@@ -1,0 +1,1824 @@
+basePath: /api/v1
+definitions:
+  handler.ChangePasswordRequest:
+    properties:
+      new_password:
+        minLength: 6
+        type: string
+      old_password:
+        type: string
+    required:
+    - new_password
+    - old_password
+    type: object
+  handler.UserProfileUpdateRequest:
+    properties:
+      avatar:
+        type: string
+      name:
+        type: string
+      username:
+        type: string
+    type: object
+  model.InviteCodeResponse:
+    properties:
+      code:
+        description: Invite code string
+        example: a1b2c3d4e5f6789012345678901234567890abcd
+        type: string
+      created_at:
+        description: Creation time
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      created_by:
+        allOf:
+        - $ref: '#/definitions/model.UserResponse'
+        description: Optional related data
+      created_by_id:
+        description: Creator user ID
+        example: 1
+        type: integer
+      description:
+        description: Description
+        example: Friend invitation code
+        type: string
+      id:
+        description: Invite code ID
+        example: 1
+        type: integer
+      max_uses:
+        description: Maximum number of uses
+        example: 10
+        type: integer
+      status:
+        description: Invite code status
+        enum:
+        - active
+        - used
+        - disabled
+        example: active
+        type: string
+      updated_at:
+        description: Last update time
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      usage_records:
+        description: Usage records
+        items:
+          $ref: '#/definitions/model.InviteCodeUsageResponse'
+        type: array
+      used_count:
+        description: Current usage count
+        example: 0
+        type: integer
+    type: object
+  model.InviteCodeUsageResponse:
+    properties:
+      created_at:
+        description: Creation time
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      id:
+        description: Usage record ID
+        example: 1
+        type: integer
+      invite_code:
+        allOf:
+        - $ref: '#/definitions/model.InviteCodeResponse'
+        description: Optional related data
+      invite_code_id:
+        description: Invite code ID
+        example: 1
+        type: integer
+      ip_address:
+        description: IP address of the user
+        example: 192.168.1.100
+        type: string
+      used_at:
+        description: When the code was used
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      used_by:
+        allOf:
+        - $ref: '#/definitions/model.UserResponse'
+        description: User who used the code
+      used_by_id:
+        description: User ID who used the code
+        example: 2
+        type: integer
+      user_agent:
+        description: User agent string
+        example: Mozilla/5.0...
+        type: string
+    type: object
+  model.UserResponse:
+    properties:
+      avatar:
+        type: string
+      created_at:
+        description: Timestamp Fields
+        type: string
+      deleted_at:
+        type: string
+      email:
+        description: Core Identity Fields
+        type: string
+      github_id:
+        type: string
+      google_id:
+        description: OAuth Provider IDs (only show if not empty)
+        type: string
+      id:
+        description: Primary Key
+        type: integer
+      invite_code_id:
+        description: Invite Code Fields
+        type: integer
+      invite_code_used:
+        type: string
+      name:
+        type: string
+      provider:
+        description: Authentication Fields (excluding password)
+        type: string
+      provider_data:
+        description: Provider Metadata (only show if not empty)
+        type: string
+      role:
+        type: string
+      status:
+        type: string
+      telegram_id:
+        type: string
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+  response.BadRequestResponse:
+    description: Bad Request response format
+    properties:
+      code:
+        example: 4000
+        type: integer
+      message:
+        example: Invalid request parameters
+        type: string
+    type: object
+  response.ConflictResponse:
+    description: Conflict response format
+    properties:
+      code:
+        example: 4009
+        type: integer
+      message:
+        example: Resource already exists
+        type: string
+    type: object
+  response.ForbiddenResponse:
+    description: Forbidden response format
+    properties:
+      code:
+        example: 4003
+        type: integer
+      message:
+        example: Access denied
+        type: string
+    type: object
+  response.InternalServerErrorResponse:
+    description: Internal Server Error response format
+    properties:
+      code:
+        example: 5000
+        type: integer
+      message:
+        example: Internal server error
+        type: string
+    type: object
+  response.ListDataInfo:
+    description: List response data structure
+    properties:
+      items:
+        description: List items
+        items:
+          type: object
+        type: array
+      pagination:
+        allOf:
+        - $ref: '#/definitions/response.PaginationResponse'
+        description: Pagination information
+    type: object
+  response.MessageOnlyResponse:
+    description: Message only response format
+    properties:
+      code:
+        example: 0
+        type: integer
+      message:
+        example: Operation completed successfully
+        type: string
+    type: object
+  response.NotFoundResponse:
+    description: Not Found response format
+    properties:
+      code:
+        example: 4004
+        type: integer
+      message:
+        example: Resource not found
+        type: string
+    type: object
+  response.PaginationResponse:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
+  response.ProviderFilterResponse:
+    description: Provider filter response format with pagination and provider information
+    properties:
+      code:
+        example: 0
+        type: integer
+      data:
+        $ref: '#/definitions/response.ProviderFilterResponseData'
+      message:
+        example: Users retrieved successfully
+        type: string
+    type: object
+  response.ProviderFilterResponseData:
+    description: Provider filter response data structure
+    properties:
+      items:
+        description: Filtered items
+        items:
+          type: object
+        type: array
+      pagination:
+        allOf:
+        - $ref: '#/definitions/response.PaginationResponse'
+        description: Pagination information
+      provider:
+        description: OAuth provider
+        example: google
+        type: string
+    type: object
+  response.SearchResponse:
+    description: Search response format with pagination and query information
+    properties:
+      code:
+        example: 0
+        type: integer
+      data:
+        $ref: '#/definitions/response.SearchResponseData'
+      message:
+        example: Search completed
+        type: string
+    type: object
+  response.SearchResponseData:
+    description: Search response data structure
+    properties:
+      items:
+        description: Search result items
+        items:
+          type: object
+        type: array
+      pagination:
+        allOf:
+        - $ref: '#/definitions/response.PaginationResponse'
+        description: Pagination information
+      query:
+        description: Search query
+        example: search term
+        type: string
+    type: object
+  response.StandardListResponse:
+    description: Standard API paginated list response format
+    properties:
+      code:
+        example: 0
+        type: integer
+      data:
+        $ref: '#/definitions/response.ListDataInfo'
+      message:
+        example: success
+        type: string
+    type: object
+  response.StandardResponse:
+    description: Standard API response format
+    properties:
+      code:
+        description: Response code (0 for success, non-zero for errors)
+        example: 0
+        type: integer
+      data:
+        description: Response data (optional)
+        type: object
+      message:
+        description: Response message
+        example: success
+        type: string
+    type: object
+  response.UnauthorizedResponse:
+    description: Unauthorized response format
+    properties:
+      code:
+        example: 4001
+        type: integer
+      message:
+        example: Authentication required
+        type: string
+    type: object
+  service.AuthResponse:
+    properties:
+      token:
+        $ref: '#/definitions/service.TokenResponse'
+      user:
+        $ref: '#/definitions/model.UserResponse'
+    type: object
+  service.CreateInviteCodeRequest:
+    properties:
+      description:
+        description: Description of the invite code
+        example: Friend invitation code
+        maxLength: 255
+        type: string
+      max_uses:
+        description: Maximum number of times the code can be used
+        example: 10
+        maximum: 100
+        minimum: 1
+        type: integer
+    type: object
+  service.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  service.RegisterRequest:
+    properties:
+      email:
+        type: string
+      invite_code:
+        description: Optional invite code
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  service.TokenResponse:
+    properties:
+      access_token:
+        type: string
+      expires_at:
+        type: string
+      expires_in:
+        type: integer
+      refresh_token:
+        type: string
+      token_type:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: A comprehensive API server with Gin, GORM, Redis, OAuth2, and invite
+    code system. Supports user authentication, profile management, and invite-based
+    registration.
+  title: Linke API
+  version: "1.0"
+paths:
+  /admin/invite-codes:
+    get:
+      consumes:
+      - application/json
+      description: Get list of all invite codes with pagination (admin only)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.StandardListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] List all invite codes'
+      tags:
+      - invite-codes
+  /admin/invite-codes/stats:
+    get:
+      consumes:
+      - application/json
+      description: Get statistics about invite codes (admin only)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Get invite code statistics'
+      tags:
+      - invite-codes
+  /admin/users:
+    get:
+      consumes:
+      - application/json
+      description: Get list of all users with pagination (admin only)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.StandardListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] List all users'
+      tags:
+      - admin-users
+  /admin/users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete any user (admin only)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MessageOnlyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Soft delete user'
+      tags:
+      - admin-users
+    get:
+      consumes:
+      - application/json
+      description: Get any user information by user ID (admin only)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.UserResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Get user by ID'
+      tags:
+      - admin-users
+    put:
+      consumes:
+      - application/json
+      description: Update any user information (admin only)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: User data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/model.UserResponse'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.UserResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Update any user'
+      tags:
+      - admin-users
+  /admin/users/{id}/hard-delete:
+    delete:
+      consumes:
+      - application/json
+      description: Permanently delete a user from database (admin only)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MessageOnlyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Hard delete user'
+      tags:
+      - admin-users
+  /admin/users/{id}/restore:
+    post:
+      consumes:
+      - application/json
+      description: Restore a soft deleted user (admin only)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MessageOnlyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Restore user'
+      tags:
+      - admin-users
+  /admin/users/{id}/role:
+    put:
+      consumes:
+      - application/json
+      description: Update user role (admin only)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Role data
+        in: body
+        name: role
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.UserResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Update user role'
+      tags:
+      - admin-users
+  /admin/users/{id}/status:
+    put:
+      consumes:
+      - application/json
+      description: Update user status (admin only)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Status data
+        in: body
+        name: status
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.UserResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Update user status'
+      tags:
+      - admin-users
+  /admin/users/batch/delete:
+    post:
+      consumes:
+      - application/json
+      description: Soft delete multiple users (admin only)
+      parameters:
+      - description: User IDs
+        in: body
+        name: ids
+        required: true
+        schema:
+          additionalProperties:
+            items:
+              type: integer
+            type: array
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Batch delete users'
+      tags:
+      - admin-users
+  /admin/users/batch/restore:
+    post:
+      consumes:
+      - application/json
+      description: Restore multiple soft deleted users (admin only)
+      parameters:
+      - description: User IDs
+        in: body
+        name: ids
+        required: true
+        schema:
+          additionalProperties:
+            items:
+              type: integer
+            type: array
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Batch restore users'
+      tags:
+      - admin-users
+  /admin/users/deleted:
+    get:
+      consumes:
+      - application/json
+      description: Get list of soft deleted users with pagination (admin only)
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.StandardListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] List deleted users'
+      tags:
+      - admin-users
+  /admin/users/provider:
+    get:
+      consumes:
+      - application/json
+      description: Get users filtered by OAuth provider with pagination (admin only)
+      parameters:
+      - description: Provider (google, github, telegram)
+        in: query
+        name: provider
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ProviderFilterResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] List users by provider'
+      tags:
+      - admin-users
+  /admin/users/search:
+    get:
+      consumes:
+      - application/json
+      description: Search users by name, email, or username with pagination (admin
+        only)
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SearchResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Search users'
+      tags:
+      - admin-users
+  /admin/users/stats:
+    get:
+      consumes:
+      - application/json
+      description: Get overall user statistics (admin only)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.StandardResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Get user statistics'
+      tags:
+      - admin-users
+  /auth/{provider}:
+    get:
+      description: Initiate OAuth login for various providers
+      parameters:
+      - description: OAuth provider (google, github, telegram)
+        in: path
+        name: provider
+        required: true
+        type: string
+      responses:
+        "302":
+          description: redirect
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+      summary: OAuth login
+      tags:
+      - auth
+  /auth/{provider}/callback:
+    get:
+      description: Handle OAuth callback from providers
+      parameters:
+      - description: OAuth provider
+        in: path
+        name: provider
+        required: true
+        type: string
+      - description: Authorization code (for OAuth2)
+        in: query
+        name: code
+        type: string
+      - description: State parameter (for OAuth2)
+        in: query
+        name: state
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      summary: OAuth callback
+      tags:
+      - auth
+  /auth/change-password:
+    post:
+      consumes:
+      - application/json
+      description: Change password for local account users
+      parameters:
+      - description: Password change data
+        in: body
+        name: passwords
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MessageOnlyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+      security:
+      - BearerAuth: []
+      summary: Change user password
+      tags:
+      - auth
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Login with email and password
+      parameters:
+      - description: Login credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/service.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/service.AuthResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+      summary: User login with email/password
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logout user (client-side token invalidation)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MessageOnlyResponse'
+      security:
+      - BearerAuth: []
+      summary: User logout
+      tags:
+      - auth
+  /auth/profile:
+    get:
+      consumes:
+      - application/json
+      description: Get current user's profile information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.UserResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user profile
+      tags:
+      - auth
+  /auth/providers:
+    get:
+      description: Get list of supported OAuth providers
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.StandardResponse'
+      summary: Get supported OAuth providers
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Refresh an existing JWT token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/service.TokenResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+      security:
+      - BearerAuth: []
+      summary: Refresh JWT token
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user with email and password. Username and name
+        are auto-generated from email. Optional invite code can be provided.
+      parameters:
+      - description: Registration data (email, password, and optional invite_code)
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/service.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/service.AuthResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.ConflictResponse'
+      summary: User registration
+      tags:
+      - auth
+  /auth/telegram/widget:
+    get:
+      description: Get Telegram Login Widget HTML for frontend integration
+      parameters:
+      - description: Bot username (optional)
+        in: query
+        name: bot_username
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+      summary: Get Telegram Login Widget
+      tags:
+      - auth
+  /invite-codes:
+    post:
+      consumes:
+      - application/json
+      description: Create a new invite code
+      parameters:
+      - description: Invite code data
+        in: body
+        name: invite_code
+        required: true
+        schema:
+          $ref: '#/definitions/service.CreateInviteCodeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.InviteCodeResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User] Create invite code'
+      tags:
+      - invite-codes
+  /invite-codes/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an invite code (only creator or admin can delete)
+      parameters:
+      - description: Invite code ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MessageOnlyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User] Delete invite code'
+      tags:
+      - invite-codes
+    get:
+      consumes:
+      - application/json
+      description: Get invite code details by ID (only creator or admin can access)
+      parameters:
+      - description: Invite code ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.InviteCodeResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User] Get invite code by ID'
+      tags:
+      - invite-codes
+  /invite-codes/{id}/status:
+    put:
+      consumes:
+      - application/json
+      description: Update the status of an invite code (only creator or admin can
+        update)
+      parameters:
+      - description: Invite code ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: New status
+        in: body
+        name: status
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.InviteCodeResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User] Update invite code status'
+      tags:
+      - invite-codes
+  /invite-codes/{id}/usages:
+    get:
+      consumes:
+      - application/json
+      description: Get usage records for a specific invite code (only creator or admin
+        can access)
+      parameters:
+      - description: Invite code ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.StandardListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User] Get invite code usages'
+      tags:
+      - invite-codes
+  /invite-codes/my:
+    get:
+      consumes:
+      - application/json
+      description: Get invite codes created by current user
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.StandardListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User] Get my invite codes'
+      tags:
+      - invite-codes
+  /invite-codes/validate/{code}:
+    get:
+      consumes:
+      - application/json
+      description: Validate if an invite code can be used
+      parameters:
+      - description: Invite code
+        in: path
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.InviteCodeResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+      summary: '[Public] Validate invite code'
+      tags:
+      - invite-codes
+  /tasks:
+    post:
+      consumes:
+      - application/json
+      description: Create and enqueue a new task
+      parameters:
+      - description: Task details
+        in: body
+        name: task
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new task
+      tags:
+      - tasks
+  /tasks/status:
+    get:
+      description: Get the current status of the task queue
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.StandardResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get queue status
+      tags:
+      - tasks
+  /user/password:
+    put:
+      consumes:
+      - application/json
+      description: Change user's own password
+      parameters:
+      - description: Password change data
+        in: body
+        name: passwords
+        required: true
+        schema:
+          $ref: '#/definitions/handler.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MessageOnlyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User] Change password'
+      tags:
+      - user-profile
+  /user/profile:
+    get:
+      consumes:
+      - application/json
+      description: Get current user's profile information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.UserResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User] Get own profile'
+      tags:
+      - user-profile
+    put:
+      consumes:
+      - application/json
+      description: Update current user's profile information (limited fields)
+      parameters:
+      - description: User profile data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UserProfileUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.UserResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User] Update own profile'
+      tags:
+      - user-profile
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
