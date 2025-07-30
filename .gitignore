@@ -28,7 +28,6 @@ go.work.sum
 .env
 
 # Editor/IDE
-# .idea/
-# .vscode/
-bin/
-CLAUDE.md
+.idea/
+.vscode/
+.claude/
