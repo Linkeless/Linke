@@ -51,6 +51,8 @@ func AuthMiddleware(authService *service.AuthService) gin.HandlerFunc {
 
 		// Store user in context for use in handlers
 		c.Set(AuthContextKey, user)
+		// Also store user ID for handlers that only need the ID
+		c.Set("user_id", user.ID)
 		c.Next()
 	}
 }
@@ -80,6 +82,8 @@ func OptionalAuthMiddleware(authService *service.AuthService) gin.HandlerFunc {
 
 		// Store user in context for use in handlers
 		c.Set(AuthContextKey, user)
+		// Also store user ID for handlers that only need the ID
+		c.Set("user_id", user.ID)
 		c.Next()
 	}
 }

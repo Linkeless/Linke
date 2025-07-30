@@ -26,6 +26,14 @@ type ListResponse struct {
 	Pagination *PaginationResponse `json:"pagination"`
 }
 
+// ServerGroupResponseData represents server group data for responses
+type ServerGroupResponseData struct {
+	ID        uint   `json:"id" example:"1"`
+	Name      string `json:"name" example:"Asia Pacific"`
+	CreatedAt string `json:"created_at" example:"2024-01-01T00:00:00Z"`
+	UpdatedAt string `json:"updated_at" example:"2024-01-01T00:00:00Z"`
+}
+
 // Success sends a successful response
 func Success(c *gin.Context, data interface{}) {
 	c.JSON(http.StatusOK, APIResponse{
@@ -62,6 +70,15 @@ func CreatedWithMessage(c *gin.Context, message string, data interface{}) {
 	})
 }
 
+// OK sends a 200 OK response with custom message and data
+func OK(c *gin.Context, message string, data interface{}) {
+	c.JSON(http.StatusOK, APIResponse{
+		Code:    0,
+		Message: message,
+		Data:    data,
+	})
+}
+
 // Error sends an error response
 func Error(c *gin.Context, httpStatus int, code int, message string) {
 	c.JSON(httpStatus, APIResponse{
@@ -71,8 +88,12 @@ func Error(c *gin.Context, httpStatus int, code int, message string) {
 }
 
 // BadRequest sends a 400 bad request response
-func BadRequest(c *gin.Context, message string) {
-	Error(c, http.StatusBadRequest, 4000, message)
+func BadRequest(c *gin.Context, message string, details ...string) {
+	msg := message
+	if len(details) > 0 {
+		msg = message + ": " + details[0]
+	}
+	Error(c, http.StatusBadRequest, 4000, msg)
 }
 
 // Unauthorized sends a 401 unauthorized response
@@ -96,8 +117,32 @@ func Conflict(c *gin.Context, message string) {
 }
 
 // InternalServerError sends a 500 internal server error response
-func InternalServerError(c *gin.Context, message string) {
-	Error(c, http.StatusInternalServerError, 5000, message)
+func InternalServerError(c *gin.Context, message string, details ...string) {
+	msg := message
+	if len(details) > 0 {
+		msg = message + ": " + details[0]
+	}
+	Error(c, http.StatusInternalServerError, 5000, msg)
+}
+
+// OKPaginated sends a paginated response with custom message
+func OKPaginated(c *gin.Context, message string, data interface{}, total int64, limit int, offset int) {
+	response := struct {
+		Code    int         `json:"code"`
+		Message string      `json:"message"`
+		Data    interface{} `json:"data"`
+		Total   int64       `json:"total"`
+		Limit   int         `json:"limit"`
+		Offset  int         `json:"offset"`
+	}{
+		Code:    0,
+		Message: message,
+		Data:    data,
+		Total:   total,
+		Limit:   limit,
+		Offset:  offset,
+	}
+	c.JSON(http.StatusOK, response)
 }
 
 // SuccessList sends a successful paginated list response

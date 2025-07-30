@@ -1,6 +1,8 @@
 package config
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"log"
 	"os"
 	"strconv"
@@ -15,10 +17,15 @@ type Config struct {
 	OAuth2   OAuth2Config
 	JWT      JWTConfig
 	Log      LogConfig
+	API      APIConfig
 }
 
 type ServerConfig struct {
 	Port string
+}
+
+type APIConfig struct {
+	ServerToken string // Token for server API authentication
 }
 
 type DatabaseConfig struct {
@@ -64,6 +71,28 @@ func LoadConfig() *Config {
 		log.Println("No .env file found, using environment variables")
 	}
 
+	// Critical: JWT_SECRET must be provided and secure
+	jwtSecret := getEnv("JWT_SECRET", "")
+	if jwtSecret == "" {
+		log.Fatal("SECURITY ERROR: JWT_SECRET environment variable is required and cannot be empty. " +
+			"This is a critical security requirement. Generate a secure random key: " +
+			"openssl rand -hex 32")
+	}
+
+	// Validate JWT secret strength
+	if len(jwtSecret) < 32 {
+		log.Fatal("SECURITY ERROR: JWT_SECRET must be at least 32 characters long for security. " +
+			"Current length: " + strconv.Itoa(len(jwtSecret)) + ". " +
+			"Generate a secure random key: openssl rand -hex 32")
+	}
+
+	// Additional validation: ensure it's not the old default weak key
+	if jwtSecret == "your-super-secret-jwt-key" || jwtSecret == "your-super-secret-jwt-key-make-it-strong-and-long" {
+		log.Fatal("SECURITY ERROR: Cannot use the default JWT_SECRET value. " +
+			"This is a known weak key that compromises system security. " +
+			"Generate a secure random key: openssl rand -hex 32")
+	}
+
 	return &Config{
 		Server: ServerConfig{
 			Port: getEnv("SERVER_PORT", "8080"),
@@ -92,13 +121,16 @@ func LoadConfig() *Config {
 			TelegramRedirectURL: getEnv("TELEGRAM_REDIRECT_URL", "http://localhost:8080/auth/telegram/callback"),
 		},
 		JWT: JWTConfig{
-			Secret:     getEnv("JWT_SECRET", "your-super-secret-jwt-key"),
+			Secret:      jwtSecret,
 			ExpireHours: getEnvInt("JWT_EXPIRE_HOURS", 24),
 		},
 		Log: LogConfig{
 			Level:  getEnv("LOG_LEVEL", "info"),
 			Format: getEnv("LOG_FORMAT", "text"),
 			Output: getEnv("LOG_OUTPUT", "stdout"),
+		},
+		API: APIConfig{
+			ServerToken: getEnv("SERVER_API_TOKEN", ""),
 		},
 	}
 }
@@ -117,4 +149,14 @@ func getEnvInt(key string, defaultValue int) int {
 		}
 	}
 	return defaultValue
+}
+
+// GenerateSecureJWTKey generates a cryptographically secure JWT key
+// This is a utility function for deployment and testing purposes
+func GenerateSecureJWTKey() string {
+	bytes := make([]byte, 32) // 256 bits
+	if _, err := rand.Read(bytes); err != nil {
+		log.Fatal("Failed to generate secure random bytes: " + err.Error())
+	}
+	return hex.EncodeToString(bytes)
 }

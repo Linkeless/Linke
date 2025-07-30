@@ -110,3 +110,22 @@ type ProviderFilterResponseData struct {
 	Pagination PaginationResponse `json:"pagination"` // Pagination information
 	Provider   string             `json:"provider" example:"google"` // OAuth provider
 }
+
+// PaginatedResponse represents a paginated response for Swagger documentation
+// @Description Paginated response format
+type PaginatedResponse struct {
+	Code    int               `json:"code" example:"0"`
+	Message string            `json:"message" example:"success"`
+	Data    interface{}       `json:"data" swaggertype:"array,object"`
+	Total   int64             `json:"total" example:"100"`
+	Limit   int               `json:"limit" example:"10"`
+	Offset  int               `json:"offset" example:"0"`
+}
+
+// Response represents the standard API response structure for Swagger documentation
+// @Description Standard API response format
+type Response struct {
+	Code    int         `json:"code" example:"0"`                     // Response code (0 for success, non-zero for errors)
+	Message string      `json:"message" example:"success"`            // Response message
+	Data    interface{} `json:"data,omitempty" swaggertype:"object"` // Response data (optional)
+}

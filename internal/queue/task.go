@@ -8,11 +8,12 @@ import (
 
 	"linke/internal/logger"
 
+	"github.com/hibiken/asynq"
 	"github.com/go-redis/redis/v8"
 )
 
 type TaskQueue struct {
-	client *redis.Client
+	client *asynq.Client
 }
 
 type Task struct {
@@ -24,22 +25,58 @@ type Task struct {
 	CreatedAt time.Time            `json:"created_at"`
 }
 
-type TaskHandler func(ctx context.Context, task *Task) error
+type TaskHandler func(ctx context.Context, task *asynq.Task) error
 
 type TaskProcessor struct {
-	queue    *TaskQueue
+	server   *asynq.Server
 	handlers map[string]TaskHandler
 }
 
-func NewTaskQueue(client *redis.Client) *TaskQueue {
+func NewTaskQueue(redisClient *redis.Client) *TaskQueue {
+	asynqClient := asynq.NewClient(asynq.RedisClientOpt{
+		Addr:     redisClient.Options().Addr,
+		Password: redisClient.Options().Password,
+		DB:       redisClient.Options().DB,
+	})
 	return &TaskQueue{
-		client: client,
+		client: asynqClient,
 	}
 }
 
-func NewTaskProcessor(queue *TaskQueue) *TaskProcessor {
+func NewTaskProcessor(redisClient *redis.Client) *TaskProcessor {
+	// Map project log level to asynq log level
+	logLevel := asynq.InfoLevel
+	projectLogLevel := logger.GetEnvLogLevel()
+	switch projectLogLevel {
+	case "debug":
+		logLevel = asynq.DebugLevel
+	case "info":
+		logLevel = asynq.InfoLevel
+	case "warn":
+		logLevel = asynq.WarnLevel
+	case "error":
+		logLevel = asynq.ErrorLevel
+	case "fatal":
+		logLevel = asynq.FatalLevel
+	}
+
+	asynqServer := asynq.NewServer(
+		asynq.RedisClientOpt{
+			Addr:     redisClient.Options().Addr,
+			Password: redisClient.Options().Password,
+			DB:       redisClient.Options().DB,
+		},
+		asynq.Config{
+			Concurrency: 10,
+			Logger:      logger.NewAsynqLogger(),
+			LogLevel:    logLevel,
+			RetryDelayFunc: func(n int, err error, task *asynq.Task) time.Duration {
+				return time.Duration(n) * time.Second
+			},
+		},
+	)
 	return &TaskProcessor{
-		queue:    queue,
+		server:   asynqServer,
 		handlers: make(map[string]TaskHandler),
 	}
 }
@@ -47,107 +84,70 @@ func NewTaskProcessor(queue *TaskQueue) *TaskProcessor {
 func (tq *TaskQueue) Enqueue(ctx context.Context, queueName string, task *Task) error {
 	task.CreatedAt = time.Now()
 	
-	data, err := json.Marshal(task)
+	data, err := json.Marshal(task.Payload)
 	if err != nil {
-		return fmt.Errorf("failed to marshal task: %w", err)
+		return fmt.Errorf("failed to marshal task payload: %w", err)
 	}
 
-	return tq.client.LPush(ctx, queueName, data).Err()
+	asynqTask := asynq.NewTask(task.Type, data, asynq.MaxRetry(task.MaxRetry), asynq.Queue(queueName))
+	_, err = tq.client.Enqueue(asynqTask)
+	return err
 }
 
-func (tq *TaskQueue) Dequeue(ctx context.Context, queueName string, timeout time.Duration) (*Task, error) {
-	result, err := tq.client.BRPop(ctx, timeout, queueName).Result()
-	if err != nil {
-		if err == redis.Nil {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("failed to dequeue task: %w", err)
-	}
-
-	if len(result) < 2 {
-		return nil, fmt.Errorf("invalid redis response")
-	}
-
-	var task Task
-	if err := json.Unmarshal([]byte(result[1]), &task); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal task: %w", err)
-	}
-
-	return &task, nil
+func (tq *TaskQueue) GetClient() *asynq.Client {
+	return tq.client
 }
 
-func (tq *TaskQueue) GetQueueLength(ctx context.Context, queueName string) (int64, error) {
-	return tq.client.LLen(ctx, queueName).Result()
+func (tq *TaskQueue) Close() error {
+	return tq.client.Close()
+}
+
+func (tq *TaskQueue) GetQueueInfo(ctx context.Context, queueName string) (map[string]interface{}, error) {
+	// For asynq, we would need to use the inspector to get queue stats
+	// This is a simplified implementation
+	return map[string]interface{}{
+		"queue_name": queueName,
+		"status": "active",
+	}, nil
 }
 
 func (tp *TaskProcessor) RegisterHandler(taskType string, handler TaskHandler) {
 	tp.handlers[taskType] = handler
 }
 
-func (tp *TaskProcessor) ProcessTasks(ctx context.Context, queueName string) {
-	logger.Info("Starting task processor", logger.String("queue", queueName))
+func (tp *TaskProcessor) Start(ctx context.Context) error {
+	logger.Info("Starting asynq task processor")
 	
-	for {
-		select {
-		case <-ctx.Done():
-			logger.Info("Task processor stopped", logger.String("queue", queueName))
-			return
-		default:
-			task, err := tp.queue.Dequeue(ctx, queueName, 5*time.Second)
+	mux := asynq.NewServeMux()
+	
+	// Register all handlers
+	for taskType, handler := range tp.handlers {
+		mux.HandleFunc(taskType, func(ctx context.Context, task *asynq.Task) error {
+			logger.Info("Processing task",
+				logger.String("task_type", task.Type()),
+			)
+			
+			err := handler(ctx, task)
 			if err != nil {
-				logger.Error("Error dequeuing task", 
-					logger.String("queue", queueName),
+				logger.Error("Task failed",
+					logger.String("task_type", task.Type()),
 					logger.Error2("error", err),
 				)
-				continue
+				return err
 			}
-
-			if task == nil {
-				continue
-			}
-
-			if err := tp.processTask(ctx, queueName, task); err != nil {
-				logger.Error("Error processing task",
-					logger.String("task_id", task.ID),
-					logger.String("queue", queueName),
-					logger.Error2("error", err),
-				)
-			}
-		}
+			
+			logger.Info("Task completed successfully",
+				logger.String("task_type", task.Type()),
+			)
+			return nil
+		})
 	}
+	
+	return tp.server.Run(mux)
 }
 
-func (tp *TaskProcessor) processTask(ctx context.Context, queueName string, task *Task) error {
-	handler, exists := tp.handlers[task.Type]
-	if !exists {
-		return fmt.Errorf("no handler registered for task type: %s", task.Type)
-	}
-
-	logger.Info("Processing task",
-		logger.String("task_id", task.ID),
-		logger.String("task_type", task.Type),
-	)
-
-	if err := handler(ctx, task); err != nil {
-		task.Retry++
-		if task.Retry < task.MaxRetry {
-			logger.Warn("Task failed, retrying",
-			logger.String("task_id", task.ID),
-			logger.Int("retry", task.Retry),
-			logger.Int("max_retry", task.MaxRetry),
-		)
-			return tp.queue.Enqueue(ctx, queueName, task)
-		}
-		
-		logger.Error("Task failed after max retries, moving to dead letter queue",
-			logger.String("task_id", task.ID),
-			logger.Int("max_retry", task.MaxRetry),
-		)
-		return tp.queue.Enqueue(ctx, queueName+"_dead", task)
-	}
-
-	logger.Info("Task completed successfully",
-		logger.String("task_id", task.ID),
-	)
-	return nil
+func (tp *TaskProcessor) Stop() {
+	logger.Info("Stopping asynq task processor")
+	tp.server.Stop()
+	logger.Info("Asynq task processor stopped")
 }

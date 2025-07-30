@@ -3,7 +3,9 @@ package service
 import (
 	"context"
 	"crypto/hmac"
+	"crypto/rand"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -44,10 +46,38 @@ type TelegramUser struct {
 	Hash      string `json:"hash"`
 }
 
+
+// AuthorizeURLRequest represents request for authorization URL
+type AuthorizeURLRequest struct {
+	Provider    string   `json:"provider" binding:"required"`
+	RedirectURI string   `json:"redirect_uri,omitempty"`
+	State       string   `json:"state,omitempty"`
+	Scopes      []string `json:"scopes,omitempty"`
+}
+
+// AuthorizeURLResponse represents response with authorization URL
+type AuthorizeURLResponse struct {
+	AuthURL string `json:"auth_url"`
+	State   string `json:"state"`
+}
+
 func NewOAuthService(cfg *config.Config) *OAuthService {
 	return &OAuthService{
 		cfg: cfg,
 	}
+}
+
+
+// generateState generates a secure random state parameter
+func (o *OAuthService) generateState() string {
+	b := make([]byte, 16)
+	rand.Read(b)
+	return base64.URLEncoding.EncodeToString(b)
+}
+
+// GenerateState generates a secure random state parameter (public method)
+func (o *OAuthService) GenerateState() string {
+	return o.generateState()
 }
 
 func (o *OAuthService) GetAuthURL(provider, state string) (string, error) {

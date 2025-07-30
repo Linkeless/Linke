@@ -27,8 +27,8 @@ type User struct {
 	GitHubID   *string `json:"github_id,omitempty" gorm:"uniqueIndex;size:100;column:github_id"`
 	TelegramID *string `json:"telegram_id,omitempty" gorm:"uniqueIndex;size:100"`
 
-	// Provider Metadata
-	ProviderData string `json:"provider_data,omitempty" gorm:"type:text"`
+	// Provider Metadata (MySQL JSON type)
+	ProviderData *string `json:"provider_data,omitempty" gorm:"type:json"`
 
 	// Invite Code Fields
 	InviteCodeID   *uint   `json:"invite_code_id,omitempty" gorm:"index"`           // 使用的邀请码ID
@@ -143,7 +143,7 @@ type UserResponse struct {
 	TelegramID *string `json:"telegram_id,omitempty"`
 
 	// Provider Metadata (only show if not empty)
-	ProviderData string `json:"provider_data,omitempty"`
+	ProviderData *string `json:"provider_data,omitempty"`
 
 	// Invite Code Fields
 	InviteCodeID   *uint   `json:"invite_code_id,omitempty"`
@@ -195,4 +195,14 @@ func (u *User) ToResponse() *UserResponse {
 	}
 
 	return resp
+}
+
+// CreateUserRequest represents the request structure for creating a new user
+type CreateUserRequest struct {
+	Email    string `json:"email" binding:"required,email,max=255" example:"user@example.com"`
+	Username string `json:"username" binding:"omitempty,max=100" example:"johndoe"`
+	Name     string `json:"name" binding:"omitempty,max=255" example:"John Doe"`
+	Password string `json:"password" binding:"omitempty,min=6,max=255" example:"password123"`
+	Role     string `json:"role" binding:"omitempty,oneof=user admin" example:"user"`
+	Status   string `json:"status" binding:"omitempty,oneof=active inactive banned" example:"active"`
 }

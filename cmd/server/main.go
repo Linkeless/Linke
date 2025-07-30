@@ -2,34 +2,32 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
 	"linke/config"
-	"linke/internal/handler"
 	"linke/internal/logger"
-	"linke/internal/middleware"
 	"linke/internal/migration"
+	"linke/internal/modules"
 	"linke/internal/queue"
 	"linke/internal/repository"
-	"linke/internal/response"
-	"linke/internal/service"
+	"linke/internal/routes"
 
-	"github.com/gin-gonic/gin"
 	"github.com/swaggo/files"
 	"github.com/swaggo/gin-swagger"
 	
 	_ "linke/docs"
-	_ "linke/internal/handler"
 )
 
 // @title Linke API
 // @version 1.0
-// @description A comprehensive API server with Gin, GORM, Redis, OAuth2, and invite code system. Supports user authentication, profile management, and invite-based registration.
+// @description A comprehensive service management platform with subscription-based billing, user management, and server administration. Features include OAuth2 authentication, traffic subscription management, multi-gateway payments, referral programs, and customer support system.
 // @host localhost:8080
 // @BasePath /api/v1
 // @securityDefinitions.apikey BearerAuth
@@ -37,8 +35,26 @@ import (
 // @name Authorization
 // @description Type "Bearer" followed by a space and JWT token.
 func main() {
+	// Parse command line flags
+	var (
+		runMigration    = flag.Bool("migrate", false, "Run database migrations and exit (alias for -migrate-command=up)")
+		migrateCommand  = flag.String("migrate-command", "", "Migration command (up, down, reset, status, force, goto, steps, list, fix-dirty)")
+		migrateVersion  = flag.String("migrate-version", "", "Target version for goto/force commands")
+		migrateSteps    = flag.String("migrate-steps", "", "Number of steps for steps command")
+		showMigrateHelp = flag.Bool("migrate-help", false, "Show migration help and exit")
+	)
+	flag.Parse()
+
+	// Show migration help if requested
+	if *showMigrateHelp {
+		showMigrationHelp()
+		return
+	}
+
+	// Load configuration
 	cfg := config.LoadConfig()
 
+	// Initialize logger
 	if err := logger.InitLogger(logger.LogConfig{
 		Level:  cfg.Log.Level,
 		Format: cfg.Log.Format,
@@ -54,146 +70,77 @@ func main() {
 		logger.String("log_format", cfg.Log.Format),
 	)
 
+	// Initialize database
 	db, err := repository.NewDatabase(cfg)
 	if err != nil {
 		logger.Fatal("Failed to initialize database", logger.Error2("error", err))
 	}
 	defer db.Close()
 
-	if err := migration.Migrate(db.DB); err != nil {
-		logger.Fatal("Failed to migrate database", logger.Error2("error", err))
+	// Handle migration commands
+	if *runMigration || *migrateCommand != "" {
+		migrationService := migration.NewMigrationService(
+			cfg.Database.Host,
+			cfg.Database.Port,
+			cfg.Database.User,
+			cfg.Database.Password,
+			cfg.Database.Name,
+		)
+
+		// Validate database connection first
+		if err := migrationService.ValidateConnection(); err != nil {
+			logger.Fatal("Database connection failed", logger.Error2("error", err))
+		}
+
+		// Determine command to execute
+		command := *migrateCommand
+		if *runMigration && command == "" {
+			command = "up"
+		}
+
+		if err := executeMigrationCommand(migrationService, command, *migrateVersion, *migrateSteps); err != nil {
+			logger.Fatal("Migration command failed", logger.Error2("error", err), logger.String("command", command))
+		}
+
+		logger.Info("Migration command completed, exiting...", logger.String("command", command))
+		return
 	}
 
+	// Initialize task queue
 	taskQueue := queue.NewTaskQueue(db.Redis)
-	processor := queue.NewTaskProcessor(taskQueue)
+	processor := queue.NewTaskProcessor(db.Redis)
 	processor.RegisterHandler("email", queue.EmailTaskHandler)
 	processor.RegisterHandler("notification", queue.NotificationTaskHandler)
 	processor.RegisterHandler("data_processing", queue.DataProcessingTaskHandler)
+	
+	// TODO: Add node data processing handlers when needed
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go processor.ProcessTasks(ctx, "default")
+	go func() {
+		if err := processor.Start(ctx); err != nil {
+			logger.ErrorWithRateLimit("task_processor_error", "Task processor failed", logger.Error2("error", err))
+		}
+	}()
 
-	userService := service.NewUserService(db.DB)
-	jwtService := service.NewJWTService(cfg)
-	inviteCodeService := service.NewInviteCodeService(db.DB)
-	inviteCodeUsageService := service.NewInviteCodeUsageService(db.DB)
-	authService := service.NewAuthService(db.DB, userService, jwtService, inviteCodeService)
+	// Initialize modules using the simple manager
+	moduleManager := modules.NewSimpleManager(cfg, db, taskQueue)
 	
-	authHandler := handler.NewAuthHandler(cfg, db, authService, jwtService)
-	taskHandler := handler.NewTaskHandler(taskQueue)
-	adminUserHandler := handler.NewAdminUserHandler(userService)
-	userProfileHandler := handler.NewUserProfileHandler(userService)
-	inviteCodeHandler := handler.NewInviteCodeHandler(inviteCodeService, inviteCodeUsageService)
+	// Initialize route manager
+	routeManager := routes.NewSimpleManager(moduleManager)
+	routeManager.SetupRoutes()
 
-	gin.SetMode(gin.ReleaseMode)
-	r := gin.New()
+	// Get router and add swagger
+	router := routeManager.GetRouter()
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	r.Use(middleware.Logger())
-	r.Use(middleware.CORS())
-	r.Use(gin.Recovery())
-
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
-	r.GET("/health", func(c *gin.Context) {
-		response.Success(c, gin.H{
-			"status": "ok",
-			"time":   time.Now().Format(time.RFC3339),
-		})
-	})
-
-	v1 := r.Group("/api/v1")
-	{
-		v1.GET("/ping", func(c *gin.Context) {
-			response.SuccessWithMessage(c, "pong", nil)
-		})
-
-		v1.POST("/tasks", middleware.AuthMiddleware(authService), taskHandler.CreateTask)
-		v1.GET("/tasks/status", middleware.AuthMiddleware(authService), taskHandler.GetQueueStatus)
-		
-		// Authentication routes
-		auth := v1.Group("/auth")
-		{
-			// OAuth routes
-			auth.GET("/providers", authHandler.GetProviders)
-			auth.GET("/telegram/widget", authHandler.GetTelegramWidget)
-			auth.GET("/:provider", authHandler.Login)
-			auth.GET("/:provider/callback", authHandler.Callback)
-			
-			// Local authentication routes
-			auth.POST("/register", authHandler.Register)
-			auth.POST("/login", authHandler.LoginLocal)
-			auth.POST("/logout", middleware.AuthMiddleware(authService), authHandler.Logout)
-			auth.POST("/refresh", authHandler.RefreshToken)
-			auth.POST("/change-password", middleware.AuthMiddleware(authService), authHandler.ChangePassword)
-			auth.GET("/profile", middleware.AuthMiddleware(authService), authHandler.GetProfile)
-		}
-
-		
-		// Admin routes - require admin privileges
-		admin := v1.Group("/admin")
-		admin.Use(middleware.AuthMiddleware(authService))
-		admin.Use(middleware.RequireAdmin())
-		{
-			// Admin user management routes
-			adminUsers := admin.Group("/users")
-			{
-				adminUsers.GET("", adminUserHandler.ListUsers)
-				adminUsers.GET("/deleted", adminUserHandler.ListDeletedUsers)
-				adminUsers.GET("/search", adminUserHandler.SearchUsers)
-				adminUsers.GET("/stats", adminUserHandler.GetUserStats)
-				adminUsers.GET("/provider", adminUserHandler.ListUsersByProvider)
-				adminUsers.GET("/:id", adminUserHandler.GetUser)
-				adminUsers.PUT("/:id", adminUserHandler.UpdateUser)
-				adminUsers.PUT("/:id/role", adminUserHandler.UpdateUserRole)
-				adminUsers.PUT("/:id/status", adminUserHandler.UpdateUserStatus)
-				adminUsers.DELETE("/:id", adminUserHandler.SoftDeleteUser)
-				adminUsers.POST("/:id/restore", adminUserHandler.RestoreUser)
-				adminUsers.DELETE("/:id/hard-delete", adminUserHandler.HardDeleteUser)
-				adminUsers.POST("/batch/delete", adminUserHandler.BatchDeleteUsers)
-				adminUsers.POST("/batch/restore", adminUserHandler.BatchRestoreUsers)
-			}
-
-			// Admin invite code management routes
-			adminInviteCodes := admin.Group("/invite-codes")
-			{
-				adminInviteCodes.GET("", inviteCodeHandler.ListAllInviteCodes)
-				adminInviteCodes.GET("/stats", inviteCodeHandler.GetInviteCodeStats)
-			}
-		}
-
-		// User routes - regular user access
-		user := v1.Group("/user")
-		user.Use(middleware.AuthMiddleware(authService))
-		{
-			// User profile management only
-			user.GET("/profile", userProfileHandler.GetProfile)
-			user.PUT("/profile", userProfileHandler.UpdateProfile)
-			user.PUT("/password", userProfileHandler.ChangePassword)
-		}
-
-		// Invite code routes
-		inviteCodes := v1.Group("/invite-codes")
-		{
-			// Public routes
-			inviteCodes.GET("/validate/:code", inviteCodeHandler.ValidateInviteCode)
-			
-			// Authenticated routes
-			inviteCodes.Use(middleware.AuthMiddleware(authService))
-			inviteCodes.POST("", inviteCodeHandler.CreateInviteCode)
-			inviteCodes.GET("/my", inviteCodeHandler.GetMyInviteCodes)
-			inviteCodes.GET("/:id", inviteCodeHandler.GetInviteCode)
-			inviteCodes.GET("/:id/usages", inviteCodeHandler.GetInviteCodeUsages)
-			inviteCodes.PUT("/:id/status", inviteCodeHandler.UpdateInviteCodeStatus)
-			inviteCodes.DELETE("/:id", inviteCodeHandler.DeleteInviteCode)
-		}
-	}
-
+	// Create HTTP server
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", cfg.Server.Port),
-		Handler: r,
+		Handler: router,
 	}
 
+	// Start server
 	go func() {
 		logger.Info("Server starting", logger.String("port", cfg.Server.Port))
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -201,11 +148,17 @@ func main() {
 		}
 	}()
 
+	// Wait for interrupt signal to gracefully shutdown the server
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 	logger.Info("Shutting down server...")
 
+	// Stop task processor
+	cancel()
+	processor.Stop()
+
+	// Graceful shutdown
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer shutdownCancel()
 
@@ -213,5 +166,163 @@ func main() {
 		logger.Fatal("Server forced to shutdown", logger.Error2("error", err))
 	}
 
+	// Close task queue
+	if err := taskQueue.Close(); err != nil {
+		logger.Error("Failed to close task queue", logger.Error2("error", err))
+	}
+
 	logger.Info("Server exited")
+}
+
+// Migration helper functions (same as original)
+func showMigrationHelp() {
+	fmt.Println("Database Migration Commands")
+	fmt.Println("")
+	fmt.Println("Usage:")
+	fmt.Println("  go run cmd/server/main.go [migration-options]")
+	fmt.Println("")
+	fmt.Println("Migration Options:")
+	fmt.Println("  -migrate                    Run database migrations and exit (same as -migrate-command=up)")
+	fmt.Println("  -migrate-command=<command>  Execute specific migration command")
+	fmt.Println("  -migrate-version=<N>        Target version for goto/force commands")
+	fmt.Println("  -migrate-steps=<N>          Number of steps for steps command")
+	fmt.Println("  -migrate-help               Show this help and exit")
+	fmt.Println("")
+	fmt.Println("Migration Commands:")
+	fmt.Println("  up       - Run all pending migrations")
+	fmt.Println("  down     - Rollback one migration")
+	fmt.Println("  reset    - Drop all tables and re-run migrations (DANGEROUS!)")
+	fmt.Println("  status   - Show current migration version")
+	fmt.Println("  list     - List all applied migrations")
+	fmt.Println("  force    - Force set migration version (use with caution)")
+	fmt.Println("  goto     - Migrate to specific version")
+	fmt.Println("  steps    - Run specific number of migration steps")
+	fmt.Println("  fix-dirty - Fix dirty migration state (requires -migrate-version)")
+	fmt.Println("")
+	fmt.Println("Examples:")
+	fmt.Println("  go run cmd/server/main.go -migrate")
+	fmt.Println("  go run cmd/server/main.go -migrate-command=status")
+	fmt.Println("  go run cmd/server/main.go -migrate-command=fix-dirty -migrate-version=9")
+	fmt.Println("  go run cmd/server/main.go -migrate-command=goto -migrate-version=5")
+	fmt.Println("  go run cmd/server/main.go -migrate-command=steps -migrate-steps=2")
+	fmt.Println("")
+	fmt.Println("Fixing Dirty Migration State:")
+	fmt.Println("  If you see 'Dirty database version X' error:")
+	fmt.Println("  go run cmd/server/main.go -migrate-command=fix-dirty -migrate-version=X")
+}
+
+func executeMigrationCommand(migrationService *migration.MigrationService, command, version, steps string) error {
+	switch command {
+	case "up":
+		logger.Info("Running database migrations...")
+		return migrationService.Up()
+
+	case "down":
+		logger.Info("Rolling back one migration...")
+		return migrationService.Down()
+
+	case "reset":
+		fmt.Print("WARNING: This will drop all tables and re-run migrations. Are you sure? (y/N): ")
+		var confirm string
+		fmt.Scanln(&confirm)
+		if confirm == "y" || confirm == "Y" {
+			logger.Info("Resetting database...")
+			return migrationService.Reset()
+		} else {
+			logger.Info("Reset cancelled")
+			return nil
+		}
+
+	case "status":
+		status, err := migrationService.Status()
+		if err != nil {
+			return err
+		}
+		fmt.Println(status)
+		return nil
+
+	case "list":
+		versions, err := migrationService.GetAppliedMigrations()
+		if err != nil {
+			return err
+		}
+		if len(versions) == 0 {
+			fmt.Println("No migrations have been applied")
+		} else {
+			fmt.Println("Applied migrations:")
+			for _, v := range versions {
+				fmt.Printf("  - Version %d\n", v)
+			}
+		}
+		return nil
+
+	case "force":
+		if version == "" {
+			return fmt.Errorf("version is required for force command")
+		}
+		v, err := strconv.Atoi(version)
+		if err != nil {
+			return fmt.Errorf("invalid version number: %w", err)
+		}
+		logger.Warn("Forcing migration version", logger.Int("version", v))
+		return migrationService.Force(v)
+
+	case "goto":
+		if version == "" {
+			return fmt.Errorf("version is required for goto command")
+		}
+		v, err := strconv.ParseUint(version, 10, 32)
+		if err != nil {
+			return fmt.Errorf("invalid version number: %w", err)
+		}
+		logger.Info("Migrating to specific version", logger.Uint("version", uint(v)))
+		return migrationService.Goto(uint(v))
+
+	case "steps":
+		if steps == "" {
+			return fmt.Errorf("steps is required for steps command")
+		}
+		s, err := strconv.Atoi(steps)
+		if err != nil {
+			return fmt.Errorf("invalid steps number: %w", err)
+		}
+		direction := "up"
+		if s < 0 {
+			direction = "down"
+		}
+		logger.Info("Running migration steps", logger.Int("steps", s), logger.String("direction", direction))
+		return migrationService.Steps(s)
+
+	case "fix-dirty":
+		if version == "" {
+			return fmt.Errorf("version is required for fix-dirty command. Use the version shown in the dirty database error")
+		}
+		v, err := strconv.Atoi(version)
+		if err != nil {
+			return fmt.Errorf("invalid version number: %w", err)
+		}
+		
+		fmt.Printf("WARNING: This will force the migration version to %d without running the migration.\n", v)
+		fmt.Print("This should only be used to fix a dirty migration state. Continue? (y/N): ")
+		var confirm string
+		fmt.Scanln(&confirm)
+		if confirm == "y" || confirm == "Y" {
+			logger.Warn("Fixing dirty migration state", logger.Int("version", v))
+			if err := migrationService.Force(v); err != nil {
+				return fmt.Errorf("failed to fix dirty migration: %w", err)
+			}
+			logger.Info("Dirty migration state fixed", logger.Int("version", v))
+			fmt.Println("Migration state fixed. You can now run migrations again.")
+			return nil
+		} else {
+			logger.Info("Fix dirty operation cancelled")
+			return nil
+		}
+
+	case "":
+		return fmt.Errorf("migration command is required")
+
+	default:
+		return fmt.Errorf("unknown migration command: %s", command)
+	}
 }

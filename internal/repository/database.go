@@ -65,7 +65,7 @@ func initRedis(cfg config.RedisConfig) *redis.Client {
 
 	_, err := client.Ping(ctx).Result()
 	if err != nil {
-		logger.Error("Failed to connect to Redis", logger.Error2("error", err))
+		logger.ErrorWithRateLimit("redis_connection_failed", "Failed to connect to Redis", logger.Error2("error", err))
 	} else {
 		logger.Info("Connected to Redis successfully",
 			logger.String("host", cfg.Host),
@@ -79,7 +79,7 @@ func initRedis(cfg config.RedisConfig) *redis.Client {
 func (d *Database) Close() error {
 	if d.Redis != nil {
 		if err := d.Redis.Close(); err != nil {
-			logger.Error("Failed to close Redis connection", logger.Error2("error", err))
+			logger.ErrorWithRateLimit("redis_close_failed", "Failed to close Redis connection", logger.Error2("error", err))
 		} else {
 			logger.Info("Redis connection closed")
 		}

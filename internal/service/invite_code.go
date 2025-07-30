@@ -14,19 +14,23 @@ import (
 )
 
 type InviteCodeService struct {
-	db *gorm.DB
+	db             *gorm.DB
+	referralService *ReferralService
 }
 
-func NewInviteCodeService(db *gorm.DB) *InviteCodeService {
+func NewInviteCodeService(db *gorm.DB, referralService *ReferralService) *InviteCodeService {
 	return &InviteCodeService{
-		db: db,
+		db:             db,
+		referralService: referralService,
 	}
 }
 
 // CreateInviteCodeRequest represents the request to create an invite code
 type CreateInviteCodeRequest struct {
-	MaxUses     int    `json:"max_uses" binding:"min=1,max=100" example:"10"`                       // Maximum number of times the code can be used
-	Description string `json:"description" binding:"max=255" example:"Friend invitation code"`     // Description of the invite code
+	MaxUses              int     `json:"max_uses" binding:"min=1,max=100" example:"10"`                       // Maximum number of times the code can be used
+	Description          string  `json:"description" binding:"max=255" example:"Friend invitation code"`     // Description of the invite code
+	ReferralCampaignID   *uint   `json:"referral_campaign_id,omitempty" example:"1"`                          // Associated referral campaign ID
+	ReferralRewardAmount float64 `json:"referral_reward_amount,omitempty" example:"5.00"`                     // Referral reward amount
 }
 
 // GenerateInviteCode generates a random invite code
@@ -60,12 +64,15 @@ func (s *InviteCodeService) CreateInviteCode(ctx context.Context, createdByID ui
 
 	// Create invite code
 	inviteCode := &model.InviteCode{
-		Code:        code,
-		CreatedByID: createdByID,
-		Status:      model.InviteCodeStatusActive,
-		MaxUses:     req.MaxUses,
-		UsedCount:   0,
-		Description: req.Description,
+		Code:                   code,
+		CreatedByID:            createdByID,
+		Status:                 model.InviteCodeStatusActive,
+		MaxUses:                req.MaxUses,
+		UsedCount:              0,
+		Description:            req.Description,
+		ReferralCampaignID:     req.ReferralCampaignID,
+		ReferralRewardAmount:   req.ReferralRewardAmount,
+		ReferralRewardCurrency: "USD",
 	}
 
 	if err := s.db.WithContext(ctx).Create(inviteCode).Error; err != nil {
@@ -227,6 +234,23 @@ func (s *InviteCodeService) UseInviteCode(ctx context.Context, code string, user
 			logger.Error2("error", err),
 		)
 		return nil, fmt.Errorf("failed to create usage record: %w", err)
+	}
+
+	// Create referral record if referral service is available
+	if s.referralService != nil {
+		attributionData := map[string]interface{}{
+			"ip_address": ipAddress,
+			"user_agent": userAgent,
+		}
+		
+		if _, err := s.referralService.CreateReferralFromInviteCode(ctx, inviteCode, userID, attributionData); err != nil {
+			logger.Error("Failed to create referral from invite code",
+				logger.Uint("invite_code_id", inviteCode.ID),
+				logger.Uint("user_id", userID),
+				logger.Error2("error", err),
+			)
+			// Don't fail the transaction for referral creation failure
+		}
 	}
 
 	// Commit transaction

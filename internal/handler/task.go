@@ -22,7 +22,7 @@ func NewTaskHandler(taskQueue *queue.TaskQueue) *TaskHandler {
 
 // @Summary Create a new task
 // @Description Create and enqueue a new task
-// @Tags tasks
+// @Tags Task-System
 // @Accept json
 // @Produce json
 // @Security BearerAuth
@@ -63,7 +63,7 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 
 // @Summary Get queue status
 // @Description Get the current status of the task queue
-// @Tags tasks
+// @Tags Task-System
 // @Produce json
 // @Security BearerAuth
 // @Success 200 {object} response.StandardResponse
@@ -71,20 +71,11 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /tasks/status [get]
 func (h *TaskHandler) GetQueueStatus(c *gin.Context) {
-	length, err := h.taskQueue.GetQueueLength(c.Request.Context(), "default")
+	info, err := h.taskQueue.GetQueueInfo(c.Request.Context(), "default")
 	if err != nil {
-		response.InternalServerError(c, "Failed to get queue length")
+		response.InternalServerError(c, "Failed to get queue info")
 		return
 	}
 
-	deadLength, err := h.taskQueue.GetQueueLength(c.Request.Context(), "default_dead")
-	if err != nil {
-		response.InternalServerError(c, "Failed to get dead queue length")
-		return
-	}
-
-	response.Success(c, gin.H{
-		"queue_length":      length,
-		"dead_queue_length": deadLength,
-	})
+	response.Success(c, info)
 }

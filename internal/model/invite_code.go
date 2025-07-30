@@ -15,6 +15,11 @@ type InviteCode struct {
 	Code        string `json:"code" gorm:"uniqueIndex;size:32;not null"`        // 邀请码
 	CreatedByID uint   `json:"created_by_id" gorm:"not null;index"`             // 创建者ID
 	
+	// Referral Integration Fields
+	ReferralCampaignID    *uint   `json:"referral_campaign_id,omitempty" gorm:"index"`                                          // 关联的推广活动ID
+	ReferralRewardAmount  float64 `json:"referral_reward_amount" gorm:"type:decimal(10,2);not null;default:0.00"`              // 推广奖励金额
+	ReferralRewardCurrency string `json:"referral_reward_currency" gorm:"size:10;not null;default:'USD'"`                     // 推广奖励货币
+	
 	// Status and Limits
 	Status      string `json:"status" gorm:"size:20;not null;default:'active';index"` // active, used, disabled
 	MaxUses     int    `json:"max_uses" gorm:"not null;default:10"`                    // 最大使用次数
@@ -27,6 +32,7 @@ type InviteCode struct {
 	// Relationships (no foreign key constraints for performance)
 	CreatedBy *User                `json:"created_by,omitempty" gorm:"-"`
 	UsageRecords []*InviteCodeUsage `json:"usage_records,omitempty" gorm:"-"`
+	ReferralCampaign *ReferralCampaign `json:"referral_campaign,omitempty" gorm:"-"`
 
 	// Timestamp Fields
 	CreatedAt time.Time      `json:"created_at" gorm:"not null;index"`
@@ -88,9 +94,15 @@ type InviteCodeResponse struct {
 	CreatedAt   time.Time `json:"created_at" example:"2024-01-01T00:00:00Z"`            // Creation time
 	UpdatedAt   time.Time `json:"updated_at" example:"2024-01-01T00:00:00Z"`            // Last update time
 	
+	// Referral Integration Fields
+	ReferralCampaignID    *uint   `json:"referral_campaign_id,omitempty" example:"1"`      // Associated referral campaign ID
+	ReferralRewardAmount  float64 `json:"referral_reward_amount" example:"5.00"`          // Referral reward amount
+	ReferralRewardCurrency string `json:"referral_reward_currency" example:"USD"`         // Referral reward currency
+	
 	// Optional related data
 	CreatedBy    *UserResponse               `json:"created_by,omitempty"`    // Creator user info
 	UsageRecords []*InviteCodeUsageResponse  `json:"usage_records,omitempty"` // Usage records
+	ReferralCampaign *ReferralCampaignResponse `json:"referral_campaign,omitempty"` // Associated referral campaign
 }
 
 // ToResponse converts InviteCode to InviteCodeResponse
@@ -105,6 +117,9 @@ func (ic *InviteCode) ToResponse() *InviteCodeResponse {
 		Description: ic.Description,
 		CreatedAt:   ic.CreatedAt,
 		UpdatedAt:   ic.UpdatedAt,
+		ReferralCampaignID:    ic.ReferralCampaignID,
+		ReferralRewardAmount:  ic.ReferralRewardAmount,
+		ReferralRewardCurrency: ic.ReferralRewardCurrency,
 	}
 	
 	// Include related data if loaded
@@ -115,6 +130,9 @@ func (ic *InviteCode) ToResponse() *InviteCodeResponse {
 		for _, usage := range ic.UsageRecords {
 			resp.UsageRecords = append(resp.UsageRecords, usage.ToResponse())
 		}
+	}
+	if ic.ReferralCampaign != nil {
+		resp.ReferralCampaign = ic.ReferralCampaign.ToResponse()
 	}
 	
 	return resp

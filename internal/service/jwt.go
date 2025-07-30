@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -11,7 +12,8 @@ import (
 )
 
 type JWTService struct {
-	cfg *config.Config
+	cfg               *config.Config
+	blacklistService  *JWTBlacklistService
 }
 
 type Claims struct {
@@ -19,6 +21,8 @@ type Claims struct {
 	Email    string `json:"email"`
 	Username string `json:"username"`
 	Provider string `json:"provider"`
+	Role     string `json:"role"`
+	Status   string `json:"status"`
 	jwt.RegisteredClaims
 }
 
@@ -30,9 +34,10 @@ type TokenResponse struct {
 	RefreshToken string    `json:"refresh_token,omitempty"`
 }
 
-func NewJWTService(cfg *config.Config) *JWTService {
+func NewJWTService(cfg *config.Config, blacklistService *JWTBlacklistService) *JWTService {
 	return &JWTService{
-		cfg: cfg,
+		cfg:              cfg,
+		blacklistService: blacklistService,
 	}
 }
 
@@ -45,6 +50,8 @@ func (j *JWTService) GenerateToken(user *model.User) (*TokenResponse, error) {
 		Email:    user.Email,
 		Username: user.Username,
 		Provider: user.Provider,
+		Role:     user.Role,
+		Status:   user.Status,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -82,6 +89,27 @@ func (j *JWTService) ValidateToken(tokenString string) (*Claims, error) {
 	}
 
 	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
+		// Check if token is blacklisted
+		if j.blacklistService != nil {
+			// Check specific token blacklist
+			isBlacklisted, err := j.blacklistService.IsTokenBlacklisted(context.Background(), tokenString)
+			if err != nil {
+				return nil, fmt.Errorf("failed to check token blacklist: %w", err)
+			}
+			if isBlacklisted {
+				return nil, fmt.Errorf("token has been revoked")
+			}
+
+			// Check user-wide blacklist
+			isUserBlacklisted, err := j.blacklistService.IsUserTokensBlacklisted(context.Background(), claims.UserID, claims.IssuedAt.Time)
+			if err != nil {
+				return nil, fmt.Errorf("failed to check user token blacklist: %w", err)
+			}
+			if isUserBlacklisted {
+				return nil, fmt.Errorf("all user tokens have been revoked")
+			}
+		}
+
 		return claims, nil
 	}
 
@@ -117,4 +145,40 @@ func (j *JWTService) RefreshToken(tokenString string) (*TokenResponse, error) {
 		ExpiresIn:   j.cfg.JWT.ExpireHours * 3600,
 		ExpiresAt:   newExpirationTime,
 	}, nil
+}
+
+// RevokeToken adds a token to the blacklist
+func (j *JWTService) RevokeToken(tokenString string, userID *uint, reason string) error {
+	if j.blacklistService == nil {
+		return fmt.Errorf("blacklist service not available")
+	}
+
+	// Parse token to get expiration time
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(j.cfg.JWT.Secret), nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to parse token for revocation: %w", err)
+	}
+
+	claims, ok := token.Claims.(*Claims)
+	if !ok {
+		return fmt.Errorf("invalid token claims")
+	}
+
+	// Add to blacklist until token expires
+	return j.blacklistService.BlacklistToken(context.Background(), tokenString, userID, reason, claims.ExpiresAt.Time)
+}
+
+// RevokeAllUserTokens revokes all tokens for a specific user
+func (j *JWTService) RevokeAllUserTokens(userID uint, reason string) error {
+	if j.blacklistService == nil {
+		return fmt.Errorf("blacklist service not available")
+	}
+
+	// Set expiration far in the future to cover all possible tokens
+	expiresAt := time.Now().Add(time.Duration(j.cfg.JWT.ExpireHours) * time.Hour)
+	
+	return j.blacklistService.BlacklistAllUserTokens(context.Background(), userID, reason, expiresAt)
 }

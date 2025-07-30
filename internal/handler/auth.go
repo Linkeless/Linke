@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
 	"linke/config"
 	"linke/internal/logger"
@@ -22,6 +24,7 @@ type AuthHandler struct {
 	oauthService *service.OAuthService
 	authService  *service.AuthService
 	jwtService   *service.JWTService
+	stateStore   *service.OAuthStateStore
 }
 
 func NewAuthHandler(cfg *config.Config, db *repository.Database, authService *service.AuthService, jwtService *service.JWTService) *AuthHandler {
@@ -31,6 +34,7 @@ func NewAuthHandler(cfg *config.Config, db *repository.Database, authService *se
 		oauthService: service.NewOAuthService(cfg),
 		authService:  authService,
 		jwtService:   jwtService,
+		stateStore:   service.NewOAuthStateStore(),
 	}
 }
 
@@ -103,14 +107,29 @@ func (h *AuthHandler) Callback(c *gin.Context) {
 		return
 	}
 
+	logger.Debug("Getting user info from provider", 
+		logger.String("provider", provider))
+	
 	userInfo, err := h.oauthService.GetUserInfo(c.Request.Context(), provider, token)
 	if err != nil {
+		logger.Error("Failed to get user info", 
+			logger.String("provider", provider), 
+			logger.Error2("error", err))
 		response.InternalServerError(c, "Failed to get user info: " + err.Error())
 		return
 	}
 
+	logger.Debug("Creating or updating user", 
+		logger.String("provider", provider), 
+		logger.String("user_id", userInfo.ID),
+		logger.String("email", userInfo.Email))
+	
 	user, err := h.createOrUpdateUser(userInfo)
 	if err != nil {
+		logger.Error("Failed to create or update user", 
+			logger.String("provider", provider), 
+			logger.String("user_id", userInfo.ID),
+			logger.Error2("error", err))
 		response.InternalServerError(c, "Failed to create or update user: " + err.Error())
 		return
 	}
@@ -297,7 +316,8 @@ func (h *AuthHandler) createOrUpdateUser(userInfo *service.UserInfo) (*model.Use
 	if !userExists {
 		// Create new user
 		providerDataBytes, _ := json.Marshal(userInfo)
-		user.ProviderData = string(providerDataBytes)
+		providerDataStr := string(providerDataBytes)
+		user.ProviderData = &providerDataStr
 		
 		if err := h.db.DB.Create(&user).Error; err != nil {
 			return nil, err
@@ -317,7 +337,8 @@ func (h *AuthHandler) createOrUpdateUser(userInfo *service.UserInfo) (*model.Use
 			
 			// Update provider data to keep it current
 			providerDataBytes, _ := json.Marshal(userInfo)
-			user.ProviderData = string(providerDataBytes)
+			providerDataStr := string(providerDataBytes)
+			user.ProviderData = &providerDataStr
 			
 			if err := h.db.DB.Save(&user).Error; err != nil {
 				return nil, err
@@ -404,10 +425,15 @@ func (h *AuthHandler) LoginLocal(c *gin.Context) {
 		return
 	}
 
-	authResponse, err := h.authService.Login(c.Request.Context(), &req)
+	// Add client context information
+	ctx := context.WithValue(c.Request.Context(), "client_ip", c.ClientIP())
+	ctx = context.WithValue(ctx, "user_agent", c.GetHeader("User-Agent"))
+
+	authResponse, err := h.authService.Login(ctx, &req)
 	if err != nil {
 		logger.Warn("Login failed",
 			logger.String("email", req.Email),
+			logger.String("ip", c.ClientIP()),
 			logger.Error2("error", err),
 		)
 		response.Unauthorized(c, err.Error())
@@ -419,7 +445,7 @@ func (h *AuthHandler) LoginLocal(c *gin.Context) {
 
 // Logout godoc
 // @Summary User logout
-// @Description Logout user (client-side token invalidation)
+// @Description Logout user (server-side token revocation)
 // @Tags auth
 // @Accept json
 // @Produce json
@@ -427,19 +453,47 @@ func (h *AuthHandler) LoginLocal(c *gin.Context) {
 // @Success 200 {object} response.MessageOnlyResponse
 // @Router /auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
-	// For JWT tokens, logout is typically handled client-side by removing the token
-	// Server-side logout would require a token blacklist, which can be implemented later
 	user, exists := c.Get(middleware.AuthContextKey)
-	if exists {
-		if u, ok := user.(*model.User); ok {
-			logger.Info("User logged out",
-				logger.Uint("user_id", u.ID),
-				logger.String("email", u.Email),
-			)
-		}
+	if !exists {
+		response.Unauthorized(c, "User not authenticated")
+		return
 	}
 
-	response.SuccessWithMessage(c, "Logged out successfully. Please remove the token from client storage.", nil)
+	u, ok := user.(*model.User)
+	if !ok {
+		response.InternalServerError(c, "Invalid user context")
+		return
+	}
+
+	// Get the token from Authorization header
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		response.BadRequest(c, "Authorization header is required")
+		return
+	}
+
+	tokenParts := strings.SplitN(authHeader, " ", 2)
+	if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
+		response.BadRequest(c, "Invalid authorization header format")
+		return
+	}
+
+	token := tokenParts[1]
+
+	// Add client context information
+	ctx := context.WithValue(c.Request.Context(), "client_ip", c.ClientIP())
+	ctx = context.WithValue(ctx, "user_agent", c.GetHeader("User-Agent"))
+
+	// Perform secure logout
+	if err := h.authService.Logout(ctx, token, u.ID); err != nil {
+		logger.Error("Logout failed",
+			logger.Uint("user_id", u.ID),
+			logger.Error2("error", err))
+		response.InternalServerError(c, "Failed to logout securely")
+		return
+	}
+
+	response.SuccessWithMessage(c, "Logged out successfully. Token has been revoked.", nil)
 }
 
 // RefreshToken godoc
@@ -550,4 +604,184 @@ func (h *AuthHandler) GetProfile(c *gin.Context) {
 	}
 
 	response.Success(c, u.ToResponse())
+}
+
+// GetAuthURL godoc
+// @Summary Get OAuth authorization URL
+// @Description Generate OAuth authorization URL for frontend applications
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body service.AuthorizeURLRequest true "Authorization URL request"
+// @Success 200 {object} response.StandardResponse{data=service.AuthorizeURLResponse}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
+// @Router /auth/url [post]
+func (h *AuthHandler) GetAuthURL(c *gin.Context) {
+	var req service.AuthorizeURLRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request format", err.Error())
+		return
+	}
+
+	// Validate provider
+	if req.Provider != "google" && req.Provider != "github" && req.Provider != "telegram" {
+		response.BadRequest(c, "Unsupported OAuth provider", "Supported providers: google, github, telegram")
+		return
+	}
+
+	// Telegram uses different authentication flow, handle separately
+	if req.Provider == "telegram" {
+		url := h.oauthService.GetTelegramLoginURL()
+		if url == "" {
+			response.BadRequest(c, "Telegram bot token not configured")
+			return
+		}
+		
+		telegramResp := &service.AuthorizeURLResponse{
+			AuthURL: url,
+			State:   "telegram-auth",
+		}
+		response.OK(c, "Authorization URL generated successfully", telegramResp)
+		return
+	}
+
+	// Generate authorization URL
+	state := req.State
+	if state == "" {
+		state = h.oauthService.GenerateState()
+	}
+	
+	url, err := h.oauthService.GetAuthURL(req.Provider, state)
+	if err != nil {
+		response.InternalServerError(c, "Failed to generate authorization URL", err.Error())
+		return
+	}
+
+	// Store state information for later validation
+	stateInfo := &service.OAuthStateInfo{
+		Provider:    req.Provider,
+		RedirectURI: req.RedirectURI,
+		CreatedAt:   time.Now(),
+		ExpiresAt:   time.Now().Add(10 * time.Minute),
+	}
+	h.stateStore.StoreState(state, stateInfo)
+
+	logger.Info("Authorization URL generated",
+		logger.String("provider", req.Provider),
+		logger.String("state", state))
+
+	response.OK(c, "Authorization URL generated successfully", &service.AuthorizeURLResponse{
+		AuthURL: url,
+		State:   state,
+	})
+}
+
+// ExchangeToken godoc
+// @Summary Exchange authorization code for tokens
+// @Description Exchange OAuth authorization code for JWT tokens
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body TokenExchangeRequest true "Token exchange request"
+// @Success 200 {object} response.StandardResponse{data=service.AuthResponse}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 401 {object} response.UnauthorizedResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
+// @Router /auth/token [post]
+func (h *AuthHandler) ExchangeToken(c *gin.Context) {
+	var req TokenExchangeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request format", err.Error())
+		return
+	}
+
+	// Validate provider
+	if req.Provider != "google" && req.Provider != "github" {
+		response.BadRequest(c, "Unsupported OAuth provider for token exchange", "Supported providers: google, github")
+		return
+	}
+
+	// Validate state parameter if provided
+	if req.State != "" {
+		stateInfo, err := h.stateStore.GetState(req.State)
+		if err != nil {
+			logger.Error("Invalid state parameter",
+				logger.String("provider", req.Provider),
+				logger.String("state", req.State),
+				logger.Error2("error", err))
+			response.Unauthorized(c, "Invalid or expired state parameter")
+			return
+		}
+		
+		// Verify provider matches
+		if stateInfo.Provider != req.Provider {
+			logger.Error("Provider mismatch in state",
+				logger.String("expected_provider", stateInfo.Provider),
+				logger.String("actual_provider", req.Provider))
+			response.Unauthorized(c, "Provider mismatch")
+			return
+		}
+	}
+
+	// Exchange authorization code for token (simple OAuth flow)
+	token, err := h.oauthService.ExchangeCodeForToken(c.Request.Context(), req.Provider, req.Code)
+	if err != nil {
+		logger.Error("Failed to exchange code for token",
+			logger.String("provider", req.Provider),
+			logger.String("code", req.Code[:10]+"..."),
+			logger.Error2("error", err))
+		response.Unauthorized(c, "Failed to exchange authorization code")
+		return
+	}
+
+	// Get user info from OAuth provider
+	userInfo, err := h.oauthService.GetUserInfo(c.Request.Context(), req.Provider, token)
+	if err != nil {
+		logger.Error("Failed to get user info",
+			logger.String("provider", req.Provider),
+			logger.Error2("error", err))
+		response.InternalServerError(c, "Failed to get user information", err.Error())
+		return
+	}
+
+	// Create or update user
+	user, err := h.createOrUpdateUser(userInfo)
+	if err != nil {
+		logger.Error("Failed to create or update user",
+			logger.String("provider", req.Provider),
+			logger.String("provider_user_id", userInfo.ID),
+			logger.Error2("error", err))
+		response.InternalServerError(c, "Failed to process user information", err.Error())
+		return
+	}
+
+	// Generate JWT token
+	jwtToken, err := h.jwtService.GenerateToken(user)
+	if err != nil {
+		logger.Error("Failed to generate JWT token",
+			logger.Uint("user_id", user.ID),
+			logger.Error2("error", err))
+		response.InternalServerError(c, "Failed to generate authentication tokens", err.Error())
+		return
+	}
+
+	// Prepare response
+	authResponse := &service.AuthResponse{
+		User:  user.ToResponse(),
+		Token: jwtToken,
+	}
+
+	logger.Info("OAuth token exchange successful",
+		logger.String("provider", req.Provider),
+		logger.Uint("user_id", user.ID))
+
+	response.OK(c, "Authentication successful", authResponse)
+}
+
+// TokenExchangeRequest represents token exchange request
+type TokenExchangeRequest struct {
+	Provider string `json:"provider" binding:"required"`
+	Code     string `json:"code" binding:"required"`
+	State    string `json:"state,omitempty"`
 }

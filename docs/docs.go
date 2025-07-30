@@ -15,14 +15,14 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/admin/invite-codes": {
+        "/admin/coupons": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get list of all invite codes with pagination (admin only)",
+                "description": "Get a paginated list of all coupons with filtering options",
                 "consumes": [
                     "application/json"
                 ],
@@ -30,9 +30,599 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "invite-codes"
+                    "Admin - Coupons"
                 ],
-                "summary": "[Admin] List all invite codes",
+                "summary": "[Admin] List all coupons",
+                "parameters": [
+                    {
+                        "enum": [
+                            "active",
+                            "inactive",
+                            "expired"
+                        ],
+                        "type": "string",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "percentage",
+                            "fixed_amount"
+                        ],
+                        "type": "string",
+                        "description": "Filter by type",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by public visibility",
+                        "name": "is_public",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "Number of items per page (1-100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "description": "Number of items to skip",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.PaginatedResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.CouponResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new coupon with specified parameters",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin - Coupons"
+                ],
+                "summary": "[Admin] Create coupon",
+                "parameters": [
+                    {
+                        "description": "Coupon creation data",
+                        "name": "create_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.CreateCouponRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.CouponResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/coupons/code/{code}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get coupon information by coupon code",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin - Coupons"
+                ],
+                "summary": "[Admin] Get coupon by code",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Coupon Code",
+                        "name": "code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.CouponResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/coupons/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get detailed information about a specific coupon",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin - Coupons"
+                ],
+                "summary": "[Admin] Get coupon details",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Coupon ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.CouponResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update an existing coupon's information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin - Coupons"
+                ],
+                "summary": "[Admin] Update coupon",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Coupon ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Coupon update data",
+                        "name": "update_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.UpdateCouponRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.CouponResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Soft delete a coupon (it will no longer be usable)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin - Coupons"
+                ],
+                "summary": "[Admin] Delete coupon",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Coupon ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/coupons/{id}/usages": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a paginated list of coupon usage records",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin - Coupons"
+                ],
+                "summary": "[Admin] Get coupon usage history",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Coupon ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "Number of items per page (1-100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "description": "Number of items to skip",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.PaginatedResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.CouponUsageResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/invite-codes": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get paginated list of all invitation codes (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Invitation-Management"
+                ],
+                "summary": "List all invitation codes",
                 "parameters": [
                     {
                         "type": "integer",
@@ -84,7 +674,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get statistics about invite codes (admin only)",
+                "description": "Get invitation code statistics (Admin only)",
                 "consumes": [
                     "application/json"
                 ],
@@ -92,9 +682,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "invite-codes"
+                    "Admin-Invitation-Management"
                 ],
-                "summary": "[Admin] Get invite code statistics",
+                "summary": "Get invitation code statistics",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -136,14 +726,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/users": {
+        "/admin/invoices": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get list of all users with pagination (admin only)",
+                "description": "Get all invoices with filtering (Admin only)",
                 "consumes": [
                     "application/json"
                 ],
@@ -151,9 +741,5308 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admin-users"
+                    "Admin-Invoice-Management"
                 ],
-                "summary": "[Admin] List all users",
+                "summary": "[Admin] List all invoices",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Filter by user ID",
+                        "name": "user_id",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "draft",
+                            "sent",
+                            "paid",
+                            "overdue",
+                            "cancelled",
+                            "voided"
+                        ],
+                        "type": "string",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "standard",
+                            "proforma",
+                            "credit_note"
+                        ],
+                        "type": "string",
+                        "description": "Filter by invoice type",
+                        "name": "invoice_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by currency",
+                        "name": "currency",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start date filter (YYYY-MM-DD)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date filter (YYYY-MM-DD)",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter overdue invoices",
+                        "name": "overdue",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search in invoice number, billing name, email",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "created_at",
+                            "issued_at",
+                            "due_at",
+                            "paid_at",
+                            "total_amount",
+                            "status"
+                        ],
+                        "type": "string",
+                        "default": "created_at",
+                        "description": "Sort by field",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "default": "desc",
+                        "description": "Sort order",
+                        "name": "sort_order",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "example": 10,
+                        "description": "Limit results",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "example": 0,
+                        "description": "Offset results",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.PaginatedResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.InvoiceResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new invoice (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Invoice-Management"
+                ],
+                "summary": "[Admin] Create invoice",
+                "parameters": [
+                    {
+                        "description": "Invoice data",
+                        "name": "invoice",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.CreateInvoiceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.InvoiceResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/invoices/from-order": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create an invoice from an existing subscription order (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Invoice-Management"
+                ],
+                "summary": "[Admin] Create invoice from order",
+                "parameters": [
+                    {
+                        "description": "Invoice from order data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/admin.CreateInvoiceFromOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.InvoiceResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/invoices/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get an invoice by ID with full details (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Invoice-Management"
+                ],
+                "summary": "[Admin] Get invoice by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Invoice ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.InvoiceResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update an invoice (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Invoice-Management"
+                ],
+                "summary": "[Admin] Update invoice",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Invoice ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated invoice data",
+                        "name": "invoice",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.UpdateInvoiceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.InvoiceResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Soft delete an invoice (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Invoice-Management"
+                ],
+                "summary": "[Admin] Delete invoice",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Invoice ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/invoices/{id}/mark-paid": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mark an invoice as paid (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Invoice-Management"
+                ],
+                "summary": "[Admin] Mark invoice as paid",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Invoice ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Payment data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/admin.MarkInvoiceAsPaidRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/invoices/{id}/send": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Send an invoice to the customer (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Invoice-Management"
+                ],
+                "summary": "[Admin] Send invoice",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Invoice ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/invoices/{id}/void": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Void an invoice (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Invoice-Management"
+                ],
+                "summary": "[Admin] Void invoice",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Invoice ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Void reason",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/admin.VoidInvoiceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/orders": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all subscription orders with advanced filtering and search (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Order-Management"
+                ],
+                "summary": "[Admin] List all subscription orders",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Filter by user ID",
+                        "name": "user_id",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "pending",
+                            "paid",
+                            "failed",
+                            "cancelled",
+                            "refunded"
+                        ],
+                        "type": "string",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "new",
+                            "renewal",
+                            "upgrade",
+                            "downgrade"
+                        ],
+                        "type": "string",
+                        "description": "Filter by order type",
+                        "name": "order_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by payment method",
+                        "name": "payment_method",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by payment gateway",
+                        "name": "payment_gateway",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Minimum amount filter",
+                        "name": "min_amount",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Maximum amount filter",
+                        "name": "max_amount",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start date filter (YYYY-MM-DD)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date filter (YYYY-MM-DD)",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by coupon code",
+                        "name": "coupon_code",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search in order number, transaction ID, user email",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "created_at",
+                            "paid_at",
+                            "amount",
+                            "total_amount"
+                        ],
+                        "type": "string",
+                        "default": "created_at",
+                        "description": "Sort by field",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "default": "desc",
+                        "description": "Sort order",
+                        "name": "sort_order",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "example": 10,
+                        "description": "Limit results",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "example": 0,
+                        "description": "Offset results",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.PaginatedResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.SubscriptionOrderResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/orders/bulk": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Perform bulk operations on multiple orders (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Order-Management"
+                ],
+                "summary": "[Admin] Bulk update orders",
+                "parameters": [
+                    {
+                        "description": "Bulk update data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/admin.BulkUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/orders/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get comprehensive order statistics and analytics (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Order-Management"
+                ],
+                "summary": "[Admin] Get order statistics",
+                "parameters": [
+                    {
+                        "enum": [
+                            "today",
+                            "week",
+                            "month",
+                            "quarter",
+                            "year",
+                            "all"
+                        ],
+                        "type": "string",
+                        "default": "month",
+                        "description": "Statistics period",
+                        "name": "period",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Custom start date (YYYY-MM-DD)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Custom end date (YYYY-MM-DD)",
+                        "name": "end_date",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.GetOrderStatsResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/orders/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a subscription order by ID with full details (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Order-Management"
+                ],
+                "summary": "[Admin] Get subscription order by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.SubscriptionOrderResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/orders/{id}/refund": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Process a full or partial refund for an order (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Order-Management"
+                ],
+                "summary": "[Admin] Process order refund",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Refund data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/admin.ProcessRefundRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.SubscriptionOrderResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/orders/{id}/status": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Manually update order status with notes (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Order-Management"
+                ],
+                "summary": "[Admin] Update order status",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Status update data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/admin.UpdateOrderStatusRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.SubscriptionOrderResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/payments/configs": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get payment configurations with filtering and pagination",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Payment-Management"
+                ],
+                "summary": "[Admin] Get payment configs",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "\"epay\"",
+                        "description": "Filter by gateway",
+                        "name": "gateway",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "\"alipay\"",
+                        "description": "Filter by method",
+                        "name": "method",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "example": true,
+                        "description": "Filter by enabled status",
+                        "name": "is_enabled",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "\"production\"",
+                        "description": "Filter by environment",
+                        "name": "environment",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "example": 10,
+                        "description": "Limit results",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "example": 0,
+                        "description": "Offset results",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.PaginatedResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.PaymentConfigResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new payment configuration",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Payment-Management"
+                ],
+                "summary": "[Admin] Create payment config",
+                "parameters": [
+                    {
+                        "description": "Payment config data",
+                        "name": "config",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.CreatePaymentConfigRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.PaymentConfigResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/payments/configs/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a payment configuration",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Payment-Management"
+                ],
+                "summary": "[Admin] Update payment config",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Payment config ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated payment config data",
+                        "name": "config",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.UpdatePaymentConfigRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.PaymentConfigResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Soft delete a payment configuration",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Payment-Management"
+                ],
+                "summary": "[Admin] Delete payment config",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Payment config ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/referral-campaigns": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get paginated list of referral campaigns (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Referral-Management"
+                ],
+                "summary": "[Admin] List referral campaigns",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by campaign type",
+                        "name": "campaign_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by public visibility",
+                        "name": "is_public",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardListResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.ReferralCampaignResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new referral campaign (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Referral-Management"
+                ],
+                "summary": "[Admin] Create referral campaign",
+                "parameters": [
+                    {
+                        "description": "Campaign data",
+                        "name": "campaign",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.CreateReferralCampaignRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.ReferralCampaignResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/referral-campaigns/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get referral campaign details by ID (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Referral-Management"
+                ],
+                "summary": "[Admin] Get referral campaign by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Campaign ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.ReferralCampaignResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update referral campaign by ID (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Referral-Management"
+                ],
+                "summary": "[Admin] Update referral campaign",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Campaign ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated campaign data",
+                        "name": "campaign",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.UpdateReferralCampaignRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.ReferralCampaignResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete referral campaign by ID (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Referral-Management"
+                ],
+                "summary": "[Admin] Delete referral campaign",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Campaign ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.MessageOnlyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/referral-campaigns/{id}/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get statistics for a referral campaign (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Referral-Management"
+                ],
+                "summary": "[Admin] Get referral campaign statistics",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Campaign ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/referrals": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get paginated list of all referrals (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Referral-Management"
+                ],
+                "summary": "[Admin] List all referrals",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by referral source",
+                        "name": "source",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by campaign ID",
+                        "name": "campaign_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardListResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.ReferralResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/referrals/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get referral details by ID (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Referral-Management"
+                ],
+                "summary": "[Admin] Get referral by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Referral ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.ReferralResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/server-groups": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get paginated list of server groups",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-ServerGroup-Management"
+                ],
+                "summary": "[Admin] List server groups",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardListResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.ServerGroupResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new server group",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-ServerGroup-Management"
+                ],
+                "summary": "[Admin] Create server group",
+                "parameters": [
+                    {
+                        "description": "Server group data",
+                        "name": "group",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.CreateServerGroupRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.ServerGroupResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/server-groups/all": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all server groups for dropdown/selection purposes",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-ServerGroup-Management"
+                ],
+                "summary": "[Admin] Get all server groups",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.ServerGroupResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/server-groups/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get server group details by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-ServerGroup-Management"
+                ],
+                "summary": "[Admin] Get server group by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Server group ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.ServerGroupResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update server group by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-ServerGroup-Management"
+                ],
+                "summary": "[Admin] Update server group",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Server group ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated server group data",
+                        "name": "group",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.UpdateServerGroupRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.ServerGroupResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete server group by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-ServerGroup-Management"
+                ],
+                "summary": "[Admin] Delete server group",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Server group ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.MessageOnlyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/shadowsocks-servers": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get shadowsocks servers with optional filters (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-ShadowsocksServers"
+                ],
+                "summary": "Get Shadowsocks Servers",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Group ID filter",
+                        "name": "group_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Status filter",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Show filter",
+                        "name": "is_show",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Online filter",
+                        "name": "is_online",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.PaginatedResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new shadowsocks server (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-ShadowsocksServers"
+                ],
+                "summary": "Create Shadowsocks Server",
+                "parameters": [
+                    {
+                        "description": "Create shadowsocks server request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.CreateShadowsocksServerRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.ShadowsocksServerResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/shadowsocks-servers/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a shadowsocks server by ID (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-ShadowsocksServers"
+                ],
+                "summary": "Get Shadowsocks Server by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Shadowsocks Server ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.ShadowsocksServerResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a shadowsocks server (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-ShadowsocksServers"
+                ],
+                "summary": "Update Shadowsocks Server",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Shadowsocks Server ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update shadowsocks server request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.UpdateShadowsocksServerRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.ShadowsocksServerResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a shadowsocks server (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-ShadowsocksServers"
+                ],
+                "summary": "Delete Shadowsocks Server",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Shadowsocks Server ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Partially update a shadowsocks server using PATCH method (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-ShadowsocksServers"
+                ],
+                "summary": "Partially Update Shadowsocks Server",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Shadowsocks Server ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Partial shadowsocks server update data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.ShadowsocksServerResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/subscriptions/plans": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all subscription plans with full details (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Subscription-Management"
+                ],
+                "summary": "[Admin] List all subscription plans",
+                "parameters": [
+                    {
+                        "enum": [
+                            "active",
+                            "inactive",
+                            "archived"
+                        ],
+                        "type": "string",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "USD",
+                        "description": "Filter by currency",
+                        "name": "currency",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "example": 10,
+                        "description": "Limit results",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "example": 0,
+                        "description": "Offset results",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.PaginatedResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.SubscriptionPlanResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new subscription plan (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Subscription-Management"
+                ],
+                "summary": "[Admin] Create subscription plan",
+                "parameters": [
+                    {
+                        "description": "Subscription plan data",
+                        "name": "plan",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.CreateSubscriptionPlanRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.SubscriptionPlanResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/subscriptions/plans/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a subscription plan by ID with full details (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Subscription-Management"
+                ],
+                "summary": "[Admin] Get subscription plan by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription plan ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.SubscriptionPlanResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a subscription plan (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Subscription-Management"
+                ],
+                "summary": "[Admin] Update subscription plan",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription plan ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated subscription plan data",
+                        "name": "plan",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.UpdateSubscriptionPlanRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.SubscriptionPlanResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Soft delete a subscription plan (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Subscription-Management"
+                ],
+                "summary": "[Admin] Delete subscription plan",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription plan ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Partially update a subscription plan with only provided fields (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Subscription-Management"
+                ],
+                "summary": "[Admin] Partially update subscription plan",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription plan ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Subscription plan fields to update",
+                        "name": "plan",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.UpdateSubscriptionPlanRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.SubscriptionPlanResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/subscriptions/users": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all user subscriptions with full details including user and subscription plan information (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Subscription-Management"
+                ],
+                "summary": "[Admin] List all user subscriptions",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Filter by user ID",
+                        "name": "user_id",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "active",
+                            "inactive",
+                            "cancelled",
+                            "expired",
+                            "trialing",
+                            "past_due"
+                        ],
+                        "type": "string",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by subscription plan ID",
+                        "name": "plan_id",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "example": 10,
+                        "description": "Limit results",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "example": 0,
+                        "description": "Offset results",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.PaginatedResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.UserSubscriptionResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new user subscription directly (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Subscription-Management"
+                ],
+                "summary": "[Admin] Create user subscription",
+                "parameters": [
+                    {
+                        "description": "User subscription data",
+                        "name": "subscription",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/admin.CreateUserSubscriptionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.UserSubscriptionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/subscriptions/users/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a user subscription by ID with full details (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Subscription-Management"
+                ],
+                "summary": "[Admin] Get user subscription by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User subscription ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.UserSubscriptionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a user subscription (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Subscription-Management"
+                ],
+                "summary": "[Admin] Update user subscription",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User subscription ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated subscription data",
+                        "name": "subscription",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.UpdateSubscriptionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.UserSubscriptionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Soft delete a user subscription (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Subscription-Management"
+                ],
+                "summary": "[Admin] Delete user subscription",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User subscription ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Partially update a user subscription with only provided fields (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Subscription-Management"
+                ],
+                "summary": "[Admin] Partially update user subscription",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User subscription ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Subscription fields to update",
+                        "name": "subscription",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.UpdateSubscriptionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.UserSubscriptionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/subscriptions/users/{id}/renew": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Manually renew a user subscription (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Subscription-Management"
+                ],
+                "summary": "[Admin] Renew user subscription",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User subscription ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.UserSubscriptionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/tickets": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all tickets in the system with advanced filtering options",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Ticket-Management"
+                ],
+                "summary": "List all tickets (Admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Filter by user ID",
+                        "name": "user_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by assigned admin ID",
+                        "name": "assigned_to_id",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "open",
+                            "in_progress",
+                            "pending",
+                            "resolved",
+                            "closed"
+                        ],
+                        "type": "string",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "low",
+                            "normal",
+                            "high",
+                            "urgent",
+                            "critical"
+                        ],
+                        "type": "string",
+                        "description": "Filter by priority",
+                        "name": "priority",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "general",
+                            "technical",
+                            "billing",
+                            "account",
+                            "feature",
+                            "bug",
+                            "subscription",
+                            "payment"
+                        ],
+                        "type": "string",
+                        "description": "Filter by category",
+                        "name": "category",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search in title, description, or ticket number",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Limit number of results",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Offset for pagination",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tickets retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/response.PaginatedResponse"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "items": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/model.TicketResponse"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/tickets/number/{ticket_no}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get details of a specific ticket by ticket number with full admin access",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Ticket-Management"
+                ],
+                "summary": "Get a ticket by ticket number (Admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Ticket Number",
+                        "name": "ticket_no",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ticket retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.TicketResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ticket number",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Ticket not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/tickets/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get comprehensive statistics about tickets",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Ticket-Management"
+                ],
+                "summary": "Get ticket statistics (Admin)",
+                "responses": {
+                    "200": {
+                        "description": "Statistics retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/tickets/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get details of a specific ticket by ID with full admin access",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Ticket-Management"
+                ],
+                "summary": "Get a specific ticket (Admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Ticket ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ticket retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.TicketResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ticket ID",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Ticket not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update ticket details (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Ticket-Management"
+                ],
+                "summary": "Update a ticket (Admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Ticket ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Ticket update request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.UpdateTicketRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ticket updated successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.TicketResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Ticket not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Soft delete a ticket (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Ticket-Management"
+                ],
+                "summary": "Delete a ticket (Admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Ticket ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ticket deleted successfully",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ticket ID",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Ticket not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/tickets/{id}/assign": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Assign a ticket to a specific admin user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Ticket-Management"
+                ],
+                "summary": "Assign a ticket to an admin (Admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Ticket ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Assignment request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.AssignTicketRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ticket assigned successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.TicketResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Ticket not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/tickets/{id}/close": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Close a ticket (typically after resolution)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Ticket-Management"
+                ],
+                "summary": "Close a ticket (Admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Ticket ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ticket closed successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.TicketResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ticket ID",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Ticket not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/tickets/{id}/messages": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all messages for a specific ticket including internal messages",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Ticket-Management"
+                ],
+                "summary": "Get messages for a ticket (Admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Ticket ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "user",
+                            "admin",
+                            "system"
+                        ],
+                        "type": "string",
+                        "description": "Filter by message type",
+                        "name": "message_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Include internal messages",
+                        "name": "include_internal",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Limit number of results",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Offset for pagination",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Messages retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/response.PaginatedResponse"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "items": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/model.TicketMessageResponse"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Ticket not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Add a message to a ticket with admin privileges (can create internal messages)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Ticket-Management"
+                ],
+                "summary": "Add a message to a ticket (Admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Ticket ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Message creation request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.CreateTicketMessageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Message added successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.TicketMessageResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Ticket not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/tickets/{id}/resolve": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Resolve a ticket with a resolution message",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Ticket-Management"
+                ],
+                "summary": "Resolve a ticket (Admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Ticket ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Resolution request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.ResolveTicketRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ticket resolved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.TicketResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Ticket not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get paginated list of all users (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-User-Management"
+                ],
+                "summary": "List all users",
                 "parameters": [
                     {
                         "type": "integer",
@@ -196,6 +6085,85 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new user account (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-User-Management"
+                ],
+                "summary": "Create new user",
+                "parameters": [
+                    {
+                        "description": "User creation data",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CreateUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.UserResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/response.ConflictResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
             }
         },
         "/admin/users/batch/delete": {
@@ -213,7 +6181,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admin-users"
+                    "Admin-User-Management"
                 ],
                 "summary": "[Admin] Batch delete users",
                 "parameters": [
@@ -282,7 +6250,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admin-users"
+                    "Admin-User-Management"
                 ],
                 "summary": "[Admin] Batch restore users",
                 "parameters": [
@@ -351,7 +6319,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admin-users"
+                    "Admin-User-Management"
                 ],
                 "summary": "[Admin] List deleted users",
                 "parameters": [
@@ -413,7 +6381,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admin-users"
+                    "Admin-User-Management"
                 ],
                 "summary": "[Admin] List users by provider",
                 "parameters": [
@@ -488,7 +6456,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admin-users"
+                    "Admin-User-Management"
                 ],
                 "summary": "[Admin] Search users",
                 "parameters": [
@@ -563,7 +6531,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admin-users"
+                    "Admin-User-Management"
                 ],
                 "summary": "[Admin] Get user statistics",
                 "responses": {
@@ -601,7 +6569,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get any user information by user ID (admin only)",
+                "description": "Get user details by user ID (Admin only)",
                 "consumes": [
                     "application/json"
                 ],
@@ -609,9 +6577,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admin-users"
+                    "Admin-User-Management"
                 ],
-                "summary": "[Admin] Get user by ID",
+                "summary": "Get user information",
                 "parameters": [
                     {
                         "type": "integer",
@@ -680,7 +6648,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admin-users"
+                    "Admin-User-Management"
                 ],
                 "summary": "[Admin] Update any user",
                 "parameters": [
@@ -766,7 +6734,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admin-users"
+                    "Admin-User-Management"
                 ],
                 "summary": "[Admin] Soft delete user",
                 "parameters": [
@@ -810,6 +6778,93 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Partially update user information using PATCH method (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-User-Management"
+                ],
+                "summary": "[Admin] Partially update user",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Partial user data",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.UserResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
             }
         },
         "/admin/users/{id}/hard-delete": {
@@ -827,7 +6882,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admin-users"
+                    "Admin-User-Management"
                 ],
                 "summary": "[Admin] Hard delete user",
                 "parameters": [
@@ -873,6 +6928,82 @@ const docTemplate = `{
                 }
             }
         },
+        "/admin/users/{id}/reset-password": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Reset a user's password (Admin only). Only works for local accounts.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-User-Management"
+                ],
+                "summary": "Reset user password",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New password data",
+                        "name": "password",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/admin.ResetPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.MessageOnlyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/admin/users/{id}/restore": {
             "post": {
                 "security": [
@@ -888,7 +7019,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admin-users"
+                    "Admin-User-Management"
                 ],
                 "summary": "[Admin] Restore user",
                 "parameters": [
@@ -949,7 +7080,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admin-users"
+                    "Admin-User-Management"
                 ],
                 "summary": "[Admin] Update user role",
                 "parameters": [
@@ -1034,7 +7165,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admin-users"
+                    "Admin-User-Management"
                 ],
                 "summary": "[Admin] Update user status",
                 "parameters": [
@@ -1223,7 +7354,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Logout user (client-side token invalidation)",
+                "description": "Logout user (server-side token revocation)",
                 "consumes": [
                     "application/json"
                 ],
@@ -1448,6 +7579,128 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/token": {
+            "post": {
+                "description": "Exchange OAuth authorization code for JWT tokens",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Exchange authorization code for tokens",
+                "parameters": [
+                    {
+                        "description": "Token exchange request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.TokenExchangeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/service.AuthResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/url": {
+            "post": {
+                "description": "Generate OAuth authorization URL for frontend applications",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Get OAuth authorization URL",
+                "parameters": [
+                    {
+                        "description": "Authorization URL request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.AuthorizeURLRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/service.AuthorizeURLResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/{provider}": {
             "get": {
                 "description": "Initiate OAuth login for various providers",
@@ -1551,7 +7804,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "invite-codes"
+                    "User-Invitation"
                 ],
                 "summary": "[User] Create invite code",
                 "parameters": [
@@ -1620,7 +7873,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "invite-codes"
+                    "User-Invitation"
                 ],
                 "summary": "[User] Get my invite codes",
                 "parameters": [
@@ -1671,7 +7924,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "invite-codes"
+                    "User-Invitation"
                 ],
                 "summary": "[Public] Validate invite code",
                 "parameters": [
@@ -1732,7 +7985,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "invite-codes"
+                    "User-Invitation"
                 ],
                 "summary": "[User] Get invite code by ID",
                 "parameters": [
@@ -1803,7 +8056,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "invite-codes"
+                    "User-Invitation"
                 ],
                 "summary": "[User] Delete invite code",
                 "parameters": [
@@ -1864,7 +8117,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "invite-codes"
+                    "User-Invitation"
                 ],
                 "summary": "[User] Update invite code status",
                 "parameters": [
@@ -1949,7 +8202,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "invite-codes"
+                    "User-Invitation"
                 ],
                 "summary": "[User] Get invite code usages",
                 "parameters": [
@@ -2009,6 +8262,1119 @@ const docTemplate = `{
                 }
             }
         },
+        "/payments/configs": {
+            "get": {
+                "description": "Get active payment configurations for public display",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Payment"
+                ],
+                "summary": "[Public] Get active payment configs",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "\"CNY\"",
+                        "description": "Filter by currency",
+                        "name": "currency",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.PaymentConfigResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/payments/methods": {
+            "get": {
+                "description": "Get available payment methods grouped by gateway",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Payment"
+                ],
+                "summary": "[Public] Get available payment methods",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/payments/notify/{gateway}": {
+            "post": {
+                "description": "Handle payment notification from gateway",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Payment"
+                ],
+                "summary": "[Webhook] Payment notification",
+                "parameters": [
+                    {
+                        "enum": [
+                            "epay",
+                            "epusdt"
+                        ],
+                        "type": "string",
+                        "description": "Payment gateway",
+                        "name": "gateway",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "fail",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "fail",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/payments/orders": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new payment order",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Payment"
+                ],
+                "summary": "[User] Create payment order",
+                "parameters": [
+                    {
+                        "description": "Payment order data",
+                        "name": "payment_order",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.CreatePaymentOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.PaymentRecordResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/payments/orders/my": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get current user's payment orders",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Payment"
+                ],
+                "summary": "[User] Get my payment orders",
+                "parameters": [
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "example": 10,
+                        "description": "Limit results",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "example": 0,
+                        "description": "Offset results",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.PaginatedResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.PaymentRecordResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/payments/orders/{payment_no}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get payment order details",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Payment"
+                ],
+                "summary": "[User] Get payment order",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Payment number",
+                        "name": "payment_no",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.PaymentRecordResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/referral-campaigns": {
+            "get": {
+                "description": "Get list of active public referral campaigns",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Referral"
+                ],
+                "summary": "[Public] Get public referral campaigns",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.ReferralCampaignResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/referral/track/{code}": {
+            "post": {
+                "description": "Track a click on a referral link",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Referral"
+                ],
+                "summary": "[Public] Track referral click",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Referral code",
+                        "name": "code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.MessageOnlyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/server/UniProxy/config": {
+            "get": {
+                "description": "Get configuration for UniProxy server based on node_id and node_type",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Server-API"
+                ],
+                "summary": "Get UniProxy Server Config",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Node ID",
+                        "name": "node_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Node Type (shadowsocks)",
+                        "name": "node_type",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Authentication Token",
+                        "name": "token",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/handler.UniProxyConfigResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/server/UniProxy/health": {
+            "get": {
+                "description": "Health check endpoint for server API",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Server-API"
+                ],
+                "summary": "Server API Health Check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/server/UniProxy/push": {
+            "post": {
+                "description": "Receive and log data push from UniProxy nodes (shadowsocks, etc.)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Server-API"
+                ],
+                "summary": "UniProxy Node Data Push",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Node ID",
+                        "name": "node_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "shadowsocks"
+                        ],
+                        "type": "string",
+                        "description": "Node Type",
+                        "name": "node_type",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Authentication Token",
+                        "name": "token",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/server/UniProxy/user": {
+            "get": {
+                "description": "Get users with active subscriptions that have access to the specified shadowsocks server. Returns all valid subscriptions, including multiple subscriptions for the same user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Server-API"
+                ],
+                "summary": "Get UniProxy Users",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Node ID",
+                        "name": "node_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Node Type (shadowsocks)",
+                        "name": "node_type",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Authentication Token",
+                        "name": "token",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.UniProxyUsersResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/subscription-orders": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new subscription order with payment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Create subscription order",
+                "parameters": [
+                    {
+                        "description": "Subscription order data",
+                        "name": "order",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.CreateSubscriptionOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/service.CreateSubscriptionOrderResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/subscription-orders/my": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get current user's subscription orders",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Get my subscription orders",
+                "parameters": [
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "example": 10,
+                        "description": "Limit results",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "example": 0,
+                        "description": "Offset results",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.PaginatedResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.SubscriptionOrderResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/subscription-orders/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get subscription order details",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Get subscription order",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.SubscriptionOrderResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/subscription-plans": {
+            "get": {
+                "description": "Get visible and active subscription plans for public display",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[Public] Get public subscription plans",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "USD",
+                        "description": "Filter by currency",
+                        "name": "currency",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.SubscriptionPlanResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/subscription-plans/code/{code}": {
+            "get": {
+                "description": "Get a subscription plan by code (public information only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[Public] Get subscription plan by code",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Subscription plan code",
+                        "name": "code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.SubscriptionPlanResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/subscription-plans/{id}": {
+            "get": {
+                "description": "Get a subscription plan by ID (public information only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[Public] Get subscription plan by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription plan ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.SubscriptionPlanResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/tasks": {
             "post": {
                 "security": [
@@ -2024,7 +9390,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "tasks"
+                    "Task-System"
                 ],
                 "summary": "Create a new task",
                 "parameters": [
@@ -2078,7 +9444,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "tasks"
+                    "Task-System"
                 ],
                 "summary": "Get queue status",
                 "responses": {
@@ -2086,6 +9452,153 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/coupons/usages": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a paginated list of current user's coupon usage records",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User - Coupons"
+                ],
+                "summary": "[User] Get my coupon usage history",
+                "parameters": [
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "Number of items per page (1-100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "description": "Number of items to skip",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.PaginatedResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.CouponUsageResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/coupons/validate": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Validate a coupon code for a specific plan and order amount",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Validate coupon code",
+                "parameters": [
+                    {
+                        "description": "Coupon validation data",
+                        "name": "validate_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/user.ValidateCouponRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/service.ValidateCouponResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "401": {
@@ -2118,7 +9631,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "user-profile"
+                    "User-Profile"
                 ],
                 "summary": "[User] Change password",
                 "parameters": [
@@ -2128,7 +9641,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.ChangePasswordRequest"
+                            "$ref": "#/definitions/user.ChangePasswordRequest"
                         }
                     }
                 ],
@@ -2175,9 +9688,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "user-profile"
+                    "User-Profile"
                 ],
-                "summary": "[User] Get own profile",
+                "summary": "Get user profile",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -2225,7 +9738,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "user-profile"
+                    "User-Profile"
                 ],
                 "summary": "[User] Update own profile",
                 "parameters": [
@@ -2235,7 +9748,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.UserProfileUpdateRequest"
+                            "$ref": "#/definitions/user.UserProfileUpdateRequest"
                         }
                     }
                 ],
@@ -2278,36 +9791,2816 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/user/referrals": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get referrals created by current user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Referral"
+                ],
+                "summary": "[User] Get my referrals",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardListResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.ReferralResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/referrals/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get referral statistics for current user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Referral"
+                ],
+                "summary": "[User] Get my referral statistics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/shadowsocks-servers": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get available shadowsocks servers for current user based on subscription",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-ShadowsocksServers"
+                ],
+                "summary": "Get Available Shadowsocks Servers",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.ShadowsocksServerResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/subscriptions": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get current user's subscriptions",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Get my subscriptions",
+                "parameters": [
+                    {
+                        "enum": [
+                            "active",
+                            "inactive",
+                            "cancelled",
+                            "expired",
+                            "trialing",
+                            "past_due"
+                        ],
+                        "type": "string",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.UserSubscriptionResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/subscriptions/accessible-servers": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all shadowsocks servers accessible through user's active subscriptions",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Get accessible servers",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.ShadowsocksServerResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/subscriptions/history": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get current user's subscription history including past subscriptions",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Get my subscription history",
+                "parameters": [
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "example": 10,
+                        "description": "Limit results",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "example": 0,
+                        "description": "Offset results",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.PaginatedResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.UserSubscriptionResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/subscriptions/notification-preferences": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get current notification preferences for subscription communications",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Get notification preferences",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/user.NotificationPreferencesRequest"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update notification preferences for subscription-related communications",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Update notification preferences",
+                "parameters": [
+                    {
+                        "description": "Notification preferences",
+                        "name": "preferences_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/user.NotificationPreferencesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/user.NotificationPreferencesRequest"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/subscriptions/purchase": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create subscription order with payment - returns payment URL for completion",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Purchase subscription",
+                "parameters": [
+                    {
+                        "description": "Purchase request data",
+                        "name": "purchase_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/user.PurchaseSubscriptionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/service.CreateSubscriptionOrderResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/subscriptions/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get comprehensive statistics about current user's subscriptions",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Get my subscription statistics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/user.SubscriptionStatsResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/subscriptions/upgrade-downgrade": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Upgrade or downgrade current user's subscription to a different plan",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Upgrade/Downgrade subscription",
+                "parameters": [
+                    {
+                        "description": "Upgrade/downgrade request data",
+                        "name": "upgrade_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.UpgradeDowngradeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/service.CreateSubscriptionOrderResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/subscriptions/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get current user's subscription by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Get my subscription by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User subscription ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.UserSubscriptionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/subscriptions/{id}/auto-renewal": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Enable or disable auto-renewal for a subscription",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Update auto-renewal settings",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User subscription ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Auto-renewal update data",
+                        "name": "update_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/user.UpdateAutoRenewalRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.UserSubscriptionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/subscriptions/{id}/cancel": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Cancel current user's subscription",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Cancel my subscription",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User subscription ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Cancellation data",
+                        "name": "cancel_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/user.CancelSubscriptionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.UserSubscriptionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/subscriptions/{id}/pause": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Pause current user's active subscription",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Pause my subscription",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User subscription ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Pause request data",
+                        "name": "pause_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/user.PauseSubscriptionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.UserSubscriptionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/subscriptions/{id}/reset-traffic": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Reset traffic usage for current billing cycle (admin only or with user consent)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Reset traffic usage",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User subscription ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.UserSubscriptionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/subscriptions/{id}/resume": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Resume current user's paused subscription",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Resume my subscription",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User subscription ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.UserSubscriptionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/subscriptions/{id}/upgrade-downgrade-options": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get available upgrade/downgrade options for a specific subscription",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Get upgrade/downgrade options",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User subscription ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.SubscriptionPlanResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/subscriptions/{subscription_id}/available-server-groups": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get server groups available for a specific subscription",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Get available server groups",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User subscription ID",
+                        "name": "subscription_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.ServerGroupResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/subscriptions/{subscription_id}/server-groups": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get server groups assigned to a specific subscription",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Get subscription server groups",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User subscription ID",
+                        "name": "subscription_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.ServerGroupResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update server groups assigned to a subscription",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Update subscription server groups",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User subscription ID",
+                        "name": "subscription_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Server groups update data",
+                        "name": "update_request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/user.UpdateSubscriptionServerGroupsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.UserSubscriptionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/subscriptions/{subscription_id}/servers": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get shadowsocks servers accessible through a specific subscription",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Get servers by subscription",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User subscription ID",
+                        "name": "subscription_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.ShadowsocksServerResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/tickets": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all tickets created by the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Ticket"
+                ],
+                "summary": "Get user's tickets",
+                "parameters": [
+                    {
+                        "enum": [
+                            "open",
+                            "in_progress",
+                            "pending",
+                            "resolved",
+                            "closed"
+                        ],
+                        "type": "string",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "general",
+                            "technical",
+                            "billing",
+                            "account",
+                            "feature",
+                            "bug",
+                            "subscription",
+                            "payment"
+                        ],
+                        "type": "string",
+                        "description": "Filter by category",
+                        "name": "category",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "low",
+                            "normal",
+                            "high",
+                            "urgent",
+                            "critical"
+                        ],
+                        "type": "string",
+                        "description": "Filter by priority",
+                        "name": "priority",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search in title, description, or ticket number",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Limit number of results",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Offset for pagination",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tickets retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/response.PaginatedResponse"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "items": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/model.TicketUserResponse"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a new support ticket for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Ticket"
+                ],
+                "summary": "Create a new support ticket",
+                "parameters": [
+                    {
+                        "description": "Ticket creation request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.CreateTicketRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Ticket created successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.TicketUserResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/tickets/number/{ticket_no}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get details of a specific ticket by ticket number (only accessible to the ticket owner)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Ticket"
+                ],
+                "summary": "Get a ticket by ticket number",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Ticket Number",
+                        "name": "ticket_no",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ticket retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.TicketUserResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ticket number",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Ticket not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/tickets/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get details of a specific ticket by ID (only accessible to the ticket owner)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Ticket"
+                ],
+                "summary": "Get a specific ticket",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Ticket ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ticket retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.TicketUserResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ticket ID",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Ticket not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/tickets/{id}/messages": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all messages for a specific ticket (only accessible to the ticket owner)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Ticket"
+                ],
+                "summary": "Get messages for a ticket",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Ticket ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Limit number of results",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Offset for pagination",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Messages retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/response.PaginatedResponse"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "items": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/model.TicketMessageUserResponse"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Ticket not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Add a message to a ticket (only accessible to the ticket owner)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Ticket"
+                ],
+                "summary": "Add a message to a ticket",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Ticket ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Message creation request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/service.CreateTicketMessageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Message added successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.TicketMessageUserResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Ticket not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
-        "handler.ChangePasswordRequest": {
+        "admin.BulkUpdateRequest": {
             "type": "object",
             "required": [
-                "new_password",
-                "old_password"
+                "admin_confirmed",
+                "operation",
+                "order_ids"
+            ],
+            "properties": {
+                "admin_confirmed": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "notes": {
+                    "type": "string",
+                    "example": "Bulk operation by admin"
+                },
+                "operation": {
+                    "type": "string",
+                    "enum": [
+                        "cancel",
+                        "refund",
+                        "export"
+                    ],
+                    "example": "cancel"
+                },
+                "order_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    },
+                    "example": [
+                        1,
+                        2,
+                        3
+                    ]
+                },
+                "reason": {
+                    "type": "string",
+                    "example": "Bulk cancellation"
+                }
+            }
+        },
+        "admin.CreateInvoiceFromOrderRequest": {
+            "type": "object",
+            "required": [
+                "order_id"
+            ],
+            "properties": {
+                "auto_send": {
+                    "type": "boolean"
+                },
+                "options": {
+                    "$ref": "#/definitions/service.CreateInvoiceRequest"
+                },
+                "order_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "admin.CreateUserSubscriptionRequest": {
+            "type": "object",
+            "required": [
+                "subscription_plan_id",
+                "user_id"
+            ],
+            "properties": {
+                "end_date": {
+                    "type": "string",
+                    "example": "2024-12-31T23:59:59Z"
+                },
+                "notes": {
+                    "type": "string",
+                    "example": "Admin assigned subscription"
+                },
+                "server_group_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "skip_payment": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "start_date": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "subscription_plan_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "use_trial": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "user_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "admin.GetOrderStatsResponse": {
+            "type": "object",
+            "properties": {
+                "avg_order_value": {
+                    "type": "number"
+                },
+                "cancelled_orders": {
+                    "type": "integer"
+                },
+                "conversion_rate": {
+                    "type": "number"
+                },
+                "failed_orders": {
+                    "type": "integer"
+                },
+                "paid_orders": {
+                    "type": "integer"
+                },
+                "pending_orders": {
+                    "type": "integer"
+                },
+                "refunded_orders": {
+                    "type": "integer"
+                },
+                "total_orders": {
+                    "type": "integer"
+                },
+                "total_refunded": {
+                    "type": "number"
+                },
+                "total_revenue": {
+                    "type": "number"
+                }
+            }
+        },
+        "admin.MarkInvoiceAsPaidRequest": {
+            "type": "object",
+            "required": [
+                "payment_method"
+            ],
+            "properties": {
+                "payment_method": {
+                    "type": "string",
+                    "example": "bank_transfer"
+                },
+                "payment_reference": {
+                    "type": "string",
+                    "example": "REF123456"
+                }
+            }
+        },
+        "admin.PaymentEvidenceRequest": {
+            "type": "object",
+            "required": [
+                "amount_received",
+                "currency",
+                "payment_gateway",
+                "payment_method",
+                "payment_time",
+                "transaction_id"
+            ],
+            "properties": {
+                "amount_received": {
+                    "type": "number",
+                    "minimum": 0.01,
+                    "example": 29.99
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "gateway_response": {
+                    "type": "string",
+                    "example": "SUCCESS"
+                },
+                "payment_gateway": {
+                    "type": "string",
+                    "example": "alipay"
+                },
+                "payment_method": {
+                    "type": "string",
+                    "example": "alipay"
+                },
+                "payment_time": {
+                    "type": "string",
+                    "example": "2024-01-01T10:30:00Z"
+                },
+                "transaction_id": {
+                    "type": "string",
+                    "example": "txn_123456789"
+                },
+                "verification_notes": {
+                    "type": "string",
+                    "example": "Payment verified manually"
+                }
+            }
+        },
+        "admin.ProcessRefundRequest": {
+            "type": "object",
+            "required": [
+                "admin_confirmed",
+                "amount",
+                "reason"
+            ],
+            "properties": {
+                "admin_confirmed": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "amount": {
+                    "type": "number",
+                    "minimum": 0.01,
+                    "example": 29.99
+                },
+                "notes": {
+                    "type": "string",
+                    "example": "Refund processed by admin"
+                },
+                "notify_user": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "reason": {
+                    "type": "string",
+                    "example": "Customer request"
+                },
+                "refund_method": {
+                    "type": "string",
+                    "example": "original"
+                }
+            }
+        },
+        "admin.ResetPasswordRequest": {
+            "type": "object",
+            "required": [
+                "new_password"
             ],
             "properties": {
                 "new_password": {
                     "type": "string",
-                    "minLength": 6
+                    "maxLength": 255,
+                    "minLength": 6,
+                    "example": "newSecurePassword123"
+                }
+            }
+        },
+        "admin.UpdateOrderStatusRequest": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "admin_confirmed": {
+                    "description": "Admin confirmation for critical operations",
+                    "type": "boolean",
+                    "example": true
                 },
-                "old_password": {
+                "notes": {
+                    "type": "string",
+                    "example": "Manual status update by admin"
+                },
+                "notify_user": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "payment_evidence": {
+                    "description": "Payment evidence required when marking as paid",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/admin.PaymentEvidenceRequest"
+                        }
+                    ]
+                },
+                "reason": {
+                    "type": "string",
+                    "example": "Payment verification completed"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "pending",
+                        "paid",
+                        "failed",
+                        "cancelled",
+                        "refunded"
+                    ],
+                    "example": "paid"
+                }
+            }
+        },
+        "admin.VoidInvoiceRequest": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "reason": {
+                    "type": "string",
+                    "example": "Customer request"
+                }
+            }
+        },
+        "handler.CreatePaymentOrderRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "currency",
+                "gateway",
+                "payment_method",
+                "subject"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "example": 29.99
+                },
+                "body": {
+                    "type": "string",
+                    "example": "Monthly premium subscription payment"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "CNY"
+                },
+                "expired_minutes": {
+                    "type": "integer",
+                    "example": 30
+                },
+                "gateway": {
+                    "type": "string",
+                    "example": "epay"
+                },
+                "payment_method": {
+                    "type": "string",
+                    "example": "alipay"
+                },
+                "return_url": {
+                    "type": "string",
+                    "example": "https://example.com/payment/return"
+                },
+                "subject": {
+                    "type": "string",
+                    "example": "Premium Subscription"
+                },
+                "subscription_order_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "handler.TokenExchangeRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "provider"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "state": {
                     "type": "string"
                 }
             }
         },
-        "handler.UserProfileUpdateRequest": {
+        "handler.UniProxyBaseConfig": {
             "type": "object",
             "properties": {
-                "avatar": {
+                "pull_interval": {
+                    "type": "integer"
+                },
+                "push_interval": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handler.UniProxyConfigResponse": {
+            "type": "object",
+            "properties": {
+                "base_config": {
+                    "$ref": "#/definitions/handler.UniProxyBaseConfig"
+                },
+                "cipher": {
                     "type": "string"
+                },
+                "obfs": {},
+                "obfs_settings": {},
+                "server_port": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handler.UniProxyUserItem": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "Subscription ID",
+                    "type": "integer"
+                },
+                "speed_limit": {
+                    "description": "Speed limit (null for unlimited)"
+                },
+                "uuid": {
+                    "description": "Subscription UUID",
+                    "type": "string"
+                }
+            }
+        },
+        "handler.UniProxyUsersResponse": {
+            "type": "object",
+            "properties": {
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handler.UniProxyUserItem"
+                    }
+                }
+            }
+        },
+        "model.CouponResponse": {
+            "type": "object",
+            "properties": {
+                "applicable_plans": {
+                    "description": "Applicable plans",
+                    "type": "string"
+                },
+                "code": {
+                    "description": "Coupon code",
+                    "type": "string",
+                    "example": "SAVE20"
+                },
+                "created_at": {
+                    "description": "Creation time",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "currency": {
+                    "description": "Currency",
+                    "type": "string",
+                    "example": "USD"
+                },
+                "description": {
+                    "description": "Description",
+                    "type": "string",
+                    "example": "Save 20% on any plan"
+                },
+                "id": {
+                    "description": "Coupon ID",
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_public": {
+                    "description": "Public visibility",
+                    "type": "boolean",
+                    "example": true
+                },
+                "max_uses": {
+                    "description": "Maximum uses",
+                    "type": "integer",
+                    "example": 100
+                },
+                "max_uses_per_user": {
+                    "description": "Max uses per user",
+                    "type": "integer",
+                    "example": 1
+                },
+                "min_order_amount": {
+                    "description": "Minimum order amount",
+                    "type": "number",
+                    "example": 10
                 },
                 "name": {
-                    "type": "string"
+                    "description": "Coupon name",
+                    "type": "string",
+                    "example": "20% Off"
+                },
+                "status": {
+                    "description": "Status",
+                    "type": "string",
+                    "example": "active"
+                },
+                "type": {
+                    "description": "Discount type",
+                    "type": "string",
+                    "example": "percentage"
+                },
+                "updated_at": {
+                    "description": "Update time",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "used_count": {
+                    "description": "Used count",
+                    "type": "integer",
+                    "example": 15
+                },
+                "valid_from": {
+                    "description": "Valid from",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "valid_until": {
+                    "description": "Valid until",
+                    "type": "string",
+                    "example": "2024-12-31T23:59:59Z"
+                },
+                "value": {
+                    "description": "Discount value",
+                    "type": "number",
+                    "example": 20
+                }
+            }
+        },
+        "model.CouponUsageResponse": {
+            "type": "object",
+            "properties": {
+                "coupon": {
+                    "description": "Related data",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.CouponResponse"
+                        }
+                    ]
+                },
+                "coupon_id": {
+                    "description": "Coupon ID",
+                    "type": "integer",
+                    "example": 1
+                },
+                "created_at": {
+                    "description": "Creation time",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "currency": {
+                    "description": "Currency",
+                    "type": "string",
+                    "example": "USD"
+                },
+                "discount_amount": {
+                    "description": "Discount amount",
+                    "type": "number",
+                    "example": 5.99
+                },
+                "id": {
+                    "description": "Usage ID",
+                    "type": "integer",
+                    "example": 1
+                },
+                "order_amount": {
+                    "description": "Original order amount",
+                    "type": "number",
+                    "example": 29.99
+                },
+                "subscription_order": {
+                    "description": "Order info",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.SubscriptionOrderResponse"
+                        }
+                    ]
+                },
+                "subscription_order_id": {
+                    "description": "Order ID",
+                    "type": "integer",
+                    "example": 1
+                },
+                "updated_at": {
+                    "description": "Update time",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "user": {
+                    "description": "User info",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.UserResponse"
+                        }
+                    ]
+                },
+                "user_id": {
+                    "description": "User ID",
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "model.CreateUserRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "user@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "John Doe"
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 6,
+                    "example": "password123"
+                },
+                "role": {
+                    "type": "string",
+                    "enum": [
+                        "user",
+                        "admin"
+                    ],
+                    "example": "user"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "inactive",
+                        "banned"
+                    ],
+                    "example": "active"
                 },
                 "username": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "johndoe"
                 }
             }
         },
@@ -2351,6 +12644,29 @@ const docTemplate = `{
                     "description": "Maximum number of uses",
                     "type": "integer",
                     "example": 10
+                },
+                "referral_campaign": {
+                    "description": "Associated referral campaign",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.ReferralCampaignResponse"
+                        }
+                    ]
+                },
+                "referral_campaign_id": {
+                    "description": "Referral Integration Fields",
+                    "type": "integer",
+                    "example": 1
+                },
+                "referral_reward_amount": {
+                    "description": "Referral reward amount",
+                    "type": "number",
+                    "example": 5
+                },
+                "referral_reward_currency": {
+                    "description": "Referral reward currency",
+                    "type": "string",
+                    "example": "USD"
                 },
                 "status": {
                     "description": "Invite code status",
@@ -2437,6 +12753,1623 @@ const docTemplate = `{
                 }
             }
         },
+        "model.InvoiceResponse": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "example": 29.99
+                },
+                "billing_address": {
+                    "type": "string",
+                    "example": "123 Main St"
+                },
+                "billing_city": {
+                    "type": "string",
+                    "example": "New York"
+                },
+                "billing_country": {
+                    "type": "string",
+                    "example": "US"
+                },
+                "billing_email": {
+                    "type": "string",
+                    "example": "john@example.com"
+                },
+                "billing_name": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "billing_state": {
+                    "type": "string",
+                    "example": "NY"
+                },
+                "billing_zip": {
+                    "type": "string",
+                    "example": "10001"
+                },
+                "company_address": {
+                    "type": "string",
+                    "example": "456 Business Ave"
+                },
+                "company_name": {
+                    "type": "string",
+                    "example": "Acme Corp"
+                },
+                "company_tax_id": {
+                    "type": "string",
+                    "example": "12-3456789"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "days_overdue": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Monthly subscription"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "due_at": {
+                    "type": "string",
+                    "example": "2024-01-31T23:59:59Z"
+                },
+                "full_address": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "invoice_number": {
+                    "type": "string",
+                    "example": "INV-2024-001"
+                },
+                "invoice_type": {
+                    "type": "string",
+                    "example": "standard"
+                },
+                "is_overdue": {
+                    "description": "Computed fields",
+                    "type": "boolean"
+                },
+                "issued_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "language": {
+                    "type": "string",
+                    "example": "en"
+                },
+                "notes": {
+                    "type": "string",
+                    "example": "Thank you for your business"
+                },
+                "paid_at": {
+                    "type": "string",
+                    "example": "2024-01-15T10:30:00Z"
+                },
+                "payment_method": {
+                    "type": "string",
+                    "example": "credit_card"
+                },
+                "payment_reference": {
+                    "type": "string",
+                    "example": "txn_123456"
+                },
+                "pdf_path": {
+                    "type": "string",
+                    "example": "/invoices/INV-2024-001.pdf"
+                },
+                "pdf_size": {
+                    "type": "integer",
+                    "example": 12345
+                },
+                "sent_at": {
+                    "type": "string",
+                    "example": "2024-01-01T12:00:00Z"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "sent"
+                },
+                "subscription_order": {
+                    "$ref": "#/definitions/model.SubscriptionOrderResponse"
+                },
+                "subscription_order_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "tax_amount": {
+                    "type": "number",
+                    "example": 5.99
+                },
+                "tax_number": {
+                    "type": "string",
+                    "example": "GB123456789"
+                },
+                "tax_rate": {
+                    "type": "number",
+                    "example": 0.2
+                },
+                "tax_type": {
+                    "type": "string",
+                    "example": "VAT"
+                },
+                "template": {
+                    "type": "string",
+                    "example": "default"
+                },
+                "total_amount": {
+                    "type": "number",
+                    "example": 35.98
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "user": {
+                    "description": "Related data",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.UserResponse"
+                        }
+                    ]
+                },
+                "user_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "voided_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Method": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "Method code (alipay, wechat, usdt, etc.)",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "Description",
+                    "type": "string"
+                },
+                "environment": {
+                    "description": "production, sandbox, test",
+                    "type": "string"
+                },
+                "fee_max": {
+                    "description": "Maximum fee",
+                    "type": "number"
+                },
+                "fee_min": {
+                    "description": "Minimum fee",
+                    "type": "number"
+                },
+                "fee_type": {
+                    "description": "none, fixed, percentage",
+                    "type": "string"
+                },
+                "fee_value": {
+                    "description": "Fee value",
+                    "type": "number"
+                },
+                "icon": {
+                    "description": "Icon URL",
+                    "type": "string"
+                },
+                "is_enabled": {
+                    "description": "Whether enabled",
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "Display name",
+                    "type": "string"
+                },
+                "sort_order": {
+                    "description": "Sort order",
+                    "type": "integer"
+                }
+            }
+        },
+        "model.PaymentConfigResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "description": "Creation time",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "fixed_fee": {
+                    "description": "Fixed fee",
+                    "type": "number",
+                    "example": 0
+                },
+                "gateway": {
+                    "description": "Payment gateway",
+                    "type": "string",
+                    "example": "epay"
+                },
+                "id": {
+                    "description": "Config ID",
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_enabled": {
+                    "description": "Enabled status",
+                    "type": "boolean",
+                    "example": true
+                },
+                "max_amount": {
+                    "description": "Maximum amount",
+                    "type": "number",
+                    "example": 99999.99
+                },
+                "methods": {
+                    "description": "Payment methods",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Method"
+                    }
+                },
+                "min_amount": {
+                    "description": "Minimum amount",
+                    "type": "number",
+                    "example": 0.01
+                },
+                "name": {
+                    "description": "Display name",
+                    "type": "string",
+                    "example": "EPay Gateway"
+                },
+                "percentage_fee": {
+                    "description": "Percentage fee",
+                    "type": "number",
+                    "example": 0.6
+                },
+                "sort_order": {
+                    "description": "Sort order",
+                    "type": "integer",
+                    "example": 1
+                },
+                "supported_currencies": {
+                    "description": "Supported currencies",
+                    "type": "string",
+                    "example": "CNY"
+                },
+                "updated_at": {
+                    "description": "Update time",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                }
+            }
+        },
+        "model.PaymentRecordResponse": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "description": "Payment amount",
+                    "type": "number",
+                    "example": 29.99
+                },
+                "can_refund": {
+                    "description": "Refundable status",
+                    "type": "boolean"
+                },
+                "created_at": {
+                    "description": "Creation time",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "currency": {
+                    "description": "Currency",
+                    "type": "string",
+                    "example": "CNY"
+                },
+                "exchange_rate": {
+                    "description": "Exchange rate",
+                    "type": "number",
+                    "example": 1
+                },
+                "expired_at": {
+                    "description": "Expiration time",
+                    "type": "string",
+                    "example": "2024-01-01T01:00:00Z"
+                },
+                "gateway": {
+                    "description": "Payment gateway",
+                    "type": "string",
+                    "example": "epay"
+                },
+                "id": {
+                    "description": "Payment ID",
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_expired": {
+                    "description": "Computed fields",
+                    "type": "boolean"
+                },
+                "notified_at": {
+                    "description": "Notification time",
+                    "type": "string",
+                    "example": "2024-01-01T00:31:00Z"
+                },
+                "out_trade_no": {
+                    "description": "Merchant order number",
+                    "type": "string",
+                    "example": "ORDER202401010001"
+                },
+                "paid_at": {
+                    "description": "Payment completion time",
+                    "type": "string",
+                    "example": "2024-01-01T00:30:00Z"
+                },
+                "payment_method": {
+                    "description": "Payment method",
+                    "type": "string",
+                    "example": "alipay"
+                },
+                "payment_no": {
+                    "description": "Payment number",
+                    "type": "string",
+                    "example": "PAY202401010001"
+                },
+                "payment_status": {
+                    "description": "Gateway payment status",
+                    "type": "string",
+                    "example": "success"
+                },
+                "payment_url": {
+                    "description": "Payment URL",
+                    "type": "string",
+                    "example": "https://example.com/pay"
+                },
+                "qr_code_url": {
+                    "description": "QR code URL",
+                    "type": "string",
+                    "example": "https://example.com/qr"
+                },
+                "refund_amount": {
+                    "description": "Refund amount",
+                    "type": "number",
+                    "example": 0
+                },
+                "refund_reason": {
+                    "description": "Refund reason",
+                    "type": "string",
+                    "example": "User request"
+                },
+                "refund_status": {
+                    "description": "Refund status",
+                    "type": "string",
+                    "example": "none"
+                },
+                "refundable_amount": {
+                    "description": "Refundable amount",
+                    "type": "number"
+                },
+                "refunded_at": {
+                    "description": "Refund time",
+                    "type": "string",
+                    "example": "2024-01-02T10:00:00Z"
+                },
+                "remark": {
+                    "description": "Remark",
+                    "type": "string",
+                    "example": "Subscription payment"
+                },
+                "status": {
+                    "description": "Payment status",
+                    "type": "string",
+                    "example": "completed"
+                },
+                "subscription_order": {
+                    "description": "Subscription order info",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.SubscriptionOrderResponse"
+                        }
+                    ]
+                },
+                "subscription_order_id": {
+                    "description": "Subscription order ID",
+                    "type": "integer",
+                    "example": 1
+                },
+                "transaction_id": {
+                    "description": "Transaction ID",
+                    "type": "string",
+                    "example": "TXN123456789"
+                },
+                "updated_at": {
+                    "description": "Update time",
+                    "type": "string",
+                    "example": "2024-01-01T00:30:00Z"
+                },
+                "user": {
+                    "description": "Related data",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.UserResponse"
+                        }
+                    ]
+                },
+                "user_id": {
+                    "description": "User ID",
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "model.ReferralCampaignResponse": {
+            "type": "object",
+            "properties": {
+                "campaign_type": {
+                    "type": "string",
+                    "example": "seasonal"
+                },
+                "code": {
+                    "type": "string",
+                    "example": "SUMMER2024"
+                },
+                "conversion_rate": {
+                    "type": "number",
+                    "example": 0.3659
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "created_by": {
+                    "description": "Optional related data",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.UserResponse"
+                        }
+                    ]
+                },
+                "created_by_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Summer referral campaign with bonus rewards"
+                },
+                "end_date": {
+                    "type": "string",
+                    "example": "2024-08-31T23:59:59Z"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_public": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "max_referrals": {
+                    "type": "integer",
+                    "example": 50
+                },
+                "max_rewards": {
+                    "type": "integer",
+                    "example": 50
+                },
+                "minimum_purchase_amount": {
+                    "type": "number",
+                    "example": 25
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Summer Referral Campaign"
+                },
+                "referee_reward_amount": {
+                    "type": "number",
+                    "example": 20
+                },
+                "referee_reward_currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "referee_reward_type": {
+                    "type": "string",
+                    "example": "discount"
+                },
+                "referrals": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ReferralResponse"
+                    }
+                },
+                "referrer_reward_amount": {
+                    "type": "number",
+                    "example": 10
+                },
+                "referrer_reward_cap": {
+                    "type": "number",
+                    "example": 100
+                },
+                "referrer_reward_currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "referrer_reward_type": {
+                    "type": "string",
+                    "example": "fixed"
+                },
+                "requires_approval": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "reward_delay": {
+                    "type": "integer",
+                    "example": 7
+                },
+                "reward_trigger": {
+                    "type": "string",
+                    "example": "first_purchase"
+                },
+                "start_date": {
+                    "type": "string",
+                    "example": "2024-06-01T00:00:00Z"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "active"
+                },
+                "total_conversions": {
+                    "type": "integer",
+                    "example": 45
+                },
+                "total_referrals": {
+                    "type": "integer",
+                    "example": 123
+                },
+                "total_reward_budget": {
+                    "type": "number",
+                    "example": 5000
+                },
+                "total_rewards_paid": {
+                    "type": "number",
+                    "example": 450
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                }
+            }
+        },
+        "model.ReferralEventResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "event_currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "event_data": {
+                    "type": "string",
+                    "example": "{\"signup_method\":\"email\"}"
+                },
+                "event_description": {
+                    "type": "string",
+                    "example": "User completed registration"
+                },
+                "event_type": {
+                    "type": "string",
+                    "example": "registration"
+                },
+                "event_value": {
+                    "type": "number",
+                    "example": 29.99
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "ip_address": {
+                    "type": "string",
+                    "example": "192.168.1.100"
+                },
+                "page_url": {
+                    "type": "string",
+                    "example": "https://example.com/signup"
+                },
+                "processed_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "referral": {
+                    "description": "Optional related data",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.ReferralResponse"
+                        }
+                    ]
+                },
+                "referral_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "referrer_url": {
+                    "type": "string",
+                    "example": "https://example.com/ref"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "user": {
+                    "$ref": "#/definitions/model.UserResponse"
+                },
+                "user_agent": {
+                    "type": "string",
+                    "example": "Mozilla/5.0..."
+                },
+                "user_id": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "utm_campaign": {
+                    "type": "string",
+                    "example": "summer_referral"
+                },
+                "utm_content": {
+                    "type": "string",
+                    "example": "banner"
+                },
+                "utm_medium": {
+                    "type": "string",
+                    "example": "social"
+                },
+                "utm_source": {
+                    "type": "string",
+                    "example": "facebook"
+                },
+                "utm_term": {
+                    "type": "string",
+                    "example": "referral"
+                }
+            }
+        },
+        "model.ReferralResponse": {
+            "type": "object",
+            "properties": {
+                "campaign": {
+                    "$ref": "#/definitions/model.ReferralCampaignResponse"
+                },
+                "campaign_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "click_count": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "conversion_type": {
+                    "type": "string",
+                    "example": "subscription"
+                },
+                "conversion_value": {
+                    "type": "number",
+                    "example": 29.99
+                },
+                "converted_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "expires_at": {
+                    "type": "string",
+                    "example": "2024-12-31T23:59:59Z"
+                },
+                "first_click_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "invite_code": {
+                    "$ref": "#/definitions/model.InviteCodeResponse"
+                },
+                "invite_code_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "last_click_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "referee": {
+                    "$ref": "#/definitions/model.UserResponse"
+                },
+                "referee_id": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "referee_reward": {
+                    "type": "number",
+                    "example": 2.5
+                },
+                "referee_status": {
+                    "type": "string",
+                    "example": "activated"
+                },
+                "referral_channel": {
+                    "type": "string",
+                    "example": "organic"
+                },
+                "referral_code": {
+                    "type": "string",
+                    "example": "REF123"
+                },
+                "referral_events": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ReferralEventResponse"
+                    }
+                },
+                "referral_rewards": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ReferralRewardResponse"
+                    }
+                },
+                "referral_source": {
+                    "type": "string",
+                    "example": "invite_code"
+                },
+                "referrer": {
+                    "description": "Optional related data",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.UserResponse"
+                        }
+                    ]
+                },
+                "referrer_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "reward_amount": {
+                    "type": "number",
+                    "example": 5
+                },
+                "reward_currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "reward_status": {
+                    "type": "string",
+                    "example": "earned"
+                },
+                "rewarded_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "confirmed"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                }
+            }
+        },
+        "model.ReferralRewardResponse": {
+            "type": "object",
+            "properties": {
+                "approved_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "approved_by": {
+                    "$ref": "#/definitions/model.UserResponse"
+                },
+                "approved_by_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "campaign": {
+                    "$ref": "#/definitions/model.ReferralCampaignResponse"
+                },
+                "campaign_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "conversion_id": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "conversion_type": {
+                    "type": "string",
+                    "example": "subscription"
+                },
+                "conversion_value": {
+                    "type": "number",
+                    "example": 29.99
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "earned_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "expires_at": {
+                    "type": "string",
+                    "example": "2024-12-31T23:59:59Z"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "net_amount": {
+                    "type": "number",
+                    "example": 9.5
+                },
+                "paid_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "payment_method": {
+                    "type": "string",
+                    "example": "paypal"
+                },
+                "payment_reference": {
+                    "type": "string",
+                    "example": "PAY-123456789"
+                },
+                "payout_batch_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "payout_fee": {
+                    "type": "number",
+                    "example": 0.5
+                },
+                "referral": {
+                    "description": "Optional related data",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.ReferralResponse"
+                        }
+                    ]
+                },
+                "referral_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "rejected_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "rejected_by": {
+                    "$ref": "#/definitions/model.UserResponse"
+                },
+                "rejected_by_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "rejection_reason": {
+                    "type": "string",
+                    "example": "Fraudulent activity detected"
+                },
+                "requires_approval": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "reward_amount": {
+                    "type": "number",
+                    "example": 10
+                },
+                "reward_currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "reward_description": {
+                    "type": "string",
+                    "example": "Referral bonus for new subscriber"
+                },
+                "reward_type": {
+                    "type": "string",
+                    "example": "cash"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "earned"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "user": {
+                    "$ref": "#/definitions/model.UserResponse"
+                },
+                "user_id": {
+                    "type": "integer",
+                    "example": 2
+                }
+            }
+        },
+        "model.ServerGroupResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Asia Pacific"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                }
+            }
+        },
+        "model.ShadowsocksServerResponse": {
+            "type": "object",
+            "properties": {
+                "cipher": {
+                    "type": "string",
+                    "example": "aes-256-gcm"
+                },
+                "created_at": {
+                    "type": "integer",
+                    "example": 1640995200
+                },
+                "excludes": {
+                    "type": "string",
+                    "example": "192.168.0.0/16"
+                },
+                "group_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "host": {
+                    "type": "string",
+                    "example": "us01.example.com"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "ips": {
+                    "type": "string",
+                    "example": "0.0.0.0/0"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "US-01"
+                },
+                "obfs": {
+                    "type": "string",
+                    "example": "tls"
+                },
+                "obfs_settings": {
+                    "type": "string",
+                    "example": "obfs=tls"
+                },
+                "parent_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "port": {
+                    "type": "integer",
+                    "example": 443
+                },
+                "rate": {
+                    "type": "number",
+                    "example": 1
+                },
+                "route_id": {
+                    "type": "string",
+                    "example": "route-1"
+                },
+                "server_group": {
+                    "description": "Relationship data",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.ServerGroupResponse"
+                        }
+                    ]
+                },
+                "server_port": {
+                    "type": "integer",
+                    "example": 8388
+                },
+                "show": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "sort": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "tags": {
+                    "type": "string",
+                    "example": "premium,fast"
+                },
+                "updated_at": {
+                    "type": "integer",
+                    "example": 1640995200
+                }
+            }
+        },
+        "model.SubscriptionOrderResponse": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "description": "Amount",
+                    "type": "number",
+                    "example": 29.99
+                },
+                "billing_period_end": {
+                    "description": "Billing end",
+                    "type": "string",
+                    "example": "2024-02-01T00:00:00Z"
+                },
+                "billing_period_start": {
+                    "description": "Billing start",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "coupon_code": {
+                    "description": "Coupon code",
+                    "type": "string",
+                    "example": "SAVE20"
+                },
+                "created_at": {
+                    "description": "Creation time",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "currency": {
+                    "description": "Currency",
+                    "type": "string",
+                    "example": "USD"
+                },
+                "discount_amount": {
+                    "description": "Discount amount",
+                    "type": "number",
+                    "example": 0
+                },
+                "discount_type": {
+                    "description": "Discount type",
+                    "type": "string",
+                    "example": "percentage"
+                },
+                "discount_value": {
+                    "description": "Discount value",
+                    "type": "number",
+                    "example": 20
+                },
+                "id": {
+                    "description": "Order ID",
+                    "type": "integer",
+                    "example": 1
+                },
+                "invoice_number": {
+                    "description": "Invoice number",
+                    "type": "string",
+                    "example": "INV-2024-001"
+                },
+                "invoice_status": {
+                    "description": "Invoice status",
+                    "type": "string",
+                    "example": "sent"
+                },
+                "invoiced_at": {
+                    "description": "Invoiced time",
+                    "type": "string",
+                    "example": "2024-01-01T10:30:00Z"
+                },
+                "order_number": {
+                    "description": "Order number",
+                    "type": "string",
+                    "example": "ORD-2024-001"
+                },
+                "order_type": {
+                    "description": "Order type",
+                    "type": "string",
+                    "example": "new"
+                },
+                "paid_at": {
+                    "description": "Paid time",
+                    "type": "string",
+                    "example": "2024-01-01T10:30:00Z"
+                },
+                "payment_gateway": {
+                    "description": "Payment gateway",
+                    "type": "string",
+                    "example": "stripe"
+                },
+                "payment_method": {
+                    "description": "Payment method",
+                    "type": "string",
+                    "example": "credit_card"
+                },
+                "payment_status": {
+                    "description": "Payment status",
+                    "type": "string",
+                    "example": "completed"
+                },
+                "refund_amount": {
+                    "description": "Refund amount",
+                    "type": "number",
+                    "example": 0
+                },
+                "refund_reason": {
+                    "description": "Refund reason",
+                    "type": "string",
+                    "example": "User request"
+                },
+                "refunded_at": {
+                    "description": "Refunded time",
+                    "type": "string",
+                    "example": "2024-01-15T10:30:00Z"
+                },
+                "setup_fee": {
+                    "description": "Setup fee",
+                    "type": "number",
+                    "example": 0
+                },
+                "status": {
+                    "description": "Status",
+                    "type": "string",
+                    "example": "paid"
+                },
+                "subscription_plan": {
+                    "description": "Plan info",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.SubscriptionPlanResponse"
+                        }
+                    ]
+                },
+                "subscription_plan_id": {
+                    "description": "Plan ID",
+                    "type": "integer",
+                    "example": 1
+                },
+                "total_amount": {
+                    "description": "Total amount",
+                    "type": "number",
+                    "example": 29.99
+                },
+                "transaction_id": {
+                    "description": "Transaction ID",
+                    "type": "string",
+                    "example": "txn_123456"
+                },
+                "updated_at": {
+                    "description": "Update time",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "user": {
+                    "description": "Related data",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.UserResponse"
+                        }
+                    ]
+                },
+                "user_id": {
+                    "description": "User ID",
+                    "type": "integer",
+                    "example": 1
+                },
+                "user_subscription": {
+                    "description": "Subscription info",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.UserSubscriptionResponse"
+                        }
+                    ]
+                },
+                "user_subscription_id": {
+                    "description": "Subscription ID",
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "model.SubscriptionPlanResponse": {
+            "type": "object",
+            "properties": {
+                "billing_cycle": {
+                    "description": "Billing cycle",
+                    "type": "string",
+                    "example": "monthly"
+                },
+                "billing_interval": {
+                    "description": "Billing interval",
+                    "type": "integer",
+                    "example": 1
+                },
+                "cancellation_fee": {
+                    "description": "Cancellation fee",
+                    "type": "number",
+                    "example": 0
+                },
+                "code": {
+                    "description": "Plan code",
+                    "type": "string",
+                    "example": "premium-monthly"
+                },
+                "created_at": {
+                    "description": "Creation time",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "currency": {
+                    "description": "Currency",
+                    "type": "string",
+                    "example": "USD"
+                },
+                "description": {
+                    "description": "Plan description",
+                    "type": "string",
+                    "example": "Premium features"
+                },
+                "features": {
+                    "description": "Features JSON",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "Plan ID",
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_popular": {
+                    "description": "Popular flag",
+                    "type": "boolean",
+                    "example": false
+                },
+                "is_recommended": {
+                    "description": "Recommended flag",
+                    "type": "boolean",
+                    "example": true
+                },
+                "is_visible": {
+                    "description": "Visibility",
+                    "type": "boolean",
+                    "example": true
+                },
+                "limits": {
+                    "description": "Limits JSON",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Plan name",
+                    "type": "string",
+                    "example": "Premium Plan"
+                },
+                "price": {
+                    "description": "Price",
+                    "type": "number",
+                    "example": 29.99
+                },
+                "setup_fee": {
+                    "description": "Setup fee",
+                    "type": "number",
+                    "example": 0
+                },
+                "sort_order": {
+                    "description": "Sort order",
+                    "type": "integer",
+                    "example": 1
+                },
+                "status": {
+                    "description": "Status",
+                    "type": "string",
+                    "example": "active"
+                },
+                "traffic_limit": {
+                    "description": "Traffic Configuration (Always enabled)",
+                    "type": "integer",
+                    "example": 107374182400
+                },
+                "traffic_limit_gb": {
+                    "description": "Traffic limit in GB (calculated)",
+                    "type": "number",
+                    "example": 100
+                },
+                "traffic_limit_text": {
+                    "description": "Human-readable traffic limit",
+                    "type": "string",
+                    "example": "100.0 GB"
+                },
+                "traffic_reset_cycle": {
+                    "description": "Traffic reset cycle",
+                    "type": "string",
+                    "example": "monthly"
+                },
+                "trial_period_days": {
+                    "description": "Trial period",
+                    "type": "integer",
+                    "example": 7
+                },
+                "updated_at": {
+                    "description": "Update time",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                }
+            }
+        },
+        "model.TicketMessageResponse": {
+            "type": "object",
+            "properties": {
+                "attachments": {
+                    "type": "string",
+                    "example": "[{\"name\":\"screenshot.png\",\"url\":\"/uploads/screenshot.png\"}]"
+                },
+                "content": {
+                    "type": "string",
+                    "example": "Thank you for contacting support. We will review your issue."
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-01T10:30:00Z"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_internal": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "message_type": {
+                    "type": "string",
+                    "example": "admin"
+                },
+                "metadata": {
+                    "type": "string",
+                    "example": "{\"priority\": \"normal\"}"
+                },
+                "ticket_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-01-01T10:30:00Z"
+                },
+                "user": {
+                    "$ref": "#/definitions/model.UserResponse"
+                },
+                "user_id": {
+                    "type": "integer",
+                    "example": 2
+                }
+            }
+        },
+        "model.TicketMessageUserResponse": {
+            "type": "object",
+            "properties": {
+                "attachments": {
+                    "type": "string",
+                    "example": "[{\"name\":\"screenshot.png\",\"url\":\"/uploads/screenshot.png\"}]"
+                },
+                "content": {
+                    "type": "string",
+                    "example": "Thank you for contacting support. We will review your issue."
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-01T10:30:00Z"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "message_type": {
+                    "type": "string",
+                    "example": "admin"
+                },
+                "ticket_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-01-01T10:30:00Z"
+                }
+            }
+        },
+        "model.TicketResponse": {
+            "type": "object",
+            "properties": {
+                "assigned_at": {
+                    "type": "string",
+                    "example": "2024-01-01T10:00:00Z"
+                },
+                "assigned_to": {
+                    "$ref": "#/definitions/model.UserResponse"
+                },
+                "assigned_to_id": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "category": {
+                    "type": "string",
+                    "example": "subscription"
+                },
+                "closed_at": {
+                    "type": "string",
+                    "example": "2024-01-02T16:00:00Z"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-01T09:00:00Z"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "I am unable to access my premium subscription features"
+                },
+                "first_response_at": {
+                    "type": "string",
+                    "example": "2024-01-01T10:30:00Z"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "last_response_at": {
+                    "type": "string",
+                    "example": "2024-01-02T14:00:00Z"
+                },
+                "messages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.TicketMessageResponse"
+                    }
+                },
+                "metadata": {
+                    "type": "string",
+                    "example": "{\"priority_escalated\": true}"
+                },
+                "priority": {
+                    "type": "string",
+                    "example": "normal"
+                },
+                "resolution": {
+                    "type": "string",
+                    "example": "Issue resolved by updating subscription settings"
+                },
+                "resolved_at": {
+                    "type": "string",
+                    "example": "2024-01-02T15:30:00Z"
+                },
+                "resolved_by": {
+                    "$ref": "#/definitions/model.UserResponse"
+                },
+                "resolved_by_id": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "status": {
+                    "type": "string",
+                    "example": "open"
+                },
+                "tags": {
+                    "type": "string",
+                    "example": "urgent,subscription"
+                },
+                "ticket_no": {
+                    "type": "string",
+                    "example": "TKT-20240101-001"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Unable to access my subscription"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-01-02T16:00:00Z"
+                },
+                "user": {
+                    "$ref": "#/definitions/model.UserResponse"
+                },
+                "user_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "model.TicketUserResponse": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "example": "subscription"
+                },
+                "closed_at": {
+                    "type": "string",
+                    "example": "2024-01-02T16:00:00Z"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-01T09:00:00Z"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "I am unable to access my premium subscription features"
+                },
+                "first_response_at": {
+                    "type": "string",
+                    "example": "2024-01-01T10:30:00Z"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "last_response_at": {
+                    "type": "string",
+                    "example": "2024-01-02T14:00:00Z"
+                },
+                "messages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.TicketMessageUserResponse"
+                    }
+                },
+                "priority": {
+                    "type": "string",
+                    "example": "normal"
+                },
+                "resolution": {
+                    "type": "string",
+                    "example": "Issue resolved by updating subscription settings"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "open"
+                },
+                "ticket_no": {
+                    "type": "string",
+                    "example": "TKT-20240101-001"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Unable to access my subscription"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-01-02T16:00:00Z"
+                }
+            }
+        },
         "model.UserResponse": {
             "type": "object",
             "properties": {
@@ -2497,6 +14430,164 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
+                }
+            }
+        },
+        "model.UserSubscriptionResponse": {
+            "type": "object",
+            "properties": {
+                "auto_renew": {
+                    "description": "Auto renewal enabled",
+                    "type": "boolean",
+                    "example": true
+                },
+                "billing_cycle": {
+                    "description": "Billing cycle",
+                    "type": "string",
+                    "example": "monthly"
+                },
+                "billing_interval": {
+                    "description": "Billing interval",
+                    "type": "integer",
+                    "example": 1
+                },
+                "cancel_at_period_end": {
+                    "description": "Cancel at period end",
+                    "type": "boolean",
+                    "example": false
+                },
+                "cancellation_reason": {
+                    "description": "Cancellation reason",
+                    "type": "string",
+                    "example": "User request"
+                },
+                "cancelled_at": {
+                    "description": "Cancelled date",
+                    "type": "string",
+                    "example": "2024-06-01T00:00:00Z"
+                },
+                "created_at": {
+                    "description": "Creation time",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "currency": {
+                    "description": "Currency",
+                    "type": "string",
+                    "example": "USD"
+                },
+                "current_period_end": {
+                    "description": "Current period end",
+                    "type": "string",
+                    "example": "2024-02-01T00:00:00Z"
+                },
+                "current_period_start": {
+                    "description": "Current period start",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "days_left": {
+                    "description": "Days until expiry (-1 for lifetime)",
+                    "type": "integer"
+                },
+                "end_date": {
+                    "description": "End date",
+                    "type": "string",
+                    "example": "2024-12-31T23:59:59Z"
+                },
+                "id": {
+                    "description": "Subscription ID",
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_expired": {
+                    "description": "Expiry status",
+                    "type": "boolean"
+                },
+                "is_in_trial": {
+                    "description": "Computed fields",
+                    "type": "boolean"
+                },
+                "last_renewal_failed": {
+                    "description": "Last renewal failure",
+                    "type": "string",
+                    "example": "2024-01-10T10:30:00Z"
+                },
+                "last_used_at": {
+                    "description": "Last used",
+                    "type": "string",
+                    "example": "2024-01-15T10:30:00Z"
+                },
+                "next_billing_date": {
+                    "description": "Next billing",
+                    "type": "string",
+                    "example": "2024-02-01T00:00:00Z"
+                },
+                "price": {
+                    "description": "Price",
+                    "type": "number",
+                    "example": 29.99
+                },
+                "renewal_attempts": {
+                    "description": "Renewal attempts count",
+                    "type": "integer",
+                    "example": 0
+                },
+                "renewal_fail_reason": {
+                    "description": "Renewal failure reason",
+                    "type": "string",
+                    "example": "Payment failed"
+                },
+                "start_date": {
+                    "description": "Start date",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "status": {
+                    "description": "Status",
+                    "type": "string",
+                    "example": "active"
+                },
+                "subscription_plan": {
+                    "description": "Plan info",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.SubscriptionPlanResponse"
+                        }
+                    ]
+                },
+                "subscription_plan_id": {
+                    "description": "Plan ID",
+                    "type": "integer",
+                    "example": 1
+                },
+                "trial_end_date": {
+                    "description": "Trial end",
+                    "type": "string",
+                    "example": "2024-01-08T00:00:00Z"
+                },
+                "updated_at": {
+                    "description": "Update time",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "user": {
+                    "description": "Related data",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.UserResponse"
+                        }
+                    ]
+                },
+                "user_id": {
+                    "description": "User ID",
+                    "type": "integer",
+                    "example": 1
+                },
+                "uuid": {
+                    "description": "Unique identifier",
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
                 }
             }
         },
@@ -2605,6 +14696,38 @@ const docTemplate = `{
                 }
             }
         },
+        "response.PaginatedResponse": {
+            "description": "Paginated response format",
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    }
+                },
+                "limit": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "message": {
+                    "type": "string",
+                    "example": "success"
+                },
+                "offset": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 100
+                }
+            }
+        },
         "response.PaginationResponse": {
             "type": "object",
             "properties": {
@@ -2659,6 +14782,26 @@ const docTemplate = `{
                     "description": "OAuth provider",
                     "type": "string",
                     "example": "google"
+                }
+            }
+        },
+        "response.Response": {
+            "description": "Standard API response format",
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "Response code (0 for success, non-zero for errors)",
+                    "type": "integer",
+                    "example": 0
+                },
+                "data": {
+                    "description": "Response data (optional)",
+                    "type": "object"
+                },
+                "message": {
+                    "description": "Response message",
+                    "type": "string",
+                    "example": "success"
                 }
             }
         },
@@ -2756,6 +14899,18 @@ const docTemplate = `{
                 }
             }
         },
+        "service.AssignTicketRequest": {
+            "type": "object",
+            "required": [
+                "assigned_to_id"
+            ],
+            "properties": {
+                "assigned_to_id": {
+                    "type": "integer",
+                    "example": 2
+                }
+            }
+        },
         "service.AuthResponse": {
             "type": "object",
             "properties": {
@@ -2764,6 +14919,116 @@ const docTemplate = `{
                 },
                 "user": {
                     "$ref": "#/definitions/model.UserResponse"
+                }
+            }
+        },
+        "service.AuthorizeURLRequest": {
+            "type": "object",
+            "required": [
+                "provider"
+            ],
+            "properties": {
+                "provider": {
+                    "type": "string"
+                },
+                "redirect_uri": {
+                    "type": "string"
+                },
+                "scopes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "state": {
+                    "type": "string"
+                }
+            }
+        },
+        "service.AuthorizeURLResponse": {
+            "type": "object",
+            "properties": {
+                "auth_url": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                }
+            }
+        },
+        "service.CreateCouponRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "name",
+                "type",
+                "value"
+            ],
+            "properties": {
+                "applicable_plans": {
+                    "type": "string",
+                    "example": "[1,2,3]"
+                },
+                "code": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 3,
+                    "example": "SAVE20"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "Save 20% on any subscription plan"
+                },
+                "is_public": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "max_uses": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 100
+                },
+                "max_uses_per_user": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 1
+                },
+                "min_order_amount": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 10
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "example": "20% Off All Plans"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "percentage",
+                        "fixed_amount"
+                    ],
+                    "example": "percentage"
+                },
+                "valid_from": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "valid_until": {
+                    "type": "string",
+                    "example": "2024-12-31T23:59:59Z"
+                },
+                "value": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 20
                 }
             }
         },
@@ -2782,6 +15047,662 @@ const docTemplate = `{
                     "maximum": 100,
                     "minimum": 1,
                     "example": 10
+                },
+                "referral_campaign_id": {
+                    "description": "Associated referral campaign ID",
+                    "type": "integer",
+                    "example": 1
+                },
+                "referral_reward_amount": {
+                    "description": "Referral reward amount",
+                    "type": "number",
+                    "example": 5
+                }
+            }
+        },
+        "service.CreateInvoiceRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "billing_email",
+                "billing_name",
+                "subscription_order_id",
+                "user_id"
+            ],
+            "properties": {
+                "amount": {
+                    "description": "Financial Details",
+                    "type": "number",
+                    "minimum": 0
+                },
+                "auto_send": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "billing_address": {
+                    "type": "string"
+                },
+                "billing_city": {
+                    "type": "string"
+                },
+                "billing_country": {
+                    "type": "string"
+                },
+                "billing_email": {
+                    "type": "string"
+                },
+                "billing_name": {
+                    "description": "Billing Information",
+                    "type": "string"
+                },
+                "billing_state": {
+                    "type": "string"
+                },
+                "billing_zip": {
+                    "type": "string"
+                },
+                "company_address": {
+                    "type": "string"
+                },
+                "company_name": {
+                    "description": "Company Information",
+                    "type": "string"
+                },
+                "company_tax_id": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "description": {
+                    "description": "Additional Information",
+                    "type": "string"
+                },
+                "due_date": {
+                    "type": "string",
+                    "example": "2024-01-31"
+                },
+                "invoice_type": {
+                    "type": "string",
+                    "example": "standard"
+                },
+                "language": {
+                    "type": "string",
+                    "example": "en"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "subscription_order_id": {
+                    "type": "integer"
+                },
+                "tax_number": {
+                    "type": "string",
+                    "example": "GB123456789"
+                },
+                "tax_rate": {
+                    "type": "number",
+                    "example": 0.2
+                },
+                "tax_type": {
+                    "type": "string",
+                    "example": "VAT"
+                },
+                "template": {
+                    "type": "string",
+                    "example": "default"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "service.CreatePaymentConfigRequest": {
+            "type": "object",
+            "required": [
+                "config",
+                "gateway",
+                "name"
+            ],
+            "properties": {
+                "config": {
+                    "type": "string",
+                    "example": "{\"api_url\":\"...\"}"
+                },
+                "fixed_fee": {
+                    "type": "number",
+                    "example": 0
+                },
+                "gateway": {
+                    "type": "string",
+                    "example": "epay"
+                },
+                "is_enabled": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "max_amount": {
+                    "type": "number",
+                    "example": 99999.99
+                },
+                "methods": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Method"
+                    }
+                },
+                "min_amount": {
+                    "type": "number",
+                    "example": 0.01
+                },
+                "name": {
+                    "type": "string",
+                    "example": "EPay Gateway"
+                },
+                "percentage_fee": {
+                    "type": "number",
+                    "example": 0.6
+                },
+                "sort_order": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "supported_currencies": {
+                    "type": "string",
+                    "example": "CNY"
+                }
+            }
+        },
+        "service.CreateReferralCampaignRequest": {
+            "type": "object",
+            "required": [
+                "campaign_type",
+                "code",
+                "name",
+                "referee_reward_amount",
+                "referee_reward_currency",
+                "referee_reward_type",
+                "referrer_reward_amount",
+                "referrer_reward_currency",
+                "referrer_reward_type",
+                "reward_trigger"
+            ],
+            "properties": {
+                "campaign_type": {
+                    "type": "string",
+                    "enum": [
+                        "standard",
+                        "bonus",
+                        "seasonal",
+                        "influencer",
+                        "partner"
+                    ]
+                },
+                "code": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "conversion_goal": {
+                    "type": "string"
+                },
+                "conversion_value": {
+                    "type": "number"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "eligible_user_segments": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "is_public": {
+                    "type": "boolean"
+                },
+                "max_referrals": {
+                    "type": "integer"
+                },
+                "max_rewards": {
+                    "type": "integer"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "minimum_purchase_amount": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "referee_reward_amount": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "referee_reward_currency": {
+                    "type": "string"
+                },
+                "referee_reward_type": {
+                    "type": "string",
+                    "enum": [
+                        "fixed",
+                        "percentage",
+                        "discount"
+                    ]
+                },
+                "referrer_reward_amount": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "referrer_reward_cap": {
+                    "type": "number"
+                },
+                "referrer_reward_currency": {
+                    "type": "string"
+                },
+                "referrer_reward_type": {
+                    "type": "string",
+                    "enum": [
+                        "fixed",
+                        "percentage",
+                        "tiered"
+                    ]
+                },
+                "requires_approval": {
+                    "type": "boolean"
+                },
+                "restricted_countries": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "reward_delay": {
+                    "type": "integer"
+                },
+                "reward_trigger": {
+                    "type": "string",
+                    "enum": [
+                        "registration",
+                        "first_purchase",
+                        "subscription",
+                        "activation"
+                    ]
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "target_audience": {
+                    "type": "string"
+                },
+                "total_reward_budget": {
+                    "type": "number"
+                },
+                "tracking_enabled": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "service.CreateServerGroupRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "Asia Pacific"
+                }
+            }
+        },
+        "service.CreateShadowsocksServerRequest": {
+            "type": "object",
+            "required": [
+                "cipher",
+                "group_id",
+                "host",
+                "name",
+                "port",
+                "rate",
+                "server_port"
+            ],
+            "properties": {
+                "cipher": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "excludes": {
+                    "type": "string"
+                },
+                "group_id": {
+                    "type": "integer"
+                },
+                "host": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "ips": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "obfs": {
+                    "type": "string",
+                    "maxLength": 11
+                },
+                "obfs_settings": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "parent_id": {
+                    "type": "integer"
+                },
+                "port": {
+                    "type": "integer",
+                    "maximum": 65535,
+                    "minimum": 1
+                },
+                "rate": {
+                    "type": "number",
+                    "minimum": 0.1
+                },
+                "route_id": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "server_port": {
+                    "type": "integer",
+                    "maximum": 65535,
+                    "minimum": 1
+                },
+                "show": {
+                    "type": "integer",
+                    "maximum": 1,
+                    "minimum": 0
+                },
+                "sort": {
+                    "type": "integer"
+                },
+                "tags": {
+                    "type": "string",
+                    "maxLength": 255
+                }
+            }
+        },
+        "service.CreateSubscriptionOrderRequest": {
+            "type": "object",
+            "required": [
+                "order_type",
+                "payment_gateway",
+                "payment_method",
+                "subscription_plan_id",
+                "user_id"
+            ],
+            "properties": {
+                "coupon_code": {
+                    "type": "string",
+                    "example": "SAVE20"
+                },
+                "metadata": {
+                    "type": "string"
+                },
+                "order_type": {
+                    "type": "string",
+                    "enum": [
+                        "new",
+                        "renewal",
+                        "upgrade",
+                        "downgrade"
+                    ],
+                    "example": "new"
+                },
+                "payment_gateway": {
+                    "type": "string",
+                    "example": "epay"
+                },
+                "payment_method": {
+                    "type": "string",
+                    "example": "alipay"
+                },
+                "return_url": {
+                    "type": "string",
+                    "example": "https://example.com/payment/return"
+                },
+                "subscription_plan_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "user_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "service.CreateSubscriptionOrderResponse": {
+            "type": "object",
+            "properties": {
+                "expired_at": {
+                    "type": "string"
+                },
+                "order": {
+                    "$ref": "#/definitions/model.SubscriptionOrderResponse"
+                },
+                "payment_record": {
+                    "$ref": "#/definitions/model.PaymentRecordResponse"
+                },
+                "payment_url": {
+                    "type": "string"
+                },
+                "qr_code_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "service.CreateSubscriptionPlanRequest": {
+            "type": "object",
+            "required": [
+                "billing_cycle",
+                "code",
+                "currency",
+                "name",
+                "price",
+                "traffic_limit",
+                "traffic_reset_cycle"
+            ],
+            "properties": {
+                "billing_cycle": {
+                    "type": "string",
+                    "enum": [
+                        "monthly",
+                        "yearly",
+                        "lifetime"
+                    ],
+                    "example": "monthly"
+                },
+                "billing_interval": {
+                    "type": "integer",
+                    "maximum": 12,
+                    "minimum": 1,
+                    "example": 1
+                },
+                "cancellation_fee": {
+                    "type": "number",
+                    "example": 0
+                },
+                "code": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 1,
+                    "example": "premium-monthly"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "Premium features with monthly billing"
+                },
+                "features": {
+                    "type": "string",
+                    "example": "{\"max_projects\": 10, \"storage_gb\": 100}"
+                },
+                "is_popular": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "is_recommended": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "is_visible": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "limits": {
+                    "type": "string",
+                    "example": "{\"api_calls_per_month\": 10000}"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "example": "Premium Plan"
+                },
+                "price": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 29.99
+                },
+                "setup_fee": {
+                    "type": "number",
+                    "example": 0
+                },
+                "sort_order": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "traffic_limit": {
+                    "description": "Traffic Configuration (Required)",
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 107374182400
+                },
+                "traffic_reset_cycle": {
+                    "description": "Traffic reset cycle",
+                    "type": "string",
+                    "enum": [
+                        "monthly",
+                        "never"
+                    ],
+                    "example": "monthly"
+                },
+                "trial_period_days": {
+                    "type": "integer",
+                    "maximum": 365,
+                    "minimum": 0,
+                    "example": 7
+                }
+            }
+        },
+        "service.CreateTicketMessageRequest": {
+            "type": "object",
+            "required": [
+                "content"
+            ],
+            "properties": {
+                "attachments": {
+                    "type": "string",
+                    "example": "[{\"name\":\"screenshot.png\",\"url\":\"https://example.com/file.png\"}]"
+                },
+                "content": {
+                    "type": "string",
+                    "maxLength": 5000,
+                    "minLength": 1,
+                    "example": "Thank you for your response. I tried the suggested solution but the issue persists."
+                },
+                "is_internal": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "message_type": {
+                    "type": "string",
+                    "enum": [
+                        "user",
+                        "admin",
+                        "system"
+                    ],
+                    "example": "user"
+                },
+                "metadata": {
+                    "type": "string",
+                    "example": "{\"client_ip\":\"192.168.1.1\"}"
+                }
+            }
+        },
+        "service.CreateTicketRequest": {
+            "type": "object",
+            "required": [
+                "category",
+                "description",
+                "title"
+            ],
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "enum": [
+                        "general",
+                        "technical",
+                        "billing",
+                        "account",
+                        "feature",
+                        "bug",
+                        "subscription",
+                        "payment"
+                    ],
+                    "example": "technical"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 5000,
+                    "minLength": 10,
+                    "example": "I cannot log in to my account even with correct credentials"
+                },
+                "metadata": {
+                    "type": "string",
+                    "example": "{\"browser\": \"Chrome\", \"os\": \"Windows\"}"
+                },
+                "priority": {
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "normal",
+                        "high",
+                        "urgent",
+                        "critical"
+                    ],
+                    "example": "normal"
+                },
+                "tags": {
+                    "type": "string",
+                    "example": "login,authentication"
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 5,
+                    "example": "Unable to access my account"
                 }
             }
         },
@@ -2820,6 +15741,20 @@ const docTemplate = `{
                 }
             }
         },
+        "service.ResolveTicketRequest": {
+            "type": "object",
+            "required": [
+                "resolution"
+            ],
+            "properties": {
+                "resolution": {
+                    "type": "string",
+                    "maxLength": 5000,
+                    "minLength": 10,
+                    "example": "Issue resolved by updating user permissions"
+                }
+            }
+        },
         "service.TokenResponse": {
             "type": "object",
             "properties": {
@@ -2837,6 +15772,860 @@ const docTemplate = `{
                 },
                 "token_type": {
                     "type": "string"
+                }
+            }
+        },
+        "service.UpdateCouponRequest": {
+            "type": "object",
+            "properties": {
+                "applicable_plans": {
+                    "type": "string",
+                    "example": "[1,2,4]"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "Updated description"
+                },
+                "is_public": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "max_uses": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 200
+                },
+                "max_uses_per_user": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 2
+                },
+                "min_order_amount": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 15
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "example": "Updated Coupon Name"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "inactive",
+                        "expired"
+                    ],
+                    "example": "active"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "percentage",
+                        "fixed_amount"
+                    ],
+                    "example": "percentage"
+                },
+                "valid_from": {
+                    "type": "string",
+                    "example": "2024-02-01T00:00:00Z"
+                },
+                "valid_until": {
+                    "type": "string",
+                    "example": "2024-11-30T23:59:59Z"
+                },
+                "value": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 25
+                }
+            }
+        },
+        "service.UpdateInvoiceRequest": {
+            "type": "object",
+            "properties": {
+                "billing_address": {
+                    "type": "string"
+                },
+                "billing_city": {
+                    "type": "string"
+                },
+                "billing_country": {
+                    "type": "string"
+                },
+                "billing_email": {
+                    "type": "string"
+                },
+                "billing_name": {
+                    "type": "string"
+                },
+                "billing_state": {
+                    "type": "string"
+                },
+                "billing_zip": {
+                    "type": "string"
+                },
+                "company_address": {
+                    "type": "string"
+                },
+                "company_name": {
+                    "type": "string"
+                },
+                "company_tax_id": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "due_date": {
+                    "type": "string"
+                },
+                "invoice_type": {
+                    "type": "string"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "tax_number": {
+                    "type": "string"
+                },
+                "tax_rate": {
+                    "type": "number"
+                },
+                "tax_type": {
+                    "type": "string"
+                },
+                "template": {
+                    "type": "string"
+                }
+            }
+        },
+        "service.UpdatePaymentConfigRequest": {
+            "type": "object",
+            "properties": {
+                "config": {
+                    "type": "string",
+                    "example": "{\"api_url\":\"...\"}"
+                },
+                "fixed_fee": {
+                    "type": "number",
+                    "example": 0
+                },
+                "is_enabled": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "max_amount": {
+                    "type": "number",
+                    "example": 99999.99
+                },
+                "methods": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Method"
+                    }
+                },
+                "min_amount": {
+                    "type": "number",
+                    "example": 0.01
+                },
+                "name": {
+                    "type": "string",
+                    "example": "EPay Gateway"
+                },
+                "percentage_fee": {
+                    "type": "number",
+                    "example": 0.6
+                },
+                "sort_order": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "supported_currencies": {
+                    "type": "string",
+                    "example": "CNY"
+                }
+            }
+        },
+        "service.UpdateReferralCampaignRequest": {
+            "type": "object",
+            "properties": {
+                "conversion_goal": {
+                    "type": "string"
+                },
+                "conversion_value": {
+                    "type": "number"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "eligible_user_segments": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "is_public": {
+                    "type": "boolean"
+                },
+                "max_referrals": {
+                    "type": "integer"
+                },
+                "max_rewards": {
+                    "type": "integer"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "minimum_purchase_amount": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "referee_reward_amount": {
+                    "type": "number"
+                },
+                "referee_reward_currency": {
+                    "type": "string"
+                },
+                "referee_reward_type": {
+                    "type": "string"
+                },
+                "referrer_reward_amount": {
+                    "type": "number"
+                },
+                "referrer_reward_cap": {
+                    "type": "number"
+                },
+                "referrer_reward_currency": {
+                    "type": "string"
+                },
+                "referrer_reward_type": {
+                    "type": "string"
+                },
+                "requires_approval": {
+                    "type": "boolean"
+                },
+                "restricted_countries": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "reward_delay": {
+                    "type": "integer"
+                },
+                "reward_trigger": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "target_audience": {
+                    "type": "string"
+                },
+                "total_reward_budget": {
+                    "type": "number"
+                },
+                "tracking_enabled": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "service.UpdateServerGroupRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "Europe"
+                }
+            }
+        },
+        "service.UpdateShadowsocksServerRequest": {
+            "type": "object",
+            "properties": {
+                "cipher": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "excludes": {
+                    "type": "string"
+                },
+                "group_id": {
+                    "type": "integer"
+                },
+                "host": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "ips": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "obfs": {
+                    "type": "string",
+                    "maxLength": 11
+                },
+                "obfs_settings": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "parent_id": {
+                    "type": "integer"
+                },
+                "port": {
+                    "type": "integer",
+                    "maximum": 65535,
+                    "minimum": 1
+                },
+                "rate": {
+                    "type": "number",
+                    "minimum": 0.1
+                },
+                "route_id": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "server_port": {
+                    "type": "integer",
+                    "maximum": 65535,
+                    "minimum": 1
+                },
+                "show": {
+                    "type": "integer",
+                    "maximum": 1,
+                    "minimum": 0
+                },
+                "sort": {
+                    "type": "integer"
+                },
+                "tags": {
+                    "type": "string",
+                    "maxLength": 255
+                }
+            }
+        },
+        "service.UpdateSubscriptionPlanRequest": {
+            "type": "object",
+            "properties": {
+                "cancellation_fee": {
+                    "type": "number",
+                    "example": 25
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "Updated description"
+                },
+                "features": {
+                    "type": "string",
+                    "example": "{\"max_projects\": 20}"
+                },
+                "is_popular": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "is_recommended": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "is_visible": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "limits": {
+                    "type": "string",
+                    "example": "{\"api_calls_per_month\": 20000}"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "example": "Premium Plan Updated"
+                },
+                "price": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 39.99
+                },
+                "setup_fee": {
+                    "type": "number",
+                    "example": 10
+                },
+                "sort_order": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "inactive",
+                        "archived"
+                    ],
+                    "example": "active"
+                },
+                "traffic_limit": {
+                    "description": "Traffic Configuration",
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 107374182400
+                },
+                "traffic_reset_cycle": {
+                    "description": "Traffic reset cycle",
+                    "type": "string",
+                    "enum": [
+                        "monthly",
+                        "never"
+                    ],
+                    "example": "monthly"
+                },
+                "trial_period_days": {
+                    "type": "integer",
+                    "maximum": 365,
+                    "minimum": 0,
+                    "example": 14
+                }
+            }
+        },
+        "service.UpdateSubscriptionRequest": {
+            "type": "object",
+            "properties": {
+                "auto_renew": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "cancel_at_period_end": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "cancellation_reason": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "User request"
+                },
+                "end_date": {
+                    "type": "string",
+                    "example": "2024-12-31T23:59:59Z"
+                },
+                "notes": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "Customer feedback notes"
+                },
+                "server_group_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "paused",
+                        "cancelled",
+                        "expired",
+                        "trial"
+                    ],
+                    "example": "active"
+                }
+            }
+        },
+        "service.UpdateTicketRequest": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "enum": [
+                        "general",
+                        "technical",
+                        "billing",
+                        "account",
+                        "feature",
+                        "bug",
+                        "subscription",
+                        "payment"
+                    ],
+                    "example": "billing"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 5000,
+                    "minLength": 10,
+                    "example": "Updated description"
+                },
+                "metadata": {
+                    "type": "string",
+                    "example": "{\"updated_by\": \"admin\"}"
+                },
+                "priority": {
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "normal",
+                        "high",
+                        "urgent",
+                        "critical"
+                    ],
+                    "example": "high"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "open",
+                        "in_progress",
+                        "pending",
+                        "resolved",
+                        "closed"
+                    ],
+                    "example": "in_progress"
+                },
+                "tags": {
+                    "type": "string",
+                    "example": "urgent,billing"
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 5,
+                    "example": "Updated ticket title"
+                }
+            }
+        },
+        "service.UpgradeDowngradeRequest": {
+            "type": "object",
+            "required": [
+                "current_subscription_id",
+                "new_plan_id",
+                "payment_gateway",
+                "payment_method"
+            ],
+            "properties": {
+                "apply_immediately": {
+                    "description": "For upgrades, default true; for downgrades, default false",
+                    "type": "boolean",
+                    "example": true
+                },
+                "current_subscription_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "new_plan_id": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "payment_gateway": {
+                    "type": "string",
+                    "example": "epay"
+                },
+                "payment_method": {
+                    "type": "string",
+                    "example": "alipay"
+                },
+                "return_url": {
+                    "type": "string",
+                    "example": "https://example.com/payment/return"
+                }
+            }
+        },
+        "service.ValidateCouponResponse": {
+            "type": "object",
+            "properties": {
+                "coupon": {
+                    "$ref": "#/definitions/model.CouponResponse"
+                },
+                "discount_amount": {
+                    "type": "number",
+                    "example": 5.99
+                },
+                "final_amount": {
+                    "type": "number",
+                    "example": 24
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Coupon is valid"
+                },
+                "valid": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "user.CancelSubscriptionRequest": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "immediately": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "reason": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "No longer needed"
+                }
+            }
+        },
+        "user.ChangePasswordRequest": {
+            "type": "object",
+            "required": [
+                "new_password",
+                "old_password"
+            ],
+            "properties": {
+                "new_password": {
+                    "type": "string",
+                    "minLength": 6
+                },
+                "old_password": {
+                    "type": "string"
+                }
+            }
+        },
+        "user.NotificationPreferencesRequest": {
+            "type": "object",
+            "properties": {
+                "email_notifications": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "expiration_warnings": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "promotional_offers": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "push_notifications": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "renewal_reminders": {
+                    "description": "Notification types",
+                    "type": "boolean",
+                    "example": true
+                },
+                "sms_notifications": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "usage_alerts": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "user.PauseSubscriptionRequest": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "reason": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "Temporary financial difficulty"
+                }
+            }
+        },
+        "user.PurchaseSubscriptionRequest": {
+            "type": "object",
+            "required": [
+                "payment_gateway",
+                "payment_method",
+                "plan_id"
+            ],
+            "properties": {
+                "auto_renew": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "coupon_code": {
+                    "type": "string",
+                    "example": "SAVE10"
+                },
+                "payment_gateway": {
+                    "type": "string",
+                    "example": "stripe"
+                },
+                "payment_metadata": {
+                    "type": "string",
+                    "example": "{\"card_last4\": \"1234\"}"
+                },
+                "payment_method": {
+                    "type": "string",
+                    "example": "credit_card"
+                },
+                "plan_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "user.SubscriptionStatsResponse": {
+            "type": "object",
+            "properties": {
+                "active_subscriptions": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "cancelled_subscriptions": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "current_monthly_cost": {
+                    "type": "number",
+                    "example": 29.99
+                },
+                "expired_subscriptions": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "next_billing_date": {
+                    "type": "string",
+                    "example": "2024-02-01T00:00:00Z"
+                },
+                "paused_subscriptions": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "subscriptions_by_plan": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "total_spent": {
+                    "type": "number",
+                    "example": 149.95
+                },
+                "total_subscriptions": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "usage_stats": {
+                    "$ref": "#/definitions/user.SubscriptionUsageStats"
+                }
+            }
+        },
+        "user.SubscriptionUsageStats": {
+            "type": "object",
+            "properties": {
+                "average_session_time": {
+                    "description": "seconds",
+                    "type": "integer",
+                    "example": 3600
+                },
+                "current_month_traffic": {
+                    "type": "integer",
+                    "example": 5368709120
+                },
+                "total_sessions": {
+                    "type": "integer",
+                    "example": 156
+                },
+                "total_traffic_limit": {
+                    "description": "bytes",
+                    "type": "integer",
+                    "example": 107374182400
+                },
+                "total_traffic_used": {
+                    "description": "bytes",
+                    "type": "integer",
+                    "example": 10737418240
+                },
+                "traffic_usage_percent": {
+                    "type": "number",
+                    "example": 10
+                }
+            }
+        },
+        "user.UpdateAutoRenewalRequest": {
+            "type": "object",
+            "properties": {
+                "auto_renew": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "user.UpdateSubscriptionServerGroupsRequest": {
+            "type": "object",
+            "required": [
+                "server_group_ids"
+            ],
+            "properties": {
+                "server_group_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    },
+                    "example": [
+                        1,
+                        2,
+                        3
+                    ]
+                }
+            }
+        },
+        "user.UserProfileUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "user.ValidateCouponRequest": {
+            "type": "object",
+            "required": [
+                "coupon_code",
+                "order_amount",
+                "plan_id"
+            ],
+            "properties": {
+                "coupon_code": {
+                    "type": "string",
+                    "example": "SAVE20"
+                },
+                "order_amount": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 29.99
+                },
+                "plan_id": {
+                    "type": "integer",
+                    "example": 1
                 }
             }
         }
@@ -2858,7 +16647,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "Linke API",
-	Description:      "A comprehensive API server with Gin, GORM, Redis, OAuth2, and invite code system. Supports user authentication, profile management, and invite-based registration.",
+	Description:      "A comprehensive service management platform with subscription-based billing, user management, and server administration. Features include OAuth2 authentication, traffic subscription management, multi-gateway payments, referral programs, and customer support system.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
