@@ -25,19 +25,38 @@ func NewInvoiceCRUDHandler(invoiceService *service.InvoiceService) *InvoiceCRUDH
 
 // CreateInvoiceFromOrderRequest represents the request to create invoice from order
 type CreateInvoiceFromOrderRequest struct {
-	OrderID  uint                          `json:"order_id" binding:"required"`
-	Options  *service.CreateInvoiceRequest `json:"options,omitempty"`
-	AutoSend bool                          `json:"auto_send,omitempty"`
+	OrderID          uint    `json:"order_id" binding:"required"`
+	InvoiceType      string  `json:"invoice_type,omitempty" example:"standard"`
+	TaxRate          float64 `json:"tax_rate,omitempty" example:"0.2"`
+	TaxType          string  `json:"tax_type,omitempty" example:"VAT"`
+	TaxNumber        string  `json:"tax_number,omitempty" example:"GB123456789"`
+	BillingName      string  `json:"billing_name,omitempty"`
+	BillingEmail     string  `json:"billing_email,omitempty"`
+	BillingAddress   string  `json:"billing_address,omitempty"`
+	BillingCity      string  `json:"billing_city,omitempty"`
+	BillingState     string  `json:"billing_state,omitempty"`
+	BillingCountry   string  `json:"billing_country,omitempty"`
+	BillingZip       string  `json:"billing_zip,omitempty"`
+	CompanyName      string  `json:"company_name,omitempty"`
+	CompanyTaxID     string  `json:"company_tax_id,omitempty"`
+	CompanyAddress   string  `json:"company_address,omitempty"`
+	Description      string  `json:"description,omitempty"`
+	Notes            string  `json:"notes,omitempty"`
+	DueDate          string  `json:"due_date,omitempty" example:"2024-01-31"`
+	PaymentTermsDays *int    `json:"payment_terms_days,omitempty" example:"30"`
+	Template         string  `json:"template,omitempty" example:"default"`
+	Language         string  `json:"language,omitempty" example:"en"`
+	AutoSend         bool    `json:"auto_send,omitempty" example:"false"`
 }
 
 // CreateInvoice godoc
-// @Summary [Admin] Create invoice
-// @Description Create a new invoice (Admin only)
+// @Summary [Admin] Create invoice from order
+// @Description Create a new invoice from an existing order (Admin only)
 // @Tags Admin-Invoice-Management
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param invoice body service.CreateInvoiceRequest true "Invoice data"
+// @Param invoice body CreateInvoiceFromOrderRequest true "Invoice data"
 // @Success 201 {object} response.StandardResponse{data=model.InvoiceResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -65,14 +84,40 @@ func (h *InvoiceCRUDHandler) CreateInvoice(c *gin.Context) {
 	}
 
 	// Bind request
-	var req service.CreateInvoiceRequest
+	var req CreateInvoiceFromOrderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "Invalid request data", err.Error())
 		return
 	}
 
+	// Convert to service request
+	serviceReq := &service.CreateInvoiceFromOrderRequest{
+		OrderID:          req.OrderID,
+		InvoiceType:      req.InvoiceType,
+		TaxRate:          req.TaxRate,
+		TaxType:          req.TaxType,
+		TaxNumber:        req.TaxNumber,
+		BillingName:      req.BillingName,
+		BillingEmail:     req.BillingEmail,
+		BillingAddress:   req.BillingAddress,
+		BillingCity:      req.BillingCity,
+		BillingState:     req.BillingState,
+		BillingCountry:   req.BillingCountry,
+		BillingZip:       req.BillingZip,
+		CompanyName:      req.CompanyName,
+		CompanyTaxID:     req.CompanyTaxID,
+		CompanyAddress:   req.CompanyAddress,
+		Description:      req.Description,
+		Notes:            req.Notes,
+		DueDate:          req.DueDate,
+		PaymentTermsDays: req.PaymentTermsDays,
+		Template:         req.Template,
+		Language:         req.Language,
+		AutoSend:         req.AutoSend,
+	}
+
 	// Create invoice
-	invoice, err := h.InvoiceService.CreateInvoice(c.Request.Context(), &req)
+	invoice, err := h.InvoiceService.CreateInvoiceFromOrder(c.Request.Context(), serviceReq)
 	if err != nil {
 		logger.Error("Failed to create invoice", logger.Error2("error", err), logger.Uint("admin_id", user.ID))
 		response.InternalServerError(c, "Failed to create invoice", err.Error())
@@ -129,13 +174,34 @@ func (h *InvoiceCRUDHandler) CreateInvoiceFromOrder(c *gin.Context) {
 		return
 	}
 
-	// Set auto_send in options if provided
-	if req.Options != nil {
-		req.Options.AutoSend = req.AutoSend
+	// Convert to service request
+	serviceReq := &service.CreateInvoiceFromOrderRequest{
+		OrderID:          req.OrderID,
+		InvoiceType:      req.InvoiceType,
+		TaxRate:          req.TaxRate,
+		TaxType:          req.TaxType,
+		TaxNumber:        req.TaxNumber,
+		BillingName:      req.BillingName,
+		BillingEmail:     req.BillingEmail,
+		BillingAddress:   req.BillingAddress,
+		BillingCity:      req.BillingCity,
+		BillingState:     req.BillingState,
+		BillingCountry:   req.BillingCountry,
+		BillingZip:       req.BillingZip,
+		CompanyName:      req.CompanyName,
+		CompanyTaxID:     req.CompanyTaxID,
+		CompanyAddress:   req.CompanyAddress,
+		Description:      req.Description,
+		Notes:            req.Notes,
+		DueDate:          req.DueDate,
+		PaymentTermsDays: req.PaymentTermsDays,
+		Template:         req.Template,
+		Language:         req.Language,
+		AutoSend:         req.AutoSend,
 	}
 
 	// Create invoice from order
-	invoice, err := h.InvoiceService.CreateInvoiceFromOrder(c.Request.Context(), req.OrderID, req.Options)
+	invoice, err := h.InvoiceService.CreateInvoiceFromOrder(c.Request.Context(), serviceReq)
 	if err != nil {
 		logger.Error("Failed to create invoice from order", 
 			logger.Error2("error", err), 

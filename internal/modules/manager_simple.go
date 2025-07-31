@@ -10,7 +10,7 @@ import (
 	admincoupon "linke/internal/handler/admin/coupon"
 	admininvoice "linke/internal/handler/admin/invoice"
 	adminticket "linke/internal/handler/admin/ticket"
-	adminorder "linke/internal/handler/admin/order"
+	// adminorder "linke/internal/handler/admin/order" // DEPRECATED - handler not created yet
 	"linke/internal/handler/user"
 	usercoupon "linke/internal/handler/user/coupon"
 	userinvitecode "linke/internal/handler/user/invite_code"
@@ -21,7 +21,13 @@ import (
 
 // SimpleManager manages all application modules using existing services
 type SimpleManager struct {
-	// Services
+	// New Business Flow Services (Order → Invoice → Payment → Subscription)
+	OrderService               *service.OrderService
+	NewInvoiceService          *service.InvoiceService  // New business flow invoice service
+	NewPaymentService          *service.PaymentService  // New business flow payment service  
+	NewSubscriptionService     *service.SubscriptionService // New business flow subscription service
+	
+	// Existing Services
 	UserService                *service.UserService
 	AuthService                *service.AuthService
 	JWTService                 *service.JWTService
@@ -31,7 +37,7 @@ type SimpleManager struct {
 	UserSubscriptionService    *service.UserSubscriptionService
 	PaymentService             *service.PaymentService
 	PaymentConfigService       *service.PaymentConfigService
-	SubscriptionOrderService   *service.SubscriptionOrderService
+	// SubscriptionOrderService   *service.SubscriptionOrderService // DEPRECATED - removed in new business flow
 	TicketService              *service.TicketService
 	TicketMessageService       *service.TicketMessageService
 	ReferralService            *service.ReferralService
@@ -46,7 +52,7 @@ type SimpleManager struct {
 	AuthHandler                *handler.AuthHandler
 	TaskHandler                *handler.TaskHandler
 	PaymentHandler             *handler.PaymentHandler
-	SubscriptionOrderHandler   *handler.SubscriptionOrderHandler
+	// SubscriptionOrderHandler   *handler.SubscriptionOrderHandler // DEPRECATED - removed in new business flow
 	ServerAPIHandler           *handler.ServerAPIHandler
 	ShadowsocksServerHandler   *handler.ShadowsocksServerHandler
 	
@@ -56,7 +62,7 @@ type SimpleManager struct {
 	AdminTicketHandler         *adminticket.AdminTicketManager
 	AdminReferralHandler       *admin.ReferralHandler
 	AdminServerGroupHandler    *admin.ServerGroupHandler
-	AdminOrderHandler          *adminorder.AdminOrderManager
+	// AdminOrderHandler          *adminorder.AdminOrderManager // DEPRECATED - handler not created yet
 	AdminInvoiceHandler        *admininvoice.AdminInvoiceManager
 	AdminCouponHandler         *admincoupon.AdminCouponManager
 	
@@ -75,7 +81,7 @@ func NewSimpleManager(cfg *config.Config, db *repository.Database, taskQueue *qu
 	jwtBlacklistService := service.NewJWTBlacklistService(db.DB)
 	loginSecurityService := service.NewLoginSecurityService(db.DB, nil) // Use default config
 	
-	// Initialize core services
+	// Initialize existing services first (dependencies)
 	userService := service.NewUserService(db.DB)
 	jwtService := service.NewJWTService(cfg, jwtBlacklistService)
 	
@@ -87,14 +93,22 @@ func NewSimpleManager(cfg *config.Config, db *repository.Database, taskQueue *qu
 	inviteCodeUsageService := service.NewInviteCodeUsageService(db.DB)
 	subscriptionPlanService := service.NewSubscriptionPlanService(db.DB)
 	userSubscriptionService := service.NewUserSubscriptionService(db.DB, subscriptionPlanService)
-	paymentService := service.NewPaymentService(db.DB)
-	paymentConfigService := service.NewPaymentConfigService(db.DB)
 	couponService := service.NewCouponService(db.DB)
 	subscriptionExpiryService := service.NewSubscriptionExpiryService(db.DB, userSubscriptionService)
-	subscriptionOrderService := service.NewSubscriptionOrderService(db.DB, subscriptionPlanService, userSubscriptionService, paymentService, couponService)
-	invoiceService := service.NewInvoiceService(db.DB, userService)
+	// subscriptionOrderService := service.NewSubscriptionOrderService(db.DB, subscriptionPlanService, userSubscriptionService, paymentService, couponService) // DEPRECATED
+	
+	// Initialize new business flow services (after dependencies)
+	orderService := service.NewOrderService(db.DB, subscriptionPlanService, couponService)
+	newInvoiceService := service.NewInvoiceService(db.DB, userService)
+	newPaymentService := service.NewPaymentService(db.DB, newInvoiceService)
+	newSubscriptionService := service.NewSubscriptionService(db.DB, orderService)
 	
 	authService := service.NewAuthService(db.DB, userService, jwtService, inviteCodeService, referralService, loginSecurityService)
+	
+	// Payment services
+	paymentService := service.NewPaymentService(db.DB, newInvoiceService)
+	paymentConfigService := service.NewPaymentConfigService(db.DB)
+	invoiceService := service.NewInvoiceService(db.DB, userService)
 	
 	// Ticket services
 	ticketService := service.NewTicketService(db.DB)
@@ -105,36 +119,42 @@ func NewSimpleManager(cfg *config.Config, db *repository.Database, taskQueue *qu
 	shadowsocksServerService := service.NewShadowsocksServerService(db)
 	
 	// Set up payment service dependencies
-	paymentService.SetSubscriptionOrderService(subscriptionOrderService)
+	// paymentService.SetSubscriptionOrderService(subscriptionOrderService) // DEPRECATED
 	
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(cfg, db, authService, jwtService)
 	taskHandler := handler.NewTaskHandler(taskQueue)
 	paymentHandler := handler.NewPaymentHandler(paymentService, paymentConfigService)
-	subscriptionOrderHandler := handler.NewSubscriptionOrderHandler(subscriptionOrderService)
+	// subscriptionOrderHandler := handler.NewSubscriptionOrderHandler(subscriptionOrderService) // DEPRECATED
 	serverAPIHandler := handler.NewServerAPIHandler(shadowsocksServerService, userService, userSubscriptionService, db, taskQueue.GetClient(), cfg)
 	shadowsocksServerHandler := handler.NewShadowsocksServerHandler(shadowsocksServerService, nil, userService, userSubscriptionService)
 	
 	// Admin handlers
 	adminUserHandler := adminuser.NewAdminUserManager(userService, authService)
-	adminSubscriptionHandler := admin.NewAdminSubscriptionHandler(subscriptionPlanService, userSubscriptionService, subscriptionOrderService)
+	adminSubscriptionHandler := admin.NewAdminSubscriptionHandler(subscriptionPlanService, userSubscriptionService, orderService, newInvoiceService, newPaymentService, newSubscriptionService) // Updated to use new business flow services
 	adminTicketHandler := adminticket.NewAdminTicketManager(ticketService, ticketMessageService)
 	adminReferralHandler := admin.NewReferralHandler(referralService, referralCampaignService)
 	adminServerGroupHandler := admin.NewServerGroupHandler(serverGroupService)
-	adminOrderHandler := adminorder.NewAdminOrderManager(subscriptionOrderService, paymentService, userService)
-	adminInvoiceHandler := admininvoice.NewAdminInvoiceManager(invoiceService)
+	// adminOrderHandler := adminorder.NewAdminOrderManager(newInvoiceService, newPaymentService, userService) // DEPRECATED - handler not created yet
+	adminInvoiceHandler := admininvoice.NewAdminInvoiceManager(newInvoiceService) // Updated to use new service
 	adminCouponHandler := admincoupon.NewAdminCouponManager(couponService)
 	
 	// User handlers
 	userProfileHandler := userprofile.NewUserProfileManager(userService)
-	userSubscriptionHandler := user.NewUserSubscriptionPublicHandler(subscriptionPlanService, userSubscriptionService, subscriptionOrderService, couponService, subscriptionExpiryService)
+	userSubscriptionHandler := user.NewUserSubscriptionPublicHandler(subscriptionPlanService, userSubscriptionService, orderService, newInvoiceService, newPaymentService, newSubscriptionService, couponService) // Updated to use new business flow services
 	userTicketHandler := userticket.NewUserTicketManager(ticketService, ticketMessageService)
 	userInviteCodeHandler := userinvitecode.NewUserInviteCodeManager(inviteCodeService, inviteCodeUsageService)
 	userReferralHandler := user.NewReferralHandler(referralService, referralCampaignService)
 	userCouponHandler := usercoupon.NewUserCouponManager(couponService)
 	
 	return &SimpleManager{
-		// Services
+		// New Business Flow Services
+		OrderService:               orderService,
+		NewInvoiceService:          newInvoiceService,
+		NewPaymentService:          newPaymentService,
+		NewSubscriptionService:     newSubscriptionService,
+		
+		// Existing Services
 		UserService:                userService,
 		AuthService:                authService,
 		JWTService:                 jwtService,
@@ -144,7 +164,7 @@ func NewSimpleManager(cfg *config.Config, db *repository.Database, taskQueue *qu
 		UserSubscriptionService:    userSubscriptionService,
 		PaymentService:             paymentService,
 		PaymentConfigService:       paymentConfigService,
-		SubscriptionOrderService:   subscriptionOrderService,
+		// SubscriptionOrderService:   subscriptionOrderService, // DEPRECATED
 		TicketService:              ticketService,
 		TicketMessageService:       ticketMessageService,
 		ReferralService:            referralService,
@@ -159,7 +179,7 @@ func NewSimpleManager(cfg *config.Config, db *repository.Database, taskQueue *qu
 		AuthHandler:                authHandler,
 		TaskHandler:                taskHandler,
 		PaymentHandler:             paymentHandler,
-		SubscriptionOrderHandler:   subscriptionOrderHandler,
+		// SubscriptionOrderHandler:   subscriptionOrderHandler, // DEPRECATED
 		ServerAPIHandler:           serverAPIHandler,
 		ShadowsocksServerHandler:   shadowsocksServerHandler,
 		
@@ -169,7 +189,7 @@ func NewSimpleManager(cfg *config.Config, db *repository.Database, taskQueue *qu
 		AdminTicketHandler:         adminTicketHandler,
 		AdminReferralHandler:       adminReferralHandler,
 		AdminServerGroupHandler:    adminServerGroupHandler,
-		AdminOrderHandler:          adminOrderHandler,
+		// AdminOrderHandler:          adminOrderHandler, // DEPRECATED - handler not created yet
 		AdminInvoiceHandler:        adminInvoiceHandler,
 		AdminCouponHandler:         adminCouponHandler,
 		

@@ -25,8 +25,8 @@ func NewInvoicePaymentHandler(invoiceService *service.InvoiceService) *InvoicePa
 
 // MarkInvoiceAsPaidRequest represents the request to mark invoice as paid
 type MarkInvoiceAsPaidRequest struct {
-	PaymentMethod    string `json:"payment_method" binding:"required" example:"bank_transfer"`
-	PaymentReference string `json:"payment_reference,omitempty" example:"REF123456"`
+	PaidAmount       float64 `json:"paid_amount" binding:"required,min=0" example:"29.99"`
+	PaymentReference string  `json:"payment_reference,omitempty" example:"REF123456"`
 }
 
 // MarkInvoiceAsPaid godoc
@@ -78,14 +78,14 @@ func (h *InvoicePaymentHandler) MarkInvoiceAsPaid(c *gin.Context) {
 		return
 	}
 
-	// Validate payment method
-	if err := h.Validator.ValidatePaymentMethod(req.PaymentMethod); err != nil {
-		response.BadRequest(c, "Invalid payment method", err.Error())
+	// Validate paid amount
+	if req.PaidAmount <= 0 {
+		response.BadRequest(c, "Paid amount must be greater than 0")
 		return
 	}
 
 	// Mark invoice as paid
-	if err := h.InvoiceService.MarkInvoiceAsPaid(c.Request.Context(), invoiceID, req.PaymentMethod, req.PaymentReference); err != nil {
+	if err := h.InvoiceService.MarkInvoiceAsPaid(c.Request.Context(), invoiceID, req.PaidAmount, req.PaymentReference); err != nil {
 		if err.Error() == "invoice not found" {
 			response.NotFound(c, "Invoice not found")
 			return

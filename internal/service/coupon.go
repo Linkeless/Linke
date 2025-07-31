@@ -420,7 +420,7 @@ func (s *CouponService) UseCoupon(ctx context.Context, couponID, userID, orderID
 	usage := &model.CouponUsage{
 		CouponID:            couponID,
 		UserID:              userID,
-		SubscriptionOrderID: orderID,
+		OrderID:         orderID,
 		DiscountAmount:      discountAmount,
 		OrderAmount:         orderAmount,
 		Currency:            currency,

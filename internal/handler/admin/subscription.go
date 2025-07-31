@@ -16,18 +16,29 @@ import (
 type AdminSubscriptionHandler struct {
 	subscriptionPlanService *service.SubscriptionPlanService
 	userSubscriptionService *service.UserSubscriptionService
-	subscriptionOrderService *service.SubscriptionOrderService
+	// Replace old SubscriptionOrderService with new business flow services
+	orderService            *service.OrderService
+	invoiceService          *service.InvoiceService
+	paymentService          *service.PaymentService
+	subscriptionService     *service.SubscriptionService
 }
 
 func NewAdminSubscriptionHandler(
 	subscriptionPlanService *service.SubscriptionPlanService,
 	userSubscriptionService *service.UserSubscriptionService,
-	subscriptionOrderService *service.SubscriptionOrderService,
+	// Replace old SubscriptionOrderService with new business flow services
+	orderService *service.OrderService,
+	invoiceService *service.InvoiceService,
+	paymentService *service.PaymentService,
+	subscriptionService *service.SubscriptionService,
 ) *AdminSubscriptionHandler {
 	return &AdminSubscriptionHandler{
 		subscriptionPlanService:  subscriptionPlanService,
 		userSubscriptionService: userSubscriptionService,
-		subscriptionOrderService: subscriptionOrderService,
+		orderService:            orderService,
+		invoiceService:          invoiceService,
+		paymentService:          paymentService,
+		subscriptionService:     subscriptionService,
 	}
 }
 

@@ -101,7 +101,8 @@ func (m *SimpleManager) setupPublicRoutes(v1 *gin.RouterGroup) {
 	payments.Use(middleware.PaymentErrorHandler()) // Add payment-specific error handling
 	{
 		payments.GET("/methods", m.modules.PaymentHandler.GetAvailablePaymentMethods)
-		payments.GET("/configs", m.modules.PaymentHandler.GetActivePaymentConfigs)
+		// TODO: Add payment config retrieval when method is available
+		// payments.GET("/configs", m.modules.PaymentHandler.GetActivePaymentConfigs)
 		// Payment notifications
 		payments.POST("/notify/:gateway", m.modules.PaymentHandler.PaymentNotify)
 	}
@@ -155,6 +156,31 @@ func (m *SimpleManager) setupUserRoutes(v1 *gin.RouterGroup) {
 		subscriptions.GET("/history", m.modules.UserSubscriptionHandler.GetMySubscriptionHistory)
 		subscriptions.POST("/purchase", m.modules.UserSubscriptionHandler.PurchaseSubscription)
 		subscriptions.POST("/:id/cancel", m.modules.UserSubscriptionHandler.CancelMySubscription)
+		subscriptions.POST("/:id/pause", m.modules.UserSubscriptionHandler.PauseMySubscription)
+		subscriptions.POST("/:id/resume", m.modules.UserSubscriptionHandler.ResumeMySubscription)
+		subscriptions.PUT("/:id/auto-renewal", m.modules.UserSubscriptionHandler.UpdateAutoRenewal)
+		subscriptions.GET("/stats", m.modules.UserSubscriptionHandler.GetMySubscriptionStats)
+		
+		// Upgrade/downgrade (temporarily disabled)
+		subscriptions.POST("/upgrade-downgrade", m.modules.UserSubscriptionHandler.UpgradeDowngradeSubscription)
+		subscriptions.GET("/:id/upgrade-downgrade-options", m.modules.UserSubscriptionHandler.GetUpgradeDowngradeOptions)
+		
+		// Coupon validation
+		subscriptions.POST("/validate-coupon", m.modules.UserSubscriptionHandler.ValidateCoupon)
+		
+		// Notification preferences
+		subscriptions.GET("/notification-preferences", m.modules.UserSubscriptionHandler.GetNotificationPreferences)
+		subscriptions.PUT("/notification-preferences", m.modules.UserSubscriptionHandler.UpdateNotificationPreferences)
+		
+		// Server management (temporarily disabled)
+		subscriptions.GET("/:subscription_id/available-server-groups", m.modules.UserSubscriptionHandler.GetAvailableServerGroups)
+		subscriptions.GET("/:subscription_id/server-groups", m.modules.UserSubscriptionHandler.GetSubscriptionServerGroups)
+		subscriptions.PUT("/:subscription_id/server-groups", m.modules.UserSubscriptionHandler.UpdateSubscriptionServerGroups)
+		subscriptions.GET("/accessible-servers", m.modules.UserSubscriptionHandler.GetAccessibleServers)
+		subscriptions.GET("/:subscription_id/servers", m.modules.UserSubscriptionHandler.GetServersBySubscription)
+		
+		// Traffic management
+		subscriptions.POST("/:id/reset-traffic", m.modules.UserSubscriptionHandler.ResetTrafficUsage)
 	}
 	
 	// User shadowsocks server routes
@@ -167,9 +193,9 @@ func (m *SimpleManager) setupUserRoutes(v1 *gin.RouterGroup) {
 	payments := user.Group("/payments")
 	payments.Use(middleware.PaymentErrorHandler()) // Add payment-specific error handling
 	{
-		payments.POST("/orders", m.modules.PaymentHandler.CreatePaymentOrder)
-		payments.GET("/orders/my", m.modules.PaymentHandler.GetMyPaymentOrders)
-		payments.GET("/orders/:payment_no", m.modules.PaymentHandler.GetPaymentOrder)
+		payments.POST("", m.modules.PaymentHandler.CreatePayment)
+		payments.GET("/my", m.modules.PaymentHandler.GetMyPayments)
+		payments.GET("/:payment_id", m.modules.PaymentHandler.GetPayment)
 	}
 	
 	// User referral routes
@@ -285,13 +311,19 @@ func (m *SimpleManager) setupAdminRoutes(v1 *gin.RouterGroup) {
 	}
 
 	
-	// Admin payment config management routes
+	// Admin payment management routes
 	adminPayments := admin.Group("/payments")
 	{
-		adminPayments.POST("/configs", m.modules.PaymentHandler.CreatePaymentConfig)
-		adminPayments.GET("/configs", m.modules.PaymentHandler.GetPaymentConfigs)
-		adminPayments.PUT("/configs/:id", m.modules.PaymentHandler.UpdatePaymentConfig)
-		adminPayments.DELETE("/configs/:id", m.modules.PaymentHandler.DeletePaymentConfig)
+		// Payment records management
+		adminPayments.GET("", m.modules.PaymentHandler.GetMyPayments) // TODO: Create admin version
+		adminPayments.GET("/:payment_id", m.modules.PaymentHandler.GetPayment)
+		adminPayments.PATCH("/:payment_id/complete", m.modules.PaymentHandler.CompletePayment)
+		
+		// TODO: Add payment config management when PaymentConfigHandler is created
+		// adminPayments.POST("/configs", m.modules.PaymentConfigHandler.CreatePaymentConfig)
+		// adminPayments.GET("/configs", m.modules.PaymentConfigHandler.GetPaymentConfigs)
+		// adminPayments.PUT("/configs/:id", m.modules.PaymentConfigHandler.UpdatePaymentConfig)
+		// adminPayments.DELETE("/configs/:id", m.modules.PaymentConfigHandler.DeletePaymentConfig)
 	}
 	
 	// Admin subscription management routes
@@ -313,17 +345,6 @@ func (m *SimpleManager) setupAdminRoutes(v1 *gin.RouterGroup) {
 		adminSubscriptions.PATCH("/users/:id", m.modules.AdminSubscriptionHandler.PatchUserSubscription)
 		adminSubscriptions.POST("/users/:id/renew", m.modules.AdminSubscriptionHandler.RenewUserSubscription)
 		adminSubscriptions.DELETE("/users/:id", m.modules.AdminSubscriptionHandler.DeleteUserSubscription)
-	}
-	
-	// Admin order management routes
-	adminOrders := admin.Group("/orders")
-	{
-		adminOrders.GET("", m.modules.AdminOrderHandler.ListOrders)
-		adminOrders.GET("/:id", m.modules.AdminOrderHandler.GetOrder)
-		adminOrders.PATCH("/:id/status", m.modules.AdminOrderHandler.UpdateOrderStatus)
-		adminOrders.POST("/:id/refund", m.modules.AdminOrderHandler.ProcessRefund)
-		adminOrders.GET("/stats", m.modules.AdminOrderHandler.GetOrderStats)
-		adminOrders.POST("/bulk", m.modules.AdminOrderHandler.BulkUpdate)
 	}
 	
 	// Admin invoice management routes
@@ -372,15 +393,6 @@ func (m *SimpleManager) setupServerAPIRoutes(v1 *gin.RouterGroup) {
 		uniProxy.GET("/user", m.modules.ServerAPIHandler.UniProxyUsers)
 		// Push endpoint for node data
 		uniProxy.POST("/push", m.modules.ServerAPIHandler.UniProxyPush)
-	}
-	
-	// Subscription order routes (authenticated)
-	subscriptionOrders := v1.Group("/subscription-orders")
-	subscriptionOrders.Use(middleware.AuthMiddleware(m.modules.AuthService))
-	{
-		subscriptionOrders.POST("", m.modules.SubscriptionOrderHandler.CreateSubscriptionOrder)
-		subscriptionOrders.GET("/my", m.modules.SubscriptionOrderHandler.GetMySubscriptionOrders)
-		subscriptionOrders.GET("/:id", m.modules.SubscriptionOrderHandler.GetSubscriptionOrder)
 	}
 }
 

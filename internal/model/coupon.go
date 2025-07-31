@@ -162,7 +162,8 @@ type CouponUsage struct {
 	// Foreign Keys
 	CouponID            uint64 `json:"coupon_id" gorm:"not null;index"`
 	UserID              uint64 `json:"user_id" gorm:"not null;index"`
-	SubscriptionOrderID uint64 `json:"subscription_order_id" gorm:"not null;index"`
+	// Replace subscription_order_id with order_id for new business flow
+	OrderID              uint64 `json:"order_id" gorm:"not null;index"`
 
 	// Usage Details
 	DiscountAmount float64 `json:"discount_amount" gorm:"type:decimal(10,2);not null"` // 实际折扣金额
@@ -172,7 +173,7 @@ type CouponUsage struct {
 	// Relationships
 	Coupon            *Coupon            `json:"coupon,omitempty" gorm:"foreignKey:CouponID;references:ID"`
 	User              *User              `json:"user,omitempty" gorm:"foreignKey:UserID;references:ID"`
-	SubscriptionOrder *SubscriptionOrder `json:"subscription_order,omitempty" gorm:"foreignKey:SubscriptionOrderID;references:ID"`
+	SubscriptionOrder *Order `json:"subscription_order,omitempty" gorm:"foreignKey:SubscriptionOrderID;references:ID"`
 
 	// Timestamp Fields
 	CreatedAt time.Time      `json:"created_at" gorm:"not null;index"`
@@ -263,7 +264,7 @@ type CouponUsageResponse struct {
 	// Related data
 	Coupon            *CouponResponse             `json:"coupon,omitempty"`             // Coupon info
 	User              *UserResponse               `json:"user,omitempty"`               // User info
-	SubscriptionOrder *SubscriptionOrderResponse  `json:"subscription_order,omitempty"` // Order info
+	SubscriptionOrder *OrderResponse  `json:"subscription_order,omitempty"` // Order info
 }
 
 // ToResponse converts CouponUsage to CouponUsageResponse
@@ -272,7 +273,7 @@ func (cu *CouponUsage) ToResponse() *CouponUsageResponse {
 		ID:                  cu.ID,
 		CouponID:            cu.CouponID,
 		UserID:              cu.UserID,
-		SubscriptionOrderID: cu.SubscriptionOrderID,
+		SubscriptionOrderID: cu.OrderID,
 		DiscountAmount:      cu.DiscountAmount,
 		OrderAmount:         cu.OrderAmount,
 		Currency:            cu.Currency,

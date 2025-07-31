@@ -68,7 +68,7 @@ func (h *InvoiceListHandler) ListInvoices(c *gin.Context) {
 	}
 
 	// Bind query parameters
-	var req service.GetInvoicesRequest
+	var req service.InvoiceFilters
 	if err := c.ShouldBindQuery(&req); err != nil {
 		response.BadRequest(c, "Invalid query parameters", err.Error())
 		return
@@ -105,7 +105,7 @@ func (h *InvoiceListHandler) ListInvoices(c *gin.Context) {
 	}
 
 	// Get invoices
-	invoices, totalCount, err := h.InvoiceService.GetInvoices(c.Request.Context(), &req)
+	invoices, totalCount, err := h.InvoiceService.ListInvoices(c.Request.Context(), &req)
 	if err != nil {
 		logger.Error("Failed to get invoices", logger.Error2("error", err))
 		response.InternalServerError(c, "Failed to get invoices", err.Error())

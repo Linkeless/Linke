@@ -95,9 +95,9 @@ func (s *UserSubscriptionService) GetUserSubscriptionStats(ctx context.Context, 
 	// Calculate total spent (sum of all payment records for this user)
 	var totalSpent float64
 	if err := s.db.WithContext(ctx).
-		Model(&model.SubscriptionOrder{}).
-		Select("COALESCE(SUM(final_amount), 0)").
-		Where("user_id = ? AND status = ?", userID, "completed").
+		Model(&model.Order{}).
+		Select("COALESCE(SUM(total_amount), 0)").
+		Where("user_id = ? AND status = ?", userID, model.NewOrderStatusFulfilled).
 		Scan(&totalSpent).Error; err != nil {
 		logger.Error("Failed to calculate total spent", logger.Error2("error", err))
 		// Don't fail the whole operation

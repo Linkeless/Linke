@@ -2,12 +2,7 @@ package service
 
 import (
 	"context"
-	"crypto/rand"
-	"crypto/sha256"
-	"encoding/hex"
-	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"linke/internal/logger"
@@ -16,478 +11,518 @@ import (
 	"gorm.io/gorm"
 )
 
-// PaymentGateway interface defines the methods that all payment gateways must implement
-type PaymentGateway interface {
-	CreatePaymentOrder(req *CreatePaymentOrderRequest) (*CreatePaymentOrderResponse, error)
-	QueryPaymentOrder(outTradeNo string) (*QueryPaymentOrderResponse, error)
-	VerifyPaymentNotify(data map[string]interface{}) (bool, *NotifyData)
-	IsPaymentCompleted(status string) bool
-	GetSupportedPaymentMethods() []string
-	GetPaymentMethodName(method string) string
-	ValidateConfig() error
-	TestConnection() error
-}
-
-// PaymentService represents the unified payment service
 type PaymentService struct {
-	db                       *gorm.DB
-	gateways                 map[string]PaymentGateway
-	subscriptionOrderService SubscriptionOrderServiceInterface
+	db             *gorm.DB
+	invoiceService *InvoiceService
 }
 
-// NewPaymentService creates a new payment service instance
-func NewPaymentService(db *gorm.DB) *PaymentService {
+func NewPaymentService(db *gorm.DB, invoiceService *InvoiceService) *PaymentService {
 	return &PaymentService{
-		db:       db,
-		gateways: make(map[string]PaymentGateway),
+		db:             db,
+		invoiceService: invoiceService,
 	}
 }
 
-// CreatePaymentOrderRequest represents the unified request to create a payment order
-type CreatePaymentOrderRequest struct {
-	UserID              uint    `json:"user_id"`
-	SubscriptionOrderID *uint   `json:"subscription_order_id,omitempty"`
-	Gateway             string  `json:"gateway"`             // epay, epusdt
-	PaymentMethod       string  `json:"payment_method"`      // alipay, wechat, usdt, etc.
-	Amount              float64 `json:"amount"`              // Amount in specified currency
-	Currency            string  `json:"currency"`            // CNY, USD, USDT
-	Subject             string  `json:"subject"`             // Order subject
-	Body                string  `json:"body"`                // Order description
-	ClientIP            string  `json:"client_ip"`           // Client IP
-	NotifyURL           string  `json:"notify_url"`          // Async notification URL
-	ReturnURL           string  `json:"return_url"`          // Sync return URL
-	ExpiredMinutes      int     `json:"expired_minutes"`     // Expiration time in minutes
-	Metadata            string  `json:"metadata,omitempty"`  // Additional metadata
+// CreatePaymentRequest represents the request to create a payment
+type CreatePaymentRequest struct {
+	InvoiceID       uint    `json:"invoice_id" binding:"required"`
+	UserID          uint    `json:"user_id" binding:"required"`
+	Amount          float64 `json:"amount" binding:"required,min=0"`
+	Currency        string  `json:"currency" binding:"required"`
+	PaymentGateway  string  `json:"payment_gateway" binding:"required"`
+	PaymentMethod   string  `json:"payment_method" binding:"required"`
+	Description     string  `json:"description,omitempty"`
+	Reference       string  `json:"reference,omitempty"`
+	ExternalID      string  `json:"external_id,omitempty"`
+	GatewayResponse string  `json:"gateway_response,omitempty"`
+	ProcessorFee    float64 `json:"processor_fee,omitempty"`
+	Notes           string  `json:"notes,omitempty"`
 }
 
-// CreatePaymentOrderResponse represents the unified response from payment order creation
-type CreatePaymentOrderResponse struct {
-	PaymentNo    string    `json:"payment_no"`              // Internal payment number
-	PaymentURL   string    `json:"payment_url"`             // Payment URL
-	QRCodeURL    string    `json:"qr_code_url"`             // QR code URL
-	Amount       float64   `json:"amount"`                  // Payment amount
-	Currency     string    `json:"currency"`                // Currency
-	ExpiredAt    time.Time `json:"expired_at"`              // Expiration time
-	GatewayData  string    `json:"gateway_data,omitempty"`  // Raw gateway response
-}
-
-// QueryPaymentOrderResponse represents the unified response from payment order query
-type QueryPaymentOrderResponse struct {
-	PaymentNo     string `json:"payment_no"`
-	Status        string `json:"status"`
-	PaidAmount    string `json:"paid_amount,omitempty"`
-	TransactionID string `json:"transaction_id,omitempty"`
-	PaidAt        string `json:"paid_at,omitempty"`
-}
-
-// NotifyData represents the unified notification data
-type NotifyData struct {
-	PaymentNo     string  `json:"payment_no"`
-	OutTradeNo    string  `json:"out_trade_no"`
-	TransactionID string  `json:"transaction_id"`
-	Amount        float64 `json:"amount"`
-	Status        string  `json:"status"`
-	PaidAt        string  `json:"paid_at,omitempty"`
-}
-
-// RegisterGateway registers a payment gateway
-func (ps *PaymentService) RegisterGateway(name string, gateway PaymentGateway) error {
-	if err := gateway.ValidateConfig(); err != nil {
-		return fmt.Errorf("gateway config validation failed: %w", err)
-	}
-
-	ps.gateways[name] = gateway
-	logger.Info("Payment gateway registered", logger.String("gateway", name))
-	return nil
-}
-
-// GetGateway gets a payment gateway by name
-func (ps *PaymentService) GetGateway(name string) (PaymentGateway, error) {
-	gateway, exists := ps.gateways[name]
-	if !exists {
-		return nil, fmt.Errorf("payment gateway '%s' not found", name)
-	}
-	return gateway, nil
-}
-
-// GeneratePaymentNo generates a unique payment number
-func (ps *PaymentService) GeneratePaymentNo() (string, error) {
-	// Generate format: PAY + YYYYMMDD + 8-digit random hex
-	now := time.Now()
-	dateStr := now.Format("20060102")
-	
-	// Generate 4 random bytes (8 hex characters)
-	randomBytes := make([]byte, 4)
-	if _, err := rand.Read(randomBytes); err != nil {
-		return "", fmt.Errorf("failed to generate random bytes: %w", err)
-	}
-	
-	randomStr := strings.ToUpper(hex.EncodeToString(randomBytes))
-	paymentNo := fmt.Sprintf("PAY%s%s", dateStr, randomStr)
-	
-	// Check if already exists (very unlikely but possible)
-	var existingRecord model.PaymentRecord
-	if err := ps.db.Where("payment_no = ?", paymentNo).First(&existingRecord).Error; err == nil {
-		// Payment number exists, try again (recursive call)
-		return ps.GeneratePaymentNo()
-	}
-	
-	return paymentNo, nil
-}
-
-// CreatePaymentOrder creates a new payment order
-func (ps *PaymentService) CreatePaymentOrder(ctx context.Context, req *CreatePaymentOrderRequest) (*model.PaymentRecord, error) {
-	// Get gateway
-	gateway, err := ps.GetGateway(req.Gateway)
+// CreatePayment creates a new payment record
+func (ps *PaymentService) CreatePayment(ctx context.Context, req *CreatePaymentRequest) (*model.Payment, error) {
+	// Verify invoice exists and belongs to user
+	invoice, err := ps.invoiceService.GetInvoice(ctx, req.InvoiceID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get invoice: %w", err)
 	}
 
-	// Validate payment method
-	supportedMethods := gateway.GetSupportedPaymentMethods()
-	methodSupported := false
-	for _, method := range supportedMethods {
-		if method == req.PaymentMethod {
-			methodSupported = true
-			break
+	if invoice.UserID != req.UserID {
+		return nil, fmt.Errorf("invoice does not belong to the specified user")
+	}
+
+	// Validate payment amount doesn't exceed remaining invoice amount
+	remainingAmount := invoice.GetRemainingAmount()
+	if req.Amount > remainingAmount {
+		return nil, fmt.Errorf("payment amount %.2f exceeds remaining invoice amount %.2f", req.Amount, remainingAmount)
+	}
+
+	// Start transaction
+	tx := ps.db.WithContext(ctx).Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
 		}
-	}
-	if !methodSupported {
-		return nil, fmt.Errorf("payment method '%s' not supported by gateway '%s'", req.PaymentMethod, req.Gateway)
-	}
+	}()
 
-	// Generate payment number and out trade number
-	paymentNo, err := ps.GeneratePaymentNo()
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate payment number: %w", err)
+	// Generate payment reference if not provided
+	reference := req.Reference
+	if reference == "" {
+		reference = ps.generatePaymentReference()
 	}
-
-	outTradeNo := paymentNo // Use payment number as out trade number
-
-	// Calculate expiration time
-	expiredAt := time.Now().Add(time.Duration(req.ExpiredMinutes) * time.Minute)
-	if req.ExpiredMinutes <= 0 {
-		expiredAt = time.Now().Add(30 * time.Minute) // Default 30 minutes
-	}
-
-	// Create gateway order request
-	gatewayReq := &CreatePaymentOrderRequest{
-		UserID:              req.UserID,
-		SubscriptionOrderID: req.SubscriptionOrderID,
-		Gateway:             req.Gateway,
-		PaymentMethod:       req.PaymentMethod,
-		Amount:              req.Amount,
-		Currency:            req.Currency,
-		Subject:             req.Subject,
-		Body:                req.Body,
-		ClientIP:            req.ClientIP,
-		NotifyURL:           req.NotifyURL,
-		ReturnURL:           req.ReturnURL,
-	}
-
-	// Create order through gateway using unified interface
-	gatewayResp, err := gateway.CreatePaymentOrder(gatewayReq)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create payment order through gateway: %w", err)
-	}
-
-	// Store raw gateway response
-	rawData, _ := json.Marshal(gatewayResp)
-	gatewayData := string(rawData)
 
 	// Create payment record
-	paymentRecord := &model.PaymentRecord{
-		UserID:              req.UserID,
-		SubscriptionOrderID: req.SubscriptionOrderID,
-		PaymentNo:           paymentNo,
-		OutTradeNo:          outTradeNo,
-		Gateway:             req.Gateway,
-		PaymentMethod:       req.PaymentMethod,
-		Amount:              req.Amount,
-		Currency:            req.Currency,
-		Status:              model.PaymentRecordStatusPending,
-		GatewayResponse:     gatewayData,
-		PaymentURL:          gatewayResp.PaymentURL,
-		QRCodeURL:           gatewayResp.QRCodeURL,
-		ExpiredAt:           &expiredAt,
-		ClientIP:            req.ClientIP,
-		NotifyURL:           req.NotifyURL,
-		ReturnURL:           req.ReturnURL,
-		Metadata:            req.Metadata,
+	payment := &model.Payment{
+		InvoiceID:       req.InvoiceID,
+		UserID:          req.UserID,
+		PaymentNumber:   reference,
+		Amount:          req.Amount,
+		Currency:        req.Currency,
+		Status:          model.NewPaymentStatusPending,
+		PaymentGateway:  req.PaymentGateway,
+		PaymentMethod:   req.PaymentMethod,
+		GatewayTransactionID: req.ExternalID,
+		GatewayFee:      req.ProcessorFee,
+		WebhookData:     req.GatewayResponse,
+		Notes:           req.Notes,
 	}
 
-	// Save to database
-	if err := ps.db.WithContext(ctx).Create(paymentRecord).Error; err != nil {
-		logger.Error("Failed to create payment record", logger.Error2("error", err))
-		return nil, fmt.Errorf("failed to create payment record: %w", err)
+	if err := tx.Create(payment).Error; err != nil {
+		tx.Rollback()
+		logger.Error("Failed to create payment", logger.Error2("error", err))
+		return nil, fmt.Errorf("failed to create payment: %w", err)
 	}
 
-	logger.Info("Payment order created successfully",
-		logger.String("payment_no", paymentNo),
-		logger.String("gateway", req.Gateway),
-		logger.String("method", req.PaymentMethod),
-		logger.Uint("user_id", req.UserID))
+	// Commit transaction
+	if err := tx.Commit().Error; err != nil {
+		return nil, fmt.Errorf("failed to commit payment creation: %w", err)
+	}
 
-	return paymentRecord, nil
+	logger.Info("Payment created successfully",
+		logger.Uint("payment_id", payment.ID),
+		logger.String("reference", reference),
+		logger.Uint("invoice_id", req.InvoiceID),
+		logger.Any("amount", req.Amount))
+
+	return payment, nil
 }
 
-// GetPaymentRecord gets a payment record by payment number
-func (ps *PaymentService) GetPaymentRecord(ctx context.Context, paymentNo string) (*model.PaymentRecord, error) {
-	var record model.PaymentRecord
-	if err := ps.db.WithContext(ctx).Where("payment_no = ?", paymentNo).First(&record).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, fmt.Errorf("payment record not found")
+// ProcessPayment processes a payment (marks as processing)
+func (ps *PaymentService) ProcessPayment(ctx context.Context, paymentID uint) error {
+	return ps.updatePaymentStatus(ctx, paymentID, model.NewPaymentStatusProcessing, "Payment is being processed")
+}
+
+// CompletePayment marks a payment as completed and updates the invoice
+func (ps *PaymentService) CompletePayment(ctx context.Context, paymentID uint, gatewayResponse string) error {
+	// Start transaction
+	tx := ps.db.WithContext(ctx).Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
 		}
-		logger.Error("Failed to get payment record", logger.Error2("error", err))
-		return nil, fmt.Errorf("failed to get payment record: %w", err)
-	}
-	return &record, nil
-}
+	}()
 
-// GetPaymentRecordByOutTradeNo gets a payment record by out trade number
-func (ps *PaymentService) GetPaymentRecordByOutTradeNo(ctx context.Context, outTradeNo string) (*model.PaymentRecord, error) {
-	var record model.PaymentRecord
-	if err := ps.db.WithContext(ctx).Where("out_trade_no = ?", outTradeNo).First(&record).Error; err != nil {
+	// Get payment with lock
+	var payment model.Payment
+	if err := tx.Set("gorm:query_option", "FOR UPDATE").First(&payment, paymentID).Error; err != nil {
+		tx.Rollback()
 		if err == gorm.ErrRecordNotFound {
-			return nil, fmt.Errorf("payment record not found")
+			return fmt.Errorf("payment not found")
 		}
-		logger.Error("Failed to get payment record by out trade no", logger.Error2("error", err))
-		return nil, fmt.Errorf("failed to get payment record: %w", err)
-	}
-	return &record, nil
-}
-
-// UpdatePaymentStatus updates payment record status
-func (ps *PaymentService) UpdatePaymentStatus(ctx context.Context, paymentNo string, status string, transactionID string, paidAt *time.Time) error {
-	updates := map[string]interface{}{
-		"status":       status,
-		"updated_at":   time.Now(),
-		"notified_at":  time.Now(),
+		return fmt.Errorf("failed to get payment: %w", err)
 	}
 
-	if transactionID != "" {
-		updates["transaction_id"] = transactionID
+	// Validate payment can be completed
+	if !payment.IsPending() && !payment.IsProcessing() {
+		tx.Rollback()
+		return fmt.Errorf("payment cannot be completed in status: %s", payment.Status)
 	}
 
-	if paidAt != nil {
-		updates["paid_at"] = paidAt
+	// Update payment status
+	now := time.Now()
+	updateData := map[string]interface{}{
+		"status":           model.NewPaymentStatusCompleted,
+		"completed_at":     now,
+		"webhook_data":     gatewayResponse,
+		"updated_at":       now,
 	}
 
-	if err := ps.db.WithContext(ctx).Model(&model.PaymentRecord{}).
-		Where("payment_no = ?", paymentNo).
-		Updates(updates).Error; err != nil {
-		logger.Error("Failed to update payment status", logger.Error2("error", err))
+	if err := tx.Model(&payment).Updates(updateData).Error; err != nil {
+		tx.Rollback()
 		return fmt.Errorf("failed to update payment status: %w", err)
 	}
 
-	logger.Info("Payment status updated",
-		logger.String("payment_no", paymentNo),
-		logger.String("status", status))
+	// Update invoice paid amount
+	if err := ps.invoiceService.MarkInvoiceAsPaid(ctx, payment.InvoiceID, payment.Amount, payment.PaymentNumber); err != nil {
+		tx.Rollback()
+		logger.Error("Failed to update invoice payment",
+			logger.Error2("error", err),
+			logger.Uint("payment_id", paymentID),
+			logger.Uint("invoice_id", payment.InvoiceID))
+		return fmt.Errorf("failed to update invoice payment: %w", err)
+	}
+
+	// Commit transaction
+	if err := tx.Commit().Error; err != nil {
+		return fmt.Errorf("failed to commit payment completion: %w", err)
+	}
+
+	logger.Info("Payment completed successfully",
+		logger.Uint("payment_id", paymentID),
+		logger.String("payment_number", payment.PaymentNumber),
+		logger.Any("amount", payment.Amount))
 
 	return nil
 }
 
-// ProcessNotification processes payment notification from gateway
-func (ps *PaymentService) ProcessNotification(ctx context.Context, gateway string, data map[string]interface{}) error {
-	// Get gateway instance
-	gatewayInstance, err := ps.GetGateway(gateway)
-	if err != nil {
-		return err
+// FailPayment marks a payment as failed
+func (ps *PaymentService) FailPayment(ctx context.Context, paymentID uint, reason, gatewayResponse string) error {
+	// Start transaction
+	tx := ps.db.WithContext(ctx).Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Get payment with lock
+	var payment model.Payment
+	if err := tx.Set("gorm:query_option", "FOR UPDATE").First(&payment, paymentID).Error; err != nil {
+		tx.Rollback()
+		if err == gorm.ErrRecordNotFound {
+			return fmt.Errorf("payment not found")
+		}
+		return fmt.Errorf("failed to get payment: %w", err)
 	}
 
-	// Verify notification
-	isValid, notifyData := gatewayInstance.VerifyPaymentNotify(data)
-	if !isValid {
-		return fmt.Errorf("notification signature verification failed")
+	// Validate payment can be failed
+	if payment.IsCompleted() {
+		tx.Rollback()
+		return fmt.Errorf("payment cannot be failed in status: %s", payment.Status)
 	}
 
-	// Get payment record with row lock to prevent race conditions
-	var paymentRecord *model.PaymentRecord
-	if err := ps.db.WithContext(ctx).Set("gorm:query_option", "FOR UPDATE").
-		Where("out_trade_no = ?", notifyData.OutTradeNo).
-		First(&paymentRecord).Error; err != nil {
-		return fmt.Errorf("payment record not found: %w", err)
-	}
-
-	// SECURITY: Idempotency check - generate hash of notification data
-	notifyHash := ps.generateNotificationHash(data)
-	if paymentRecord.LastNotifyHash == notifyHash {
-		logger.Warn("Duplicate notification detected, ignoring",
-			logger.String("payment_no", paymentRecord.PaymentNo),
-			logger.String("gateway", gateway),
-			logger.String("notify_hash", notifyHash))
-		return nil // Silently ignore duplicate notifications
-	}
-
-	// SECURITY: Check for status downgrade attempts
-	if paymentRecord.Status == model.PaymentRecordStatusCompleted && 
-		!gatewayInstance.IsPaymentCompleted(notifyData.Status) {
-		logger.Warn("Attempted status downgrade from completed, ignoring",
-			logger.String("payment_no", paymentRecord.PaymentNo),
-			logger.String("current_status", paymentRecord.Status),
-			logger.String("notify_status", notifyData.Status))
-		return nil
-	}
-
-	// Update notification tracking
+	// Update payment status
 	now := time.Now()
-	updateFields := map[string]interface{}{
-		"last_notify_hash": notifyHash,
-		"notify_count":     paymentRecord.NotifyCount + 1,
-		"notified_at":      &now,
+	updateData := map[string]interface{}{
+		"status":           model.NewPaymentStatusFailed,
+		"updated_at":       now,
+		"webhook_data":     gatewayResponse,
+		"notes":            reason,
 	}
 
-	// Check if payment is completed
-	if gatewayInstance.IsPaymentCompleted(notifyData.Status) {
-		paidAt := time.Now()
-		if notifyData.PaidAt != "" {
-			if parsedTime, parseErr := time.Parse("2006-01-02 15:04:05", notifyData.PaidAt); parseErr == nil {
-				paidAt = parsedTime
-			}
-		}
-
-		// Update payment status with notification tracking
-		updateFields["status"] = model.PaymentRecordStatusCompleted
-		updateFields["transaction_id"] = notifyData.TransactionID
-		updateFields["paid_at"] = &paidAt
-		
-		if err := ps.db.WithContext(ctx).Model(paymentRecord).Updates(updateFields).Error; err != nil {
-			return fmt.Errorf("failed to update payment status: %w", err)
-		}
-
-		// Process order completion (integrate with subscription system)
-		if err := ps.processOrderCompletion(ctx, paymentRecord); err != nil {
-			logger.Error("Failed to process order completion", logger.Error2("error", err))
-			// Don't return error here as payment is already processed
-		}
-	} else {
-		// Update status based on notification
-		var status string
-		switch notifyData.Status {
-		case "TRADE_CLOSED", "TRADE_CANCELLED":
-			status = model.PaymentRecordStatusCancelled
-		case "TRADE_FAILED":
-			status = model.PaymentRecordStatusFailed
-		default:
-			status = model.PaymentRecordStatusProcessing
-		}
-
-		updateFields["status"] = status
-		updateFields["transaction_id"] = notifyData.TransactionID
-		
-		if err := ps.db.WithContext(ctx).Model(paymentRecord).Updates(updateFields).Error; err != nil {
-			return fmt.Errorf("failed to update payment status: %w", err)
-		}
+	if err := tx.Model(&payment).Updates(updateData).Error; err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to update payment status: %w", err)
 	}
+
+	// Commit transaction
+	if err := tx.Commit().Error; err != nil {
+		return fmt.Errorf("failed to commit payment failure: %w", err)
+	}
+
+	logger.Info("Payment marked as failed",
+		logger.Uint("payment_id", paymentID),
+		logger.String("payment_number", payment.PaymentNumber),
+		logger.String("reason", reason))
 
 	return nil
 }
 
-// SetSubscriptionOrderService sets the subscription order service for payment processing
-func (ps *PaymentService) SetSubscriptionOrderService(subscriptionOrderService SubscriptionOrderServiceInterface) {
-	ps.subscriptionOrderService = subscriptionOrderService
+// CancelPayment marks a payment as cancelled
+func (ps *PaymentService) CancelPayment(ctx context.Context, paymentID uint, reason string) error {
+	return ps.updatePaymentStatusWithReason(ctx, paymentID, model.NewPaymentStatusCancelled, reason)
 }
 
-// SubscriptionOrderServiceInterface defines the interface for subscription order service
-type SubscriptionOrderServiceInterface interface {
-	ProcessOrderPaymentSuccess(ctx context.Context, orderID uint) error
-}
-
-// processOrderCompletion processes the completion of an order after successful payment
-func (ps *PaymentService) processOrderCompletion(ctx context.Context, paymentRecord *model.PaymentRecord) error {
-	// If this payment is for a subscription order, process the order completion
-	if paymentRecord.SubscriptionOrderID != nil {
-		// If subscription order service is available, use it for processing
-		if ps.subscriptionOrderService != nil {
-			if err := ps.subscriptionOrderService.ProcessOrderPaymentSuccess(ctx, *paymentRecord.SubscriptionOrderID); err != nil {
-				return fmt.Errorf("failed to process subscription order payment: %w", err)
-			}
-		} else {
-			// Fallback: just update the order status
-			if err := ps.db.WithContext(ctx).Model(&model.SubscriptionOrder{}).
-				Where("id = ?", *paymentRecord.SubscriptionOrderID).
-				Updates(map[string]interface{}{
-					"status":      model.OrderStatusPaid,
-					"paid_at":     time.Now(),
-					"updated_at":  time.Now(),
-				}).Error; err != nil {
-				return fmt.Errorf("failed to update subscription order status: %w", err)
-			}
+// RefundPayment creates a refund for a completed payment
+func (ps *PaymentService) RefundPayment(ctx context.Context, paymentID uint, refundAmount float64, reason string) (*model.Payment, error) {
+	// Start transaction
+	tx := ps.db.WithContext(ctx).Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
 		}
+	}()
 
-		logger.Info("Subscription order payment processed",
-			logger.Uint("order_id", *paymentRecord.SubscriptionOrderID),
-			logger.String("payment_no", paymentRecord.PaymentNo))
+	// Get original payment with lock
+	var originalPayment model.Payment
+	if err := tx.Set("gorm:query_option", "FOR UPDATE").First(&originalPayment, paymentID).Error; err != nil {
+		tx.Rollback()
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("payment not found")
+		}
+		return nil, fmt.Errorf("failed to get payment: %w", err)
 	}
 
-	return nil
+	// Validate payment can be refunded
+	if !originalPayment.CanBeRefunded() {
+		tx.Rollback()
+		return nil, fmt.Errorf("payment cannot be refunded in status: %s", originalPayment.Status)
+	}
+
+	// Validate refund amount
+	if refundAmount <= 0 || refundAmount > originalPayment.Amount {
+		tx.Rollback()
+		return nil, fmt.Errorf("invalid refund amount: %.2f (original: %.2f)", refundAmount, originalPayment.Amount)
+	}
+
+	// Create refund payment record (negative amount)
+	refund := &model.Payment{
+		InvoiceID:      originalPayment.InvoiceID,
+		UserID:         originalPayment.UserID,
+		Amount:         -refundAmount, // Negative amount for refund
+		Currency:       originalPayment.Currency,
+		Status:         model.NewPaymentStatusCompleted,
+		PaymentGateway: originalPayment.PaymentGateway,
+		PaymentMethod:  originalPayment.PaymentMethod,
+		PaymentNumber:  ps.generateRefundReference(originalPayment.PaymentNumber),
+		RefundReason:   fmt.Sprintf("Refund for payment %s", originalPayment.PaymentNumber),
+		Notes:          fmt.Sprintf("Refund reason: %s", reason),
+		CompletedAt:    &time.Time{},
+	}
+	now := time.Now()
+	refund.CompletedAt = &now
+
+	if err := tx.Create(refund).Error; err != nil {
+		tx.Rollback()
+		logger.Error("Failed to create refund", logger.Error2("error", err))
+		return nil, fmt.Errorf("failed to create refund: %w", err)
+	}
+
+	// Update original payment refund amount
+	newRefundedAmount := originalPayment.RefundAmount + refundAmount
+	updateData := map[string]interface{}{
+		"refund_amount": newRefundedAmount,
+		"updated_at":    now,
+	}
+
+	// Mark as fully refunded if applicable
+	if newRefundedAmount >= originalPayment.Amount {
+		updateData["refunded_at"] = now
+		updateData["refund_reason"] = reason
+	}
+
+	if err := tx.Model(&originalPayment).Updates(updateData).Error; err != nil {
+		tx.Rollback()
+		return nil, fmt.Errorf("failed to update original payment: %w", err)
+	}
+
+	// Commit transaction
+	if err := tx.Commit().Error; err != nil {
+		return nil, fmt.Errorf("failed to commit refund: %w", err)
+	}
+
+	logger.Info("Refund processed successfully",
+		logger.Uint("refund_id", refund.ID),
+		logger.Uint("original_payment_id", paymentID),
+		logger.Any("refund_amount", refundAmount))
+
+	return refund, nil
 }
 
-// GetUserPaymentRecords gets payment records for a user with pagination
-func (ps *PaymentService) GetUserPaymentRecords(ctx context.Context, userID uint, limit, offset int) ([]*model.PaymentRecord, int64, error) {
-	var records []*model.PaymentRecord
-	var totalCount int64
+// GetPayment gets a payment by ID
+func (ps *PaymentService) GetPayment(ctx context.Context, paymentID uint) (*model.Payment, error) {
+	var payment model.Payment
+	if err := ps.db.WithContext(ctx).First(&payment, paymentID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("payment not found")
+		}
+		return nil, fmt.Errorf("failed to get payment: %w", err)
+	}
+	return &payment, nil
+}
+
+// GetPaymentWithRelations gets a payment with related data
+func (ps *PaymentService) GetPaymentWithRelations(ctx context.Context, paymentID uint) (*model.Payment, error) {
+	var payment model.Payment
+	if err := ps.db.WithContext(ctx).
+		Preload("Invoice").
+		Preload("User").
+		First(&payment, paymentID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("payment not found")
+		}
+		return nil, fmt.Errorf("failed to get payment: %w", err)
+	}
+	return &payment, nil
+}
+
+// PaymentFilters represents filters for payment listing
+type PaymentFilters struct {
+	UserID         *uint  `form:"user_id"`
+	InvoiceID      *uint  `form:"invoice_id"`
+	Status         string `form:"status"`
+	PaymentGateway string `form:"payment_gateway"`
+	PaymentMethod  string `form:"payment_method"`
+	Currency       string `form:"currency"`
+	StartDate      string `form:"start_date"`
+	EndDate        string `form:"end_date"`
+	MinAmount      *float64 `form:"min_amount"`
+	MaxAmount      *float64 `form:"max_amount"`
+	Search         string `form:"search"`
+	SortBy         string `form:"sort_by"`
+	SortOrder      string `form:"sort_order"`
+	Limit          int    `form:"limit"`
+	Offset         int    `form:"offset"`
+}
+
+// ListPayments lists payments with filtering and pagination
+func (ps *PaymentService) ListPayments(ctx context.Context, filters *PaymentFilters) ([]*model.Payment, int64, error) {
+	query := ps.db.WithContext(ctx).Model(&model.Payment{})
+
+	// Apply filters
+	if filters.UserID != nil {
+		query = query.Where("user_id = ?", *filters.UserID)
+	}
+
+	if filters.InvoiceID != nil {
+		query = query.Where("invoice_id = ?", *filters.InvoiceID)
+	}
+
+	if filters.Status != "" {
+		query = query.Where("status = ?", filters.Status)
+	}
+
+	if filters.PaymentGateway != "" {
+		query = query.Where("payment_gateway = ?", filters.PaymentGateway)
+	}
+
+	if filters.PaymentMethod != "" {
+		query = query.Where("payment_method = ?", filters.PaymentMethod)
+	}
+
+	if filters.Currency != "" {
+		query = query.Where("currency = ?", filters.Currency)
+	}
+
+	// Amount range filtering
+	if filters.MinAmount != nil {
+		query = query.Where("amount >= ?", *filters.MinAmount)
+	}
+
+	if filters.MaxAmount != nil {
+		query = query.Where("amount <= ?", *filters.MaxAmount)
+	}
+
+	// Date range filtering
+	if filters.StartDate != "" {
+		if startDate, err := time.Parse("2006-01-02", filters.StartDate); err == nil {
+			query = query.Where("created_at >= ?", startDate)
+		}
+	}
+
+	if filters.EndDate != "" {
+		if endDate, err := time.Parse("2006-01-02", filters.EndDate); err == nil {
+			endDate = endDate.Add(24 * time.Hour)
+			query = query.Where("created_at < ?", endDate)
+		}
+	}
+
+	// Search functionality
+	if filters.Search != "" {
+		searchPattern := "%" + filters.Search + "%"
+		query = query.Where(
+			"payment_number LIKE ? OR gateway_transaction_id LIKE ? OR notes LIKE ?",
+			searchPattern, searchPattern, searchPattern,
+		)
+	}
 
 	// Get total count
-	if err := ps.db.WithContext(ctx).Model(&model.PaymentRecord{}).
-		Where("user_id = ?", userID).
-		Count(&totalCount).Error; err != nil {
-		return nil, 0, fmt.Errorf("failed to count payment records: %w", err)
+	var totalCount int64
+	if err := query.Count(&totalCount).Error; err != nil {
+		return nil, 0, fmt.Errorf("failed to count payments: %w", err)
 	}
 
-	// Get records with pagination
-	query := ps.db.WithContext(ctx).Where("user_id = ?", userID).
-		Order("created_at DESC")
-
-	if limit > 0 {
-		query = query.Limit(limit)
+	// Apply sorting
+	sortBy := filters.SortBy
+	if sortBy == "" {
+		sortBy = "created_at"
 	}
 
-	if offset > 0 {
-		query = query.Offset(offset)
+	sortOrder := filters.SortOrder
+	if sortOrder == "" {
+		sortOrder = "desc"
 	}
 
-	if err := query.Find(&records).Error; err != nil {
-		return nil, 0, fmt.Errorf("failed to get payment records: %w", err)
+	validSortFields := map[string]bool{
+		"created_at":   true,
+		"updated_at":   true,
+		"completed_at": true,
+		"failed_at":    true,
+		"amount":       true,
+		"status":       true,
+		"payment_number": true,
 	}
 
-	return records, totalCount, nil
+	if !validSortFields[sortBy] {
+		sortBy = "created_at"
+	}
+
+	if sortOrder != "asc" && sortOrder != "desc" {
+		sortOrder = "desc"
+	}
+
+	query = query.Order(fmt.Sprintf("%s %s", sortBy, sortOrder))
+
+	// Apply pagination
+	if filters.Limit > 0 {
+		query = query.Limit(filters.Limit)
+	}
+
+	if filters.Offset > 0 {
+		query = query.Offset(filters.Offset)
+	}
+
+	var payments []*model.Payment
+	if err := query.Find(&payments).Error; err != nil {
+		return nil, 0, fmt.Errorf("failed to get payments: %w", err)
+	}
+
+	return payments, totalCount, nil
 }
 
-// GetAvailablePaymentMethods gets available payment methods
-func (ps *PaymentService) GetAvailablePaymentMethods(ctx context.Context) (map[string][]string, error) {
-	methods := make(map[string][]string)
-	
-	for gatewayName, gateway := range ps.gateways {
-		methods[gatewayName] = gateway.GetSupportedPaymentMethods()
+// Helper methods
+
+func (ps *PaymentService) updatePaymentStatus(ctx context.Context, paymentID uint, status, reason string) error {
+	updateData := map[string]interface{}{
+		"status":     status,
+		"updated_at": time.Now(),
 	}
-	
-	return methods, nil
+
+	if reason != "" {
+		updateData["notes"] = reason
+	}
+
+	if err := ps.db.WithContext(ctx).Model(&model.Payment{}).Where("id = ?", paymentID).Updates(updateData).Error; err != nil {
+		return fmt.Errorf("failed to update payment status: %w", err)
+	}
+
+	return nil
 }
 
-// generateNotificationHash generates a hash for notification data to detect duplicates
-func (ps *PaymentService) generateNotificationHash(data map[string]interface{}) string {
-	// Import crypto/sha256 at the top of the file if not already imported
-	// Create a consistent string representation of the notification data
-	keys := make([]string, 0, len(data))
-	for k := range data {
-		keys = append(keys, k)
+func (ps *PaymentService) updatePaymentStatusWithReason(ctx context.Context, paymentID uint, status, reason string) error {
+	updateData := map[string]interface{}{
+		"status":     status,
+		"updated_at": time.Now(),
+		"notes":      reason,
 	}
-	// Sort keys for consistent hash generation
-	for i := 0; i < len(keys); i++ {
-		for j := i + 1; j < len(keys); j++ {
-			if keys[i] > keys[j] {
-				keys[i], keys[j] = keys[j], keys[i]
-			}
-		}
+
+	if err := ps.db.WithContext(ctx).Model(&model.Payment{}).Where("id = ?", paymentID).Updates(updateData).Error; err != nil {
+		return fmt.Errorf("failed to update payment status: %w", err)
 	}
-	
-	var hashContent string
-	for _, key := range keys {
-		hashContent += key + ":" + fmt.Sprintf("%v", data[key]) + "|"
-	}
-	
-	// Generate SHA256 hash
-	h := sha256.Sum256([]byte(hashContent))
-	return fmt.Sprintf("%x", h)
+
+	return nil
+}
+
+func (ps *PaymentService) generatePaymentReference() string {
+	now := time.Now()
+	timestamp := now.Format("20060102150405")
+	random := now.Nanosecond() % 1000
+	return fmt.Sprintf("PMT%s%03d", timestamp, random)
+}
+
+func (ps *PaymentService) generateRefundReference(originalRef string) string {
+	now := time.Now()
+	timestamp := now.Format("20060102150405")
+	random := now.Nanosecond() % 1000
+	return fmt.Sprintf("RFD%s%03d", timestamp, random)
 }
