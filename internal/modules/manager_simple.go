@@ -6,6 +6,11 @@ import (
 	"linke/internal/service"
 	"linke/internal/handler"
 	"linke/internal/handler/admin"
+	adminuser "linke/internal/handler/admin/user"
+	admincoupon "linke/internal/handler/admin/coupon"
+	admininvoice "linke/internal/handler/admin/invoice"
+	adminticket "linke/internal/handler/admin/ticket"
+	adminorder "linke/internal/handler/admin/order"
 	"linke/internal/handler/user"
 	"linke/internal/queue"
 )
@@ -42,14 +47,14 @@ type SimpleManager struct {
 	ShadowsocksServerHandler   *handler.ShadowsocksServerHandler
 	
 	// Admin handlers
-	AdminUserHandler           *admin.AdminUserHandler
+	AdminUserHandler           *adminuser.AdminUserManager
 	AdminSubscriptionHandler   *admin.AdminSubscriptionHandler
-	AdminTicketHandler         *admin.AdminTicketHandler
+	AdminTicketHandler         *adminticket.AdminTicketManager
 	AdminReferralHandler       *admin.ReferralHandler
 	AdminServerGroupHandler    *admin.ServerGroupHandler
-	AdminOrderHandler          *admin.AdminOrderHandler
-	AdminInvoiceHandler        *admin.AdminInvoiceHandler
-	AdminCouponHandler         *admin.AdminCouponHandler
+	AdminOrderHandler          *adminorder.AdminOrderManager
+	AdminInvoiceHandler        *admininvoice.AdminInvoiceManager
+	AdminCouponHandler         *admincoupon.AdminCouponManager
 	
 	// User handlers
 	UserProfileHandler         *user.UserProfileHandler
@@ -107,14 +112,14 @@ func NewSimpleManager(cfg *config.Config, db *repository.Database, taskQueue *qu
 	shadowsocksServerHandler := handler.NewShadowsocksServerHandler(shadowsocksServerService, nil, userService, userSubscriptionService)
 	
 	// Admin handlers
-	adminUserHandler := admin.NewAdminUserHandler(userService, authService)
+	adminUserHandler := adminuser.NewAdminUserManager(userService, authService)
 	adminSubscriptionHandler := admin.NewAdminSubscriptionHandler(subscriptionPlanService, userSubscriptionService, subscriptionOrderService)
-	adminTicketHandler := admin.NewAdminTicketHandler(ticketService, ticketMessageService)
+	adminTicketHandler := adminticket.NewAdminTicketManager(ticketService, ticketMessageService)
 	adminReferralHandler := admin.NewReferralHandler(referralService, referralCampaignService)
 	adminServerGroupHandler := admin.NewServerGroupHandler(serverGroupService)
-	adminOrderHandler := admin.NewAdminOrderHandler(subscriptionOrderService, paymentService, userService)
-	adminInvoiceHandler := admin.NewAdminInvoiceHandler(invoiceService)
-	adminCouponHandler := admin.NewAdminCouponHandler(couponService)
+	adminOrderHandler := adminorder.NewAdminOrderManager(subscriptionOrderService, paymentService, userService)
+	adminInvoiceHandler := admininvoice.NewAdminInvoiceManager(invoiceService)
+	adminCouponHandler := admincoupon.NewAdminCouponManager(couponService)
 	
 	// User handlers
 	userProfileHandler := user.NewUserProfileHandler(userService)
