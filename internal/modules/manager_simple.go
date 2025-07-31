@@ -12,6 +12,10 @@ import (
 	adminticket "linke/internal/handler/admin/ticket"
 	adminorder "linke/internal/handler/admin/order"
 	"linke/internal/handler/user"
+	usercoupon "linke/internal/handler/user/coupon"
+	userinvitecode "linke/internal/handler/user/invite_code"
+	userprofile "linke/internal/handler/user/profile"
+	userticket "linke/internal/handler/user/ticket"
 	"linke/internal/queue"
 )
 
@@ -57,12 +61,12 @@ type SimpleManager struct {
 	AdminCouponHandler         *admincoupon.AdminCouponManager
 	
 	// User handlers
-	UserProfileHandler         *user.UserProfileHandler
+	UserProfileHandler         *userprofile.UserProfileManager
 	UserSubscriptionHandler    *user.UserSubscriptionPublicHandler
-	UserTicketHandler          *user.UserTicketHandler
-	UserInviteCodeHandler      *user.InviteCodeHandler
+	UserTicketHandler          *userticket.UserTicketManager
+	UserInviteCodeHandler      *userinvitecode.UserInviteCodeManager
 	UserReferralHandler        *user.ReferralHandler
-	UserCouponHandler          *user.UserCouponHandler
+	UserCouponHandler          *usercoupon.UserCouponManager
 }
 
 // NewSimpleManager creates a new simple module manager using existing services
@@ -122,12 +126,12 @@ func NewSimpleManager(cfg *config.Config, db *repository.Database, taskQueue *qu
 	adminCouponHandler := admincoupon.NewAdminCouponManager(couponService)
 	
 	// User handlers
-	userProfileHandler := user.NewUserProfileHandler(userService)
+	userProfileHandler := userprofile.NewUserProfileManager(userService)
 	userSubscriptionHandler := user.NewUserSubscriptionPublicHandler(subscriptionPlanService, userSubscriptionService, subscriptionOrderService, couponService, subscriptionExpiryService)
-	userTicketHandler := user.NewUserTicketHandler(ticketService, ticketMessageService)
-	userInviteCodeHandler := user.NewInviteCodeHandler(inviteCodeService, inviteCodeUsageService)
+	userTicketHandler := userticket.NewUserTicketManager(ticketService, ticketMessageService)
+	userInviteCodeHandler := userinvitecode.NewUserInviteCodeManager(inviteCodeService, inviteCodeUsageService)
 	userReferralHandler := user.NewReferralHandler(referralService, referralCampaignService)
-	userCouponHandler := user.NewUserCouponHandler(couponService)
+	userCouponHandler := usercoupon.NewUserCouponManager(couponService)
 	
 	return &SimpleManager{
 		// Services
