@@ -116,6 +116,15 @@ func Conflict(c *gin.Context, message string) {
 	Error(c, http.StatusConflict, 4009, message)
 }
 
+// UnprocessableEntity sends a 422 unprocessable entity response
+func UnprocessableEntity(c *gin.Context, message string, details ...string) {
+	msg := message
+	if len(details) > 0 {
+		msg = message + ": " + details[0]
+	}
+	Error(c, http.StatusUnprocessableEntity, 4022, msg)
+}
+
 // InternalServerError sends a 500 internal server error response
 func InternalServerError(c *gin.Context, message string, details ...string) {
 	msg := message
@@ -171,6 +180,13 @@ func SuccessListWithMessage(c *gin.Context, message string, items interface{}, p
 	}
 	
 	SuccessWithMessage(c, message, response)
+}
+
+// HandleError handles different types of errors and sends appropriate responses
+func HandleError(c *gin.Context, err error) {
+	// TODO: Implement more sophisticated error handling based on error types
+	// For now, send a generic internal server error
+	InternalServerError(c, "Internal server error", err.Error())
 }
 
 // SuccessListWithExtra sends a successful paginated list response with additional data
