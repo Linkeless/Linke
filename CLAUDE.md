@@ -2,492 +2,608 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Application Overview:**
-Linke is a comprehensive service management platform with subscription-based billing, user management, and server administration. The system supports shadowsocks server management, multi-gateway payments, referral programs, and customer support through an integrated ticket system.
+**项目概述:**
+Linke 是一个基于 Go 语言构建的综合服务管理平台，采用 VSA (Vertical Slice Architecture) + Clean Architecture 架构模式。系统提供订阅计费、用户管理、服务器管理等功能，支持 shadowsocks 服务器管理、多网关支付、推荐系统和工单客服系统。
 
-## Development Commands
+**Go 开发规范:**
+- 遵循 Go 官方代码规范和惯例
+- 使用依赖注入模式进行组件解耦
+- 接口优先设计，面向接口编程
+- 统一的错误处理和日志记录
+- 完整的单元测试和集成测试覆盖
 
-**Build and Run:**
-- `make build` - Build the application to `bin/server`
-- `make run` - Run the application directly
-- `make dev` - Run in development mode (generates Swagger docs first)
-- `make safe-run` - Run with security pre-flight checks (RECOMMENDED)
-- `make safe-dev` - Run in development mode with security checks (RECOMMENDED)
+## 开发命令
 
-**Security:**
-- `make security-check` - Run security pre-flight validation
-- `go run tools/generate-jwt-key/main.go` - Generate secure JWT key
+**构建和运行:**
+- `make build` - 构建应用程序到 `bin/server`
+- `make run` - 直接运行应用程序
+- `make dev` - 开发模式运行 (先生成 Swagger 文档)
+- `make safe-run` - 带安全预检查运行 (推荐)
+- `make safe-dev` - 开发模式带安全检查运行 (推荐)
+- `go run cmd/server/main.go app:serve` - 启动服务器
+- `go run cmd/server/main.go -help` - 显示可用命令
 
-**Testing and Quality:**
-- `make test` - Run all tests with verbose output (`go test -v ./...`)
+**安全检查:**
+- `make security-check` - 运行安全预检查验证
+- `go run tools/generate-jwt-key/main.go` - 生成安全的 JWT 密钥
 
-**Documentation:**
-- `make swagger` - Generate Swagger API documentation in `docs/`
-- Swagger UI available at `/swagger/*any` when server is running
+**测试和质量:**
+- `make test` - 运行所有测试，详细输出 (`go test -v ./...`)
+- `go test ./... -v -coverprofile cover.txt -coverpkg=./...` - 生成测试覆盖率报告
+- `go tool cover -html=cover.txt -o index.html` - 生成 HTML 覆盖率报告
+- `make lint-setup` - 配置代码检查和预提交钩子 (需要 Python3)
+- 目标测试覆盖率: >80%
 
-**Dependencies:**
-- `make install` - Install dependencies and required tools (swag)
-- `make clean` - Clean build artifacts and docs
+**文档生成:**
+- `make swagger` - 在 `docs/` 目录生成 Swagger API 文档
+- 服务器运行时可通过 `/swagger/*any` 访问 Swagger UI
 
-**Database Migration (Integrated):**
-- `make migrate-help` - Show detailed migration help and usage
-- `make migrate-up` - Run all pending migrations
-- `make migrate-down` - Rollback one migration
-- `make migrate-status` - Show current migration version
-- `make migrate-list` - List all applied migrations
-- `make migrate-reset` - Drop all tables and re-run migrations (DANGEROUS!)
-- `make migrate-create NAME=name` - Create new migration files
-- `make migrate-force VERSION=N` - Force set migration version
-- `make migrate-goto VERSION=N` - Migrate to specific version
-- `make migrate-steps STEPS=N` - Run N migration steps (positive for up, negative for down)
-- `make migrate-fix-dirty VERSION=N` - Fix dirty migration state (use version from error message)
-- `go run cmd/server/main.go -migrate` - Run migrations only and exit (does not start server)
-- All migration commands are integrated into the main server application
+**依赖管理:**
+- `make install` - 安装依赖和必需工具 (swag)
+- `make clean` - 清理构建产物和文档
+- `go mod tidy` - 清理和同步模块依赖
+- `go list -m -u all` - 检查所有模块更新
+- `go get -u` - 更新所有依赖到最新版本
+- `go get example.com/module@latest` - 更新特定模块
 
-**Migration Troubleshooting:**
-- If you see "Dirty database version X" error: `make migrate-fix-dirty VERSION=X`
-- Or use: `go run cmd/server/main.go -migrate-command=fix-dirty -migrate-version=X`
-- See `docs/MIGRATION_TROUBLESHOOTING.md` for detailed troubleshooting guide
+**数据库迁移 (集成式):**
+- `make migrate-help` - 显示详细的迁移帮助和用法
+- `make migrate-up` - 运行所有待执行的迁移
+- `make migrate-down` - 回滚一个迁移
+- `make migrate-status` - 显示当前迁移版本
+- `make migrate-list` - 列出所有已应用的迁移
+- `make migrate-reset` - 删除所有表并重新运行迁移 (危险操作!)
+- `make migrate-create NAME=name` - 创建新的迁移文件
+- `make migrate-force VERSION=N` - 强制设置迁移版本
+- `make migrate-goto VERSION=N` - 迁移到指定版本
+- `make migrate-steps STEPS=N` - 运行 N 步迁移 (正数向上，负数向下)
+- `make migrate-fix-dirty VERSION=N` - 修复脏迁移状态 (使用错误消息中的版本号)
+- `go run cmd/server/main.go -migrate` - 仅运行迁移后退出 (不启动服务器)
 
-## Architecture Overview
+**迁移问题排查:**
+- 如果看到 "Dirty database version X" 错误: `make migrate-fix-dirty VERSION=X`
+- 或使用: `go run cmd/server/main.go -migrate-command=fix-dirty -migrate-version=X`
 
-**Core Application Structure:**
-- **Entry Point**: `cmd/server/main.go` - Server initialization with graceful shutdown
-- **Configuration**: Environment-based config with `.env` support via `config/config.go`
-- **Database Layer**: GORM for MySQL + Redis for caching/queues in `internal/repository/`
-- **Business Logic**: Service layer in `internal/service/`
-- **API Layer**: Gin HTTP handlers in `internal/handler/`
-- **Background Processing**: Redis-based task queue system in `internal/queue/`
-- **Module Management**: `internal/modules/manager_simple.go` - Centralized dependency injection and service wiring
-- **Route Management**: `internal/routes/manager_simple.go` - Centralized route registration with middleware
+## 架构概述 (VSA + Clean Architecture)
 
-**Key Components:**
+**整体架构设计:**
+本项目采用 VSA (Vertical Slice Architecture) + Clean Architecture 的混合架构模式，将业务按功能垂直切分成独立的领域模块，每个模块内部遵循 Clean Architecture 的四层结构。
 
-**Authentication System** (`internal/handler/auth.go`, `internal/service/oauth.go`):
-- Multi-provider OAuth2 (Google, GitHub, Telegram)
-- Telegram Widget integration for web authentication
-- User creation/update with provider-specific ID mapping
-- Local account registration with email/password
-- JWT token-based authentication with refresh support
+**架构层次:**
+```
+├── cmd/server/                    # 应用程序入口点
+├── internal/
+│   ├── application/               # 应用层 - 跨领域业务协调
+│   │   ├── services/              # 应用服务 - 领域模块协调器
+│   │   ├── workflows/             # 业务工作流 - 复杂业务流程
+│   │   └── handlers/              # 应用处理器 - 跨领域 HTTP 接口
+│   ├── domains/                   # 领域层 - 业务功能垂直切片
+│   │   ├── user/                  # 用户领域模块
+│   │   ├── auth/                  # 认证领域模块
+│   │   ├── subscription/          # 订阅领域模块
+│   │   ├── payment/               # 支付领域模块
+│   │   ├── coupon/                # 优惠券领域模块
+│   │   ├── invoice/               # 发票领域模块
+│   │   ├── ticket/                # 工单领域模块
+│   │   ├── server/                # 服务器领域模块
+│   │   └── referral/              # 推荐领域模块
+│   └── shared/                    # 共享基础设施
+│       ├── config/                # 配置管理
+│       ├── database/              # 数据库连接
+│       ├── logger/                # 日志系统
+│       ├── middleware/            # 通用中间件
+│       ├── response/              # 响应格式化
+│       ├── events/                # 事件总线
+│       └── queue/                 # 队列系统
+```
 
-**Task Queue System** (`internal/queue/`):
-- Redis-backed asynchronous task processing
-- Configurable retry logic with dead letter queues
-- Built-in handlers for email, notifications, and data processing
-- Graceful shutdown and context cancellation support
+**领域模块内部结构 (Clean Architecture):**
+每个领域模块按 Clean Architecture 四层结构组织：
 
-**User Management** (`internal/model/user.go`, `internal/handler/user.go`):
-- Soft delete functionality with restore capabilities
-- Multi-provider account linking (Google, GitHub, Telegram IDs)
-- CRUD operations with proper error handling
-- User status management (active, inactive, banned)
-- Admin and regular user role support
+```
+domains/[domain]/
+├── entities/                      # 实体层 - 业务实体和核心业务规则
+│   ├── [domain].go               # 核心业务实体
+│   ├── value_objects.go          # 值对象
+│   └── dto.go                    # 数据传输对象
+├── usecases/                     # 用例层 - 业务逻辑和应用服务
+│   ├── interfaces/               # 接口定义
+│   │   ├── [domain]_repository.go
+│   │   └── [domain]_service.go
+│   └── implementations/          # 接口实现
+│       ├── [domain]_service_impl.go
+│       └── mock_[domain]_service.go
+├── adapters/                     # 适配器层 - 外部接口适配
+│   └── repositories/             # 数据访问实现
+│       └── [domain]_repository.go
+└── module.go                     # 模块组装和依赖注入
+```
 
-**Structured Logging** (`internal/logger/logger.go`):
-- Zap-based structured logging with multiple output formats
-- Environment-configurable log levels and outputs
-- Standardized field helpers for consistent logging
+**关键架构原则:**
 
-**Invite Code System** (`internal/model/invite_code.go`, `internal/service/invite_code.go`):
-- Secure random code generation (32-character hex)
-- Flexible usage limits (single-use or multi-use codes)
-- Expiration time support with automatic validation
-- Status management (active, used, expired, disabled)
-- Integration with user registration process
-- Admin monitoring and statistics
+1. **领域驱动设计 (DDD)**: 按业务领域垂直切分，每个领域具有清晰的边界和职责
+2. **依赖倒置**: 内层不依赖外层，通过接口进行解耦
+3. **单一职责**: 每个模块、服务、实体都有明确的单一职责
+4. **开闭原则**: 对扩展开放，对修改关闭
+5. **接口隔离**: 使用小而专一的接口，避免臃肿的接口
 
-**Server Group Management** (`internal/model/server_group.go`, `internal/service/server_group.go`):
-- Server group organization for network services
-- Unique naming constraints with proper validation
-- Full CRUD operations with admin controls
-- Integration with shadowsocks server management
+**Go 语言特定原则:**
+- **接口优先设计**: 定义小而专一的接口，便于测试和扩展
+- **构造函数注入**: 使用 `NewXxx()` 构造函数进行依赖注入
+- **错误处理**: 明确的错误返回和包装，使用 `pkg/errors` 增强错误信息
+- **并发安全**: 合理使用 goroutine 和 channel，避免竞态条件
+- **模块化**: 使用 `fx.Module` 进行依赖注入管理
 
-**Shadowsocks Server Management** (`internal/model/shadowsocks_server.go`, `internal/service/shadowsocks_server.go`):
-- Complete shadowsocks server configuration management
-- Server group association for organization
-- User access control and subscription integration
-- Rate limiting and traffic management features
+## 核心业务领域模块
 
-**Payment System** (`internal/service/payment*.go`, `internal/handler/payment.go`):
-- Multi-gateway payment processing (EPay, EPUSDT)
-- Payment config management for different gateways
-- Order tracking and notification handling
-- Integration with subscription system for automated billing
+**User 领域模块** (`internal/domains/user/`):
+- **职责**: 用户生命周期管理、用户信息维护、用户状态管理
+- **核心实体**: User, UserProfile, UserPreferences
+- **主要功能**: 用户注册、资料更新、状态变更、多提供商账号关联
+- **依赖关系**: 被 Auth 领域依赖，依赖共享基础设施
 
-**Subscription Management** (`internal/service/subscription*.go`, `internal/service/user_subscription.go`):
-- Flexible subscription plan creation and management
-- User subscription lifecycle (purchase, renewal, cancellation)
-- Integration with payment system for automated billing
-- Subscription order processing and tracking
+**Auth 领域模块** (`internal/domains/auth/`):
+- **职责**: 身份认证、授权管理、会话管理
+- **核心实体**: AuthToken, Session, OAuthProvider, LoginAttempt
+- **主要功能**: 多提供商 OAuth2、JWT 令牌管理、登录/注销、密码重置
+- **依赖关系**: 依赖 User 领域获取用户信息
 
-**Referral System** (`internal/service/referral*.go`, `internal/handler/**/referral.go`):
-- Referral campaign management with customizable rewards
-- Referral tracking and analytics
-- Integration with user registration and invite codes
-- Campaign statistics and performance monitoring
+**Subscription 领域模块** (`internal/domains/subscription/`):
+- **职责**: 订阅计划管理、用户订阅生命周期、计费周期管理
+- **核心实体**: SubscriptionPlan, UserSubscription, SubscriptionOrder
+- **主要功能**: 计划创建、订阅购买、续费、取消、试用期管理
+- **依赖关系**: 与 Payment 领域协作处理付费订阅
 
-**Support Ticket System** (`internal/service/ticket*.go`, `internal/handler/**/ticket.go`):
-- Multi-tier ticket management (user and admin interfaces)
-- Ticket messaging and conversation threading
-- Ticket assignment and resolution workflows
-- Decoupled ticket architecture for scalability
+**Payment 领域模块** (`internal/domains/payment/`):
+- **职责**: 支付处理、多网关集成、支付记录管理
+- **核心实体**: Payment, PaymentMethod, PaymentGateway, PaymentConfig
+- **主要功能**: 支付创建、状态跟踪、网关回调处理、退款管理
+- **依赖关系**: 被多个领域依赖进行支付处理
 
-**Coupon System** (`internal/service/coupon.go`, `internal/handler/**/coupon.go`, `internal/model/coupon.go`):
-- Flexible discount system supporting percentage and fixed-amount coupons
-- Usage tracking and limitation controls (per-user and global usage limits)
-- Time-based validity periods with automatic expiration
-- Plan-specific applicability and minimum order requirements
-- Public/private coupon visibility management
-- Complete audit trail with usage history tracking
-- Integration with subscription order creation and payment processing
+**Coupon 领域模块** (`internal/domains/coupon/`):
+- **职责**: 优惠券系统、折扣计算、使用限制管理
+- **核心实体**: Coupon, CouponUsage, DiscountRule
+- **主要功能**: 优惠券创建、验证、使用、统计分析
+- **依赖关系**: 与 Subscription 和 Payment 集成提供折扣
 
-**Database Migration System** (`internal/migration/migrate.go`, integrated in `cmd/server/main.go`):
-- golang-migrate integration for versioned database migrations with automatic `schema_migrations` table management
-- Fully integrated migration functionality within main server application (no separate CLI tool required)
-- Support for up, down, reset, status, list, force, goto, steps, and fix-dirty operations
-- golang-migrate automatically creates and manages `schema_migrations` table following best practices
-- Uses same database configuration as main application
-- Migration files in `migrations/` directory with SQL schema definitions
-- Rich command-line interface with `-migrate-command`, `-migrate-version`, `-migrate-steps` flags
-- Migration tracking with dirty state detection and comprehensive error recovery
+**Invoice 领域模块** (`internal/domains/invoice/`):
+- **职责**: 发票生成、管理、PDF 生成、通知发送
+- **核心实体**: Invoice, InvoiceItem, InvoiceTemplate
+- **主要功能**: 发票创建、PDF 生成、状态管理、发送通知
+- **依赖关系**: 基于 Payment 数据生成发票
 
-**Database Architecture:**
-- GORM for MySQL with connection pooling (max idle: 10, max open: 100)
-- Redis for caching and task queues
-- Soft delete middleware for query scoping (`internal/middleware/soft_delete.go`)
-- Models: User, InviteCode, SubscriptionPlan, UserSubscription, PaymentRecord, Coupon, CouponUsage, etc.
-- **Schema Optimizations**: Foreign key constraints, composite indexes, CHECK constraints, and performance optimizations
-- **Audit & Security**: Login tracking, failed attempt monitoring, email verification, and comprehensive audit trails
-- **Reporting Views**: `v_active_subscriptions` and `v_revenue_summary` for business analytics
+**Ticket 领域模块** (`internal/domains/ticket/`):
+- **职责**: 客户支持、工单管理、SLA 跟踪
+- **核心实体**: Ticket, TicketMessage, TicketAssignment
+- **主要功能**: 工单创建、消息线程、分配处理、SLA 监控
+- **依赖关系**: 需要用户信息和订阅上下文
 
-## Environment Configuration
+**Server 领域模块** (`internal/domains/server/`):
+- **职责**: 服务器管理、健康监控、负载均衡
+- **核心实体**: Server, ServerGroup, HealthCheck
+- **主要功能**: 服务器配置、状态监控、流量统计、组管理
+- **依赖关系**: 与 Subscription 集成提供服务器访问权限
 
-**🚨 CRITICAL SECURITY REQUIREMENTS:**
+**Referral 领域模块** (`internal/domains/referral/`):
+- **职责**: 推荐系统、邀请码管理、奖励计算
+- **核心实体**: Referral, InviteCode, ReferralCampaign, ReferralReward
+- **主要功能**: 邀请码生成、推荐跟踪、转化统计、奖励发放
+- **依赖关系**: 与 User 和 Payment 集成处理推荐奖励
 
-**JWT Configuration (REQUIRED):**
-- `JWT_SECRET` - **CRITICAL**: Must be set with a secure random key (32+ chars)
-  - Generate with: `openssl rand -hex 32`
-  - Or use: `go run tools/generate-jwt-key/main.go`
-  - NEVER use default values in production
-- `JWT_EXPIRE_HOURS` - Token expiration time (default: 24)
+## 应用层协调
 
-**Security Checks:**
-- Run `make security-check` before deployment
-- Use `make safe-run` or `make safe-dev` for development
-- The application will refuse to start with insecure JWT configuration
+**ApplicationService** (`internal/application/services/application_service.go`):
+- **职责**: 作为所有领域模块的协调器，提供统一的应用程序接口
+- **主要功能**: 
+  - 领域模块初始化和依赖注入
+  - 跨领域业务流程协调
+  - 事件总线管理
+  - 系统健康检查
 
-Required environment variables for full functionality:
+**业务工作流** (`internal/application/workflows/`):
+- **SubscriptionWorkflow**: 完整的订阅购买流程，整合支付、优惠券、推荐
+- **ReferralWorkflow**: 推荐邀请和奖励处理流程
+- **其他复杂业务流程**: 涉及多个领域协作的业务场景
 
-**Database:**
+**应用处理器** (`internal/application/handlers/`):
+- **ApplicationHandler**: 处理跨领域的 HTTP 请求
+- **提供聚合的 API 接口**: 如用户仪表板、管理后台等
+
+## 共享基础设施
+
+**配置管理** (`internal/shared/config/`):
+- 统一的配置加载和管理
+- 支持环境变量、配置文件
+- 提供类型安全的配置访问接口
+
+**数据库管理** (`internal/shared/database/`):
+- GORM 连接管理和配置
+- 连接池优化
+- 迁移管理集成
+
+**日志系统** (`internal/shared/logger/`):
+- 基于 Zap 的结构化日志
+- 统一的日志格式和字段
+- 多输出支持 (控制台、文件、远程)
+
+**事件系统** (`internal/shared/events/`):
+- 领域事件发布和订阅
+- 异步事件处理
+- 跨领域通信机制
+
+**队列系统** (`internal/shared/queue/`):
+- 基于 Redis 的任务队列
+- 异步任务处理
+- 重试和错误处理机制
+
+**中间件** (`internal/shared/middleware/`):
+- 认证和授权中间件
+- 软删除查询中间件
+- 请求日志和限流中间件
+
+## 环境配置
+
+**🚨 关键安全要求:**
+
+**JWT 配置 (必需):**
+- `JWT_SECRET` - **关键**: 必须设置安全随机密钥 (32+ 字符)
+  - 生成方式: `openssl rand -hex 32`
+  - 或使用: `go run tools/generate-jwt-key/main.go`
+  - 生产环境中绝不使用默认值
+- `JWT_EXPIRE_HOURS` - 令牌过期时间 (默认: 24)
+
+**安全检查:**
+- 部署前运行 `make security-check`
+- 开发环境使用 `make safe-run` 或 `make safe-dev`
+- 应用程序在不安全的 JWT 配置下会拒绝启动
+
+**必需环境变量:**
+
+**数据库配置:**
 - `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
 
-**Redis:**
+**Redis 配置:**
 - `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `REDIS_DB`
 
-**OAuth2 Providers:**
+**OAuth2 提供商:**
 - Google: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URL`
 - GitHub: `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GITHUB_REDIRECT_URL`
 - Telegram: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_REDIRECT_URL`
 
-**Logging:**
-- `LOG_LEVEL` (debug, info, warn, error), `LOG_FORMAT` (text/json), `LOG_OUTPUT`
+**日志配置:**
+- `LOG_LEVEL` (debug, info, warn, error)
+- `LOG_FORMAT` (text/json)
+- `LOG_OUTPUT`
 
-**Server:**
-- `SERVER_PORT` (default: 8080)
+**服务器配置:**
+- `SERVER_PORT` (默认: 8080)
+- `SERVER_API_TOKEN` - UniProxy 服务器节点认证令牌 (最少 20 字符)
 
-**Server API Token:**
-- `SERVER_API_TOKEN` - Authentication token for UniProxy server nodes (minimum 20 characters required)
+**数据库迁移:**
+- `RUN_MIGRATION` (设置为 "true" 启用自动迁移)
 
-**Database Migration:**
-- `RUN_MIGRATION` (set to "true" to enable auto-migration)
+## API 路由结构
 
-## API Structure
+**应用层路由** (`/api/v1/app`):
+- `POST /app/register-with-invite` - 带邀请码的用户注册工作流
+- `POST /app/subscription/purchase` - 完整订阅购买工作流
+- `POST /app/referral/create-invite` - 创建推荐邀请工作流
+- `GET /app/dashboard/user` - 用户仪表板聚合数据
+- `GET /app/dashboard/admin` - 管理员仪表板聚合数据
+- `GET /app/system/health` - 系统健康检查
 
-**Authentication Routes** (`/api/v1/auth`):
-- `GET /auth/providers` - List available OAuth providers
-- `GET /auth/:provider` - Initiate OAuth login
-- `GET /auth/:provider/callback` - Handle OAuth callbacks
-- `GET /auth/telegram/widget` - Get Telegram login widget HTML
-- `POST /auth/register` - Register new user with email/password (supports invite codes)
-- `POST /auth/login` - Login with email/password
-- `POST /auth/logout` - Logout current user
-- `POST /auth/refresh` - Refresh JWT token
-- `POST /auth/change-password` - Change user password
-- `GET /auth/profile` - Get current user profile
+**领域特定路由:**
+每个领域模块都有自己的路由组，例如：
+- `/api/v1/user` - 用户领域路由
+- `/api/v1/auth` - 认证领域路由
+- `/api/v1/subscription` - 订阅领域路由
+- `/api/v1/payment` - 支付领域路由
+- 等等...
 
-**User Routes** (`/api/v1/user`):
-- `GET /user/profile` - Get current user's profile
-- `PUT /user/profile` - Update current user's profile
-- `PUT /user/password` - Change current user's password
+## 开发最佳实践
 
-**Invite Code Routes** (`/api/v1/invite-codes`):
-- `GET /invite-codes/validate/:code` - Validate invite code (public)
-- `POST /invite-codes` - Create new invite code (authenticated)
-- `GET /invite-codes/my` - Get my invite codes (authenticated)
-- `GET /invite-codes/:id` - Get invite code details (authenticated)
-- `PUT /invite-codes/:id/status` - Update invite code status (authenticated)
-- `DELETE /invite-codes/:id` - Delete invite code (authenticated)
+**领域模块开发:**
+1. **实体优先**: 先定义核心业务实体和业务规则
+2. **接口设计**: 定义清晰的仓储和服务接口
+3. **测试驱动**: 为每个用例编写单元测试
+4. **Mock 实现**: 提供 Mock 服务便于测试和开发
 
-**Admin Routes** (`/api/v1/admin`):
-- User management: `/admin/users` with full CRUD operations, search, stats, and batch operations
-- Invite code management: `/admin/invite-codes` with statistics
-- Server group management: `/admin/server-groups` with full CRUD operations
-- Shadowsocks server management: `/admin/shadowsocks-servers` with full CRUD operations
-- Subscription plan management: `/admin/subscriptions/plans` with full CRUD operations
-- User subscription management: `/admin/subscriptions/users` with management and renewal
-- Payment config management: `/admin/payments/configs` with CRUD operations
-- Referral management: `/admin/referrals` and `/admin/referral-campaigns` with full CRUD operations
-- Ticket management: Admin ticket routes with assignment and resolution
-- Coupon management: `/admin/coupons` with full CRUD operations, usage tracking, and statistics
+**跨领域协作:**
+1. **事件驱动**: 使用领域事件进行异步通信
+2. **接口依赖**: 通过接口而不是具体实现进行依赖
+3. **应用服务协调**: 复杂业务流程在应用层协调
+4. **避免循环依赖**: 通过事件或应用层打破循环依赖
 
-**User-Specific Routes** (`/api/v1/user`):
-- Profile management: `/user/profile` and `/user/password`
-- Subscription management: `/user/subscriptions` with purchase, cancel, and history
-- Payment orders: `/user/payments/orders` with creation and tracking
-- Shadowsocks servers: `/user/shadowsocks-servers` for available servers
-- Referrals: `/user/referrals` and `/user/referrals/stats`
-- Invite codes: `/user/invite-codes` with full management
-- Tasks: `/user/tasks` for background task management
-- Tickets: User ticket routes for support system
-- Coupon operations: `/user/coupons/validate` for coupon validation and `/user/coupons/usages` for usage history
+**代码质量 (Go 最佳实践):**
+1. **命名约定**: 遵循 Go 官方命名规范
+   - 包名使用小写，简短且有意义
+   - 接口名通常以 -er 结尾 (如 `UserRepository`, `PaymentService`)
+   - 私有成员使用小写开头，公有成员大写开头
+2. **错误处理**: 
+   - 使用预定义错误常量 (如 `errorz.ErrUnauthorized`)
+   - 统一的错误响应格式 (`responses.HandleError`)
+   - 错误包装和上下文传递
+3. **依赖注入**: 
+   - 使用构造函数 `NewXxx()` 注入依赖
+   - 通过接口而非具体类型进行依赖
+   - 使用 `fx.Module` 管理生命周期
+4. **日志记录**: 
+   - 结构化日志，包含请求上下文
+   - 统一的日志格式和字段
+   - 合理的日志级别 (debug, info, warn, error)
+5. **测试**: 
+   - 为每个公共方法编写单元测试
+   - 使用 Mock 接口进行隔离测试
+   - 集成测试验证完整业务流程
 
-**Public Routes**:
-- Subscription plans: `/api/v1/subscription-plans` with public plan listing
-- Payment methods: `/api/v1/payments/methods` and `/api/v1/payments/configs`
-- Payment notifications: `/api/v1/payments/notify/:gateway`
-- Server status: `/api/v1/servers/status`
-- Referral campaigns: `/api/v1/referral-campaigns` and `/api/v1/referral/track/:code`
-- Public coupons: `/api/v1/coupons` for browsing available public coupons
+**性能考虑 (Go 特定优化):**
+1. **数据库优化**: 
+   - GORM 连接池配置和预编译语句
+   - 合理的索引设计和查询优化
+   - 使用 `BeforeCreate` 钩子自动生成 UUID
+2. **缓存策略**: 
+   - Redis 连接池和分片策略
+   - 热点数据缓存和缓存失效策略
+3. **并发处理**: 
+   - 使用 goroutine 处理异步任务
+   - channel 用于 goroutine 间通信
+   - context.Context 传递请求上下文
+4. **内存管理**: 
+   - 避免内存泄漏，及时释放资源
+   - 使用对象池减少 GC 压力
+   - 批量操作减少网络开销
 
-**Server API Routes** (`/api/v1/server`):
-- UniProxy Server API: `/server/UniProxy/health`
-- Subscription orders: `/subscription-orders` with authenticated access
+## 测试策略
 
-**Health Check Routes**:
-- `GET /health` - Health check endpoint
-- `GET /api/v1/ping` - API ping endpoint
+**单元测试:**
+- 每个领域服务都有对应的单元测试
+- 使用 Mock 仓储进行业务逻辑测试
+- 测试覆盖率目标 >80%
 
-## Development Patterns
+**集成测试:**
+- 测试领域模块之间的集成
+- 测试数据库操作的正确性
+- 测试外部服务集成
 
-**Error Handling:**
-- Structured logging with context fields throughout
-- Graceful degradation for missing OAuth provider configurations
-- Database transaction rollback patterns in handlers
+**端到端测试:**
+- 测试完整的业务工作流
+- 验证 API 接口的正确性
+- 模拟真实用户场景
 
-**Database Patterns:**
-- Use `internal/middleware/soft_delete.go` scopes for deleted record handling
-- Provider-specific user lookups with fallback creation
-- Auto-migration runs on server startup
-- Transaction-based invite code usage to ensure data consistency
+## 部署和运维
 
-**Handler Organization:**
-- **Admin Handlers** (`internal/handler/admin/`): Admin-only operations requiring elevated privileges
-- **User Handlers** (`internal/handler/user/`): User-specific operations with authentication
-- **Root Handlers** (`internal/handler/`): General API handlers (auth, payments, tasks, server APIs)
-- Consistent response formatting using `internal/response/` package
-- Structured error handling with proper HTTP status codes
+**容器化部署:**
+- 提供 Dockerfile 进行容器化部署
+- 支持 Docker Compose 本地开发环境
+- Kubernetes 部署配置
 
-**Module Architecture:**
-- `SimpleManager` in `internal/modules/` handles dependency injection
-- Services are initialized once and shared across handlers
-- Circular dependency resolution through careful service initialization order
-- Centralized module configuration and management
+**监控和观测:**
+- 结构化日志输出
+- Prometheus 指标暴露
+- 分布式链路追踪集成
+- 健康检查端点
 
-**Queue Patterns:**
-- Register task handlers in `main.go` during startup
-- Tasks include retry logic and dead letter queue routing
-- Context-aware processing with graceful shutdown
+**扩展性考虑:**
+- 水平扩展支持
+- 数据库读写分离
+- 缓存分片策略
+- 微服务拆分准备
 
-**Configuration:**
-- Environment variables with sensible defaults
-- Centralized config loading in `config/config.go`
-- Provider feature toggles based on credential availability
+## 使用示例
 
-**Security Patterns:**
-- JWT token-based authentication with refresh mechanism
-- User status validation on all authenticated endpoints
-- Only active users can access protected resources
-- Invite code validation with expiration and usage limits
-- Admin-only routes protected by role-based middleware
-- OAuth2 data comparison to minimize unnecessary database updates
-
-## Usage Examples
-
-**Creating an Invite Code:**
+**创建新的领域模块:**
 ```bash
-curl -X POST http://localhost:8080/api/v1/invite-codes \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "max_uses": 5,
-    "expires_at": "2024-12-31T23:59:59Z",
-    "description": "Friend invitation code"
-  }'
+# 1. 创建领域目录结构
+mkdir -p internal/domains/newmodule/{entities,usecases/{interfaces,implementations},adapters/repositories}
+
+# 2. 实现核心实体
+# internal/domains/newmodule/entities/newmodule.go
+
+# 3. 定义接口
+# internal/domains/newmodule/usecases/interfaces/
+
+# 4. 实现服务和仓储
+# internal/domains/newmodule/usecases/implementations/
+# internal/domains/newmodule/adapters/repositories/
+
+# 5. 创建模块组装
+# internal/domains/newmodule/module.go
 ```
 
-**Registering with Invite Code:**
+**应用层工作流示例:**
+```go
+// 跨领域业务流程
+func (s *ApplicationService) ProcessOrderWithReferral(ctx context.Context, req *OrderRequest) (*OrderResponse, error) {
+    // 1. 验证用户
+    user, err := s.userModule.GetUserService().GetUser(ctx, req.UserID)
+    if err != nil {
+        return nil, err
+    }
+    
+    // 2. 应用优惠券
+    var discount float64
+    if req.CouponCode != "" {
+        couponResult, err := s.couponModule.GetCouponService().ValidateAndApply(ctx, req.CouponCode, req.Amount)
+        if err == nil {
+            discount = couponResult.DiscountAmount
+        }
+    }
+    
+    // 3. 处理支付
+    payment, err := s.paymentModule.GetPaymentService().ProcessPayment(ctx, &payment.CreatePaymentRequest{
+        Amount: req.Amount - discount,
+        // ...
+    })
+    if err != nil {
+        return nil, err
+    }
+    
+    // 4. 记录推荐转化
+    if req.ReferralCode != "" {
+        go s.referralModule.GetReferralService().RecordConversion(ctx, req.ReferralCode, req.Amount)
+    }
+    
+    return &OrderResponse{
+        Payment: payment,
+        Discount: discount,
+    }, nil
+}
+```
+
+**技术特色:**
+- **高内聚，低耦合**: 每个领域模块职责单一，模块间依赖最小化
+- **接口驱动**: 清晰的接口边界，便于单元测试和集成测试
+- **Go 惯例**: 遵循 Go 官方推荐的项目结构和代码规范
+- **依赖注入**: 使用 Fx 框架进行生命周期管理
+
+## 使用指南
+
+**🚀 启动应用:**
 ```bash
-curl -X POST http://localhost:8080/api/v1/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "newuser@example.com",
-    "password": "securepassword123",
-    "invite_code": "a1b2c3d4e5f6789012345678901234567890abcd"
-  }'
+# 基本启动
+go run cmd/server/main.go app:serve
+
+# 构建后运行
+make build
+./bin/server
+
+# 开发模式 (启用热重载)
+make dev
+
+# 带安全检查的开发模式 (推荐)
+make safe-dev
+
+# 使用 Mock 服务进行开发
+go run cmd/server/main.go app:serve -mock
+
+# 指定端口和环境
+go run cmd/server/main.go app:serve -port 9090 -env production
+
+# 显示所有可用命令
+go run cmd/server/main.go -help
 ```
 
-**Validating an Invite Code:**
-```bash
-curl -X GET http://localhost:8080/api/v1/invite-codes/validate/a1b2c3d4e5f6789012345678901234567890abcd
+**项目结构 (Go 最佳实践):**
+```
+项目根目录/
+├── cmd/                   # 应用程序入口点
+│   └── server/           # 服务器应用
+├── internal/             # 私有应用代码
+│   ├── domains/          # 业务领域 (垂直切片)
+│   ├── application/      # 应用层协调
+│   └── shared/           # 共享基础设施
+├── pkg/                  # 可复用的库代码
+├── docs/                 # 文档和 API 规范
+├── migrations/           # 数据库迁移文件
+├── tools/                # 工具和脚本
+└── go.mod               # Go 模块定义
 ```
 
-**Coupon Management Examples:**
-```bash
-# Get public coupons (no authentication required)
-curl -X GET http://localhost:8080/api/v1/coupons
+**Go 代码示例 (最佳实践):**
 
-# Create a coupon (admin only)
-curl -X POST http://localhost:8080/api/v1/admin/coupons \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "code": "SAVE20",
-    "name": "20% Off All Plans",
-    "description": "Save 20% on any subscription plan",
-    "type": "percentage",
-    "value": 20,
-    "max_uses": 100,
-    "max_uses_per_user": 1,
-    "min_order_amount": 10,
-    "currency": "USD",
-    "valid_until": "2024-12-31T23:59:59Z",
-    "is_public": true
-  }'
+1. **领域服务实现:**
+```go
+// 用户服务接口定义
+type UserService interface {
+    CreateUser(ctx context.Context, req *CreateUserRequest) (*User, error)
+    GetUserByID(ctx context.Context, id string) (*User, error)
+}
 
-# Validate a coupon (user authentication required)
-curl -X POST http://localhost:8080/api/v1/user/coupons/validate \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "coupon_code": "SAVE20",
-    "plan_id": 1,
-    "order_amount": 29.99,
-    "currency": "USD"
-  }'
+// 服务实现
+type userServiceImpl struct {
+    repo   UserRepository
+    logger framework.Logger
+}
 
-# Get coupon usage history (admin only)
-curl -X GET http://localhost:8080/api/v1/admin/coupons/1/usages \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+// 构造函数注入
+func NewUserService(repo UserRepository, logger framework.Logger) UserService {
+    return &userServiceImpl{
+        repo:   repo,
+        logger: logger,
+    }
+}
 
-# Get my coupon usage history (user authentication required)
-curl -X GET http://localhost:8080/api/v1/user/coupons/usages \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+func (s *userServiceImpl) CreateUser(ctx context.Context, req *CreateUserRequest) (*User, error) {
+    s.logger.Info("Creating user", "email", req.Email)
+    
+    // 业务验证
+    if err := req.Validate(); err != nil {
+        return nil, errorz.ErrInvalidInput
+    }
+    
+    // 创建用户
+    user, err := s.repo.Create(ctx, req)
+    if err != nil {
+        s.logger.Error("Failed to create user", "error", err)
+        return nil, err
+    }
+    
+    return user, nil
+}
 ```
 
-**UniProxy Server API Usage:**
-```bash
-# Get server configuration (for UniProxy nodes)
-curl -X GET "http://localhost:8080/api/v1/server/UniProxy/config?node_id=1&node_type=shadowsocks&token=uniproxy-server-token-2024-secure-key-example"
+2. **统一错误处理:**
+```go
+// 预定义错误
+var (
+    ErrUserNotFound = &APIError{
+        StatusCode: http.StatusNotFound,
+        Message:    "User not found",
+    }
+    ErrInvalidInput = &APIError{
+        StatusCode: http.StatusBadRequest,
+        Message:    "Invalid input provided",
+    }
+)
 
-# Get users list (for UniProxy nodes)
-curl -X GET "http://localhost:8080/api/v1/server/UniProxy/user?node_id=1&node_type=shadowsocks&token=uniproxy-server-token-2024-secure-key-example"
-
-# Health check (for UniProxy nodes)
-curl -X GET "http://localhost:8080/api/v1/server/UniProxy/health"
-
-# Push data from UniProxy node
-curl -X POST "http://localhost:8080/api/v1/server/UniProxy/push?node_id=1&node_type=shadowsocks&token=uniproxy-server-token-2024-secure-key-example" \
-  -H "Content-Type: application/json" \
-  -d '{"data": "node statistics or traffic data"}'
+// HTTP 处理器中使用
+func (h *UserHandler) GetUser(c *gin.Context) {
+    userID := c.Param("id")
+    
+    user, err := h.service.GetUserByID(c.Request.Context(), userID)
+    if err != nil {
+        responses.HandleError(h.logger, c, err)
+        return
+    }
+    
+    responses.SuccessJSON(c, http.StatusOK, user)
+}
 ```
 
-**Server Group Access Configuration:**
-```json
-# Allow access to specific server groups
-{"server_group_ids": "[1,2,3]"}
+3. **模块组装 (Fx):**
+```go
+// 领域模块定义
+var Module = fx.Module("user",
+    fx.Provide(
+        NewUserRepository,
+        NewUserService,
+        NewUserController,
+        NewUserRoute,
+    ),
+    fx.Invoke(RegisterUserRoutes),
+)
 
-# Allow access to all server groups (explicit)
-{"server_group_ids": "[0]"}
-
-# No access (secure default)
-{"server_group_ids": ""}
+// 主应用中使用
+func main() {
+    fx.New(
+        user.Module,
+        auth.Module,
+        payment.Module,
+        // ...
+    ).Run()
+}
 ```
 
-**Subscription Server Group Assignment:**
-- **SubscriptionPlan**: Contains `default_server_group_ids` (JSON) for automatic assignment
-- **User Purchase**: Automatically inherits plan's default server groups
-- **Admin Creation**: Can override server groups via API
-- **Default Behavior**: Empty plan configuration grants access to all groups (`[0]`)
-- **Security**: Empty subscription `server_group_ids` denies all access
+**架构优势:**
+- **可维护性**: 领域边界清晰，单一职责原则
+- **可测试性**: 接口驱动设计，Mock 支持完善
+- **可扩展性**: 新功能以领域为单位增加
+- **团队协作**: 领域独立开发，减少冲突
+- **Go 特性**: 充分利用 Go 的并发模型和类型系统
 
-## Database Schema Best Practices
-
-**Schema Optimizations** (Migrations 000009, 000010 & 000011):
-- **Foreign Key Constraints**: Full referential integrity with proper CASCADE/RESTRICT actions
-- **Composite Indexes**: Optimized for common query patterns (auth, billing, reporting)
-- **Data Validation**: CHECK constraints for status values, business rules (MySQL 8.0.16+)
-- **Performance Monitoring**: Gateway response times, retry tracking, login patterns
-- **Security Enhancements**: Failed login tracking, account lockout, email verification
-- **Audit Trail**: Comprehensive logging for user actions and payment processing
-- **Reporting Views**: Pre-built views for subscription analytics and revenue reporting
-- **JSON Optimization**: Efficient storage for metadata and configuration data (MySQL 5.7+)
-- **MySQL Compatibility**: Fixed syntax issues for MySQL/MariaDB compatibility
-
-See `docs/DATABASE_OPTIMIZATIONS.md` for detailed implementation guide.
-
-## Best Practices
-
-**Authentication:**
-- Always use HTTPS in production
-- Implement proper token refresh logic in frontend
-- Store JWT tokens securely (httpOnly cookies recommended)
-- Validate user status on critical operations
-
-**Invite Code Management:**
-- Set appropriate expiration times for invite codes
-- Monitor invite code usage through admin statistics
-- Implement rate limiting on invite code creation
-- Use single-use codes for sensitive invitations
-
-**Database Operations:**
-- Enable database migration in production with `RUN_MIGRATION=true`
-- Monitor database connection pool usage
-- Use soft delete for audit trails
-- Implement proper indexing for performance
-
-**Server API Token Security:**
-- Use strong, randomly generated tokens (minimum 20 characters)
-- Rotate tokens regularly in production environments
-- Store tokens securely as environment variables
-- Never log or expose tokens in responses
-- Implement rate limiting for server API endpoints
-- Monitor failed authentication attempts
-
-**UniProxy Server API Security:**
-- Subscription access validation with multiple security layers:
-  - Time-based validation using database NOW() function for timezone consistency
-  - Traffic limit enforcement (both database flag and real-time usage check)
-  - Trial period expiration validation
-  - Server group access control with explicit permission model
-- Server group access follows "deny by default" principle:
-  - Empty `server_group_ids` denies access (secure default)
-  - Use `[0]` in JSON to explicitly grant access to all groups
-  - Specific group IDs must be listed for limited access
-- Support for both `active` and `trial` subscription statuses
-
-**Logging and Monitoring:**
-- Use structured logging with appropriate log levels
-- Monitor invite code usage patterns
-- Track authentication failures and security events
-- Set up alerts for admin operations
-- Monitor server API token usage and failed attempts
-- Monitor coupon usage patterns and fraud detection
-
-**Coupon Management:**
-- Set appropriate expiration times and usage limits for coupons
-- Monitor coupon usage statistics and conversion rates
-- Implement fraud detection for suspicious coupon usage patterns
-- Use percentage coupons carefully to avoid excessive discounts
-- Set minimum order amounts to prevent abuse
-- Regularly audit coupon effectiveness and ROI
-- Archive expired coupons but maintain usage history for analytics
+**部署和运维:**
+- **容器化**: Docker 和 Docker Compose 支持
+- **环境配置**: 统一的环境变量管理
+- **监控**: Prometheus 指标暴露，结构化日志
+- **健康检查**: `/health` 端点和服务状态监控
+- **扩展性**: 水平扩展和负载均衡支持
