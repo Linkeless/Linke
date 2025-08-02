@@ -8,7 +8,7 @@ type ServerGroup struct {
 	Name      string    `json:"name" gorm:"size:255;not null;uniqueIndex" binding:"required,max=255"`
 	CreatedAt time.Time `json:"created_at" gorm:"not null;index"`
 	UpdatedAt time.Time `json:"updated_at" gorm:"not null"`
-	
+
 	// Reverse relationship - shadowsocks servers in this group
 	ShadowsocksServers []ShadowsocksServer `json:"shadowsocks_servers,omitempty" gorm:"foreignKey:GroupID;references:ID"`
 }

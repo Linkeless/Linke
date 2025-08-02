@@ -18,9 +18,9 @@ type InviteCodeUsage struct {
 	UsedByID     uint `json:"used_by_id" gorm:"not null;index"`
 
 	// Usage Info
-	UsedAt time.Time `json:"used_at" gorm:"not null;index"`
-	IPAddress string `json:"ip_address" gorm:"size:45"` // IPv4/IPv6 address
-	UserAgent string `json:"user_agent" gorm:"size:255"` // User agent string
+	UsedAt    time.Time `json:"used_at" gorm:"not null;index"`
+	IPAddress string    `json:"ip_address" gorm:"size:45"`  // IPv4/IPv6 address
+	UserAgent string    `json:"user_agent" gorm:"size:255"` // User agent string
 
 	// Relationships (no foreign key constraints for performance)
 	// TODO: Fix cross-domain references in entities
@@ -40,14 +40,14 @@ func (InviteCodeUsage) TableName() string {
 
 // InviteCodeUsageResponse represents the invite code usage data structure for API responses
 type InviteCodeUsageResponse struct {
-	ID           uint                 `json:"id" example:"1"`                                    // Usage record ID
-	InviteCodeID uint                 `json:"invite_code_id" example:"1"`                       // Invite code ID
-	UsedByID     uint                 `json:"used_by_id" example:"2"`                           // User ID who used the code
-	UsedAt       time.Time            `json:"used_at" example:"2024-01-01T00:00:00Z"`          // When the code was used
-	IPAddress    string               `json:"ip_address" example:"192.168.1.100"`              // IP address of the user
-	UserAgent    string               `json:"user_agent" example:"Mozilla/5.0..."`             // User agent string
-	CreatedAt    time.Time            `json:"created_at" example:"2024-01-01T00:00:00Z"`       // Creation time
-	
+	ID           uint      `json:"id" example:"1"`                            // Usage record ID
+	InviteCodeID uint      `json:"invite_code_id" example:"1"`                // Invite code ID
+	UsedByID     uint      `json:"used_by_id" example:"2"`                    // User ID who used the code
+	UsedAt       time.Time `json:"used_at" example:"2024-01-01T00:00:00Z"`    // When the code was used
+	IPAddress    string    `json:"ip_address" example:"192.168.1.100"`        // IP address of the user
+	UserAgent    string    `json:"user_agent" example:"Mozilla/5.0..."`       // User agent string
+	CreatedAt    time.Time `json:"created_at" example:"2024-01-01T00:00:00Z"` // Creation time
+
 	// Optional related data
 	InviteCode *InviteCodeResponse `json:"invite_code,omitempty"` // Invite code details
 	UsedBy     *dto.UserBasicDTO   `json:"used_by,omitempty"`     // User who used the code
@@ -64,9 +64,9 @@ func (icu *InviteCodeUsage) ToResponse() *InviteCodeUsageResponse {
 		UserAgent:    icu.UserAgent,
 		CreatedAt:    icu.CreatedAt,
 	}
-	
+
 	// Note: Related data should be populated at the application layer
 	// to avoid cross-domain dependencies
-	
+
 	return resp
 }

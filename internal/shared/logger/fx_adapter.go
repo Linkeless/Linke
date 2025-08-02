@@ -24,21 +24,21 @@ func NewFxAdapter(logger Logger) fxevent.Logger {
 func (l *FxAdapter) LogEvent(event fxevent.Event) {
 	switch e := event.(type) {
 	case *fxevent.OnStartExecuting:
-		l.logger.Info("Fx lifecycle hook executing", 
+		l.logger.Info("Fx lifecycle hook executing",
 			zap.String("hook", "OnStart"),
 			zap.String("function", e.FunctionName),
 			zap.String("caller", e.CallerName))
 
 	case *fxevent.OnStartExecuted:
 		if e.Err != nil {
-			l.logger.Error("Fx lifecycle hook failed", 
+			l.logger.Error("Fx lifecycle hook failed",
 				zap.String("hook", "OnStart"),
 				zap.String("function", e.FunctionName),
 				zap.String("caller", e.CallerName),
 				zap.String("runtime", e.Runtime.String()),
 				zap.Error(e.Err))
 		} else {
-			l.logger.Info("Fx lifecycle hook executed successfully", 
+			l.logger.Info("Fx lifecycle hook executed successfully",
 				zap.String("hook", "OnStart"),
 				zap.String("function", e.FunctionName),
 				zap.String("caller", e.CallerName),
@@ -46,21 +46,21 @@ func (l *FxAdapter) LogEvent(event fxevent.Event) {
 		}
 
 	case *fxevent.OnStopExecuting:
-		l.logger.Info("Fx lifecycle hook executing", 
+		l.logger.Info("Fx lifecycle hook executing",
 			zap.String("hook", "OnStop"),
 			zap.String("function", e.FunctionName),
 			zap.String("caller", e.CallerName))
 
 	case *fxevent.OnStopExecuted:
 		if e.Err != nil {
-			l.logger.Error("Fx lifecycle hook failed", 
+			l.logger.Error("Fx lifecycle hook failed",
 				zap.String("hook", "OnStop"),
 				zap.String("function", e.FunctionName),
 				zap.String("caller", e.CallerName),
 				zap.String("runtime", e.Runtime.String()),
 				zap.Error(e.Err))
 		} else {
-			l.logger.Info("Fx lifecycle hook executed successfully", 
+			l.logger.Info("Fx lifecycle hook executed successfully",
 				zap.String("hook", "OnStop"),
 				zap.String("function", e.FunctionName),
 				zap.String("caller", e.CallerName),
@@ -68,12 +68,12 @@ func (l *FxAdapter) LogEvent(event fxevent.Event) {
 		}
 
 	case *fxevent.Supplied:
-		l.logger.Debug("Fx dependency supplied", 
+		l.logger.Debug("Fx dependency supplied",
 			zap.String("type", e.TypeName),
 			zap.String("module", e.ModuleName))
 
 	case *fxevent.Provided:
-		l.logger.Debug("Fx dependency provided", 
+		l.logger.Debug("Fx dependency provided",
 			zap.String("constructor", cleanConstructorName(e.ConstructorName)),
 			zap.String("type", e.OutputTypeNames[0]),
 			zap.String("module", e.ModuleName))
@@ -85,24 +85,24 @@ func (l *FxAdapter) LogEvent(event fxevent.Event) {
 			zap.String("module", e.ModuleName))
 
 	case *fxevent.Invoking:
-		l.logger.Info("Fx invoking function", 
+		l.logger.Info("Fx invoking function",
 			zap.String("function", cleanConstructorName(e.FunctionName)),
 			zap.String("module", e.ModuleName))
 
 	case *fxevent.Invoked:
 		if e.Err != nil {
-			l.logger.Error("Fx function invocation failed", 
+			l.logger.Error("Fx function invocation failed",
 				zap.String("function", cleanConstructorName(e.FunctionName)),
 				zap.String("module", e.ModuleName),
 				zap.Error(e.Err))
 		} else {
-			l.logger.Debug("Fx function invoked successfully", 
+			l.logger.Debug("Fx function invoked successfully",
 				zap.String("function", cleanConstructorName(e.FunctionName)),
 				zap.String("module", e.ModuleName))
 		}
 
 	case *fxevent.Stopping:
-		l.logger.Info("Fx application stopping", 
+		l.logger.Info("Fx application stopping",
 			zap.String("signal", e.Signal.String()))
 
 	case *fxevent.Stopped:
@@ -126,7 +126,7 @@ func (l *FxAdapter) LogEvent(event fxevent.Event) {
 		l.logger.Info("Fx application started successfully")
 
 	case *fxevent.LoggerInitialized:
-		l.logger.Debug("Fx custom logger initialized", 
+		l.logger.Debug("Fx custom logger initialized",
 			zap.String("constructor", cleanConstructorName(e.ConstructorName)))
 
 	default:
@@ -141,7 +141,7 @@ func cleanConstructorName(name string) string {
 	if lastSlash := strings.LastIndex(name, "/"); lastSlash != -1 {
 		name = name[lastSlash+1:]
 	}
-	
+
 	// 如果有模块名前缀，也简化
 	if dot := strings.Index(name, "."); dot != -1 && !strings.Contains(name[:dot], "(") {
 		// 保留模块名，但简化包路径
@@ -150,6 +150,6 @@ func cleanConstructorName(name string) string {
 			return parts[len(parts)-2] + "." + parts[len(parts)-1]
 		}
 	}
-	
+
 	return name
 }

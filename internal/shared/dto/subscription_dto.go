@@ -4,14 +4,14 @@ import "time"
 
 // SubscriptionPlanBasicDTO represents basic subscription plan information
 type SubscriptionPlanBasicDTO struct {
-	ID          uint    `json:"id" example:"1"`
-	Name        string  `json:"name" example:"Premium Plan"`
-	Description string  `json:"description" example:"Premium subscription with advanced features"`
-	Price       float64 `json:"price" example:"29.99"`
-	Currency    string  `json:"currency" example:"USD"`
-	Duration    int     `json:"duration" example:"30"`
-	DurationType string `json:"duration_type" example:"days"`
-	Status      string  `json:"status" example:"active"`
+	ID           uint    `json:"id" example:"1"`
+	Name         string  `json:"name" example:"Premium Plan"`
+	Description  string  `json:"description" example:"Premium subscription with advanced features"`
+	Price        float64 `json:"price" example:"29.99"`
+	Currency     string  `json:"currency" example:"USD"`
+	Duration     int     `json:"duration" example:"30"`
+	DurationType string  `json:"duration_type" example:"days"`
+	Status       string  `json:"status" example:"active"`
 }
 
 // SubscriptionOrderBasicDTO represents basic subscription order information for cross-domain references
@@ -45,13 +45,13 @@ type SubscriptionOrderSummaryDTO struct {
 
 // UserSubscriptionBasicDTO represents basic user subscription information
 type UserSubscriptionBasicDTO struct {
-	ID                 uint       `json:"id" example:"1"`
-	UserID             uint       `json:"user_id" example:"1"`
-	SubscriptionPlanID uint       `json:"subscription_plan_id" example:"1"`
-	Status             string     `json:"status" example:"active"`
-	StartedAt          time.Time  `json:"started_at" example:"2024-01-01T00:00:00Z"`
-	ExpiresAt          time.Time  `json:"expires_at" example:"2024-02-01T00:00:00Z"`
-	AutoRenew          bool       `json:"auto_renew" example:"true"`
-	CreatedAt          time.Time  `json:"created_at" example:"2024-01-01T00:00:00Z"`
-	UpdatedAt          time.Time  `json:"updated_at" example:"2024-01-01T00:00:00Z"`
+	ID                 uint      `json:"id" example:"1"`
+	UserID             uint      `json:"user_id" example:"1"`
+	SubscriptionPlanID uint      `json:"subscription_plan_id" example:"1"`
+	Status             string    `json:"status" example:"active"`
+	StartedAt          time.Time `json:"started_at" example:"2024-01-01T00:00:00Z"`
+	ExpiresAt          time.Time `json:"expires_at" example:"2024-02-01T00:00:00Z"`
+	AutoRenew          bool      `json:"auto_renew" example:"true"`
+	CreatedAt          time.Time `json:"created_at" example:"2024-01-01T00:00:00Z"`
+	UpdatedAt          time.Time `json:"updated_at" example:"2024-01-01T00:00:00Z"`
 }

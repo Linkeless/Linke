@@ -155,7 +155,7 @@ func SuccessList(c *gin.Context, items interface{}, page int, limit int, total i
 			Total: total,
 		},
 	}
-	
+
 	Success(c, response)
 }
 
@@ -169,7 +169,7 @@ func SuccessListWithMessage(c *gin.Context, message string, items interface{}, p
 			Total: total,
 		},
 	}
-	
+
 	SuccessWithMessage(c, message, response)
 }
 
@@ -183,12 +183,12 @@ func SuccessListWithExtra(c *gin.Context, message string, items interface{}, pag
 			Total: total,
 		},
 	}
-	
+
 	// Add extra fields
 	for key, value := range extra {
 		response[key] = value
 	}
-	
+
 	SuccessWithMessage(c, message, response)
 }
 

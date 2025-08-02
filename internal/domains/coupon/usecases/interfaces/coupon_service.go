@@ -2,8 +2,8 @@ package interfaces
 
 import (
 	"context"
-	"time"
 	"linke/internal/domains/coupon/entities"
+	"time"
 )
 
 // CouponService defines the interface for coupon operations
@@ -32,7 +32,7 @@ type CouponService interface {
 	// Usage tracking
 	GetCouponUsage(ctx context.Context, couponID uint64, limit, offset int) ([]*entities.CouponUsage, int64, error)
 	GetUserCouponUsage(ctx context.Context, userID uint64, limit, offset int) ([]*entities.CouponUsage, int64, error)
-	
+
 	// Statistics
 	GetCouponStatistics(ctx context.Context, couponID uint64) (map[string]interface{}, error)
 	GetCouponSystemStatistics(ctx context.Context) (map[string]interface{}, error)

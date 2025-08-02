@@ -955,59 +955,165 @@ func (r *subscriptionOrderRepository) Delete(ctx context.Context, id uint) error
 }
 
 // Stub implementations for remaining SubscriptionOrderRepository methods
-func (r *subscriptionOrderRepository) SoftDelete(ctx context.Context, id uint) error { return r.Delete(ctx, id) }
-func (r *subscriptionOrderRepository) Restore(ctx context.Context, id uint) error { return fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) HardDelete(ctx context.Context, id uint) error { return fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) List(ctx context.Context, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) ListDeleted(ctx context.Context, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) ListByUser(ctx context.Context, userID uint, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) GetUserOrderHistory(ctx context.Context, userID uint, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) GetUserActiveOrders(ctx context.Context, userID uint, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) ListByPlan(ctx context.Context, planID uint, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) GetPlanOrderStats(ctx context.Context, planID uint, since time.Time) (map[string]int64, error) { return nil, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) ListByStatus(ctx context.Context, status string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) ListByOrderType(ctx context.Context, orderType string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) ListByPaymentStatus(ctx context.Context, paymentStatus string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) ListPendingPayments(ctx context.Context, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) ListFailedPayments(ctx context.Context, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) ListByTransactionID(ctx context.Context, transactionID string) ([]*entities.SubscriptionOrder, error) { return nil, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) ListByPaymentGateway(ctx context.Context, gateway string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) ListByDateRange(ctx context.Context, start, end time.Time, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) ListRecentOrders(ctx context.Context, since time.Time, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) ListOrdersForBillingPeriod(ctx context.Context, start, end time.Time, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) ListByCouponCode(ctx context.Context, couponCode string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) ListWithDiscounts(ctx context.Context, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) ListRefundedOrders(ctx context.Context, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) ListRefundableOrders(ctx context.Context, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) ListByInvoiceStatus(ctx context.Context, invoiceStatus string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) ListUninvoicedOrders(ctx context.Context, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) UpdateStatus(ctx context.Context, id uint, status string) error { return fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) UpdatePaymentStatus(ctx context.Context, id uint, paymentStatus string, transactionID string) error { return fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) UpdateInvoiceStatus(ctx context.Context, id uint, invoiceStatus string, invoiceNumber string) error { return fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) MarkAsPaid(ctx context.Context, id uint, transactionID string, paidAt time.Time) error { return fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) MarkAsRefunded(ctx context.Context, id uint, refundAmount float64, refundReason string, refundedAt time.Time) error { return fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) Search(ctx context.Context, query string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) SearchByUserEmail(ctx context.Context, email string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) CountTotal(ctx context.Context) (int64, error) { return 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) CountByStatus(ctx context.Context, status string) (int64, error) { return 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) CountByUser(ctx context.Context, userID uint) (int64, error) { return 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) CountByPlan(ctx context.Context, planID uint) (int64, error) { return 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) CountPaidOrders(ctx context.Context, since time.Time) (int64, error) { return 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) CountFailedOrders(ctx context.Context, since time.Time) (int64, error) { return 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) GetTotalRevenue(ctx context.Context, currency string, since time.Time) (float64, error) { return 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) GetRevenueByPlan(ctx context.Context, planID uint, currency string, since time.Time) (float64, error) { return 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) GetRevenueByPeriod(ctx context.Context, currency string, start, end time.Time) (float64, error) { return 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) GetDailyRevenue(ctx context.Context, currency string, days int) (map[string]float64, error) { return nil, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) GetMonthlyRevenue(ctx context.Context, currency string, months int) (map[string]float64, error) { return nil, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) ListByCurrency(ctx context.Context, currency string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) GetSupportedCurrencies(ctx context.Context) ([]string, error) { return nil, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) BatchUpdateStatus(ctx context.Context, ids []uint, status string) (int, []uint, error) { return 0, nil, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) GetLastOrderNumber(ctx context.Context, prefix string) (string, error) { return "", fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) ExistsByOrderNumber(ctx context.Context, orderNumber string) (bool, error) { return false, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) ListBySubscription(ctx context.Context, subscriptionID uint, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) GetSubscriptionOrders(ctx context.Context, subscriptionID uint) ([]*entities.SubscriptionOrder, error) { return nil, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) ListWithFilters(ctx context.Context, filters map[string]interface{}, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *subscriptionOrderRepository) GetOrdersForRenewal(ctx context.Context, beforeDate time.Time, limit int) ([]*entities.SubscriptionOrder, error) { return nil, fmt.Errorf("not implemented") }
+func (r *subscriptionOrderRepository) SoftDelete(ctx context.Context, id uint) error {
+	return r.Delete(ctx, id)
+}
+func (r *subscriptionOrderRepository) Restore(ctx context.Context, id uint) error {
+	return fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) HardDelete(ctx context.Context, id uint) error {
+	return fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) List(ctx context.Context, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) ListDeleted(ctx context.Context, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) ListByUser(ctx context.Context, userID uint, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) GetUserOrderHistory(ctx context.Context, userID uint, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) GetUserActiveOrders(ctx context.Context, userID uint, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) ListByPlan(ctx context.Context, planID uint, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) GetPlanOrderStats(ctx context.Context, planID uint, since time.Time) (map[string]int64, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) ListByStatus(ctx context.Context, status string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) ListByOrderType(ctx context.Context, orderType string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) ListByPaymentStatus(ctx context.Context, paymentStatus string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) ListPendingPayments(ctx context.Context, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) ListFailedPayments(ctx context.Context, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) ListByTransactionID(ctx context.Context, transactionID string) ([]*entities.SubscriptionOrder, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) ListByPaymentGateway(ctx context.Context, gateway string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) ListByDateRange(ctx context.Context, start, end time.Time, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) ListRecentOrders(ctx context.Context, since time.Time, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) ListOrdersForBillingPeriod(ctx context.Context, start, end time.Time, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) ListByCouponCode(ctx context.Context, couponCode string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) ListWithDiscounts(ctx context.Context, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) ListRefundedOrders(ctx context.Context, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) ListRefundableOrders(ctx context.Context, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) ListByInvoiceStatus(ctx context.Context, invoiceStatus string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) ListUninvoicedOrders(ctx context.Context, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) UpdateStatus(ctx context.Context, id uint, status string) error {
+	return fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) UpdatePaymentStatus(ctx context.Context, id uint, paymentStatus string, transactionID string) error {
+	return fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) UpdateInvoiceStatus(ctx context.Context, id uint, invoiceStatus string, invoiceNumber string) error {
+	return fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) MarkAsPaid(ctx context.Context, id uint, transactionID string, paidAt time.Time) error {
+	return fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) MarkAsRefunded(ctx context.Context, id uint, refundAmount float64, refundReason string, refundedAt time.Time) error {
+	return fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) Search(ctx context.Context, query string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) SearchByUserEmail(ctx context.Context, email string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) CountTotal(ctx context.Context) (int64, error) {
+	return 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) CountByStatus(ctx context.Context, status string) (int64, error) {
+	return 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) CountByUser(ctx context.Context, userID uint) (int64, error) {
+	return 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) CountByPlan(ctx context.Context, planID uint) (int64, error) {
+	return 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) CountPaidOrders(ctx context.Context, since time.Time) (int64, error) {
+	return 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) CountFailedOrders(ctx context.Context, since time.Time) (int64, error) {
+	return 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) GetTotalRevenue(ctx context.Context, currency string, since time.Time) (float64, error) {
+	return 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) GetRevenueByPlan(ctx context.Context, planID uint, currency string, since time.Time) (float64, error) {
+	return 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) GetRevenueByPeriod(ctx context.Context, currency string, start, end time.Time) (float64, error) {
+	return 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) GetDailyRevenue(ctx context.Context, currency string, days int) (map[string]float64, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) GetMonthlyRevenue(ctx context.Context, currency string, months int) (map[string]float64, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) ListByCurrency(ctx context.Context, currency string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) GetSupportedCurrencies(ctx context.Context) ([]string, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) BatchUpdateStatus(ctx context.Context, ids []uint, status string) (int, []uint, error) {
+	return 0, nil, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) GetLastOrderNumber(ctx context.Context, prefix string) (string, error) {
+	return "", fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) ExistsByOrderNumber(ctx context.Context, orderNumber string) (bool, error) {
+	return false, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) ListBySubscription(ctx context.Context, subscriptionID uint, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) GetSubscriptionOrders(ctx context.Context, subscriptionID uint) ([]*entities.SubscriptionOrder, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) ListWithFilters(ctx context.Context, filters map[string]interface{}, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *subscriptionOrderRepository) GetOrdersForRenewal(ctx context.Context, beforeDate time.Time, limit int) ([]*entities.SubscriptionOrder, error) {
+	return nil, fmt.Errorf("not implemented")
+}
 
 // === UserSubscriptionRepository Implementation ===
 
@@ -1073,76 +1179,222 @@ func (r *userSubscriptionRepository) Delete(ctx context.Context, id uint) error 
 }
 
 // Stub implementations for remaining UserSubscriptionRepository methods
-func (r *userSubscriptionRepository) SoftDelete(ctx context.Context, id uint) error { return r.Delete(ctx, id) }
-func (r *userSubscriptionRepository) Restore(ctx context.Context, id uint) error { return fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) HardDelete(ctx context.Context, id uint) error { return fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ListByUser(ctx context.Context, userID uint, limit, offset int) ([]*entities.UserSubscription, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) GetActiveByUser(ctx context.Context, userID uint) ([]*entities.UserSubscription, error) { return nil, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) GetUserCurrentSubscription(ctx context.Context, userID uint) (*entities.UserSubscription, error) { return nil, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) GetUserActiveSubscriptions(ctx context.Context, userID uint) ([]*entities.UserSubscription, error) { return nil, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) GetUserExpiredSubscriptions(ctx context.Context, userID uint, limit, offset int) ([]*entities.UserSubscription, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ListByPlan(ctx context.Context, planID uint, limit, offset int) ([]*entities.UserSubscription, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) CountByPlan(ctx context.Context, planID uint) (int64, error) { return 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) GetActivePlanSubscriptions(ctx context.Context, planID uint, limit, offset int) ([]*entities.UserSubscription, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ListByStatus(ctx context.Context, status string, limit, offset int) ([]*entities.UserSubscription, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ListActive(ctx context.Context, limit, offset int) ([]*entities.UserSubscription, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ListExpired(ctx context.Context, limit, offset int) ([]*entities.UserSubscription, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ListCancelled(ctx context.Context, limit, offset int) ([]*entities.UserSubscription, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ListInTrial(ctx context.Context, limit, offset int) ([]*entities.UserSubscription, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ListExpiringBefore(ctx context.Context, beforeDate time.Time, limit, offset int) ([]*entities.UserSubscription, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ListForRenewal(ctx context.Context, beforeDate time.Time, limit int) ([]*entities.UserSubscription, error) { return nil, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ListOverdueRenewals(ctx context.Context, limit int) ([]*entities.UserSubscription, error) { return nil, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ListTrialsExpiring(ctx context.Context, beforeDate time.Time, limit int) ([]*entities.UserSubscription, error) { return nil, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ListByDateRange(ctx context.Context, field string, start, end time.Time, limit, offset int) ([]*entities.UserSubscription, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ListCreatedAfter(ctx context.Context, after time.Time, limit, offset int) ([]*entities.UserSubscription, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ListLastUsedBefore(ctx context.Context, before time.Time, limit, offset int) ([]*entities.UserSubscription, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ListByTrafficUsage(ctx context.Context, minUsage, maxUsage int64, limit, offset int) ([]*entities.UserSubscription, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ListTrafficSuspended(ctx context.Context, limit, offset int) ([]*entities.UserSubscription, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ListNearTrafficLimit(ctx context.Context, thresholdPercent float64, limit, offset int) ([]*entities.UserSubscription, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ListForTrafficReset(ctx context.Context, beforeDate time.Time, limit int) ([]*entities.UserSubscription, error) { return nil, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ListAutoRenewEnabled(ctx context.Context, limit, offset int) ([]*entities.UserSubscription, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ListFailedRenewals(ctx context.Context, limit, offset int) ([]*entities.UserSubscription, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ListPendingCancellations(ctx context.Context, limit, offset int) ([]*entities.UserSubscription, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ListByServerGroupAccess(ctx context.Context, serverGroupID uint, limit, offset int) ([]*entities.UserSubscription, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) GetSubscriptionsWithServerAccess(ctx context.Context, serverGroupID uint) ([]*entities.UserSubscription, error) { return nil, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) UpdateStatus(ctx context.Context, id uint, status string) error { return fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) UpdateLastUsed(ctx context.Context, id uint, lastUsedAt time.Time) error { return fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) UpdateTrafficUsage(ctx context.Context, id uint, trafficUsed int64) error { return fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ResetTrafficUsage(ctx context.Context, id uint, resetDate time.Time) error { return fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) SuspendForTrafficLimit(ctx context.Context, id uint) error { return fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) UnsuspendTraffic(ctx context.Context, id uint) error { return fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) UpdateNextBillingDate(ctx context.Context, id uint, nextBillingDate time.Time) error { return fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) UpdateRenewalAttempts(ctx context.Context, id uint, attempts int) error { return fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) MarkRenewalFailed(ctx context.Context, id uint, failedAt time.Time, reason string) error { return fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ResetRenewalAttempts(ctx context.Context, id uint) error { return fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) CancelSubscription(ctx context.Context, id uint, reason string, cancelAtPeriodEnd bool) error { return fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) CancelAtPeriodEnd(ctx context.Context, id uint, reason string) error { return fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) UncancelSubscription(ctx context.Context, id uint) error { return fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) UpdateServerGroupAccess(ctx context.Context, id uint, serverGroupIDs []uint) error { return fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) GrantServerGroupAccess(ctx context.Context, id uint, serverGroupID uint) error { return fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) RevokeServerGroupAccess(ctx context.Context, id uint, serverGroupID uint) error { return fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) BatchUpdateStatus(ctx context.Context, ids []uint, status string) (int, []uint, error) { return 0, nil, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) BatchCancel(ctx context.Context, ids []uint, reason string) (int, []uint, error) { return 0, nil, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) BatchResetTraffic(ctx context.Context, ids []uint, resetDate time.Time) (int, []uint, error) { return 0, nil, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) BatchDelete(ctx context.Context, ids []uint) (int, []uint, error) { return 0, nil, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) List(ctx context.Context, limit, offset int) ([]*entities.UserSubscription, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ListDeleted(ctx context.Context, limit, offset int) ([]*entities.UserSubscription, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) Search(ctx context.Context, query string, limit, offset int) ([]*entities.UserSubscription, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) SearchByUserEmail(ctx context.Context, email string, limit, offset int) ([]*entities.UserSubscription, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) CountTotal(ctx context.Context) (int64, error) { return 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) CountByStatus(ctx context.Context, status string) (int64, error) { return 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) CountActiveSubscriptions(ctx context.Context) (int64, error) { return 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) CountExpiredSubscriptions(ctx context.Context) (int64, error) { return 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) CountTrialSubscriptions(ctx context.Context) (int64, error) { return 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) CountByUser(ctx context.Context, userID uint) (int64, error) { return 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) GetSubscriptionStats(ctx context.Context, since time.Time) (map[string]interface{}, error) { return nil, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) GetChurnRate(ctx context.Context, period time.Duration) (float64, error) { return 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) GetRetentionRate(ctx context.Context, period time.Duration) (float64, error) { return 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ExistsByUUID(ctx context.Context, uuid string) (bool, error) { return false, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ExistsByID(ctx context.Context, id uint) (bool, error) { return false, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) UserHasActiveSubscription(ctx context.Context, userID uint) (bool, error) { return false, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) UserHasSubscriptionToPlan(ctx context.Context, userID, planID uint) (bool, error) { return false, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ListByCurrency(ctx context.Context, currency string, limit, offset int) ([]*entities.UserSubscription, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) ListWithFilters(ctx context.Context, filters map[string]interface{}, limit, offset int) ([]*entities.UserSubscription, int64, error) { return nil, 0, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) GetSubscriptionsNeedingAttention(ctx context.Context, limit int) ([]*entities.UserSubscription, error) { return nil, fmt.Errorf("not implemented") }
-func (r *userSubscriptionRepository) GetSubscriptionsForMaintenance(ctx context.Context, maintenanceType string, limit int) ([]*entities.UserSubscription, error) { return nil, fmt.Errorf("not implemented") }
+func (r *userSubscriptionRepository) SoftDelete(ctx context.Context, id uint) error {
+	return r.Delete(ctx, id)
+}
+func (r *userSubscriptionRepository) Restore(ctx context.Context, id uint) error {
+	return fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) HardDelete(ctx context.Context, id uint) error {
+	return fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ListByUser(ctx context.Context, userID uint, limit, offset int) ([]*entities.UserSubscription, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) GetActiveByUser(ctx context.Context, userID uint) ([]*entities.UserSubscription, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) GetUserCurrentSubscription(ctx context.Context, userID uint) (*entities.UserSubscription, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) GetUserActiveSubscriptions(ctx context.Context, userID uint) ([]*entities.UserSubscription, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) GetUserExpiredSubscriptions(ctx context.Context, userID uint, limit, offset int) ([]*entities.UserSubscription, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ListByPlan(ctx context.Context, planID uint, limit, offset int) ([]*entities.UserSubscription, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) CountByPlan(ctx context.Context, planID uint) (int64, error) {
+	return 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) GetActivePlanSubscriptions(ctx context.Context, planID uint, limit, offset int) ([]*entities.UserSubscription, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ListByStatus(ctx context.Context, status string, limit, offset int) ([]*entities.UserSubscription, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ListActive(ctx context.Context, limit, offset int) ([]*entities.UserSubscription, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ListExpired(ctx context.Context, limit, offset int) ([]*entities.UserSubscription, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ListCancelled(ctx context.Context, limit, offset int) ([]*entities.UserSubscription, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ListInTrial(ctx context.Context, limit, offset int) ([]*entities.UserSubscription, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ListExpiringBefore(ctx context.Context, beforeDate time.Time, limit, offset int) ([]*entities.UserSubscription, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ListForRenewal(ctx context.Context, beforeDate time.Time, limit int) ([]*entities.UserSubscription, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ListOverdueRenewals(ctx context.Context, limit int) ([]*entities.UserSubscription, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ListTrialsExpiring(ctx context.Context, beforeDate time.Time, limit int) ([]*entities.UserSubscription, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ListByDateRange(ctx context.Context, field string, start, end time.Time, limit, offset int) ([]*entities.UserSubscription, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ListCreatedAfter(ctx context.Context, after time.Time, limit, offset int) ([]*entities.UserSubscription, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ListLastUsedBefore(ctx context.Context, before time.Time, limit, offset int) ([]*entities.UserSubscription, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ListByTrafficUsage(ctx context.Context, minUsage, maxUsage int64, limit, offset int) ([]*entities.UserSubscription, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ListTrafficSuspended(ctx context.Context, limit, offset int) ([]*entities.UserSubscription, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ListNearTrafficLimit(ctx context.Context, thresholdPercent float64, limit, offset int) ([]*entities.UserSubscription, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ListForTrafficReset(ctx context.Context, beforeDate time.Time, limit int) ([]*entities.UserSubscription, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ListAutoRenewEnabled(ctx context.Context, limit, offset int) ([]*entities.UserSubscription, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ListFailedRenewals(ctx context.Context, limit, offset int) ([]*entities.UserSubscription, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ListPendingCancellations(ctx context.Context, limit, offset int) ([]*entities.UserSubscription, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ListByServerGroupAccess(ctx context.Context, serverGroupID uint, limit, offset int) ([]*entities.UserSubscription, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) GetSubscriptionsWithServerAccess(ctx context.Context, serverGroupID uint) ([]*entities.UserSubscription, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) UpdateStatus(ctx context.Context, id uint, status string) error {
+	return fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) UpdateLastUsed(ctx context.Context, id uint, lastUsedAt time.Time) error {
+	return fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) UpdateTrafficUsage(ctx context.Context, id uint, trafficUsed int64) error {
+	return fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ResetTrafficUsage(ctx context.Context, id uint, resetDate time.Time) error {
+	return fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) SuspendForTrafficLimit(ctx context.Context, id uint) error {
+	return fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) UnsuspendTraffic(ctx context.Context, id uint) error {
+	return fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) UpdateNextBillingDate(ctx context.Context, id uint, nextBillingDate time.Time) error {
+	return fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) UpdateRenewalAttempts(ctx context.Context, id uint, attempts int) error {
+	return fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) MarkRenewalFailed(ctx context.Context, id uint, failedAt time.Time, reason string) error {
+	return fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ResetRenewalAttempts(ctx context.Context, id uint) error {
+	return fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) CancelSubscription(ctx context.Context, id uint, reason string, cancelAtPeriodEnd bool) error {
+	return fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) CancelAtPeriodEnd(ctx context.Context, id uint, reason string) error {
+	return fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) UncancelSubscription(ctx context.Context, id uint) error {
+	return fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) UpdateServerGroupAccess(ctx context.Context, id uint, serverGroupIDs []uint) error {
+	return fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) GrantServerGroupAccess(ctx context.Context, id uint, serverGroupID uint) error {
+	return fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) RevokeServerGroupAccess(ctx context.Context, id uint, serverGroupID uint) error {
+	return fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) BatchUpdateStatus(ctx context.Context, ids []uint, status string) (int, []uint, error) {
+	return 0, nil, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) BatchCancel(ctx context.Context, ids []uint, reason string) (int, []uint, error) {
+	return 0, nil, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) BatchResetTraffic(ctx context.Context, ids []uint, resetDate time.Time) (int, []uint, error) {
+	return 0, nil, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) BatchDelete(ctx context.Context, ids []uint) (int, []uint, error) {
+	return 0, nil, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) List(ctx context.Context, limit, offset int) ([]*entities.UserSubscription, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ListDeleted(ctx context.Context, limit, offset int) ([]*entities.UserSubscription, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) Search(ctx context.Context, query string, limit, offset int) ([]*entities.UserSubscription, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) SearchByUserEmail(ctx context.Context, email string, limit, offset int) ([]*entities.UserSubscription, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) CountTotal(ctx context.Context) (int64, error) {
+	return 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) CountByStatus(ctx context.Context, status string) (int64, error) {
+	return 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) CountActiveSubscriptions(ctx context.Context) (int64, error) {
+	return 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) CountExpiredSubscriptions(ctx context.Context) (int64, error) {
+	return 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) CountTrialSubscriptions(ctx context.Context) (int64, error) {
+	return 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) CountByUser(ctx context.Context, userID uint) (int64, error) {
+	return 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) GetSubscriptionStats(ctx context.Context, since time.Time) (map[string]interface{}, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) GetChurnRate(ctx context.Context, period time.Duration) (float64, error) {
+	return 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) GetRetentionRate(ctx context.Context, period time.Duration) (float64, error) {
+	return 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ExistsByUUID(ctx context.Context, uuid string) (bool, error) {
+	return false, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ExistsByID(ctx context.Context, id uint) (bool, error) {
+	return false, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) UserHasActiveSubscription(ctx context.Context, userID uint) (bool, error) {
+	return false, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) UserHasSubscriptionToPlan(ctx context.Context, userID, planID uint) (bool, error) {
+	return false, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ListByCurrency(ctx context.Context, currency string, limit, offset int) ([]*entities.UserSubscription, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) ListWithFilters(ctx context.Context, filters map[string]interface{}, limit, offset int) ([]*entities.UserSubscription, int64, error) {
+	return nil, 0, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) GetSubscriptionsNeedingAttention(ctx context.Context, limit int) ([]*entities.UserSubscription, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+func (r *userSubscriptionRepository) GetSubscriptionsForMaintenance(ctx context.Context, maintenanceType string, limit int) ([]*entities.UserSubscription, error) {
+	return nil, fmt.Errorf("not implemented")
+}

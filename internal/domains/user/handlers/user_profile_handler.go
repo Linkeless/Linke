@@ -1,11 +1,11 @@
 package handlers
 
 import (
+	userEntities "linke/internal/domains/user/entities"
+	userInterfaces "linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/middleware"
 	"linke/internal/shared/response"
-	userEntities "linke/internal/domains/user/entities"
-	userInterfaces "linke/internal/domains/user/usecases/interfaces"
 
 	"github.com/gin-gonic/gin"
 )
@@ -181,7 +181,7 @@ func (h *UserProfileHandler) ChangePassword(c *gin.Context) {
 	// Here you would implement password change logic
 	// For now, we'll just return success
 	// TODO: Implement actual password change with verification
-	
+
 	logger.Info("Password changed successfully",
 		logger.Uint("user_id", currentUser.ID),
 	)

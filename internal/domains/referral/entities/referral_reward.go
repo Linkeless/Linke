@@ -14,49 +14,49 @@ type ReferralReward struct {
 	ID uint `json:"id" gorm:"primaryKey"`
 
 	// Foreign Keys
-	ReferralID uint `json:"referral_id" gorm:"not null;index"`
-	UserID     uint `json:"user_id" gorm:"not null;index"`       // User who earned the reward
+	ReferralID uint  `json:"referral_id" gorm:"not null;index"`
+	UserID     uint  `json:"user_id" gorm:"not null;index"`      // User who earned the reward
 	CampaignID *uint `json:"campaign_id,omitempty" gorm:"index"` // Associated campaign
-	
+
 	// Reward Details
-	RewardType        string  `json:"reward_type" gorm:"size:50;not null;index"`        // Type of reward (cash, credit, discount, etc.)
-	RewardAmount      float64 `json:"reward_amount" gorm:"type:decimal(10,2);not null"` // Reward amount
+	RewardType        string  `json:"reward_type" gorm:"size:50;not null;index"`             // Type of reward (cash, credit, discount, etc.)
+	RewardAmount      float64 `json:"reward_amount" gorm:"type:decimal(10,2);not null"`      // Reward amount
 	RewardCurrency    string  `json:"reward_currency" gorm:"size:10;not null;default:'USD'"` // Currency
-	RewardDescription string  `json:"reward_description" gorm:"size:255"`               // Description of the reward
-	
+	RewardDescription string  `json:"reward_description" gorm:"size:255"`                    // Description of the reward
+
 	// Reward Status
-	Status            string     `json:"status" gorm:"size:20;not null;default:'pending';index"` // pending, earned, paid, cancelled, expired
-	EarnedAt          *time.Time `json:"earned_at,omitempty" gorm:"index"`                       // When reward was earned
-	PaidAt            *time.Time `json:"paid_at,omitempty" gorm:"index"`                         // When reward was paid
-	ExpiresAt         *time.Time `json:"expires_at,omitempty" gorm:"index"`                      // When reward expires
-	
+	Status    string     `json:"status" gorm:"size:20;not null;default:'pending';index"` // pending, earned, paid, cancelled, expired
+	EarnedAt  *time.Time `json:"earned_at,omitempty" gorm:"index"`                       // When reward was earned
+	PaidAt    *time.Time `json:"paid_at,omitempty" gorm:"index"`                         // When reward was paid
+	ExpiresAt *time.Time `json:"expires_at,omitempty" gorm:"index"`                      // When reward expires
+
 	// Payment Information
-	PaymentMethod     string     `json:"payment_method" gorm:"size:50;index"`                    // Payment method used
-	PaymentReference  string     `json:"payment_reference" gorm:"size:100;index"`                // Payment reference/transaction ID
-	PaymentData       string     `json:"payment_data,omitempty" gorm:"type:text"`                // Payment details (JSON)
-	
+	PaymentMethod    string `json:"payment_method" gorm:"size:50;index"`     // Payment method used
+	PaymentReference string `json:"payment_reference" gorm:"size:100;index"` // Payment reference/transaction ID
+	PaymentData      string `json:"payment_data,omitempty" gorm:"type:text"` // Payment details (JSON)
+
 	// Conversion Details
-	ConversionValue   float64    `json:"conversion_value" gorm:"type:decimal(10,2);default:0"`   // Value of conversion that triggered reward
-	ConversionType    string     `json:"conversion_type" gorm:"size:50;index"`                   // Type of conversion
-	ConversionID      *uint      `json:"conversion_id,omitempty" gorm:"index"`                   // ID of conversion record (e.g., subscription order)
-	
+	ConversionValue float64 `json:"conversion_value" gorm:"type:decimal(10,2);default:0"` // Value of conversion that triggered reward
+	ConversionType  string  `json:"conversion_type" gorm:"size:50;index"`                 // Type of conversion
+	ConversionID    *uint   `json:"conversion_id,omitempty" gorm:"index"`                 // ID of conversion record (e.g., subscription order)
+
 	// Payout Information
-	PayoutBatchID     *uint      `json:"payout_batch_id,omitempty" gorm:"index"`                 // Associated payout batch
-	PayoutFee         float64    `json:"payout_fee" gorm:"type:decimal(10,2);default:0"`         // Fee charged for payout
-	NetAmount         float64    `json:"net_amount" gorm:"type:decimal(10,2);default:0"`         // Net amount after fees
-	
+	PayoutBatchID *uint   `json:"payout_batch_id,omitempty" gorm:"index"`         // Associated payout batch
+	PayoutFee     float64 `json:"payout_fee" gorm:"type:decimal(10,2);default:0"` // Fee charged for payout
+	NetAmount     float64 `json:"net_amount" gorm:"type:decimal(10,2);default:0"` // Net amount after fees
+
 	// Approval Workflow
-	RequiresApproval  bool       `json:"requires_approval" gorm:"not null;default:false"`        // Whether reward requires approval
-	ApprovedAt        *time.Time `json:"approved_at,omitempty" gorm:"index"`                     // When reward was approved
-	ApprovedByID      *uint      `json:"approved_by_id,omitempty" gorm:"index"`                  // Admin who approved
-	RejectedAt        *time.Time `json:"rejected_at,omitempty" gorm:"index"`                     // When reward was rejected
-	RejectedByID      *uint      `json:"rejected_by_id,omitempty" gorm:"index"`                  // Admin who rejected
-	RejectionReason   string     `json:"rejection_reason" gorm:"size:255"`                       // Reason for rejection
-	
+	RequiresApproval bool       `json:"requires_approval" gorm:"not null;default:false"` // Whether reward requires approval
+	ApprovedAt       *time.Time `json:"approved_at,omitempty" gorm:"index"`              // When reward was approved
+	ApprovedByID     *uint      `json:"approved_by_id,omitempty" gorm:"index"`           // Admin who approved
+	RejectedAt       *time.Time `json:"rejected_at,omitempty" gorm:"index"`              // When reward was rejected
+	RejectedByID     *uint      `json:"rejected_by_id,omitempty" gorm:"index"`           // Admin who rejected
+	RejectionReason  string     `json:"rejection_reason" gorm:"size:255"`                // Reason for rejection
+
 	// Metadata
-	Metadata          string     `json:"metadata,omitempty" gorm:"type:text"`                    // Additional reward metadata (JSON)
-	Notes             string     `json:"notes,omitempty" gorm:"type:text"`                       // Admin notes
-	
+	Metadata string `json:"metadata,omitempty" gorm:"type:text"` // Additional reward metadata (JSON)
+	Notes    string `json:"notes,omitempty" gorm:"type:text"`    // Admin notes
+
 	// Note: Relationships removed to avoid cross-domain dependencies
 	// Related data should be fetched and assembled at the application layer
 
@@ -73,29 +73,29 @@ func (ReferralReward) TableName() string {
 
 // Reward Type constants
 const (
-	RewardTypeCash          = "cash"
-	RewardTypeCredit        = "credit"
-	RewardTypeBonus         = "bonus"
-	RewardTypeCoupon        = "coupon"
-	RewardTypeSubscription  = "subscription"
-	RewardTypeProduct       = "product"
-	RewardTypeService       = "service"
+	RewardTypeCash         = "cash"
+	RewardTypeCredit       = "credit"
+	RewardTypeBonus        = "bonus"
+	RewardTypeCoupon       = "coupon"
+	RewardTypeSubscription = "subscription"
+	RewardTypeProduct      = "product"
+	RewardTypeService      = "service"
 )
 
 // Reward Status constants (specific to referral rewards)
 const (
-	RewardStatusExpired   = "expired"
-	RewardStatusRejected  = "rejected"
+	RewardStatusExpired  = "expired"
+	RewardStatusRejected = "rejected"
 )
 
 // Payment Method constants
 const (
-	PaymentMethodPayPal     = "paypal"
-	PaymentMethodStripe     = "stripe"
+	PaymentMethodPayPal       = "paypal"
+	PaymentMethodStripe       = "stripe"
 	PaymentMethodBankTransfer = "bank_transfer"
-	PaymentMethodCredit     = "credit"
-	PaymentMethodCrypto     = "crypto"
-	PaymentMethodCheck      = "check"
+	PaymentMethodCredit       = "credit"
+	PaymentMethodCrypto       = "crypto"
+	PaymentMethodCheck        = "check"
 )
 
 // IsActive checks if the reward is in an active state
@@ -164,13 +164,13 @@ type ReferralRewardResponse struct {
 	RejectionReason   string     `json:"rejection_reason" example:"Fraudulent activity detected"`
 	CreatedAt         time.Time  `json:"created_at" example:"2024-01-01T00:00:00Z"`
 	UpdatedAt         time.Time  `json:"updated_at" example:"2024-01-01T00:00:00Z"`
-	
+
 	// Optional related data (to be populated at application layer)
-	Referral          *ReferralResponse         `json:"referral,omitempty"`
-	User              *dto.UserBasicDTO         `json:"user,omitempty"`
-	Campaign          *ReferralCampaignResponse `json:"campaign,omitempty"`
-	ApprovedBy        *dto.UserBasicDTO         `json:"approved_by,omitempty"`
-	RejectedBy        *dto.UserBasicDTO         `json:"rejected_by,omitempty"`
+	Referral   *ReferralResponse         `json:"referral,omitempty"`
+	User       *dto.UserBasicDTO         `json:"user,omitempty"`
+	Campaign   *ReferralCampaignResponse `json:"campaign,omitempty"`
+	ApprovedBy *dto.UserBasicDTO         `json:"approved_by,omitempty"`
+	RejectedBy *dto.UserBasicDTO         `json:"rejected_by,omitempty"`
 }
 
 // ToResponse converts ReferralReward to ReferralRewardResponse
@@ -205,10 +205,10 @@ func (rr *ReferralReward) ToResponse() *ReferralRewardResponse {
 		CreatedAt:         rr.CreatedAt,
 		UpdatedAt:         rr.UpdatedAt,
 	}
-	
+
 	// Note: Related data should be populated at the application layer
 	// to avoid cross-domain dependencies
-	
+
 	return resp
 }
 

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"linke/internal/shared/logger"
 	"linke/internal/domains/subscription/entities"
+	"linke/internal/shared/logger"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -31,11 +31,11 @@ type CreateSubscriptionRequest struct {
 	StartDate          string `json:"start_date,omitempty" binding:"omitempty" example:"2024-01-01T00:00:00Z"`
 	UseTrial           bool   `json:"use_trial,omitempty" example:"true"`
 	ServerGroupIDs     []uint `json:"server_group_ids,omitempty"`
-	
+
 	// Custom Traffic Configuration (optional, overrides plan defaults)
-	CustomTrafficLimit      *int64  `json:"custom_traffic_limit,omitempty" example:"107374182400"`     // Custom traffic limit in bytes
-	CustomTrafficResetCycle *string `json:"custom_traffic_reset_cycle,omitempty" example:"monthly"`   // Custom reset cycle
-	DisableTrafficLimit     *bool   `json:"disable_traffic_limit,omitempty" example:"false"`          // Disable traffic limit for this subscription
+	CustomTrafficLimit      *int64  `json:"custom_traffic_limit,omitempty" example:"107374182400"`  // Custom traffic limit in bytes
+	CustomTrafficResetCycle *string `json:"custom_traffic_reset_cycle,omitempty" example:"monthly"` // Custom reset cycle
+	DisableTrafficLimit     *bool   `json:"disable_traffic_limit,omitempty" example:"false"`        // Disable traffic limit for this subscription
 }
 
 // UpdateSubscriptionRequest represents the request to update a user subscription
@@ -72,7 +72,7 @@ func (s *UserSubscriptionService) CreateUserSubscription(ctx context.Context, re
 	// Check if user already has an active subscription to this plan
 	var existingSubscription entities.UserSubscription
 	if err := s.db.WithContext(ctx).
-		Where("user_id = ? AND subscription_plan_id = ? AND status IN (?)", 
+		Where("user_id = ? AND subscription_plan_id = ? AND status IN (?)",
 			req.UserID, req.SubscriptionPlanID, []string{entities.UserSubscriptionStatusActive, entities.UserSubscriptionStatusTrial}).
 		First(&existingSubscription).Error; err == nil {
 		return nil, fmt.Errorf("user already has an active subscription to this plan")
@@ -138,7 +138,7 @@ func (s *UserSubscriptionService) CreateUserSubscription(ctx context.Context, re
 	var trafficLimit int64
 	var trafficResetCycle string
 	var trafficResetDate *time.Time
-	
+
 	// Check if traffic limit is disabled for this subscription
 	if req.DisableTrafficLimit != nil && *req.DisableTrafficLimit {
 		trafficLimit = 0 // Unlimited
@@ -150,14 +150,14 @@ func (s *UserSubscriptionService) CreateUserSubscription(ctx context.Context, re
 		} else {
 			trafficLimit = plan.TrafficLimit
 		}
-		
+
 		// Use custom reset cycle if provided, otherwise use plan default
 		if req.CustomTrafficResetCycle != nil {
 			trafficResetCycle = *req.CustomTrafficResetCycle
 		} else {
 			trafficResetCycle = plan.TrafficResetCycle
 		}
-		
+
 		// Calculate traffic reset date based on configuration
 		if trafficResetCycle != entities.TrafficResetCycleNever && trafficLimit > 0 {
 			var resetDate time.Time
@@ -196,7 +196,7 @@ func (s *UserSubscriptionService) CreateUserSubscription(ctx context.Context, re
 		BillingCycle:       plan.BillingCycle,
 		BillingInterval:    plan.BillingInterval,
 		CancelAtPeriodEnd:  false,
-		
+
 		// Apply calculated traffic configuration
 		TrafficLimit:      trafficLimit,
 		TrafficUsed:       0, // Start with zero usage
@@ -204,7 +204,7 @@ func (s *UserSubscriptionService) CreateUserSubscription(ctx context.Context, re
 		TrafficResetCycle: trafficResetCycle,
 		TrafficSuspended:  false, // Start as not suspended
 	}
-	
+
 	// Set server group IDs if provided
 	if len(req.ServerGroupIDs) > 0 {
 		if err := subscription.SetServerGroupIDs(req.ServerGroupIDs); err != nil {
@@ -217,7 +217,7 @@ func (s *UserSubscriptionService) CreateUserSubscription(ctx context.Context, re
 		return nil, fmt.Errorf("failed to create user subscription: %w", err)
 	}
 
-	logger.Info("User subscription created successfully", 
+	logger.Info("User subscription created successfully",
 		logger.Uint("subscription_id", subscription.ID),
 		logger.Uint("user_id", req.UserID),
 		logger.Uint("plan_id", req.SubscriptionPlanID),
@@ -365,13 +365,13 @@ func (s *UserSubscriptionService) GetUserSubscriptionsWithRelations(ctx context.
 	type SubscriptionWithRelations struct {
 		entities.UserSubscription
 		// User fields
-		UserIDRef       *uint      `gorm:"column:user_id_ref"`
-		UserEmail       *string    `gorm:"column:user_email"`
-		UserUsername    *string    `gorm:"column:user_username"`
-		UserStatus      *string    `gorm:"column:user_status"`
-		UserRole        *string    `gorm:"column:user_role"`
-		UserCreatedAt   *time.Time `gorm:"column:user_created_at"`
-		UserUpdatedAt   *time.Time `gorm:"column:user_updated_at"`
+		UserIDRef     *uint      `gorm:"column:user_id_ref"`
+		UserEmail     *string    `gorm:"column:user_email"`
+		UserUsername  *string    `gorm:"column:user_username"`
+		UserStatus    *string    `gorm:"column:user_status"`
+		UserRole      *string    `gorm:"column:user_role"`
+		UserCreatedAt *time.Time `gorm:"column:user_created_at"`
+		UserUpdatedAt *time.Time `gorm:"column:user_updated_at"`
 		// Plan fields
 		PlanIDRef           *uint      `gorm:"column:plan_id_ref"`
 		PlanName            *string    `gorm:"column:plan_name"`
@@ -396,7 +396,7 @@ func (s *UserSubscriptionService) GetUserSubscriptionsWithRelations(ctx context.
 	subscriptions := make([]*entities.UserSubscription, len(results))
 	for i, result := range results {
 		subscription := &result.UserSubscription
-		
+
 		// TODO: Populate User data through service interfaces
 		// For now, we'll just keep the UserID reference
 
@@ -406,7 +406,7 @@ func (s *UserSubscriptionService) GetUserSubscriptionsWithRelations(ctx context.
 		subscriptions[i] = subscription
 	}
 
-	logger.Info("User subscriptions with relations retrieved successfully", 
+	logger.Info("User subscriptions with relations retrieved successfully",
 		logger.Int("count", len(subscriptions)),
 		logger.Int64("total", totalCount))
 
@@ -432,7 +432,7 @@ func getBoolValue(ptr *bool) bool {
 func (s *UserSubscriptionService) GetActiveUserSubscription(ctx context.Context, userID, planID uint) (*entities.UserSubscription, error) {
 	var subscription entities.UserSubscription
 	if err := s.db.WithContext(ctx).
-		Where("user_id = ? AND subscription_plan_id = ? AND status IN (?)", 
+		Where("user_id = ? AND subscription_plan_id = ? AND status IN (?)",
 			userID, planID, []string{entities.UserSubscriptionStatusActive, entities.UserSubscriptionStatusTrial}).
 		First(&subscription).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -461,7 +461,7 @@ func (s *UserSubscriptionService) UpdateUserSubscription(ctx context.Context, su
 	if req.Status != nil {
 		newStatus := *req.Status
 		currentStatus := subscription.Status
-		
+
 		// Define allowed status transitions
 		allowedTransitions := map[string][]string{
 			entities.UserSubscriptionStatusActive: {
@@ -482,7 +482,7 @@ func (s *UserSubscriptionService) UpdateUserSubscription(ctx context.Context, su
 				entities.UserSubscriptionStatusActive, // Only allow reactivation
 			},
 		}
-		
+
 		// Check if transition is allowed
 		if allowedStatuses, exists := allowedTransitions[currentStatus]; exists {
 			isAllowed := false
@@ -511,7 +511,7 @@ func (s *UserSubscriptionService) UpdateUserSubscription(ctx context.Context, su
 			now := time.Now()
 			updates["cancelled_at"] = &now
 		}
-		
+
 		// If reactivating from expired, clear cancellation data
 		if *req.Status == entities.UserSubscriptionStatusActive && subscription.Status == entities.UserSubscriptionStatusExpired {
 			updates["cancelled_at"] = nil
@@ -605,7 +605,7 @@ func (s *UserSubscriptionService) CancelUserSubscription(ctx context.Context, su
 		return nil, fmt.Errorf("failed to reload cancelled user subscription: %w", err)
 	}
 
-	logger.Info("User subscription cancelled successfully", 
+	logger.Info("User subscription cancelled successfully",
 		logger.Uint("subscription_id", subscription.ID),
 		logger.Any("immediately", immediately))
 
@@ -708,9 +708,9 @@ func (s *UserSubscriptionService) UpdateLastUsed(ctx context.Context, subscripti
 
 // ResetTrafficRequest represents the request to reset traffic for subscriptions
 type ResetTrafficRequest struct {
-	SubscriptionIDs []uint `json:"subscription_ids,omitempty"`     // Specific subscription IDs (optional)
-	UserID          *uint  `json:"user_id,omitempty"`              // Reset for specific user (optional)
-	ResetAll        bool   `json:"reset_all,omitempty"`            // Reset all eligible subscriptions
+	SubscriptionIDs []uint `json:"subscription_ids,omitempty"` // Specific subscription IDs (optional)
+	UserID          *uint  `json:"user_id,omitempty"`          // Reset for specific user (optional)
+	ResetAll        bool   `json:"reset_all,omitempty"`        // Reset all eligible subscriptions
 }
 
 // ResetSubscriptionTraffic resets traffic usage for a specific subscription
@@ -728,7 +728,7 @@ func (s *UserSubscriptionService) ResetSubscriptionTraffic(ctx context.Context, 
 	// Calculate next reset date
 	var nextResetDate *time.Time
 	now := time.Now()
-	
+
 	switch subscription.TrafficResetCycle {
 	case entities.TrafficResetCycleMonthly:
 		// Reset to the next month's start date
@@ -749,19 +749,19 @@ func (s *UserSubscriptionService) ResetSubscriptionTraffic(ctx context.Context, 
 		"traffic_suspended": false,
 		"updated_at":        now,
 	}
-	
+
 	if nextResetDate != nil {
 		updates["traffic_reset_date"] = nextResetDate
 	}
 
 	if err := s.db.WithContext(ctx).Model(subscription).Updates(updates).Error; err != nil {
-		logger.Error("Failed to reset subscription traffic", 
+		logger.Error("Failed to reset subscription traffic",
 			logger.Uint("subscription_id", subscriptionID),
 			logger.Error2("error", err))
 		return fmt.Errorf("failed to reset subscription traffic: %w", err)
 	}
 
-	logger.Info("Subscription traffic reset successfully", 
+	logger.Info("Subscription traffic reset successfully",
 		logger.Uint("subscription_id", subscriptionID),
 		logger.Uint("user_id", subscription.UserID))
 
@@ -776,7 +776,7 @@ func (s *UserSubscriptionService) ResetTrafficForSubscriptions(ctx context.Conte
 		// Reset all subscriptions that need traffic reset
 		var subscriptions []entities.UserSubscription
 		if err := s.db.WithContext(ctx).
-			Where("traffic_reset_cycle != ? AND traffic_limit > 0 AND (traffic_reset_date IS NULL OR traffic_reset_date <= ?)", 
+			Where("traffic_reset_cycle != ? AND traffic_limit > 0 AND (traffic_reset_date IS NULL OR traffic_reset_date <= ?)",
 				entities.TrafficResetCycleNever, time.Now()).
 			Find(&subscriptions).Error; err != nil {
 			logger.Error("Failed to find subscriptions for traffic reset", logger.Error2("error", err))
@@ -785,7 +785,7 @@ func (s *UserSubscriptionService) ResetTrafficForSubscriptions(ctx context.Conte
 
 		for _, subscription := range subscriptions {
 			if err := s.ResetSubscriptionTraffic(ctx, subscription.ID); err != nil {
-				logger.Error("Failed to reset traffic for subscription", 
+				logger.Error("Failed to reset traffic for subscription",
 					logger.Uint("subscription_id", subscription.ID),
 					logger.Error2("error", err))
 				continue
@@ -796,7 +796,7 @@ func (s *UserSubscriptionService) ResetTrafficForSubscriptions(ctx context.Conte
 		// Reset for specific user
 		var subscriptions []entities.UserSubscription
 		if err := s.db.WithContext(ctx).
-			Where("user_id = ? AND traffic_reset_cycle != ? AND traffic_limit > 0", 
+			Where("user_id = ? AND traffic_reset_cycle != ? AND traffic_limit > 0",
 				*req.UserID, entities.TrafficResetCycleNever).
 			Find(&subscriptions).Error; err != nil {
 			logger.Error("Failed to find user subscriptions for traffic reset", logger.Error2("error", err))
@@ -805,7 +805,7 @@ func (s *UserSubscriptionService) ResetTrafficForSubscriptions(ctx context.Conte
 
 		for _, subscription := range subscriptions {
 			if err := s.ResetSubscriptionTraffic(ctx, subscription.ID); err != nil {
-				logger.Error("Failed to reset traffic for user subscription", 
+				logger.Error("Failed to reset traffic for user subscription",
 					logger.Uint("subscription_id", subscription.ID),
 					logger.Error2("error", err))
 				continue
@@ -816,7 +816,7 @@ func (s *UserSubscriptionService) ResetTrafficForSubscriptions(ctx context.Conte
 		// Reset specific subscriptions
 		for _, subscriptionID := range req.SubscriptionIDs {
 			if err := s.ResetSubscriptionTraffic(ctx, subscriptionID); err != nil {
-				logger.Error("Failed to reset traffic for specific subscription", 
+				logger.Error("Failed to reset traffic for specific subscription",
 					logger.Uint("subscription_id", subscriptionID),
 					logger.Error2("error", err))
 				continue
@@ -851,9 +851,9 @@ func (s *UserSubscriptionService) UpdateSubscriptionTrafficLimit(ctx context.Con
 	}
 
 	updates := map[string]interface{}{
-		"traffic_limit":      newLimit,
+		"traffic_limit":       newLimit,
 		"traffic_reset_cycle": resetCycle,
-		"updated_at":         time.Now(),
+		"updated_at":          time.Now(),
 	}
 
 	if nextResetDate != nil {
@@ -875,13 +875,13 @@ func (s *UserSubscriptionService) UpdateSubscriptionTrafficLimit(ctx context.Con
 	}
 
 	if err := s.db.WithContext(ctx).Model(subscription).Updates(updates).Error; err != nil {
-		logger.Error("Failed to update subscription traffic limit", 
+		logger.Error("Failed to update subscription traffic limit",
 			logger.Uint("subscription_id", subscriptionID),
 			logger.Error2("error", err))
 		return fmt.Errorf("failed to update subscription traffic limit: %w", err)
 	}
 
-	logger.Info("Subscription traffic limit updated successfully", 
+	logger.Info("Subscription traffic limit updated successfully",
 		logger.Uint("subscription_id", subscriptionID),
 		logger.Int64("new_limit", newLimit),
 		logger.String("reset_cycle", resetCycle))
@@ -894,7 +894,7 @@ func (s *UserSubscriptionService) ProcessAutoRenewals(ctx context.Context) (int,
 	// Find subscriptions that need auto-renewal
 	var subscriptions []entities.UserSubscription
 	if err := s.db.WithContext(ctx).
-		Where("auto_renew = ? AND status IN (?) AND next_billing_date IS NOT NULL AND next_billing_date <= ? AND renewal_attempts < 3", 
+		Where("auto_renew = ? AND status IN (?) AND next_billing_date IS NOT NULL AND next_billing_date <= ? AND renewal_attempts < 3",
 			true, []string{entities.UserSubscriptionStatusActive, entities.UserSubscriptionStatusTrial}, time.Now().Add(24*time.Hour)).
 		Find(&subscriptions).Error; err != nil {
 		logger.Error("Failed to find subscriptions for auto-renewal", logger.Error2("error", err))
@@ -908,7 +908,7 @@ func (s *UserSubscriptionService) ProcessAutoRenewals(ctx context.Context) (int,
 		}
 
 		if err := s.ProcessSubscriptionAutoRenewal(ctx, subscription.ID); err != nil {
-			logger.Error("Failed to process auto-renewal", 
+			logger.Error("Failed to process auto-renewal",
 				logger.Uint("subscription_id", subscription.ID),
 				logger.Error2("error", err))
 			continue
@@ -949,14 +949,14 @@ func (s *UserSubscriptionService) ProcessSubscriptionAutoRenewal(ctx context.Con
 		// If this was the final attempt, disable auto-renewal
 		if subscription.RenewalAttempts+1 >= 3 {
 			updates["auto_renew"] = false
-			logger.Error("Auto-renewal permanently failed after 3 attempts", 
+			logger.Error("Auto-renewal permanently failed after 3 attempts",
 				logger.Uint("subscription_id", subscriptionID),
 				logger.Error2("error", err))
 		}
 
 		// Update the subscription with failure info
 		if updateErr := s.db.WithContext(ctx).Model(&subscription).Updates(updates).Error; updateErr != nil {
-			logger.Error("Failed to update subscription renewal failure", 
+			logger.Error("Failed to update subscription renewal failure",
 				logger.Uint("subscription_id", subscriptionID),
 				logger.Error2("error", updateErr))
 		}
@@ -969,12 +969,12 @@ func (s *UserSubscriptionService) ProcessSubscriptionAutoRenewal(ctx context.Con
 	updates["renewal_fail_reason"] = ""
 
 	if err := s.db.WithContext(ctx).Model(&subscription).Updates(updates).Error; err != nil {
-		logger.Error("Failed to update subscription after successful renewal", 
+		logger.Error("Failed to update subscription after successful renewal",
 			logger.Uint("subscription_id", subscriptionID),
 			logger.Error2("error", err))
 	}
 
-	logger.Info("Subscription auto-renewed successfully", 
+	logger.Info("Subscription auto-renewed successfully",
 		logger.Uint("subscription_id", subscriptionID),
 		logger.Uint("user_id", subscription.UserID))
 
@@ -985,7 +985,7 @@ func (s *UserSubscriptionService) ProcessSubscriptionAutoRenewal(ctx context.Con
 func (s *UserSubscriptionService) GetSubscriptionsForAutoRenewal(ctx context.Context) ([]*entities.UserSubscription, error) {
 	var subscriptions []*entities.UserSubscription
 	if err := s.db.WithContext(ctx).
-		Where("auto_renew = ? AND status IN (?) AND next_billing_date IS NOT NULL AND next_billing_date <= ? AND renewal_attempts < 3", 
+		Where("auto_renew = ? AND status IN (?) AND next_billing_date IS NOT NULL AND next_billing_date <= ? AND renewal_attempts < 3",
 			true, []string{entities.UserSubscriptionStatusActive, entities.UserSubscriptionStatusTrial}, time.Now().Add(24*time.Hour)).
 		Preload("User").
 		Preload("SubscriptionPlan").
@@ -1009,7 +1009,7 @@ func (s *UserSubscriptionService) EnableAutoRenewal(ctx context.Context, subscri
 	if err := s.db.WithContext(ctx).Model(&entities.UserSubscription{}).
 		Where("id = ?", subscriptionID).
 		Updates(updates).Error; err != nil {
-		logger.Error("Failed to enable auto-renewal", 
+		logger.Error("Failed to enable auto-renewal",
 			logger.Uint("subscription_id", subscriptionID),
 			logger.Error2("error", err))
 		return fmt.Errorf("failed to enable auto-renewal: %w", err)
@@ -1024,7 +1024,7 @@ func (s *UserSubscriptionService) DisableAutoRenewal(ctx context.Context, subscr
 	if err := s.db.WithContext(ctx).Model(&entities.UserSubscription{}).
 		Where("id = ?", subscriptionID).
 		Update("auto_renew", false).Error; err != nil {
-		logger.Error("Failed to disable auto-renewal", 
+		logger.Error("Failed to disable auto-renewal",
 			logger.Uint("subscription_id", subscriptionID),
 			logger.Error2("error", err))
 		return fmt.Errorf("failed to disable auto-renewal: %w", err)
@@ -1033,4 +1033,3 @@ func (s *UserSubscriptionService) DisableAutoRenewal(ctx context.Context, subscr
 	logger.Info("Auto-renewal disabled", logger.Uint("subscription_id", subscriptionID))
 	return nil
 }
-

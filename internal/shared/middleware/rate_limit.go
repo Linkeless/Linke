@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"linke/internal/shared/logger"
-	
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,9 +22,9 @@ type RateLimiter struct {
 
 // ClientLimiter represents a rate limiter for a specific client
 type ClientLimiter struct {
-	tokens    int
-	lastSeen  time.Time
-	mutex     sync.Mutex
+	tokens   int
+	lastSeen time.Time
+	mutex    sync.Mutex
 }
 
 // NewRateLimiter creates a new rate limiter
@@ -63,15 +63,15 @@ func (rl *RateLimiter) Allow(clientID string) bool {
 
 	now := time.Now()
 	elapsed := now.Sub(limiter.lastSeen)
-	
+
 	// Add tokens based on elapsed time
 	tokensToAdd := int(elapsed.Minutes() * float64(rl.rate))
 	limiter.tokens += tokensToAdd
-	
+
 	if limiter.tokens > rl.burst {
 		limiter.tokens = rl.burst
 	}
-	
+
 	limiter.lastSeen = now
 
 	if limiter.tokens > 0 {
@@ -88,7 +88,7 @@ func (rl *RateLimiter) CleanupExpiredClients() {
 	defer rl.mutex.Unlock()
 
 	cutoff := time.Now().Add(-1 * time.Hour) // Remove clients not seen in 1 hour
-	
+
 	for clientID, limiter := range rl.clients {
 		limiter.mutex.Lock()
 		if limiter.lastSeen.Before(cutoff) {
@@ -101,7 +101,7 @@ func (rl *RateLimiter) CleanupExpiredClients() {
 // RateLimit creates a rate limiting middleware
 func RateLimit(rate, burst int) gin.HandlerFunc {
 	limiter := NewRateLimiter(rate, burst)
-	
+
 	// Start cleanup goroutine
 	go func() {
 		ticker := time.NewTicker(10 * time.Minute)
@@ -113,14 +113,14 @@ func RateLimit(rate, burst int) gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 		clientID := getClientID(c)
-		
+
 		if !limiter.Allow(clientID) {
 			logger.Warn("Rate limit exceeded",
 				logger.String("client_ip", c.ClientIP()),
 				logger.String("path", c.Request.URL.Path),
 				logger.String("method", c.Request.Method),
 				logger.String("client_id", clientID))
-			
+
 			c.JSON(http.StatusTooManyRequests, gin.H{
 				"error": "Rate limit exceeded",
 				"code":  "RATE_LIMIT_EXCEEDED",
@@ -137,12 +137,12 @@ func RateLimit(rate, burst int) gin.HandlerFunc {
 func getClientID(c *gin.Context) string {
 	// Use IP address as the primary identifier
 	clientIP := c.ClientIP()
-	
+
 	// For authenticated requests, use user ID if available
 	if userID, exists := c.Get("user_id"); exists {
 		return fmt.Sprintf("user:%v", userID)
 	}
-	
+
 	return fmt.Sprintf("ip:%s", clientIP)
 }
 

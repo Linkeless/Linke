@@ -2,8 +2,8 @@ package interfaces
 
 import (
 	"context"
-	"time"
 	"linke/internal/domains/referral/entities"
+	"time"
 )
 
 // ReferralCampaignService defines the interface for referral campaign operations

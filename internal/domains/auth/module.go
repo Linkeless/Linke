@@ -1,14 +1,14 @@
 package auth
 
 import (
-	"time"
 	"go.uber.org/fx"
 	"gorm.io/gorm"
+	"time"
 
 	"linke/internal/domains/auth/adapters/repositories"
+	"linke/internal/domains/auth/handlers"
 	"linke/internal/domains/auth/usecases/implementations"
 	"linke/internal/domains/auth/usecases/interfaces"
-	"linke/internal/domains/auth/handlers"
 	"linke/internal/shared/config"
 )
 
@@ -82,15 +82,15 @@ var Module = fx.Module("auth",
 		if cfg.JWT.Secret == "" || len(cfg.JWT.Secret) < 32 {
 			panic("JWT_SECRET must be set and at least 32 characters long for security")
 		}
-		
+
 		// 可以添加其他认证相关的初始化逻辑
 	}),
 )
 
 // ServiceProvider 为外部模块提供认证服务接口
 type ServiceProvider struct {
-	AuthService interfaces.AuthService
-	JWTService  interfaces.JWTService
+	AuthService  interfaces.AuthService
+	JWTService   interfaces.JWTService
 	OAuthService interfaces.OAuthService
 }
 

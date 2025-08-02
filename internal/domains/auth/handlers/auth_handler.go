@@ -7,14 +7,14 @@ import (
 	"strings"
 	"time"
 
+	authImplementations "linke/internal/domains/auth/usecases/implementations"
+	authInterfaces "linke/internal/domains/auth/usecases/interfaces"
+	userEntities "linke/internal/domains/user/entities"
 	"linke/internal/shared/config"
+	"linke/internal/shared/database"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/middleware"
-	"linke/internal/shared/database"
 	"linke/internal/shared/response"
-	userEntities "linke/internal/domains/user/entities"
-	authInterfaces "linke/internal/domains/auth/usecases/interfaces"
-	authImplementations "linke/internal/domains/auth/usecases/implementations"
 
 	"github.com/gin-gonic/gin"
 )
@@ -104,41 +104,41 @@ func (h *AuthHandler) Callback(c *gin.Context) {
 
 	token, err := h.oauthService.ExchangeCodeForToken(c.Request.Context(), provider, code)
 	if err != nil {
-		response.InternalServerError(c, "Failed to exchange code for token: " + err.Error())
+		response.InternalServerError(c, "Failed to exchange code for token: "+err.Error())
 		return
 	}
 
-	logger.Debug("Getting user info from provider", 
+	logger.Debug("Getting user info from provider",
 		logger.String("provider", provider))
-	
+
 	userInfo, err := h.oauthService.GetUserInfo(c.Request.Context(), provider, token)
 	if err != nil {
-		logger.Error("Failed to get user info", 
-			logger.String("provider", provider), 
+		logger.Error("Failed to get user info",
+			logger.String("provider", provider),
 			logger.Error2("error", err))
-		response.InternalServerError(c, "Failed to get user info: " + err.Error())
+		response.InternalServerError(c, "Failed to get user info: "+err.Error())
 		return
 	}
 
-	logger.Debug("Creating or updating user", 
-		logger.String("provider", provider), 
+	logger.Debug("Creating or updating user",
+		logger.String("provider", provider),
 		logger.String("user_id", userInfo.ID),
 		logger.String("email", userInfo.Email))
-	
+
 	user, err := h.createOrUpdateUser(userInfo)
 	if err != nil {
-		logger.Error("Failed to create or update user", 
-			logger.String("provider", provider), 
+		logger.Error("Failed to create or update user",
+			logger.String("provider", provider),
 			logger.String("user_id", userInfo.ID),
 			logger.Error2("error", err))
-		response.InternalServerError(c, "Failed to create or update user: " + err.Error())
+		response.InternalServerError(c, "Failed to create or update user: "+err.Error())
 		return
 	}
 
 	// Generate JWT token for the user
 	jwtToken, err := h.jwtService.GenerateToken(user)
 	if err != nil {
-		response.InternalServerError(c, "Failed to generate JWT token: " + err.Error())
+		response.InternalServerError(c, "Failed to generate JWT token: "+err.Error())
 		return
 	}
 
@@ -232,20 +232,20 @@ func (h *AuthHandler) handleTelegramCallback(c *gin.Context) {
 
 	userInfo, err := h.oauthService.VerifyTelegramAuth(data)
 	if err != nil {
-		response.Unauthorized(c, "Invalid Telegram authentication: " + err.Error())
+		response.Unauthorized(c, "Invalid Telegram authentication: "+err.Error())
 		return
 	}
 
 	user, err := h.createOrUpdateUser(userInfo)
 	if err != nil {
-		response.InternalServerError(c, "Failed to create or update user: " + err.Error())
+		response.InternalServerError(c, "Failed to create or update user: "+err.Error())
 		return
 	}
 
 	// Generate JWT token for the user
 	jwtToken, err := h.jwtService.GenerateToken(user)
 	if err != nil {
-		response.InternalServerError(c, "Failed to generate JWT token: " + err.Error())
+		response.InternalServerError(c, "Failed to generate JWT token: "+err.Error())
 		return
 	}
 
@@ -319,11 +319,11 @@ func (h *AuthHandler) createOrUpdateUser(userInfo *authInterfaces.UserInfo) (*us
 		providerDataBytes, _ := json.Marshal(userInfo)
 		providerDataStr := string(providerDataBytes)
 		user.ProviderData = &providerDataStr
-		
+
 		if err := h.db.DB.Create(&user).Error; err != nil {
 			return nil, err
 		}
-		
+
 		logger.Info("New OAuth user created",
 			logger.String("provider", userInfo.Provider),
 			logger.String("provider_id", userInfo.ID),
@@ -335,16 +335,16 @@ func (h *AuthHandler) createOrUpdateUser(userInfo *authInterfaces.UserInfo) (*us
 			// Update only name and avatar fields
 			user.Name = userInfo.Name
 			user.Avatar = userInfo.Avatar
-			
+
 			// Update provider data to keep it current
 			providerDataBytes, _ := json.Marshal(userInfo)
 			providerDataStr := string(providerDataBytes)
 			user.ProviderData = &providerDataStr
-			
+
 			if err := h.db.DB.Save(&user).Error; err != nil {
 				return nil, err
 			}
-			
+
 			logger.Info("OAuth user profile updated",
 				logger.String("provider", userInfo.Provider),
 				logger.String("provider_id", userInfo.ID),
@@ -373,7 +373,7 @@ func (h *AuthHandler) hasUserDataChanged(user *userEntities.User, userInfo *auth
 	if user.Avatar != userInfo.Avatar {
 		return true
 	}
-	
+
 	return false
 }
 
@@ -638,7 +638,7 @@ func (h *AuthHandler) GetAuthURL(c *gin.Context) {
 			response.BadRequest(c, "Telegram bot token not configured")
 			return
 		}
-		
+
 		telegramResp := &authInterfaces.AuthorizeURLResponse{
 			AuthURL: url,
 			State:   "telegram-auth",
@@ -652,7 +652,7 @@ func (h *AuthHandler) GetAuthURL(c *gin.Context) {
 	if state == "" {
 		state = h.oauthService.GenerateState()
 	}
-	
+
 	url, err := h.oauthService.GetAuthURL(req.Provider, state)
 	if err != nil {
 		response.InternalServerError(c, "Failed to generate authorization URL", err.Error())
@@ -714,7 +714,7 @@ func (h *AuthHandler) ExchangeToken(c *gin.Context) {
 			response.Unauthorized(c, "Invalid or expired state parameter")
 			return
 		}
-		
+
 		// Verify provider matches
 		if stateInfo.Provider != req.Provider {
 			logger.Error("Provider mismatch in state",

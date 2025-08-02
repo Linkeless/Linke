@@ -2,9 +2,9 @@ package interfaces
 
 import (
 	"context"
-	"time"
-	"linke/internal/domains/subscription/entities"
 	paymentEntities "linke/internal/domains/payment/entities"
+	"linke/internal/domains/subscription/entities"
+	"time"
 )
 
 // SubscriptionOrderService defines the interface for subscription order operations
@@ -40,20 +40,20 @@ type CreateSubscriptionOrderRequest struct {
 
 // CreateSubscriptionOrderResponse represents the response after creating a subscription order
 type CreateSubscriptionOrderResponse struct {
-	Order         *entities.SubscriptionOrderResponse `json:"order"`
-	PaymentRecord *paymentEntities.PaymentRecordResponse     `json:"payment_record"`
-	PaymentURL    string                              `json:"payment_url"`
-	QRCodeURL     string                              `json:"qr_code_url,omitempty"`
-	ExpiredAt     time.Time                           `json:"expired_at"`
+	Order         *entities.SubscriptionOrderResponse    `json:"order"`
+	PaymentRecord *paymentEntities.PaymentRecordResponse `json:"payment_record"`
+	PaymentURL    string                                 `json:"payment_url"`
+	QRCodeURL     string                                 `json:"qr_code_url,omitempty"`
+	ExpiredAt     time.Time                              `json:"expired_at"`
 }
 
 // GetSubscriptionOrdersRequest represents the request to get subscription orders
 type GetSubscriptionOrdersRequest struct {
-	UserID     uint   `form:"user_id,omitempty" example:"1"`
-	Status     string `form:"status,omitempty" example:"pending"`
-	OrderType  string `form:"order_type,omitempty" example:"new"`
-	DateFrom   string `form:"date_from,omitempty" example:"2024-01-01"`
-	DateTo     string `form:"date_to,omitempty" example:"2024-12-31"`
-	Limit      int    `form:"limit,omitempty" example:"10"`
-	Offset     int    `form:"offset,omitempty" example:"0"`
+	UserID    uint   `form:"user_id,omitempty" example:"1"`
+	Status    string `form:"status,omitempty" example:"pending"`
+	OrderType string `form:"order_type,omitempty" example:"new"`
+	DateFrom  string `form:"date_from,omitempty" example:"2024-01-01"`
+	DateTo    string `form:"date_to,omitempty" example:"2024-12-31"`
+	Limit     int    `form:"limit,omitempty" example:"10"`
+	Offset    int    `form:"offset,omitempty" example:"0"`
 }

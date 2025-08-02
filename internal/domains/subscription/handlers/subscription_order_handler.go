@@ -3,12 +3,12 @@ package handlers
 import (
 	"strconv"
 
+	subscriptionEntities "linke/internal/domains/subscription/entities"
+	subscriptionInterfaces "linke/internal/domains/subscription/usecases/interfaces"
+	userEntities "linke/internal/domains/user/entities"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/middleware"
 	"linke/internal/shared/response"
-	userEntities "linke/internal/domains/user/entities"
-	subscriptionEntities "linke/internal/domains/subscription/entities"
-	subscriptionInterfaces "linke/internal/domains/subscription/usecases/interfaces"
 
 	"github.com/gin-gonic/gin"
 )

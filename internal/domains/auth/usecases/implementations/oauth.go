@@ -16,8 +16,8 @@ import (
 	"strings"
 	"time"
 
-	"linke/internal/shared/config"
 	"linke/internal/domains/auth/usecases/interfaces"
+	"linke/internal/shared/config"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
@@ -43,7 +43,6 @@ func NewOAuthService(cfg *config.Config) *OAuthService {
 		cfg: cfg,
 	}
 }
-
 
 // generateState generates a secure random state parameter
 func (o *OAuthService) generateState() string {

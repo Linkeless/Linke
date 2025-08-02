@@ -3,17 +3,17 @@ package services
 import (
 	"context"
 
-	"linke/internal/shared/logger"
-	"linke/internal/shared/database"
-	"linke/internal/domains/user"
 	"linke/internal/domains/auth"
-	"linke/internal/domains/subscription"
-	"linke/internal/domains/payment"
 	"linke/internal/domains/coupon"
 	"linke/internal/domains/invoice"
-	"linke/internal/domains/ticket"
-	"linke/internal/domains/server"
+	"linke/internal/domains/payment"
 	"linke/internal/domains/referral"
+	"linke/internal/domains/server"
+	"linke/internal/domains/subscription"
+	"linke/internal/domains/ticket"
+	"linke/internal/domains/user"
+	"linke/internal/shared/database"
+	"linke/internal/shared/logger"
 )
 
 // ApplicationService 应用层服务
@@ -21,7 +21,7 @@ import (
 type ApplicationService struct {
 	logger   logger.Logger
 	database *database.Database
-	
+
 	// 领域服务提供者
 	userService         *user.ServiceProvider
 	authService         *auth.ServiceProvider
@@ -66,18 +66,18 @@ func NewApplicationService(
 // HealthCheck 系统健康检查
 func (s *ApplicationService) HealthCheck(ctx context.Context) map[string]interface{} {
 	result := make(map[string]interface{})
-	
+
 	// 数据库健康检查
 	dbHealth := s.database.HealthCheck(ctx)
 	result["database"] = dbHealth
-	
+
 	// 添加应用层状态
 	result["application"] = map[string]interface{}{
 		"status": "healthy",
 		"modules": map[string]string{
 			"user":         "active",
 			"auth":         "active",
-			"subscription": "active", 
+			"subscription": "active",
 			"payment":      "active",
 			"coupon":       "active",
 			"invoice":      "active",
@@ -86,7 +86,7 @@ func (s *ApplicationService) HealthCheck(ctx context.Context) map[string]interfa
 			"referral":     "active",
 		},
 	}
-	
+
 	return result
 }
 

@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
 // MigrationService handles database migrations
 type MigrationService struct {
-	dbURL       string
-	mysqlDSN    string
+	dbURL          string
+	mysqlDSN       string
 	migrationsPath string
 }
 
@@ -32,10 +32,10 @@ type MigrationConfig struct {
 func NewMigrationService(dbHost, dbPort, dbUser, dbPassword, dbName string) *MigrationService {
 	dbURL := fmt.Sprintf("mysql://%s:%s@tcp(%s:%s)/%s", dbUser, dbPassword, dbHost, dbPort, dbName)
 	mysqlDSN := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbUser, dbPassword, dbHost, dbPort, dbName)
-	
+
 	return &MigrationService{
-		dbURL:       dbURL,
-		mysqlDSN:    mysqlDSN,
+		dbURL:          dbURL,
+		mysqlDSN:       mysqlDSN,
 		migrationsPath: "migrations",
 	}
 }
@@ -44,12 +44,12 @@ func NewMigrationService(dbHost, dbPort, dbUser, dbPassword, dbName string) *Mig
 func NewMigrationServiceWithConfig(cfg MigrationConfig) *MigrationService {
 	dbURL := fmt.Sprintf("mysql://%s:%s@tcp(%s:%s)/%s", cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName)
 	mysqlDSN := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName)
-	
+
 	migrationsPath := cfg.MigrationsPath
 	if migrationsPath == "" {
 		migrationsPath = "migrations"
 	}
-	
+
 	return &MigrationService{
 		dbURL:          dbURL,
 		mysqlDSN:       mysqlDSN,
@@ -67,7 +67,7 @@ func (ms *MigrationService) createMigrate() (*migrate.Migrate, error) {
 
 	// Create file source
 	sourceURL := fmt.Sprintf("file://%s", absPath)
-	
+
 	// Create migrate instance
 	m, err := migrate.New(sourceURL, ms.dbURL)
 	if err != nil {

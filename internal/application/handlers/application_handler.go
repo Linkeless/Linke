@@ -38,8 +38,8 @@ func NewApplicationHandler(
 // @Router /api/v1/app/system/health [get]
 func (h *ApplicationHandler) HealthCheck(c *gin.Context) {
 	ctx := c.Request.Context()
-	
+
 	health := h.appService.HealthCheck(ctx)
-	
+
 	response.SuccessJSON(c, http.StatusOK, health)
 }

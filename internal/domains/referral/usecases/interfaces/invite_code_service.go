@@ -41,10 +41,10 @@ type InviteCodeService interface {
 
 // CreateInviteCodeRequest represents the request to create an invite code
 type CreateInviteCodeRequest struct {
-	MaxUses              int     `json:"max_uses" binding:"min=1,max=100" example:"10"`                       // Maximum number of times the code can be used
-	Description          string  `json:"description" binding:"max=255" example:"Friend invitation code"`     // Description of the invite code
-	ReferralCampaignID   *uint   `json:"referral_campaign_id,omitempty" example:"1"`                          // Associated referral campaign ID
-	ReferralRewardAmount float64 `json:"referral_reward_amount,omitempty" example:"5.00"`                     // Referral reward amount
+	MaxUses              int     `json:"max_uses" binding:"min=1,max=100" example:"10"`                  // Maximum number of times the code can be used
+	Description          string  `json:"description" binding:"max=255" example:"Friend invitation code"` // Description of the invite code
+	ReferralCampaignID   *uint   `json:"referral_campaign_id,omitempty" example:"1"`                     // Associated referral campaign ID
+	ReferralRewardAmount float64 `json:"referral_reward_amount,omitempty" example:"5.00"`                // Referral reward amount
 }
 
 // UpdateInviteCodeRequest represents the request to update an invite code

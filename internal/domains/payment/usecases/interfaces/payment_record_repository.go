@@ -2,8 +2,8 @@ package interfaces
 
 import (
 	"context"
-	"time"
 	"linke/internal/domains/payment/entities"
+	"time"
 )
 
 // PaymentRecordRepository defines the interface for payment record data access operations

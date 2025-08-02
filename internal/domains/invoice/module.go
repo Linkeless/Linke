@@ -13,7 +13,7 @@ import (
 var Module = fx.Module("invoice",
 	// 注意：目前 invoice 领域还没有 repository 实现
 	// 当添加了 repository 时，需要在这里提供
-	
+
 	// 提供 Service 实现
 	fx.Provide(
 		fx.Annotate(

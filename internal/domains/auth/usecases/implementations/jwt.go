@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"time"
 
-	"linke/internal/shared/config"
 	"linke/internal/domains/auth/usecases/interfaces"
 	userEntities "linke/internal/domains/user/entities"
+	"linke/internal/shared/config"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
 type JWTService struct {
-	cfg               *config.Config
-	blacklistService  *JWTBlacklistService
+	cfg              *config.Config
+	blacklistService *JWTBlacklistService
 }
 
 // Custom Claims struct for JWT parsing (includes jwt.RegisteredClaims)
@@ -105,13 +105,13 @@ func (j *JWTService) ValidateToken(tokenString string) (*interfaces.Claims, erro
 		}
 
 		return &interfaces.Claims{
-			UserID:   claims.UserID,
-			Email:    claims.Email,
-			Username: claims.Username,
-			Provider: claims.Provider,
-			Role:     claims.Role,
-			Status:   claims.Status,
-			IssuedAt: claims.IssuedAt.Time,
+			UserID:    claims.UserID,
+			Email:     claims.Email,
+			Username:  claims.Username,
+			Provider:  claims.Provider,
+			Role:      claims.Role,
+			Status:    claims.Status,
+			IssuedAt:  claims.IssuedAt.Time,
 			ExpiresAt: claims.ExpiresAt.Time,
 		}, nil
 	}
@@ -192,6 +192,6 @@ func (j *JWTService) RevokeAllUserTokens(userID uint, reason string) error {
 
 	// Set expiration far in the future to cover all possible tokens
 	expiresAt := time.Now().Add(time.Duration(j.cfg.JWT.ExpireHours) * time.Hour)
-	
+
 	return j.blacklistService.BlacklistAllUserTokens(context.Background(), userID, reason, expiresAt)
 }

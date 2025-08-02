@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"linke/internal/shared/logger"
 	"linke/internal/domains/auth/entities"
+	"linke/internal/shared/logger"
 
 	"gorm.io/gorm"
 )
@@ -26,7 +26,7 @@ func NewJWTBlacklistService(db *gorm.DB) *JWTBlacklistService {
 // BlacklistToken adds a token to the blacklist
 func (j *JWTBlacklistService) BlacklistToken(ctx context.Context, token string, userID *uint, reason string, expiresAt time.Time) error {
 	tokenHash := entities.HashToken(token)
-	
+
 	blacklistEntry := &entities.JWTBlacklist{
 		TokenHash: tokenHash,
 		UserID:    userID,
@@ -54,10 +54,10 @@ func (j *JWTBlacklistService) BlacklistToken(ctx context.Context, token string, 
 // IsTokenBlacklisted checks if a token is blacklisted
 func (j *JWTBlacklistService) IsTokenBlacklisted(ctx context.Context, token string) (bool, error) {
 	tokenHash := entities.HashToken(token)
-	
+
 	var blacklistEntry entities.JWTBlacklist
 	err := j.db.WithContext(ctx).Where("token_hash = ? AND expires_at > ?", tokenHash, time.Now()).First(&blacklistEntry).Error
-	
+
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return false, nil // Token not blacklisted
@@ -76,7 +76,7 @@ func (j *JWTBlacklistService) BlacklistAllUserTokens(ctx context.Context, userID
 	// This creates a "user blacklist" entry that will invalidate all tokens for the user
 	// We use a special token hash pattern to identify user-wide blacklists
 	userTokenHash := fmt.Sprintf("user_%d_%d", userID, time.Now().Unix())
-	
+
 	blacklistEntry := &entities.JWTBlacklist{
 		TokenHash: userTokenHash,
 		UserID:    &userID,
@@ -104,7 +104,7 @@ func (j *JWTBlacklistService) BlacklistAllUserTokens(ctx context.Context, userID
 func (j *JWTBlacklistService) IsUserTokensBlacklisted(ctx context.Context, userID uint, tokenIssuedAt time.Time) (bool, error) {
 	var count int64
 	err := j.db.WithContext(ctx).Model(&entities.JWTBlacklist{}).
-		Where("user_id = ? AND token_hash LIKE ? AND created_at > ? AND expires_at > ?", 
+		Where("user_id = ? AND token_hash LIKE ? AND created_at > ? AND expires_at > ?",
 			userID, "user_%", tokenIssuedAt, time.Now()).
 		Count(&count).Error
 
@@ -121,7 +121,7 @@ func (j *JWTBlacklistService) IsUserTokensBlacklisted(ctx context.Context, userI
 // CleanupExpiredEntries removes expired blacklist entries
 func (j *JWTBlacklistService) CleanupExpiredEntries(ctx context.Context) error {
 	result := j.db.WithContext(ctx).Where("expires_at < ?", time.Now()).Delete(&entities.JWTBlacklist{})
-	
+
 	if result.Error != nil {
 		logger.Error("Failed to cleanup expired blacklist entries",
 			logger.Error2("error", result.Error))
@@ -139,12 +139,12 @@ func (j *JWTBlacklistService) CleanupExpiredEntries(ctx context.Context) error {
 // GetBlacklistStats returns statistics about blacklisted tokens
 func (j *JWTBlacklistService) GetBlacklistStats(ctx context.Context) (map[string]interface{}, error) {
 	var totalCount, expiredCount int64
-	
+
 	// Count total blacklisted tokens
 	if err := j.db.WithContext(ctx).Model(&entities.JWTBlacklist{}).Count(&totalCount).Error; err != nil {
 		return nil, fmt.Errorf("failed to count total blacklisted tokens: %w", err)
 	}
-	
+
 	// Count expired tokens
 	if err := j.db.WithContext(ctx).Model(&entities.JWTBlacklist{}).
 		Where("expires_at < ?", time.Now()).Count(&expiredCount).Error; err != nil {
@@ -156,7 +156,7 @@ func (j *JWTBlacklistService) GetBlacklistStats(ctx context.Context) (map[string
 		Reason string `json:"reason"`
 		Count  int64  `json:"count"`
 	}
-	
+
 	if err := j.db.WithContext(ctx).Model(&entities.JWTBlacklist{}).
 		Select("reason, COUNT(*) as count").
 		Where("expires_at > ?", time.Now()).
@@ -166,10 +166,10 @@ func (j *JWTBlacklistService) GetBlacklistStats(ctx context.Context) (map[string
 	}
 
 	return map[string]interface{}{
-		"total_blacklisted": totalCount,
+		"total_blacklisted":  totalCount,
 		"active_blacklisted": totalCount - expiredCount,
-		"expired_entries": expiredCount,
-		"reason_breakdown": reasonStats,
+		"expired_entries":    expiredCount,
+		"reason_breakdown":   reasonStats,
 	}, nil
 }
 

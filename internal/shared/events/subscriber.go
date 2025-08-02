@@ -18,16 +18,16 @@ type SubscriberManager struct {
 
 // EventSubscriber represents a single event subscriber
 type EventSubscriber struct {
-	ID          string
-	EventTypes  []string
-	Handler     EventHandler
-	Config      SubscriberConfig
-	IsActive    bool
-	CreatedAt   time.Time
-	LastEventAt time.Time
+	ID             string
+	EventTypes     []string
+	Handler        EventHandler
+	Config         SubscriberConfig
+	IsActive       bool
+	CreatedAt      time.Time
+	LastEventAt    time.Time
 	ProcessedCount int64
 	FailedCount    int64
-	mutex       sync.RWMutex
+	mutex          sync.RWMutex
 }
 
 // SubscriberConfig contains configuration for an event subscriber

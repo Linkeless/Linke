@@ -7,30 +7,30 @@ import (
 	"fmt"
 	"time"
 
-	"linke/internal/shared/logger"
 	"linke/internal/domains/referral/entities"
+	"linke/internal/shared/logger"
 
 	"gorm.io/gorm"
 )
 
 type InviteCodeService struct {
-	db             *gorm.DB
+	db              *gorm.DB
 	referralService *ReferralService
 }
 
 func NewInviteCodeService(db *gorm.DB, referralService *ReferralService) *InviteCodeService {
 	return &InviteCodeService{
-		db:             db,
+		db:              db,
 		referralService: referralService,
 	}
 }
 
 // CreateInviteCodeRequest represents the request to create an invite code
 type CreateInviteCodeRequest struct {
-	MaxUses              int     `json:"max_uses" binding:"min=1,max=100" example:"10"`                       // Maximum number of times the code can be used
-	Description          string  `json:"description" binding:"max=255" example:"Friend invitation code"`     // Description of the invite code
-	ReferralCampaignID   *uint   `json:"referral_campaign_id,omitempty" example:"1"`                          // Associated referral campaign ID
-	ReferralRewardAmount float64 `json:"referral_reward_amount,omitempty" example:"5.00"`                     // Referral reward amount
+	MaxUses              int     `json:"max_uses" binding:"min=1,max=100" example:"10"`                  // Maximum number of times the code can be used
+	Description          string  `json:"description" binding:"max=255" example:"Friend invitation code"` // Description of the invite code
+	ReferralCampaignID   *uint   `json:"referral_campaign_id,omitempty" example:"1"`                     // Associated referral campaign ID
+	ReferralRewardAmount float64 `json:"referral_reward_amount,omitempty" example:"5.00"`                // Referral reward amount
 }
 
 // GenerateInviteCode generates a random invite code
@@ -40,17 +40,17 @@ func (s *InviteCodeService) GenerateInviteCode() (string, error) {
 	if _, err := rand.Read(bytes); err != nil {
 		return "", fmt.Errorf("failed to generate random bytes: %w", err)
 	}
-	
+
 	// Convert to hex string (32 characters)
 	code := hex.EncodeToString(bytes)
-	
+
 	// Check if code already exists (very unlikely but possible)
 	var existingCode entities.InviteCode
 	if err := s.db.Where("code = ?", code).First(&existingCode).Error; err == nil {
 		// Code exists, try again (recursive call)
 		return s.GenerateInviteCode()
 	}
-	
+
 	return code, nil
 }
 
@@ -172,7 +172,7 @@ func (s *InviteCodeService) UseInviteCode(ctx context.Context, code string, user
 
 	// Increment used count
 	inviteCode.UsedCount++
-	
+
 	// Update status if exhausted
 	if inviteCode.UsedCount >= inviteCode.MaxUses {
 		inviteCode.Status = entities.InviteCodeStatusUsed
@@ -214,7 +214,7 @@ func (s *InviteCodeService) UseInviteCode(ctx context.Context, code string, user
 			"ip_address": ipAddress,
 			"user_agent": userAgent,
 		}
-		
+
 		if _, err := s.referralService.CreateReferralFromInviteCode(ctx, inviteCode, userID, attributionData); err != nil {
 			logger.Error("Failed to create referral from invite code",
 				logger.Uint("invite_code_id", inviteCode.ID),
@@ -244,7 +244,6 @@ func (s *InviteCodeService) UseInviteCode(ctx context.Context, code string, user
 
 	return inviteCode, nil
 }
-
 
 // ListAllInviteCodes lists all invite codes
 func (s *InviteCodeService) ListAllInviteCodes(ctx context.Context, limit, offset int) ([]*entities.InviteCode, int64, error) {

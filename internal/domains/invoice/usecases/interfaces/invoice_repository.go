@@ -2,8 +2,8 @@ package interfaces
 
 import (
 	"context"
-	"time"
 	"linke/internal/domains/invoice/entities"
+	"time"
 )
 
 // InvoiceRepository defines the interface for invoice data access operations

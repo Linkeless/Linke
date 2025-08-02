@@ -2,8 +2,8 @@ package interfaces
 
 import (
 	"context"
-	"time"
 	"linke/internal/domains/subscription/entities"
+	"time"
 )
 
 // UserSubscriptionRepository defines the interface for user subscription data access operations

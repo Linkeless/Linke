@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"linke/internal/shared/logger"
 	"linke/internal/domains/subscription/entities"
+	"linke/internal/shared/logger"
 
 	"gorm.io/gorm"
 )
@@ -26,11 +26,11 @@ func NewSubscriptionExpiryService(db *gorm.DB, userSubscriptionService *UserSubs
 // ProcessExpiredSubscriptions processes all expired subscriptions
 func (s *SubscriptionExpiryService) ProcessExpiredSubscriptions(ctx context.Context) (int, error) {
 	now := time.Now()
-	
+
 	// Find subscriptions that have expired but are still active
 	var expiredSubscriptions []entities.UserSubscription
 	if err := s.db.WithContext(ctx).
-		Where("status IN (?) AND end_date IS NOT NULL AND end_date <= ?", 
+		Where("status IN (?) AND end_date IS NOT NULL AND end_date <= ?",
 			[]string{entities.UserSubscriptionStatusActive, entities.UserSubscriptionStatusTrial}, now).
 		Find(&expiredSubscriptions).Error; err != nil {
 		logger.Error("Failed to find expired subscriptions", logger.Error2("error", err))
@@ -40,7 +40,7 @@ func (s *SubscriptionExpiryService) ProcessExpiredSubscriptions(ctx context.Cont
 	var processedCount int
 	for _, subscription := range expiredSubscriptions {
 		if err := s.ExpireSubscription(ctx, subscription.ID); err != nil {
-			logger.Error("Failed to expire subscription", 
+			logger.Error("Failed to expire subscription",
 				logger.Uint("subscription_id", subscription.ID),
 				logger.Error2("error", err))
 			continue
@@ -55,11 +55,11 @@ func (s *SubscriptionExpiryService) ProcessExpiredSubscriptions(ctx context.Cont
 // ProcessCancelledSubscriptions processes subscriptions that should be cancelled at period end
 func (s *SubscriptionExpiryService) ProcessCancelledSubscriptions(ctx context.Context) (int, error) {
 	now := time.Now()
-	
+
 	// Find subscriptions marked for cancellation at period end
 	var subscriptions []entities.UserSubscription
 	if err := s.db.WithContext(ctx).
-		Where("cancel_at_period_end = ? AND status IN (?) AND current_period_end IS NOT NULL AND current_period_end <= ?", 
+		Where("cancel_at_period_end = ? AND status IN (?) AND current_period_end IS NOT NULL AND current_period_end <= ?",
 			true, []string{entities.UserSubscriptionStatusActive, entities.UserSubscriptionStatusTrial}, now).
 		Find(&subscriptions).Error; err != nil {
 		logger.Error("Failed to find subscriptions to cancel", logger.Error2("error", err))
@@ -69,7 +69,7 @@ func (s *SubscriptionExpiryService) ProcessCancelledSubscriptions(ctx context.Co
 	var processedCount int
 	for _, subscription := range subscriptions {
 		if err := s.CancelSubscriptionAtPeriodEnd(ctx, subscription.ID); err != nil {
-			logger.Error("Failed to cancel subscription at period end", 
+			logger.Error("Failed to cancel subscription at period end",
 				logger.Uint("subscription_id", subscription.ID),
 				logger.Error2("error", err))
 			continue
@@ -85,10 +85,10 @@ func (s *SubscriptionExpiryService) ProcessCancelledSubscriptions(ctx context.Co
 func (s *SubscriptionExpiryService) ProcessOverdueSubscriptions(ctx context.Context) (int, error) {
 	// Find subscriptions that are overdue (7 days past billing date) and still active
 	overdueThreshold := time.Now().Add(-7 * 24 * time.Hour)
-	
+
 	var overdueSubscriptions []entities.UserSubscription
 	if err := s.db.WithContext(ctx).
-		Where("status IN (?) AND next_billing_date IS NOT NULL AND next_billing_date <= ? AND auto_renew = ?", 
+		Where("status IN (?) AND next_billing_date IS NOT NULL AND next_billing_date <= ? AND auto_renew = ?",
 			[]string{entities.UserSubscriptionStatusActive, entities.UserSubscriptionStatusTrial}, overdueThreshold, false).
 		Find(&overdueSubscriptions).Error; err != nil {
 		logger.Error("Failed to find overdue subscriptions", logger.Error2("error", err))
@@ -98,7 +98,7 @@ func (s *SubscriptionExpiryService) ProcessOverdueSubscriptions(ctx context.Cont
 	var processedCount int
 	for _, subscription := range overdueSubscriptions {
 		if err := s.SuspendOverdueSubscription(ctx, subscription.ID); err != nil {
-			logger.Error("Failed to suspend overdue subscription", 
+			logger.Error("Failed to suspend overdue subscription",
 				logger.Uint("subscription_id", subscription.ID),
 				logger.Error2("error", err))
 			continue
@@ -143,14 +143,14 @@ func (s *SubscriptionExpiryService) ExpireSubscription(ctx context.Context, subs
 
 	if err := tx.Model(&subscription).Updates(updates).Error; err != nil {
 		tx.Rollback()
-		logger.Error("Failed to update expired subscription", 
+		logger.Error("Failed to update expired subscription",
 			logger.Uint("subscription_id", subscriptionID),
 			logger.Error2("error", err))
 		return fmt.Errorf("failed to update expired subscription: %w", err)
 	}
 
 	// Log subscription expiration
-	logger.Info("Subscription expired", 
+	logger.Info("Subscription expired",
 		logger.Uint("subscription_id", subscriptionID),
 		logger.Uint("user_id", subscription.UserID),
 		logger.String("old_status", string(oldStatus)))
@@ -160,7 +160,7 @@ func (s *SubscriptionExpiryService) ExpireSubscription(ctx context.Context, subs
 		return fmt.Errorf("failed to commit subscription expiry: %w", err)
 	}
 
-	logger.Info("Subscription expired successfully", 
+	logger.Info("Subscription expired successfully",
 		logger.Uint("subscription_id", subscriptionID),
 		logger.Uint("user_id", subscription.UserID))
 
@@ -199,10 +199,10 @@ func (s *SubscriptionExpiryService) CancelSubscriptionAtPeriodEnd(ctx context.Co
 	now := time.Now()
 	oldStatus := subscription.Status
 	updates := map[string]interface{}{
-		"status":              entities.UserSubscriptionStatusCancelled,
-		"cancelled_at":        &now,
+		"status":               entities.UserSubscriptionStatusCancelled,
+		"cancelled_at":         &now,
 		"cancel_at_period_end": false,
-		"updated_at":          now,
+		"updated_at":           now,
 	}
 
 	if subscription.CancellationReason == "" {
@@ -211,14 +211,14 @@ func (s *SubscriptionExpiryService) CancelSubscriptionAtPeriodEnd(ctx context.Co
 
 	if err := tx.Model(&subscription).Updates(updates).Error; err != nil {
 		tx.Rollback()
-		logger.Error("Failed to cancel subscription at period end", 
+		logger.Error("Failed to cancel subscription at period end",
 			logger.Uint("subscription_id", subscriptionID),
 			logger.Error2("error", err))
 		return fmt.Errorf("failed to cancel subscription at period end: %w", err)
 	}
 
 	// Log subscription cancellation
-	logger.Info("Subscription cancelled at period end", 
+	logger.Info("Subscription cancelled at period end",
 		logger.Uint("subscription_id", subscriptionID),
 		logger.Uint("user_id", subscription.UserID),
 		logger.String("old_status", string(oldStatus)))
@@ -228,7 +228,7 @@ func (s *SubscriptionExpiryService) CancelSubscriptionAtPeriodEnd(ctx context.Co
 		return fmt.Errorf("failed to commit period-end cancellation: %w", err)
 	}
 
-	logger.Info("Subscription cancelled at period end", 
+	logger.Info("Subscription cancelled at period end",
 		logger.Uint("subscription_id", subscriptionID),
 		logger.Uint("user_id", subscription.UserID))
 
@@ -268,14 +268,14 @@ func (s *SubscriptionExpiryService) SuspendOverdueSubscription(ctx context.Conte
 
 	if err := tx.Model(&subscription).Updates(updates).Error; err != nil {
 		tx.Rollback()
-		logger.Error("Failed to suspend overdue subscription", 
+		logger.Error("Failed to suspend overdue subscription",
 			logger.Uint("subscription_id", subscriptionID),
 			logger.Error2("error", err))
 		return fmt.Errorf("failed to suspend overdue subscription: %w", err)
 	}
 
 	// Log subscription suspension
-	logger.Info("Subscription suspended for overdue payment", 
+	logger.Info("Subscription suspended for overdue payment",
 		logger.Uint("subscription_id", subscriptionID),
 		logger.Uint("user_id", subscription.UserID),
 		logger.String("old_status", string(oldStatus)))
@@ -285,7 +285,7 @@ func (s *SubscriptionExpiryService) SuspendOverdueSubscription(ctx context.Conte
 		return fmt.Errorf("failed to commit overdue suspension: %w", err)
 	}
 
-	logger.Info("Subscription suspended for overdue payment", 
+	logger.Info("Subscription suspended for overdue payment",
 		logger.Uint("subscription_id", subscriptionID),
 		logger.Uint("user_id", subscription.UserID))
 

@@ -6,12 +6,30 @@ import (
 	"strings"
 	"time"
 
+	"linke/internal/domains/user/entities"
 	"linke/internal/shared/framework"
 	"linke/internal/shared/logger"
-	"linke/internal/domains/user/entities"
 
 	"gorm.io/gorm"
 )
+
+// UserStats represents user statistics
+type UserStats struct {
+	TotalUsers    int64            `json:"total_users"`
+	ActiveUsers   int64            `json:"active_users"`
+	InactiveUsers int64            `json:"inactive_users"`
+	BannedUsers   int64            `json:"banned_users"`
+	DeletedUsers  int64            `json:"deleted_users"`
+	ByProvider    map[string]int64 `json:"by_provider"`
+	RecentSignups int64            `json:"recent_signups"`
+}
+
+// BatchOperationResult represents the result of batch operations
+type BatchOperationResult struct {
+	DeletedCount  int    `json:"deleted_count,omitempty"`
+	RestoredCount int    `json:"restored_count,omitempty"`
+	FailedIDs     []uint `json:"failed_ids,omitempty"`
+}
 
 type UserService struct {
 	db     *gorm.DB
@@ -236,7 +254,7 @@ func (s *UserService) SearchUsers(ctx context.Context, query string, limit, offs
 
 	// Count total matching users
 	if err := s.db.WithContext(ctx).Model(&entities.User{}).Where(whereClause, searchQuery, searchQuery, searchQuery).Count(&total).Error; err != nil {
-		s.logger.Error("Failed to count search results", 
+		s.logger.Error("Failed to count search results",
 			logger.String("query", query),
 			logger.ErrorField(err),
 		)
@@ -245,7 +263,7 @@ func (s *UserService) SearchUsers(ctx context.Context, query string, limit, offs
 
 	// Get matching users with pagination
 	if err := s.db.WithContext(ctx).Where(whereClause, searchQuery, searchQuery, searchQuery).Limit(limit).Offset(offset).Find(&users).Error; err != nil {
-		s.logger.Error("Failed to search users", 
+		s.logger.Error("Failed to search users",
 			logger.String("query", query),
 			logger.ErrorField(err),
 		)
@@ -309,17 +327,6 @@ func (s *UserService) UpdateUserRole(ctx context.Context, id uint, role string) 
 	return &user, nil
 }
 
-// UserStats represents user statistics
-type UserStats struct {
-	TotalUsers    int64            `json:"total_users"`
-	ActiveUsers   int64            `json:"active_users"`
-	InactiveUsers int64            `json:"inactive_users"`
-	BannedUsers   int64            `json:"banned_users"`
-	DeletedUsers  int64            `json:"deleted_users"`
-	ByProvider    map[string]int64 `json:"by_provider"`
-	RecentSignups int64            `json:"recent_signups"`
-}
-
 // GetUserStats returns user statistics
 func (s *UserService) GetUserStats(ctx context.Context) (*UserStats, error) {
 	stats := &UserStats{
@@ -366,13 +373,6 @@ func (s *UserService) GetUserStats(ctx context.Context) (*UserStats, error) {
 	}
 
 	return stats, nil
-}
-
-// BatchOperationResult represents the result of batch operations
-type BatchOperationResult struct {
-	DeletedCount  int    `json:"deleted_count,omitempty"`
-	RestoredCount int    `json:"restored_count,omitempty"`
-	FailedIDs     []uint `json:"failed_ids,omitempty"`
 }
 
 // BatchDeleteUsers performs batch soft delete on multiple users
@@ -478,7 +478,7 @@ func (s *UserService) ListUsersByProvider(ctx context.Context, provider string, 
 
 	// Count total users for the provider
 	if err := s.db.WithContext(ctx).Model(&entities.User{}).Where("provider = ?", provider).Count(&total).Error; err != nil {
-		s.logger.Error("Failed to count users by provider", 
+		s.logger.Error("Failed to count users by provider",
 			logger.String("provider", provider),
 			logger.ErrorField(err),
 		)
@@ -487,7 +487,7 @@ func (s *UserService) ListUsersByProvider(ctx context.Context, provider string, 
 
 	// Get users with pagination
 	if err := s.db.WithContext(ctx).Where("provider = ?", provider).Limit(limit).Offset(offset).Find(&users).Error; err != nil {
-		s.logger.Error("Failed to list users by provider", 
+		s.logger.Error("Failed to list users by provider",
 			logger.String("provider", provider),
 			logger.ErrorField(err),
 		)

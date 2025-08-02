@@ -559,7 +559,7 @@ func (r *accountLockoutRepository) IsAccountLocked(ctx context.Context, email st
 // IncrementFailureCount increments the failure count for an account
 func (r *accountLockoutRepository) IncrementFailureCount(ctx context.Context, email string, userID *uint) (*entities.AccountLockout, error) {
 	var lockout entities.AccountLockout
-	
+
 	// Try to get existing lockout record
 	err := r.db.WithContext(ctx).Where("email = ?", email).First(&lockout).Error
 	if err != nil && err != gorm.ErrRecordNotFound {

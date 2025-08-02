@@ -5,9 +5,9 @@ import (
 	"gorm.io/gorm"
 
 	"linke/internal/domains/server/adapters/repositories"
+	"linke/internal/domains/server/handlers"
 	"linke/internal/domains/server/usecases/implementations"
 	"linke/internal/domains/server/usecases/interfaces"
-	"linke/internal/domains/server/handlers"
 	"linke/internal/shared/config"
 )
 
@@ -25,7 +25,7 @@ var Module = fx.Module("server",
 			fx.As(new(interfaces.ShadowsocksServerRepository)),
 		),
 	),
-	
+
 	// 提供 Service 实现
 	fx.Provide(
 		fx.Annotate(
@@ -52,7 +52,7 @@ var Module = fx.Module("server",
 
 // ServiceProvider 为外部模块提供服务器服务接口
 type ServiceProvider struct {
-	ServerGroupService      interfaces.ServerGroupService
+	ServerGroupService       interfaces.ServerGroupService
 	ShadowsocksServerService interfaces.ShadowsocksServerService
 }
 

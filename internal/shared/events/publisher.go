@@ -67,7 +67,7 @@ func (bus *InMemoryEventBus) Publish(ctx context.Context, event Event) error {
 			bus.logger.Error("Event handler failed",
 				logger.String("event_type", event.EventType()),
 				logger.String("event_id", event.EventID()),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 			errors = append(errors, err)
 		}
 	}
@@ -86,7 +86,7 @@ func (bus *InMemoryEventBus) PublishAsync(ctx context.Context, event Event) erro
 			bus.logger.Error("Async event publishing failed",
 				logger.String("event_type", event.EventType()),
 				logger.String("event_id", event.EventID()),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 		}
 	}()
 	return nil
@@ -99,10 +99,10 @@ func (bus *InMemoryEventBus) Subscribe(eventTypes []string, handler EventHandler
 
 	for _, eventType := range eventTypes {
 		if _, exists := bus.handlers[eventType]; !exists {
-			bus.handlers[eventType] = make([]EventHandler, 0)
+			bus.handlers[eventType] = nil
 		}
 		bus.handlers[eventType] = append(bus.handlers[eventType], handler)
-		
+
 		bus.logger.Info("Event handler subscribed",
 			logger.String("event_type", eventType))
 	}
@@ -158,7 +158,7 @@ func (bus *InMemoryEventBus) ListEventTypes() []string {
 	bus.mutex.RLock()
 	defer bus.mutex.RUnlock()
 
-	eventTypes := make([]string, 0, len(bus.handlers))
+	var eventTypes []string
 	for eventType := range bus.handlers {
 		eventTypes = append(eventTypes, eventType)
 	}
@@ -198,20 +198,20 @@ func LoggingMiddleware() EventMiddleware {
 			logger.String("event_type", event.EventType()),
 			logger.String("event_id", event.EventID()),
 			logger.String("event_source", event.EventSource()))
-		
+
 		err := next(ctx, event)
-		
+
 		if err != nil {
 			logger.Error("Event processing failed",
 				logger.String("event_type", event.EventType()),
 				logger.String("event_id", event.EventID()),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 		} else {
 			logger.Info("Event processed successfully",
 				logger.String("event_type", event.EventType()),
 				logger.String("event_id", event.EventID()))
 		}
-		
+
 		return err
 	})
 }
@@ -225,23 +225,23 @@ func RetryMiddleware(maxRetries int) EventMiddleware {
 			if err == nil {
 				return nil
 			}
-			
+
 			if i < maxRetries {
 				logger.Warn("Event processing failed, retrying",
 					logger.String("event_type", event.EventType()),
 					logger.String("event_id", event.EventID()),
 					logger.Int("attempt", i+1),
 					logger.Int("max_retries", maxRetries),
-					logger.Error2("error", err))
+					logger.ErrorField(err))
 			}
 		}
-		
+
 		logger.Error("Event processing failed after all retries",
 			logger.String("event_type", event.EventType()),
 			logger.String("event_id", event.EventID()),
 			logger.Int("max_retries", maxRetries),
 			logger.Error2("error", err))
-		
+
 		return err
 	})
 }

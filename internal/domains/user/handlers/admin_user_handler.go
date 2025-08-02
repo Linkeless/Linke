@@ -4,12 +4,12 @@ import (
 	"strconv"
 	"strings"
 
+	authInterfaces "linke/internal/domains/auth/usecases/interfaces"
+	userEntities "linke/internal/domains/user/entities"
+	userInterfaces "linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/middleware"
 	"linke/internal/shared/response"
-	userEntities "linke/internal/domains/user/entities"
-	userInterfaces "linke/internal/domains/user/usecases/interfaces"
-	authInterfaces "linke/internal/domains/auth/usecases/interfaces"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -87,13 +87,13 @@ func (h *AdminUserHandler) CreateUser(c *gin.Context) {
 			logger.String("email", createReq.Email),
 			logger.Error2("error", err),
 		)
-		
+
 		// Check if it's a duplicate key error
 		if strings.Contains(err.Error(), "Duplicate entry") || strings.Contains(err.Error(), "UNIQUE constraint") {
 			response.Conflict(c, "User with this email already exists")
 			return
 		}
-		
+
 		response.InternalServerError(c, "Failed to create user")
 		return
 	}
@@ -490,7 +490,7 @@ func (h *AdminUserHandler) SearchUsers(c *gin.Context) {
 
 	users, total, err := h.userService.SearchUsers(c.Request.Context(), query, limit, offset)
 	if err != nil {
-		logger.Error("Admin failed to search users", 
+		logger.Error("Admin failed to search users",
 			logger.String("query", query),
 			logger.Error2("error", err),
 		)
@@ -623,7 +623,7 @@ func (h *AdminUserHandler) BatchDeleteUsers(c *gin.Context) {
 
 	response.SuccessWithMessage(c, "Users deleted successfully", map[string]interface{}{
 		"deleted_count": result.DeletedCount,
-		"failed_ids": result.FailedIDs,
+		"failed_ids":    result.FailedIDs,
 	})
 }
 
@@ -671,7 +671,7 @@ func (h *AdminUserHandler) PatchUser(c *gin.Context) {
 
 	// Apply partial updates to the current user
 	user := *currentUser
-	
+
 	// Update only the fields present in the request
 	if name, exists := updateData["name"]; exists {
 		if nameStr, ok := name.(string); ok {
@@ -681,7 +681,7 @@ func (h *AdminUserHandler) PatchUser(c *gin.Context) {
 			return
 		}
 	}
-	
+
 	if email, exists := updateData["email"]; exists {
 		if emailStr, ok := email.(string); ok {
 			user.Email = emailStr
@@ -690,7 +690,7 @@ func (h *AdminUserHandler) PatchUser(c *gin.Context) {
 			return
 		}
 	}
-	
+
 	if username, exists := updateData["username"]; exists {
 		if usernameStr, ok := username.(string); ok {
 			user.Username = usernameStr
@@ -699,7 +699,7 @@ func (h *AdminUserHandler) PatchUser(c *gin.Context) {
 			return
 		}
 	}
-	
+
 	if role, exists := updateData["role"]; exists {
 		if roleStr, ok := role.(string); ok {
 			if roleStr != "user" && roleStr != "admin" {
@@ -712,7 +712,7 @@ func (h *AdminUserHandler) PatchUser(c *gin.Context) {
 			return
 		}
 	}
-	
+
 	if status, exists := updateData["status"]; exists {
 		if statusStr, ok := status.(string); ok {
 			if statusStr != "active" && statusStr != "inactive" && statusStr != "banned" {
@@ -776,7 +776,7 @@ func (h *AdminUserHandler) BatchRestoreUsers(c *gin.Context) {
 
 	response.SuccessWithMessage(c, "Users restored successfully", map[string]interface{}{
 		"restored_count": result.RestoredCount,
-		"failed_ids": result.FailedIDs,
+		"failed_ids":     result.FailedIDs,
 	})
 }
 
@@ -833,7 +833,7 @@ func (h *AdminUserHandler) ResetUserPassword(c *gin.Context) {
 			logger.Uint("target_user_id", uint(userID)),
 			logger.Error2("error", err),
 		)
-		
+
 		// Check specific error types for appropriate HTTP responses
 		if strings.Contains(err.Error(), "user not found") {
 			response.NotFound(c, err.Error())

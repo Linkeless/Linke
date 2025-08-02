@@ -3,15 +3,15 @@ package response
 // StandardResponse represents the standard API response structure for Swagger documentation
 // @Description Standard API response format
 type StandardResponse struct {
-	Code    int         `json:"code" example:"0"`                     // Response code (0 for success, non-zero for errors)
-	Message string      `json:"message" example:"success"`            // Response message
+	Code    int         `json:"code" example:"0"`                    // Response code (0 for success, non-zero for errors)
+	Message string      `json:"message" example:"success"`           // Response message
 	Data    interface{} `json:"data,omitempty" swaggertype:"object"` // Response data (optional)
 }
 
 // StandardErrorResponse represents error response structure for Swagger documentation
 // @Description Standard API error response format
 type StandardErrorResponse struct {
-	Code    int    `json:"code" example:"4000"`        // Error code
+	Code    int    `json:"code" example:"4000"`           // Error code
 	Message string `json:"message" example:"Bad Request"` // Error message
 }
 
@@ -68,8 +68,8 @@ type StandardListResponse struct {
 // ListDataInfo represents the data structure for list responses
 // @Description List response data structure
 type ListDataInfo struct {
-	Items      interface{}         `json:"items" swaggertype:"array,object"`      // List items
-	Pagination PaginationResponse `json:"pagination"` // Pagination information
+	Items      interface{}        `json:"items" swaggertype:"array,object"` // List items
+	Pagination PaginationResponse `json:"pagination"`                       // Pagination information
 }
 
 // MessageOnlyResponse represents a response with only a message (no data)
@@ -90,42 +90,42 @@ type SearchResponse struct {
 // SearchResponseData represents the data structure for search responses
 // @Description Search response data structure
 type SearchResponseData struct {
-	Items      interface{}         `json:"items" swaggertype:"array,object"`      // Search result items
-	Pagination PaginationResponse `json:"pagination"` // Pagination information
-	Query      string             `json:"query" example:"search term"` // Search query
+	Items      interface{}        `json:"items" swaggertype:"array,object"` // Search result items
+	Pagination PaginationResponse `json:"pagination"`                       // Pagination information
+	Query      string             `json:"query" example:"search term"`      // Search query
 }
 
 // ProviderFilterResponse represents a provider filter response with pagination and provider info
 // @Description Provider filter response format with pagination and provider information
 type ProviderFilterResponse struct {
-	Code    int                       `json:"code" example:"0"`
-	Message string                    `json:"message" example:"Users retrieved successfully"`
+	Code    int                        `json:"code" example:"0"`
+	Message string                     `json:"message" example:"Users retrieved successfully"`
 	Data    ProviderFilterResponseData `json:"data"`
 }
 
 // ProviderFilterResponseData represents the data structure for provider filter responses
 // @Description Provider filter response data structure
 type ProviderFilterResponseData struct {
-	Items      interface{}         `json:"items" swaggertype:"array,object"`      // Filtered items
-	Pagination PaginationResponse `json:"pagination"` // Pagination information
-	Provider   string             `json:"provider" example:"google"` // OAuth provider
+	Items      interface{}        `json:"items" swaggertype:"array,object"` // Filtered items
+	Pagination PaginationResponse `json:"pagination"`                       // Pagination information
+	Provider   string             `json:"provider" example:"google"`        // OAuth provider
 }
 
 // PaginatedResponse represents a paginated response for Swagger documentation
 // @Description Paginated response format
 type PaginatedResponse struct {
-	Code    int               `json:"code" example:"0"`
-	Message string            `json:"message" example:"success"`
-	Data    interface{}       `json:"data" swaggertype:"array,object"`
-	Total   int64             `json:"total" example:"100"`
-	Limit   int               `json:"limit" example:"10"`
-	Offset  int               `json:"offset" example:"0"`
+	Code    int         `json:"code" example:"0"`
+	Message string      `json:"message" example:"success"`
+	Data    interface{} `json:"data" swaggertype:"array,object"`
+	Total   int64       `json:"total" example:"100"`
+	Limit   int         `json:"limit" example:"10"`
+	Offset  int         `json:"offset" example:"0"`
 }
 
 // Response represents the standard API response structure for Swagger documentation
 // @Description Standard API response format
 type Response struct {
-	Code    int         `json:"code" example:"0"`                     // Response code (0 for success, non-zero for errors)
-	Message string      `json:"message" example:"success"`            // Response message
+	Code    int         `json:"code" example:"0"`                    // Response code (0 for success, non-zero for errors)
+	Message string      `json:"message" example:"success"`           // Response message
 	Data    interface{} `json:"data,omitempty" swaggertype:"object"` // Response data (optional)
 }

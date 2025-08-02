@@ -5,9 +5,9 @@ import (
 	"gorm.io/gorm"
 
 	"linke/internal/domains/user/adapters/repositories"
+	"linke/internal/domains/user/handlers"
 	"linke/internal/domains/user/usecases/implementations"
 	"linke/internal/domains/user/usecases/interfaces"
-	"linke/internal/domains/user/handlers"
 	"linke/internal/shared/framework"
 )
 

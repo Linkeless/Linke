@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
-	"github.com/go-redis/redis/v8"
 )
 
 // Logger interface defines the logging contract for the framework

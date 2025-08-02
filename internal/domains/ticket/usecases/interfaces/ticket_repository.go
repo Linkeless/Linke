@@ -2,8 +2,8 @@ package interfaces
 
 import (
 	"context"
-	"time"
 	"linke/internal/domains/ticket/entities"
+	"time"
 )
 
 // TicketRepository defines the interface for ticket data access operations

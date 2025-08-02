@@ -14,21 +14,21 @@ type InviteCode struct {
 	ID uint `json:"id" gorm:"primaryKey"`
 
 	// Core Fields
-	Code        string `json:"code" gorm:"uniqueIndex;size:32;not null"`        // 邀请码
-	CreatedByID uint   `json:"created_by_id" gorm:"not null;index"`             // 创建者ID
-	
+	Code        string `json:"code" gorm:"uniqueIndex;size:32;not null"` // 邀请码
+	CreatedByID uint   `json:"created_by_id" gorm:"not null;index"`      // 创建者ID
+
 	// Referral Integration Fields
-	ReferralCampaignID    *uint   `json:"referral_campaign_id,omitempty" gorm:"index"`                                          // 关联的推广活动ID
-	ReferralRewardAmount  float64 `json:"referral_reward_amount" gorm:"type:decimal(10,2);not null;default:0.00"`              // 推广奖励金额
-	ReferralRewardCurrency string `json:"referral_reward_currency" gorm:"size:10;not null;default:'USD'"`                     // 推广奖励货币
-	
+	ReferralCampaignID     *uint   `json:"referral_campaign_id,omitempty" gorm:"index"`                            // 关联的推广活动ID
+	ReferralRewardAmount   float64 `json:"referral_reward_amount" gorm:"type:decimal(10,2);not null;default:0.00"` // 推广奖励金额
+	ReferralRewardCurrency string  `json:"referral_reward_currency" gorm:"size:10;not null;default:'USD'"`         // 推广奖励货币
+
 	// Status and Limits
-	Status      string `json:"status" gorm:"size:20;not null;default:'active';index"` // active, used, disabled
-	MaxUses     int    `json:"max_uses" gorm:"not null;default:10"`                    // 最大使用次数
-	UsedCount   int    `json:"used_count" gorm:"not null;default:0"`                   // 已使用次数
-	
+	Status    string `json:"status" gorm:"size:20;not null;default:'active';index"` // active, used, disabled
+	MaxUses   int    `json:"max_uses" gorm:"not null;default:10"`                   // 最大使用次数
+	UsedCount int    `json:"used_count" gorm:"not null;default:0"`                  // 已使用次数
+
 	// Metadata
-	Description string `json:"description" gorm:"size:255"` // 描述
+	Description string `json:"description" gorm:"size:255"`         // 描述
 	Metadata    string `json:"metadata,omitempty" gorm:"type:text"` // 额外元数据(JSON)
 
 	// Relationships (no foreign key constraints for performance)
@@ -60,15 +60,14 @@ func (ic *InviteCode) IsActive() bool {
 	if ic.Status != InviteCodeStatusActive {
 		return false
 	}
-	
+
 	// Check if max uses reached
 	if ic.UsedCount >= ic.MaxUses {
 		return false
 	}
-	
+
 	return true
 }
-
 
 // IsExhausted checks if the invite code has reached its maximum uses
 func (ic *InviteCode) IsExhausted() bool {
@@ -87,21 +86,21 @@ func (ic *InviteCode) IsDeleted() bool {
 
 // InviteCodeResponse represents the invite code data structure for API responses
 type InviteCodeResponse struct {
-	ID          uint      `json:"id" example:"1"`                                        // Invite code ID
+	ID          uint      `json:"id" example:"1"`                                          // Invite code ID
 	Code        string    `json:"code" example:"a1b2c3d4e5f6789012345678901234567890abcd"` // Invite code string
-	CreatedByID uint      `json:"created_by_id" example:"1"`                             // Creator user ID
-	Status      string    `json:"status" example:"active" enums:"active,used,disabled"`   // Invite code status
-	MaxUses     int       `json:"max_uses" example:"10"`                                 // Maximum number of uses
-	UsedCount   int       `json:"used_count" example:"0"`                                // Current usage count
-	Description string    `json:"description" example:"Friend invitation code"`          // Description
-	CreatedAt   time.Time `json:"created_at" example:"2024-01-01T00:00:00Z"`            // Creation time
-	UpdatedAt   time.Time `json:"updated_at" example:"2024-01-01T00:00:00Z"`            // Last update time
-	
+	CreatedByID uint      `json:"created_by_id" example:"1"`                               // Creator user ID
+	Status      string    `json:"status" example:"active" enums:"active,used,disabled"`    // Invite code status
+	MaxUses     int       `json:"max_uses" example:"10"`                                   // Maximum number of uses
+	UsedCount   int       `json:"used_count" example:"0"`                                  // Current usage count
+	Description string    `json:"description" example:"Friend invitation code"`            // Description
+	CreatedAt   time.Time `json:"created_at" example:"2024-01-01T00:00:00Z"`               // Creation time
+	UpdatedAt   time.Time `json:"updated_at" example:"2024-01-01T00:00:00Z"`               // Last update time
+
 	// Referral Integration Fields
-	ReferralCampaignID    *uint   `json:"referral_campaign_id,omitempty" example:"1"`      // Associated referral campaign ID
-	ReferralRewardAmount  float64 `json:"referral_reward_amount" example:"5.00"`          // Referral reward amount
-	ReferralRewardCurrency string `json:"referral_reward_currency" example:"USD"`         // Referral reward currency
-	
+	ReferralCampaignID     *uint   `json:"referral_campaign_id,omitempty" example:"1"` // Associated referral campaign ID
+	ReferralRewardAmount   float64 `json:"referral_reward_amount" example:"5.00"`      // Referral reward amount
+	ReferralRewardCurrency string  `json:"referral_reward_currency" example:"USD"`     // Referral reward currency
+
 	// Optional related data
 	// TODO: Fix cross-domain references in response types
 	// CreatedBy    *userEntities.UserResponse               `json:"created_by,omitempty"`    // Creator user info
@@ -112,20 +111,20 @@ type InviteCodeResponse struct {
 // ToResponse converts InviteCode to InviteCodeResponse
 func (ic *InviteCode) ToResponse() *InviteCodeResponse {
 	resp := &InviteCodeResponse{
-		ID:          ic.ID,
-		Code:        ic.Code,
-		CreatedByID: ic.CreatedByID,
-		Status:      ic.Status,
-		MaxUses:     ic.MaxUses,
-		UsedCount:   ic.UsedCount,
-		Description: ic.Description,
-		CreatedAt:   ic.CreatedAt,
-		UpdatedAt:   ic.UpdatedAt,
-		ReferralCampaignID:    ic.ReferralCampaignID,
-		ReferralRewardAmount:  ic.ReferralRewardAmount,
+		ID:                     ic.ID,
+		Code:                   ic.Code,
+		CreatedByID:            ic.CreatedByID,
+		Status:                 ic.Status,
+		MaxUses:                ic.MaxUses,
+		UsedCount:              ic.UsedCount,
+		Description:            ic.Description,
+		CreatedAt:              ic.CreatedAt,
+		UpdatedAt:              ic.UpdatedAt,
+		ReferralCampaignID:     ic.ReferralCampaignID,
+		ReferralRewardAmount:   ic.ReferralRewardAmount,
 		ReferralRewardCurrency: ic.ReferralRewardCurrency,
 	}
-	
+
 	// Include related data if loaded
 	// TODO: Fix cross-domain references
 	// if ic.CreatedBy != nil {
@@ -139,7 +138,7 @@ func (ic *InviteCode) ToResponse() *InviteCodeResponse {
 	// if ic.ReferralCampaign != nil {
 	//	resp.ReferralCampaign = ic.ReferralCampaign.ToResponse()
 	// }
-	
+
 	return resp
 }
 

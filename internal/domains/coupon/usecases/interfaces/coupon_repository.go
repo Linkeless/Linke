@@ -2,8 +2,8 @@ package interfaces
 
 import (
 	"context"
-	"time"
 	"linke/internal/domains/coupon/entities"
+	"time"
 )
 
 // CouponRepository defines the interface for coupon data access operations

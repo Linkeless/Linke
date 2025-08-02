@@ -30,17 +30,17 @@ type ReferralService interface {
 
 // CreateReferralRequest represents the request to create a referral
 type CreateReferralRequest struct {
-	ReferrerID       uint                   `json:"referrer_id" binding:"required"`
-	RefereeID        uint                   `json:"referee_id" binding:"required"`
-	InviteCodeID     *uint                  `json:"invite_code_id,omitempty"`
-	ReferralSource   string                 `json:"referral_source" binding:"required"`
-	ReferralChannel  string                 `json:"referral_channel,omitempty"`
-	ReferralCode     string                 `json:"referral_code,omitempty"`
-	CampaignID       *uint                  `json:"campaign_id,omitempty"`
-	AttributionData  map[string]interface{} `json:"attribution_data,omitempty"`
-	ConversionValue  float64                `json:"conversion_value,omitempty"`
-	ConversionType   string                 `json:"conversion_type,omitempty"`
-	ExpirationDays   int                    `json:"expiration_days,omitempty"`
+	ReferrerID      uint                   `json:"referrer_id" binding:"required"`
+	RefereeID       uint                   `json:"referee_id" binding:"required"`
+	InviteCodeID    *uint                  `json:"invite_code_id,omitempty"`
+	ReferralSource  string                 `json:"referral_source" binding:"required"`
+	ReferralChannel string                 `json:"referral_channel,omitempty"`
+	ReferralCode    string                 `json:"referral_code,omitempty"`
+	CampaignID      *uint                  `json:"campaign_id,omitempty"`
+	AttributionData map[string]interface{} `json:"attribution_data,omitempty"`
+	ConversionValue float64                `json:"conversion_value,omitempty"`
+	ConversionType  string                 `json:"conversion_type,omitempty"`
+	ExpirationDays  int                    `json:"expiration_days,omitempty"`
 }
 
 // UpdateReferralRequest represents the request to update a referral
@@ -55,13 +55,13 @@ type UpdateReferralRequest struct {
 
 // GetReferralsRequest represents the request to get referrals with filters
 type GetReferralsRequest struct {
-	ReferrerID    uint   `form:"referrer_id,omitempty"`
-	RefereeID     uint   `form:"referee_id,omitempty"`
-	Status        string `form:"status,omitempty"`
-	RewardStatus  string `form:"reward_status,omitempty"`
-	CampaignID    *uint  `form:"campaign_id,omitempty"`
-	DateFrom      string `form:"date_from,omitempty"`
-	DateTo        string `form:"date_to,omitempty"`
-	Limit         int    `form:"limit,omitempty"`
-	Offset        int    `form:"offset,omitempty"`
+	ReferrerID   uint   `form:"referrer_id,omitempty"`
+	RefereeID    uint   `form:"referee_id,omitempty"`
+	Status       string `form:"status,omitempty"`
+	RewardStatus string `form:"reward_status,omitempty"`
+	CampaignID   *uint  `form:"campaign_id,omitempty"`
+	DateFrom     string `form:"date_from,omitempty"`
+	DateTo       string `form:"date_to,omitempty"`
+	Limit        int    `form:"limit,omitempty"`
+	Offset       int    `form:"offset,omitempty"`
 }

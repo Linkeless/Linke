@@ -8,8 +8,8 @@ import (
 
 	"linke/internal/shared/logger"
 
-	"github.com/hibiken/asynq"
 	"github.com/go-redis/redis/v8"
+	"github.com/hibiken/asynq"
 )
 
 type TaskQueue struct {
@@ -17,12 +17,12 @@ type TaskQueue struct {
 }
 
 type Task struct {
-	ID      string                 `json:"id"`
-	Type    string                 `json:"type"`
-	Payload map[string]interface{} `json:"payload"`
-	Retry   int                    `json:"retry"`
-	MaxRetry int                   `json:"max_retry"`
-	CreatedAt time.Time            `json:"created_at"`
+	ID        string                 `json:"id"`
+	Type      string                 `json:"type"`
+	Payload   map[string]interface{} `json:"payload"`
+	Retry     int                    `json:"retry"`
+	MaxRetry  int                    `json:"max_retry"`
+	CreatedAt time.Time              `json:"created_at"`
 }
 
 type TaskHandler func(ctx context.Context, task *asynq.Task) error
@@ -83,7 +83,7 @@ func NewTaskProcessor(redisClient *redis.Client) *TaskProcessor {
 
 func (tq *TaskQueue) Enqueue(ctx context.Context, queueName string, task *Task) error {
 	task.CreatedAt = time.Now()
-	
+
 	data, err := json.Marshal(task.Payload)
 	if err != nil {
 		return fmt.Errorf("failed to marshal task payload: %w", err)
@@ -107,7 +107,7 @@ func (tq *TaskQueue) GetQueueInfo(ctx context.Context, queueName string) (map[st
 	// This is a simplified implementation
 	return map[string]interface{}{
 		"queue_name": queueName,
-		"status": "active",
+		"status":     "active",
 	}, nil
 }
 
@@ -117,16 +117,16 @@ func (tp *TaskProcessor) RegisterHandler(taskType string, handler TaskHandler) {
 
 func (tp *TaskProcessor) Start(ctx context.Context) error {
 	logger.Info("Starting asynq task processor")
-	
+
 	mux := asynq.NewServeMux()
-	
+
 	// Register all handlers
 	for taskType, handler := range tp.handlers {
 		mux.HandleFunc(taskType, func(ctx context.Context, task *asynq.Task) error {
 			logger.Info("Processing task",
 				logger.String("task_type", task.Type()),
 			)
-			
+
 			err := handler(ctx, task)
 			if err != nil {
 				logger.Error("Task failed",
@@ -135,14 +135,14 @@ func (tp *TaskProcessor) Start(ctx context.Context) error {
 				)
 				return err
 			}
-			
+
 			logger.Info("Task completed successfully",
 				logger.String("task_type", task.Type()),
 			)
 			return nil
 		})
 	}
-	
+
 	return tp.server.Run(mux)
 }
 
@@ -167,7 +167,7 @@ func NewPriorityTaskQueue(redisClient *redis.Client) *PriorityTaskQueue {
 // EnqueueWithPriority enqueues a task with priority
 func (ptq *PriorityTaskQueue) EnqueueWithPriority(ctx context.Context, queueName string, task *Task, priority int) error {
 	task.CreatedAt = time.Now()
-	
+
 	data, err := json.Marshal(task.Payload)
 	if err != nil {
 		return fmt.Errorf("failed to marshal task payload: %w", err)
@@ -206,7 +206,7 @@ func NewDelayedTaskQueue(redisClient *redis.Client) *DelayedTaskQueue {
 // EnqueueDelayed enqueues a task to be processed at a later time
 func (dtq *DelayedTaskQueue) EnqueueDelayed(ctx context.Context, queueName string, task *Task, delay time.Duration) error {
 	task.CreatedAt = time.Now()
-	
+
 	data, err := json.Marshal(task.Payload)
 	if err != nil {
 		return fmt.Errorf("failed to marshal task payload: %w", err)
@@ -220,7 +220,7 @@ func (dtq *DelayedTaskQueue) EnqueueDelayed(ctx context.Context, queueName strin
 // EnqueueAt enqueues a task to be processed at a specific time
 func (dtq *DelayedTaskQueue) EnqueueAt(ctx context.Context, queueName string, task *Task, processAt time.Time) error {
 	task.CreatedAt = time.Now()
-	
+
 	data, err := json.Marshal(task.Payload)
 	if err != nil {
 		return fmt.Errorf("failed to marshal task payload: %w", err)

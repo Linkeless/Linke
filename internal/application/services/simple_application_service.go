@@ -3,8 +3,8 @@ package services
 import (
 	"context"
 
-	"linke/internal/shared/logger"
 	"linke/internal/shared/database"
+	"linke/internal/shared/logger"
 )
 
 // SimpleApplicationService 简化的应用层服务
@@ -28,17 +28,17 @@ func NewSimpleApplicationService(
 // HealthCheck 系统健康检查
 func (s *SimpleApplicationService) HealthCheck(ctx context.Context) map[string]interface{} {
 	result := make(map[string]interface{})
-	
+
 	// 数据库健康检查
 	dbHealth := s.database.HealthCheck(ctx)
 	result["database"] = dbHealth
-	
+
 	// 添加应用层状态
 	result["application"] = map[string]interface{}{
 		"status": "healthy",
 		"mode":   "simplified", // 表示使用简化模式
 		"note":   "Domain modules temporarily disabled due to import issues",
 	}
-	
+
 	return result
 }

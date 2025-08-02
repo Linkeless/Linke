@@ -133,9 +133,9 @@ func (r *jwtBlacklistRepository) BlacklistAllUserTokens(ctx context.Context, use
 func (r *jwtBlacklistRepository) IsUserTokensBlacklisted(ctx context.Context, userID uint, tokenIssuedAt time.Time) (bool, error) {
 	var count int64
 	beforeHash := fmt.Sprintf("user_%d_before_%d", userID, tokenIssuedAt.Unix())
-	
+
 	if err := r.db.WithContext(ctx).Model(&entities.JWTBlacklist{}).
-		Where("user_id = ? AND expires_at > ? AND (token_hash = ? OR token_hash LIKE ?)", 
+		Where("user_id = ? AND expires_at > ? AND (token_hash = ? OR token_hash LIKE ?)",
 			userID, time.Now(), beforeHash, fmt.Sprintf("user_%d_before_%%", userID)).
 		Count(&count).Error; err != nil {
 		logger.Error("Failed to check if user tokens are blacklisted",

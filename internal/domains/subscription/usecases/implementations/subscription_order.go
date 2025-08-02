@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"linke/internal/shared/logger"
-	"linke/internal/domains/subscription/entities"
-	paymentInterfaces "linke/internal/domains/payment/usecases/interfaces"
 	couponInterfaces "linke/internal/domains/coupon/usecases/interfaces"
+	paymentInterfaces "linke/internal/domains/payment/usecases/interfaces"
+	"linke/internal/domains/subscription/entities"
+	"linke/internal/shared/logger"
 
 	"gorm.io/gorm"
 )
@@ -33,23 +33,23 @@ func NewSubscriptionOrderService(db *gorm.DB, subscriptionPlanService *Subscript
 
 // CreateSubscriptionOrderRequest represents the request to create a subscription order
 type CreateSubscriptionOrderRequest struct {
-	UserID             uint    `json:"user_id" binding:"required" example:"1"`
-	SubscriptionPlanID uint    `json:"subscription_plan_id" binding:"required" example:"1"`
-	OrderType          string  `json:"order_type" binding:"required,oneof=new renewal upgrade downgrade" example:"new"`
-	CouponCode         string  `json:"coupon_code,omitempty" example:"SAVE20"`
-	PaymentGateway     string  `json:"payment_gateway" binding:"required" example:"epay"`
-	PaymentMethod      string  `json:"payment_method" binding:"required" example:"alipay"`
-	ReturnURL          string  `json:"return_url,omitempty" example:"https://example.com/payment/return"`
-	Metadata           string  `json:"metadata,omitempty"`
+	UserID             uint   `json:"user_id" binding:"required" example:"1"`
+	SubscriptionPlanID uint   `json:"subscription_plan_id" binding:"required" example:"1"`
+	OrderType          string `json:"order_type" binding:"required,oneof=new renewal upgrade downgrade" example:"new"`
+	CouponCode         string `json:"coupon_code,omitempty" example:"SAVE20"`
+	PaymentGateway     string `json:"payment_gateway" binding:"required" example:"epay"`
+	PaymentMethod      string `json:"payment_method" binding:"required" example:"alipay"`
+	ReturnURL          string `json:"return_url,omitempty" example:"https://example.com/payment/return"`
+	Metadata           string `json:"metadata,omitempty"`
 }
 
 // CreateSubscriptionOrderResponse represents the response after creating a subscription order
 type CreateSubscriptionOrderResponse struct {
-	Order          *entities.SubscriptionOrderResponse `json:"order"`
-	PaymentRecord  interface{}     `json:"payment_record"` // TODO: Use DTO instead of cross-domain entity
-	PaymentURL     string                           `json:"payment_url"`
-	QRCodeURL      string                           `json:"qr_code_url,omitempty"`
-	ExpiredAt      time.Time                        `json:"expired_at"`
+	Order         *entities.SubscriptionOrderResponse `json:"order"`
+	PaymentRecord interface{}                         `json:"payment_record"` // TODO: Use DTO instead of cross-domain entity
+	PaymentURL    string                              `json:"payment_url"`
+	QRCodeURL     string                              `json:"qr_code_url,omitempty"`
+	ExpiredAt     time.Time                           `json:"expired_at"`
 }
 
 // CreateSubscriptionOrder creates a new subscription order with payment
@@ -58,7 +58,7 @@ func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context
 	if err := sos.checkDuplicateOrders(ctx, req.UserID, req.SubscriptionPlanID, req.OrderType); err != nil {
 		return nil, fmt.Errorf("duplicate order check failed: %w", err)
 	}
-	
+
 	// Get subscription plan
 	plan, err := sos.subscriptionPlanService.GetSubscriptionPlan(ctx, req.SubscriptionPlanID)
 	if err != nil {
@@ -83,7 +83,7 @@ func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context
 	// Calculate billing period
 	var billingPeriodStart, billingPeriodEnd *time.Time
 	now := time.Now()
-	
+
 	if plan.BillingCycle != entities.BillingCycleLifetime {
 		periodStart := now
 		billingPeriodStart = &periodStart
@@ -136,18 +136,18 @@ func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context
 	}
 
 	totalAmount := amount + setupFee - discountAmount
-	
+
 	// SECURITY: Price protection - validate final amount is reasonable
 	if totalAmount < 0 {
 		return nil, fmt.Errorf("invalid total amount: negative value not allowed")
 	}
-	
+
 	// Prevent excessive discounts (more than 95% off)
 	originalTotal := amount + setupFee
-	if originalTotal > 0 && discountAmount > (originalTotal * 0.95) {
+	if originalTotal > 0 && discountAmount > (originalTotal*0.95) {
 		return nil, fmt.Errorf("discount amount %.2f exceeds maximum allowed (95%% of original price)", discountAmount)
 	}
-	
+
 	// Validate amounts are within reasonable limits
 	maxAllowedAmount := 10000.0 // $10,000 max
 	if totalAmount > maxAllowedAmount {
@@ -215,8 +215,8 @@ func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context
 		orderIDUint64 := uint64(order.ID)
 		_, err := sos.couponService.UseCoupon(ctx, appliedCouponID, uint64(req.UserID), couponDiscountAmount, &orderIDUint64)
 		if err != nil {
-			logger.Error("Failed to record coupon usage", 
-				logger.Error2("error", err), 
+			logger.Error("Failed to record coupon usage",
+				logger.Error2("error", err),
 				logger.Any("coupon_id", appliedCouponID),
 				logger.Uint("order_id", order.ID))
 			// Don't fail the entire order creation, just log the error
@@ -303,7 +303,7 @@ func (sos *SubscriptionOrderService) ProcessOrderPaymentSuccess(ctx context.Cont
 			SubscriptionPlanID: order.SubscriptionPlanID,
 			UseTrial:           false, // Paid subscription, no trial
 		}
-		
+
 		// Use the billing period from order if available
 		if order.BillingPeriodStart != nil {
 			subscriptionReq.StartDate = order.BillingPeriodStart.Format(time.RFC3339)
@@ -347,7 +347,7 @@ func (sos *SubscriptionOrderService) ProcessOrderPaymentSuccess(ctx context.Cont
 	case entities.OrderTypeUpgrade, entities.OrderTypeDowngrade:
 		// Find existing subscription for this user and current active plan
 		var currentSubscription entities.UserSubscription
-		if err := tx.Where("user_id = ? AND status IN (?)", 
+		if err := tx.Where("user_id = ? AND status IN (?)",
 			order.UserID, []string{entities.UserSubscriptionStatusActive, entities.UserSubscriptionStatusTrial}).
 			First(&currentSubscription).Error; err != nil {
 			tx.Rollback()
@@ -382,9 +382,9 @@ func (sos *SubscriptionOrderService) ProcessOrderPaymentSuccess(ctx context.Cont
 
 		// Cancel current subscription (mark as cancelled but keep active until period end)
 		if err := tx.Model(&currentSubscription).Updates(map[string]interface{}{
-			"cancel_at_period_end":  true,
-			"cancelled_at":          time.Now(),
-			"cancellation_reason":   fmt.Sprintf("Subscription %s to plan %s", order.OrderType, plan.Name),
+			"cancel_at_period_end": true,
+			"cancelled_at":         time.Now(),
+			"cancellation_reason":  fmt.Sprintf("Subscription %s to plan %s", order.OrderType, plan.Name),
 		}).Error; err != nil {
 			tx.Rollback()
 			return fmt.Errorf("failed to cancel current subscription: %w", err)
@@ -396,7 +396,7 @@ func (sos *SubscriptionOrderService) ProcessOrderPaymentSuccess(ctx context.Cont
 			SubscriptionPlanID: order.SubscriptionPlanID,
 			UseTrial:           false, // Paid subscription, no trial for upgrades/downgrades
 		}
-		
+
 		// For upgrade: start immediately
 		// For downgrade: start at end of current billing period
 		if order.OrderType == entities.OrderTypeUpgrade {
@@ -637,7 +637,7 @@ func getApplyImmediately(orderType string, userPreference *bool) bool {
 	if userPreference != nil {
 		return *userPreference
 	}
-	
+
 	// Default behavior: upgrades apply immediately, downgrades apply at period end
 	return orderType == entities.OrderTypeUpgrade
 }
@@ -667,47 +667,47 @@ type GetOrdersRequest struct {
 // GetOrdersWithFiltering gets orders with advanced filtering and search
 func (sos *SubscriptionOrderService) GetOrdersWithFiltering(ctx context.Context, req *GetOrdersRequest) ([]*entities.SubscriptionOrder, int64, error) {
 	query := sos.db.WithContext(ctx).Model(&entities.SubscriptionOrder{})
-	
+
 	// Apply filters
 	if req.UserID != nil {
 		query = query.Where("user_id = ?", *req.UserID)
 	}
-	
+
 	if req.Status != "" {
 		query = query.Where("status = ?", req.Status)
 	}
-	
+
 	if req.OrderType != "" {
 		query = query.Where("order_type = ?", req.OrderType)
 	}
-	
+
 	if req.PaymentMethod != "" {
 		query = query.Where("payment_method = ?", req.PaymentMethod)
 	}
-	
+
 	if req.PaymentGateway != "" {
 		query = query.Where("payment_gateway = ?", req.PaymentGateway)
 	}
-	
+
 	if req.MinAmount > 0 {
 		query = query.Where("total_amount >= ?", req.MinAmount)
 	}
-	
+
 	if req.MaxAmount > 0 {
 		query = query.Where("total_amount <= ?", req.MaxAmount)
 	}
-	
+
 	if req.CouponCode != "" {
 		query = query.Where("coupon_code = ?", req.CouponCode)
 	}
-	
+
 	// Date range filtering
 	if req.StartDate != "" {
 		if startDate, err := time.Parse("2006-01-02", req.StartDate); err == nil {
 			query = query.Where("created_at >= ?", startDate)
 		}
 	}
-	
+
 	if req.EndDate != "" {
 		if endDate, err := time.Parse("2006-01-02", req.EndDate); err == nil {
 			// Add 24 hours to include the entire end date
@@ -715,7 +715,7 @@ func (sos *SubscriptionOrderService) GetOrdersWithFiltering(ctx context.Context,
 			query = query.Where("created_at < ?", endDate)
 		}
 	}
-	
+
 	// Search functionality
 	if req.Search != "" {
 		searchPattern := "%" + req.Search + "%"
@@ -724,24 +724,24 @@ func (sos *SubscriptionOrderService) GetOrdersWithFiltering(ctx context.Context,
 			searchPattern, searchPattern, searchPattern,
 		)
 	}
-	
+
 	// Get total count before pagination
 	var totalCount int64
 	if err := query.Count(&totalCount).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to count orders: %w", err)
 	}
-	
+
 	// Apply sorting
 	sortBy := req.SortBy
 	if sortBy == "" {
 		sortBy = "created_at"
 	}
-	
+
 	sortOrder := req.SortOrder
 	if sortOrder == "" {
 		sortOrder = "desc"
 	}
-	
+
 	// Validate sort fields
 	validSortFields := map[string]bool{
 		"created_at":   true,
@@ -752,36 +752,36 @@ func (sos *SubscriptionOrderService) GetOrdersWithFiltering(ctx context.Context,
 		"status":       true,
 		"order_type":   true,
 	}
-	
+
 	if !validSortFields[sortBy] {
 		sortBy = "created_at"
 	}
-	
+
 	if sortOrder != "asc" && sortOrder != "desc" {
 		sortOrder = "desc"
 	}
-	
+
 	query = query.Order(fmt.Sprintf("%s %s", sortBy, sortOrder))
-	
+
 	// Apply pagination
 	if req.Limit > 0 {
 		query = query.Limit(req.Limit)
 	}
-	
+
 	if req.Offset > 0 {
 		query = query.Offset(req.Offset)
 	}
-	
+
 	// Load relations if requested
 	if req.IncludeRelations {
 		query = query.Preload("User").Preload("SubscriptionPlan").Preload("UserSubscription")
 	}
-	
+
 	var orders []*entities.SubscriptionOrder
 	if err := query.Find(&orders).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to get orders: %w", err)
 	}
-	
+
 	return orders, totalCount, nil
 }
 
@@ -798,18 +798,18 @@ func (sos *SubscriptionOrderService) GetOrderWithRelations(ctx context.Context, 
 		}
 		return nil, fmt.Errorf("failed to get order: %w", err)
 	}
-	
+
 	return &order, nil
 }
 
 // PaymentEvidence represents payment verification evidence
 type PaymentEvidence struct {
-	PaymentMethod    string `json:"payment_method" binding:"required"`
-	TransactionID    string `json:"transaction_id" binding:"required"`
-	PaymentReference string `json:"payment_reference,omitempty"`
-	PaymentProof     string `json:"payment_proof,omitempty"`
+	PaymentMethod    string  `json:"payment_method" binding:"required"`
+	TransactionID    string  `json:"transaction_id" binding:"required"`
+	PaymentReference string  `json:"payment_reference,omitempty"`
+	PaymentProof     string  `json:"payment_proof,omitempty"`
 	VerifiedAmount   float64 `json:"verified_amount" binding:"required,min=0"`
-	Notes            string `json:"notes,omitempty"`
+	Notes            string  `json:"notes,omitempty"`
 }
 
 // UpdateOrderStatusRequest represents the enhanced request to update order status
@@ -839,7 +839,7 @@ func (sos *SubscriptionOrderService) UpdateOrderStatusWithEvidence(ctx context.C
 			tx.Rollback()
 		}
 	}()
-	
+
 	// Get order with lock
 	var order entities.SubscriptionOrder
 	if err := tx.Set("gorm:query_option", "FOR UPDATE").First(&order, orderID).Error; err != nil {
@@ -849,7 +849,7 @@ func (sos *SubscriptionOrderService) UpdateOrderStatusWithEvidence(ctx context.C
 		}
 		return nil, fmt.Errorf("failed to get order: %w", err)
 	}
-	
+
 	// SECURITY: Enhanced validation for status changes to "paid"
 	if req.Status == entities.OrderStatusPaid {
 		// Require payment evidence for manual payment confirmation
@@ -857,26 +857,26 @@ func (sos *SubscriptionOrderService) UpdateOrderStatusWithEvidence(ctx context.C
 			tx.Rollback()
 			return nil, fmt.Errorf("payment evidence is required when marking order as paid")
 		}
-		
+
 		// Validate payment evidence
 		if err := sos.validatePaymentEvidence(&order, req.PaymentEvidence); err != nil {
 			tx.Rollback()
 			return nil, fmt.Errorf("payment evidence validation failed: %w", err)
 		}
 	}
-	
+
 	// SECURITY: Require admin confirmation for critical operations
 	if sos.isCriticalOperation(order.Status, req.Status) && !req.AdminConfirm {
 		tx.Rollback()
 		return nil, fmt.Errorf("admin confirmation is required for this status change")
 	}
-	
+
 	// Prepare update data
 	updateData := map[string]interface{}{
 		"status":     req.Status,
 		"updated_at": time.Now(),
 	}
-	
+
 	// Add payment evidence data if provided
 	if req.PaymentEvidence != nil {
 		updateData["payment_method"] = req.PaymentEvidence.PaymentMethod
@@ -885,62 +885,62 @@ func (sos *SubscriptionOrderService) UpdateOrderStatusWithEvidence(ctx context.C
 			updateData["payment_reference"] = req.PaymentEvidence.PaymentReference
 		}
 	}
-	
+
 	// Add admin notes with enhanced security logging
 	adminNote := fmt.Sprintf("[%s] Admin (ID:%d)", time.Now().Format("2006-01-02 15:04:05"), adminID)
-	
+
 	if req.Status == entities.OrderStatusPaid && req.PaymentEvidence != nil {
-		adminNote += fmt.Sprintf(" - Payment verified: Method=%s, TxnID=%s, Amount=%.2f", 
-			req.PaymentEvidence.PaymentMethod, 
-			req.PaymentEvidence.TransactionID, 
+		adminNote += fmt.Sprintf(" - Payment verified: Method=%s, TxnID=%s, Amount=%.2f",
+			req.PaymentEvidence.PaymentMethod,
+			req.PaymentEvidence.TransactionID,
 			req.PaymentEvidence.VerifiedAmount)
 	}
-	
+
 	if req.Notes != "" {
 		adminNote += fmt.Sprintf(" - Notes: %s", req.Notes)
 	}
-	
+
 	if req.Reason != "" {
 		adminNote += fmt.Sprintf(" - Reason: %s", req.Reason)
 	}
-	
+
 	if req.PaymentEvidence != nil && req.PaymentEvidence.Notes != "" {
 		adminNote += fmt.Sprintf(" - Payment Notes: %s", req.PaymentEvidence.Notes)
 	}
-	
+
 	currentNotes := order.Notes
 	if currentNotes != "" {
 		updateData["notes"] = currentNotes + "\n" + adminNote
 	} else {
 		updateData["notes"] = adminNote
 	}
-	
+
 	// Set paid_at if status is paid
 	if req.Status == entities.OrderStatusPaid && order.PaidAt == nil {
 		updateData["paid_at"] = time.Now()
 	}
-	
+
 	// Update order
 	if err := tx.Model(&order).Updates(updateData).Error; err != nil {
 		tx.Rollback()
 		return nil, fmt.Errorf("failed to update order status: %w", err)
 	}
-	
+
 	// If changing to paid status, process the order
 	if req.Status == entities.OrderStatusPaid && order.Status != entities.OrderStatusPaid {
 		if err := sos.ProcessOrderPaymentSuccess(ctx, orderID); err != nil {
-			logger.Error("Failed to process order after status update", 
-				logger.Error2("error", err), 
+			logger.Error("Failed to process order after status update",
+				logger.Error2("error", err),
 				logger.Uint("order_id", orderID))
 			// Don't fail the status update, but log the error
 		}
 	}
-	
+
 	// Commit transaction
 	if err := tx.Commit().Error; err != nil {
 		return nil, fmt.Errorf("failed to commit status update: %w", err)
 	}
-	
+
 	// Log security event for audit
 	logger.Info("Order status updated by admin",
 		logger.Uint("admin_id", adminID),
@@ -949,12 +949,12 @@ func (sos *SubscriptionOrderService) UpdateOrderStatusWithEvidence(ctx context.C
 		logger.String("new_status", req.Status),
 		logger.Any("payment_verified", req.PaymentEvidence != nil),
 		logger.Any("admin_confirmed", req.AdminConfirm))
-	
+
 	// Reload order with updated data
 	if err := sos.db.WithContext(ctx).First(&order, orderID).Error; err != nil {
 		return nil, fmt.Errorf("failed to reload order: %w", err)
 	}
-	
+
 	return &order, nil
 }
 
@@ -964,33 +964,33 @@ func (sos *SubscriptionOrderService) validatePaymentEvidence(order *entities.Sub
 	if evidence.VerifiedAmount != order.TotalAmount {
 		return fmt.Errorf("verified amount %.2f does not match order total %.2f", evidence.VerifiedAmount, order.TotalAmount)
 	}
-	
+
 	// SECURITY: Ensure transaction ID is not empty and unique
 	if len(evidence.TransactionID) < 6 {
 		return fmt.Errorf("transaction ID must be at least 6 characters")
 	}
-	
+
 	// Check for duplicate transaction ID in other orders
 	var existingOrder entities.SubscriptionOrder
 	if err := sos.db.Where("transaction_id = ? AND id != ?", evidence.TransactionID, order.ID).First(&existingOrder).Error; err == nil {
 		return fmt.Errorf("transaction ID %s is already used by order %d", evidence.TransactionID, existingOrder.ID)
 	}
-	
+
 	// SECURITY: Validate payment method
 	validMethods := map[string]bool{
 		"bank_transfer": true,
-		"alipay":       true,
-		"wechat":       true,
-		"credit_card":  true,
-		"crypto":       true,
-		"paypal":       true,
-		"manual":       true,
+		"alipay":        true,
+		"wechat":        true,
+		"credit_card":   true,
+		"crypto":        true,
+		"paypal":        true,
+		"manual":        true,
 	}
-	
+
 	if !validMethods[evidence.PaymentMethod] {
 		return fmt.Errorf("invalid payment method: %s", evidence.PaymentMethod)
 	}
-	
+
 	return nil
 }
 
@@ -999,21 +999,21 @@ func (sos *SubscriptionOrderService) isCriticalOperation(oldStatus, newStatus st
 	criticalChanges := map[string][]string{
 		entities.OrderStatusPending:   {entities.OrderStatusPaid},                                    // Manual payment confirmation
 		entities.OrderStatusFailed:    {entities.OrderStatusPaid},                                    // Retry failed payment
-		entities.OrderStatusCancelled: {entities.OrderStatusPaid, entities.OrderStatusPending},          // Reactivate cancelled order
-		entities.OrderStatusPaid:      {entities.OrderStatusRefunded, entities.OrderStatusCancelled},    // Reverse paid order
+		entities.OrderStatusCancelled: {entities.OrderStatusPaid, entities.OrderStatusPending},       // Reactivate cancelled order
+		entities.OrderStatusPaid:      {entities.OrderStatusRefunded, entities.OrderStatusCancelled}, // Reverse paid order
 	}
-	
+
 	allowedTargets, exists := criticalChanges[oldStatus]
 	if !exists {
 		return false
 	}
-	
+
 	for _, target := range allowedTargets {
 		if target == newStatus {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -1036,7 +1036,7 @@ func (sos *SubscriptionOrderService) ProcessRefund(ctx context.Context, req *Pro
 			tx.Rollback()
 		}
 	}()
-	
+
 	// Get order with lock
 	var order entities.SubscriptionOrder
 	if err := tx.Set("gorm:query_option", "FOR UPDATE").First(&order, req.OrderID).Error; err != nil {
@@ -1046,13 +1046,13 @@ func (sos *SubscriptionOrderService) ProcessRefund(ctx context.Context, req *Pro
 		}
 		return nil, fmt.Errorf("failed to get order: %w", err)
 	}
-	
+
 	// Validate refund
 	if !order.CanBeRefunded() {
 		tx.Rollback()
 		return nil, fmt.Errorf("order cannot be refunded")
 	}
-	
+
 	// SECURITY: Validate refund time window (30 days from payment)
 	if order.PaidAt != nil {
 		refundDeadline := order.PaidAt.AddDate(0, 0, 30) // 30 days from payment
@@ -1061,13 +1061,13 @@ func (sos *SubscriptionOrderService) ProcessRefund(ctx context.Context, req *Pro
 			return nil, fmt.Errorf("refund window has expired (30 days from payment date)")
 		}
 	}
-	
+
 	maxRefundable := order.GetRefundableAmount()
 	if req.Amount > maxRefundable {
 		tx.Rollback()
 		return nil, fmt.Errorf("refund amount %.2f exceeds refundable amount %.2f", req.Amount, maxRefundable)
 	}
-	
+
 	// Update order with refund information
 	updateData := map[string]interface{}{
 		"refund_amount": order.RefundAmount + req.Amount,
@@ -1075,44 +1075,44 @@ func (sos *SubscriptionOrderService) ProcessRefund(ctx context.Context, req *Pro
 		"refunded_at":   time.Now(),
 		"updated_at":    time.Now(),
 	}
-	
+
 	// If full refund, update status
 	if order.RefundAmount+req.Amount >= order.TotalAmount {
 		updateData["status"] = entities.OrderStatusRefunded
 	}
-	
+
 	// Add admin notes
 	if req.Notes != "" {
 		currentNotes := order.Notes
-		adminNote := fmt.Sprintf("[%s] Refund processed by Admin (ID:%d): Amount=%.2f, Reason=%s, Notes=%s", 
+		adminNote := fmt.Sprintf("[%s] Refund processed by Admin (ID:%d): Amount=%.2f, Reason=%s, Notes=%s",
 			time.Now().Format("2006-01-02 15:04:05"), req.ProcessedBy, req.Amount, req.Reason, req.Notes)
-		
+
 		if currentNotes != "" {
 			updateData["notes"] = currentNotes + "\n" + adminNote
 		} else {
 			updateData["notes"] = adminNote
 		}
 	}
-	
+
 	// Update order
 	if err := tx.Model(&order).Updates(updateData).Error; err != nil {
 		tx.Rollback()
 		return nil, fmt.Errorf("failed to update order with refund: %w", err)
 	}
-	
+
 	// TODO: Integrate with payment gateway to process actual refund
 	// This would call the payment service to process the refund through the original payment gateway
-	
+
 	// Commit transaction
 	if err := tx.Commit().Error; err != nil {
 		return nil, fmt.Errorf("failed to commit refund: %w", err)
 	}
-	
+
 	// Reload order with updated data
 	if err := sos.db.WithContext(ctx).First(&order, req.OrderID).Error; err != nil {
 		return nil, fmt.Errorf("failed to reload order: %w", err)
 	}
-	
+
 	return &order, nil
 }
 
@@ -1140,12 +1140,12 @@ type OrderStatistics struct {
 // GetOrderStatistics gets comprehensive order statistics
 func (sos *SubscriptionOrderService) GetOrderStatistics(ctx context.Context, req *GetOrderStatsRequest) (*OrderStatistics, error) {
 	query := sos.db.WithContext(ctx).Model(&entities.SubscriptionOrder{})
-	
+
 	// Apply date filtering based on period
 	if req.Period != "" && req.Period != "all" {
 		now := time.Now()
 		var startDate time.Time
-		
+
 		switch req.Period {
 		case "today":
 			startDate = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
@@ -1158,41 +1158,41 @@ func (sos *SubscriptionOrderService) GetOrderStatistics(ctx context.Context, req
 		case "year":
 			startDate = now.AddDate(-1, 0, 0)
 		}
-		
+
 		if !startDate.IsZero() {
 			query = query.Where("created_at >= ?", startDate)
 		}
 	}
-	
+
 	// Apply custom date range if provided
 	if req.StartDate != "" {
 		if startDate, err := time.Parse("2006-01-02", req.StartDate); err == nil {
 			query = query.Where("created_at >= ?", startDate)
 		}
 	}
-	
+
 	if req.EndDate != "" {
 		if endDate, err := time.Parse("2006-01-02", req.EndDate); err == nil {
 			endDate = endDate.Add(24 * time.Hour)
 			query = query.Where("created_at < ?", endDate)
 		}
 	}
-	
+
 	stats := &OrderStatistics{}
-	
+
 	// Get total orders
 	query.Count(&stats.TotalOrders)
-	
+
 	// Get orders by status
 	var statusCounts []struct {
 		Status string
 		Count  int64
 	}
-	
+
 	if err := query.Select("status, count(*) as count").Group("status").Find(&statusCounts).Error; err != nil {
 		return nil, fmt.Errorf("failed to get status counts: %w", err)
 	}
-	
+
 	for _, sc := range statusCounts {
 		switch sc.Status {
 		case entities.OrderStatusPending:
@@ -1207,31 +1207,31 @@ func (sos *SubscriptionOrderService) GetOrderStatistics(ctx context.Context, req
 			stats.RefundedOrders = sc.Count
 		}
 	}
-	
+
 	// Get revenue statistics
 	var revenueStats struct {
 		TotalRevenue  float64
 		TotalRefunded float64
 		AvgOrderValue float64
 	}
-	
+
 	if err := query.Select(
 		"COALESCE(SUM(CASE WHEN status = 'paid' THEN total_amount ELSE 0 END), 0) as total_revenue, " +
-		"COALESCE(SUM(refund_amount), 0) as total_refunded, " +
-		"COALESCE(AVG(CASE WHEN status = 'paid' THEN total_amount ELSE NULL END), 0) as avg_order_value",
+			"COALESCE(SUM(refund_amount), 0) as total_refunded, " +
+			"COALESCE(AVG(CASE WHEN status = 'paid' THEN total_amount ELSE NULL END), 0) as avg_order_value",
 	).Scan(&revenueStats).Error; err != nil {
 		return nil, fmt.Errorf("failed to get revenue stats: %w", err)
 	}
-	
+
 	stats.TotalRevenue = revenueStats.TotalRevenue
 	stats.TotalRefunded = revenueStats.TotalRefunded
 	stats.AvgOrderValue = revenueStats.AvgOrderValue
-	
+
 	// Calculate conversion rate (paid orders / total orders)
 	if stats.TotalOrders > 0 {
 		stats.ConversionRate = float64(stats.PaidOrders) / float64(stats.TotalOrders) * 100
 	}
-	
+
 	return stats, nil
 }
 
@@ -1263,10 +1263,10 @@ func (sos *SubscriptionOrderService) BulkUpdateOrders(ctx context.Context, req *
 		Successful: make([]uint, 0),
 		Failed:     make([]BulkUpdateFailure, 0),
 	}
-	
+
 	for _, orderID := range req.OrderIDs {
 		var err error
-		
+
 		switch req.Operation {
 		case "cancel":
 			_, err = sos.UpdateOrderStatus(ctx, orderID, entities.OrderStatusCancelled, req.ProcessedBy, req.Notes, req.Reason)
@@ -1290,7 +1290,7 @@ func (sos *SubscriptionOrderService) BulkUpdateOrders(ctx context.Context, req *
 		default:
 			err = fmt.Errorf("unsupported operation: %s", req.Operation)
 		}
-		
+
 		if err != nil {
 			result.Failed = append(result.Failed, BulkUpdateFailure{
 				OrderID: orderID,
@@ -1300,7 +1300,7 @@ func (sos *SubscriptionOrderService) BulkUpdateOrders(ctx context.Context, req *
 			result.Successful = append(result.Successful, orderID)
 		}
 	}
-	
+
 	// Generate summary
 	result.Summary = map[string]interface{}{
 		"total_processed": len(req.OrderIDs),
@@ -1308,7 +1308,7 @@ func (sos *SubscriptionOrderService) BulkUpdateOrders(ctx context.Context, req *
 		"failed":          len(result.Failed),
 		"operation":       req.Operation,
 	}
-	
+
 	return result, nil
 }
 
@@ -1317,45 +1317,45 @@ func (sos *SubscriptionOrderService) checkDuplicateOrders(ctx context.Context, u
 	// SECURITY: Check for pending orders with same plan and type
 	var pendingCount int64
 	if err := sos.db.WithContext(ctx).Model(&entities.SubscriptionOrder{}).
-		Where("user_id = ? AND subscription_plan_id = ? AND order_type = ? AND status IN (?)", 
+		Where("user_id = ? AND subscription_plan_id = ? AND order_type = ? AND status IN (?)",
 			userID, planID, orderType, []string{entities.OrderStatusPending}).
 		Count(&pendingCount).Error; err != nil {
 		return fmt.Errorf("failed to check pending orders: %w", err)
 	}
-	
+
 	if pendingCount > 0 {
 		return fmt.Errorf("you already have a pending order for this subscription plan")
 	}
-	
+
 	// SECURITY: Check for recent orders within cooldown period (5 minutes)
 	cooldownTime := time.Now().Add(-5 * time.Minute)
 	var recentCount int64
 	if err := sos.db.WithContext(ctx).Model(&entities.SubscriptionOrder{}).
-		Where("user_id = ? AND subscription_plan_id = ? AND order_type = ? AND created_at > ?", 
+		Where("user_id = ? AND subscription_plan_id = ? AND order_type = ? AND created_at > ?",
 			userID, planID, orderType, cooldownTime).
 		Count(&recentCount).Error; err != nil {
 		return fmt.Errorf("failed to check recent orders: %w", err)
 	}
-	
+
 	if recentCount >= 3 {
 		return fmt.Errorf("too many recent order attempts, please wait a few minutes before trying again")
 	}
-	
+
 	// SECURITY: For new subscriptions, check if user already has active subscription
 	if orderType == entities.OrderTypeNew {
 		var activeCount int64
 		if err := sos.db.WithContext(ctx).Model(&entities.UserSubscription{}).
-			Where("user_id = ? AND subscription_plan_id = ? AND status IN (?)", 
+			Where("user_id = ? AND subscription_plan_id = ? AND status IN (?)",
 				userID, planID, []string{entities.UserSubscriptionStatusActive, entities.UserSubscriptionStatusTrial}).
 			Count(&activeCount).Error; err != nil {
 			return fmt.Errorf("failed to check active subscriptions: %w", err)
 		}
-		
+
 		if activeCount > 0 {
 			return fmt.Errorf("you already have an active subscription for this plan")
 		}
 	}
-	
+
 	return nil
 }
 
@@ -1365,12 +1365,12 @@ func (sos *SubscriptionOrderService) checkRefundTimeWindow(order *entities.Subsc
 	if order.PaidAt == nil {
 		return fmt.Errorf("order has not been paid")
 	}
-	
+
 	// Allow refunds within 30 days of payment
 	refundDeadline := order.PaidAt.Add(30 * 24 * time.Hour)
 	if time.Now().After(refundDeadline) {
 		return fmt.Errorf("refund window has expired (30 days maximum)")
 	}
-	
+
 	return nil
 }

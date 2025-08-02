@@ -134,7 +134,7 @@ func (r *serverGroupRepository) UpdateStatus(ctx context.Context, id uint, isAct
 	// Note: Since the ServerGroup entity doesn't have an IsActive field,
 	// this method will just check if the group exists for now
 	// If needed, the IsActive field should be added to the entity
-	
+
 	var group entities.ServerGroup
 	if err := r.db.WithContext(ctx).First(&group, id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {

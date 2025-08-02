@@ -50,7 +50,7 @@ type UserRepository interface {
 	CountRecentSignups(ctx context.Context, days int) (int64, error)
 
 	// Batch operations
-	BatchDelete(ctx context.Context, ids []uint) (int, []uint, error) // returns (deletedCount, failedIDs, error)
+	BatchDelete(ctx context.Context, ids []uint) (int, []uint, error)  // returns (deletedCount, failedIDs, error)
 	BatchRestore(ctx context.Context, ids []uint) (int, []uint, error) // returns (restoredCount, failedIDs, error)
 
 	// Existence checks

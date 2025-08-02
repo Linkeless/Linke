@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"linke/internal/shared/logger"
 	"linke/internal/domains/payment/entities"
+	"linke/internal/shared/logger"
 
 	"gorm.io/gorm"
 )
@@ -26,6 +26,11 @@ type PaymentGateway interface {
 	GetPaymentMethodName(method string) string
 	ValidateConfig() error
 	TestConnection() error
+}
+
+// SubscriptionOrderServiceInterface defines the interface for subscription order service
+type SubscriptionOrderServiceInterface interface {
+	ProcessOrderPaymentSuccess(ctx context.Context, orderID uint) error
 }
 
 // PaymentService represents the unified payment service
@@ -47,28 +52,28 @@ func NewPaymentService(db *gorm.DB) *PaymentService {
 type CreatePaymentOrderRequest struct {
 	UserID              uint    `json:"user_id"`
 	SubscriptionOrderID *uint   `json:"subscription_order_id,omitempty"`
-	Gateway             string  `json:"gateway"`             // epay, epusdt
-	PaymentMethod       string  `json:"payment_method"`      // alipay, wechat, usdt, etc.
-	Amount              float64 `json:"amount"`              // Amount in specified currency
-	Currency            string  `json:"currency"`            // CNY, USD, USDT
-	Subject             string  `json:"subject"`             // Order subject
-	Body                string  `json:"body"`                // Order description
-	ClientIP            string  `json:"client_ip"`           // Client IP
-	NotifyURL           string  `json:"notify_url"`          // Async notification URL
-	ReturnURL           string  `json:"return_url"`          // Sync return URL
-	ExpiredMinutes      int     `json:"expired_minutes"`     // Expiration time in minutes
-	Metadata            string  `json:"metadata,omitempty"`  // Additional metadata
+	Gateway             string  `json:"gateway"`            // epay, epusdt
+	PaymentMethod       string  `json:"payment_method"`     // alipay, wechat, usdt, etc.
+	Amount              float64 `json:"amount"`             // Amount in specified currency
+	Currency            string  `json:"currency"`           // CNY, USD, USDT
+	Subject             string  `json:"subject"`            // Order subject
+	Body                string  `json:"body"`               // Order description
+	ClientIP            string  `json:"client_ip"`          // Client IP
+	NotifyURL           string  `json:"notify_url"`         // Async notification URL
+	ReturnURL           string  `json:"return_url"`         // Sync return URL
+	ExpiredMinutes      int     `json:"expired_minutes"`    // Expiration time in minutes
+	Metadata            string  `json:"metadata,omitempty"` // Additional metadata
 }
 
 // CreatePaymentOrderResponse represents the unified response from payment order creation
 type CreatePaymentOrderResponse struct {
-	PaymentNo    string    `json:"payment_no"`              // Internal payment number
-	PaymentURL   string    `json:"payment_url"`             // Payment URL
-	QRCodeURL    string    `json:"qr_code_url"`             // QR code URL
-	Amount       float64   `json:"amount"`                  // Payment amount
-	Currency     string    `json:"currency"`                // Currency
-	ExpiredAt    time.Time `json:"expired_at"`              // Expiration time
-	GatewayData  string    `json:"gateway_data,omitempty"`  // Raw gateway response
+	PaymentNo   string    `json:"payment_no"`             // Internal payment number
+	PaymentURL  string    `json:"payment_url"`            // Payment URL
+	QRCodeURL   string    `json:"qr_code_url"`            // QR code URL
+	Amount      float64   `json:"amount"`                 // Payment amount
+	Currency    string    `json:"currency"`               // Currency
+	ExpiredAt   time.Time `json:"expired_at"`             // Expiration time
+	GatewayData string    `json:"gateway_data,omitempty"` // Raw gateway response
 }
 
 // QueryPaymentOrderResponse represents the unified response from payment order query
@@ -115,23 +120,23 @@ func (ps *PaymentService) GeneratePaymentNo() (string, error) {
 	// Generate format: PAY + YYYYMMDD + 8-digit random hex
 	now := time.Now()
 	dateStr := now.Format("20060102")
-	
+
 	// Generate 4 random bytes (8 hex characters)
 	randomBytes := make([]byte, 4)
 	if _, err := rand.Read(randomBytes); err != nil {
 		return "", fmt.Errorf("failed to generate random bytes: %w", err)
 	}
-	
+
 	randomStr := strings.ToUpper(hex.EncodeToString(randomBytes))
 	paymentNo := fmt.Sprintf("PAY%s%s", dateStr, randomStr)
-	
+
 	// Check if already exists (very unlikely but possible)
 	var existingRecord entities.PaymentRecord
 	if err := ps.db.Where("payment_no = ?", paymentNo).First(&existingRecord).Error; err == nil {
 		// Payment number exists, try again (recursive call)
 		return ps.GeneratePaymentNo()
 	}
-	
+
 	return paymentNo, nil
 }
 
@@ -260,9 +265,9 @@ func (ps *PaymentService) GetPaymentRecordByOutTradeNo(ctx context.Context, outT
 // UpdatePaymentStatus updates payment record status
 func (ps *PaymentService) UpdatePaymentStatus(ctx context.Context, paymentNo string, status string, transactionID string, paidAt *time.Time) error {
 	updates := map[string]interface{}{
-		"status":       status,
-		"updated_at":   time.Now(),
-		"notified_at":  time.Now(),
+		"status":      status,
+		"updated_at":  time.Now(),
+		"notified_at": time.Now(),
 	}
 
 	if transactionID != "" {
@@ -320,7 +325,7 @@ func (ps *PaymentService) ProcessNotification(ctx context.Context, gateway strin
 	}
 
 	// SECURITY: Check for status downgrade attempts
-	if paymentRecord.Status == entities.PaymentRecordStatusCompleted && 
+	if paymentRecord.Status == entities.PaymentRecordStatusCompleted &&
 		!gatewayInstance.IsPaymentCompleted(notifyData.Status) {
 		logger.Warn("Attempted status downgrade from completed, ignoring",
 			logger.String("payment_no", paymentRecord.PaymentNo),
@@ -350,7 +355,7 @@ func (ps *PaymentService) ProcessNotification(ctx context.Context, gateway strin
 		updateFields["status"] = entities.PaymentRecordStatusCompleted
 		updateFields["transaction_id"] = notifyData.TransactionID
 		updateFields["paid_at"] = &paidAt
-		
+
 		if err := ps.db.WithContext(ctx).Model(paymentRecord).Updates(updateFields).Error; err != nil {
 			return fmt.Errorf("failed to update payment status: %w", err)
 		}
@@ -374,7 +379,7 @@ func (ps *PaymentService) ProcessNotification(ctx context.Context, gateway strin
 
 		updateFields["status"] = status
 		updateFields["transaction_id"] = notifyData.TransactionID
-		
+
 		if err := ps.db.WithContext(ctx).Model(paymentRecord).Updates(updateFields).Error; err != nil {
 			return fmt.Errorf("failed to update payment status: %w", err)
 		}
@@ -386,11 +391,6 @@ func (ps *PaymentService) ProcessNotification(ctx context.Context, gateway strin
 // SetSubscriptionOrderService sets the subscription order service for payment processing
 func (ps *PaymentService) SetSubscriptionOrderService(subscriptionOrderService SubscriptionOrderServiceInterface) {
 	ps.subscriptionOrderService = subscriptionOrderService
-}
-
-// SubscriptionOrderServiceInterface defines the interface for subscription order service
-type SubscriptionOrderServiceInterface interface {
-	ProcessOrderPaymentSuccess(ctx context.Context, orderID uint) error
 }
 
 // processOrderCompletion processes the completion of an order after successful payment
@@ -405,7 +405,7 @@ func (ps *PaymentService) processOrderCompletion(ctx context.Context, paymentRec
 		} else {
 			// TODO: Update subscription order status through subscription service interface
 			// This should be handled by the subscription domain, not payment domain
-			logger.Info("Payment completed for subscription order", 
+			logger.Info("Payment completed for subscription order",
 				logger.Uint("order_id", *paymentRecord.SubscriptionOrderID),
 				logger.String("payment_no", paymentRecord.PaymentNo))
 		}
@@ -452,11 +452,11 @@ func (ps *PaymentService) GetUserPaymentRecords(ctx context.Context, userID uint
 // GetAvailablePaymentMethods gets available payment methods
 func (ps *PaymentService) GetAvailablePaymentMethods(ctx context.Context) (map[string][]string, error) {
 	methods := make(map[string][]string)
-	
+
 	for gatewayName, gateway := range ps.gateways {
 		methods[gatewayName] = gateway.GetSupportedPaymentMethods()
 	}
-	
+
 	return methods, nil
 }
 
@@ -476,12 +476,12 @@ func (ps *PaymentService) generateNotificationHash(data map[string]interface{}) 
 			}
 		}
 	}
-	
+
 	var hashContent string
 	for _, key := range keys {
 		hashContent += key + ":" + fmt.Sprintf("%v", data[key]) + "|"
 	}
-	
+
 	// Generate SHA256 hash
 	h := sha256.Sum256([]byte(hashContent))
 	return fmt.Sprintf("%x", h)

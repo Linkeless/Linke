@@ -24,7 +24,7 @@ func (cl *ConfigLoader) LoadFromFile(path string) (*Config, error) {
 	if path != "" {
 		os.Setenv("ENV_FILE", path)
 	}
-	
+
 	return LoadConfig(), nil
 }
 
@@ -111,7 +111,7 @@ func SetConfigForTesting() *Config {
 	os.Setenv("DB_HOST", "localhost")
 	os.Setenv("DB_NAME", "linke_test")
 	os.Setenv("REDIS_HOST", "localhost")
-	
+
 	return LoadConfig()
 }
 
@@ -120,10 +120,10 @@ func ClearTestingConfig() {
 	testVars := []string{
 		"JWT_SECRET",
 		"DB_HOST",
-		"DB_NAME", 
+		"DB_NAME",
 		"REDIS_HOST",
 	}
-	
+
 	for _, variable := range testVars {
 		os.Unsetenv(variable)
 	}

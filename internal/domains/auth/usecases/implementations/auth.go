@@ -8,31 +8,30 @@ import (
 	"strings"
 	"time"
 
-	"linke/internal/shared/logger"
-	"linke/internal/domains/auth/usecases/interfaces"
-	userEntities "linke/internal/domains/user/entities"
 	authEntities "linke/internal/domains/auth/entities"
+	"linke/internal/domains/auth/usecases/interfaces"
 	referralEntities "linke/internal/domains/referral/entities"
+	userEntities "linke/internal/domains/user/entities"
+	"linke/internal/shared/logger"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
 type AuthService struct {
-	db                  *gorm.DB
-	userService         interfaces.UserService
-	jwtService          interfaces.JWTService
-	inviteCodeService   interfaces.InviteCodeService
+	db                   *gorm.DB
+	userService          interfaces.UserService
+	jwtService           interfaces.JWTService
+	inviteCodeService    interfaces.InviteCodeService
 	loginSecurityService interfaces.LoginSecurityService
 }
 
-
 func NewAuthService(db *gorm.DB, userService interfaces.UserService, jwtService interfaces.JWTService, inviteCodeService interfaces.InviteCodeService, loginSecurityService interfaces.LoginSecurityService) *AuthService {
 	return &AuthService{
-		db:                  db,
-		userService:         userService,
-		jwtService:          jwtService,
-		inviteCodeService:   inviteCodeService,
+		db:                   db,
+		userService:          userService,
+		jwtService:           jwtService,
+		inviteCodeService:    inviteCodeService,
 		loginSecurityService: loginSecurityService,
 	}
 }
@@ -70,10 +69,10 @@ func (a *AuthService) Register(ctx context.Context, req *interfaces.RegisterRequ
 	// Generate username and name from email
 	emailParts := strings.Split(req.Email, "@")
 	baseUsername := emailParts[0]
-	
+
 	// Generate a unique username by adding random numbers if needed
 	username := a.generateUniqueUsername(ctx, baseUsername)
-	
+
 	// Generate name from email (capitalize first letter of username)
 	name := baseUsername
 	if len(baseUsername) > 0 {
@@ -109,7 +108,7 @@ func (a *AuthService) Register(ctx context.Context, req *interfaces.RegisterRequ
 		// Get IP address and user agent from context (can be enhanced later)
 		ipAddress := "unknown"
 		userAgent := "unknown"
-		
+
 		_, err := a.inviteCodeService.UseInviteCode(ctx, inviteCode.Code, user.ID, ipAddress, userAgent)
 		if err != nil {
 			logger.Error("Failed to use invite code during registration",
@@ -176,11 +175,11 @@ func (a *AuthService) Login(ctx context.Context, req *interfaces.LoginRequest) (
 				logger.String("email", req.Email),
 				logger.String("ip", ip),
 				logger.Duration("remaining_lock_time", lockout.GetRemainingLockTime()))
-			
+
 			// Record the failed attempt
 			a.recordLoginAttempt(ctx, req.Email, ip, userAgent, authEntities.LoginFailureAccountLocked, false, nil)
-			
-			return nil, fmt.Errorf("account is temporarily locked due to multiple failed login attempts. Please try again in %v", 
+
+			return nil, fmt.Errorf("account is temporarily locked due to multiple failed login attempts. Please try again in %v",
 				lockout.GetRemainingLockTime().Round(time.Minute))
 		}
 	}
@@ -191,10 +190,10 @@ func (a *AuthService) Login(ctx context.Context, req *interfaces.LoginRequest) (
 		logger.Warn("Login attempt with non-existent email",
 			logger.String("email", req.Email),
 			logger.String("ip", ip))
-		
+
 		// Record failed attempt
 		a.recordLoginAttempt(ctx, req.Email, ip, userAgent, authEntities.LoginFailureUserNotFound, false, nil)
-		
+
 		return nil, fmt.Errorf("invalid email or password")
 	}
 
@@ -204,10 +203,10 @@ func (a *AuthService) Login(ctx context.Context, req *interfaces.LoginRequest) (
 			logger.String("email", req.Email),
 			logger.String("provider", user.Provider),
 			logger.String("ip", ip))
-		
+
 		// Record failed attempt
 		a.recordLoginAttempt(ctx, req.Email, ip, userAgent, authEntities.LoginFailureOAuthMismatch, false, &user.ID)
-		
+
 		return nil, fmt.Errorf("this account uses %s authentication. Please use the appropriate login method", user.Provider)
 	}
 
@@ -227,10 +226,10 @@ func (a *AuthService) Login(ctx context.Context, req *interfaces.LoginRequest) (
 			logger.String("email", req.Email),
 			logger.String("status", user.Status),
 			logger.String("ip", ip))
-		
+
 		// Record failed attempt
 		a.recordLoginAttempt(ctx, req.Email, ip, userAgent, reason, false, &user.ID)
-		
+
 		return nil, fmt.Errorf("account is %s. Please contact support", user.Status)
 	}
 
@@ -240,10 +239,10 @@ func (a *AuthService) Login(ctx context.Context, req *interfaces.LoginRequest) (
 			logger.String("email", req.Email),
 			logger.String("ip", ip),
 			logger.Uint("user_id", user.ID))
-		
+
 		// Record failed attempt
 		a.recordLoginAttempt(ctx, req.Email, ip, userAgent, authEntities.LoginFailureInvalidCredentials, false, &user.ID)
-		
+
 		return nil, fmt.Errorf("invalid email or password")
 	}
 
@@ -414,32 +413,32 @@ func (a *AuthService) ValidateToken(tokenString string) (*userEntities.User, err
 func (a *AuthService) generateUniqueUsername(ctx context.Context, baseUsername string) string {
 	// Initialize random seed
 	rand.Seed(time.Now().UnixNano())
-	
+
 	// Clean the base username (remove special characters, convert to lowercase)
 	baseUsername = strings.ToLower(strings.ReplaceAll(baseUsername, ".", ""))
 	baseUsername = strings.ReplaceAll(baseUsername, "+", "")
 	baseUsername = strings.ReplaceAll(baseUsername, "_", "")
-	
+
 	// If base username is too short, pad it
 	if len(baseUsername) < 3 {
 		baseUsername = baseUsername + "user"
 	}
-	
+
 	// Try the base username first
 	if !a.usernameExists(ctx, baseUsername) {
 		return baseUsername
 	}
-	
+
 	// If base username exists, try with random numbers
 	for attempts := 0; attempts < 10; attempts++ {
 		randomNum := rand.Intn(9999) + 1 // 1-9999
 		candidate := baseUsername + strconv.Itoa(randomNum)
-		
+
 		if !a.usernameExists(ctx, candidate) {
 			return candidate
 		}
 	}
-	
+
 	// If all attempts failed, use timestamp
 	timestamp := time.Now().Unix()
 	return baseUsername + strconv.FormatInt(timestamp, 10)

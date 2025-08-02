@@ -773,7 +773,7 @@ func (r *paymentConfigRepository) ListActive(ctx context.Context, limit, offset 
 func (r *paymentConfigRepository) GetEnabledByCurrency(ctx context.Context, currency string) ([]*entities.PaymentConfig, error) {
 	var configs []*entities.PaymentConfig
 	if err := r.db.WithContext(ctx).
-		Where("is_enabled = ? AND (supported_currencies = ? OR supported_currencies = 'ALL' OR supported_currencies = '*')", 
+		Where("is_enabled = ? AND (supported_currencies = ? OR supported_currencies = 'ALL' OR supported_currencies = '*')",
 			true, currency).
 		Order("sort_order ASC").Find(&configs).Error; err != nil {
 		logger.Error("Failed to get enabled payment configs by currency",
@@ -789,7 +789,7 @@ func (r *paymentConfigRepository) GetEnabledByCurrency(ctx context.Context, curr
 func (r *paymentConfigRepository) GetAvailableForPayment(ctx context.Context, currency string, amount float64) ([]*entities.PaymentConfig, error) {
 	var configs []*entities.PaymentConfig
 	if err := r.db.WithContext(ctx).
-		Where("is_enabled = ? AND (supported_currencies = ? OR supported_currencies = 'ALL' OR supported_currencies = '*') AND min_amount <= ? AND max_amount >= ?", 
+		Where("is_enabled = ? AND (supported_currencies = ? OR supported_currencies = 'ALL' OR supported_currencies = '*') AND min_amount <= ? AND max_amount >= ?",
 			true, currency, amount, amount).
 		Order("sort_order ASC").Find(&configs).Error; err != nil {
 		logger.Error("Failed to get available payment configs",
@@ -887,7 +887,7 @@ func (r *paymentRecordRepository) BatchDelete(ctx context.Context, ids []uint) (
 	return successCount, failedIDs, nil
 }
 
-// BatchDelete deletes multiple payment configs by IDs  
+// BatchDelete deletes multiple payment configs by IDs
 func (r *paymentConfigRepository) BatchDelete(ctx context.Context, ids []uint) (int, []uint, error) {
 	if len(ids) == 0 {
 		return 0, nil, nil
@@ -1115,7 +1115,7 @@ func (r *paymentConfigRepository) ExportConfigs(ctx context.Context) ([]*entitie
 func (r *paymentConfigRepository) GetConfigsForAmount(ctx context.Context, amount float64, currency string) ([]*entities.PaymentConfig, error) {
 	var configs []*entities.PaymentConfig
 	if err := r.db.WithContext(ctx).
-		Where("is_enabled = ? AND (supported_currencies = ? OR supported_currencies = 'ALL' OR supported_currencies = '*') AND min_amount <= ? AND max_amount >= ?", 
+		Where("is_enabled = ? AND (supported_currencies = ? OR supported_currencies = 'ALL' OR supported_currencies = '*') AND min_amount <= ? AND max_amount >= ?",
 			true, currency, amount, amount).
 		Order("sort_order ASC").Find(&configs).Error; err != nil {
 		logger.Error("Failed to get configs for amount",
@@ -1211,7 +1211,7 @@ func (r *paymentRecordRepository) ListRefundablePayments(ctx context.Context, li
 
 // ListByCurrency lists payment records by currency
 func (r *paymentRecordRepository) ListByCurrency(ctx context.Context, currency string, limit, offset int) ([]*entities.PaymentRecord, int64, error) {
-	var payments []*entities.PaymentRecord  
+	var payments []*entities.PaymentRecord
 	var total int64
 	if err := r.db.WithContext(ctx).Model(&entities.PaymentRecord{}).Where("currency = ?", currency).Count(&total).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to count payments by currency: %w", err)
@@ -1338,7 +1338,7 @@ func (r *paymentRecordRepository) GetDailyRevenue(ctx context.Context, currency 
 
 // GetMonthlyRevenue gets monthly revenue data
 func (r *paymentRecordRepository) GetMonthlyRevenue(ctx context.Context, currency string, months int) (map[string]float64, error) {
-	// TODO: Implement monthly revenue aggregation  
+	// TODO: Implement monthly revenue aggregation
 	return make(map[string]float64), fmt.Errorf("GetMonthlyRevenue not implemented")
 }
 
@@ -1351,7 +1351,7 @@ func (r *paymentRecordRepository) ListByAmountRange(ctx context.Context, minAmou
 	if err := r.db.WithContext(ctx).Model(&entities.PaymentRecord{}).Where(condition, args...).Count(&total).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to count payments by amount range: %w", err)
 	}
-	if err := r.db.WithContext(ctx).Where(condition, args...).Limit(limit).Offset(offset).Find(&payments).Error; err != nil {  
+	if err := r.db.WithContext(ctx).Where(condition, args...).Limit(limit).Offset(offset).Find(&payments).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to list payments by amount range: %w", err)
 	}
 	return payments, total, nil
@@ -1431,7 +1431,7 @@ func (r *paymentRecordRepository) HasRecentPayment(ctx context.Context, userID u
 		return false, fmt.Errorf("failed to check recent payment: %w", err)
 	}
 	return count > 0, nil
-}// Additional missing methods for PaymentConfigRepository
+} // Additional missing methods for PaymentConfigRepository
 
 // Update updates a payment config
 func (r *paymentConfigRepository) Update(ctx context.Context, config *entities.PaymentConfig) error {
@@ -1749,12 +1749,12 @@ func (r *paymentConfigRepository) GetMethodStats(ctx context.Context) (map[strin
 // GetGatewayStats gets gateway statistics
 func (r *paymentConfigRepository) GetGatewayStats(ctx context.Context) (map[string]int64, error) {
 	var result map[string]int64 = make(map[string]int64)
-	
+
 	type GatewayCount struct {
 		Gateway string
 		Count   int64
 	}
-	
+
 	var gatewayCounts []GatewayCount
 	if err := r.db.WithContext(ctx).Model(&entities.PaymentConfig{}).
 		Select("gateway, COUNT(*) as count").
@@ -1762,11 +1762,11 @@ func (r *paymentConfigRepository) GetGatewayStats(ctx context.Context) (map[stri
 		Scan(&gatewayCounts).Error; err != nil {
 		return nil, fmt.Errorf("failed to get gateway stats: %w", err)
 	}
-	
+
 	for _, gc := range gatewayCounts {
 		result[gc.Gateway] = gc.Count
 	}
-	
+
 	return result, nil
 }
 
@@ -1812,6 +1812,6 @@ func (r *paymentConfigRepository) GetProductionConfigs(ctx context.Context) ([]*
 
 // GetTestConfigs gets test configs
 func (r *paymentConfigRepository) GetTestConfigs(ctx context.Context) ([]*entities.PaymentConfig, error) {
-	// TODO: Implement based on environment field  
+	// TODO: Implement based on environment field
 	return nil, fmt.Errorf("GetTestConfigs not implemented")
 }

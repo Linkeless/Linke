@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"linke/internal/shared/logger"
 	"linke/internal/domains/payment/entities"
+	"linke/internal/shared/logger"
 
 	"gorm.io/gorm"
 )
@@ -29,7 +29,7 @@ type CreatePaymentConfigRequest struct {
 	IsEnabled           *bool             `json:"is_enabled,omitempty" example:"true"`
 	SortOrder           int               `json:"sort_order,omitempty" example:"1"`
 	SupportedCurrencies string            `json:"supported_currencies,omitempty" example:"CNY"`
-	Methods             []entities.Method    `json:"methods,omitempty"`
+	Methods             []entities.Method `json:"methods,omitempty"`
 	MinAmount           float64           `json:"min_amount,omitempty" example:"0.01"`
 	MaxAmount           float64           `json:"max_amount,omitempty" example:"99999.99"`
 	FixedFee            float64           `json:"fixed_fee,omitempty" example:"0.00"`
@@ -43,7 +43,7 @@ type UpdatePaymentConfigRequest struct {
 	IsEnabled           *bool             `json:"is_enabled,omitempty" example:"true"`
 	SortOrder           *int              `json:"sort_order,omitempty" example:"1"`
 	SupportedCurrencies *string           `json:"supported_currencies,omitempty" example:"CNY"`
-	Methods             []entities.Method    `json:"methods,omitempty"`
+	Methods             []entities.Method `json:"methods,omitempty"`
 	MinAmount           *float64          `json:"min_amount,omitempty" example:"0.01"`
 	MaxAmount           *float64          `json:"max_amount,omitempty" example:"99999.99"`
 	FixedFee            *float64          `json:"fixed_fee,omitempty" example:"0.00"`
@@ -52,10 +52,10 @@ type UpdatePaymentConfigRequest struct {
 
 // GetPaymentConfigsRequest represents the request to get payment configs
 type GetPaymentConfigsRequest struct {
-	Gateway     string `form:"gateway,omitempty" example:"epay"`
-	IsEnabled   *bool  `form:"is_enabled,omitempty" example:"true"`
-	Limit       int    `form:"limit,omitempty" example:"10"`
-	Offset      int    `form:"offset,omitempty" example:"0"`
+	Gateway   string `form:"gateway,omitempty" example:"epay"`
+	IsEnabled *bool  `form:"is_enabled,omitempty" example:"true"`
+	Limit     int    `form:"limit,omitempty" example:"10"`
+	Offset    int    `form:"offset,omitempty" example:"0"`
 }
 
 // CreatePaymentConfig creates a new payment config
@@ -321,8 +321,8 @@ func (pcs *PaymentConfigService) TogglePaymentConfig(ctx context.Context, config
 	}
 
 	config.IsEnabled = newStatus
-	logger.Info("Payment config status toggled", 
-		logger.Uint("config_id", configID), 
+	logger.Info("Payment config status toggled",
+		logger.Uint("config_id", configID),
 		logger.Any("enabled", newStatus))
 
 	return config, nil

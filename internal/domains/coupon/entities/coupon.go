@@ -15,35 +15,35 @@ type Coupon struct {
 	ID uint64 `json:"id" gorm:"primaryKey"`
 
 	// Core Fields
-	Code        string  `json:"code" gorm:"uniqueIndex;size:50;not null"`               // 优惠券代码
-	Name        string  `json:"name" gorm:"size:100;not null;index"`                   // 优惠券名称
-	Description string  `json:"description" gorm:"type:text"`                          // 描述
-	Type        string  `json:"type" gorm:"size:20;not null;index"`                    // percentage, fixed_amount
-	Value       float64 `json:"value" gorm:"type:decimal(10,2);not null"`              // 折扣值
+	Code        string  `json:"code" gorm:"uniqueIndex;size:50;not null"` // 优惠券代码
+	Name        string  `json:"name" gorm:"size:100;not null;index"`      // 优惠券名称
+	Description string  `json:"description" gorm:"type:text"`             // 描述
+	Type        string  `json:"type" gorm:"size:20;not null;index"`       // percentage, fixed_amount
+	Value       float64 `json:"value" gorm:"type:decimal(10,2);not null"` // 折扣值
 
 	// Usage Limits
-	MaxUses         int `json:"max_uses" gorm:"not null;default:1"`                    // 最大使用次数 (0 = 无限制)
-	UsedCount       int `json:"used_count" gorm:"not null;default:0"`                  // 已使用次数
-	MaxUsesPerUser  int `json:"max_uses_per_user" gorm:"not null;default:1"`           // 每用户最大使用次数
-	
+	MaxUses        int `json:"max_uses" gorm:"not null;default:1"`          // 最大使用次数 (0 = 无限制)
+	UsedCount      int `json:"used_count" gorm:"not null;default:0"`        // 已使用次数
+	MaxUsesPerUser int `json:"max_uses_per_user" gorm:"not null;default:1"` // 每用户最大使用次数
+
 	// Minimum Order Requirements
 	MinOrderAmount float64 `json:"min_order_amount" gorm:"type:decimal(10,2);default:0"` // 最小订单金额
 	Currency       string  `json:"currency" gorm:"size:3;not null;default:'USD'"`        // 货币
 
 	// Validity Period
-	ValidFrom  *time.Time `json:"valid_from,omitempty" gorm:"index"`                   // 生效时间
-	ValidUntil *time.Time `json:"valid_until,omitempty" gorm:"index"`                 // 失效时间
+	ValidFrom  *time.Time `json:"valid_from,omitempty" gorm:"index"`  // 生效时间
+	ValidUntil *time.Time `json:"valid_until,omitempty" gorm:"index"` // 失效时间
 
 	// Applicable Plans (JSON array of plan IDs, empty means all plans)
-	ApplicablePlans string `json:"applicable_plans,omitempty" gorm:"type:text"`        // JSON格式的适用套餐ID列表
+	ApplicablePlans string `json:"applicable_plans,omitempty" gorm:"type:text"` // JSON格式的适用套餐ID列表
 
 	// Status & Visibility
-	Status    string `json:"status" gorm:"size:20;not null;default:'active';index"`  // active, inactive, expired
-	IsPublic  bool   `json:"is_public" gorm:"not null;default:false"`                // 是否允许在用户界面显示（仍需通过安全渠道获取）
-	CreatedBy uint64 `json:"created_by" gorm:"not null;index"`                       // 创建者ID
+	Status    string `json:"status" gorm:"size:20;not null;default:'active';index"` // active, inactive, expired
+	IsPublic  bool   `json:"is_public" gorm:"not null;default:false"`               // 是否允许在用户界面显示（仍需通过安全渠道获取）
+	CreatedBy uint64 `json:"created_by" gorm:"not null;index"`                      // 创建者ID
 
 	// Metadata
-	Metadata string `json:"metadata,omitempty" gorm:"type:text"`                     // 额外元数据(JSON)
+	Metadata string `json:"metadata,omitempty" gorm:"type:text"` // 额外元数据(JSON)
 
 	// Timestamp Fields
 	CreatedAt time.Time      `json:"created_at" gorm:"not null;index"`
@@ -187,24 +187,24 @@ func (CouponUsage) TableName() string {
 
 // CouponResponse represents the coupon data structure for API responses
 type CouponResponse struct {
-	ID              uint64     `json:"id" example:"1"`                          // Coupon ID
-	Code            string     `json:"code" example:"SAVE20"`                   // Coupon code
-	Name            string     `json:"name" example:"20% Off"`                  // Coupon name
-	Description     string     `json:"description" example:"Save 20% on any plan"` // Description
-	Type            string     `json:"type" example:"percentage"`               // Discount type
-	Value           float64    `json:"value" example:"20"`                      // Discount value
-	MaxUses         int        `json:"max_uses" example:"100"`                  // Maximum uses
-	UsedCount       int        `json:"used_count" example:"15"`                 // Used count
-	MaxUsesPerUser  int        `json:"max_uses_per_user" example:"1"`           // Max uses per user
-	MinOrderAmount  float64    `json:"min_order_amount" example:"10"`           // Minimum order amount
-	Currency        string     `json:"currency" example:"USD"`                  // Currency
-	ValidFrom       *time.Time `json:"valid_from,omitempty" example:"2024-01-01T00:00:00Z"` // Valid from
+	ID              uint64     `json:"id" example:"1"`                                       // Coupon ID
+	Code            string     `json:"code" example:"SAVE20"`                                // Coupon code
+	Name            string     `json:"name" example:"20% Off"`                               // Coupon name
+	Description     string     `json:"description" example:"Save 20% on any plan"`           // Description
+	Type            string     `json:"type" example:"percentage"`                            // Discount type
+	Value           float64    `json:"value" example:"20"`                                   // Discount value
+	MaxUses         int        `json:"max_uses" example:"100"`                               // Maximum uses
+	UsedCount       int        `json:"used_count" example:"15"`                              // Used count
+	MaxUsesPerUser  int        `json:"max_uses_per_user" example:"1"`                        // Max uses per user
+	MinOrderAmount  float64    `json:"min_order_amount" example:"10"`                        // Minimum order amount
+	Currency        string     `json:"currency" example:"USD"`                               // Currency
+	ValidFrom       *time.Time `json:"valid_from,omitempty" example:"2024-01-01T00:00:00Z"`  // Valid from
 	ValidUntil      *time.Time `json:"valid_until,omitempty" example:"2024-12-31T23:59:59Z"` // Valid until
-	ApplicablePlans string     `json:"applicable_plans,omitempty"`              // Applicable plans
-	Status          string     `json:"status" example:"active"`                 // Status
-	IsPublic        bool       `json:"is_public" example:"true"`                // Public visibility
-	CreatedAt       time.Time  `json:"created_at" example:"2024-01-01T00:00:00Z"` // Creation time
-	UpdatedAt       time.Time  `json:"updated_at" example:"2024-01-01T00:00:00Z"` // Update time
+	ApplicablePlans string     `json:"applicable_plans,omitempty"`                           // Applicable plans
+	Status          string     `json:"status" example:"active"`                              // Status
+	IsPublic        bool       `json:"is_public" example:"true"`                             // Public visibility
+	CreatedAt       time.Time  `json:"created_at" example:"2024-01-01T00:00:00Z"`            // Creation time
+	UpdatedAt       time.Time  `json:"updated_at" example:"2024-01-01T00:00:00Z"`            // Update time
 }
 
 // ToResponse converts Coupon to CouponResponse
@@ -250,20 +250,20 @@ func (c *Coupon) ToPublicResponse() *CouponResponse {
 
 // CouponUsageResponse represents the coupon usage data structure for API responses
 type CouponUsageResponse struct {
-	ID                  uint64                    `json:"id" example:"1"`                                    // Usage ID
-	CouponID            uint64                    `json:"coupon_id" example:"1"`                             // Coupon ID
-	UserID              uint64                    `json:"user_id" example:"1"`                               // User ID
-	SubscriptionOrderID uint64                    `json:"subscription_order_id" example:"1"`                // Order ID
-	DiscountAmount      float64                   `json:"discount_amount" example:"5.99"`                   // Discount amount
-	OrderAmount         float64                   `json:"order_amount" example:"29.99"`                     // Original order amount
-	Currency            string                    `json:"currency" example:"USD"`                            // Currency
-	CreatedAt           time.Time                 `json:"created_at" example:"2024-01-01T00:00:00Z"`        // Creation time
-	UpdatedAt           time.Time                 `json:"updated_at" example:"2024-01-01T00:00:00Z"`        // Update time
-	
+	ID                  uint64    `json:"id" example:"1"`                            // Usage ID
+	CouponID            uint64    `json:"coupon_id" example:"1"`                     // Coupon ID
+	UserID              uint64    `json:"user_id" example:"1"`                       // User ID
+	SubscriptionOrderID uint64    `json:"subscription_order_id" example:"1"`         // Order ID
+	DiscountAmount      float64   `json:"discount_amount" example:"5.99"`            // Discount amount
+	OrderAmount         float64   `json:"order_amount" example:"29.99"`              // Original order amount
+	Currency            string    `json:"currency" example:"USD"`                    // Currency
+	CreatedAt           time.Time `json:"created_at" example:"2024-01-01T00:00:00Z"` // Creation time
+	UpdatedAt           time.Time `json:"updated_at" example:"2024-01-01T00:00:00Z"` // Update time
+
 	// Related data (to be populated at application layer)
-	Coupon            *CouponResponse                   `json:"coupon,omitempty"`             // Coupon info
-	User              *dto.UserBasicDTO                 `json:"user,omitempty"`               // User info
-	SubscriptionOrder *dto.SubscriptionOrderBasicDTO  `json:"subscription_order,omitempty"` // Order info
+	Coupon            *CouponResponse                `json:"coupon,omitempty"`             // Coupon info
+	User              *dto.UserBasicDTO              `json:"user,omitempty"`               // User info
+	SubscriptionOrder *dto.SubscriptionOrderBasicDTO `json:"subscription_order,omitempty"` // Order info
 }
 
 // ToResponse converts CouponUsage to CouponUsageResponse

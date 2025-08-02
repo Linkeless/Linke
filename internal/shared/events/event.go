@@ -24,13 +24,13 @@ type Event interface {
 
 // BaseEvent provides a basic implementation of Event interface
 type BaseEvent struct {
-	ID        string      `json:"id"`
-	Type      string      `json:"type"`
-	Source    string      `json:"source"`
-	Time      time.Time   `json:"time"`
-	Version   string      `json:"version"`
-	Data      interface{} `json:"data"`
-	Metadata  map[string]interface{} `json:"metadata,omitempty"`
+	ID       string                 `json:"id"`
+	Type     string                 `json:"type"`
+	Source   string                 `json:"source"`
+	Time     time.Time              `json:"time"`
+	Version  string                 `json:"version"`
+	Data     interface{}            `json:"data"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
 func (e *BaseEvent) EventType() string {

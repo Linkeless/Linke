@@ -2,8 +2,8 @@ package interfaces
 
 import (
 	"context"
-	"time"
 	"linke/internal/domains/subscription/entities"
+	"time"
 )
 
 // SubscriptionOrderRepository defines the interface for subscription order data access operations

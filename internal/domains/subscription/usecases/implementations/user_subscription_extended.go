@@ -6,34 +6,34 @@ import (
 	"fmt"
 	"time"
 
-	"linke/internal/shared/logger"
 	"linke/internal/domains/subscription/entities"
+	"linke/internal/shared/logger"
 )
 
 // ============= Subscription Statistics and Analytics =============
 
 // SubscriptionStatsResponse represents subscription statistics
 type SubscriptionStatsResponse struct {
-	TotalSubscriptions     int                           `json:"total_subscriptions" example:"5"`
-	ActiveSubscriptions    int                           `json:"active_subscriptions" example:"3"`
-	PausedSubscriptions    int                           `json:"paused_subscriptions" example:"1"`
-	CancelledSubscriptions int                           `json:"cancelled_subscriptions" example:"1"`
-	ExpiredSubscriptions   int                           `json:"expired_subscriptions" example:"0"`
-	TotalSpent            float64                       `json:"total_spent" example:"149.95"`
-	CurrentMonthlyCost    float64                       `json:"current_monthly_cost" example:"29.99"`
-	NextBillingDate       *time.Time                    `json:"next_billing_date,omitempty" example:"2024-02-01T00:00:00Z"`
-	SubscriptionsByPlan   map[string]int                `json:"subscriptions_by_plan"`
-	UsageStats           *SubscriptionUsageStats       `json:"usage_stats,omitempty"`
+	TotalSubscriptions     int                     `json:"total_subscriptions" example:"5"`
+	ActiveSubscriptions    int                     `json:"active_subscriptions" example:"3"`
+	PausedSubscriptions    int                     `json:"paused_subscriptions" example:"1"`
+	CancelledSubscriptions int                     `json:"cancelled_subscriptions" example:"1"`
+	ExpiredSubscriptions   int                     `json:"expired_subscriptions" example:"0"`
+	TotalSpent             float64                 `json:"total_spent" example:"149.95"`
+	CurrentMonthlyCost     float64                 `json:"current_monthly_cost" example:"29.99"`
+	NextBillingDate        *time.Time              `json:"next_billing_date,omitempty" example:"2024-02-01T00:00:00Z"`
+	SubscriptionsByPlan    map[string]int          `json:"subscriptions_by_plan"`
+	UsageStats             *SubscriptionUsageStats `json:"usage_stats,omitempty"`
 }
 
 // SubscriptionUsageStats represents usage statistics
 type SubscriptionUsageStats struct {
-	TotalTrafficUsed    int64   `json:"total_traffic_used" example:"10737418240"`    // bytes
-	TotalTrafficLimit   int64   `json:"total_traffic_limit" example:"107374182400"`   // bytes  
+	TotalTrafficUsed    int64   `json:"total_traffic_used" example:"10737418240"`   // bytes
+	TotalTrafficLimit   int64   `json:"total_traffic_limit" example:"107374182400"` // bytes
 	TrafficUsagePercent float64 `json:"traffic_usage_percent" example:"10.0"`
 	CurrentMonthTraffic int64   `json:"current_month_traffic" example:"5368709120"`
-	AverageSessionTime  int64   `json:"average_session_time" example:"3600"`         // seconds
-	TotalSessions      int     `json:"total_sessions" example:"156"`
+	AverageSessionTime  int64   `json:"average_session_time" example:"3600"` // seconds
+	TotalSessions       int     `json:"total_sessions" example:"156"`
 }
 
 // GetUserSubscriptionStats gets comprehensive statistics for a user's subscriptions
@@ -47,7 +47,7 @@ func (s *UserSubscriptionService) GetUserSubscriptionStats(ctx context.Context, 
 		Status string
 		Count  int
 	}
-	
+
 	if err := s.db.WithContext(ctx).
 		Model(&entities.UserSubscription{}).
 		Select("status, COUNT(*) as count").
@@ -77,7 +77,7 @@ func (s *UserSubscriptionService) GetUserSubscriptionStats(ctx context.Context, 
 		PlanName string `gorm:"column:plan_name"`
 		Count    int
 	}
-	
+
 	if err := s.db.WithContext(ctx).
 		Model(&entities.UserSubscription{}).
 		Select("sp.name as plan_name, COUNT(*) as count").
@@ -146,7 +146,7 @@ func (s *UserSubscriptionService) getUserUsageStats(ctx context.Context, userID 
 		TotalUsed  int64
 		TotalLimit int64
 	}
-	
+
 	if err := s.db.WithContext(ctx).
 		Model(&entities.UserSubscription{}).
 		Select("COALESCE(SUM(traffic_used), 0) as total_used, COALESCE(SUM(CASE WHEN traffic_limit > 0 THEN traffic_limit ELSE 0 END), 0) as total_limit").
@@ -171,7 +171,6 @@ func (s *UserSubscriptionService) getUserUsageStats(ctx context.Context, userID 
 }
 
 // ============= Traffic and Usage History =============
-
 
 // ============= Notification Preferences =============
 
@@ -198,7 +197,7 @@ func (s *UserSubscriptionService) UpdateNotificationPreferences(ctx context.Cont
 	// Note: This requires User entity from user domain - need to use user service instead
 	// TODO: Implement through user service to avoid cross-domain dependency
 	if err := s.db.WithContext(ctx).
-		Exec("UPDATE users SET provider_data = ? WHERE id = ?", 
+		Exec("UPDATE users SET provider_data = ? WHERE id = ?",
 			fmt.Sprintf(`{"notification_preferences": %s}`, string(prefsJSON)), userID).Error; err != nil {
 		return fmt.Errorf("failed to update notification preferences: %w", err)
 	}
@@ -281,14 +280,14 @@ func (s *UserSubscriptionService) PauseUserSubscription(ctx context.Context, sub
 
 	if err := tx.Model(&subscription).Updates(updates).Error; err != nil {
 		tx.Rollback()
-		logger.Error("Failed to pause subscription", 
+		logger.Error("Failed to pause subscription",
 			logger.Uint("subscription_id", subscriptionID),
 			logger.Error2("error", err))
 		return nil, fmt.Errorf("failed to pause subscription: %w", err)
 	}
 
 	// Log subscription pause action
-	logger.Info("Subscription paused successfully", 
+	logger.Info("Subscription paused successfully",
 		logger.Uint("subscription_id", subscriptionID),
 		logger.Uint("user_id", subscription.UserID),
 		logger.String("reason", reason),
@@ -302,7 +301,7 @@ func (s *UserSubscriptionService) PauseUserSubscription(ctx context.Context, sub
 	// Reload subscription with updates
 	subscription.Status = entities.UserSubscriptionStatusPaused
 
-	logger.Info("Subscription paused successfully", 
+	logger.Info("Subscription paused successfully",
 		logger.Uint("subscription_id", subscriptionID),
 		logger.Uint("user_id", subscription.UserID))
 
@@ -342,21 +341,21 @@ func (s *UserSubscriptionService) ResumeUserSubscription(ctx context.Context, su
 	now := time.Now()
 	oldStatus := subscription.Status
 	updates := map[string]interface{}{
-		"status":           entities.UserSubscriptionStatusActive,
+		"status":            entities.UserSubscriptionStatusActive,
 		"traffic_suspended": false, // Clear traffic suspension on resume
-		"updated_at":       now,
+		"updated_at":        now,
 	}
 
 	if err := tx.Model(&subscription).Updates(updates).Error; err != nil {
 		tx.Rollback()
-		logger.Error("Failed to resume subscription", 
+		logger.Error("Failed to resume subscription",
 			logger.Uint("subscription_id", subscriptionID),
 			logger.Error2("error", err))
 		return nil, fmt.Errorf("failed to resume subscription: %w", err)
 	}
 
 	// Log subscription resume action
-	logger.Info("Subscription resumed successfully", 
+	logger.Info("Subscription resumed successfully",
 		logger.Uint("subscription_id", subscriptionID),
 		logger.Uint("user_id", subscription.UserID),
 		logger.String("old_status", string(oldStatus)))
@@ -370,7 +369,7 @@ func (s *UserSubscriptionService) ResumeUserSubscription(ctx context.Context, su
 	subscription.Status = entities.UserSubscriptionStatusActive
 	subscription.TrafficSuspended = false
 
-	logger.Info("Subscription resumed successfully", 
+	logger.Info("Subscription resumed successfully",
 		logger.Uint("subscription_id", subscriptionID),
 		logger.Uint("user_id", subscription.UserID))
 
@@ -406,22 +405,22 @@ func (s *UserSubscriptionService) ResetTrafficUsage(ctx context.Context, subscri
 	}
 
 	updates := map[string]interface{}{
-		"traffic_used":      0,
-		"traffic_suspended": false,
+		"traffic_used":       0,
+		"traffic_suspended":  false,
 		"traffic_reset_date": nextResetDate,
-		"updated_at":        now,
+		"updated_at":         now,
 	}
 
 	if err := tx.Model(&subscription).Updates(updates).Error; err != nil {
 		tx.Rollback()
-		logger.Error("Failed to reset traffic usage", 
+		logger.Error("Failed to reset traffic usage",
 			logger.Uint("subscription_id", subscriptionID),
 			logger.Error2("error", err))
 		return nil, fmt.Errorf("failed to reset traffic usage: %w", err)
 	}
 
 	// Log traffic reset action
-	logger.Info("Traffic usage reset successfully", 
+	logger.Info("Traffic usage reset successfully",
 		logger.Uint("subscription_id", subscriptionID),
 		logger.Uint("user_id", subscription.UserID),
 		logger.Int64("previous_usage", oldTrafficUsed))
@@ -436,7 +435,7 @@ func (s *UserSubscriptionService) ResetTrafficUsage(ctx context.Context, subscri
 	subscription.TrafficSuspended = false
 	subscription.TrafficResetDate = nextResetDate
 
-	logger.Info("Traffic usage reset successfully", 
+	logger.Info("Traffic usage reset successfully",
 		logger.Uint("subscription_id", subscriptionID),
 		logger.Uint("user_id", subscription.UserID),
 		logger.Int64("previous_usage", oldTrafficUsed))

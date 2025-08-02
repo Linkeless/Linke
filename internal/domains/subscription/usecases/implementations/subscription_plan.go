@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"linke/internal/shared/logger"
 	"linke/internal/domains/subscription/entities"
+	"linke/internal/shared/logger"
 
 	"gorm.io/gorm"
 )
@@ -39,9 +39,9 @@ type CreateSubscriptionPlanRequest struct {
 	IsRecommended   *bool   `json:"is_recommended,omitempty" example:"true"`
 	SetupFee        float64 `json:"setup_fee,omitempty" example:"0"`
 	CancellationFee float64 `json:"cancellation_fee,omitempty" example:"0"`
-	
+
 	// Traffic Configuration (Required)
-	TrafficLimit      int64  `json:"traffic_limit" binding:"required,min=0" example:"107374182400"` // Traffic limit in bytes (0 = unlimited)
+	TrafficLimit      int64  `json:"traffic_limit" binding:"required,min=0" example:"107374182400"`                // Traffic limit in bytes (0 = unlimited)
 	TrafficResetCycle string `json:"traffic_reset_cycle" binding:"required,oneof=monthly never" example:"monthly"` // Traffic reset cycle
 }
 
@@ -60,9 +60,9 @@ type UpdateSubscriptionPlanRequest struct {
 	IsRecommended   *bool    `json:"is_recommended,omitempty" example:"false"`
 	SetupFee        *float64 `json:"setup_fee,omitempty" example:"10"`
 	CancellationFee *float64 `json:"cancellation_fee,omitempty" example:"25"`
-	
+
 	// Traffic Configuration
-	TrafficLimit      *int64  `json:"traffic_limit,omitempty" binding:"omitempty,min=0" example:"107374182400"` // Traffic limit in bytes
+	TrafficLimit      *int64  `json:"traffic_limit,omitempty" binding:"omitempty,min=0" example:"107374182400"`                // Traffic limit in bytes
 	TrafficResetCycle *string `json:"traffic_reset_cycle,omitempty" binding:"omitempty,oneof=monthly never" example:"monthly"` // Traffic reset cycle
 }
 
@@ -129,7 +129,7 @@ func (s *SubscriptionPlanService) CreateSubscriptionPlan(ctx context.Context, cr
 		IsRecommended:   isRecommended,
 		SetupFee:        req.SetupFee,
 		CancellationFee: req.CancellationFee,
-		
+
 		// Traffic Configuration (Required for all plans)
 		TrafficLimit:      req.TrafficLimit,
 		TrafficResetCycle: req.TrafficResetCycle,
@@ -140,7 +140,7 @@ func (s *SubscriptionPlanService) CreateSubscriptionPlan(ctx context.Context, cr
 		return nil, fmt.Errorf("failed to create subscription plan: %w", err)
 	}
 
-	logger.Info("Subscription plan created successfully", 
+	logger.Info("Subscription plan created successfully",
 		logger.Uint("plan_id", plan.ID),
 		logger.String("plan_code", plan.Code),
 		logger.Uint("creator_id", creatorID))
@@ -308,12 +308,12 @@ func (s *SubscriptionPlanService) UpdateSubscriptionPlan(ctx context.Context, pl
 	if req.CancellationFee != nil {
 		updates["cancellation_fee"] = *req.CancellationFee
 	}
-	
+
 	// Traffic Configuration
 	if req.TrafficLimit != nil {
 		updates["traffic_limit"] = *req.TrafficLimit
 	}
-	
+
 	if req.TrafficResetCycle != nil {
 		updates["traffic_reset_cycle"] = *req.TrafficResetCycle
 	}

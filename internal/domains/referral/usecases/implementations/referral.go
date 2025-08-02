@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"linke/internal/shared/logger"
 	"linke/internal/domains/referral/entities"
 	"linke/internal/shared/database"
+	"linke/internal/shared/logger"
 
 	"gorm.io/gorm"
 )
@@ -28,17 +28,17 @@ func NewReferralService(db *database.Database) *ReferralService {
 
 // CreateReferralRequest represents the request to create a referral
 type CreateReferralRequest struct {
-	ReferrerID       uint                   `json:"referrer_id" binding:"required"`
-	RefereeID        uint                   `json:"referee_id" binding:"required"`
-	InviteCodeID     *uint                  `json:"invite_code_id,omitempty"`
-	ReferralSource   string                 `json:"referral_source" binding:"required"`
-	ReferralChannel  string                 `json:"referral_channel,omitempty"`
-	ReferralCode     string                 `json:"referral_code,omitempty"`
-	CampaignID       *uint                  `json:"campaign_id,omitempty"`
-	AttributionData  map[string]interface{} `json:"attribution_data,omitempty"`
-	ConversionValue  float64                `json:"conversion_value,omitempty"`
-	ConversionType   string                 `json:"conversion_type,omitempty"`
-	ExpirationDays   int                    `json:"expiration_days,omitempty"`
+	ReferrerID      uint                   `json:"referrer_id" binding:"required"`
+	RefereeID       uint                   `json:"referee_id" binding:"required"`
+	InviteCodeID    *uint                  `json:"invite_code_id,omitempty"`
+	ReferralSource  string                 `json:"referral_source" binding:"required"`
+	ReferralChannel string                 `json:"referral_channel,omitempty"`
+	ReferralCode    string                 `json:"referral_code,omitempty"`
+	CampaignID      *uint                  `json:"campaign_id,omitempty"`
+	AttributionData map[string]interface{} `json:"attribution_data,omitempty"`
+	ConversionValue float64                `json:"conversion_value,omitempty"`
+	ConversionType  string                 `json:"conversion_type,omitempty"`
+	ExpirationDays  int                    `json:"expiration_days,omitempty"`
 }
 
 // CreateReferral creates a new referral relationship
@@ -121,7 +121,7 @@ func (s *ReferralService) CreateReferral(ctx context.Context, req *CreateReferra
 	}
 
 	// Log referral creation event
-	s.createReferralEvent(ctx, referral.ID, req.RefereeID, entities.EventTypeRegistration, 
+	s.createReferralEvent(ctx, referral.ID, req.RefereeID, entities.EventTypeRegistration,
 		"User registered via referral", req.AttributionData)
 
 	logger.Info("Referral created successfully",
@@ -174,9 +174,9 @@ func (s *ReferralService) TrackReferralClick(ctx context.Context, referralCode s
 	// Update click tracking
 	now := time.Now()
 	updates := map[string]interface{}{
-		"click_count":    gorm.Expr("click_count + 1"),
-		"last_click_at":  now,
-		"updated_at":     now,
+		"click_count":   gorm.Expr("click_count + 1"),
+		"last_click_at": now,
+		"updated_at":    now,
 	}
 
 	if referral.FirstClickAt == nil {
@@ -188,7 +188,7 @@ func (s *ReferralService) TrackReferralClick(ctx context.Context, referralCode s
 	}
 
 	// Create click event
-	s.createReferralEvent(ctx, referral.ID, referral.RefereeID, entities.EventTypeClick, 
+	s.createReferralEvent(ctx, referral.ID, referral.RefereeID, entities.EventTypeClick,
 		"Referral link clicked", attributionData)
 
 	return nil
@@ -214,7 +214,7 @@ func (s *ReferralService) ConfirmReferral(ctx context.Context, referralID uint) 
 	}
 
 	// Create confirmation event
-	s.createReferralEvent(ctx, referral.ID, referral.RefereeID, entities.EventTypeActivation, 
+	s.createReferralEvent(ctx, referral.ID, referral.RefereeID, entities.EventTypeActivation,
 		"Referral confirmed", nil)
 
 	logger.Info("Referral confirmed",
@@ -241,7 +241,7 @@ func (s *ReferralService) TrackConversion(ctx context.Context, userID uint, conv
 	}
 
 	now := time.Now()
-	
+
 	// Update referral with conversion data
 	updates := map[string]interface{}{
 		"converted_at":     now,
@@ -268,7 +268,7 @@ func (s *ReferralService) TrackConversion(ctx context.Context, userID uint, conv
 		eventData["conversion_id"] = *conversionID
 	}
 
-	s.createReferralEvent(ctx, referral.ID, userID, entities.EventTypeConversion, 
+	s.createReferralEvent(ctx, referral.ID, userID, entities.EventTypeConversion,
 		fmt.Sprintf("User converted: %s", conversionType), eventData)
 
 	// Process rewards if applicable
@@ -290,7 +290,7 @@ func (s *ReferralService) GetReferralsByReferrer(ctx context.Context, referrerID
 	var total int64
 
 	query := s.db.DB.Where("referrer_id = ?", referrerID)
-	
+
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to count referrals: %w", err)
 	}
@@ -308,7 +308,7 @@ func (s *ReferralService) GetReferralsByReferee(ctx context.Context, refereeID u
 	var total int64
 
 	query := s.db.DB.Where("referee_id = ?", refereeID)
-	
+
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to count referrals: %w", err)
 	}
@@ -453,13 +453,13 @@ func (s *ReferralService) loadReferralRelations(referral *entities.Referral) err
 	// Note: Cross-domain entity loading has been removed to maintain clean architecture
 	// Related data (User, InviteCode, Campaign) should be loaded and assembled at the application layer
 	// This maintains domain boundaries and prevents circular dependencies
-	
+
 	// TODO: The following related data loading should be handled at the application layer:
 	// - Referrer user data (via User domain service)
-	// - Referee user data (via User domain service)  
+	// - Referee user data (via User domain service)
 	// - Invite code data (if InviteCodeID is not nil)
 	// - Campaign data (if CampaignID is not nil)
-	
+
 	logger.Info("Referral relations should be loaded at application layer",
 		logger.Uint("referral_id", referral.ID),
 		logger.Uint("referrer_id", referral.ReferrerID),

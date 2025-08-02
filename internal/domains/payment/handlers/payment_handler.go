@@ -3,12 +3,12 @@ package handlers
 import (
 	"strconv"
 
+	paymentEntities "linke/internal/domains/payment/entities"
+	paymentInterfaces "linke/internal/domains/payment/usecases/interfaces"
+	userEntities "linke/internal/domains/user/entities"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/middleware"
 	"linke/internal/shared/response"
-	userEntities "linke/internal/domains/user/entities"
-	paymentEntities "linke/internal/domains/payment/entities"
-	paymentInterfaces "linke/internal/domains/payment/usecases/interfaces"
 
 	"github.com/gin-gonic/gin"
 )
@@ -319,19 +319,19 @@ func (h *PaymentHandler) PaymentNotify(c *gin.Context) {
 
 	// Parse notification data based on content type
 	var notifyData map[string]interface{}
-	
+
 	contentType := c.GetHeader("Content-Type")
 	if contentType == "application/json" {
 		// JSON format (EPUSDT)
 		if err := c.ShouldBindJSON(&notifyData); err != nil {
-			logger.Error("Failed to parse JSON notification", 
+			logger.Error("Failed to parse JSON notification",
 				logger.Error2("error", err),
 				logger.String("gateway", gateway),
 				logger.String("client_ip", c.ClientIP()))
 			c.String(400, "fail")
 			return
 		}
-		
+
 		// SECURITY: Validate JSON data structure
 		if len(notifyData) == 0 {
 			logger.Warn("Empty payment notification data",
@@ -340,7 +340,7 @@ func (h *PaymentHandler) PaymentNotify(c *gin.Context) {
 			c.String(400, "fail")
 			return
 		}
-		
+
 	} else {
 		// Form format (Epay)
 		if err := c.Request.ParseForm(); err != nil {
@@ -351,7 +351,7 @@ func (h *PaymentHandler) PaymentNotify(c *gin.Context) {
 			c.String(400, "fail")
 			return
 		}
-		
+
 		notifyData = make(map[string]interface{})
 		for key, values := range c.Request.PostForm {
 			if len(values) > 0 {
@@ -367,7 +367,7 @@ func (h *PaymentHandler) PaymentNotify(c *gin.Context) {
 				notifyData[key] = values[0]
 			}
 		}
-		
+
 		// SECURITY: Validate form data structure
 		if len(notifyData) == 0 {
 			logger.Warn("Empty payment notification form data",
@@ -380,8 +380,8 @@ func (h *PaymentHandler) PaymentNotify(c *gin.Context) {
 
 	// Process notification
 	if err := h.paymentService.ProcessNotification(c.Request.Context(), gateway, notifyData); err != nil {
-		logger.Error("Failed to process payment notification", 
-			logger.Error2("error", err), 
+		logger.Error("Failed to process payment notification",
+			logger.Error2("error", err),
 			logger.String("gateway", gateway))
 		c.String(500, "fail")
 		return

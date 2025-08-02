@@ -36,7 +36,7 @@ func (r *shadowsocksServerRepository) Create(ctx context.Context, server *entiti
 
 	logger.Debug("Shadowsocks server created successfully in repository",
 		logger.Int("server_id", server.ID),
-		logger.String("name", server.Name), 
+		logger.String("name", server.Name),
 		logger.String("host", server.Host),
 	)
 	return nil
@@ -184,12 +184,12 @@ func (r *shadowsocksServerRepository) ListActive(ctx context.Context, limit, off
 func (r *shadowsocksServerRepository) ListByStatus(ctx context.Context, status string, limit, offset int) ([]*entities.ShadowsocksServer, int64, error) {
 	// Note: The current entity doesn't have a status field, using 'show' field as status indicator
 	// If a separate status field is needed, it should be added to the entity
-	
+
 	var servers []*entities.ShadowsocksServer
 	var total int64
-	
+
 	var query *gorm.DB
-	
+
 	// Map status to show field values
 	switch status {
 	case "active":
@@ -270,7 +270,7 @@ func (r *shadowsocksServerRepository) UpdateStatus(ctx context.Context, id uint,
 func (r *shadowsocksServerRepository) ListByLocation(ctx context.Context, country, region string, limit, offset int) ([]*entities.ShadowsocksServer, int64, error) {
 	// Note: The current entity doesn't have country/region fields
 	// This is a placeholder implementation. If location fields are needed, they should be added to the entity
-	
+
 	var servers []*entities.ShadowsocksServer
 	var total int64
 
@@ -368,7 +368,7 @@ func (r *shadowsocksServerRepository) CountTotal(ctx context.Context) (int64, er
 func (r *shadowsocksServerRepository) GetLocationStats(ctx context.Context) (map[string]int64, error) {
 	// Note: Since the entity doesn't have dedicated location fields,
 	// this is a placeholder implementation that could be enhanced with proper location fields
-	
+
 	var results []struct {
 		Location string
 		Count    int64

@@ -21,7 +21,7 @@ func ErrorHandler() gin.HandlerFunc {
 				// Log the panic with stack trace
 				stack := make([]byte, 1024*8)
 				stack = stack[:runtime.Stack(stack, false)]
-				
+
 				logger.Error("Recovered from panic",
 					logger.String("error", toString(r)),
 					logger.String("path", c.Request.URL.Path),
@@ -57,7 +57,7 @@ func DatabaseErrorHandler() gin.HandlerFunc {
 		// Check for database-related errors in the context
 		if len(c.Errors) > 0 {
 			err := c.Errors.Last()
-			
+
 			logger.Error("Database error occurred",
 				logger.String("error", err.Error()),
 				logger.String("path", c.Request.URL.Path),
@@ -71,7 +71,7 @@ func DatabaseErrorHandler() gin.HandlerFunc {
 
 			// Categorize database errors and return appropriate responses
 			errMsg := strings.ToLower(err.Error())
-			
+
 			switch {
 			case strings.Contains(errMsg, "duplicate") || strings.Contains(errMsg, "unique"):
 				response.Error(c, http.StatusConflict, http.StatusConflict, "Resource already exists")
@@ -98,14 +98,14 @@ func ValidationErrorHandler() gin.HandlerFunc {
 		// Handle validation errors
 		if len(c.Errors) > 0 {
 			err := c.Errors.Last()
-			
+
 			// Skip if response already written
 			if c.Writer.Written() {
 				return
 			}
 
 			errMsg := err.Error()
-			
+
 			// Check for common validation error patterns
 			switch {
 			case strings.Contains(errMsg, "required"):
@@ -133,14 +133,14 @@ func SecurityErrorHandler() gin.HandlerFunc {
 		// Handle security errors
 		if len(c.Errors) > 0 {
 			err := c.Errors.Last()
-			
+
 			// Skip if response already written
 			if c.Writer.Written() {
 				return
 			}
 
 			errMsg := strings.ToLower(err.Error())
-			
+
 			// Log security-related errors with additional context
 			if isSecurityError(errMsg) {
 				logger.Warn("Security error detected",
@@ -178,14 +178,14 @@ func PaymentErrorHandler() gin.HandlerFunc {
 		// Handle payment errors
 		if len(c.Errors) > 0 {
 			err := c.Errors.Last()
-			
+
 			// Skip if response already written
 			if c.Writer.Written() {
 				return
 			}
 
 			errMsg := strings.ToLower(err.Error())
-			
+
 			// Log payment errors for audit
 			logger.Error("Payment error occurred",
 				logger.String("error", err.Error()),
@@ -227,7 +227,7 @@ func isSecurityError(errMsg string) bool {
 		"unauthorized", "forbidden", "permission", "token", "authentication",
 		"csrf", "xss", "injection", "rate limit", "suspicious", "blocked",
 	}
-	
+
 	for _, keyword := range securityKeywords {
 		if strings.Contains(errMsg, keyword) {
 			return true

@@ -2,8 +2,8 @@ package interfaces
 
 import (
 	"context"
-	"time"
 	"linke/internal/domains/subscription/entities"
+	"time"
 )
 
 // UserSubscriptionService defines the interface for user subscription operations
@@ -44,11 +44,11 @@ type CreateSubscriptionRequest struct {
 	StartDate          string `json:"start_date,omitempty" binding:"omitempty" example:"2024-01-01T00:00:00Z"`
 	UseTrial           bool   `json:"use_trial,omitempty" example:"true"`
 	ServerGroupIDs     []uint `json:"server_group_ids,omitempty"`
-	
+
 	// Custom Traffic Configuration (optional, overrides plan defaults)
-	CustomTrafficLimit      *int64  `json:"custom_traffic_limit,omitempty" example:"107374182400"`     // Custom traffic limit in bytes
-	CustomTrafficResetCycle *string `json:"custom_traffic_reset_cycle,omitempty" example:"monthly"`   // Custom reset cycle
-	DisableTrafficLimit     *bool   `json:"disable_traffic_limit,omitempty" example:"false"`          // Disable traffic limit for this subscription
+	CustomTrafficLimit      *int64  `json:"custom_traffic_limit,omitempty" example:"107374182400"`  // Custom traffic limit in bytes
+	CustomTrafficResetCycle *string `json:"custom_traffic_reset_cycle,omitempty" example:"monthly"` // Custom reset cycle
+	DisableTrafficLimit     *bool   `json:"disable_traffic_limit,omitempty" example:"false"`        // Disable traffic limit for this subscription
 }
 
 // UpdateSubscriptionRequest represents the request to update a user subscription

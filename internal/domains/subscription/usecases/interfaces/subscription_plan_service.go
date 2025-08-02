@@ -42,9 +42,9 @@ type CreateSubscriptionPlanRequest struct {
 	IsRecommended   *bool   `json:"is_recommended,omitempty" example:"true"`
 	SetupFee        float64 `json:"setup_fee,omitempty" example:"0"`
 	CancellationFee float64 `json:"cancellation_fee,omitempty" example:"0"`
-	
+
 	// Traffic Configuration (Required)
-	TrafficLimit      int64  `json:"traffic_limit" binding:"required,min=0" example:"107374182400"` // Traffic limit in bytes (0 = unlimited)
+	TrafficLimit      int64  `json:"traffic_limit" binding:"required,min=0" example:"107374182400"`                // Traffic limit in bytes (0 = unlimited)
 	TrafficResetCycle string `json:"traffic_reset_cycle" binding:"required,oneof=monthly never" example:"monthly"` // Traffic reset cycle
 }
 
@@ -63,9 +63,9 @@ type UpdateSubscriptionPlanRequest struct {
 	IsRecommended   *bool    `json:"is_recommended,omitempty" example:"false"`
 	SetupFee        *float64 `json:"setup_fee,omitempty" example:"10"`
 	CancellationFee *float64 `json:"cancellation_fee,omitempty" example:"25"`
-	
+
 	// Traffic Configuration
-	TrafficLimit      *int64  `json:"traffic_limit,omitempty" binding:"omitempty,min=0" example:"107374182400"` // Traffic limit in bytes
+	TrafficLimit      *int64  `json:"traffic_limit,omitempty" binding:"omitempty,min=0" example:"107374182400"`                // Traffic limit in bytes
 	TrafficResetCycle *string `json:"traffic_reset_cycle,omitempty" binding:"omitempty,oneof=monthly never" example:"monthly"` // Traffic reset cycle
 }
 

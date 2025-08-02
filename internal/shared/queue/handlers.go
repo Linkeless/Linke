@@ -38,9 +38,9 @@ func EmailTaskHandler(ctx context.Context, task *asynq.Task) error {
 		logger.String("body", body),
 		logger.String("task_type", task.Type()),
 	)
-	
+
 	time.Sleep(2 * time.Second)
-	
+
 	logger.Info("Email sent successfully",
 		logger.String("to", to),
 		logger.String("task_type", task.Type()),
@@ -69,9 +69,9 @@ func NotificationTaskHandler(ctx context.Context, task *asynq.Task) error {
 		logger.String("message", message),
 		logger.String("task_type", task.Type()),
 	)
-	
+
 	time.Sleep(1 * time.Second)
-	
+
 	logger.Info("Notification sent successfully",
 		logger.String("user_id", userID),
 		logger.String("task_type", task.Type()),
@@ -94,9 +94,9 @@ func DataProcessingTaskHandler(ctx context.Context, task *asynq.Task) error {
 		logger.String("data_type", dataType),
 		logger.String("task_type", task.Type()),
 	)
-	
+
 	time.Sleep(5 * time.Second)
-	
+
 	logger.Info("Data processing completed",
 		logger.String("data_type", dataType),
 		logger.String("task_type", task.Type()),
@@ -128,10 +128,10 @@ func PaymentProcessingTaskHandler(ctx context.Context, task *asynq.Task) error {
 		logger.Any("amount", amount),
 		logger.String("task_type", task.Type()),
 	)
-	
+
 	// Simulate payment processing
 	time.Sleep(3 * time.Second)
-	
+
 	logger.Info("Payment processed successfully",
 		logger.String("payment_id", paymentID),
 		logger.String("task_type", task.Type()),
@@ -161,10 +161,10 @@ func SubscriptionExpiryTaskHandler(ctx context.Context, task *asynq.Task) error 
 		logger.String("subscription_id", subscriptionID),
 		logger.String("task_type", task.Type()),
 	)
-	
+
 	// Simulate subscription expiry processing
 	time.Sleep(2 * time.Second)
-	
+
 	logger.Info("Subscription expiry processed successfully",
 		logger.String("user_id", userID),
 		logger.String("task_type", task.Type()),
@@ -194,10 +194,10 @@ func InvoiceGenerationTaskHandler(ctx context.Context, task *asynq.Task) error {
 		logger.String("user_id", userID),
 		logger.String("task_type", task.Type()),
 	)
-	
+
 	// Simulate invoice generation
 	time.Sleep(4 * time.Second)
-	
+
 	logger.Info("Invoice generated successfully",
 		logger.String("order_id", orderID),
 		logger.String("task_type", task.Type()),
@@ -221,10 +221,10 @@ func ServerHealthCheckTaskHandler(ctx context.Context, task *asynq.Task) error {
 		logger.String("server_id", serverID),
 		logger.String("task_type", task.Type()),
 	)
-	
+
 	// Simulate health check
 	time.Sleep(1 * time.Second)
-	
+
 	logger.Info("Server health check completed",
 		logger.String("server_id", serverID),
 		logger.String("task_type", task.Type()),
@@ -254,10 +254,10 @@ func ReferralProcessingTaskHandler(ctx context.Context, task *asynq.Task) error 
 		logger.String("referee_id", refereeID),
 		logger.String("task_type", task.Type()),
 	)
-	
+
 	// Simulate referral processing
 	time.Sleep(2 * time.Second)
-	
+
 	logger.Info("Referral processed successfully",
 		logger.String("referrer_id", referrerID),
 		logger.String("task_type", task.Type()),
@@ -267,14 +267,14 @@ func ReferralProcessingTaskHandler(ctx context.Context, task *asynq.Task) error 
 
 // Task type constants
 const (
-	TaskTypeEmail               = "email:send"
-	TaskTypeNotification        = "notification:send"
-	TaskTypeDataProcessing      = "data:process"
-	TaskTypePaymentProcessing   = "payment:process"
-	TaskTypeSubscriptionExpiry  = "subscription:expiry"
-	TaskTypeInvoiceGeneration   = "invoice:generate"
-	TaskTypeServerHealthCheck   = "server:health_check"
-	TaskTypeReferralProcessing  = "referral:process"
+	TaskTypeEmail              = "email:send"
+	TaskTypeNotification       = "notification:send"
+	TaskTypeDataProcessing     = "data:process"
+	TaskTypePaymentProcessing  = "payment:process"
+	TaskTypeSubscriptionExpiry = "subscription:expiry"
+	TaskTypeInvoiceGeneration  = "invoice:generate"
+	TaskTypeServerHealthCheck  = "server:health_check"
+	TaskTypeReferralProcessing = "referral:process"
 )
 
 // RegisterDefaultHandlers registers all default task handlers

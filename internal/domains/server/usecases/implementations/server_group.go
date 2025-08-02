@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"linke/internal/shared/logger"
 	"linke/internal/domains/server/entities"
 	"linke/internal/shared/database"
+	"linke/internal/shared/logger"
 
 	"gorm.io/gorm"
 )
@@ -53,13 +53,13 @@ func (s *ServerGroupService) CreateServerGroup(ctx context.Context, req *CreateS
 	}
 
 	if err := s.db.DB.WithContext(ctx).Create(group).Error; err != nil {
-		logger.Error("Failed to create server group", 
+		logger.Error("Failed to create server group",
 			logger.String("name", req.Name),
 			logger.Error2("error", err))
 		return nil, fmt.Errorf("failed to create server group: %w", err)
 	}
 
-	logger.Info("Server group created successfully", 
+	logger.Info("Server group created successfully",
 		logger.Uint("group_id", group.ID),
 		logger.String("name", group.Name))
 

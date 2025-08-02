@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"linke/internal/shared/logger"
-	"linke/internal/domains/subscription/entities"
 	serverEntities "linke/internal/domains/server/entities"
+	"linke/internal/domains/subscription/entities"
+	"linke/internal/shared/logger"
 )
 
 // ============= Server Group Management for User Subscriptions =============
@@ -147,14 +147,14 @@ func (s *UserSubscriptionService) UpdateSubscriptionServerGroups(ctx context.Con
 	// Update subscription in database
 	if err := tx.Model(&subscription).Update("server_group_ids", subscription.ServerGroupIDs).Error; err != nil {
 		tx.Rollback()
-		logger.Error("Failed to update subscription server groups", 
+		logger.Error("Failed to update subscription server groups",
 			logger.Uint("subscription_id", req.SubscriptionID),
 			logger.Error2("error", err))
 		return nil, fmt.Errorf("failed to update subscription server groups: %w", err)
 	}
 
 	// Log server group update
-	logger.Info("Server groups updated by user", 
+	logger.Info("Server groups updated by user",
 		logger.Uint("subscription_id", req.SubscriptionID),
 		logger.Uint("user_id", subscription.UserID),
 		logger.Int("old_count", len(oldGroupIDs)),
@@ -165,7 +165,7 @@ func (s *UserSubscriptionService) UpdateSubscriptionServerGroups(ctx context.Con
 		return nil, fmt.Errorf("failed to commit server group update: %w", err)
 	}
 
-	logger.Info("Subscription server groups updated successfully", 
+	logger.Info("Subscription server groups updated successfully",
 		logger.Uint("subscription_id", req.SubscriptionID),
 		logger.Uint("user_id", subscription.UserID),
 		logger.Any("old_groups", oldGroupIDs),

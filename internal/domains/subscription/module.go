@@ -5,9 +5,9 @@ import (
 	"gorm.io/gorm"
 
 	"linke/internal/domains/subscription/adapters/repositories"
+	"linke/internal/domains/subscription/handlers"
 	"linke/internal/domains/subscription/usecases/implementations"
 	"linke/internal/domains/subscription/usecases/interfaces"
-	"linke/internal/domains/subscription/handlers"
 )
 
 // Module Subscription 领域模块
@@ -83,9 +83,9 @@ func NewServiceProvider(
 	orderService interfaces.SubscriptionOrderService,
 ) *ServiceProvider {
 	return &ServiceProvider{
-		SubscriptionPlanService:   planService,
-		UserSubscriptionService:   userSubService,
-		SubscriptionOrderService:  orderService,
+		SubscriptionPlanService:  planService,
+		UserSubscriptionService:  userSubService,
+		SubscriptionOrderService: orderService,
 	}
 }
 

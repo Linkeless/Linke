@@ -46,15 +46,15 @@ func (la *LoginAttempt) BeforeCreate(tx *gorm.DB) error {
 
 // AccountLockout represents account lockout information
 type AccountLockout struct {
-	ID           uint      `json:"id" gorm:"primaryKey"`
-	Email        string    `json:"email" gorm:"uniqueIndex;size:255;not null"`
-	UserID       *uint     `json:"user_id" gorm:"index"`
-	FailedCount  int       `json:"failed_count" gorm:"not null;default:0"`
-	LastFailure  time.Time `json:"last_failure" gorm:"index"`
-	LockedUntil  *time.Time `json:"locked_until" gorm:"index"`
-	LockReason   string    `json:"lock_reason" gorm:"size:200"`
-	CreatedAt    time.Time `json:"created_at" gorm:"not null;index"`
-	UpdatedAt    time.Time `json:"updated_at" gorm:"not null"`
+	ID          uint       `json:"id" gorm:"primaryKey"`
+	Email       string     `json:"email" gorm:"uniqueIndex;size:255;not null"`
+	UserID      *uint      `json:"user_id" gorm:"index"`
+	FailedCount int        `json:"failed_count" gorm:"not null;default:0"`
+	LastFailure time.Time  `json:"last_failure" gorm:"index"`
+	LockedUntil *time.Time `json:"locked_until" gorm:"index"`
+	LockReason  string     `json:"lock_reason" gorm:"size:200"`
+	CreatedAt   time.Time  `json:"created_at" gorm:"not null;index"`
+	UpdatedAt   time.Time  `json:"updated_at" gorm:"not null"`
 }
 
 // TableName returns the table name for AccountLockout model
@@ -64,10 +64,10 @@ func (AccountLockout) TableName() string {
 
 // Account lockout reasons
 const (
-	LockReasonMultipleFailures = "multiple_failed_attempts"
+	LockReasonMultipleFailures   = "multiple_failed_attempts"
 	LockReasonSuspiciousActivity = "suspicious_activity"
-	LockReasonAdminAction      = "admin_action"
-	LockReasonSecurityBreach   = "security_breach"
+	LockReasonAdminAction        = "admin_action"
+	LockReasonSecurityBreach     = "security_breach"
 )
 
 // IsLocked checks if the account is currently locked

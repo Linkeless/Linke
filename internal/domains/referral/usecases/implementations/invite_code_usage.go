@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"linke/internal/shared/logger"
 	"linke/internal/domains/referral/entities"
+	"linke/internal/shared/logger"
 
 	"gorm.io/gorm"
 )

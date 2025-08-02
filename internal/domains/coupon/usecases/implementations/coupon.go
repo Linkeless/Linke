@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"linke/internal/shared/logger"
 	"linke/internal/domains/coupon/entities"
+	"linke/internal/shared/logger"
 
 	"gorm.io/gorm"
 )
@@ -75,10 +75,10 @@ type ValidateCouponRequest struct {
 
 // ValidateCouponResponse represents the response of coupon validation
 type ValidateCouponResponse struct {
-	Valid          bool    `json:"valid" example:"true"`
-	Message        string  `json:"message" example:"Coupon is valid"`
-	DiscountAmount float64 `json:"discount_amount" example:"5.99"`
-	FinalAmount    float64 `json:"final_amount" example:"24.00"`
+	Valid          bool                     `json:"valid" example:"true"`
+	Message        string                   `json:"message" example:"Coupon is valid"`
+	DiscountAmount float64                  `json:"discount_amount" example:"5.99"`
+	FinalAmount    float64                  `json:"final_amount" example:"24.00"`
 	Coupon         *entities.CouponResponse `json:"coupon,omitempty"`
 }
 
@@ -144,7 +144,7 @@ func (s *CouponService) CreateCoupon(ctx context.Context, creatorID uint64, req 
 		return nil, fmt.Errorf("failed to create coupon: %w", err)
 	}
 
-	logger.Info("Coupon created successfully", 
+	logger.Info("Coupon created successfully",
 		logger.Any("coupon_id", coupon.ID),
 		logger.String("coupon_code", coupon.Code),
 		logger.Any("creator_id", creatorID))
@@ -226,7 +226,7 @@ func (s *CouponService) GetCoupons(ctx context.Context, req *GetCouponsRequest) 
 
 // GetPublicCoupons gets active and public coupons
 // NOTE: This method should only be used internally by the system,
-// not exposed to public APIs for security reasons. 
+// not exposed to public APIs for security reasons.
 // The 'is_public' flag now indicates whether a coupon can be displayed
 // in user interfaces after proper authentication and authorization.
 func (s *CouponService) GetPublicCoupons(ctx context.Context) ([]*entities.Coupon, error) {
@@ -267,8 +267,8 @@ func (s *CouponService) UpdateCoupon(ctx context.Context, couponID uint64, req *
 
 	if req.Value != nil {
 		// Validate percentage values
-		if (req.Type != nil && *req.Type == entities.CouponTypePercentage) || 
-		   (req.Type == nil && coupon.Type == entities.CouponTypePercentage) {
+		if (req.Type != nil && *req.Type == entities.CouponTypePercentage) ||
+			(req.Type == nil && coupon.Type == entities.CouponTypePercentage) {
 			if *req.Value > 100 {
 				return nil, fmt.Errorf("percentage discount cannot exceed 100%%")
 			}

@@ -7,16 +7,16 @@ import (
 	"strconv"
 	"time"
 
-	"linke/internal/shared/config"
-	"linke/internal/shared/logger"
-	"linke/internal/shared/database"
-	"linke/internal/shared/response"
 	serverEntities "linke/internal/domains/server/entities"
-	userEntities "linke/internal/domains/user/entities"
-	subscriptionEntities "linke/internal/domains/subscription/entities"
 	serverInterfaces "linke/internal/domains/server/usecases/interfaces"
-	userInterfaces "linke/internal/domains/user/usecases/interfaces"
+	subscriptionEntities "linke/internal/domains/subscription/entities"
 	subscriptionInterfaces "linke/internal/domains/subscription/usecases/interfaces"
+	userEntities "linke/internal/domains/user/entities"
+	userInterfaces "linke/internal/domains/user/usecases/interfaces"
+	"linke/internal/shared/config"
+	"linke/internal/shared/database"
+	"linke/internal/shared/logger"
+	"linke/internal/shared/response"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hibiken/asynq"
@@ -24,21 +24,21 @@ import (
 
 type ServerAPIHandler struct {
 	shadowsocksService      serverInterfaces.ShadowsocksServerService
-	userService            userInterfaces.UserService
+	userService             userInterfaces.UserService
 	userSubscriptionService subscriptionInterfaces.UserSubscriptionService
-	db                     *database.Database
-	asynqClient            *asynq.Client
-	config                 *config.Config
+	db                      *database.Database
+	asynqClient             *asynq.Client
+	config                  *config.Config
 }
 
 func NewServerAPIHandler(shadowsocksService serverInterfaces.ShadowsocksServerService, userService userInterfaces.UserService, userSubscriptionService subscriptionInterfaces.UserSubscriptionService, db *database.Database, asynqClient *asynq.Client, cfg *config.Config) *ServerAPIHandler {
 	return &ServerAPIHandler{
 		shadowsocksService:      shadowsocksService,
-		userService:            userService,
+		userService:             userService,
 		userSubscriptionService: userSubscriptionService,
-		db:                     db,
-		asynqClient:            asynqClient,
-		config:                 cfg,
+		db:                      db,
+		asynqClient:             asynqClient,
+		config:                  cfg,
 	}
 }
 
@@ -52,18 +52,18 @@ func NewServerAPIHandler(shadowsocksService serverInterfaces.ShadowsocksServerSe
 // @Router /server/UniProxy/health [get]
 func (h *ServerAPIHandler) Health(c *gin.Context) {
 	response.Success(c, map[string]interface{}{
-		"status": "ok",
+		"status":  "ok",
 		"service": "server-api",
 	})
 }
 
 // UniProxyConfigResponse represents the config response for UniProxy
 type UniProxyConfigResponse struct {
-	ServerPort   int                    `json:"server_port"`
-	Cipher       string                 `json:"cipher"`
-	Obfs         interface{}           `json:"obfs"`
-	ObfsSettings interface{}           `json:"obfs_settings"`
-	BaseConfig   UniProxyBaseConfig    `json:"base_config"`
+	ServerPort   int                `json:"server_port"`
+	Cipher       string             `json:"cipher"`
+	Obfs         interface{}        `json:"obfs"`
+	ObfsSettings interface{}        `json:"obfs_settings"`
+	BaseConfig   UniProxyBaseConfig `json:"base_config"`
 }
 
 // UniProxyBaseConfig represents the base configuration for UniProxy
@@ -112,7 +112,7 @@ func (h *ServerAPIHandler) UniProxyConfig(c *gin.Context) {
 	// Parse node_id
 	nodeID, err := strconv.Atoi(nodeIDStr)
 	if err != nil {
-		logger.Warn("Invalid node_id parameter", 
+		logger.Warn("Invalid node_id parameter",
 			logger.String("node_id", nodeIDStr),
 			logger.String("remote_addr", c.ClientIP()),
 		)
@@ -122,7 +122,7 @@ func (h *ServerAPIHandler) UniProxyConfig(c *gin.Context) {
 
 	// Validate node_type (for now only support shadowsocks)
 	if nodeType != "shadowsocks" {
-		logger.Warn("Unsupported node_type", 
+		logger.Warn("Unsupported node_type",
 			logger.String("node_type", nodeType),
 			logger.String("remote_addr", c.ClientIP()),
 		)
@@ -132,7 +132,7 @@ func (h *ServerAPIHandler) UniProxyConfig(c *gin.Context) {
 
 	// Simple token validation - you may want to implement more sophisticated validation
 	if !h.validateServerToken(token) {
-		logger.Warn("Invalid server token", 
+		logger.Warn("Invalid server token",
 			logger.String("token", token),
 			logger.String("remote_addr", c.ClientIP()),
 		)
@@ -186,8 +186,8 @@ func (h *ServerAPIHandler) UniProxyConfig(c *gin.Context) {
 
 // UniProxyUserItem represents a single user item for UniProxy
 type UniProxyUserItem struct {
-	ID         uint        `json:"id"`         // Subscription ID
-	UUID       string      `json:"uuid"`       // Subscription UUID
+	ID         uint        `json:"id"`          // Subscription ID
+	UUID       string      `json:"uuid"`        // Subscription UUID
 	SpeedLimit interface{} `json:"speed_limit"` // Speed limit (null for unlimited)
 }
 
@@ -236,7 +236,7 @@ func (h *ServerAPIHandler) UniProxyUsers(c *gin.Context) {
 	// Parse node_id
 	nodeID, err := strconv.Atoi(nodeIDStr)
 	if err != nil {
-		logger.Warn("Invalid node_id parameter", 
+		logger.Warn("Invalid node_id parameter",
 			logger.String("node_id", nodeIDStr),
 			logger.String("remote_addr", c.ClientIP()),
 		)
@@ -246,7 +246,7 @@ func (h *ServerAPIHandler) UniProxyUsers(c *gin.Context) {
 
 	// Validate node_type (for now only support shadowsocks)
 	if nodeType != "shadowsocks" {
-		logger.Warn("Unsupported node_type", 
+		logger.Warn("Unsupported node_type",
 			logger.String("node_type", nodeType),
 			logger.String("remote_addr", c.ClientIP()),
 		)
@@ -256,7 +256,7 @@ func (h *ServerAPIHandler) UniProxyUsers(c *gin.Context) {
 
 	// Simple token validation
 	if !h.validateServerToken(token) {
-		logger.Warn("Invalid server token", 
+		logger.Warn("Invalid server token",
 			logger.String("token", token),
 			logger.String("remote_addr", c.ClientIP()),
 		)
@@ -332,17 +332,17 @@ func (h *ServerAPIHandler) getUsersForServer(ctx context.Context, server *server
 	var validSubscriptions []subscriptionEntities.UserSubscription
 	var validUserIDs []uint
 	userIDSet := make(map[uint]bool) // To avoid duplicate user IDs
-	
+
 	for _, subscription := range userSubscriptions {
 		// Check traffic limits (additional safety check beyond traffic_suspended)
 		if subscription.TrafficLimit > 0 && subscription.TrafficUsed >= subscription.TrafficLimit {
-			logger.Debug("Subscription over traffic limit", 
+			logger.Debug("Subscription over traffic limit",
 				logger.Uint("subscription_id", subscription.ID),
 				logger.Int64("limit", subscription.TrafficLimit),
 				logger.Int64("used", subscription.TrafficUsed))
 			continue
 		}
-		
+
 		// Check if subscription has access to the server's group
 		if h.hasAccessToServerGroup(&subscription, server.GroupID) {
 			validSubscriptions = append(validSubscriptions, subscription)
@@ -397,31 +397,31 @@ func (h *ServerAPIHandler) validateServerToken(token string) bool {
 		logger.Error("Server API token not configured, rejecting all requests")
 		return false
 	}
-	
+
 	// SECURITY: Check minimum token length for security
 	if len(h.config.API.ServerToken) < 20 {
 		logger.Error("Server API token too short, must be at least 20 characters")
 		return false
 	}
-	
+
 	// SECURITY: Use constant-time comparison to prevent timing attacks
 	if len(token) != len(h.config.API.ServerToken) {
 		return false
 	}
-	
+
 	// Constant-time comparison
 	var result byte
 	for i := 0; i < len(token); i++ {
 		result |= token[i] ^ h.config.API.ServerToken[i]
 	}
-	
+
 	if result != 0 {
 		logger.Warn("Invalid server API token attempted",
 			logger.String("client_ip", "unknown"), // Add IP logging in middleware
 			logger.Int("token_length", len(token)))
 		return false
 	}
-	
+
 	return true
 }
 
@@ -430,11 +430,11 @@ func (h *ServerAPIHandler) hasAccessToServerGroup(subscription *subscriptionEnti
 	// SECURITY: If no server group IDs are specified, deny access by default
 	// This prevents accidental access to all groups due to misconfiguration
 	if subscription.ServerGroupIDs == "" {
-		logger.Debug("Subscription has no server group access configured", 
+		logger.Debug("Subscription has no server group access configured",
 			logger.Uint("subscription_id", subscription.ID))
 		return false
 	}
-	
+
 	// Parse the server group IDs JSON
 	var groupIDs []uint
 	if err := json.Unmarshal([]byte(subscription.ServerGroupIDs), &groupIDs); err != nil {
@@ -445,7 +445,7 @@ func (h *ServerAPIHandler) hasAccessToServerGroup(subscription *subscriptionEnti
 		)
 		return false
 	}
-	
+
 	// Special case: if groupIDs contains 0, it means access to all groups
 	// This must be explicitly configured, not just an empty field
 	for _, id := range groupIDs {
@@ -455,14 +455,14 @@ func (h *ServerAPIHandler) hasAccessToServerGroup(subscription *subscriptionEnti
 			return true
 		}
 	}
-	
+
 	// Check if the specific group ID is in the list
 	for _, id := range groupIDs {
 		if id == groupID {
 			return true
 		}
 	}
-	
+
 	return false
 }
 

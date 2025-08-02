@@ -2,10 +2,10 @@ package interfaces
 
 import (
 	"context"
-	"time"
 	"linke/internal/domains/auth/entities"
-	userEntities "linke/internal/domains/user/entities"
 	referralEntities "linke/internal/domains/referral/entities"
+	userEntities "linke/internal/domains/user/entities"
+	"time"
 )
 
 // AuthService defines the interface for authentication service operations
@@ -42,7 +42,6 @@ type AuthResponse struct {
 	Token *TokenResponse             `json:"token"`
 }
 
-
 // Service dependencies (interfaces that AuthService depends on)
 type UserService interface {
 	CreateUser(ctx context.Context, user *userEntities.User) error
@@ -75,13 +74,13 @@ type LoginSecurityService interface {
 
 // Claims represents JWT token claims
 type Claims struct {
-	UserID   uint      `json:"user_id"`
-	Email    string    `json:"email"`
-	Username string    `json:"username"`
-	Provider string    `json:"provider"`
-	Role     string    `json:"role"`
-	Status   string    `json:"status"`
-	IssuedAt time.Time `json:"issued_at"`
+	UserID    uint      `json:"user_id"`
+	Email     string    `json:"email"`
+	Username  string    `json:"username"`
+	Provider  string    `json:"provider"`
+	Role      string    `json:"role"`
+	Status    string    `json:"status"`
+	IssuedAt  time.Time `json:"issued_at"`
 	ExpiresAt time.Time `json:"expires_at"`
 }
 

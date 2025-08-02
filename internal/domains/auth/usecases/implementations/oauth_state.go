@@ -14,16 +14,15 @@ type OAuthStateStore struct {
 	mutex  sync.RWMutex
 }
 
-
 // NewOAuthStateStore creates a new OAuth state store
 func NewOAuthStateStore() *OAuthStateStore {
 	store := &OAuthStateStore{
 		states: make(map[string]*interfaces.OAuthStateInfo),
 	}
-	
+
 	// Start cleanup goroutine
 	go store.cleanupExpiredStates()
-	
+
 	return store
 }
 
@@ -31,16 +30,16 @@ func NewOAuthStateStore() *OAuthStateStore {
 func (s *OAuthStateStore) StoreState(state string, info *interfaces.OAuthStateInfo) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	
+
 	// Set expiration time if not set (default 10 minutes)
 	if info.ExpiresAt.IsZero() {
 		info.ExpiresAt = time.Now().Add(10 * time.Minute)
 	}
-	
+
 	if info.CreatedAt.IsZero() {
 		info.CreatedAt = time.Now()
 	}
-	
+
 	s.states[state] = info
 }
 
@@ -48,21 +47,21 @@ func (s *OAuthStateStore) StoreState(state string, info *interfaces.OAuthStateIn
 func (s *OAuthStateStore) GetState(state string) (*interfaces.OAuthStateInfo, error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	
+
 	info, exists := s.states[state]
 	if !exists {
 		return nil, fmt.Errorf("invalid or expired state parameter")
 	}
-	
+
 	// Check if expired
 	if time.Now().After(info.ExpiresAt) {
 		delete(s.states, state)
 		return nil, fmt.Errorf("state parameter has expired")
 	}
-	
+
 	// Remove state after use (single use)
 	delete(s.states, state)
-	
+
 	return info, nil
 }
 
@@ -70,12 +69,12 @@ func (s *OAuthStateStore) GetState(state string) (*interfaces.OAuthStateInfo, er
 func (s *OAuthStateStore) ValidateState(state string) bool {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
-	
+
 	info, exists := s.states[state]
 	if !exists {
 		return false
 	}
-	
+
 	return time.Now().Before(info.ExpiresAt)
 }
 
@@ -83,7 +82,7 @@ func (s *OAuthStateStore) ValidateState(state string) bool {
 func (s *OAuthStateStore) cleanupExpiredStates() {
 	ticker := time.NewTicker(1 * time.Minute)
 	defer ticker.Stop()
-	
+
 	for range ticker.C {
 		s.mutex.Lock()
 		now := time.Now()
@@ -100,6 +99,6 @@ func (s *OAuthStateStore) cleanupExpiredStates() {
 func (s *OAuthStateStore) GetStatsString() string {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
-	
+
 	return fmt.Sprintf("Active states: %d", len(s.states))
 }

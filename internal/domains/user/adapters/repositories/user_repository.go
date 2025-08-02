@@ -30,7 +30,7 @@ func (r *userRepository) Create(ctx context.Context, user *entities.User) error 
 	if err := r.db.WithContext(ctx).Create(user).Error; err != nil {
 		logger.Error("Failed to create user in repository",
 			logger.String("email", user.Email),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return fmt.Errorf("failed to create user: %w", err)
 	}
@@ -51,7 +51,7 @@ func (r *userRepository) GetByID(ctx context.Context, id uint) (*entities.User, 
 		}
 		logger.Error("Failed to get user by ID",
 			logger.Uint("user_id", id),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
@@ -67,7 +67,7 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*entitie
 		}
 		logger.Error("Failed to get user by email",
 			logger.String("email", email),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
@@ -83,7 +83,7 @@ func (r *userRepository) GetByGoogleID(ctx context.Context, googleID string) (*e
 		}
 		logger.Error("Failed to get user by Google ID",
 			logger.String("google_id", googleID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
@@ -99,7 +99,7 @@ func (r *userRepository) GetByGitHubID(ctx context.Context, githubID string) (*e
 		}
 		logger.Error("Failed to get user by GitHub ID",
 			logger.String("github_id", githubID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
@@ -115,7 +115,7 @@ func (r *userRepository) GetByTelegramID(ctx context.Context, telegramID string)
 		}
 		logger.Error("Failed to get user by Telegram ID",
 			logger.String("telegram_id", telegramID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
@@ -131,7 +131,7 @@ func (r *userRepository) GetActiveByID(ctx context.Context, id uint) (*entities.
 		}
 		logger.Error("Failed to get active user by ID",
 			logger.Uint("user_id", id),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to get active user: %w", err)
 	}
@@ -147,7 +147,7 @@ func (r *userRepository) GetActiveByEmail(ctx context.Context, email string) (*e
 		}
 		logger.Error("Failed to get active user by email",
 			logger.String("email", email),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to get active user: %w", err)
 	}
@@ -159,7 +159,7 @@ func (r *userRepository) Update(ctx context.Context, user *entities.User) error 
 	if err := r.db.WithContext(ctx).Save(user).Error; err != nil {
 		logger.Error("Failed to update user in repository",
 			logger.Uint("user_id", user.ID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return fmt.Errorf("failed to update user: %w", err)
 	}
@@ -287,7 +287,7 @@ func (r *userRepository) ListByProvider(ctx context.Context, provider string, li
 	if err := r.db.WithContext(ctx).Model(&entities.User{}).Where("provider = ?", provider).Count(&total).Error; err != nil {
 		logger.Error("Failed to count users by provider",
 			logger.String("provider", provider),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to count users by provider: %w", err)
 	}
@@ -296,7 +296,7 @@ func (r *userRepository) ListByProvider(ctx context.Context, provider string, li
 	if err := r.db.WithContext(ctx).Where("provider = ?", provider).Limit(limit).Offset(offset).Find(&users).Error; err != nil {
 		logger.Error("Failed to list users by provider",
 			logger.String("provider", provider),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to list users by provider: %w", err)
 	}
@@ -313,7 +313,7 @@ func (r *userRepository) ListByStatus(ctx context.Context, status string, limit,
 	if err := r.db.WithContext(ctx).Model(&entities.User{}).Where("status = ?", status).Count(&total).Error; err != nil {
 		logger.Error("Failed to count users by status",
 			logger.String("status", status),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to count users by status: %w", err)
 	}
@@ -322,7 +322,7 @@ func (r *userRepository) ListByStatus(ctx context.Context, status string, limit,
 	if err := r.db.WithContext(ctx).Where("status = ?", status).Limit(limit).Offset(offset).Find(&users).Error; err != nil {
 		logger.Error("Failed to list users by status",
 			logger.String("status", status),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to list users by status: %w", err)
 	}
@@ -339,7 +339,7 @@ func (r *userRepository) ListByRole(ctx context.Context, role string, limit, off
 	if err := r.db.WithContext(ctx).Model(&entities.User{}).Where("role = ?", role).Count(&total).Error; err != nil {
 		logger.Error("Failed to count users by role",
 			logger.String("role", role),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to count users by role: %w", err)
 	}
@@ -348,7 +348,7 @@ func (r *userRepository) ListByRole(ctx context.Context, role string, limit, off
 	if err := r.db.WithContext(ctx).Where("role = ?", role).Limit(limit).Offset(offset).Find(&users).Error; err != nil {
 		logger.Error("Failed to list users by role",
 			logger.String("role", role),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to list users by role: %w", err)
 	}
@@ -369,7 +369,7 @@ func (r *userRepository) Search(ctx context.Context, query string, limit, offset
 	if err := r.db.WithContext(ctx).Model(&entities.User{}).Where(whereClause, searchQuery, searchQuery, searchQuery).Count(&total).Error; err != nil {
 		logger.Error("Failed to count search results",
 			logger.String("query", query),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to count search results: %w", err)
 	}
@@ -378,7 +378,7 @@ func (r *userRepository) Search(ctx context.Context, query string, limit, offset
 	if err := r.db.WithContext(ctx).Where(whereClause, searchQuery, searchQuery, searchQuery).Limit(limit).Offset(offset).Find(&users).Error; err != nil {
 		logger.Error("Failed to search users",
 			logger.String("query", query),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to search users: %w", err)
 	}
@@ -600,7 +600,7 @@ func (r *userRepository) GetByInviteCodeUsed(ctx context.Context, inviteCode str
 	if err := r.db.WithContext(ctx).Where("invite_code_used = ?", inviteCode).Find(&users).Error; err != nil {
 		logger.Error("Failed to get users by invite code used",
 			logger.String("invite_code", inviteCode),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to get users by invite code: %w", err)
 	}

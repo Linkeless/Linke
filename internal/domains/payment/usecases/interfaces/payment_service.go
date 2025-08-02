@@ -2,8 +2,8 @@ package interfaces
 
 import (
 	"context"
-	"time"
 	"linke/internal/domains/payment/entities"
+	"time"
 )
 
 // PaymentService defines the interface for payment service operations
@@ -53,28 +53,28 @@ type SubscriptionOrderServiceInterface interface {
 type CreatePaymentOrderRequest struct {
 	UserID              uint    `json:"user_id"`
 	SubscriptionOrderID *uint   `json:"subscription_order_id,omitempty"`
-	Gateway             string  `json:"gateway"`             // epay, epusdt
-	PaymentMethod       string  `json:"payment_method"`      // alipay, wechat, usdt, etc.
-	Amount              float64 `json:"amount"`              // Amount in specified currency
-	Currency            string  `json:"currency"`            // CNY, USD, USDT
-	Subject             string  `json:"subject"`             // Order subject
-	Body                string  `json:"body"`                // Order description
-	ClientIP            string  `json:"client_ip"`           // Client IP
-	NotifyURL           string  `json:"notify_url"`          // Async notification URL
-	ReturnURL           string  `json:"return_url"`          // Sync return URL
-	ExpiredMinutes      int     `json:"expired_minutes"`     // Expiration time in minutes
-	Metadata            string  `json:"metadata,omitempty"`  // Additional metadata
+	Gateway             string  `json:"gateway"`            // epay, epusdt
+	PaymentMethod       string  `json:"payment_method"`     // alipay, wechat, usdt, etc.
+	Amount              float64 `json:"amount"`             // Amount in specified currency
+	Currency            string  `json:"currency"`           // CNY, USD, USDT
+	Subject             string  `json:"subject"`            // Order subject
+	Body                string  `json:"body"`               // Order description
+	ClientIP            string  `json:"client_ip"`          // Client IP
+	NotifyURL           string  `json:"notify_url"`         // Async notification URL
+	ReturnURL           string  `json:"return_url"`         // Sync return URL
+	ExpiredMinutes      int     `json:"expired_minutes"`    // Expiration time in minutes
+	Metadata            string  `json:"metadata,omitempty"` // Additional metadata
 }
 
 // CreatePaymentOrderResponse represents the unified response from payment order creation
 type CreatePaymentOrderResponse struct {
-	PaymentNo    string    `json:"payment_no"`              // Internal payment number
-	PaymentURL   string    `json:"payment_url"`             // Payment URL
-	QRCodeURL    string    `json:"qr_code_url"`             // QR code URL
-	Amount       float64   `json:"amount"`                  // Payment amount
-	Currency     string    `json:"currency"`                // Currency
-	ExpiredAt    time.Time `json:"expired_at"`              // Expiration time
-	GatewayData  string    `json:"gateway_data,omitempty"`  // Raw gateway response
+	PaymentNo   string    `json:"payment_no"`             // Internal payment number
+	PaymentURL  string    `json:"payment_url"`            // Payment URL
+	QRCodeURL   string    `json:"qr_code_url"`            // QR code URL
+	Amount      float64   `json:"amount"`                 // Payment amount
+	Currency    string    `json:"currency"`               // Currency
+	ExpiredAt   time.Time `json:"expired_at"`             // Expiration time
+	GatewayData string    `json:"gateway_data,omitempty"` // Raw gateway response
 }
 
 // QueryPaymentOrderResponse represents the unified response from payment order query

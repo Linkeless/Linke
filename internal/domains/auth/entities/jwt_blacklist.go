@@ -25,11 +25,11 @@ func (JWTBlacklist) TableName() string {
 
 // Blacklist reason constants
 const (
-	BlacklistReasonLogout          = "logout"
-	BlacklistReasonSecurityBreach  = "security_breach"
-	BlacklistReasonAdminRevoke     = "admin_revoke"
-	BlacklistReasonPasswordChange  = "password_change"
-	BlacklistReasonAccountLocked   = "account_locked"
+	BlacklistReasonLogout         = "logout"
+	BlacklistReasonSecurityBreach = "security_breach"
+	BlacklistReasonAdminRevoke    = "admin_revoke"
+	BlacklistReasonPasswordChange = "password_change"
+	BlacklistReasonAccountLocked  = "account_locked"
 )
 
 // HashToken creates a SHA256 hash of the JWT token for storage

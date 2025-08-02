@@ -24,10 +24,10 @@ import (
 	"linke/internal/shared/database"
 	loggerPkg "linke/internal/shared/logger"
 	"linke/internal/shared/queue"
-	
+
 	// Redis
 	"github.com/go-redis/redis/v8"
-	
+
 	// Migration 已移至 shared/database
 
 	// Swagger 文档
@@ -44,11 +44,28 @@ import (
 // @name Authorization
 // @description Type "Bearer" followed by a space and JWT token.
 
+// 类型定义
+
 // AppHandler 简单的应用处理器
 type AppHandler struct {
 	logger   loggerPkg.Logger
 	database *database.Database
 }
+
+// TaskHandler 简单的任务处理器
+type TaskHandler struct {
+	taskQueue *queue.TaskQueue
+	logger    loggerPkg.Logger
+}
+
+// HTTPServer HTTP 服务器结构
+type HTTPServer struct {
+	*gin.Engine
+	logger loggerPkg.Logger
+	config *config.Config
+}
+
+// 构造函数
 
 // NewAppHandler 创建应用处理器
 func NewAppHandler(logger loggerPkg.Logger, database *database.Database) *AppHandler {
@@ -58,72 +75,12 @@ func NewAppHandler(logger loggerPkg.Logger, database *database.Database) *AppHan
 	}
 }
 
-// HealthCheck 健康检查
-func (h *AppHandler) HealthCheck(c *gin.Context) {
-	ctx := c.Request.Context()
-	
-	health := h.database.HealthCheck(ctx)
-	result := map[string]interface{}{
-		"status":   "healthy",
-		"database": health,
-		"architecture": "VSA + Clean Architecture",
-		"framework": "Fx Dependency Injection",
-		"note": "New architecture successfully implemented",
-	}
-	
-	c.JSON(http.StatusOK, result)
-}
-
-// TaskHandler 简单的任务处理器
-type TaskHandler struct {
-	taskQueue *queue.TaskQueue
-	logger    loggerPkg.Logger
-}
-
 // NewTaskHandler 创建任务处理器
 func NewTaskHandler(taskQueue *queue.TaskQueue, logger loggerPkg.Logger) *TaskHandler {
 	return &TaskHandler{
 		taskQueue: taskQueue,
 		logger:    logger,
 	}
-}
-
-// CreateTask 创建任务
-func (h *TaskHandler) CreateTask(c *gin.Context) {
-	var req struct {
-		Type    string                 `json:"type" binding:"required"`
-		Payload map[string]interface{} `json:"payload" binding:"required"`
-	}
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	task := &queue.Task{
-		ID:       fmt.Sprintf("task-%d", os.Getpid()),
-		Type:     req.Type,
-		Payload:  req.Payload,
-		MaxRetry: 3,
-	}
-
-	if err := h.taskQueue.Enqueue(c.Request.Context(), "default", task); err != nil {
-		h.logger.Error("Failed to enqueue task", loggerPkg.ErrorField(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to enqueue task"})
-		return
-	}
-
-	c.JSON(http.StatusCreated, gin.H{
-		"message": "Task enqueued successfully",
-		"task_id": task.ID,
-	})
-}
-
-// HTTPServer HTTP 服务器结构
-type HTTPServer struct {
-	*gin.Engine
-	logger loggerPkg.Logger
-	config *config.Config
 }
 
 // NewHTTPServer 创建 HTTP 服务器
@@ -173,11 +130,60 @@ func NewHTTPServer(
 	}
 }
 
+// 方法
+
+// HealthCheck 健康检查
+func (h *AppHandler) HealthCheck(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	health := h.database.HealthCheck(ctx)
+	result := map[string]interface{}{
+		"status":       "healthy",
+		"database":     health,
+		"architecture": "VSA + Clean Architecture",
+		"framework":    "Fx Dependency Injection",
+		"note":         "New architecture successfully implemented",
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
+// CreateTask 创建任务
+func (h *TaskHandler) CreateTask(c *gin.Context) {
+	var req struct {
+		Type    string                 `json:"type" binding:"required"`
+		Payload map[string]interface{} `json:"payload" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	task := &queue.Task{
+		ID:       fmt.Sprintf("task-%d", os.Getpid()),
+		Type:     req.Type,
+		Payload:  req.Payload,
+		MaxRetry: 3,
+	}
+
+	if err := h.taskQueue.Enqueue(c.Request.Context(), "default", task); err != nil {
+		h.logger.Error("Failed to enqueue task", loggerPkg.ErrorField(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to enqueue task"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Task enqueued successfully",
+		"task_id": task.ID,
+	})
+}
+
 // Start 启动 HTTP 服务器
 func (s *HTTPServer) Start() error {
 	addr := fmt.Sprintf(":%s", s.config.Server.Port)
 	s.logger.Info("Starting HTTP server", loggerPkg.String("addr", addr))
-	
+
 	return http.ListenAndServe(addr, s.Engine)
 }
 
@@ -355,7 +361,7 @@ func handleMigrationCommand(runMigration bool, migrateCommand, migrateVersion, m
 	loggerPkg.Info("Migration command completed, exiting...", loggerPkg.String("command", command))
 }
 
-// Migration helper functions (same as original)
+// 工具函数
 func showMigrationHelp() {
 	fmt.Println("Database Migration Commands")
 	fmt.Println("")

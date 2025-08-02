@@ -56,7 +56,7 @@ type OAuth2Config struct {
 }
 
 type JWTConfig struct {
-	Secret     string
+	Secret      string
 	ExpireHours int
 }
 

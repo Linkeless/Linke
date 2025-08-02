@@ -5,19 +5,19 @@ import (
 	"fmt"
 	"time"
 
-	"linke/internal/shared/logger"
 	"linke/internal/domains/auth/entities"
+	"linke/internal/shared/logger"
 
 	"gorm.io/gorm"
 )
 
 // LoginSecurityService handles login security features like failure tracking and account lockouts
 type LoginSecurityService struct {
-	db                    *gorm.DB
-	maxFailures           int           // Maximum failed attempts before lockout
-	lockoutDuration       time.Duration // How long to lock account
-	failureWindow         time.Duration // Time window to count failures
-	progressiveLockout    bool          // Whether to use progressive lockout (longer locks for repeat offenders)
+	db                 *gorm.DB
+	maxFailures        int           // Maximum failed attempts before lockout
+	lockoutDuration    time.Duration // How long to lock account
+	failureWindow      time.Duration // Time window to count failures
+	progressiveLockout bool          // Whether to use progressive lockout (longer locks for repeat offenders)
 }
 
 // LoginSecurityConfig contains configuration for login security
@@ -94,7 +94,7 @@ func (l *LoginSecurityService) RecordLoginAttempt(ctx context.Context, email, ip
 func (l *LoginSecurityService) IsAccountLocked(ctx context.Context, email string) (bool, *entities.AccountLockout, error) {
 	var lockout entities.AccountLockout
 	err := l.db.WithContext(ctx).Where("email = ?", email).First(&lockout).Error
-	
+
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return false, nil, nil // Account not locked
@@ -112,7 +112,7 @@ func (l *LoginSecurityService) IsAccountLocked(ctx context.Context, email string
 // GetFailureCount returns the current failure count for an email within the failure window
 func (l *LoginSecurityService) GetFailureCount(ctx context.Context, email string) (int, error) {
 	windowStart := time.Now().Add(-l.failureWindow)
-	
+
 	var count int64
 	err := l.db.WithContext(ctx).Model(&entities.LoginAttempt{}).
 		Where("email = ? AND success = false AND created_at > ?", email, windowStart).
@@ -130,7 +130,7 @@ func (l *LoginSecurityService) updateFailureTracking(ctx context.Context, email 
 	// Get current lockout record or create new one
 	var lockout entities.AccountLockout
 	err := l.db.WithContext(ctx).Where("email = ?", email).First(&lockout).Error
-	
+
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return fmt.Errorf("failed to get lockout record: %w", err)
 	}
@@ -158,7 +158,7 @@ func (l *LoginSecurityService) updateFailureTracking(ctx context.Context, email 
 		lockout.FailedCount = failureCount
 		lockout.LastFailure = now
 		lockout.UpdatedAt = now
-		
+
 		if userID != nil && lockout.UserID == nil {
 			lockout.UserID = userID
 		}
@@ -206,7 +206,7 @@ func (l *LoginSecurityService) calculateLockoutDuration(lockout *entities.Accoun
 	// Count how many times this account has been locked before
 	var lockCount int64
 	l.db.Model(&entities.LoginAttempt{}).
-		Where("email = ? AND reason = ? AND created_at > ?", 
+		Where("email = ? AND reason = ? AND created_at > ?",
 			lockout.Email, entities.LoginFailureAccountLocked, time.Now().Add(-24*time.Hour)).
 		Count(&lockCount)
 
@@ -244,7 +244,7 @@ func (l *LoginSecurityService) UnlockAccount(ctx context.Context, email string, 
 // GetLoginAttemptStats returns statistics about login attempts
 func (l *LoginSecurityService) GetLoginAttemptStats(ctx context.Context, since time.Time) (map[string]interface{}, error) {
 	var totalAttempts, successfulAttempts, failedAttempts int64
-	
+
 	// Count total attempts
 	if err := l.db.WithContext(ctx).Model(&entities.LoginAttempt{}).
 		Where("created_at > ?", since).Count(&totalAttempts).Error; err != nil {
@@ -271,7 +271,7 @@ func (l *LoginSecurityService) GetLoginAttemptStats(ctx context.Context, since t
 		IP    string `json:"ip"`
 		Count int64  `json:"count"`
 	}
-	
+
 	if err := l.db.WithContext(ctx).Model(&entities.LoginAttempt{}).
 		Select("ip, COUNT(*) as count").
 		Where("created_at > ? AND success = false", since).
@@ -295,9 +295,9 @@ func (l *LoginSecurityService) GetLoginAttemptStats(ctx context.Context, since t
 // CleanupOldAttempts removes old login attempt records
 func (l *LoginSecurityService) CleanupOldAttempts(ctx context.Context, olderThan time.Duration) error {
 	cutoff := time.Now().Add(-olderThan)
-	
+
 	result := l.db.WithContext(ctx).Where("created_at < ?", cutoff).Delete(&entities.LoginAttempt{})
-	
+
 	if result.Error != nil {
 		return fmt.Errorf("failed to cleanup old login attempts: %w", result.Error)
 	}

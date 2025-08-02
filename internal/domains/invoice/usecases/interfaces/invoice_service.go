@@ -35,17 +35,17 @@ type InvoiceService interface {
 
 // CreateInvoiceRequest represents the request to create an invoice
 type CreateInvoiceRequest struct {
-	UserID              uint    `json:"user_id" binding:"required"`
-	SubscriptionOrderID uint    `json:"subscription_order_id" binding:"required"`
-	InvoiceType         string  `json:"invoice_type,omitempty" example:"standard"`
-	
+	UserID              uint   `json:"user_id" binding:"required"`
+	SubscriptionOrderID uint   `json:"subscription_order_id" binding:"required"`
+	InvoiceType         string `json:"invoice_type,omitempty" example:"standard"`
+
 	// Financial Details
 	Amount    float64 `json:"amount" binding:"required,min=0"`
 	Currency  string  `json:"currency,omitempty" example:"USD"`
 	TaxRate   float64 `json:"tax_rate,omitempty" example:"0.2"`
 	TaxType   string  `json:"tax_type,omitempty" example:"VAT"`
 	TaxNumber string  `json:"tax_number,omitempty" example:"GB123456789"`
-	
+
 	// Billing Information
 	BillingName    string `json:"billing_name" binding:"required"`
 	BillingEmail   string `json:"billing_email" binding:"required,email"`
@@ -54,12 +54,12 @@ type CreateInvoiceRequest struct {
 	BillingState   string `json:"billing_state,omitempty"`
 	BillingCountry string `json:"billing_country,omitempty"`
 	BillingZip     string `json:"billing_zip,omitempty"`
-	
+
 	// Company Information
 	CompanyName    string `json:"company_name,omitempty"`
 	CompanyTaxID   string `json:"company_tax_id,omitempty"`
 	CompanyAddress string `json:"company_address,omitempty"`
-	
+
 	// Additional Information
 	Description string `json:"description,omitempty"`
 	Notes       string `json:"notes,omitempty"`
@@ -75,7 +75,7 @@ type UpdateInvoiceRequest struct {
 	Amount      *float64 `json:"amount,omitempty" example:"100.00"`
 	TaxRate     *float64 `json:"tax_rate,omitempty" example:"0.1"`
 	TaxType     *string  `json:"tax_type,omitempty" example:"GST"`
-	
+
 	// Billing Information
 	BillingName    *string `json:"billing_name,omitempty"`
 	BillingEmail   *string `json:"billing_email,omitempty"`
@@ -84,12 +84,12 @@ type UpdateInvoiceRequest struct {
 	BillingState   *string `json:"billing_state,omitempty"`
 	BillingCountry *string `json:"billing_country,omitempty"`
 	BillingZip     *string `json:"billing_zip,omitempty"`
-	
+
 	// Company Information
 	CompanyName    *string `json:"company_name,omitempty"`
 	CompanyTaxID   *string `json:"company_tax_id,omitempty"`
 	CompanyAddress *string `json:"company_address,omitempty"`
-	
+
 	// Additional Information
 	Description *string `json:"description,omitempty"`
 	Notes       *string `json:"notes,omitempty"`
@@ -111,9 +111,9 @@ type GetInvoicesRequest struct {
 
 // SendInvoiceRequest represents the request to send an invoice via email
 type SendInvoiceRequest struct {
-	ToEmail   string `json:"to_email" binding:"required,email" example:"customer@example.com"`
-	CcEmails  string `json:"cc_emails,omitempty" example:"manager@example.com"`
-	Subject   string `json:"subject,omitempty" example:"Your Invoice"`
-	Message   string `json:"message,omitempty" example:"Please find your invoice attached"`
-	SendCopy  bool   `json:"send_copy,omitempty" example:"true"`
+	ToEmail  string `json:"to_email" binding:"required,email" example:"customer@example.com"`
+	CcEmails string `json:"cc_emails,omitempty" example:"manager@example.com"`
+	Subject  string `json:"subject,omitempty" example:"Your Invoice"`
+	Message  string `json:"message,omitempty" example:"Please find your invoice attached"`
+	SendCopy bool   `json:"send_copy,omitempty" example:"true"`
 }
