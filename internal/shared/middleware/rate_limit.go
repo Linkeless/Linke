@@ -158,6 +158,41 @@ func PaymentRateLimit() gin.HandlerFunc {
 	return RateLimit(10, 2) // 10 requests per minute, burst of 2
 }
 
+// PaymentNotifyRateLimit creates a specialized rate limiter for payment notifications
+func PaymentNotifyRateLimit(rate, burst int) gin.HandlerFunc {
+	limiter := NewRateLimiter(rate, burst)
+
+	// Start cleanup goroutine
+	go func() {
+		ticker := time.NewTicker(10 * time.Minute)
+		defer ticker.Stop()
+		for range ticker.C {
+			limiter.CleanupExpiredClients()
+		}
+	}()
+
+	return func(c *gin.Context) {
+		// Use a combination of IP and gateway for more granular control
+		gateway := c.Param("gateway")
+		clientID := fmt.Sprintf("payment_notify:%s:%s", gateway, c.ClientIP())
+
+		if !limiter.Allow(clientID) {
+			logger.Warn("Payment notification rate limit exceeded",
+				logger.String("client_ip", c.ClientIP()),
+				logger.String("gateway", gateway),
+				logger.String("path", c.Request.URL.Path),
+				logger.String("method", c.Request.Method),
+				logger.String("client_id", clientID))
+
+			c.String(http.StatusTooManyRequests, "fail")
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
+}
+
 // APIRateLimit creates a rate limiter for general API endpoints
 func APIRateLimit() gin.HandlerFunc {
 	return RateLimit(100, 20) // 100 requests per minute, burst of 20

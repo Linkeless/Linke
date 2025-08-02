@@ -257,14 +257,49 @@ func (ps *PaymentService) ProcessNotification(ctx context.Context, gateway strin
 		return fmt.Errorf("payment record not found: %w", err)
 	}
 
-	// SECURITY: Idempotency check - generate hash of notification data
+	// SECURITY: Enhanced idempotency check
 	notifyHash := ps.generateNotificationHash(data)
+	
+	// Safely get client IP from context (set by middleware)
+	var clientIP string
+	if ip := ctx.Value("client_ip"); ip != nil {
+		if ipStr, ok := ip.(string); ok {
+			clientIP = ipStr
+		}
+	}
+	if clientIP == "" {
+		clientIP = "unknown" // Fallback
+	}
+	
+	// Check for exact duplicate (same hash)
 	if paymentRecord.LastNotifyHash == notifyHash {
 		logger.Warn("Duplicate notification detected, ignoring",
 			logger.String("payment_no", paymentRecord.PaymentNo),
 			logger.String("gateway", gateway),
-			logger.String("notify_hash", notifyHash))
+			logger.String("notify_hash", notifyHash),
+			logger.String("client_ip", clientIP))
 		return nil // Silently ignore duplicate notifications
+	}
+	
+	// Check for time-based replay attack protection
+	if paymentRecord.LastNotifyTime != nil {
+		timeSinceLastNotify := time.Since(*paymentRecord.LastNotifyTime)
+		if timeSinceLastNotify < 30*time.Second {
+			logger.Warn("Notification received too soon after last notification",
+				logger.String("payment_no", paymentRecord.PaymentNo),
+				logger.String("gateway", gateway),
+				logger.Duration("time_since_last", timeSinceLastNotify))
+			return fmt.Errorf("notification rate limit exceeded")
+		}
+	}
+	
+	// Check for suspicious IP changes (optional security measure)
+	if paymentRecord.NotifySource != "" && paymentRecord.NotifySource != clientIP {
+		logger.Warn("Notification source IP changed",
+			logger.String("payment_no", paymentRecord.PaymentNo),
+			logger.String("previous_ip", paymentRecord.NotifySource),
+			logger.String("current_ip", clientIP))
+		// Don't block, but log for monitoring
 	}
 
 	// SECURITY: Check for status downgrade attempts
@@ -277,12 +312,14 @@ func (ps *PaymentService) ProcessNotification(ctx context.Context, gateway strin
 		return nil
 	}
 
-	// Update notification tracking
+	// Update notification tracking with enhanced security fields
 	now := time.Now()
 	updateFields := map[string]interface{}{
 		"last_notify_hash": notifyHash,
 		"notify_count":     paymentRecord.NotifyCount + 1,
 		"notified_at":      &now,
+		"last_notify_time": &now,
+		"notify_source":    clientIP,
 	}
 
 	// Check if payment is completed

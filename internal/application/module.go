@@ -16,8 +16,9 @@ var Module = fx.Module("application",
 		services.NewSimpleApplicationService,
 	),
 
-	// 业务工作流 (基础实现已恢复)
+	// 业务工作流 (完整实现)
 	fx.Provide(
+		// SubscriptionWorkflow 需要多个服务依赖，通过依赖注入自动连接
 		workflows.NewSubscriptionWorkflow,
 		workflows.NewReferralWorkflow,
 	),
@@ -31,5 +32,7 @@ var Module = fx.Module("application",
 	// 应用层初始化
 	fx.Invoke(func() {
 		// 应用层初始化逻辑
+		// SubscriptionWorkflow 的所有依赖都通过 fx 自动注入
+		// 包括：logger、database、各种服务接口
 	}),
 )

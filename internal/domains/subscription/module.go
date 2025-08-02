@@ -75,6 +75,7 @@ var Module = fx.Module("subscription",
 	// 提供 Handler 实现
 	fx.Provide(
 		handlers.NewSubscriptionOrderHandler,
+		handlers.NewUserSubscriptionHandler,
 	),
 
 	// 提供扩展服务（这些可能没有接口定义）

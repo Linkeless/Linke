@@ -33,6 +33,9 @@ import (
 	// GORM
 	"gorm.io/gorm"
 
+	// Asynq
+	"github.com/hibiken/asynq"
+
 	// Migration 已移至 shared/database
 
 	// 业务领域模块
@@ -50,8 +53,8 @@ import (
 	invoiceHandlers "linke/internal/domains/invoice/handlers"
 	subscriptionHandlers "linke/internal/domains/subscription/handlers"
 	userHandlers "linke/internal/domains/user/handlers"
-	// paymentHandlers "linke/internal/domains/payment/handlers" // TODO: 待实现
-	// serverHandlers "linke/internal/domains/server/handlers"   // TODO: 待实现
+	paymentHandlers "linke/internal/domains/payment/handlers"
+	serverHandlers "linke/internal/domains/server/handlers"
 
 	// 应用层
 	applicationLayer "linke/internal/application"
@@ -221,10 +224,10 @@ func NewHTTPServer(
 	userProfileHandler *userHandlers.UserProfileHandler,
 	adminUserHandler *userHandlers.AdminUserHandler,
 	subscriptionOrderHandler *subscriptionHandlers.SubscriptionOrderHandler,
+	userSubscriptionHandler *subscriptionHandlers.UserSubscriptionHandler,
 	invoiceHandler *invoiceHandlers.InvoiceHandler,
-	// TODO: 待实现的handlers
-	// paymentHandler *paymentHandlers.PaymentHandler,
-	// serverHandler *serverHandlers.ServerAPIHandler,
+	paymentHandler *paymentHandlers.PaymentHandler,
+	serverHandler *serverHandlers.ServerAPIHandler,
 ) *HTTPServer {
 	// 设置 Gin 模式
 	if cfg.Log.Level == "debug" {
@@ -261,14 +264,30 @@ func NewHTTPServer(
 	// 认证路由 (/api/v1/auth)
 	authGroup := apiV1.Group("/auth")
 	{
+		// 本地认证
 		authGroup.POST("/register", authHandler.Register)
 		authGroup.POST("/login", authHandler.LoginLocal)
 		authGroup.POST("/logout", authHandler.Logout)
 		authGroup.POST("/refresh", authHandler.RefreshToken)
-		authGroup.GET("/callback", authHandler.Callback)
-		authGroup.GET("/providers", authHandler.GetProviders)
 		authGroup.GET("/profile", authHandler.GetProfile)
 		authGroup.POST("/change-password", authHandler.ChangePassword)
+		
+		// OAuth 提供商路由
+		authGroup.GET("/providers", authHandler.GetProviders)
+		
+		// OAuth 认证启动路由 - 使用动态参数匹配 handler 预期
+		authGroup.GET("/:provider", authHandler.Login)
+		
+		// OAuth 回调路由 - 使用动态参数匹配 handler 预期
+		authGroup.GET("/:provider/callback", authHandler.Callback)
+		
+		// 通用回调路由（兼容性）
+		authGroup.GET("/callback", authHandler.Callback)
+		
+		// 额外的 OAuth 端点
+		authGroup.POST("/url", authHandler.GetAuthURL)
+		authGroup.POST("/token", authHandler.ExchangeToken)
+		authGroup.GET("/telegram/widget", authHandler.GetTelegramWidget)
 	}
 
 	// 用户路由 (/api/v1/user)
@@ -294,29 +313,40 @@ func NewHTTPServer(
 	// 订阅路由 (/api/v1/subscription)
 	subscriptionGroup := apiV1.Group("/subscription")
 	{
+		// 订单相关
 		subscriptionGroup.POST("/orders", subscriptionOrderHandler.CreateSubscriptionOrder)
+		subscriptionGroup.GET("/orders/my", subscriptionOrderHandler.GetMySubscriptionOrders)
+		subscriptionGroup.GET("/orders/:id", subscriptionOrderHandler.GetSubscriptionOrder)
+		
+		// 订阅管理相关
+		subscriptionGroup.GET("/my", userSubscriptionHandler.GetMySubscriptions)
+		subscriptionGroup.GET("/my/active", userSubscriptionHandler.GetMyActiveSubscriptions)
+		subscriptionGroup.GET("/:id", userSubscriptionHandler.GetSubscription)
+		subscriptionGroup.POST("/:id/cancel", userSubscriptionHandler.CancelSubscription)
+		subscriptionGroup.GET("/:id/traffic-stats", userSubscriptionHandler.GetSubscriptionTrafficStats)
 	}
 
 	// 发票路由 (/api/v1/invoice) - 使用RegisterRoutes方法
 	invoiceHandler.RegisterRoutes(apiV1)
 
-	// TODO: 以下路由需要等待handler方法实现后启用
 	// 支付路由 (/api/v1/payment)
-	// paymentGroup := apiV1.Group("/payment")
-	// {
-	//     paymentGroup.POST("/create", paymentHandler.CreatePayment)
-	//     paymentGroup.GET("/:id", paymentHandler.GetPayment)
-	//     paymentGroup.POST("/webhook/:gateway", paymentHandler.HandleWebhook)
-	// }
+	paymentGroup := apiV1.Group("/payment")
+	{
+		paymentGroup.POST("/orders", paymentHandler.CreatePaymentOrder)
+		paymentGroup.GET("/orders/:id", paymentHandler.GetPaymentOrder)
+		paymentGroup.GET("/my-orders", paymentHandler.GetMyPaymentOrders)
+		paymentGroup.GET("/methods", paymentHandler.GetAvailablePaymentMethods)
+		paymentGroup.POST("/notify/:gateway", paymentHandler.PaymentNotify)
+	}
 
 	// 服务器路由 (/api/v1/server)
-	// serverGroup := apiV1.Group("/server")
-	// {
-	//     serverGroup.GET("/groups", serverHandler.GetServerGroups)
-	//     serverGroup.POST("/groups", serverHandler.CreateServerGroup)
-	//     serverGroup.PUT("/groups/:id", serverHandler.UpdateServerGroup)
-	//     serverGroup.DELETE("/groups/:id", serverHandler.DeleteServerGroup)
-	// }
+	serverGroup := apiV1.Group("/server")
+	{
+		serverGroup.GET("/health", serverHandler.Health)
+		serverGroup.GET("/uni-proxy/config", serverHandler.UniProxyConfig)
+		serverGroup.GET("/uni-proxy/users", serverHandler.UniProxyUsers)
+		serverGroup.POST("/uni-proxy/push", serverHandler.UniProxyPush)
+	}
 
 	// Swagger 文档
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -503,6 +533,19 @@ func main() {
 						cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.DB)
 				}
 				return taskProcessor, nil
+			},
+			// Asynq Client 提供者 - 为需要直接使用 asynq.Client 的服务提供
+			func(redisClient *redis.Client, cfg *config.Config) (*asynq.Client, error) {
+				asynqClient := asynq.NewClient(asynq.RedisClientOpt{
+					Addr:     redisClient.Options().Addr,
+					Password: redisClient.Options().Password,
+					DB:       redisClient.Options().DB,
+				})
+				if asynqClient == nil {
+					return nil, fmt.Errorf("asynq client initialization failed - redis: %s:%s, db: %d", 
+						cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.DB)
+				}
+				return asynqClient, nil
 			},
 		),
 

@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -19,6 +20,7 @@ type Config struct {
 	JWT      JWTConfig
 	Log      LogConfig
 	API      APIConfig
+	Payment  PaymentSecurityConfig
 }
 
 type ServerConfig struct {
@@ -64,6 +66,30 @@ type LogConfig struct {
 	Level  string
 	Format string
 	Output string
+}
+
+type PaymentSecurityConfig struct {
+	// Signature verification
+	RequireSignature          bool     `json:"require_signature"`
+	EpaySignKey              string   `json:"epay_sign_key"`
+	EpusdtSignKey            string   `json:"epusdt_sign_key"`
+	
+	// IP whitelist
+	EnableIPWhitelist        bool     `json:"enable_ip_whitelist"`
+	EpayIPWhitelist          []string `json:"epay_ip_whitelist"`
+	EpusdtIPWhitelist        []string `json:"epusdt_ip_whitelist"`
+	
+	// Replay attack prevention
+	EnableReplayProtection   bool     `json:"enable_replay_protection"`
+	ReplayTimeWindowMinutes  int      `json:"replay_time_window_minutes"`
+	
+	// Rate limiting
+	NotifyRateLimit          int      `json:"notify_rate_limit"`          // requests per minute
+	NotifyRateBurst          int      `json:"notify_rate_burst"`          // burst size
+	
+	// Security headers
+	RequireHTTPS             bool     `json:"require_https"`
+	MaxRequestSize           int64    `json:"max_request_size"`           // in bytes
 }
 
 func LoadConfig() *Config {
@@ -151,6 +177,20 @@ func LoadConfig() *Config {
 		API: APIConfig{
 			ServerToken: getEnv("SERVER_API_TOKEN", ""),
 		},
+		Payment: PaymentSecurityConfig{
+			RequireSignature:        getEnvBool("PAYMENT_REQUIRE_SIGNATURE", true),
+			EpaySignKey:            getEnv("EPAY_SIGN_KEY", ""),
+			EpusdtSignKey:          getEnv("EPUSDT_SIGN_KEY", ""),
+			EnableIPWhitelist:      getEnvBool("PAYMENT_ENABLE_IP_WHITELIST", false),
+			EpayIPWhitelist:        getEnvStringSlice("EPAY_IP_WHITELIST", []string{}),
+			EpusdtIPWhitelist:      getEnvStringSlice("EPUSDT_IP_WHITELIST", []string{}),
+			EnableReplayProtection: getEnvBool("PAYMENT_ENABLE_REPLAY_PROTECTION", true),
+			ReplayTimeWindowMinutes: getEnvInt("PAYMENT_REPLAY_TIME_WINDOW_MINUTES", 5),
+			NotifyRateLimit:        getEnvInt("PAYMENT_NOTIFY_RATE_LIMIT", 10),
+			NotifyRateBurst:        getEnvInt("PAYMENT_NOTIFY_RATE_BURST", 2),
+			RequireHTTPS:           getEnvBool("PAYMENT_REQUIRE_HTTPS", false),
+			MaxRequestSize:         int64(getEnvInt("PAYMENT_MAX_REQUEST_SIZE", 1048576)), // 1MB default
+		},
 	}
 }
 
@@ -166,6 +206,33 @@ func getEnvInt(key string, defaultValue int) int {
 		if intValue, err := strconv.Atoi(value); err == nil {
 			return intValue
 		}
+	}
+	return defaultValue
+}
+
+func getEnvBool(key string, defaultValue bool) bool {
+	if value := os.Getenv(key); value != "" {
+		switch strings.ToLower(value) {
+		case "true", "1", "yes", "on":
+			return true
+		case "false", "0", "no", "off":
+			return false
+		}
+	}
+	return defaultValue
+}
+
+func getEnvStringSlice(key string, defaultValue []string) []string {
+	if value := os.Getenv(key); value != "" {
+		// Split by comma and trim spaces
+		parts := strings.Split(value, ",")
+		result := make([]string, 0, len(parts))
+		for _, part := range parts {
+			if trimmed := strings.TrimSpace(part); trimmed != "" {
+				result = append(result, trimmed)
+			}
+		}
+		return result
 	}
 	return defaultValue
 }

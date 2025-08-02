@@ -846,6 +846,19 @@ definitions:
         example: 550e8400-e29b-41d4-a716-446655440000
         type: string
     type: object
+  handlers.CancelSubscriptionRequest:
+    properties:
+      cancel_at_period_end:
+        example: true
+        type: boolean
+      reason:
+        example: No longer needed
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - reason
+    type: object
   handlers.ChangePasswordRequest:
     properties:
       new_password:
@@ -874,6 +887,9 @@ definitions:
       gateway:
         example: epay
         type: string
+      invoice_id:
+        example: 1
+        type: integer
       payment_method:
         example: alipay
         type: string
@@ -3824,6 +3840,245 @@ paths:
       security:
       - BearerAuth: []
       summary: '[User] Get my subscription orders'
+      tags:
+      - User-Subscription
+  /subscriptions/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get details of a specific subscription
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.UserSubscriptionResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User] Get subscription details'
+      tags:
+      - User-Subscription
+  /subscriptions/{id}/cancel:
+    post:
+      consumes:
+      - application/json
+      description: Cancel a subscription
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Cancel request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CancelSubscriptionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.UserSubscriptionResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User] Cancel subscription'
+      tags:
+      - User-Subscription
+  /subscriptions/{id}/traffic-stats:
+    get:
+      consumes:
+      - application/json
+      description: Get traffic statistics for a subscription
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User] Get subscription traffic statistics'
+      tags:
+      - User-Subscription
+  /subscriptions/my:
+    get:
+      consumes:
+      - application/json
+      description: Get current user's subscriptions with optional filtering
+      parameters:
+      - description: Filter by status
+        enum:
+        - active
+        - paused
+        - cancelled
+        - expired
+        - trial
+        in: query
+        name: status
+        type: string
+      - description: Limit results
+        example: 10
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - description: Offset results
+        example: 0
+        in: query
+        minimum: 0
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.PaginatedResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/entities.UserSubscriptionResponse'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User] Get my subscriptions'
+      tags:
+      - User-Subscription
+  /subscriptions/my/active:
+    get:
+      consumes:
+      - application/json
+      description: Get current user's active subscriptions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/entities.UserSubscriptionResponse'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User] Get my active subscriptions'
       tags:
       - User-Subscription
   /tasks:
