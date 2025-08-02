@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"linke/config"
+	"linke/internal/shared/config"
 )
 
 func main() {

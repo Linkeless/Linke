@@ -1,0 +1,97 @@
+package middleware
+
+import (
+	"strings"
+
+	"linke/internal/shared/logger"
+	"linke/internal/shared/response"
+
+	"github.com/gin-gonic/gin"
+)
+
+const (
+	AuthContextKey = "auth_user"
+)
+
+// AuthService interface for authentication operations
+type AuthService interface {
+	ValidateToken(token string) (interface{}, error)
+}
+
+// AuthMiddleware creates a middleware for JWT authentication
+func AuthMiddleware(authService AuthService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			logger.Warn("Missing authorization header",
+				logger.String("path", c.Request.URL.Path),
+			)
+			response.Unauthorized(c, "Authorization header is required")
+			c.Abort()
+			return
+		}
+
+		tokenParts := strings.SplitN(authHeader, " ", 2)
+		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
+			logger.Warn("Invalid authorization header format",
+				logger.String("path", c.Request.URL.Path),
+			)
+			response.Unauthorized(c, "Invalid authorization header format. Use 'Bearer <token>'")
+			c.Abort()
+			return
+		}
+
+		token := tokenParts[1]
+		user, err := authService.ValidateToken(token)
+		if err != nil {
+			logger.Warn("Invalid token",
+				logger.String("path", c.Request.URL.Path),
+				logger.Error2("error", err),
+			)
+			response.Unauthorized(c, "Invalid or expired token")
+			c.Abort()
+			return
+		}
+
+		// Store user in context for use in handlers
+		c.Set(AuthContextKey, user)
+		// Also store user ID for handlers that only need the ID
+		if userWithID, ok := user.(interface{ GetID() interface{} }); ok {
+			c.Set("user_id", userWithID.GetID())
+		}
+		c.Next()
+	}
+}
+
+// OptionalAuthMiddleware creates a middleware that sets user context if token is present but doesn't require it
+func OptionalAuthMiddleware(authService AuthService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.Next()
+			return
+		}
+
+		tokenParts := strings.SplitN(authHeader, " ", 2)
+		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
+			c.Next()
+			return
+		}
+
+		token := tokenParts[1]
+		user, err := authService.ValidateToken(token)
+		if err != nil {
+			// Don't fail the request, just continue without user context
+			c.Next()
+			return
+		}
+
+		// Store user in context for use in handlers
+		c.Set(AuthContextKey, user)
+		// Also store user ID for handlers that only need the ID
+		if userWithID, ok := user.(interface{ GetID() interface{} }); ok {
+			c.Set("user_id", userWithID.GetID())
+		}
+		c.Next()
+	}
+}
