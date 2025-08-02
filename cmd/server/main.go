@@ -30,6 +30,25 @@ import (
 
 	// Migration 已移至 shared/database
 
+	// 业务领域模块
+	authDomain "linke/internal/domains/auth"
+	invoiceDomain "linke/internal/domains/invoice"
+	paymentDomain "linke/internal/domains/payment"
+	serverDomain "linke/internal/domains/server"
+	subscriptionDomain "linke/internal/domains/subscription"
+	userDomain "linke/internal/domains/user"
+
+	// Handler 导入
+	authHandlers "linke/internal/domains/auth/handlers"
+	invoiceHandlers "linke/internal/domains/invoice/handlers"
+	subscriptionHandlers "linke/internal/domains/subscription/handlers"
+	userHandlers "linke/internal/domains/user/handlers"
+	// paymentHandlers "linke/internal/domains/payment/handlers" // TODO: 待实现
+	// serverHandlers "linke/internal/domains/server/handlers"   // TODO: 待实现
+
+	// 应用层
+	applicationLayer "linke/internal/application"
+
 	// Swagger 文档
 	_ "linke/docs"
 )
@@ -89,6 +108,15 @@ func NewHTTPServer(
 	logger loggerPkg.Logger,
 	appHandler *AppHandler,
 	taskHandler *TaskHandler,
+	// 业务领域 handlers
+	authHandler *authHandlers.AuthHandler,
+	userProfileHandler *userHandlers.UserProfileHandler,
+	adminUserHandler *userHandlers.AdminUserHandler,
+	subscriptionOrderHandler *subscriptionHandlers.SubscriptionOrderHandler,
+	invoiceHandler *invoiceHandlers.InvoiceHandler,
+	// TODO: 待实现的handlers
+	// paymentHandler *paymentHandlers.PaymentHandler,
+	// serverHandler *serverHandlers.ServerAPIHandler,
 ) *HTTPServer {
 	// 设置 Gin 模式
 	if cfg.Log.Level == "debug" {
@@ -119,6 +147,68 @@ func NewHTTPServer(
 	{
 		taskGroup.POST("", taskHandler.CreateTask)
 	}
+
+	// 业务领域路由注册
+
+	// 认证路由 (/api/v1/auth)
+	authGroup := apiV1.Group("/auth")
+	{
+		authGroup.POST("/register", authHandler.Register)
+		authGroup.POST("/login", authHandler.LoginLocal)
+		authGroup.POST("/logout", authHandler.Logout)
+		authGroup.POST("/refresh", authHandler.RefreshToken)
+		authGroup.GET("/callback", authHandler.Callback)
+		authGroup.GET("/providers", authHandler.GetProviders)
+		authGroup.GET("/profile", authHandler.GetProfile)
+		authGroup.POST("/change-password", authHandler.ChangePassword)
+	}
+
+	// 用户路由 (/api/v1/user)
+	userGroup := apiV1.Group("/user")
+	{
+		userGroup.GET("/profile", userProfileHandler.GetProfile)
+		userGroup.PUT("/profile", userProfileHandler.UpdateProfile)
+		userGroup.POST("/change-password", userProfileHandler.ChangePassword)
+	}
+
+	// 管理员用户路由 (/api/v1/admin/users)
+	adminUserGroup := apiV1.Group("/admin/users")
+	{
+		adminUserGroup.POST("", adminUserHandler.CreateUser)
+		adminUserGroup.GET("", adminUserHandler.ListUsers)
+		adminUserGroup.GET("/:id", adminUserHandler.GetUser)
+		adminUserGroup.PUT("/:id", adminUserHandler.UpdateUser)
+		adminUserGroup.DELETE("/:id", adminUserHandler.SoftDeleteUser)
+		adminUserGroup.POST("/:id/restore", adminUserHandler.RestoreUser)
+		adminUserGroup.GET("/stats", adminUserHandler.GetUserStats)
+	}
+
+	// 订阅路由 (/api/v1/subscription)
+	subscriptionGroup := apiV1.Group("/subscription")
+	{
+		subscriptionGroup.POST("/orders", subscriptionOrderHandler.CreateSubscriptionOrder)
+	}
+
+	// 发票路由 (/api/v1/invoice) - 使用RegisterRoutes方法
+	invoiceHandler.RegisterRoutes(apiV1)
+
+	// TODO: 以下路由需要等待handler方法实现后启用
+	// 支付路由 (/api/v1/payment)
+	// paymentGroup := apiV1.Group("/payment")
+	// {
+	//     paymentGroup.POST("/create", paymentHandler.CreatePayment)
+	//     paymentGroup.GET("/:id", paymentHandler.GetPayment)
+	//     paymentGroup.POST("/webhook/:gateway", paymentHandler.HandleWebhook)
+	// }
+
+	// 服务器路由 (/api/v1/server)
+	// serverGroup := apiV1.Group("/server")
+	// {
+	//     serverGroup.GET("/groups", serverHandler.GetServerGroups)
+	//     serverGroup.POST("/groups", serverHandler.CreateServerGroup)
+	//     serverGroup.PUT("/groups/:id", serverHandler.UpdateServerGroup)
+	//     serverGroup.DELETE("/groups/:id", serverHandler.DeleteServerGroup)
+	// }
 
 	// Swagger 文档
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -245,6 +335,17 @@ func main() {
 			queue.NewTaskQueue,
 			queue.NewTaskProcessor,
 		),
+
+		// 业务领域模块
+		userDomain.Module,
+		authDomain.Module,
+		subscriptionDomain.Module,
+		paymentDomain.Module,
+		serverDomain.Module,
+		invoiceDomain.Module,
+
+		// 应用层模块
+		applicationLayer.Module,
 
 		// 应用处理器
 		fx.Provide(

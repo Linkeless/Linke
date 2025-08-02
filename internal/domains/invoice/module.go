@@ -4,6 +4,8 @@ import (
 	"go.uber.org/fx"
 	"gorm.io/gorm"
 
+	"linke/internal/domains/invoice/adapters/repositories"
+	"linke/internal/domains/invoice/handlers"
 	"linke/internal/domains/invoice/usecases/implementations"
 	"linke/internal/domains/invoice/usecases/interfaces"
 )
@@ -11,8 +13,13 @@ import (
 // Module Invoice 领域模块
 // 提供发票生成、管理、PDF 生成、通知发送等功能
 var Module = fx.Module("invoice",
-	// 注意：目前 invoice 领域还没有 repository 实现
-	// 当添加了 repository 时，需要在这里提供
+	// 提供 Repository 实现
+	fx.Provide(
+		fx.Annotate(
+			repositories.NewInvoiceRepository,
+			fx.As(new(interfaces.InvoiceRepository)),
+		),
+	),
 
 	// 提供 Service 实现
 	fx.Provide(
@@ -22,8 +29,10 @@ var Module = fx.Module("invoice",
 		),
 	),
 
-	// 注意：目前 invoice 领域还没有 handler 实现
-	// 当添加了 handler 时，需要在这里提供
+	// 提供 Handler 实现
+	fx.Provide(
+		handlers.NewInvoiceHandler,
+	),
 
 	// 模块初始化钩子
 	fx.Invoke(func(db *gorm.DB) {

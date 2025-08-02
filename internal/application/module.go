@@ -5,7 +5,7 @@ import (
 
 	"linke/internal/application/handlers"
 	"linke/internal/application/services"
-	// "linke/internal/application/workflows" // 暂时禁用
+	"linke/internal/application/workflows"
 )
 
 // Module 应用层模块
@@ -16,11 +16,11 @@ var Module = fx.Module("application",
 		services.NewSimpleApplicationService,
 	),
 
-	// 业务工作流 (暂时禁用，等待领域模块修复)
-	// fx.Provide(
-	//	workflows.NewSubscriptionWorkflow,
-	//	workflows.NewReferralWorkflow,
-	// ),
+	// 业务工作流 (基础实现已恢复)
+	fx.Provide(
+		workflows.NewSubscriptionWorkflow,
+		workflows.NewReferralWorkflow,
+	),
 
 	// 应用级处理器 (简化版本)
 	fx.Provide(
