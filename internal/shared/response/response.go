@@ -10,7 +10,7 @@ import (
 type APIResponse struct {
 	Code    int         `json:"code"`
 	Message string      `json:"message"`
-	Data    interface{} `json:"data,omitempty"`
+	Data    any `json:"data,omitempty"`
 }
 
 // PaginationResponse represents pagination data structure
@@ -22,7 +22,7 @@ type PaginationResponse struct {
 
 // ListResponse represents a paginated list response
 type ListResponse struct {
-	Items      interface{}         `json:"items"`
+	Items      any         `json:"items"`
 	Pagination *PaginationResponse `json:"pagination"`
 }
 
@@ -35,7 +35,7 @@ type ServerGroupResponseData struct {
 }
 
 // Success sends a successful response
-func Success(c *gin.Context, data interface{}) {
+func Success(c *gin.Context, data any) {
 	c.JSON(http.StatusOK, APIResponse{
 		Code:    0,
 		Message: "success",
@@ -44,7 +44,7 @@ func Success(c *gin.Context, data interface{}) {
 }
 
 // SuccessWithMessage sends a successful response with custom message
-func SuccessWithMessage(c *gin.Context, message string, data interface{}) {
+func SuccessWithMessage(c *gin.Context, message string, data any) {
 	c.JSON(http.StatusOK, APIResponse{
 		Code:    0,
 		Message: message,
@@ -53,7 +53,7 @@ func SuccessWithMessage(c *gin.Context, message string, data interface{}) {
 }
 
 // Created sends a 201 created response
-func Created(c *gin.Context, data interface{}) {
+func Created(c *gin.Context, data any) {
 	c.JSON(http.StatusCreated, APIResponse{
 		Code:    0,
 		Message: "created successfully",
@@ -62,7 +62,7 @@ func Created(c *gin.Context, data interface{}) {
 }
 
 // CreatedWithMessage sends a 201 created response with custom message
-func CreatedWithMessage(c *gin.Context, message string, data interface{}) {
+func CreatedWithMessage(c *gin.Context, message string, data any) {
 	c.JSON(http.StatusCreated, APIResponse{
 		Code:    0,
 		Message: message,
@@ -71,7 +71,7 @@ func CreatedWithMessage(c *gin.Context, message string, data interface{}) {
 }
 
 // OK sends a 200 OK response with custom message and data
-func OK(c *gin.Context, message string, data interface{}) {
+func OK(c *gin.Context, message string, data any) {
 	c.JSON(http.StatusOK, APIResponse{
 		Code:    0,
 		Message: message,
@@ -126,11 +126,11 @@ func InternalServerError(c *gin.Context, message string, details ...string) {
 }
 
 // OKPaginated sends a paginated response with custom message
-func OKPaginated(c *gin.Context, message string, data interface{}, total int64, limit int, offset int) {
+func OKPaginated(c *gin.Context, message string, data any, total int64, limit int, offset int) {
 	response := struct {
 		Code    int         `json:"code"`
 		Message string      `json:"message"`
-		Data    interface{} `json:"data"`
+		Data    any `json:"data"`
 		Total   int64       `json:"total"`
 		Limit   int         `json:"limit"`
 		Offset  int         `json:"offset"`
@@ -146,7 +146,7 @@ func OKPaginated(c *gin.Context, message string, data interface{}, total int64, 
 }
 
 // SuccessList sends a successful paginated list response
-func SuccessList(c *gin.Context, items interface{}, page int, limit int, total int64) {
+func SuccessList(c *gin.Context, items any, page int, limit int, total int64) {
 	response := ListResponse{
 		Items: items,
 		Pagination: &PaginationResponse{
@@ -160,7 +160,7 @@ func SuccessList(c *gin.Context, items interface{}, page int, limit int, total i
 }
 
 // SuccessListWithMessage sends a successful paginated list response with custom message
-func SuccessListWithMessage(c *gin.Context, message string, items interface{}, page int, limit int, total int64) {
+func SuccessListWithMessage(c *gin.Context, message string, items any, page int, limit int, total int64) {
 	response := ListResponse{
 		Items: items,
 		Pagination: &PaginationResponse{
@@ -174,8 +174,8 @@ func SuccessListWithMessage(c *gin.Context, message string, items interface{}, p
 }
 
 // SuccessListWithExtra sends a successful paginated list response with additional data
-func SuccessListWithExtra(c *gin.Context, message string, items interface{}, page int, limit int, total int64, extra map[string]interface{}) {
-	response := map[string]interface{}{
+func SuccessListWithExtra(c *gin.Context, message string, items any, page int, limit int, total int64, extra map[string]any) {
+	response := map[string]any{
 		"items": items,
 		"pagination": &PaginationResponse{
 			Page:  page,
@@ -193,7 +193,7 @@ func SuccessListWithExtra(c *gin.Context, message string, items interface{}, pag
 }
 
 // SuccessJSON sends a successful response with custom HTTP status
-func SuccessJSON(c *gin.Context, httpStatus int, data interface{}) {
+func SuccessJSON(c *gin.Context, httpStatus int, data any) {
 	c.JSON(httpStatus, APIResponse{
 		Code:    0,
 		Message: "success",
@@ -202,14 +202,14 @@ func SuccessJSON(c *gin.Context, httpStatus int, data interface{}) {
 }
 
 // HandleError is a helper function to handle errors with logging
-func HandleError(logger interface{}, c *gin.Context, err error) {
+func HandleError(logger any, c *gin.Context, err error) {
 	if err == nil {
 		return
 	}
 
 	// Log the error if logger is provided
 	if l, ok := logger.(interface {
-		Error(msg string, fields ...interface{})
+		Error(msg string, fields ...any)
 	}); ok {
 		l.Error("Request error occurred", "error", err, "path", c.Request.URL.Path)
 	}

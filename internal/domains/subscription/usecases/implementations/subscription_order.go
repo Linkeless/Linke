@@ -3,6 +3,7 @@ package implementations
 import (
 	"context"
 	"fmt"
+	"slices"
 	"time"
 
 	couponInterfaces "linke/internal/domains/coupon/usecases/interfaces"
@@ -205,7 +206,7 @@ func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context
 	}
 
 	// Update order with payment information
-	if err := sos.db.WithContext(ctx).Model(order).Updates(map[string]interface{}{
+	if err := sos.db.WithContext(ctx).Model(order).Updates(map[string]any{
 		"transaction_id": paymentRecord.PaymentNo,
 		"updated_at":     time.Now(),
 	}).Error; err != nil {
@@ -266,7 +267,7 @@ func (sos *SubscriptionOrderService) ProcessOrderPaymentSuccess(ctx context.Cont
 	}
 
 	// Update order status
-	if err := tx.Model(&order).Updates(map[string]interface{}{
+	if err := tx.Model(&order).Updates(map[string]any{
 		"status":     entities.OrderStatusPaid,
 		"paid_at":    time.Now(),
 		"updated_at": time.Now(),
@@ -351,7 +352,7 @@ func (sos *SubscriptionOrderService) ProcessOrderPaymentSuccess(ctx context.Cont
 			if updatedTotalAmount < 0 {
 				updatedTotalAmount = 0
 			}
-			if err := tx.Model(&order).Updates(map[string]interface{}{
+			if err := tx.Model(&order).Updates(map[string]any{
 				"discount_amount": order.DiscountAmount + proratedCredit,
 				"total_amount":    updatedTotalAmount,
 				"metadata":        fmt.Sprintf(`{"proration_credit": %.2f, "original_total": %.2f}`, proratedCredit, order.TotalAmount),
@@ -362,7 +363,7 @@ func (sos *SubscriptionOrderService) ProcessOrderPaymentSuccess(ctx context.Cont
 		}
 
 		// Cancel current subscription (mark as cancelled but keep active until period end)
-		if err := tx.Model(&currentSubscription).Updates(map[string]interface{}{
+		if err := tx.Model(&currentSubscription).Updates(map[string]any{
 			"cancel_at_period_end": true,
 			"cancelled_at":         time.Now(),
 			"cancellation_reason":  fmt.Sprintf("Subscription %s to plan %s", order.OrderType, plan.Name),
@@ -853,7 +854,7 @@ func (sos *SubscriptionOrderService) UpdateOrderStatusWithEvidence(ctx context.C
 	}
 
 	// Prepare update data
-	updateData := map[string]interface{}{
+	updateData := map[string]any{
 		"status":     req.Status,
 		"updated_at": time.Now(),
 	}
@@ -989,13 +990,7 @@ func (sos *SubscriptionOrderService) isCriticalOperation(oldStatus, newStatus st
 		return false
 	}
 
-	for _, target := range allowedTargets {
-		if target == newStatus {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(allowedTargets, newStatus)
 }
 
 // ProcessRefundRequest represents the request to process a refund
@@ -1050,7 +1045,7 @@ func (sos *SubscriptionOrderService) ProcessRefund(ctx context.Context, req *Pro
 	}
 
 	// Update order with refund information
-	updateData := map[string]interface{}{
+	updateData := map[string]any{
 		"refund_amount": order.RefundAmount + req.Amount,
 		"refund_reason": req.Reason,
 		"refunded_at":   time.Now(),
@@ -1204,7 +1199,7 @@ func (sos *SubscriptionOrderService) CancelSubscriptionOrder(ctx context.Context
 	}
 
 	// Update order status
-	updateData := map[string]interface{}{
+	updateData := map[string]any{
 		"status":              entities.OrderStatusCancelled,
 		"cancellation_reason": reason,
 		"cancelled_at":        time.Now(),
@@ -1229,7 +1224,7 @@ func (sos *SubscriptionOrderService) CancelSubscriptionOrder(ctx context.Context
 }
 
 // GetOrderStatistics gets comprehensive order statistics
-func (sos *SubscriptionOrderService) GetOrderStatistics(ctx context.Context, fromDate, toDate time.Time) (map[string]interface{}, error) {
+func (sos *SubscriptionOrderService) GetOrderStatistics(ctx context.Context, fromDate, toDate time.Time) (map[string]any, error) {
 	query := sos.db.WithContext(ctx).Model(&entities.SubscriptionOrder{})
 
 	// Apply date range
@@ -1241,7 +1236,7 @@ func (sos *SubscriptionOrderService) GetOrderStatistics(ctx context.Context, fro
 		query = query.Where("created_at <= ?", toDate)
 	}
 
-	stats := make(map[string]interface{})
+	stats := make(map[string]any)
 
 	// Get total orders
 	var totalOrders int64
@@ -1322,7 +1317,7 @@ type BulkUpdateOrdersRequest struct {
 type BulkUpdateResult struct {
 	Successful []uint                 `json:"successful"`
 	Failed     []BulkUpdateFailure    `json:"failed"`
-	Summary    map[string]interface{} `json:"summary"`
+	Summary    map[string]any `json:"summary"`
 }
 
 // BulkUpdateFailure represents a failed bulk operation
@@ -1376,7 +1371,7 @@ func (sos *SubscriptionOrderService) BulkUpdateOrders(ctx context.Context, req *
 	}
 
 	// Generate summary
-	result.Summary = map[string]interface{}{
+	result.Summary = map[string]any{
 		"total_processed": len(req.OrderIDs),
 		"successful":      len(result.Successful),
 		"failed":          len(result.Failed),
@@ -1433,18 +1428,3 @@ func (sos *SubscriptionOrderService) checkDuplicateOrders(ctx context.Context, u
 	return nil
 }
 
-// checkRefundTimeWindow validates if refund is within allowed time window
-func (sos *SubscriptionOrderService) checkRefundTimeWindow(order *entities.SubscriptionOrder) error {
-	// SECURITY: Enforce refund time limits
-	if order.PaidAt == nil {
-		return fmt.Errorf("order has not been paid")
-	}
-
-	// Allow refunds within 30 days of payment
-	refundDeadline := order.PaidAt.Add(30 * 24 * time.Hour)
-	if time.Now().After(refundDeadline) {
-		return fmt.Errorf("refund window has expired (30 days maximum)")
-	}
-
-	return nil
-}

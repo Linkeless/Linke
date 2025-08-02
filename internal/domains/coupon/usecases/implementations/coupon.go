@@ -197,7 +197,7 @@ func (s *CouponService) UpdateCoupon(ctx context.Context, couponID uint64, req *
 	}
 
 	// Prepare updates
-	updates := make(map[string]interface{})
+	updates := make(map[string]any)
 
 	if req.Name != nil {
 		updates["name"] = *req.Name
@@ -534,7 +534,7 @@ func (s *CouponService) GetUserCouponUsage(ctx context.Context, userID uint64, l
 }
 
 // GetCouponStatistics gets statistics for a specific coupon
-func (s *CouponService) GetCouponStatistics(ctx context.Context, couponID uint64) (map[string]interface{}, error) {
+func (s *CouponService) GetCouponStatistics(ctx context.Context, couponID uint64) (map[string]any, error) {
 	coupon, err := s.GetCoupon(ctx, couponID)
 	if err != nil {
 		return nil, err
@@ -557,7 +557,7 @@ func (s *CouponService) GetCouponStatistics(ctx context.Context, couponID uint64
 		return nil, fmt.Errorf("failed to calculate total discount amount: %w", err)
 	}
 
-	stats := map[string]interface{}{
+	stats := map[string]any{
 		"coupon_id":            coupon.ID,
 		"coupon_code":          coupon.Code,
 		"status":               coupon.Status,
@@ -576,8 +576,8 @@ func (s *CouponService) GetCouponStatistics(ctx context.Context, couponID uint64
 }
 
 // GetCouponSystemStatistics gets overall system statistics for coupons
-func (s *CouponService) GetCouponSystemStatistics(ctx context.Context) (map[string]interface{}, error) {
-	stats := make(map[string]interface{})
+func (s *CouponService) GetCouponSystemStatistics(ctx context.Context) (map[string]any, error) {
+	stats := make(map[string]any)
 
 	// Count coupons by status
 	statuses := []string{entities.CouponStatusActive, entities.CouponStatusInactive, entities.CouponStatusExpired}

@@ -3,6 +3,7 @@ package implementations
 import (
 	"context"
 	"fmt"
+	"slices"
 	"time"
 
 	"linke/internal/domains/subscription/entities"
@@ -382,20 +383,6 @@ func (s *UserSubscriptionService) GetUserSubscriptionsWithRelations(ctx context.
 	return subscriptions, totalCount, nil
 }
 
-// Helper functions to safely get values from pointers
-func getStringValue(ptr *string) string {
-	if ptr == nil {
-		return ""
-	}
-	return *ptr
-}
-
-func getBoolValue(ptr *bool) bool {
-	if ptr == nil {
-		return false
-	}
-	return *ptr
-}
 
 // GetActiveUserSubscription gets the active subscription for a user and plan
 func (s *UserSubscriptionService) GetActiveUserSubscription(ctx context.Context, userID, planID uint) (*entities.UserSubscription, error) {
@@ -454,14 +441,7 @@ func (s *UserSubscriptionService) UpdateUserSubscription(ctx context.Context, su
 
 		// Check if transition is allowed
 		if allowedStatuses, exists := allowedTransitions[currentStatus]; exists {
-			isAllowed := false
-			for _, allowedStatus := range allowedStatuses {
-				if newStatus == allowedStatus {
-					isAllowed = true
-					break
-				}
-			}
-			if !isAllowed {
+			if !slices.Contains(allowedStatuses, newStatus) {
 				return nil, fmt.Errorf("invalid status transition from %s to %s", currentStatus, newStatus)
 			}
 		} else {
@@ -470,7 +450,7 @@ func (s *UserSubscriptionService) UpdateUserSubscription(ctx context.Context, su
 	}
 
 	// Prepare updates
-	updates := make(map[string]interface{})
+	updates := make(map[string]any)
 
 	if req.Status != nil {
 		updates["status"] = *req.Status
@@ -551,7 +531,7 @@ func (s *UserSubscriptionService) CancelUserSubscription(ctx context.Context, su
 	}
 
 	now := time.Now()
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"cancelled_at":        &now,
 		"cancellation_reason": reason,
 		"cancel_at_period_end": cancelAtPeriodEnd,
@@ -610,7 +590,7 @@ func (s *UserSubscriptionService) RenewUserSubscription(ctx context.Context, sub
 
 	newNextBillingDate = newPeriodEnd
 
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"current_period_start": &newPeriodStart,
 		"current_period_end":   &newPeriodEnd,
 		"next_billing_date":    &newNextBillingDate,
@@ -699,7 +679,7 @@ func (s *UserSubscriptionService) ResetSubscriptionTraffic(ctx context.Context, 
 	}
 
 	// Reset traffic usage
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"traffic_used":      0,
 		"traffic_suspended": false,
 		"updated_at":        now,
@@ -805,7 +785,7 @@ func (s *UserSubscriptionService) UpdateSubscriptionTrafficLimit(ctx context.Con
 		}
 	}
 
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"traffic_limit":       newLimit,
 		"traffic_reset_cycle": resetCycle,
 		"updated_at":          time.Now(),
@@ -891,7 +871,7 @@ func (s *UserSubscriptionService) ProcessSubscriptionAutoRenewal(ctx context.Con
 
 	// Increment renewal attempts
 	now := time.Now()
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"renewal_attempts": subscription.RenewalAttempts + 1,
 	}
 
@@ -954,7 +934,7 @@ func (s *UserSubscriptionService) GetSubscriptionsForAutoRenewal(ctx context.Con
 
 // EnableAutoRenewal enables auto-renewal for a subscription
 func (s *UserSubscriptionService) EnableAutoRenewal(ctx context.Context, subscriptionID uint) error {
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"auto_renew":          true,
 		"renewal_attempts":    0,
 		"last_renewal_failed": nil,
@@ -1017,13 +997,13 @@ func (s *UserSubscriptionService) UpdateTrafficUsage(ctx context.Context, subscr
 
 
 // GetSubscriptionTrafficStats gets traffic statistics for a subscription
-func (s *UserSubscriptionService) GetSubscriptionTrafficStats(ctx context.Context, subscriptionID uint) (map[string]interface{}, error) {
+func (s *UserSubscriptionService) GetSubscriptionTrafficStats(ctx context.Context, subscriptionID uint) (map[string]any, error) {
 	subscription, err := s.GetUserSubscription(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	stats := map[string]interface{}{
+	stats := map[string]any{
 		"traffic_limit": subscription.TrafficLimit,
 		"traffic_used":  subscription.TrafficUsed,
 		"traffic_remaining": subscription.TrafficLimit - subscription.TrafficUsed,
@@ -1068,8 +1048,8 @@ func (s *UserSubscriptionService) ExtendSubscription(ctx context.Context, subscr
 }
 
 // GetSubscriptionStatistics gets subscription statistics
-func (s *UserSubscriptionService) GetSubscriptionStatistics(ctx context.Context) (map[string]interface{}, error) {
-	stats := make(map[string]interface{})
+func (s *UserSubscriptionService) GetSubscriptionStatistics(ctx context.Context) (map[string]any, error) {
+	stats := make(map[string]any)
 
 	// Count subscriptions by status
 	statuses := []string{

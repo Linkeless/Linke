@@ -153,16 +153,16 @@ func (s *stubInviteCodeService) GetUserInviteCodeUsage(ctx context.Context, user
 	return nil, 0, fmt.Errorf("invite code service not implemented")
 }
 
-func (s *stubInviteCodeService) GetInviteCodeStatistics(ctx context.Context, inviteCodeID uint) (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (s *stubInviteCodeService) GetInviteCodeStatistics(ctx context.Context, inviteCodeID uint) (map[string]any, error) {
+	return map[string]any{
 		"total_codes": 0,
 		"used_codes": 0,
 		"active_codes": 0,
 	}, nil
 }
 
-func (s *stubInviteCodeService) GetUserInviteCodeStatistics(ctx context.Context, userID uint) (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (s *stubInviteCodeService) GetUserInviteCodeStatistics(ctx context.Context, userID uint) (map[string]any, error) {
+	return map[string]any{
 		"total_codes": 0,
 		"used_codes": 0,
 		"active_codes": 0,
@@ -335,7 +335,7 @@ func (h *AppHandler) HealthCheck(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	health := h.database.HealthCheck(ctx)
-	result := map[string]interface{}{
+	result := map[string]any{
 		"status":       "healthy",
 		"database":     health,
 		"architecture": "VSA + Clean Architecture",
@@ -350,7 +350,7 @@ func (h *AppHandler) HealthCheck(c *gin.Context) {
 func (h *TaskHandler) CreateTask(c *gin.Context) {
 	var req struct {
 		Type    string                 `json:"type" binding:"required"`
-		Payload map[string]interface{} `json:"payload" binding:"required"`
+		Payload map[string]any `json:"payload" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
