@@ -7,6 +7,7 @@ import (
 	"time"
 
 	couponInterfaces "linke/internal/domains/coupon/usecases/interfaces"
+	invoiceInterfaces "linke/internal/domains/invoice/usecases/interfaces"
 	paymentInterfaces "linke/internal/domains/payment/usecases/interfaces"
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/domains/subscription/usecases/interfaces"
@@ -21,15 +22,17 @@ type SubscriptionOrderService struct {
 	userSubscriptionService interfaces.UserSubscriptionService
 	paymentService          paymentInterfaces.PaymentService
 	couponService           couponInterfaces.CouponService
+	invoiceService          invoiceInterfaces.InvoiceService
 }
 
-func NewSubscriptionOrderService(db *gorm.DB, subscriptionPlanService interfaces.SubscriptionPlanService, userSubscriptionService interfaces.UserSubscriptionService, paymentService paymentInterfaces.PaymentService, couponService couponInterfaces.CouponService) *SubscriptionOrderService {
+func NewSubscriptionOrderService(db *gorm.DB, subscriptionPlanService interfaces.SubscriptionPlanService, userSubscriptionService interfaces.UserSubscriptionService, paymentService paymentInterfaces.PaymentService, couponService couponInterfaces.CouponService, invoiceService invoiceInterfaces.InvoiceService) *SubscriptionOrderService {
 	return &SubscriptionOrderService{
 		db:                      db,
 		subscriptionPlanService: subscriptionPlanService,
 		userSubscriptionService: userSubscriptionService,
 		paymentService:          paymentService,
 		couponService:           couponService,
+		invoiceService:          invoiceService,
 	}
 }
 
@@ -156,6 +159,9 @@ func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context
 		Metadata:           req.Metadata,
 	}
 
+	// Set order status to confirmed (ready for invoice generation)
+	order.Status = entities.OrderStatusConfirmed
+
 	// Save order to database
 	if err := tx.Create(order).Error; err != nil {
 		tx.Rollback()
@@ -163,16 +169,36 @@ func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context
 		return nil, fmt.Errorf("failed to create subscription order: %w", err)
 	}
 
-	// Create payment order within the same transaction context
+	// Generate invoice from order
+	invoiceReq := &invoiceInterfaces.CreateInvoiceRequest{
+		UserID:              req.UserID,
+		SubscriptionOrderID: order.ID,
+		Amount:              totalAmount,
+		Currency:            plan.Currency,
+		Description:         fmt.Sprintf("Subscription: %s", plan.Name),
+		BillingName:         fmt.Sprintf("User %d", req.UserID), // TODO: Get actual user name
+		BillingEmail:        fmt.Sprintf("user%d@example.com", req.UserID), // TODO: Get actual user email
+		DueDate:             time.Now().AddDate(0, 0, 30).Format("2006-01-02"), // 30 days from now
+	}
+
+	invoice, err := sos.invoiceService.CreateInvoice(ctx, invoiceReq)
+	if err != nil {
+		tx.Rollback()
+		logger.Error("Failed to create invoice", logger.Error2("error", err))
+		return nil, fmt.Errorf("failed to create invoice: %w", err)
+	}
+
+	// Create payment order from invoice
 	paymentReq := &paymentInterfaces.CreatePaymentOrderRequest{
 		UserID:              req.UserID,
-		SubscriptionOrderID: &order.ID,
+		SubscriptionOrderID: &order.ID,    // Keep the order reference for service activation
+		InvoiceID:           &invoice.ID,   // Add invoice reference for invoice payment tracking
 		Gateway:             req.PaymentGateway,
 		PaymentMethod:       req.PaymentMethod,
 		Amount:              totalAmount,
 		Currency:            plan.Currency,
-		Subject:             fmt.Sprintf("Subscription: %s", plan.Name),
-		Body:                fmt.Sprintf("Payment for %s subscription plan", plan.Name),
+		Subject:             fmt.Sprintf("Invoice %s - Subscription: %s", invoice.InvoiceNumber, plan.Name),
+		Body:                fmt.Sprintf("Payment for invoice %s - %s subscription plan", invoice.InvoiceNumber, plan.Name),
 		ReturnURL:           req.ReturnURL,
 		ExpiredMinutes:      30, // 30 minutes expiration
 	}
@@ -223,6 +249,7 @@ func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context
 	// Return response
 	response := &interfaces.CreateSubscriptionOrderResponse{
 		Order:         order.ToResponse(),
+		Invoice:       invoice.ToResponse(),
 		PaymentRecord: paymentRecord.ToUserResponse(),
 		PaymentURL:    paymentRecord.PaymentURL,
 		QRCodeURL:     paymentRecord.QRCodeURL,
@@ -257,6 +284,12 @@ func (sos *SubscriptionOrderService) ProcessOrderPaymentSuccess(ctx context.Cont
 	if order.Status == entities.OrderStatusCancelled || order.Status == entities.OrderStatusFailed {
 		tx.Rollback()
 		return fmt.Errorf("order %d cannot be processed in status: %s", orderID, order.Status)
+	}
+	
+	// Only allow processing from pending or confirmed status
+	if order.Status != entities.OrderStatusPending && order.Status != entities.OrderStatusConfirmed {
+		tx.Rollback()
+		return fmt.Errorf("order %d can only be processed from pending or confirmed status, current status: %s", orderID, order.Status)
 	}
 
 	// Get subscription plan
@@ -980,6 +1013,7 @@ func (sos *SubscriptionOrderService) validatePaymentEvidence(order *entities.Sub
 func (sos *SubscriptionOrderService) isCriticalOperation(oldStatus, newStatus string) bool {
 	criticalChanges := map[string][]string{
 		entities.OrderStatusPending:   {entities.OrderStatusPaid},                                    // Manual payment confirmation
+		entities.OrderStatusConfirmed: {entities.OrderStatusPaid},                                    // Manual payment confirmation for confirmed orders
 		entities.OrderStatusFailed:    {entities.OrderStatusPaid},                                    // Retry failed payment
 		entities.OrderStatusCancelled: {entities.OrderStatusPaid, entities.OrderStatusPending},       // Reactivate cancelled order
 		entities.OrderStatusPaid:      {entities.OrderStatusRefunded, entities.OrderStatusCancelled}, // Reverse paid order

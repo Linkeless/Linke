@@ -53,6 +53,7 @@ type SubscriptionOrderServiceInterface interface {
 type CreatePaymentOrderRequest struct {
 	UserID              uint    `json:"user_id"`
 	SubscriptionOrderID *uint   `json:"subscription_order_id,omitempty"`
+	InvoiceID           *uint   `json:"invoice_id,omitempty"`
 	Gateway             string  `json:"gateway"`            // epay, epusdt
 	PaymentMethod       string  `json:"payment_method"`     // alipay, wechat, usdt, etc.
 	Amount              float64 `json:"amount"`             // Amount in specified currency

@@ -85,6 +85,7 @@ const (
 // Order status constants
 const (
 	OrderStatusPending   = "pending"
+	OrderStatusConfirmed = "confirmed"
 	OrderStatusPaid      = "paid"
 	OrderStatusFailed    = "failed"
 	OrderStatusCancelled = "cancelled"

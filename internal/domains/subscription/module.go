@@ -4,11 +4,33 @@ import (
 	"go.uber.org/fx"
 	"gorm.io/gorm"
 
+	couponInterfaces "linke/internal/domains/coupon/usecases/interfaces"
+	invoiceInterfaces "linke/internal/domains/invoice/usecases/interfaces"
+	paymentInterfaces "linke/internal/domains/payment/usecases/interfaces"
 	"linke/internal/domains/subscription/adapters/repositories"
 	"linke/internal/domains/subscription/handlers"
 	"linke/internal/domains/subscription/usecases/implementations"
 	"linke/internal/domains/subscription/usecases/interfaces"
 )
+
+// NewSubscriptionOrderServiceWithInvoice creates a subscription order service with invoice service dependency
+func NewSubscriptionOrderServiceWithInvoice(
+	db *gorm.DB,
+	subscriptionPlanService interfaces.SubscriptionPlanService,
+	userSubscriptionService interfaces.UserSubscriptionService,
+	paymentService paymentInterfaces.PaymentService,
+	couponService couponInterfaces.CouponService,
+	invoiceService invoiceInterfaces.InvoiceService,
+) interfaces.SubscriptionOrderService {
+	return implementations.NewSubscriptionOrderService(
+		db,
+		subscriptionPlanService,
+		userSubscriptionService,
+		paymentService,
+		couponService,
+		invoiceService,
+	)
+}
 
 // Module Subscription 领域模块
 // 提供订阅计划管理、用户订阅生命周期、计费周期管理等功能
@@ -45,7 +67,7 @@ var Module = fx.Module("subscription",
 	// 注意：这些服务依赖其他服务，需要在基础服务之后提供
 	fx.Provide(
 		fx.Annotate(
-			implementations.NewSubscriptionOrderService,
+			NewSubscriptionOrderServiceWithInvoice,
 			fx.As(new(interfaces.SubscriptionOrderService)),
 		),
 	),

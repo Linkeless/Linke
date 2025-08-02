@@ -9,6 +9,7 @@ import (
 type InvoiceService interface {
 	// Invoice CRUD operations
 	CreateInvoice(ctx context.Context, req *CreateInvoiceRequest) (*entities.Invoice, error)
+	CreateInvoiceFromOrder(ctx context.Context, orderID uint, options *CreateInvoiceRequest) (*entities.Invoice, error)
 	GetInvoice(ctx context.Context, invoiceID uint) (*entities.Invoice, error)
 	GetInvoiceByNumber(ctx context.Context, invoiceNumber string) (*entities.Invoice, error)
 	UpdateInvoice(ctx context.Context, invoiceID uint, req *UpdateInvoiceRequest) (*entities.Invoice, error)

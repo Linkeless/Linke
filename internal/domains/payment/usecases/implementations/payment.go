@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	invoiceInterfaces "linke/internal/domains/invoice/usecases/interfaces"
 	"linke/internal/domains/payment/entities"
 	"linke/internal/domains/payment/usecases/interfaces"
 	"linke/internal/shared/logger"
@@ -23,6 +24,7 @@ type PaymentService struct {
 	db                       *gorm.DB
 	gateways                 map[string]interfaces.PaymentGateway
 	subscriptionOrderService interfaces.SubscriptionOrderServiceInterface
+	invoiceService           invoiceInterfaces.InvoiceService
 }
 
 // NewPaymentService creates a new payment service instance
@@ -118,6 +120,7 @@ func (ps *PaymentService) CreatePaymentOrder(ctx context.Context, req *interface
 	gatewayReq := &interfaces.CreatePaymentOrderRequest{
 		UserID:              req.UserID,
 		SubscriptionOrderID: req.SubscriptionOrderID,
+		InvoiceID:           req.InvoiceID,
 		Gateway:             req.Gateway,
 		PaymentMethod:       req.PaymentMethod,
 		Amount:              req.Amount,
@@ -143,6 +146,7 @@ func (ps *PaymentService) CreatePaymentOrder(ctx context.Context, req *interface
 	paymentRecord := &entities.PaymentRecord{
 		UserID:              req.UserID,
 		SubscriptionOrderID: req.SubscriptionOrderID,
+		InvoiceID:           req.InvoiceID,
 		PaymentNo:           paymentNo,
 		OutTradeNo:          outTradeNo,
 		Gateway:             req.Gateway,
@@ -332,8 +336,32 @@ func (ps *PaymentService) SetSubscriptionOrderService(subscriptionOrderService i
 	ps.subscriptionOrderService = subscriptionOrderService
 }
 
+// SetInvoiceService sets the invoice service for payment processing
+func (ps *PaymentService) SetInvoiceService(invoiceService invoiceInterfaces.InvoiceService) {
+	ps.invoiceService = invoiceService
+}
+
 // processOrderCompletion processes the completion of an order after successful payment
 func (ps *PaymentService) processOrderCompletion(ctx context.Context, paymentRecord *entities.PaymentRecord) error {
+	// If this payment is for an invoice, mark the invoice as paid first
+	if paymentRecord.InvoiceID != nil {
+		if ps.invoiceService != nil {
+			// Mark invoice as paid
+			paidAt := time.Now().Format("2006-01-02")
+			if err := ps.invoiceService.MarkInvoiceAsPaid(ctx, *paymentRecord.InvoiceID, paidAt); err != nil {
+				return fmt.Errorf("failed to mark invoice as paid: %w", err)
+			}
+			
+			logger.Info("Invoice marked as paid",
+				logger.Uint("invoice_id", *paymentRecord.InvoiceID),
+				logger.String("payment_no", paymentRecord.PaymentNo))
+
+			// For invoice payments, we need to find the associated order and process it
+			// TODO: Add method to get invoice with order details
+			// For now, assume invoice payment should also trigger subscription activation
+		}
+	}
+
 	// If this payment is for a subscription order, process the order completion
 	if paymentRecord.SubscriptionOrderID != nil {
 		// If subscription order service is available, use it for processing
@@ -351,6 +379,15 @@ func (ps *PaymentService) processOrderCompletion(ctx context.Context, paymentRec
 
 		logger.Info("Subscription order payment processed",
 			logger.Uint("order_id", *paymentRecord.SubscriptionOrderID),
+			logger.String("payment_no", paymentRecord.PaymentNo))
+	}
+
+	// If we have both invoice and subscription order, ensure both are processed
+	// This handles the new business flow: Order -> Invoice -> Payment -> Service Activation
+	if paymentRecord.InvoiceID != nil && paymentRecord.SubscriptionOrderID != nil {
+		logger.Info("Complete business flow processed: Order -> Invoice -> Payment -> Service will be activated",
+			logger.Uint("order_id", *paymentRecord.SubscriptionOrderID),
+			logger.Uint("invoice_id", *paymentRecord.InvoiceID),
 			logger.String("payment_no", paymentRecord.PaymentNo))
 	}
 

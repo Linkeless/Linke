@@ -2,9 +2,11 @@ package interfaces
 
 import (
 	"context"
+	"time"
+
+	invoiceEntities "linke/internal/domains/invoice/entities"
 	paymentEntities "linke/internal/domains/payment/entities"
 	"linke/internal/domains/subscription/entities"
-	"time"
 )
 
 // SubscriptionOrderService defines the interface for subscription order operations
@@ -41,6 +43,7 @@ type CreateSubscriptionOrderRequest struct {
 // CreateSubscriptionOrderResponse represents the response after creating a subscription order
 type CreateSubscriptionOrderResponse struct {
 	Order         *entities.SubscriptionOrderResponse    `json:"order"`
+	Invoice       *invoiceEntities.InvoiceResponse       `json:"invoice"`
 	PaymentRecord *paymentEntities.PaymentRecordResponse `json:"payment_record"`
 	PaymentURL    string                                 `json:"payment_url"`
 	QRCodeURL     string                                 `json:"qr_code_url,omitempty"`

@@ -28,6 +28,7 @@ func NewPaymentHandler(paymentService interfaces.PaymentService, paymentConfigSe
 // CreatePaymentOrderRequest represents the request to create a payment order
 type CreatePaymentOrderRequest struct {
 	SubscriptionOrderID *uint   `json:"subscription_order_id,omitempty" example:"1"`
+	InvoiceID           *uint   `json:"invoice_id,omitempty" example:"1"`
 	Gateway             string  `json:"gateway" binding:"required" example:"epay"`
 	PaymentMethod       string  `json:"payment_method" binding:"required" example:"alipay"`
 	Amount              float64 `json:"amount" binding:"required,gt=0" example:"29.99"`
@@ -72,6 +73,12 @@ func (h *PaymentHandler) CreatePaymentOrder(c *gin.Context) {
 		return
 	}
 
+	// Validate that either invoice_id or subscription_order_id is provided
+	if req.InvoiceID == nil && req.SubscriptionOrderID == nil {
+		response.BadRequest(c, "Either invoice_id or subscription_order_id is required")
+		return
+	}
+
 	// Get client IP
 	clientIP := c.ClientIP()
 
@@ -82,6 +89,7 @@ func (h *PaymentHandler) CreatePaymentOrder(c *gin.Context) {
 	paymentReq := &interfaces.CreatePaymentOrderRequest{
 		UserID:              user.ID,
 		SubscriptionOrderID: req.SubscriptionOrderID,
+		InvoiceID:           req.InvoiceID,
 		Gateway:             req.Gateway,
 		PaymentMethod:       req.PaymentMethod,
 		Amount:              req.Amount,

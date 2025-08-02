@@ -16,6 +16,7 @@ type PaymentRecord struct {
 	// Foreign Keys
 	UserID              uint  `json:"user_id" gorm:"not null;index"`
 	SubscriptionOrderID *uint `json:"subscription_order_id,omitempty" gorm:"index"` // 关联的订阅订单
+	InvoiceID           *uint `json:"invoice_id,omitempty" gorm:"index"`             // 关联的发票
 
 	// Payment Information
 	PaymentNo     string `json:"payment_no" gorm:"uniqueIndex;size:100;not null"`   // 支付单号（系统生成）
