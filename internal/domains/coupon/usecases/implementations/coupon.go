@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"linke/internal/domains/coupon/entities"
+	"linke/internal/domains/coupon/usecases/interfaces"
 	"linke/internal/shared/logger"
 
 	"gorm.io/gorm"
@@ -22,68 +22,9 @@ func NewCouponService(db *gorm.DB) *CouponService {
 	}
 }
 
-// CreateCouponRequest represents the request to create a coupon
-type CreateCouponRequest struct {
-	Code            string     `json:"code" binding:"required,min=3,max=50" example:"SAVE20"`
-	Name            string     `json:"name" binding:"required,min=1,max=100" example:"20% Off All Plans"`
-	Description     string     `json:"description,omitempty" binding:"max=1000" example:"Save 20% on any subscription plan"`
-	Type            string     `json:"type" binding:"required,oneof=percentage fixed_amount" example:"percentage"`
-	Value           float64    `json:"value" binding:"required,min=0" example:"20"`
-	MaxUses         int        `json:"max_uses,omitempty" binding:"min=0" example:"100"`
-	MaxUsesPerUser  int        `json:"max_uses_per_user,omitempty" binding:"min=1" example:"1"`
-	MinOrderAmount  float64    `json:"min_order_amount,omitempty" binding:"min=0" example:"10"`
-	Currency        string     `json:"currency,omitempty" binding:"omitempty,len=3" example:"USD"`
-	ValidFrom       *time.Time `json:"valid_from,omitempty" example:"2024-01-01T00:00:00Z"`
-	ValidUntil      *time.Time `json:"valid_until,omitempty" example:"2024-12-31T23:59:59Z"`
-	ApplicablePlans string     `json:"applicable_plans,omitempty" example:"[1,2,3]"`
-	IsPublic        *bool      `json:"is_public,omitempty" example:"true"`
-}
-
-// UpdateCouponRequest represents the request to update a coupon
-type UpdateCouponRequest struct {
-	Name            *string    `json:"name,omitempty" binding:"omitempty,min=1,max=100" example:"Updated Coupon Name"`
-	Description     *string    `json:"description,omitempty" binding:"omitempty,max=1000" example:"Updated description"`
-	Type            *string    `json:"type,omitempty" binding:"omitempty,oneof=percentage fixed_amount" example:"percentage"`
-	Value           *float64   `json:"value,omitempty" binding:"omitempty,min=0" example:"25"`
-	MaxUses         *int       `json:"max_uses,omitempty" binding:"omitempty,min=0" example:"200"`
-	MaxUsesPerUser  *int       `json:"max_uses_per_user,omitempty" binding:"omitempty,min=1" example:"2"`
-	MinOrderAmount  *float64   `json:"min_order_amount,omitempty" binding:"omitempty,min=0" example:"15"`
-	ValidFrom       *time.Time `json:"valid_from,omitempty" example:"2024-02-01T00:00:00Z"`
-	ValidUntil      *time.Time `json:"valid_until,omitempty" example:"2024-11-30T23:59:59Z"`
-	ApplicablePlans *string    `json:"applicable_plans,omitempty" example:"[1,2,4]"`
-	Status          *string    `json:"status,omitempty" binding:"omitempty,oneof=active inactive expired" example:"active"`
-	IsPublic        *bool      `json:"is_public,omitempty" example:"false"`
-}
-
-// GetCouponsRequest represents the request to get coupons
-type GetCouponsRequest struct {
-	Status   string `form:"status,omitempty" binding:"omitempty,oneof=active inactive expired" example:"active"`
-	Type     string `form:"type,omitempty" binding:"omitempty,oneof=percentage fixed_amount" example:"percentage"`
-	IsPublic *bool  `form:"is_public,omitempty" example:"true"`
-	Limit    int    `form:"limit,omitempty" binding:"omitempty,min=1,max=100" example:"10"`
-	Offset   int    `form:"offset,omitempty" binding:"omitempty,min=0" example:"0"`
-}
-
-// ValidateCouponRequest represents the request to validate a coupon
-type ValidateCouponRequest struct {
-	Code        string  `json:"code" binding:"required" example:"SAVE20"`
-	UserID      uint64  `json:"user_id" binding:"required" example:"1"`
-	OrderAmount float64 `json:"order_amount" binding:"required,min=0" example:"29.99"`
-	PlanID      uint64  `json:"plan_id" binding:"required" example:"1"`
-	Currency    string  `json:"currency" binding:"required,len=3" example:"USD"`
-}
-
-// ValidateCouponResponse represents the response of coupon validation
-type ValidateCouponResponse struct {
-	Valid          bool                     `json:"valid" example:"true"`
-	Message        string                   `json:"message" example:"Coupon is valid"`
-	DiscountAmount float64                  `json:"discount_amount" example:"5.99"`
-	FinalAmount    float64                  `json:"final_amount" example:"24.00"`
-	Coupon         *entities.CouponResponse `json:"coupon,omitempty"`
-}
 
 // CreateCoupon creates a new coupon
-func (s *CouponService) CreateCoupon(ctx context.Context, creatorID uint64, req *CreateCouponRequest) (*entities.Coupon, error) {
+func (s *CouponService) CreateCoupon(ctx context.Context, creatorID uint64, req *interfaces.CreateCouponRequest) (*entities.Coupon, error) {
 	// Validate and normalize code
 	code := strings.TrimSpace(strings.ToUpper(req.Code))
 	if code == "" {
@@ -181,7 +122,7 @@ func (s *CouponService) GetCouponByCode(ctx context.Context, code string) (*enti
 }
 
 // GetCoupons gets coupons with filtering and pagination
-func (s *CouponService) GetCoupons(ctx context.Context, req *GetCouponsRequest) ([]*entities.Coupon, int64, error) {
+func (s *CouponService) GetCoupons(ctx context.Context, req *interfaces.GetCouponsRequest) ([]*entities.Coupon, int64, error) {
 	query := s.db.WithContext(ctx).Model(&entities.Coupon{})
 
 	// Apply filters
@@ -224,17 +165,22 @@ func (s *CouponService) GetCoupons(ctx context.Context, req *GetCouponsRequest) 
 	return coupons, totalCount, nil
 }
 
-// GetPublicCoupons gets active and public coupons
+// GetPublicCoupons gets active and public coupons with limit
 // NOTE: This method should only be used internally by the system,
 // not exposed to public APIs for security reasons.
 // The 'is_public' flag now indicates whether a coupon can be displayed
 // in user interfaces after proper authentication and authorization.
-func (s *CouponService) GetPublicCoupons(ctx context.Context) ([]*entities.Coupon, error) {
-	var coupons []*entities.Coupon
-	if err := s.db.WithContext(ctx).
+func (s *CouponService) GetPublicCoupons(ctx context.Context, limit int) ([]*entities.Coupon, error) {
+	query := s.db.WithContext(ctx).
 		Where("status = ? AND is_public = ?", entities.CouponStatusActive, true).
-		Order("created_at DESC").
-		Find(&coupons).Error; err != nil {
+		Order("created_at DESC")
+		
+	if limit > 0 {
+		query = query.Limit(limit)
+	}
+
+	var coupons []*entities.Coupon
+	if err := query.Find(&coupons).Error; err != nil {
 		logger.Error("Failed to get public coupons", logger.Error2("error", err))
 		return nil, fmt.Errorf("failed to get public coupons: %w", err)
 	}
@@ -243,7 +189,7 @@ func (s *CouponService) GetPublicCoupons(ctx context.Context) ([]*entities.Coupo
 }
 
 // UpdateCoupon updates a coupon
-func (s *CouponService) UpdateCoupon(ctx context.Context, couponID uint64, req *UpdateCouponRequest) (*entities.Coupon, error) {
+func (s *CouponService) UpdateCoupon(ctx context.Context, couponID uint64, req *interfaces.UpdateCouponRequest) (*entities.Coupon, error) {
 	// Get existing coupon
 	coupon, err := s.GetCoupon(ctx, couponID)
 	if err != nil {
@@ -345,11 +291,11 @@ func (s *CouponService) DeleteCoupon(ctx context.Context, couponID uint64) error
 }
 
 // ValidateCoupon validates a coupon for a specific user and order
-func (s *CouponService) ValidateCoupon(ctx context.Context, req *ValidateCouponRequest) (*ValidateCouponResponse, error) {
+func (s *CouponService) ValidateCoupon(ctx context.Context, req *interfaces.ValidateCouponRequest) (*interfaces.ValidateCouponResponse, error) {
 	// Get coupon by code
 	coupon, err := s.GetCouponByCode(ctx, req.Code)
 	if err != nil {
-		return &ValidateCouponResponse{
+		return &interfaces.ValidateCouponResponse{
 			Valid:   false,
 			Message: "Coupon not found",
 		}, nil
@@ -358,7 +304,7 @@ func (s *CouponService) ValidateCoupon(ctx context.Context, req *ValidateCouponR
 	// Check if coupon can be used by this user
 	canUse, message := coupon.CanBeUsedBy(req.UserID, req.OrderAmount, req.PlanID, s.db)
 	if !canUse {
-		return &ValidateCouponResponse{
+		return &interfaces.ValidateCouponResponse{
 			Valid:   false,
 			Message: message,
 			Coupon:  coupon.ToPublicResponse(),
@@ -367,7 +313,7 @@ func (s *CouponService) ValidateCoupon(ctx context.Context, req *ValidateCouponR
 
 	// Check currency match
 	if coupon.Currency != req.Currency {
-		return &ValidateCouponResponse{
+		return &interfaces.ValidateCouponResponse{
 			Valid:   false,
 			Message: fmt.Sprintf("Coupon is only valid for %s currency", coupon.Currency),
 			Coupon:  coupon.ToPublicResponse(),
@@ -378,7 +324,7 @@ func (s *CouponService) ValidateCoupon(ctx context.Context, req *ValidateCouponR
 	discountAmount := coupon.CalculateDiscount(req.OrderAmount)
 	finalAmount := req.OrderAmount - discountAmount
 
-	return &ValidateCouponResponse{
+	return &interfaces.ValidateCouponResponse{
 		Valid:          true,
 		Message:        "Coupon is valid",
 		DiscountAmount: discountAmount,
@@ -387,8 +333,39 @@ func (s *CouponService) ValidateCoupon(ctx context.Context, req *ValidateCouponR
 	}, nil
 }
 
-// UseCoupon records the usage of a coupon
-func (s *CouponService) UseCoupon(ctx context.Context, couponID, userID, orderID uint64, discountAmount, orderAmount float64, currency string) error {
+// UseCoupon records the usage of a coupon (interface compatible version)
+func (s *CouponService) UseCoupon(ctx context.Context, couponID, userID uint64, orderAmount float64, orderID *uint64) (*entities.CouponUsage, error) {
+	// Get coupon to calculate discount
+	coupon, err := s.GetCoupon(ctx, couponID)
+	if err != nil {
+		return nil, err
+	}
+
+	discountAmount := coupon.CalculateDiscount(orderAmount)
+	
+	var actualOrderID uint64
+	if orderID != nil {
+		actualOrderID = *orderID
+	}
+	
+	if err := s.useCouponInternal(ctx, couponID, userID, actualOrderID, discountAmount, orderAmount, coupon.Currency); err != nil {
+		return nil, err
+	}
+
+	// Return the created usage record
+	var usage entities.CouponUsage
+	if err := s.db.WithContext(ctx).
+		Where("coupon_id = ? AND user_id = ? AND subscription_order_id = ?", couponID, userID, actualOrderID).
+		Order("created_at DESC").
+		First(&usage).Error; err != nil {
+		return nil, fmt.Errorf("failed to retrieve coupon usage record: %w", err)
+	}
+
+	return &usage, nil
+}
+
+// useCouponInternal is the internal implementation that was originally named UseCoupon
+func (s *CouponService) useCouponInternal(ctx context.Context, couponID, userID, orderID uint64, discountAmount, orderAmount float64, currency string) error {
 	// Start transaction
 	tx := s.db.WithContext(ctx).Begin()
 	defer func() {
@@ -491,4 +468,150 @@ func (s *CouponService) GetCouponUsages(ctx context.Context, couponID *uint64, u
 	}
 
 	return usages, totalCount, nil
+}
+
+// GetActiveCoupons gets all active coupons
+func (s *CouponService) GetActiveCoupons(ctx context.Context) ([]*entities.Coupon, error) {
+	var coupons []*entities.Coupon
+	if err := s.db.WithContext(ctx).
+		Where("status = ?", entities.CouponStatusActive).
+		Order("created_at DESC").
+		Find(&coupons).Error; err != nil {
+		logger.Error("Failed to get active coupons", logger.Error2("error", err))
+		return nil, fmt.Errorf("failed to get active coupons: %w", err)
+	}
+
+	return coupons, nil
+}
+
+// ActivateCoupon activates a coupon
+func (s *CouponService) ActivateCoupon(ctx context.Context, couponID uint64) error {
+	if err := s.db.WithContext(ctx).Model(&entities.Coupon{}).
+		Where("id = ?", couponID).
+		Update("status", entities.CouponStatusActive).Error; err != nil {
+		logger.Error("Failed to activate coupon", logger.Error2("error", err), logger.Any("coupon_id", couponID))
+		return fmt.Errorf("failed to activate coupon: %w", err)
+	}
+
+	logger.Info("Coupon activated successfully", logger.Any("coupon_id", couponID))
+	return nil
+}
+
+// DeactivateCoupon deactivates a coupon
+func (s *CouponService) DeactivateCoupon(ctx context.Context, couponID uint64) error {
+	if err := s.db.WithContext(ctx).Model(&entities.Coupon{}).
+		Where("id = ?", couponID).
+		Update("status", entities.CouponStatusInactive).Error; err != nil {
+		logger.Error("Failed to deactivate coupon", logger.Error2("error", err), logger.Any("coupon_id", couponID))
+		return fmt.Errorf("failed to deactivate coupon: %w", err)
+	}
+
+	logger.Info("Coupon deactivated successfully", logger.Any("coupon_id", couponID))
+	return nil
+}
+
+// ExpireCoupon expires a coupon
+func (s *CouponService) ExpireCoupon(ctx context.Context, couponID uint64) error {
+	if err := s.db.WithContext(ctx).Model(&entities.Coupon{}).
+		Where("id = ?", couponID).
+		Update("status", entities.CouponStatusExpired).Error; err != nil {
+		logger.Error("Failed to expire coupon", logger.Error2("error", err), logger.Any("coupon_id", couponID))
+		return fmt.Errorf("failed to expire coupon: %w", err)
+	}
+
+	logger.Info("Coupon expired successfully", logger.Any("coupon_id", couponID))
+	return nil
+}
+
+// GetCouponUsage gets coupon usage records for a specific coupon
+func (s *CouponService) GetCouponUsage(ctx context.Context, couponID uint64, limit, offset int) ([]*entities.CouponUsage, int64, error) {
+	return s.GetCouponUsages(ctx, &couponID, nil, limit, offset)
+}
+
+// GetUserCouponUsage gets coupon usage records for a specific user
+func (s *CouponService) GetUserCouponUsage(ctx context.Context, userID uint64, limit, offset int) ([]*entities.CouponUsage, int64, error) {
+	return s.GetCouponUsages(ctx, nil, &userID, limit, offset)
+}
+
+// GetCouponStatistics gets statistics for a specific coupon
+func (s *CouponService) GetCouponStatistics(ctx context.Context, couponID uint64) (map[string]interface{}, error) {
+	coupon, err := s.GetCoupon(ctx, couponID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Count total usages
+	var totalUsages int64
+	if err := s.db.WithContext(ctx).Model(&entities.CouponUsage{}).
+		Where("coupon_id = ?", couponID).
+		Count(&totalUsages).Error; err != nil {
+		return nil, fmt.Errorf("failed to count coupon usages: %w", err)
+	}
+
+	// Calculate total discount amount
+	var totalDiscountAmount float64
+	if err := s.db.WithContext(ctx).Model(&entities.CouponUsage{}).
+		Where("coupon_id = ?", couponID).
+		Select("COALESCE(SUM(discount_amount), 0)").
+		Scan(&totalDiscountAmount).Error; err != nil {
+		return nil, fmt.Errorf("failed to calculate total discount amount: %w", err)
+	}
+
+	stats := map[string]interface{}{
+		"coupon_id":            coupon.ID,
+		"coupon_code":          coupon.Code,
+		"status":               coupon.Status,
+		"max_uses":             coupon.MaxUses,
+		"used_count":           coupon.UsedCount,
+		"total_usages":         totalUsages,
+		"total_discount_amount": totalDiscountAmount,
+		"remaining_uses":       coupon.MaxUses - coupon.UsedCount,
+	}
+
+	if coupon.MaxUses > 0 {
+		stats["usage_percentage"] = float64(coupon.UsedCount) / float64(coupon.MaxUses) * 100
+	}
+
+	return stats, nil
+}
+
+// GetCouponSystemStatistics gets overall system statistics for coupons
+func (s *CouponService) GetCouponSystemStatistics(ctx context.Context) (map[string]interface{}, error) {
+	stats := make(map[string]interface{})
+
+	// Count coupons by status
+	statuses := []string{entities.CouponStatusActive, entities.CouponStatusInactive, entities.CouponStatusExpired}
+	for _, status := range statuses {
+		var count int64
+		if err := s.db.WithContext(ctx).Model(&entities.Coupon{}).
+			Where("status = ?", status).Count(&count).Error; err != nil {
+			return nil, fmt.Errorf("failed to count coupons with status %s: %w", status, err)
+		}
+		stats[status+"_coupons"] = count
+	}
+
+	// Total coupons
+	var totalCoupons int64
+	if err := s.db.WithContext(ctx).Model(&entities.Coupon{}).Count(&totalCoupons).Error; err != nil {
+		return nil, fmt.Errorf("failed to count total coupons: %w", err)
+	}
+	stats["total_coupons"] = totalCoupons
+
+	// Total usages
+	var totalUsages int64
+	if err := s.db.WithContext(ctx).Model(&entities.CouponUsage{}).Count(&totalUsages).Error; err != nil {
+		return nil, fmt.Errorf("failed to count total coupon usages: %w", err)
+	}
+	stats["total_usages"] = totalUsages
+
+	// Total discount amount
+	var totalDiscountAmount float64
+	if err := s.db.WithContext(ctx).Model(&entities.CouponUsage{}).
+		Select("COALESCE(SUM(discount_amount), 0)").
+		Scan(&totalDiscountAmount).Error; err != nil {
+		return nil, fmt.Errorf("failed to calculate total discount amount: %w", err)
+	}
+	stats["total_discount_amount"] = totalDiscountAmount
+
+	return stats, nil
 }

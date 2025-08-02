@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"linke/internal/domains/invoice/entities"
+	"linke/internal/domains/invoice/usecases/interfaces"
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/shared/logger"
 
@@ -24,44 +25,9 @@ func NewInvoiceService(db *gorm.DB, userService userInterfaces.UserService) *Inv
 	}
 }
 
-// CreateInvoiceRequest represents the request to create an invoice
-type CreateInvoiceRequest struct {
-	UserID              uint   `json:"user_id" binding:"required"`
-	SubscriptionOrderID uint   `json:"subscription_order_id" binding:"required"`
-	InvoiceType         string `json:"invoice_type,omitempty" example:"standard"`
-
-	// Financial Details
-	Amount    float64 `json:"amount" binding:"required,min=0"`
-	Currency  string  `json:"currency,omitempty" example:"USD"`
-	TaxRate   float64 `json:"tax_rate,omitempty" example:"0.2"`
-	TaxType   string  `json:"tax_type,omitempty" example:"VAT"`
-	TaxNumber string  `json:"tax_number,omitempty" example:"GB123456789"`
-
-	// Billing Information
-	BillingName    string `json:"billing_name" binding:"required"`
-	BillingEmail   string `json:"billing_email" binding:"required,email"`
-	BillingAddress string `json:"billing_address,omitempty"`
-	BillingCity    string `json:"billing_city,omitempty"`
-	BillingState   string `json:"billing_state,omitempty"`
-	BillingCountry string `json:"billing_country,omitempty"`
-	BillingZip     string `json:"billing_zip,omitempty"`
-
-	// Company Information
-	CompanyName    string `json:"company_name,omitempty"`
-	CompanyTaxID   string `json:"company_tax_id,omitempty"`
-	CompanyAddress string `json:"company_address,omitempty"`
-
-	// Additional Information
-	Description string `json:"description,omitempty"`
-	Notes       string `json:"notes,omitempty"`
-	DueDate     string `json:"due_date,omitempty" example:"2024-01-31"`
-	Template    string `json:"template,omitempty" example:"default"`
-	Language    string `json:"language,omitempty" example:"en"`
-	AutoSend    bool   `json:"auto_send,omitempty" example:"false"`
-}
 
 // CreateInvoice creates a new invoice
-func (is *InvoiceService) CreateInvoice(ctx context.Context, req *CreateInvoiceRequest) (*entities.Invoice, error) {
+func (is *InvoiceService) CreateInvoice(ctx context.Context, req *interfaces.CreateInvoiceRequest) (*entities.Invoice, error) {
 	// TODO: Replace with subscription service interface call
 	// For now, we'll validate the order ID exists in the subscription context
 	if req.SubscriptionOrderID == 0 {
@@ -149,7 +115,12 @@ func (is *InvoiceService) CreateInvoice(ctx context.Context, req *CreateInvoiceR
 
 	// Auto-send if requested
 	if req.AutoSend {
-		if err := is.SendInvoice(ctx, invoice.ID); err != nil {
+		emailRequest := &interfaces.SendInvoiceRequest{
+			ToEmail: req.BillingEmail,
+			Subject: fmt.Sprintf("Invoice %s", invoiceNumber),
+			Message: "Please find your invoice attached.",
+		}
+		if err := is.SendInvoice(ctx, invoice.ID, emailRequest); err != nil {
 			logger.Error("Failed to auto-send invoice",
 				logger.Error2("error", err),
 				logger.Uint("invoice_id", invoice.ID))
@@ -167,7 +138,7 @@ func (is *InvoiceService) CreateInvoice(ctx context.Context, req *CreateInvoiceR
 }
 
 // CreateInvoiceFromOrder creates an invoice from a subscription order
-func (is *InvoiceService) CreateInvoiceFromOrder(ctx context.Context, orderID uint, options *CreateInvoiceRequest) (*entities.Invoice, error) {
+func (is *InvoiceService) CreateInvoiceFromOrder(ctx context.Context, orderID uint, options *interfaces.CreateInvoiceRequest) (*entities.Invoice, error) {
 	// TODO: Replace with subscription service interface call
 	// For now, we'll create the invoice with the provided order ID
 	if orderID == 0 {
@@ -188,7 +159,7 @@ func (is *InvoiceService) CreateInvoiceFromOrder(ctx context.Context, orderID ui
 		return nil, fmt.Errorf("options are required for invoice creation")
 	}
 
-	req := &CreateInvoiceRequest{
+	req := &interfaces.CreateInvoiceRequest{
 		UserID:              options.UserID,
 		SubscriptionOrderID: orderID,
 		Amount:              options.Amount,
@@ -294,29 +265,14 @@ func (is *InvoiceService) GetInvoiceWithRelations(ctx context.Context, invoiceID
 	return &invoice, nil
 }
 
-// GetInvoicesRequest represents the request to get invoices with filtering
-type GetInvoicesRequest struct {
-	UserID      *uint  `form:"user_id"`
-	Status      string `form:"status"`
-	InvoiceType string `form:"invoice_type"`
-	Currency    string `form:"currency"`
-	StartDate   string `form:"start_date"`
-	EndDate     string `form:"end_date"`
-	Overdue     *bool  `form:"overdue"`
-	Search      string `form:"search"`
-	SortBy      string `form:"sort_by"`
-	SortOrder   string `form:"sort_order"`
-	Limit       int    `form:"limit"`
-	Offset      int    `form:"offset"`
-}
 
 // GetInvoices gets invoices with filtering
-func (is *InvoiceService) GetInvoices(ctx context.Context, req *GetInvoicesRequest) ([]*entities.Invoice, int64, error) {
+func (is *InvoiceService) GetInvoices(ctx context.Context, req *interfaces.GetInvoicesRequest) ([]*entities.Invoice, int64, error) {
 	query := is.db.WithContext(ctx).Model(&entities.Invoice{})
 
 	// Apply filters
-	if req.UserID != nil {
-		query = query.Where("user_id = ?", *req.UserID)
+	if req.UserID != 0 {
+		query = query.Where("user_id = ?", req.UserID)
 	}
 
 	if req.Status != "" {
@@ -327,41 +283,22 @@ func (is *InvoiceService) GetInvoices(ctx context.Context, req *GetInvoicesReque
 		query = query.Where("invoice_type = ?", req.InvoiceType)
 	}
 
-	if req.Currency != "" {
-		query = query.Where("currency = ?", req.Currency)
-	}
 
 	// Date range filtering
-	if req.StartDate != "" {
-		if startDate, err := time.Parse("2006-01-02", req.StartDate); err == nil {
+	if req.DateFrom != "" {
+		if startDate, err := time.Parse("2006-01-02", req.DateFrom); err == nil {
 			query = query.Where("issued_at >= ?", startDate)
 		}
 	}
 
-	if req.EndDate != "" {
-		if endDate, err := time.Parse("2006-01-02", req.EndDate); err == nil {
+	if req.DateTo != "" {
+		if endDate, err := time.Parse("2006-01-02", req.DateTo); err == nil {
 			endDate = endDate.Add(24 * time.Hour)
 			query = query.Where("issued_at < ?", endDate)
 		}
 	}
 
-	// Overdue filter
-	if req.Overdue != nil {
-		if *req.Overdue {
-			query = query.Where("due_at < ? AND status != ?", time.Now(), entities.InvoiceStatusPaid)
-		} else {
-			query = query.Where("due_at >= ? OR status = ?", time.Now(), entities.InvoiceStatusPaid)
-		}
-	}
 
-	// Search functionality
-	if req.Search != "" {
-		searchPattern := "%" + req.Search + "%"
-		query = query.Where(
-			"invoice_number LIKE ? OR billing_name LIKE ? OR billing_email LIKE ? OR company_name LIKE ?",
-			searchPattern, searchPattern, searchPattern, searchPattern,
-		)
-	}
 
 	// Get total count
 	var totalCount int64
@@ -370,36 +307,7 @@ func (is *InvoiceService) GetInvoices(ctx context.Context, req *GetInvoicesReque
 	}
 
 	// Apply sorting
-	sortBy := req.SortBy
-	if sortBy == "" {
-		sortBy = "created_at"
-	}
-
-	sortOrder := req.SortOrder
-	if sortOrder == "" {
-		sortOrder = "desc"
-	}
-
-	validSortFields := map[string]bool{
-		"created_at":     true,
-		"updated_at":     true,
-		"issued_at":      true,
-		"due_at":         true,
-		"paid_at":        true,
-		"total_amount":   true,
-		"status":         true,
-		"invoice_number": true,
-	}
-
-	if !validSortFields[sortBy] {
-		sortBy = "created_at"
-	}
-
-	if sortOrder != "asc" && sortOrder != "desc" {
-		sortOrder = "desc"
-	}
-
-	query = query.Order(fmt.Sprintf("%s %s", sortBy, sortOrder))
+	query = query.Order("created_at desc")
 
 	// Apply pagination
 	if req.Limit > 0 {
@@ -410,8 +318,6 @@ func (is *InvoiceService) GetInvoices(ctx context.Context, req *GetInvoicesReque
 		query = query.Offset(req.Offset)
 	}
 
-	// Load relations
-	query = query.Preload("User").Preload("SubscriptionOrder")
 
 	var invoices []*entities.Invoice
 	if err := query.Find(&invoices).Error; err != nil {
@@ -421,31 +327,9 @@ func (is *InvoiceService) GetInvoices(ctx context.Context, req *GetInvoicesReque
 	return invoices, totalCount, nil
 }
 
-// UpdateInvoiceRequest represents the request to update an invoice
-type UpdateInvoiceRequest struct {
-	InvoiceType    *string  `json:"invoice_type,omitempty"`
-	TaxRate        *float64 `json:"tax_rate,omitempty"`
-	TaxType        *string  `json:"tax_type,omitempty"`
-	TaxNumber      *string  `json:"tax_number,omitempty"`
-	BillingName    *string  `json:"billing_name,omitempty"`
-	BillingEmail   *string  `json:"billing_email,omitempty"`
-	BillingAddress *string  `json:"billing_address,omitempty"`
-	BillingCity    *string  `json:"billing_city,omitempty"`
-	BillingState   *string  `json:"billing_state,omitempty"`
-	BillingCountry *string  `json:"billing_country,omitempty"`
-	BillingZip     *string  `json:"billing_zip,omitempty"`
-	CompanyName    *string  `json:"company_name,omitempty"`
-	CompanyTaxID   *string  `json:"company_tax_id,omitempty"`
-	CompanyAddress *string  `json:"company_address,omitempty"`
-	Description    *string  `json:"description,omitempty"`
-	Notes          *string  `json:"notes,omitempty"`
-	DueDate        *string  `json:"due_date,omitempty"`
-	Template       *string  `json:"template,omitempty"`
-	Language       *string  `json:"language,omitempty"`
-}
 
 // UpdateInvoice updates an invoice
-func (is *InvoiceService) UpdateInvoice(ctx context.Context, invoiceID uint, req *UpdateInvoiceRequest) (*entities.Invoice, error) {
+func (is *InvoiceService) UpdateInvoice(ctx context.Context, invoiceID uint, req *interfaces.UpdateInvoiceRequest) (*entities.Invoice, error) {
 	// Get invoice
 	invoice, err := is.GetInvoice(ctx, invoiceID)
 	if err != nil {
@@ -465,9 +349,6 @@ func (is *InvoiceService) UpdateInvoice(ctx context.Context, invoiceID uint, req
 	}
 	if req.TaxType != nil {
 		updateData["tax_type"] = *req.TaxType
-	}
-	if req.TaxNumber != nil {
-		updateData["tax_number"] = *req.TaxNumber
 	}
 	if req.BillingName != nil {
 		updateData["billing_name"] = *req.BillingName
@@ -548,7 +429,7 @@ func (is *InvoiceService) UpdateInvoice(ctx context.Context, invoiceID uint, req
 }
 
 // SendInvoice sends an invoice to the customer
-func (is *InvoiceService) SendInvoice(ctx context.Context, invoiceID uint) error {
+func (is *InvoiceService) SendInvoice(ctx context.Context, invoiceID uint, emailRequest *interfaces.SendInvoiceRequest) error {
 	// Get invoice
 	invoice, err := is.GetInvoice(ctx, invoiceID)
 	if err != nil {
@@ -584,7 +465,7 @@ func (is *InvoiceService) SendInvoice(ctx context.Context, invoiceID uint) error
 }
 
 // MarkInvoiceAsPaid marks an invoice as paid
-func (is *InvoiceService) MarkInvoiceAsPaid(ctx context.Context, invoiceID uint, paymentMethod, paymentReference string) error {
+func (is *InvoiceService) MarkInvoiceAsPaid(ctx context.Context, invoiceID uint, paymentDate string) error {
 	// Get invoice
 	invoice, err := is.GetInvoice(ctx, invoiceID)
 	if err != nil {
@@ -596,14 +477,23 @@ func (is *InvoiceService) MarkInvoiceAsPaid(ctx context.Context, invoiceID uint,
 		return fmt.Errorf("invoice cannot be marked as paid in status: %s", invoice.Status)
 	}
 
+	// Parse payment date
+	var paidAt time.Time
+	if paymentDate != "" {
+		if parsed, parseErr := time.Parse("2006-01-02", paymentDate); parseErr == nil {
+			paidAt = parsed
+		} else {
+			return fmt.Errorf("invalid payment date format: %w", parseErr)
+		}
+	} else {
+		paidAt = time.Now()
+	}
+
 	// Update invoice status
-	now := time.Now()
 	updateData := map[string]interface{}{
-		"status":            entities.InvoiceStatusPaid,
-		"paid_at":           now,
-		"payment_method":    paymentMethod,
-		"payment_reference": paymentReference,
-		"updated_at":        now,
+		"status":     entities.InvoiceStatusPaid,
+		"paid_at":    paidAt,
+		"updated_at": time.Now(),
 	}
 
 	if err := is.db.WithContext(ctx).Model(invoice).Updates(updateData).Error; err != nil {
@@ -613,13 +503,13 @@ func (is *InvoiceService) MarkInvoiceAsPaid(ctx context.Context, invoiceID uint,
 	logger.Info("Invoice marked as paid",
 		logger.Uint("invoice_id", invoiceID),
 		logger.String("invoice_number", invoice.InvoiceNumber),
-		logger.String("payment_method", paymentMethod))
+		logger.String("payment_date", paymentDate))
 
 	return nil
 }
 
-// VoidInvoice voids an invoice
-func (is *InvoiceService) VoidInvoice(ctx context.Context, invoiceID uint, reason string) error {
+// MarkInvoiceAsVoid voids an invoice
+func (is *InvoiceService) MarkInvoiceAsVoid(ctx context.Context, invoiceID uint, reason string) error {
 	// Get invoice
 	invoice, err := is.GetInvoice(ctx, invoiceID)
 	if err != nil {
@@ -684,6 +574,245 @@ func (is *InvoiceService) DeleteInvoice(ctx context.Context, invoiceID uint) err
 		logger.String("invoice_number", invoice.InvoiceNumber))
 
 	return nil
+}
+
+// GetInvoiceByNumber gets an invoice by invoice number
+func (is *InvoiceService) GetInvoiceByNumber(ctx context.Context, invoiceNumber string) (*entities.Invoice, error) {
+	var invoice entities.Invoice
+	if err := is.db.WithContext(ctx).Where("invoice_number = ?", invoiceNumber).First(&invoice).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("invoice not found")
+		}
+		return nil, fmt.Errorf("failed to get invoice: %w", err)
+	}
+	return &invoice, nil
+}
+
+// GetUserInvoices gets invoices for a specific user
+func (is *InvoiceService) GetUserInvoices(ctx context.Context, userID uint, limit, offset int) ([]*entities.Invoice, int64, error) {
+	query := is.db.WithContext(ctx).Model(&entities.Invoice{}).Where("user_id = ?", userID)
+
+	// Get total count
+	var totalCount int64
+	if err := query.Count(&totalCount).Error; err != nil {
+		return nil, 0, fmt.Errorf("failed to count user invoices: %w", err)
+	}
+
+	// Apply pagination
+	if limit > 0 {
+		query = query.Limit(limit)
+	}
+	if offset > 0 {
+		query = query.Offset(offset)
+	}
+
+	query = query.Order("created_at desc")
+
+	var invoices []*entities.Invoice
+	if err := query.Find(&invoices).Error; err != nil {
+		return nil, 0, fmt.Errorf("failed to get user invoices: %w", err)
+	}
+
+	return invoices, totalCount, nil
+}
+
+// GenerateInvoicePDF generates a PDF for the invoice
+func (is *InvoiceService) GenerateInvoicePDF(ctx context.Context, invoiceID uint) ([]byte, error) {
+	// Get invoice
+	invoice, err := is.GetInvoice(ctx, invoiceID)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: Implement PDF generation
+	// This would use a PDF library to generate the invoice PDF
+	// For now, return a placeholder
+	pdfContent := fmt.Sprintf("Invoice PDF for %s - Amount: %.2f %s", 
+		invoice.InvoiceNumber, invoice.TotalAmount, invoice.Currency)
+	
+	logger.Info("Invoice PDF generated",
+		logger.Uint("invoice_id", invoiceID),
+		logger.String("invoice_number", invoice.InvoiceNumber))
+	
+	return []byte(pdfContent), nil
+}
+
+// ResendInvoice resends an invoice
+func (is *InvoiceService) ResendInvoice(ctx context.Context, invoiceID uint) error {
+	// Get invoice
+	invoice, err := is.GetInvoice(ctx, invoiceID)
+	if err != nil {
+		return err
+	}
+
+	// Check if invoice can be sent
+	if !invoice.CanBeSent() && invoice.Status != entities.InvoiceStatusSent {
+		return fmt.Errorf("invoice cannot be resent in status: %s", invoice.Status)
+	}
+
+	// Create a default send request
+	emailRequest := &interfaces.SendInvoiceRequest{
+		ToEmail: invoice.BillingEmail,
+		Subject: fmt.Sprintf("Invoice %s", invoice.InvoiceNumber),
+		Message: "Please find your invoice attached.",
+	}
+
+	return is.SendInvoice(ctx, invoiceID, emailRequest)
+}
+
+// MarkInvoiceAsOverdue marks an invoice as overdue
+func (is *InvoiceService) MarkInvoiceAsOverdue(ctx context.Context, invoiceID uint) error {
+	// Get invoice
+	invoice, err := is.GetInvoice(ctx, invoiceID)
+	if err != nil {
+		return err
+	}
+
+	// Check if invoice is actually overdue
+	if invoice.DueAt == nil || invoice.DueAt.After(time.Now()) {
+		return fmt.Errorf("invoice is not overdue")
+	}
+
+	// Check if invoice can be marked as overdue
+	if invoice.Status == entities.InvoiceStatusPaid || invoice.Status == entities.InvoiceStatusVoided {
+		return fmt.Errorf("invoice cannot be marked as overdue in status: %s", invoice.Status)
+	}
+
+	// Update invoice status
+	updateData := map[string]interface{}{
+		"status":     entities.InvoiceStatusOverdue,
+		"updated_at": time.Now(),
+	}
+
+	if err := is.db.WithContext(ctx).Model(invoice).Updates(updateData).Error; err != nil {
+		return fmt.Errorf("failed to mark invoice as overdue: %w", err)
+	}
+
+	logger.Info("Invoice marked as overdue",
+		logger.Uint("invoice_id", invoiceID),
+		logger.String("invoice_number", invoice.InvoiceNumber))
+
+	return nil
+}
+
+// GetInvoiceStatistics gets invoice statistics for a date range
+func (is *InvoiceService) GetInvoiceStatistics(ctx context.Context, fromDate, toDate string) (map[string]interface{}, error) {
+	stats := make(map[string]interface{})
+
+	// Parse dates
+	var startDate, endDate time.Time
+	var err error
+
+	if fromDate != "" {
+		startDate, err = time.Parse("2006-01-02", fromDate)
+		if err != nil {
+			return nil, fmt.Errorf("invalid from_date format: %w", err)
+		}
+	} else {
+		startDate = time.Now().AddDate(0, -1, 0) // Default to last month
+	}
+
+	if toDate != "" {
+		endDate, err = time.Parse("2006-01-02", toDate)
+		if err != nil {
+			return nil, fmt.Errorf("invalid to_date format: %w", err)
+		}
+		endDate = endDate.Add(24 * time.Hour) // Include the end date
+	} else {
+		endDate = time.Now()
+	}
+
+	query := is.db.WithContext(ctx).Model(&entities.Invoice{}).
+		Where("created_at >= ? AND created_at < ?", startDate, endDate)
+
+	// Total count
+	var totalCount int64
+	if err := query.Count(&totalCount).Error; err != nil {
+		return nil, fmt.Errorf("failed to count invoices: %w", err)
+	}
+	stats["total_count"] = totalCount
+
+	// Count by status
+	type StatusCount struct {
+		Status string
+		Count  int64
+	}
+	var statusCounts []StatusCount
+	if err := query.Select("status, COUNT(*) as count").Group("status").Find(&statusCounts).Error; err != nil {
+		return nil, fmt.Errorf("failed to get status counts: %w", err)
+	}
+
+	statusStats := make(map[string]int64)
+	for _, sc := range statusCounts {
+		statusStats[sc.Status] = sc.Count
+	}
+	stats["by_status"] = statusStats
+
+	// Total amount
+	type AmountSum struct {
+		TotalAmount float64
+	}
+	var amountSum AmountSum
+	if err := query.Select("SUM(total_amount) as total_amount").Find(&amountSum).Error; err != nil {
+		return nil, fmt.Errorf("failed to calculate total amount: %w", err)
+	}
+	stats["total_amount"] = amountSum.TotalAmount
+
+	stats["from_date"] = fromDate
+	stats["to_date"] = toDate
+
+	return stats, nil
+}
+
+// GetUserInvoiceStatistics gets invoice statistics for a specific user
+func (is *InvoiceService) GetUserInvoiceStatistics(ctx context.Context, userID uint) (map[string]interface{}, error) {
+	stats := make(map[string]interface{})
+
+	query := is.db.WithContext(ctx).Model(&entities.Invoice{}).Where("user_id = ?", userID)
+
+	// Total count
+	var totalCount int64
+	if err := query.Count(&totalCount).Error; err != nil {
+		return nil, fmt.Errorf("failed to count user invoices: %w", err)
+	}
+	stats["total_count"] = totalCount
+
+	// Count by status
+	type StatusCount struct {
+		Status string
+		Count  int64
+	}
+	var statusCounts []StatusCount
+	if err := query.Select("status, COUNT(*) as count").Group("status").Find(&statusCounts).Error; err != nil {
+		return nil, fmt.Errorf("failed to get status counts: %w", err)
+	}
+
+	statusStats := make(map[string]int64)
+	for _, sc := range statusCounts {
+		statusStats[sc.Status] = sc.Count
+	}
+	stats["by_status"] = statusStats
+
+	// Total amount
+	type AmountSum struct {
+		TotalAmount float64
+	}
+	var amountSum AmountSum
+	if err := query.Select("SUM(total_amount) as total_amount").Find(&amountSum).Error; err != nil {
+		return nil, fmt.Errorf("failed to calculate total amount: %w", err)
+	}
+	stats["total_amount"] = amountSum.TotalAmount
+
+	// Overdue count
+	var overdueCount int64
+	if err := query.Where("due_at < ? AND status != ?", time.Now(), entities.InvoiceStatusPaid).Count(&overdueCount).Error; err != nil {
+		return nil, fmt.Errorf("failed to count overdue invoices: %w", err)
+	}
+	stats["overdue_count"] = overdueCount
+
+	stats["user_id"] = userID
+
+	return stats, nil
 }
 
 // generateInvoiceNumber generates a unique invoice number

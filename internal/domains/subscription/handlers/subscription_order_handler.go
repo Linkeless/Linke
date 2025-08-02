@@ -3,8 +3,8 @@ package handlers
 import (
 	"strconv"
 
-	subscriptionEntities "linke/internal/domains/subscription/entities"
-	subscriptionInterfaces "linke/internal/domains/subscription/usecases/interfaces"
+	"linke/internal/domains/subscription/entities"
+	"linke/internal/domains/subscription/usecases/interfaces"
 	userEntities "linke/internal/domains/user/entities"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/middleware"
@@ -14,10 +14,10 @@ import (
 )
 
 type SubscriptionOrderHandler struct {
-	subscriptionOrderService subscriptionInterfaces.SubscriptionOrderService
+	subscriptionOrderService interfaces.SubscriptionOrderService
 }
 
-func NewSubscriptionOrderHandler(subscriptionOrderService subscriptionInterfaces.SubscriptionOrderService) *SubscriptionOrderHandler {
+func NewSubscriptionOrderHandler(subscriptionOrderService interfaces.SubscriptionOrderService) *SubscriptionOrderHandler {
 	return &SubscriptionOrderHandler{
 		subscriptionOrderService: subscriptionOrderService,
 	}
@@ -30,8 +30,8 @@ func NewSubscriptionOrderHandler(subscriptionOrderService subscriptionInterfaces
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param order body service.CreateSubscriptionOrderRequest true "Subscription order data"
-// @Success 201 {object} response.StandardResponse{data=service.CreateSubscriptionOrderResponse}
+// @Param order body interfaces.CreateSubscriptionOrderRequest true "Subscription order data"
+// @Success 201 {object} response.StandardResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -51,7 +51,7 @@ func (h *SubscriptionOrderHandler) CreateSubscriptionOrder(c *gin.Context) {
 	}
 
 	// Bind request
-	var req subscriptionInterfaces.CreateSubscriptionOrderRequest
+	var req interfaces.CreateSubscriptionOrderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "Invalid request data", err.Error())
 		return
@@ -82,7 +82,7 @@ func (h *SubscriptionOrderHandler) CreateSubscriptionOrder(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Subscription order ID"
-// @Success 200 {object} response.StandardResponse{data=model.SubscriptionOrderResponse}
+// @Success 200 {object} response.StandardResponse{data=entities.SubscriptionOrderResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -141,7 +141,7 @@ func (h *SubscriptionOrderHandler) GetSubscriptionOrder(c *gin.Context) {
 // @Security BearerAuth
 // @Param limit query int false "Limit results" minimum(1) maximum(100) example(10)
 // @Param offset query int false "Offset results" minimum(0) example(0)
-// @Success 200 {object} response.PaginatedResponse{data=[]model.SubscriptionOrderResponse}
+// @Success 200 {object} response.PaginatedResponse{data=[]entities.SubscriptionOrderResponse}
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /subscription-orders/my [get]
@@ -182,7 +182,7 @@ func (h *SubscriptionOrderHandler) GetMySubscriptionOrders(c *gin.Context) {
 	}
 
 	// Convert to response format
-	var orderResponses []*subscriptionEntities.SubscriptionOrderResponse
+	var orderResponses []*entities.SubscriptionOrderResponse
 	for _, order := range orders {
 		orderResponses = append(orderResponses, order.ToResponse())
 	}

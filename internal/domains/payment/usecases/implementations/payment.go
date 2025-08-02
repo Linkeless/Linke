@@ -11,92 +11,31 @@ import (
 	"time"
 
 	"linke/internal/domains/payment/entities"
+	"linke/internal/domains/payment/usecases/interfaces"
 	"linke/internal/shared/logger"
 
 	"gorm.io/gorm"
 )
 
-// PaymentGateway interface defines the methods that all payment gateways must implement
-type PaymentGateway interface {
-	CreatePaymentOrder(req *CreatePaymentOrderRequest) (*CreatePaymentOrderResponse, error)
-	QueryPaymentOrder(outTradeNo string) (*QueryPaymentOrderResponse, error)
-	VerifyPaymentNotify(data map[string]interface{}) (bool, *NotifyData)
-	IsPaymentCompleted(status string) bool
-	GetSupportedPaymentMethods() []string
-	GetPaymentMethodName(method string) string
-	ValidateConfig() error
-	TestConnection() error
-}
-
-// SubscriptionOrderServiceInterface defines the interface for subscription order service
-type SubscriptionOrderServiceInterface interface {
-	ProcessOrderPaymentSuccess(ctx context.Context, orderID uint) error
-}
 
 // PaymentService represents the unified payment service
 type PaymentService struct {
 	db                       *gorm.DB
-	gateways                 map[string]PaymentGateway
-	subscriptionOrderService SubscriptionOrderServiceInterface
+	gateways                 map[string]interfaces.PaymentGateway
+	subscriptionOrderService interfaces.SubscriptionOrderServiceInterface
 }
 
 // NewPaymentService creates a new payment service instance
 func NewPaymentService(db *gorm.DB) *PaymentService {
 	return &PaymentService{
 		db:       db,
-		gateways: make(map[string]PaymentGateway),
+		gateways: make(map[string]interfaces.PaymentGateway),
 	}
 }
 
-// CreatePaymentOrderRequest represents the unified request to create a payment order
-type CreatePaymentOrderRequest struct {
-	UserID              uint    `json:"user_id"`
-	SubscriptionOrderID *uint   `json:"subscription_order_id,omitempty"`
-	Gateway             string  `json:"gateway"`            // epay, epusdt
-	PaymentMethod       string  `json:"payment_method"`     // alipay, wechat, usdt, etc.
-	Amount              float64 `json:"amount"`             // Amount in specified currency
-	Currency            string  `json:"currency"`           // CNY, USD, USDT
-	Subject             string  `json:"subject"`            // Order subject
-	Body                string  `json:"body"`               // Order description
-	ClientIP            string  `json:"client_ip"`          // Client IP
-	NotifyURL           string  `json:"notify_url"`         // Async notification URL
-	ReturnURL           string  `json:"return_url"`         // Sync return URL
-	ExpiredMinutes      int     `json:"expired_minutes"`    // Expiration time in minutes
-	Metadata            string  `json:"metadata,omitempty"` // Additional metadata
-}
-
-// CreatePaymentOrderResponse represents the unified response from payment order creation
-type CreatePaymentOrderResponse struct {
-	PaymentNo   string    `json:"payment_no"`             // Internal payment number
-	PaymentURL  string    `json:"payment_url"`            // Payment URL
-	QRCodeURL   string    `json:"qr_code_url"`            // QR code URL
-	Amount      float64   `json:"amount"`                 // Payment amount
-	Currency    string    `json:"currency"`               // Currency
-	ExpiredAt   time.Time `json:"expired_at"`             // Expiration time
-	GatewayData string    `json:"gateway_data,omitempty"` // Raw gateway response
-}
-
-// QueryPaymentOrderResponse represents the unified response from payment order query
-type QueryPaymentOrderResponse struct {
-	PaymentNo     string `json:"payment_no"`
-	Status        string `json:"status"`
-	PaidAmount    string `json:"paid_amount,omitempty"`
-	TransactionID string `json:"transaction_id,omitempty"`
-	PaidAt        string `json:"paid_at,omitempty"`
-}
-
-// NotifyData represents the unified notification data
-type NotifyData struct {
-	PaymentNo     string  `json:"payment_no"`
-	OutTradeNo    string  `json:"out_trade_no"`
-	TransactionID string  `json:"transaction_id"`
-	Amount        float64 `json:"amount"`
-	Status        string  `json:"status"`
-	PaidAt        string  `json:"paid_at,omitempty"`
-}
 
 // RegisterGateway registers a payment gateway
-func (ps *PaymentService) RegisterGateway(name string, gateway PaymentGateway) error {
+func (ps *PaymentService) RegisterGateway(name string, gateway interfaces.PaymentGateway) error {
 	if err := gateway.ValidateConfig(); err != nil {
 		return fmt.Errorf("gateway config validation failed: %w", err)
 	}
@@ -107,7 +46,7 @@ func (ps *PaymentService) RegisterGateway(name string, gateway PaymentGateway) e
 }
 
 // GetGateway gets a payment gateway by name
-func (ps *PaymentService) GetGateway(name string) (PaymentGateway, error) {
+func (ps *PaymentService) GetGateway(name string) (interfaces.PaymentGateway, error) {
 	gateway, exists := ps.gateways[name]
 	if !exists {
 		return nil, fmt.Errorf("payment gateway '%s' not found", name)
@@ -141,7 +80,7 @@ func (ps *PaymentService) GeneratePaymentNo() (string, error) {
 }
 
 // CreatePaymentOrder creates a new payment order
-func (ps *PaymentService) CreatePaymentOrder(ctx context.Context, req *CreatePaymentOrderRequest) (*entities.PaymentRecord, error) {
+func (ps *PaymentService) CreatePaymentOrder(ctx context.Context, req *interfaces.CreatePaymentOrderRequest) (*entities.PaymentRecord, error) {
 	// Get gateway
 	gateway, err := ps.GetGateway(req.Gateway)
 	if err != nil {
@@ -176,7 +115,7 @@ func (ps *PaymentService) CreatePaymentOrder(ctx context.Context, req *CreatePay
 	}
 
 	// Create gateway order request
-	gatewayReq := &CreatePaymentOrderRequest{
+	gatewayReq := &interfaces.CreatePaymentOrderRequest{
 		UserID:              req.UserID,
 		SubscriptionOrderID: req.SubscriptionOrderID,
 		Gateway:             req.Gateway,
@@ -389,7 +328,7 @@ func (ps *PaymentService) ProcessNotification(ctx context.Context, gateway strin
 }
 
 // SetSubscriptionOrderService sets the subscription order service for payment processing
-func (ps *PaymentService) SetSubscriptionOrderService(subscriptionOrderService SubscriptionOrderServiceInterface) {
+func (ps *PaymentService) SetSubscriptionOrderService(subscriptionOrderService interfaces.SubscriptionOrderServiceInterface) {
 	ps.subscriptionOrderService = subscriptionOrderService
 }
 

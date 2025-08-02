@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	userEntities "linke/internal/domains/user/entities"
+	"linke/internal/domains/user/entities"
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/middleware"
@@ -27,7 +27,7 @@ func NewUserProfileHandler(userService userInterfaces.UserService) *UserProfileH
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} response.StandardResponse{data=userEntities.UserResponse}
+// @Success 200 {object} response.StandardResponse{data=entities.UserResponse}
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /user/profile [get]
@@ -39,7 +39,7 @@ func (h *UserProfileHandler) GetProfile(c *gin.Context) {
 		return
 	}
 
-	user, ok := userValue.(*userEntities.User)
+	user, ok := userValue.(*entities.User)
 	if !ok {
 		response.Unauthorized(c, "Invalid user context")
 		return
@@ -67,7 +67,7 @@ func (h *UserProfileHandler) GetProfile(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param user body UserProfileUpdateRequest true "User profile data"
-// @Success 200 {object} response.StandardResponse{data=userEntities.UserResponse}
+// @Success 200 {object} response.StandardResponse{data=entities.UserResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -80,7 +80,7 @@ func (h *UserProfileHandler) UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	currentUser, ok := userValue.(*userEntities.User)
+	currentUser, ok := userValue.(*entities.User)
 	if !ok {
 		response.Unauthorized(c, "Invalid user context")
 		return
@@ -154,14 +154,14 @@ func (h *UserProfileHandler) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	currentUser, ok := userValue.(*userEntities.User)
+	currentUser, ok := userValue.(*entities.User)
 	if !ok {
 		response.Unauthorized(c, "Invalid user context")
 		return
 	}
 
 	// Only allow local account users to change password
-	if currentUser.Provider != userEntities.ProviderLocal {
+	if currentUser.Provider != entities.ProviderLocal {
 		response.BadRequest(c, "Password change is only available for local accounts")
 		return
 	}

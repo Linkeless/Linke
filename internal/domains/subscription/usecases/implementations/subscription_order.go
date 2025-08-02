@@ -8,6 +8,7 @@ import (
 	couponInterfaces "linke/internal/domains/coupon/usecases/interfaces"
 	paymentInterfaces "linke/internal/domains/payment/usecases/interfaces"
 	"linke/internal/domains/subscription/entities"
+	"linke/internal/domains/subscription/usecases/interfaces"
 	"linke/internal/shared/logger"
 
 	"gorm.io/gorm"
@@ -15,13 +16,13 @@ import (
 
 type SubscriptionOrderService struct {
 	db                      *gorm.DB
-	subscriptionPlanService *SubscriptionPlanService
-	userSubscriptionService *UserSubscriptionService
+	subscriptionPlanService interfaces.SubscriptionPlanService
+	userSubscriptionService interfaces.UserSubscriptionService
 	paymentService          paymentInterfaces.PaymentService
 	couponService           couponInterfaces.CouponService
 }
 
-func NewSubscriptionOrderService(db *gorm.DB, subscriptionPlanService *SubscriptionPlanService, userSubscriptionService *UserSubscriptionService, paymentService paymentInterfaces.PaymentService, couponService couponInterfaces.CouponService) *SubscriptionOrderService {
+func NewSubscriptionOrderService(db *gorm.DB, subscriptionPlanService interfaces.SubscriptionPlanService, userSubscriptionService interfaces.UserSubscriptionService, paymentService paymentInterfaces.PaymentService, couponService couponInterfaces.CouponService) *SubscriptionOrderService {
 	return &SubscriptionOrderService{
 		db:                      db,
 		subscriptionPlanService: subscriptionPlanService,
@@ -31,29 +32,9 @@ func NewSubscriptionOrderService(db *gorm.DB, subscriptionPlanService *Subscript
 	}
 }
 
-// CreateSubscriptionOrderRequest represents the request to create a subscription order
-type CreateSubscriptionOrderRequest struct {
-	UserID             uint   `json:"user_id" binding:"required" example:"1"`
-	SubscriptionPlanID uint   `json:"subscription_plan_id" binding:"required" example:"1"`
-	OrderType          string `json:"order_type" binding:"required,oneof=new renewal upgrade downgrade" example:"new"`
-	CouponCode         string `json:"coupon_code,omitempty" example:"SAVE20"`
-	PaymentGateway     string `json:"payment_gateway" binding:"required" example:"epay"`
-	PaymentMethod      string `json:"payment_method" binding:"required" example:"alipay"`
-	ReturnURL          string `json:"return_url,omitempty" example:"https://example.com/payment/return"`
-	Metadata           string `json:"metadata,omitempty"`
-}
-
-// CreateSubscriptionOrderResponse represents the response after creating a subscription order
-type CreateSubscriptionOrderResponse struct {
-	Order         *entities.SubscriptionOrderResponse `json:"order"`
-	PaymentRecord interface{}                         `json:"payment_record"` // TODO: Use DTO instead of cross-domain entity
-	PaymentURL    string                              `json:"payment_url"`
-	QRCodeURL     string                              `json:"qr_code_url,omitempty"`
-	ExpiredAt     time.Time                           `json:"expired_at"`
-}
 
 // CreateSubscriptionOrder creates a new subscription order with payment
-func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context, req *CreateSubscriptionOrderRequest) (*CreateSubscriptionOrderResponse, error) {
+func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context, req *interfaces.CreateSubscriptionOrderRequest) (*interfaces.CreateSubscriptionOrderResponse, error) {
 	// SECURITY: Check for duplicate pending orders to prevent order spam
 	if err := sos.checkDuplicateOrders(ctx, req.UserID, req.SubscriptionPlanID, req.OrderType); err != nil {
 		return nil, fmt.Errorf("duplicate order check failed: %w", err)
@@ -239,7 +220,7 @@ func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context
 		logger.Uint("plan_id", req.SubscriptionPlanID))
 
 	// Return response
-	response := &CreateSubscriptionOrderResponse{
+	response := &interfaces.CreateSubscriptionOrderResponse{
 		Order:         order.ToResponse(),
 		PaymentRecord: paymentRecord.ToUserResponse(),
 		PaymentURL:    paymentRecord.PaymentURL,
@@ -298,7 +279,7 @@ func (sos *SubscriptionOrderService) ProcessOrderPaymentSuccess(ctx context.Cont
 	switch order.OrderType {
 	case entities.OrderTypeNew:
 		// Create new subscription
-		subscriptionReq := &CreateSubscriptionRequest{
+		subscriptionReq := &interfaces.CreateSubscriptionRequest{
 			UserID:             order.UserID,
 			SubscriptionPlanID: order.SubscriptionPlanID,
 			UseTrial:           false, // Paid subscription, no trial
@@ -335,7 +316,7 @@ func (sos *SubscriptionOrderService) ProcessOrderPaymentSuccess(ctx context.Cont
 		}
 
 		// Renew subscription
-		if _, err := sos.userSubscriptionService.RenewUserSubscription(ctx, subscription.ID); err != nil {
+		if err := sos.userSubscriptionService.RenewUserSubscription(ctx, subscription.ID); err != nil {
 			tx.Rollback()
 			return fmt.Errorf("failed to renew subscription: %w", err)
 		}
@@ -391,7 +372,7 @@ func (sos *SubscriptionOrderService) ProcessOrderPaymentSuccess(ctx context.Cont
 		}
 
 		// Create new subscription with the new plan
-		subscriptionReq := &CreateSubscriptionRequest{
+		subscriptionReq := &interfaces.CreateSubscriptionRequest{
 			UserID:             order.UserID,
 			SubscriptionPlanID: order.SubscriptionPlanID,
 			UseTrial:           false, // Paid subscription, no trial for upgrades/downgrades
@@ -574,7 +555,7 @@ type UpgradeDowngradeRequest struct {
 }
 
 // CreateUpgradeDowngradeOrder creates an order for subscription upgrade or downgrade
-func (sos *SubscriptionOrderService) CreateUpgradeDowngradeOrder(ctx context.Context, userID uint, req *UpgradeDowngradeRequest) (*CreateSubscriptionOrderResponse, error) {
+func (sos *SubscriptionOrderService) CreateUpgradeDowngradeOrder(ctx context.Context, userID uint, req *UpgradeDowngradeRequest) (*interfaces.CreateSubscriptionOrderResponse, error) {
 	// Get current subscription
 	currentSubscription, err := sos.userSubscriptionService.GetUserSubscription(ctx, req.CurrentSubscriptionID)
 	if err != nil {
@@ -618,7 +599,7 @@ func (sos *SubscriptionOrderService) CreateUpgradeDowngradeOrder(ctx context.Con
 	}
 
 	// Create order request
-	orderReq := &CreateSubscriptionOrderRequest{
+	orderReq := &interfaces.CreateSubscriptionOrderRequest{
 		UserID:             userID,
 		SubscriptionPlanID: req.NewPlanID,
 		OrderType:          orderType,
@@ -1137,51 +1118,135 @@ type OrderStatistics struct {
 	ConversionRate  float64 `json:"conversion_rate"`
 }
 
-// GetOrderStatistics gets comprehensive order statistics
-func (sos *SubscriptionOrderService) GetOrderStatistics(ctx context.Context, req *GetOrderStatsRequest) (*OrderStatistics, error) {
+// GetSubscriptionOrders gets subscription orders with filtering
+func (sos *SubscriptionOrderService) GetSubscriptionOrders(ctx context.Context, req *interfaces.GetSubscriptionOrdersRequest) ([]*entities.SubscriptionOrder, int64, error) {
 	query := sos.db.WithContext(ctx).Model(&entities.SubscriptionOrder{})
 
-	// Apply date filtering based on period
-	if req.Period != "" && req.Period != "all" {
-		now := time.Now()
-		var startDate time.Time
+	// Apply filters
+	if req.UserID != 0 {
+		query = query.Where("user_id = ?", req.UserID)
+	}
 
-		switch req.Period {
-		case "today":
-			startDate = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-		case "week":
-			startDate = now.AddDate(0, 0, -7)
-		case "month":
-			startDate = now.AddDate(0, -1, 0)
-		case "quarter":
-			startDate = now.AddDate(0, -3, 0)
-		case "year":
-			startDate = now.AddDate(-1, 0, 0)
-		}
+	if req.Status != "" {
+		query = query.Where("status = ?", req.Status)
+	}
 
-		if !startDate.IsZero() {
+	if req.OrderType != "" {
+		query = query.Where("order_type = ?", req.OrderType)
+	}
+
+	// Date range filtering
+	if req.DateFrom != "" {
+		if startDate, err := time.Parse("2006-01-02", req.DateFrom); err == nil {
 			query = query.Where("created_at >= ?", startDate)
 		}
 	}
 
-	// Apply custom date range if provided
-	if req.StartDate != "" {
-		if startDate, err := time.Parse("2006-01-02", req.StartDate); err == nil {
-			query = query.Where("created_at >= ?", startDate)
-		}
-	}
-
-	if req.EndDate != "" {
-		if endDate, err := time.Parse("2006-01-02", req.EndDate); err == nil {
+	if req.DateTo != "" {
+		if endDate, err := time.Parse("2006-01-02", req.DateTo); err == nil {
+			// Add 24 hours to include the entire end date
 			endDate = endDate.Add(24 * time.Hour)
 			query = query.Where("created_at < ?", endDate)
 		}
 	}
 
-	stats := &OrderStatistics{}
+	// Get total count
+	var totalCount int64
+	if err := query.Count(&totalCount).Error; err != nil {
+		return nil, 0, fmt.Errorf("failed to count subscription orders: %w", err)
+	}
+
+	// Apply pagination
+	if req.Limit > 0 {
+		query = query.Limit(req.Limit)
+	}
+
+	if req.Offset > 0 {
+		query = query.Offset(req.Offset)
+	}
+
+	// Apply ordering
+	query = query.Order("created_at DESC")
+
+	// Get orders
+	var orders []*entities.SubscriptionOrder
+	if err := query.Find(&orders).Error; err != nil {
+		return nil, 0, fmt.Errorf("failed to get subscription orders: %w", err)
+	}
+
+	return orders, totalCount, nil
+}
+
+// CancelSubscriptionOrder cancels a subscription order
+func (sos *SubscriptionOrderService) CancelSubscriptionOrder(ctx context.Context, orderID uint, reason string) error {
+	// Start transaction
+	tx := sos.db.WithContext(ctx).Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Get order with lock
+	var order entities.SubscriptionOrder
+	if err := tx.Set("gorm:query_option", "FOR UPDATE").First(&order, orderID).Error; err != nil {
+		tx.Rollback()
+		if err == gorm.ErrRecordNotFound {
+			return fmt.Errorf("subscription order not found")
+		}
+		return fmt.Errorf("failed to get subscription order: %w", err)
+	}
+
+	// Check if order can be cancelled
+	if order.Status != entities.OrderStatusPending {
+		tx.Rollback()
+		return fmt.Errorf("order cannot be cancelled in status: %s", order.Status)
+	}
+
+	// Update order status
+	updateData := map[string]interface{}{
+		"status":              entities.OrderStatusCancelled,
+		"cancellation_reason": reason,
+		"cancelled_at":        time.Now(),
+		"updated_at":          time.Now(),
+	}
+
+	if err := tx.Model(&order).Updates(updateData).Error; err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to cancel order: %w", err)
+	}
+
+	// Commit transaction
+	if err := tx.Commit().Error; err != nil {
+		return fmt.Errorf("failed to commit order cancellation: %w", err)
+	}
+
+	logger.Info("Order cancelled successfully",
+		logger.Uint("order_id", orderID),
+		logger.String("reason", reason))
+
+	return nil
+}
+
+// GetOrderStatistics gets comprehensive order statistics
+func (sos *SubscriptionOrderService) GetOrderStatistics(ctx context.Context, fromDate, toDate time.Time) (map[string]interface{}, error) {
+	query := sos.db.WithContext(ctx).Model(&entities.SubscriptionOrder{})
+
+	// Apply date range
+	if !fromDate.IsZero() {
+		query = query.Where("created_at >= ?", fromDate)
+	}
+
+	if !toDate.IsZero() {
+		query = query.Where("created_at <= ?", toDate)
+	}
+
+	stats := make(map[string]interface{})
 
 	// Get total orders
-	query.Count(&stats.TotalOrders)
+	var totalOrders int64
+	query.Count(&totalOrders)
+	stats["total_orders"] = totalOrders
 
 	// Get orders by status
 	var statusCounts []struct {
@@ -1193,20 +1258,27 @@ func (sos *SubscriptionOrderService) GetOrderStatistics(ctx context.Context, req
 		return nil, fmt.Errorf("failed to get status counts: %w", err)
 	}
 
+	var pendingOrders, paidOrders, failedOrders, cancelledOrders, refundedOrders int64
 	for _, sc := range statusCounts {
 		switch sc.Status {
 		case entities.OrderStatusPending:
-			stats.PendingOrders = sc.Count
+			pendingOrders = sc.Count
 		case entities.OrderStatusPaid:
-			stats.PaidOrders = sc.Count
+			paidOrders = sc.Count
 		case entities.OrderStatusFailed:
-			stats.FailedOrders = sc.Count
+			failedOrders = sc.Count
 		case entities.OrderStatusCancelled:
-			stats.CancelledOrders = sc.Count
+			cancelledOrders = sc.Count
 		case entities.OrderStatusRefunded:
-			stats.RefundedOrders = sc.Count
+			refundedOrders = sc.Count
 		}
 	}
+
+	stats["pending_orders"] = pendingOrders
+	stats["paid_orders"] = paidOrders
+	stats["failed_orders"] = failedOrders
+	stats["cancelled_orders"] = cancelledOrders
+	stats["refunded_orders"] = refundedOrders
 
 	// Get revenue statistics
 	var revenueStats struct {
@@ -1223,13 +1295,15 @@ func (sos *SubscriptionOrderService) GetOrderStatistics(ctx context.Context, req
 		return nil, fmt.Errorf("failed to get revenue stats: %w", err)
 	}
 
-	stats.TotalRevenue = revenueStats.TotalRevenue
-	stats.TotalRefunded = revenueStats.TotalRefunded
-	stats.AvgOrderValue = revenueStats.AvgOrderValue
+	stats["total_revenue"] = revenueStats.TotalRevenue
+	stats["total_refunded"] = revenueStats.TotalRefunded
+	stats["avg_order_value"] = revenueStats.AvgOrderValue
 
 	// Calculate conversion rate (paid orders / total orders)
-	if stats.TotalOrders > 0 {
-		stats.ConversionRate = float64(stats.PaidOrders) / float64(stats.TotalOrders) * 100
+	if totalOrders > 0 {
+		stats["conversion_rate"] = float64(paidOrders) / float64(totalOrders) * 100
+	} else {
+		stats["conversion_rate"] = 0.0
 	}
 
 	return stats, nil

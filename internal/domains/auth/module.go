@@ -33,8 +33,13 @@ var Module = fx.Module("auth",
 
 	// 提供基础服务实现
 	fx.Provide(
+		// Provide JWTBlacklistService as concrete type first
+		implementations.NewJWTBlacklistService,
+		// Provide interface wrapper
 		fx.Annotate(
-			implementations.NewJWTBlacklistService,
+			func(service *implementations.JWTBlacklistService) interfaces.JWTBlacklistService {
+				return service
+			},
 			fx.As(new(interfaces.JWTBlacklistService)),
 		),
 		fx.Annotate(

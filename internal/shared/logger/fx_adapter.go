@@ -73,15 +73,23 @@ func (l *FxAdapter) LogEvent(event fxevent.Event) {
 			zap.String("module", e.ModuleName))
 
 	case *fxevent.Provided:
+		typeName := "<unknown>"
+		if len(e.OutputTypeNames) > 0 {
+			typeName = e.OutputTypeNames[0]
+		}
 		l.logger.Debug("Fx dependency provided",
 			zap.String("constructor", cleanConstructorName(e.ConstructorName)),
-			zap.String("type", e.OutputTypeNames[0]),
+			zap.String("type", typeName),
 			zap.String("module", e.ModuleName))
 
 	case *fxevent.Decorated:
+		typeName := "<unknown>"
+		if len(e.OutputTypeNames) > 0 {
+			typeName = e.OutputTypeNames[0]
+		}
 		l.logger.Debug("Fx dependency decorated",
 			zap.String("decorator", cleanConstructorName(e.DecoratorName)),
-			zap.String("type", e.OutputTypeNames[0]),
+			zap.String("type", typeName),
 			zap.String("module", e.ModuleName))
 
 	case *fxevent.Invoking:

@@ -366,13 +366,13 @@ func (us *UserSubscription) ToUserResponse() *UserSubscriptionResponse {
 // GetServerGroupIDs returns the list of server group IDs this subscription can access
 func (us *UserSubscription) GetServerGroupIDs() []uint {
 	if us.ServerGroupIDs == "" {
-		return []uint{}
+		return nil
 	}
 
 	var groupIDs []uint
 	if err := json.Unmarshal([]byte(us.ServerGroupIDs), &groupIDs); err != nil {
-		// If parsing fails, return empty slice
-		return []uint{}
+		// If parsing fails, return nil slice
+		return nil
 	}
 
 	return groupIDs

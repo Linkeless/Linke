@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"linke/internal/domains/server/entities"
+	"linke/internal/domains/server/usecases/interfaces"
 	"linke/internal/shared/database"
 	"linke/internal/shared/logger"
 
@@ -21,24 +22,9 @@ func NewServerGroupService(db *database.Database) *ServerGroupService {
 	}
 }
 
-// CreateServerGroupRequest represents the request to create a server group
-type CreateServerGroupRequest struct {
-	Name string `json:"name" binding:"required,max=255" example:"Asia Pacific"`
-}
-
-// UpdateServerGroupRequest represents the request to update a server group
-type UpdateServerGroupRequest struct {
-	Name *string `json:"name,omitempty" binding:"omitempty,max=255" example:"Europe"`
-}
-
-// GetServerGroupsRequest represents the request to get server groups with filters
-type GetServerGroupsRequest struct {
-	Limit  int `json:"limit,omitempty" binding:"omitempty,min=1,max=100" example:"10"`
-	Offset int `json:"offset,omitempty" binding:"omitempty,min=0" example:"0"`
-}
 
 // CreateServerGroup creates a new server group
-func (s *ServerGroupService) CreateServerGroup(ctx context.Context, req *CreateServerGroupRequest) (*entities.ServerGroup, error) {
+func (s *ServerGroupService) CreateServerGroup(ctx context.Context, req *interfaces.CreateServerGroupRequest) (*entities.ServerGroup, error) {
 	// Check if server group with the same name already exists
 	var existingGroup entities.ServerGroup
 	if err := s.db.DB.WithContext(ctx).Where("name = ?", req.Name).First(&existingGroup).Error; err == nil {
@@ -81,7 +67,7 @@ func (s *ServerGroupService) GetServerGroup(ctx context.Context, id uint) (*enti
 }
 
 // GetServerGroups gets server groups with filtering and pagination
-func (s *ServerGroupService) GetServerGroups(ctx context.Context, req *GetServerGroupsRequest) ([]*entities.ServerGroup, int64, error) {
+func (s *ServerGroupService) GetServerGroups(ctx context.Context, req *interfaces.GetServerGroupsRequest) ([]*entities.ServerGroup, int64, error) {
 	var groups []*entities.ServerGroup
 	var total int64
 
@@ -113,7 +99,7 @@ func (s *ServerGroupService) GetServerGroups(ctx context.Context, req *GetServer
 }
 
 // UpdateServerGroup updates a server group
-func (s *ServerGroupService) UpdateServerGroup(ctx context.Context, id uint, req *UpdateServerGroupRequest) (*entities.ServerGroup, error) {
+func (s *ServerGroupService) UpdateServerGroup(ctx context.Context, id uint, req *interfaces.UpdateServerGroupRequest) (*entities.ServerGroup, error) {
 	// Get existing group
 	group, err := s.GetServerGroup(ctx, id)
 	if err != nil {
@@ -183,4 +169,64 @@ func (s *ServerGroupService) GetAllServerGroups(ctx context.Context) ([]*entitie
 	}
 
 	return groups, nil
+}
+
+// GetGroupServers gets all servers in a specific group
+func (s *ServerGroupService) GetGroupServers(ctx context.Context, groupID uint) ([]*entities.ShadowsocksServer, error) {
+	var servers []*entities.ShadowsocksServer
+
+	if err := s.db.DB.WithContext(ctx).Where("server_group_id = ?", groupID).Find(&servers).Error; err != nil {
+		logger.Error("Failed to get group servers", logger.Error2("error", err), logger.Uint("group_id", groupID))
+		return nil, fmt.Errorf("failed to get group servers: %w", err)
+	}
+
+	return servers, nil
+}
+
+// GetGroupServerCount gets the count of servers in a specific group
+func (s *ServerGroupService) GetGroupServerCount(ctx context.Context, groupID uint) (int64, error) {
+	var count int64
+
+	if err := s.db.DB.WithContext(ctx).Model(&entities.ShadowsocksServer{}).Where("server_group_id = ?", groupID).Count(&count).Error; err != nil {
+		logger.Error("Failed to count group servers", logger.Error2("error", err), logger.Uint("group_id", groupID))
+		return 0, fmt.Errorf("failed to count group servers: %w", err)
+	}
+
+	return count, nil
+}
+
+// GetGroupStatistics gets statistics for a specific group
+func (s *ServerGroupService) GetGroupStatistics(ctx context.Context, groupID uint) (map[string]interface{}, error) {
+	stats := make(map[string]interface{})
+
+	// Get server count
+	serverCount, err := s.GetGroupServerCount(ctx, groupID)
+	if err != nil {
+		return nil, err
+	}
+	stats["server_count"] = serverCount
+
+	// Get active server count
+	var activeCount int64
+	if err := s.db.DB.WithContext(ctx).Model(&entities.ShadowsocksServer{}).
+		Where("server_group_id = ? AND is_enabled = ?", groupID, true).
+		Count(&activeCount).Error; err != nil {
+		logger.Error("Failed to count active group servers", logger.Error2("error", err), logger.Uint("group_id", groupID))
+		return nil, fmt.Errorf("failed to count active group servers: %w", err)
+	}
+	stats["active_server_count"] = activeCount
+
+	// Get total bandwidth usage (if available)
+	var totalBandwidth int64
+	if err := s.db.DB.WithContext(ctx).Model(&entities.ShadowsocksServer{}).
+		Where("server_group_id = ?", groupID).
+		Select("COALESCE(SUM(total_transfer), 0)").
+		Scan(&totalBandwidth).Error; err != nil {
+		logger.Error("Failed to calculate total bandwidth", logger.Error2("error", err), logger.Uint("group_id", groupID))
+		// Don't fail for bandwidth calculation error
+		totalBandwidth = 0
+	}
+	stats["total_bandwidth_bytes"] = totalBandwidth
+
+	return stats, nil
 }

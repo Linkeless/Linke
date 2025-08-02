@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	authInterfaces "linke/internal/domains/auth/usecases/interfaces"
-	userEntities "linke/internal/domains/user/entities"
+	"linke/internal/domains/user/entities"
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/middleware"
@@ -34,8 +34,8 @@ func NewAdminUserHandler(userService userInterfaces.UserService, authService aut
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param user body userEntities.CreateUserRequest true "User creation data"
-// @Success 201 {object} response.StandardResponse{data=userEntities.UserResponse}
+// @Param user body entities.CreateUserRequest true "User creation data"
+// @Success 201 {object} response.StandardResponse{data=entities.UserResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -43,20 +43,20 @@ func NewAdminUserHandler(userService userInterfaces.UserService, authService aut
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /admin/users [post]
 func (h *AdminUserHandler) CreateUser(c *gin.Context) {
-	var createReq userEntities.CreateUserRequest
+	var createReq entities.CreateUserRequest
 	if err := c.ShouldBindJSON(&createReq); err != nil {
 		response.BadRequest(c, err.Error())
 		return
 	}
 
 	// Create user model from request
-	user := &userEntities.User{
+	user := &entities.User{
 		Email:    createReq.Email,
 		Username: createReq.Username,
 		Name:     createReq.Name,
 		Role:     createReq.Role,
 		Status:   createReq.Status,
-		Provider: userEntities.ProviderLocal,
+		Provider: entities.ProviderLocal,
 	}
 
 	// Set password if provided (hash the password before storing)
@@ -75,10 +75,10 @@ func (h *AdminUserHandler) CreateUser(c *gin.Context) {
 
 	// Set default values if not provided
 	if user.Role == "" {
-		user.Role = userEntities.UserRoleUser
+		user.Role = entities.UserRoleUser
 	}
 	if user.Status == "" {
-		user.Status = userEntities.UserStatusActive
+		user.Status = entities.UserStatusActive
 	}
 
 	// Create the user
@@ -115,7 +115,7 @@ func (h *AdminUserHandler) CreateUser(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "User ID"
-// @Success 200 {object} response.StandardResponse{data=userEntities.UserResponse}
+// @Success 200 {object} response.StandardResponse{data=entities.UserResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -187,8 +187,8 @@ func (h *AdminUserHandler) ListUsers(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "User ID"
-// @Param user body userEntities.UserResponse true "User data"
-// @Success 200 {object} response.StandardResponse{data=userEntities.UserResponse}
+// @Param user body entities.UserResponse true "User data"
+// @Success 200 {object} response.StandardResponse{data=entities.UserResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -203,7 +203,7 @@ func (h *AdminUserHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	var user userEntities.User
+	var user entities.User
 	if err := c.ShouldBindJSON(&user); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -231,7 +231,7 @@ func (h *AdminUserHandler) UpdateUser(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "User ID"
 // @Param role body map[string]string true "Role data"
-// @Success 200 {object} response.StandardResponse{data=userEntities.UserResponse}
+// @Success 200 {object} response.StandardResponse{data=entities.UserResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -277,7 +277,7 @@ func (h *AdminUserHandler) UpdateUserRole(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "User ID"
 // @Param status body map[string]string true "Status data"
-// @Success 200 {object} response.StandardResponse{data=userEntities.UserResponse}
+// @Success 200 {object} response.StandardResponse{data=entities.UserResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -527,9 +527,9 @@ func (h *AdminUserHandler) ListUsersByProvider(c *gin.Context) {
 	}
 
 	validProviders := map[string]bool{
-		userEntities.ProviderGoogle:   true,
-		userEntities.ProviderGitHub:   true,
-		userEntities.ProviderTelegram: true,
+		entities.ProviderGoogle:   true,
+		entities.ProviderGitHub:   true,
+		entities.ProviderTelegram: true,
 	}
 
 	if !validProviders[provider] {
@@ -636,7 +636,7 @@ func (h *AdminUserHandler) BatchDeleteUsers(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "User ID"
 // @Param user body map[string]interface{} true "Partial user data"
-// @Success 200 {object} response.StandardResponse{data=userEntities.UserResponse}
+// @Success 200 {object} response.StandardResponse{data=entities.UserResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -804,7 +804,7 @@ func (h *AdminUserHandler) ResetUserPassword(c *gin.Context) {
 		return
 	}
 
-	admin, ok := adminUser.(*userEntities.User)
+	admin, ok := adminUser.(*entities.User)
 	if !ok {
 		response.InternalServerError(c, "Invalid admin user context")
 		return

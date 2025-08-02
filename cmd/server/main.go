@@ -13,6 +13,7 @@ import (
 	// 标准库
 	"go.uber.org/fx"
 	"go.uber.org/fx/fxevent"
+	"go.uber.org/zap"
 
 	// Gin 和 Swagger
 	"github.com/gin-gonic/gin"
@@ -22,18 +23,24 @@ import (
 	// 新的 shared 模块
 	"linke/internal/shared/config"
 	"linke/internal/shared/database"
+	"linke/internal/shared/framework"
 	loggerPkg "linke/internal/shared/logger"
 	"linke/internal/shared/queue"
 
 	// Redis
 	"github.com/go-redis/redis/v8"
 
+	// GORM
+	"gorm.io/gorm"
+
 	// Migration 已移至 shared/database
 
 	// 业务领域模块
 	authDomain "linke/internal/domains/auth"
+	couponDomain "linke/internal/domains/coupon"
 	invoiceDomain "linke/internal/domains/invoice"
 	paymentDomain "linke/internal/domains/payment"
+	// referralDomain "linke/internal/domains/referral"
 	serverDomain "linke/internal/domains/server"
 	subscriptionDomain "linke/internal/domains/subscription"
 	userDomain "linke/internal/domains/user"
@@ -48,6 +55,10 @@ import (
 
 	// 应用层
 	applicationLayer "linke/internal/application"
+
+	// Invite code service interface (temporary import)
+	referralEntities "linke/internal/domains/referral/entities"
+	referralInterfaces "linke/internal/domains/referral/usecases/interfaces"
 
 	// Swagger 文档
 	_ "linke/docs"
@@ -64,6 +75,103 @@ import (
 // @description Type "Bearer" followed by a space and JWT token.
 
 // 类型定义
+
+// frameworkLogger 定义 framework.Logger 接口的类型别名
+type frameworkLogger = framework.Logger
+
+// frameworkLoggerAdapter 适配器，将 loggerPkg.Logger 适配为 framework.Logger
+type frameworkLoggerAdapter struct {
+	loggerPkg.Logger
+}
+
+func (f *frameworkLoggerAdapter) With(fields ...zap.Field) framework.Logger {
+	return &frameworkLoggerAdapter{f.Logger.With(fields...)}
+}
+
+// stubInviteCodeService provides a minimal stub implementation of InviteCodeService
+// This is a temporary implementation to allow the application to start without the full referral system
+type stubInviteCodeService struct{}
+
+func newStubInviteCodeService() referralInterfaces.InviteCodeService {
+	return &stubInviteCodeService{}
+}
+
+func (s *stubInviteCodeService) CreateInviteCode(ctx context.Context, createdByID uint, req *referralInterfaces.CreateInviteCodeRequest) (*referralEntities.InviteCode, error) {
+	return nil, fmt.Errorf("invite code service not implemented")
+}
+
+func (s *stubInviteCodeService) GetInviteCode(ctx context.Context, codeID uint) (*referralEntities.InviteCode, error) {
+	return nil, fmt.Errorf("invite code service not implemented")
+}
+
+func (s *stubInviteCodeService) GetInviteCodeByCode(ctx context.Context, code string) (*referralEntities.InviteCode, error) {
+	return nil, fmt.Errorf("invite code service not implemented")
+}
+
+func (s *stubInviteCodeService) UpdateInviteCode(ctx context.Context, inviteCodeID uint, req *referralInterfaces.UpdateInviteCodeRequest) (*referralEntities.InviteCode, error) {
+	return nil, fmt.Errorf("invite code service not implemented")
+}
+
+func (s *stubInviteCodeService) DeleteInviteCode(ctx context.Context, inviteCodeID uint) error {
+	return fmt.Errorf("invite code service not implemented")
+}
+
+func (s *stubInviteCodeService) GetInviteCodes(ctx context.Context, req *referralInterfaces.GetInviteCodesRequest) ([]*referralEntities.InviteCode, int64, error) {
+	return nil, 0, fmt.Errorf("invite code service not implemented")
+}
+
+func (s *stubInviteCodeService) GetUserInviteCodes(ctx context.Context, userID uint, limit, offset int) ([]*referralEntities.InviteCode, int64, error) {
+	return nil, 0, fmt.Errorf("invite code service not implemented")
+}
+
+func (s *stubInviteCodeService) ValidateInviteCode(ctx context.Context, code string) (*referralEntities.InviteCode, error) {
+	// Return nil to indicate the code is not valid (but don't fail startup)
+	return nil, fmt.Errorf("invite code validation not available")
+}
+
+func (s *stubInviteCodeService) UseInviteCode(ctx context.Context, code string, userID uint, ipAddress, userAgent string) (*referralEntities.InviteCodeUsage, error) {
+	return nil, fmt.Errorf("invite code usage not implemented")
+}
+
+func (s *stubInviteCodeService) ActivateInviteCode(ctx context.Context, inviteCodeID uint) error {
+	return fmt.Errorf("invite code service not implemented")
+}
+
+func (s *stubInviteCodeService) DeactivateInviteCode(ctx context.Context, inviteCodeID uint) error {
+	return fmt.Errorf("invite code service not implemented")
+}
+
+func (s *stubInviteCodeService) ExpireInviteCode(ctx context.Context, inviteCodeID uint) error {
+	return fmt.Errorf("invite code service not implemented")
+}
+
+func (s *stubInviteCodeService) GetInviteCodeUsage(ctx context.Context, inviteCodeID uint, limit, offset int) ([]*referralEntities.InviteCodeUsage, int64, error) {
+	return nil, 0, fmt.Errorf("invite code service not implemented")
+}
+
+func (s *stubInviteCodeService) GetUserInviteCodeUsage(ctx context.Context, userID uint, limit, offset int) ([]*referralEntities.InviteCodeUsage, int64, error) {
+	return nil, 0, fmt.Errorf("invite code service not implemented")
+}
+
+func (s *stubInviteCodeService) GetInviteCodeStatistics(ctx context.Context, inviteCodeID uint) (map[string]interface{}, error) {
+	return map[string]interface{}{
+		"total_codes": 0,
+		"used_codes": 0,
+		"active_codes": 0,
+	}, nil
+}
+
+func (s *stubInviteCodeService) GetUserInviteCodeStatistics(ctx context.Context, userID uint) (map[string]interface{}, error) {
+	return map[string]interface{}{
+		"total_codes": 0,
+		"used_codes": 0,
+		"active_codes": 0,
+	}, nil
+}
+
+func (s *stubInviteCodeService) GenerateInviteCode() (string, error) {
+	return "", fmt.Errorf("invite code generation not implemented")
+}
 
 // AppHandler 简单的应用处理器
 type AppHandler struct {
@@ -303,22 +411,59 @@ func main() {
 	// 创建 Fx 应用
 	app := fx.New(
 		// 配置管理
-		fx.Provide(config.LoadConfig),
+		fx.Provide(func() (*config.Config, error) {
+			cfg := config.LoadConfig()
+			if err := config.ValidateConfig(cfg); err != nil {
+				return nil, fmt.Errorf("configuration validation failed: %w", err)
+			}
+			return cfg, nil
+		}),
 
 		// 数据库连接
-		fx.Provide(database.NewDatabase),
+		fx.Provide(func(cfg *config.Config) (*database.Database, error) {
+			db, err := database.NewDatabase(cfg)
+			if err != nil {
+				return nil, fmt.Errorf("database connection failed - host: %s:%s, database: %s, error: %w", 
+					cfg.Database.Host, cfg.Database.Port, cfg.Database.Name, err)
+			}
+			return db, nil
+		}),
+
+		// 提供 GORM DB 实例
+		fx.Provide(func(db *database.Database) *gorm.DB {
+			return db.GetDB()
+		}),
 
 		// 日志系统
-		fx.Provide(func(cfg *config.Config) loggerPkg.Logger {
+		fx.Provide(func(cfg *config.Config) (loggerPkg.Logger, error) {
 			if err := loggerPkg.InitLogger(loggerPkg.LogConfig{
 				Level:  cfg.Log.Level,
 				Format: cfg.Log.Format,
 				Output: cfg.Log.Output,
 			}); err != nil {
-				panic("Failed to initialize logger: " + err.Error())
+				return nil, fmt.Errorf("logger initialization failed - level: %s, format: %s, output: %s, error: %w", 
+					cfg.Log.Level, cfg.Log.Format, cfg.Log.Output, err)
 			}
-			return loggerPkg.GetGlobalLogger()
+			return loggerPkg.GetGlobalLogger(), nil
 		}),
+
+		// 提供 framework.Logger 接口适配
+		fx.Provide(
+			fx.Annotate(
+				func(logger loggerPkg.Logger) frameworkLogger {
+					return &frameworkLoggerAdapter{logger}
+				},
+				fx.As(new(frameworkLogger)),
+			),
+		),
+
+		// 提供临时的邀请码服务实现
+		fx.Provide(
+			fx.Annotate(
+				newStubInviteCodeService,
+				fx.As(new(referralInterfaces.InviteCodeService)),
+			),
+		),
 
 		// 自定义 Fx 日志系统 - 统一日志输出格式
 		fx.WithLogger(func(logger loggerPkg.Logger) fxevent.Logger {
@@ -326,19 +471,47 @@ func main() {
 		}),
 
 		// Redis 客户端提供者 (从 Database 中提取)
-		fx.Provide(func(db *database.Database) *redis.Client {
-			return db.GetRedis()
+		fx.Provide(func(db *database.Database, cfg *config.Config) (*redis.Client, error) {
+			client := db.GetRedis()
+			if client == nil {
+				return nil, fmt.Errorf("redis client initialization failed - host: %s:%s, db: %d", 
+					cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.DB)
+			}
+			// 测试Redis连接
+			ctx := context.Background()
+			if err := client.Ping(ctx).Err(); err != nil {
+				return nil, fmt.Errorf("redis connection test failed - host: %s:%s, db: %d, error: %w", 
+					cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.DB, err)
+			}
+			return client, nil
 		}),
 
 		// 队列系统
 		fx.Provide(
-			queue.NewTaskQueue,
-			queue.NewTaskProcessor,
+			func(redisClient *redis.Client, cfg *config.Config) (*queue.TaskQueue, error) {
+				taskQueue := queue.NewTaskQueue(redisClient)
+				if taskQueue == nil {
+					return nil, fmt.Errorf("task queue initialization failed - redis: %s:%s, db: %d", 
+						cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.DB)
+				}
+				return taskQueue, nil
+			},
+			func(redisClient *redis.Client, cfg *config.Config) (*queue.TaskProcessor, error) {
+				taskProcessor := queue.NewTaskProcessor(redisClient)
+				if taskProcessor == nil {
+					return nil, fmt.Errorf("task processor initialization failed - redis: %s:%s, db: %d", 
+						cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.DB)
+				}
+				return taskProcessor, nil
+			},
 		),
 
 		// 业务领域模块
 		userDomain.Module,
 		authDomain.Module,
+		couponDomain.Module,
+		// TODO: Fix referral service interface implementation
+		// referralDomain.Module,
 		subscriptionDomain.Module,
 		paymentDomain.Module,
 		serverDomain.Module,
@@ -361,6 +534,19 @@ func main() {
 	)
 
 	// 运行应用
+	if err := app.Err(); err != nil {
+		fmt.Printf("❌ Application startup failed\n")
+		fmt.Printf("   Error: %v\n", err)
+		fmt.Printf("   This error occurred during dependency injection initialization.\n")
+		fmt.Printf("   Common causes:\n")
+		fmt.Printf("   - Database connection failure (check DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME)\n")
+		fmt.Printf("   - Redis connection failure (check REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, REDIS_DB)\n")
+		fmt.Printf("   - Invalid JWT_SECRET (must be 32+ characters)\n")
+		fmt.Printf("   - Missing required environment variables\n")
+		fmt.Printf("   - Configuration validation errors\n")
+		fmt.Printf("\n   For detailed troubleshooting, run: make security-check\n")
+		os.Exit(1)
+	}
 	app.Run()
 }
 
@@ -382,14 +568,32 @@ func startServer(
 			go func() {
 				loggerPkg.Info("Starting task processor")
 				if err := taskProcessor.Start(ctx); err != nil {
-					loggerPkg.Error("Task processor failed", loggerPkg.ErrorField(err))
+					loggerPkg.Error("Task processor startup failed", 
+						loggerPkg.ErrorField(err),
+						loggerPkg.String("component", "task_processor"),
+						loggerPkg.String("action", "start"))
+					fmt.Printf("❌ Task processor failed to start: %v\n", err)
+					os.Exit(1)
 				}
 			}()
 
 			// 启动 HTTP 服务器
 			go func() {
+				addr := fmt.Sprintf(":%s", httpServer.config.Server.Port)
+				loggerPkg.Info("Starting HTTP server", 
+					loggerPkg.String("port", httpServer.config.Server.Port),
+					loggerPkg.String("address", addr))
 				if err := httpServer.Start(); err != nil && err != http.ErrServerClosed {
-					loggerPkg.Fatal("Failed to start HTTP server", loggerPkg.ErrorField(err))
+					loggerPkg.Fatal("HTTP server startup failed", 
+						loggerPkg.ErrorField(err),
+						loggerPkg.String("address", addr),
+						loggerPkg.String("component", "http_server"))
+					fmt.Printf("❌ HTTP server failed to start on %s: %v\n", addr, err)
+					fmt.Printf("   Common causes:\n")
+					fmt.Printf("   - Port %s already in use\n", httpServer.config.Server.Port)
+					fmt.Printf("   - Insufficient permissions to bind to port\n")
+					fmt.Printf("   - Invalid port number\n")
+					os.Exit(1)
 				}
 			}()
 
@@ -420,7 +624,13 @@ func startServer(
 // handleMigrationCommand 处理迁移命令
 func handleMigrationCommand(runMigration bool, migrateCommand, migrateVersion, migrateSteps string) {
 	// 加载配置
+	fmt.Println("Loading configuration for migration...")
 	cfg := config.LoadConfig()
+	if err := config.ValidateConfig(cfg); err != nil {
+		fmt.Printf("❌ Configuration validation failed: %v\n", err)
+		fmt.Printf("   Please check your environment variables and .env file\n")
+		os.Exit(1)
+	}
 
 	// 初始化日志
 	if err := loggerPkg.InitLogger(loggerPkg.LogConfig{
@@ -444,8 +654,27 @@ func handleMigrationCommand(runMigration bool, migrateCommand, migrateVersion, m
 	)
 
 	// 验证数据库连接
+	loggerPkg.Info("Validating database connection", 
+		loggerPkg.String("host", cfg.Database.Host),
+		loggerPkg.String("port", cfg.Database.Port),
+		loggerPkg.String("database", cfg.Database.Name))
 	if err := migrationService.ValidateConnection(); err != nil {
-		loggerPkg.Fatal("Database connection failed", loggerPkg.ErrorField(err))
+		loggerPkg.Fatal("Database connection failed", 
+			loggerPkg.ErrorField(err),
+			loggerPkg.String("host", cfg.Database.Host),
+			loggerPkg.String("port", cfg.Database.Port),
+			loggerPkg.String("database", cfg.Database.Name))
+		fmt.Printf("❌ Database connection failed\n")
+		fmt.Printf("   Host: %s:%s\n", cfg.Database.Host, cfg.Database.Port)
+		fmt.Printf("   Database: %s\n", cfg.Database.Name)
+		fmt.Printf("   User: %s\n", cfg.Database.User)
+		fmt.Printf("   Error: %v\n", err)
+		fmt.Printf("   Common causes:\n")
+		fmt.Printf("   - Database server not running\n")
+		fmt.Printf("   - Incorrect credentials (DB_USER, DB_PASSWORD)\n")
+		fmt.Printf("   - Network connectivity issues\n")
+		fmt.Printf("   - Database does not exist\n")
+		os.Exit(1)
 	}
 
 	// 确定要执行的命令
@@ -456,7 +685,14 @@ func handleMigrationCommand(runMigration bool, migrateCommand, migrateVersion, m
 
 	// 执行迁移命令
 	if err := executeMigrationCommand(migrationService, command, migrateVersion, migrateSteps); err != nil {
-		loggerPkg.Fatal("Migration command failed", loggerPkg.ErrorField(err), loggerPkg.String("command", command))
+		loggerPkg.Fatal("Migration command failed", 
+			loggerPkg.ErrorField(err), 
+			loggerPkg.String("command", command),
+			loggerPkg.String("version", migrateVersion),
+			loggerPkg.String("steps", migrateSteps))
+		fmt.Printf("❌ Migration command '%s' failed: %v\n", command, err)
+		fmt.Printf("   For help with migration commands, run: go run cmd/server/main.go -migrate-help\n")
+		os.Exit(1)
 	}
 
 	loggerPkg.Info("Migration command completed, exiting...", loggerPkg.String("command", command))

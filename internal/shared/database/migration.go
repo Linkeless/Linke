@@ -262,8 +262,8 @@ func (ms *MigrationService) GetAppliedMigrations() ([]uint, error) {
 
 	rows, err := db.Query("SELECT version FROM schema_migrations ORDER BY version")
 	if err != nil {
-		// If table doesn't exist, return empty slice
-		return []uint{}, nil
+		// If table doesn't exist, return nil slice
+		return nil, nil
 	}
 	defer rows.Close()
 

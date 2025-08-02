@@ -8,7 +8,7 @@ import (
 	"time"
 
 	authImplementations "linke/internal/domains/auth/usecases/implementations"
-	authInterfaces "linke/internal/domains/auth/usecases/interfaces"
+	interfaces "linke/internal/domains/auth/usecases/interfaces"
 	userEntities "linke/internal/domains/user/entities"
 	"linke/internal/shared/config"
 	"linke/internal/shared/database"
@@ -22,13 +22,13 @@ import (
 type AuthHandler struct {
 	cfg          *config.Config
 	db           *database.Database
-	oauthService authInterfaces.OAuthService
-	authService  authInterfaces.AuthService
-	jwtService   authInterfaces.JWTService
-	stateStore   authInterfaces.OAuthStateService
+	oauthService interfaces.OAuthService
+	authService  interfaces.AuthService
+	jwtService   interfaces.JWTService
+	stateStore   interfaces.OAuthStateService
 }
 
-func NewAuthHandler(cfg *config.Config, db *database.Database, authService authInterfaces.AuthService, jwtService authInterfaces.JWTService) *AuthHandler {
+func NewAuthHandler(cfg *config.Config, db *database.Database, authService interfaces.AuthService, jwtService interfaces.JWTService) *AuthHandler {
 	return &AuthHandler{
 		cfg:          cfg,
 		db:           db,
@@ -255,7 +255,7 @@ func (h *AuthHandler) handleTelegramCallback(c *gin.Context) {
 	})
 }
 
-func (h *AuthHandler) createOrUpdateUser(userInfo *authInterfaces.UserInfo) (*userEntities.User, error) {
+func (h *AuthHandler) createOrUpdateUser(userInfo *interfaces.UserInfo) (*userEntities.User, error) {
 	var user userEntities.User
 	var userExists bool
 
@@ -365,7 +365,7 @@ func (h *AuthHandler) createOrUpdateUser(userInfo *authInterfaces.UserInfo) (*us
 
 // hasUserDataChanged checks if user data has changed compared to OAuth provider data
 // Only compares name and avatar fields as these are the main changeable fields from OAuth providers
-func (h *AuthHandler) hasUserDataChanged(user *userEntities.User, userInfo *authInterfaces.UserInfo) bool {
+func (h *AuthHandler) hasUserDataChanged(user *userEntities.User, userInfo *interfaces.UserInfo) bool {
 	// Check only name and avatar fields that can be updated from OAuth provider
 	if user.Name != userInfo.Name {
 		return true
@@ -383,13 +383,13 @@ func (h *AuthHandler) hasUserDataChanged(user *userEntities.User, userInfo *auth
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param user body service.RegisterRequest true "Registration data (email, password, and optional invite_code)"
-// @Success 201 {object} response.StandardResponse{data=service.AuthResponse}
+// @Param user body interfaces.RegisterRequest true "Registration data (email, password, and optional invite_code)"
+// @Success 201 {object} response.StandardResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 409 {object} response.ConflictResponse
 // @Router /auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
-	var req authInterfaces.RegisterRequest
+	var req interfaces.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -414,13 +414,13 @@ func (h *AuthHandler) Register(c *gin.Context) {
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param credentials body service.LoginRequest true "Login credentials"
-// @Success 200 {object} response.StandardResponse{data=service.AuthResponse}
+// @Param credentials body interfaces.LoginRequest true "Login credentials"
+// @Success 200 {object} response.StandardResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Router /auth/login [post]
 func (h *AuthHandler) LoginLocal(c *gin.Context) {
-	var req authInterfaces.LoginRequest
+	var req interfaces.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -504,7 +504,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} response.StandardResponse{data=service.TokenResponse}
+// @Success 200 {object} response.StandardResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Router /auth/refresh [post]
 func (h *AuthHandler) RefreshToken(c *gin.Context) {
@@ -587,7 +587,7 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} response.StandardResponse{data=model.UserResponse}
+// @Success 200 {object} response.StandardResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /auth/profile [get]
@@ -613,13 +613,13 @@ func (h *AuthHandler) GetProfile(c *gin.Context) {
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param request body service.AuthorizeURLRequest true "Authorization URL request"
-// @Success 200 {object} response.StandardResponse{data=service.AuthorizeURLResponse}
+// @Param request body interfaces.AuthorizeURLRequest true "Authorization URL request"
+// @Success 200 {object} response.StandardResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /auth/url [post]
 func (h *AuthHandler) GetAuthURL(c *gin.Context) {
-	var req authInterfaces.AuthorizeURLRequest
+	var req interfaces.AuthorizeURLRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "Invalid request format", err.Error())
 		return
@@ -639,7 +639,7 @@ func (h *AuthHandler) GetAuthURL(c *gin.Context) {
 			return
 		}
 
-		telegramResp := &authInterfaces.AuthorizeURLResponse{
+		telegramResp := &interfaces.AuthorizeURLResponse{
 			AuthURL: url,
 			State:   "telegram-auth",
 		}
@@ -660,7 +660,7 @@ func (h *AuthHandler) GetAuthURL(c *gin.Context) {
 	}
 
 	// Store state information for later validation
-	stateInfo := &authInterfaces.OAuthStateInfo{
+	stateInfo := &interfaces.OAuthStateInfo{
 		Provider:    req.Provider,
 		RedirectURI: req.RedirectURI,
 		CreatedAt:   time.Now(),
@@ -672,7 +672,7 @@ func (h *AuthHandler) GetAuthURL(c *gin.Context) {
 		logger.String("provider", req.Provider),
 		logger.String("state", state))
 
-	response.OK(c, "Authorization URL generated successfully", &authInterfaces.AuthorizeURLResponse{
+	response.OK(c, "Authorization URL generated successfully", &interfaces.AuthorizeURLResponse{
 		AuthURL: url,
 		State:   state,
 	})
@@ -685,7 +685,7 @@ func (h *AuthHandler) GetAuthURL(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body TokenExchangeRequest true "Token exchange request"
-// @Success 200 {object} response.StandardResponse{data=service.AuthResponse}
+// @Success 200 {object} response.StandardResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -768,7 +768,7 @@ func (h *AuthHandler) ExchangeToken(c *gin.Context) {
 	}
 
 	// Prepare response
-	authResponse := &authInterfaces.AuthResponse{
+	authResponse := &interfaces.AuthResponse{
 		User:  user.ToResponse(),
 		Token: jwtToken,
 	}

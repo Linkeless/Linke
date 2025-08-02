@@ -11,7 +11,9 @@ import (
 	authEntities "linke/internal/domains/auth/entities"
 	"linke/internal/domains/auth/usecases/interfaces"
 	referralEntities "linke/internal/domains/referral/entities"
+	referralInterfaces "linke/internal/domains/referral/usecases/interfaces"
 	userEntities "linke/internal/domains/user/entities"
+	userInterfaces "linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/shared/logger"
 
 	"golang.org/x/crypto/bcrypt"
@@ -20,13 +22,13 @@ import (
 
 type AuthService struct {
 	db                   *gorm.DB
-	userService          interfaces.UserService
+	userService          userInterfaces.UserService
 	jwtService           interfaces.JWTService
-	inviteCodeService    interfaces.InviteCodeService
+	inviteCodeService    referralInterfaces.InviteCodeService
 	loginSecurityService interfaces.LoginSecurityService
 }
 
-func NewAuthService(db *gorm.DB, userService interfaces.UserService, jwtService interfaces.JWTService, inviteCodeService interfaces.InviteCodeService, loginSecurityService interfaces.LoginSecurityService) *AuthService {
+func NewAuthService(db *gorm.DB, userService userInterfaces.UserService, jwtService interfaces.JWTService, inviteCodeService referralInterfaces.InviteCodeService, loginSecurityService interfaces.LoginSecurityService) *AuthService {
 	return &AuthService{
 		db:                   db,
 		userService:          userService,

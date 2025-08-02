@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"linke/internal/domains/server/entities"
+	"linke/internal/domains/server/usecases/interfaces"
 	"linke/internal/shared/database"
 	"linke/internal/shared/logger"
 
@@ -22,56 +23,9 @@ func NewShadowsocksServerService(db *database.Database) *ShadowsocksServerServic
 	}
 }
 
-// CreateShadowsocksServerRequest represents the request to create a shadowsocks server
-type CreateShadowsocksServerRequest struct {
-	GroupID      uint    `json:"group_id" binding:"required"`
-	RouteID      string  `json:"route_id,omitempty" binding:"max=255"`
-	ParentID     *int    `json:"parent_id,omitempty"`
-	Name         string  `json:"name" binding:"required,max=255"`
-	Tags         string  `json:"tags,omitempty" binding:"max=255"`
-	Host         string  `json:"host" binding:"required,max=255"`
-	Port         int     `json:"port" binding:"required,min=1,max=65535"`
-	ServerPort   int     `json:"server_port" binding:"required,min=1,max=65535"`
-	Cipher       string  `json:"cipher" binding:"required,max=255"`
-	Obfs         string  `json:"obfs,omitempty" binding:"max=11"`
-	ObfsSettings string  `json:"obfs_settings,omitempty" binding:"max=255"`
-	Excludes     string  `json:"excludes,omitempty"`
-	IPs          string  `json:"ips,omitempty" binding:"max=255"`
-	Rate         float64 `json:"rate" binding:"required,min=0.1"`
-	Show         int     `json:"show" binding:"min=0,max=1"`
-	Sort         *int    `json:"sort,omitempty"`
-}
-
-// UpdateShadowsocksServerRequest represents the request to update a shadowsocks server
-type UpdateShadowsocksServerRequest struct {
-	GroupID      *uint    `json:"group_id,omitempty"`
-	RouteID      *string  `json:"route_id,omitempty" binding:"omitempty,max=255"`
-	ParentID     *int     `json:"parent_id,omitempty"`
-	Name         *string  `json:"name,omitempty" binding:"omitempty,max=255"`
-	Tags         *string  `json:"tags,omitempty" binding:"omitempty,max=255"`
-	Host         *string  `json:"host,omitempty" binding:"omitempty,max=255"`
-	Port         *int     `json:"port,omitempty" binding:"omitempty,min=1,max=65535"`
-	ServerPort   *int     `json:"server_port,omitempty" binding:"omitempty,min=1,max=65535"`
-	Cipher       *string  `json:"cipher,omitempty" binding:"omitempty,max=255"`
-	Obfs         *string  `json:"obfs,omitempty" binding:"omitempty,max=11"`
-	ObfsSettings *string  `json:"obfs_settings,omitempty" binding:"omitempty,max=255"`
-	Excludes     *string  `json:"excludes,omitempty"`
-	IPs          *string  `json:"ips,omitempty" binding:"omitempty,max=255"`
-	Rate         *float64 `json:"rate,omitempty" binding:"omitempty,min=0.1"`
-	Show         *int     `json:"show,omitempty" binding:"omitempty,min=0,max=1"`
-	Sort         *int     `json:"sort,omitempty"`
-}
-
-// GetShadowsocksServersRequest represents the request to get shadowsocks servers with filters
-type GetShadowsocksServersRequest struct {
-	GroupID *uint `json:"group_id,omitempty"`
-	Show    *int  `json:"show,omitempty"`
-	Limit   int   `json:"limit,omitempty"`
-	Offset  int   `json:"offset,omitempty"`
-}
 
 // CreateShadowsocksServer creates a new shadowsocks server
-func (s *ShadowsocksServerService) CreateShadowsocksServer(ctx context.Context, req *CreateShadowsocksServerRequest) (*entities.ShadowsocksServer, error) {
+func (s *ShadowsocksServerService) CreateShadowsocksServer(ctx context.Context, req *interfaces.CreateShadowsocksServerRequest) (*entities.ShadowsocksServer, error) {
 	// Set default values
 	if req.Rate == 0 {
 		req.Rate = 1.0
@@ -132,7 +86,7 @@ func (s *ShadowsocksServerService) GetShadowsocksServerByID(ctx context.Context,
 }
 
 // GetShadowsocksServers retrieves shadowsocks servers with optional filters
-func (s *ShadowsocksServerService) GetShadowsocksServers(ctx context.Context, req *GetShadowsocksServersRequest) ([]*entities.ShadowsocksServer, int64, error) {
+func (s *ShadowsocksServerService) GetShadowsocksServers(ctx context.Context, req *interfaces.GetShadowsocksServersRequest) ([]*entities.ShadowsocksServer, int64, error) {
 	var servers []*entities.ShadowsocksServer
 	var total int64
 
@@ -192,10 +146,22 @@ func (s *ShadowsocksServerService) GetShadowsocksServersByGroupID(ctx context.Co
 	return servers, nil
 }
 
-// UpdateShadowsocksServer updates a shadowsocks server
-func (s *ShadowsocksServerService) UpdateShadowsocksServer(ctx context.Context, id int, req *UpdateShadowsocksServerRequest) (*entities.ShadowsocksServer, error) {
+// GetShadowsocksServer retrieves a shadowsocks server by uint ID
+func (s *ShadowsocksServerService) GetShadowsocksServer(ctx context.Context, serverID uint) (*entities.ShadowsocksServer, error) {
 	var server entities.ShadowsocksServer
-	if err := s.db.DB.WithContext(ctx).First(&server, id).Error; err != nil {
+	if err := s.db.DB.WithContext(ctx).First(&server, serverID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("shadowsocks server not found")
+		}
+		return nil, fmt.Errorf("failed to get shadowsocks server: %w", err)
+	}
+	return &server, nil
+}
+
+// UpdateShadowsocksServer updates a shadowsocks server
+func (s *ShadowsocksServerService) UpdateShadowsocksServer(ctx context.Context, serverID uint, req *interfaces.UpdateShadowsocksServerRequest) (*entities.ShadowsocksServer, error) {
+	var server entities.ShadowsocksServer
+	if err := s.db.DB.WithContext(ctx).First(&server, serverID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("shadowsocks server not found")
 		}
@@ -257,14 +223,14 @@ func (s *ShadowsocksServerService) UpdateShadowsocksServer(ctx context.Context, 
 
 	if err := s.db.DB.WithContext(ctx).Model(&server).Updates(updates).Error; err != nil {
 		logger.Error("Failed to update shadowsocks server",
-			logger.Int("server_id", id),
+			logger.Uint("server_id", serverID),
 			logger.Error2("error", err),
 		)
 		return nil, fmt.Errorf("failed to update shadowsocks server: %w", err)
 	}
 
 	logger.Info("Shadowsocks server updated successfully",
-		logger.Int("server_id", id),
+		logger.Uint("server_id", serverID),
 		logger.String("name", server.Name),
 	)
 
@@ -272,11 +238,11 @@ func (s *ShadowsocksServerService) UpdateShadowsocksServer(ctx context.Context, 
 }
 
 // DeleteShadowsocksServer soft deletes a shadowsocks server
-func (s *ShadowsocksServerService) DeleteShadowsocksServer(ctx context.Context, id int) error {
-	result := s.db.DB.WithContext(ctx).Delete(&entities.ShadowsocksServer{}, id)
+func (s *ShadowsocksServerService) DeleteShadowsocksServer(ctx context.Context, serverID uint) error {
+	result := s.db.DB.WithContext(ctx).Delete(&entities.ShadowsocksServer{}, serverID)
 	if result.Error != nil {
 		logger.Error("Failed to delete shadowsocks server",
-			logger.Int("server_id", id),
+			logger.Uint("server_id", serverID),
 			logger.Error2("error", result.Error),
 		)
 		return fmt.Errorf("failed to delete shadowsocks server: %w", result.Error)
@@ -287,8 +253,103 @@ func (s *ShadowsocksServerService) DeleteShadowsocksServer(ctx context.Context, 
 	}
 
 	logger.Info("Shadowsocks server deleted successfully",
-		logger.Int("server_id", id),
+		logger.Uint("server_id", serverID),
 	)
 
 	return nil
+}
+
+// GetServersByGroup retrieves shadowsocks servers by group ID
+func (s *ShadowsocksServerService) GetServersByGroup(ctx context.Context, groupID uint) ([]*entities.ShadowsocksServer, error) {
+	return s.GetShadowsocksServersByGroupID(ctx, groupID)
+}
+
+// GetVisibleServers retrieves visible shadowsocks servers with optional group filter
+func (s *ShadowsocksServerService) GetVisibleServers(ctx context.Context, groupID *uint) ([]*entities.ShadowsocksServer, error) {
+	query := s.db.DB.WithContext(ctx).Where("show = ?", 1)
+	
+	if groupID != nil {
+		query = query.Where("group_id = ?", *groupID)
+	}
+	
+	var servers []*entities.ShadowsocksServer
+	if err := query.Order("sort ASC, created_at DESC").Find(&servers).Error; err != nil {
+		return nil, fmt.Errorf("failed to get visible servers: %w", err)
+	}
+	return servers, nil
+}
+
+// UpdateServerStatus updates a shadowsocks server's status
+func (s *ShadowsocksServerService) UpdateServerStatus(ctx context.Context, serverID uint, status string) error {
+	result := s.db.DB.WithContext(ctx).Model(&entities.ShadowsocksServer{}).
+		Where("id = ?", serverID).
+		Update("show", status)
+	
+	if result.Error != nil {
+		return fmt.Errorf("failed to update server status: %w", result.Error)
+	}
+	
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("shadowsocks server not found")
+	}
+	
+	return nil
+}
+
+// BulkUpdateServers updates multiple shadowsocks servers
+func (s *ShadowsocksServerService) BulkUpdateServers(ctx context.Context, serverIDs []uint, updates map[string]interface{}) error {
+	if len(serverIDs) == 0 {
+		return nil
+	}
+	
+	updates["updated_at"] = int(time.Now().Unix())
+	
+	result := s.db.DB.WithContext(ctx).Model(&entities.ShadowsocksServer{}).
+		Where("id IN ?", serverIDs).
+		Updates(updates)
+	
+	if result.Error != nil {
+		return fmt.Errorf("failed to bulk update servers: %w", result.Error)
+	}
+	
+	return nil
+}
+
+// CheckServerHealth checks a shadowsocks server's health
+func (s *ShadowsocksServerService) CheckServerHealth(ctx context.Context, serverID uint) (map[string]interface{}, error) {
+	// TODO: Implement actual health check logic
+	// For now, return a placeholder response
+	server, err := s.GetShadowsocksServer(ctx, serverID)
+	if err != nil {
+		return nil, err
+	}
+	
+	return map[string]interface{}{
+		"server_id": serverID,
+		"status":    "unknown", // TODO: Implement actual health check
+		"host":      server.Host,
+		"port":      server.Port,
+		"checked_at": time.Now(),
+	}, nil
+}
+
+// GetServerStatistics gets a shadowsocks server's statistics
+func (s *ShadowsocksServerService) GetServerStatistics(ctx context.Context, serverID uint) (map[string]interface{}, error) {
+	// TODO: Implement actual statistics collection
+	// For now, return a placeholder response
+	server, err := s.GetShadowsocksServer(ctx, serverID)
+	if err != nil {
+		return nil, err
+	}
+	
+	return map[string]interface{}{
+		"server_id":     serverID,
+		"connections":   0,    // TODO: Implement actual stats
+		"bandwidth_up":  0,    // TODO: Implement actual stats
+		"bandwidth_down": 0,   // TODO: Implement actual stats
+		"uptime":        "0s", // TODO: Implement actual stats
+		"last_updated":  time.Now(),
+		"name":          server.Name,
+		"host":          server.Host,
+	}, nil
 }

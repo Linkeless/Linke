@@ -78,7 +78,7 @@ const (
 // GetMethods returns the parsed methods from SupportedMethods JSON
 func (pc *PaymentConfig) GetMethods() ([]Method, error) {
 	if pc.SupportedMethods == "" {
-		return []Method{}, nil
+		return nil, nil
 	}
 
 	var methods []Method

@@ -17,7 +17,7 @@ safe-dev: security-check swagger
 security-check:
 	@echo "Running security pre-flight checks..."
 	@chmod +x scripts/security-check.sh
-	@scripts/security-check.sh
+	@set -a && [ -f .env ] && . ./.env && set +a && scripts/security-check.sh
 
 test:
 	go test -v ./...
@@ -26,7 +26,7 @@ clean:
 	rm -rf bin/ docs/
 
 swagger:
-	swag init -g cmd/server/main.go -o docs
+	$(HOME)/go/bin/swag init -g cmd/server/main.go -o docs
 
 dev: swagger
 	go run cmd/server/main.go

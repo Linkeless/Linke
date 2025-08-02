@@ -21,12 +21,12 @@ type UserSubscriptionService interface {
 	// Subscription management
 	CancelUserSubscription(ctx context.Context, subscriptionID uint, reason string, cancelAtPeriodEnd bool) error
 	RenewUserSubscription(ctx context.Context, subscriptionID uint) error
-	PauseUserSubscription(ctx context.Context, subscriptionID uint, reason string) error
-	ResumeUserSubscription(ctx context.Context, subscriptionID uint) error
+	PauseUserSubscription(ctx context.Context, subscriptionID uint, reason string, adminUserID uint) (*entities.UserSubscription, error)
+	ResumeUserSubscription(ctx context.Context, subscriptionID uint, adminUserID uint) (*entities.UserSubscription, error)
 
 	// Traffic and usage management
 	UpdateTrafficUsage(ctx context.Context, subscriptionID uint, usedBytes int64) error
-	ResetTrafficUsage(ctx context.Context, subscriptionID uint) error
+	ResetTrafficUsage(ctx context.Context, subscriptionID uint, adminUserID uint) (*entities.UserSubscription, error)
 	GetSubscriptionTrafficStats(ctx context.Context, subscriptionID uint) (map[string]interface{}, error)
 
 	// Subscription expiry management

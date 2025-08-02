@@ -6,6 +6,7 @@ import (
 
 	serverEntities "linke/internal/domains/server/entities"
 	"linke/internal/domains/subscription/entities"
+	"linke/internal/domains/subscription/usecases/interfaces"
 	"linke/internal/shared/logger"
 )
 
@@ -66,7 +67,7 @@ func (s *UserSubscriptionService) GetSubscriptionServerGroups(ctx context.Contex
 	// Get assigned server group IDs
 	assignedGroupIDs := subscription.GetServerGroupIDs()
 	if len(assignedGroupIDs) == 0 {
-		return []*serverEntities.ServerGroup{}, nil
+		return nil, nil
 	}
 
 	// Get server group details
@@ -177,7 +178,7 @@ func (s *UserSubscriptionService) UpdateSubscriptionServerGroups(ctx context.Con
 // GetUserAccessibleServers returns all shadowsocks servers accessible to a user based on their subscriptions
 func (s *UserSubscriptionService) GetUserAccessibleServers(ctx context.Context, userID uint) ([]*serverEntities.ShadowsocksServer, error) {
 	// Get all active subscriptions for the user
-	activeSubscriptions, _, err := s.GetUserSubscriptions(ctx, &GetUserSubscriptionsRequest{
+	activeSubscriptions, _, err := s.GetUserSubscriptions(ctx, &interfaces.GetUserSubscriptionsRequest{
 		UserID: userID,
 		Status: entities.UserSubscriptionStatusActive,
 		Limit:  1000, // Get all active subscriptions
@@ -187,7 +188,7 @@ func (s *UserSubscriptionService) GetUserAccessibleServers(ctx context.Context, 
 	}
 
 	if len(activeSubscriptions) == 0 {
-		return []*serverEntities.ShadowsocksServer{}, nil
+		return nil, nil
 	}
 
 	// Collect all server group IDs from active subscriptions
@@ -205,7 +206,7 @@ func (s *UserSubscriptionService) GetUserAccessibleServers(ctx context.Context, 
 	}
 
 	if len(allGroupIDs) == 0 {
-		return []*serverEntities.ShadowsocksServer{}, nil
+		return nil, nil
 	}
 
 	// Get all servers from accessible server groups
@@ -234,13 +235,13 @@ func (s *UserSubscriptionService) GetUserServersBySubscription(ctx context.Conte
 	}
 
 	if !subscription.IsActive() {
-		return []*serverEntities.ShadowsocksServer{}, nil
+		return nil, nil
 	}
 
 	// Get server group IDs for this subscription
 	groupIDs := subscription.GetServerGroupIDs()
 	if len(groupIDs) == 0 {
-		return []*serverEntities.ShadowsocksServer{}, nil
+		return nil, nil
 	}
 
 	// Get servers from assigned server groups
@@ -269,7 +270,7 @@ func (s *UserSubscriptionService) ValidateUserServerAccess(ctx context.Context, 
 	}
 
 	// Get all active subscriptions for the user
-	activeSubscriptions, _, err := s.GetUserSubscriptions(ctx, &GetUserSubscriptionsRequest{
+	activeSubscriptions, _, err := s.GetUserSubscriptions(ctx, &interfaces.GetUserSubscriptionsRequest{
 		UserID: userID,
 		Status: entities.UserSubscriptionStatusActive,
 		Limit:  1000,
@@ -291,7 +292,7 @@ func (s *UserSubscriptionService) ValidateUserServerAccess(ctx context.Context, 
 // GetServerGroupUsageStats returns usage statistics for server groups in user's subscriptions
 func (s *UserSubscriptionService) GetServerGroupUsageStats(ctx context.Context, userID uint) (map[uint]*ServerGroupUsageStats, error) {
 	// Get all active subscriptions for the user
-	activeSubscriptions, _, err := s.GetUserSubscriptions(ctx, &GetUserSubscriptionsRequest{
+	activeSubscriptions, _, err := s.GetUserSubscriptions(ctx, &interfaces.GetUserSubscriptionsRequest{
 		UserID: userID,
 		Status: entities.UserSubscriptionStatusActive,
 		Limit:  1000,

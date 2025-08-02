@@ -7,29 +7,13 @@ import (
 	"time"
 
 	"linke/internal/domains/user/entities"
+	"linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/shared/framework"
 	"linke/internal/shared/logger"
 
 	"gorm.io/gorm"
 )
 
-// UserStats represents user statistics
-type UserStats struct {
-	TotalUsers    int64            `json:"total_users"`
-	ActiveUsers   int64            `json:"active_users"`
-	InactiveUsers int64            `json:"inactive_users"`
-	BannedUsers   int64            `json:"banned_users"`
-	DeletedUsers  int64            `json:"deleted_users"`
-	ByProvider    map[string]int64 `json:"by_provider"`
-	RecentSignups int64            `json:"recent_signups"`
-}
-
-// BatchOperationResult represents the result of batch operations
-type BatchOperationResult struct {
-	DeletedCount  int    `json:"deleted_count,omitempty"`
-	RestoredCount int    `json:"restored_count,omitempty"`
-	FailedIDs     []uint `json:"failed_ids,omitempty"`
-}
 
 type UserService struct {
 	db     *gorm.DB
@@ -328,8 +312,8 @@ func (s *UserService) UpdateUserRole(ctx context.Context, id uint, role string) 
 }
 
 // GetUserStats returns user statistics
-func (s *UserService) GetUserStats(ctx context.Context) (*UserStats, error) {
-	stats := &UserStats{
+func (s *UserService) GetUserStats(ctx context.Context) (*interfaces.UserStats, error) {
+	stats := &interfaces.UserStats{
 		ByProvider: make(map[string]int64),
 	}
 
@@ -376,8 +360,8 @@ func (s *UserService) GetUserStats(ctx context.Context) (*UserStats, error) {
 }
 
 // BatchDeleteUsers performs batch soft delete on multiple users
-func (s *UserService) BatchDeleteUsers(ctx context.Context, ids []uint) (*BatchOperationResult, error) {
-	result := &BatchOperationResult{}
+func (s *UserService) BatchDeleteUsers(ctx context.Context, ids []uint) (*interfaces.BatchOperationResult, error) {
+	result := &interfaces.BatchOperationResult{}
 
 	// Validate that users exist and are not already deleted
 	var existingUsers []entities.User
@@ -424,8 +408,8 @@ func (s *UserService) BatchDeleteUsers(ctx context.Context, ids []uint) (*BatchO
 }
 
 // BatchRestoreUsers performs batch restore on multiple soft deleted users
-func (s *UserService) BatchRestoreUsers(ctx context.Context, ids []uint) (*BatchOperationResult, error) {
-	result := &BatchOperationResult{}
+func (s *UserService) BatchRestoreUsers(ctx context.Context, ids []uint) (*interfaces.BatchOperationResult, error) {
+	result := &interfaces.BatchOperationResult{}
 
 	// Validate that users exist and are deleted
 	var deletedUsers []entities.User

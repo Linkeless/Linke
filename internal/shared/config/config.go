@@ -70,30 +70,46 @@ func LoadConfig() *Config {
 	if err := godotenv.Load(); err != nil {
 		// Use standard log here since logger might not be initialized yet
 		// This is informational only, not an error
-		fmt.Println("INFO: No .env file found, using environment variables")
+		fmt.Printf("INFO: No .env file found in current directory (%s), using environment variables only\n", 
+			getCurrentDirectory())
+	} else {
+		fmt.Printf("INFO: Configuration loaded from .env file in %s\n", getCurrentDirectory())
 	}
 
 	// Critical: JWT_SECRET must be provided and secure
 	jwtSecret := getEnv("JWT_SECRET", "")
 	if jwtSecret == "" {
 		// Keep log.Fatal for critical security issues that should prevent startup
-		log.Fatal("SECURITY ERROR: JWT_SECRET environment variable is required and cannot be empty. " +
-			"This is a critical security requirement. Generate a secure random key: " +
-			"openssl rand -hex 32")
+		log.Fatal("❌ SECURITY ERROR: JWT_SECRET environment variable is required and cannot be empty.\n" +
+			"   This is a critical security requirement for token-based authentication.\n" +
+			"   Solutions:\n" +
+			"   1. Generate a secure random key: openssl rand -hex 32\n" +
+			"   2. Add it to your .env file: JWT_SECRET=your_generated_key\n" +
+			"   3. Or export it: export JWT_SECRET=your_generated_key\n" +
+			"   Current working directory: " + getCurrentDirectory())
 	}
 
 	// Validate JWT secret strength
 	if len(jwtSecret) < 32 {
-		log.Fatal("SECURITY ERROR: JWT_SECRET must be at least 32 characters long for security. " +
-			"Current length: " + strconv.Itoa(len(jwtSecret)) + ". " +
-			"Generate a secure random key: openssl rand -hex 32")
+		log.Fatal("❌ SECURITY ERROR: JWT_SECRET must be at least 32 characters long for security.\n" +
+			fmt.Sprintf("   Current length: %d characters (minimum required: 32)\n", len(jwtSecret)) +
+			"   Your current JWT_SECRET is too weak and compromises system security.\n" +
+			"   Solutions:\n" +
+			"   1. Generate a secure random key: openssl rand -hex 32\n" +
+			"   2. Update your .env file or environment variable\n" +
+			"   Current working directory: " + getCurrentDirectory())
 	}
 
 	// Additional validation: ensure it's not the old default weak key
 	if jwtSecret == "your-super-secret-jwt-key" || jwtSecret == "your-super-secret-jwt-key-make-it-strong-and-long" {
-		log.Fatal("SECURITY ERROR: Cannot use the default JWT_SECRET value. " +
-			"This is a known weak key that compromises system security. " +
-			"Generate a secure random key: openssl rand -hex 32")
+		log.Fatal("❌ SECURITY ERROR: Cannot use the default JWT_SECRET value.\n" +
+			"   This is a known weak key that compromises system security.\n" +
+			"   The current JWT_SECRET appears to be a default/example value.\n" +
+			"   Solutions:\n" +
+			"   1. Generate a secure random key: openssl rand -hex 32\n" +
+			"   2. Update your .env file with the new key\n" +
+			"   3. Never use example/default keys in production\n" +
+			"   Current working directory: " + getCurrentDirectory())
 	}
 
 	return &Config{
@@ -154,13 +170,23 @@ func getEnvInt(key string, defaultValue int) int {
 	return defaultValue
 }
 
+// getCurrentDirectory returns current working directory for error messages
+func getCurrentDirectory() string {
+	if cwd, err := os.Getwd(); err == nil {
+		return cwd
+	}
+	return "unknown"
+}
+
 // GenerateSecureJWTKey generates a cryptographically secure JWT key
 // This is a utility function for deployment and testing purposes
 func GenerateSecureJWTKey() string {
 	bytes := make([]byte, 32) // 256 bits
 	if _, err := rand.Read(bytes); err != nil {
 		// Keep log.Fatal for cryptographic failures that indicate system problems
-		log.Fatal("CRITICAL: Failed to generate secure random bytes: " + err.Error())
+		log.Fatal("❌ CRITICAL: Failed to generate secure random bytes: " + err.Error() + 
+			"\n   This indicates a serious system problem with the cryptographic subsystem." +
+			"\n   Please check your system's random number generator.")
 	}
 	return hex.EncodeToString(bytes)
 }

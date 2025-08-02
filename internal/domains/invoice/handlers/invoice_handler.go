@@ -260,7 +260,7 @@ func (h *InvoiceHandler) GetInvoices(c *gin.Context) {
 // @Security BearerAuth
 // @Param limit query int false "Limit" default(10)
 // @Param offset query int false "Offset" default(0)
-// @Success 200 {object} response.PaginatedResponse{data=[]entities.InvoiceUserResponse}
+// @Success 200 {object} response.PaginatedResponse{data=[]entities.InvoiceResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
