@@ -202,11 +202,14 @@ func NewSubscriptionEvent(eventType string, subscriptionID uint, userID uint, da
 // Event type constants
 const (
 	// User events
-	EventTypeUserRegistered = "user.registered"
-	EventTypeUserUpdated    = "user.updated"
-	EventTypeUserDeleted    = "user.deleted"
-	EventTypeUserLoggedIn   = "user.logged_in"
-	EventTypeUserLoggedOut  = "user.logged_out"
+	EventTypeUserCreated       = "user.created"
+	EventTypeUserRegistered    = "user.registered"
+	EventTypeUserUpdated       = "user.updated"
+	EventTypeUserDeleted       = "user.deleted"
+	EventTypeUserStatusChanged = "user.status_changed"
+	EventTypeUserLoggedIn      = "user.logged_in"
+	EventTypeUserLoggedOut     = "user.logged_out"
+	EventTypeUserPasswordReset = "user.password_reset"
 
 	// Payment events
 	EventTypePaymentCreated   = "payment.created"
@@ -215,11 +218,21 @@ const (
 	EventTypePaymentRefunded  = "payment.refunded"
 
 	// Subscription events
-	EventTypeSubscriptionCreated  = "subscription.created"
-	EventTypeSubscriptionUpdated  = "subscription.updated"
-	EventTypeSubscriptionExpired  = "subscription.expired"
-	EventTypeSubscriptionCanceled = "subscription.canceled"
-	EventTypeSubscriptionRenewed  = "subscription.renewed"
+	EventTypeSubscriptionCreated   = "subscription.created"
+	EventTypeSubscriptionUpdated   = "subscription.updated"
+	EventTypeSubscriptionActivated = "subscription.activated"
+	EventTypeSubscriptionExpired   = "subscription.expired"
+	EventTypeSubscriptionCancelled = "subscription.cancelled"
+	EventTypeSubscriptionRenewed   = "subscription.renewed"
+	EventTypeSubscriptionSuspended = "subscription.suspended"
+
+	// Order events
+	EventTypeOrderCreated   = "order.created"
+	EventTypeOrderUpdated   = "order.updated"
+	EventTypeOrderPaid      = "order.paid"
+	EventTypeOrderCancelled = "order.cancelled"
+	EventTypeOrderExpired   = "order.expired"
+	EventTypeOrderRefunded  = "order.refunded"
 
 	// Server events
 	EventTypeServerCreated = "server.created"
@@ -231,14 +244,68 @@ const (
 	EventTypeReferralCompleted = "referral.completed"
 
 	// Invoice events
+	EventTypeInvoiceCreated   = "invoice.created"
 	EventTypeInvoiceGenerated = "invoice.generated"
 	EventTypeInvoiceSent      = "invoice.sent"
+	EventTypeInvoicePaid      = "invoice.paid"
+	EventTypeInvoiceOverdue   = "invoice.overdue"
+	EventTypeInvoiceCancelled = "invoice.cancelled"
 
 	// Ticket events
 	EventTypeTicketCreated = "ticket.created"
 	EventTypeTicketUpdated = "ticket.updated"
 	EventTypeTicketClosed  = "ticket.closed"
 )
+
+// Order Event represents order-related events
+type OrderEvent struct {
+	*BaseEvent
+	OrderID uint `json:"order_id"`
+	UserID  uint `json:"user_id"`
+}
+
+// NewOrderEvent creates a new order event
+func NewOrderEvent(eventType string, orderID uint, userID uint, data interface{}) *OrderEvent {
+	return &OrderEvent{
+		BaseEvent: NewBaseEvent(eventType, "order-service", data),
+		OrderID:   orderID,
+		UserID:    userID,
+	}
+}
+
+// Invoice Event represents invoice-related events
+type InvoiceEvent struct {
+	*BaseEvent
+	InvoiceID uint    `json:"invoice_id"`
+	OrderID   uint    `json:"order_id"`
+	UserID    uint    `json:"user_id"`
+	Amount    float64 `json:"amount"`
+}
+
+// NewInvoiceEvent creates a new invoice event
+func NewInvoiceEvent(eventType string, invoiceID uint, orderID uint, userID uint, amount float64, data interface{}) *InvoiceEvent {
+	return &InvoiceEvent{
+		BaseEvent: NewBaseEvent(eventType, "invoice-service", data),
+		InvoiceID: invoiceID,
+		OrderID:   orderID,
+		UserID:    userID,
+		Amount:    amount,
+	}
+}
+
+// ServerEvent represents server-related events
+type ServerEvent struct {
+	*BaseEvent
+	ServerID uint `json:"server_id"`
+}
+
+// NewServerEvent creates a new server event
+func NewServerEvent(eventType string, serverID uint, data interface{}) *ServerEvent {
+	return &ServerEvent{
+		BaseEvent: NewBaseEvent(eventType, "server-service", data),
+		ServerID:  serverID,
+	}
+}
 
 // Helper function to generate event IDs
 func generateEventID() string {

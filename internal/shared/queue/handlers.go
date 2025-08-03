@@ -275,6 +275,8 @@ const (
 	TaskTypeInvoiceGeneration  = "invoice:generate"
 	TaskTypeServerHealthCheck  = "server:health_check"
 	TaskTypeReferralProcessing = "referral:process"
+	TaskTypeEventProcessing    = "event:process"
+	TaskTypeEventReprocessing  = "event:reprocess"
 )
 
 // RegisterDefaultHandlers registers all default task handlers

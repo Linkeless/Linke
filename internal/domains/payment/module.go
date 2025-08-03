@@ -8,6 +8,7 @@ import (
 	"linke/internal/domains/payment/handlers"
 	"linke/internal/domains/payment/usecases/implementations"
 	"linke/internal/domains/payment/usecases/interfaces"
+	"linke/internal/shared/cache"
 )
 
 // Module Payment 领域模块
@@ -27,12 +28,17 @@ var Module = fx.Module("payment",
 
 	// 提供 Service 实现
 	fx.Provide(
+		// Base service implementations
+		implementations.NewPaymentService,
+		implementations.NewPaymentConfigService,
+		
+		// Cached service implementations
 		fx.Annotate(
-			implementations.NewPaymentService,
+			implementations.NewCachedPaymentService,
 			fx.As(new(interfaces.PaymentService)),
 		),
 		fx.Annotate(
-			implementations.NewPaymentConfigService,
+			implementations.NewCachedPaymentConfigService,
 			fx.As(new(interfaces.PaymentConfigService)),
 		),
 	),
@@ -53,16 +59,19 @@ var Module = fx.Module("payment",
 type ServiceProvider struct {
 	PaymentService       interfaces.PaymentService
 	PaymentConfigService interfaces.PaymentConfigService
+	CacheManager         cache.CacheManager
 }
 
 // NewServiceProvider 创建支付服务提供者
 func NewServiceProvider(
 	paymentService interfaces.PaymentService,
 	paymentConfigService interfaces.PaymentConfigService,
+	cacheManager cache.CacheManager,
 ) *ServiceProvider {
 	return &ServiceProvider{
 		PaymentService:       paymentService,
 		PaymentConfigService: paymentConfigService,
+		CacheManager:         cacheManager,
 	}
 }
 

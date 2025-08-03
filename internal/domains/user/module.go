@@ -8,6 +8,8 @@ import (
 	"linke/internal/domains/user/handlers"
 	"linke/internal/domains/user/usecases/implementations"
 	"linke/internal/domains/user/usecases/interfaces"
+	"linke/internal/shared/cache"
+	"linke/internal/shared/events"
 	"linke/internal/shared/framework"
 )
 
@@ -24,8 +26,17 @@ var Module = fx.Module("user",
 
 	// 提供 Service 实现
 	fx.Provide(
+		// 提供基础的 UserService 实现
+		implementations.NewUserService,
+		
+		// 提供带缓存的 UserService 实现
+		implementations.NewCachedUserService,
+
+		// 提供事件感知的 UserService 实现
 		fx.Annotate(
-			implementations.NewUserService,
+			func(cachedUserService *implementations.CachedUserService, eventBus events.EventBus, logger framework.Logger) interfaces.UserService {
+				return implementations.NewEventAwareUserService(cachedUserService, eventBus, logger)
+			},
 			fx.As(new(interfaces.UserService)),
 		),
 	),
@@ -37,10 +48,10 @@ var Module = fx.Module("user",
 	),
 
 	// 模块初始化钩子
-	fx.Invoke(func(db *gorm.DB, logger framework.Logger) {
+	fx.Invoke(func(db *gorm.DB, logger framework.Logger, cacheManager cache.CacheManager) {
 		// 确保用户表存在并且结构正确
 		// 这里可以添加用户领域特定的初始化逻辑
-		logger.Info("User domain module initialized")
+		logger.Info("User domain module initialized with caching support")
 	}),
 )
 

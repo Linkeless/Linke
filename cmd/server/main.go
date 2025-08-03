@@ -38,6 +38,11 @@ import (
 
 	// Migration 已移至 shared/database
 
+	// 共享模块
+	"linke/internal/shared/cache"
+	"linke/internal/shared/events"
+	"linke/internal/shared/versioning"
+	
 	// 业务领域模块
 	authDomain "linke/internal/domains/auth"
 	couponDomain "linke/internal/domains/coupon"
@@ -228,6 +233,8 @@ func NewHTTPServer(
 	invoiceHandler *invoiceHandlers.InvoiceHandler,
 	paymentHandler *paymentHandlers.PaymentHandler,
 	serverHandler *serverHandlers.ServerAPIHandler,
+	// Versioning middleware
+	versionMiddleware *versioning.VersionMiddleware,
 ) *HTTPServer {
 	// 设置 Gin 模式
 	if cfg.Log.Level == "debug" {
@@ -244,8 +251,17 @@ func NewHTTPServer(
 	// 健康检查端点
 	router.GET("/health", appHandler.HealthCheck)
 
-	// API 路由组
-	apiV1 := router.Group("/api/v1")
+	// API versioning routes - version info endpoints
+	router.GET("/api/version", versionMiddleware.VersionInfo())
+	router.GET("/api/health", versionMiddleware.HealthCheck())
+
+	// API 路由组 - Apply versioning middleware
+	api := router.Group("/api")
+	api.Use(versionMiddleware.Middleware())
+	
+	// Version-specific route groups
+	apiV1 := api.Group("/v1")
+	// apiV2 := api.Group("/v2") // Reserved for future v2 endpoints
 
 	// 应用层路由
 	appGroup := apiV1.Group("/app")
@@ -549,6 +565,29 @@ func main() {
 			},
 		),
 
+		// 缓存系统
+		cache.Module,
+		
+		// 版本控制系统
+		versioning.Module,
+		
+		// 事件系统
+		fx.Provide(
+			// Event bus
+			fx.Annotate(
+				events.NewEnhancedEventBus,
+				fx.As(new(events.EventBus)),
+			),
+			// Event store
+			func(db *gorm.DB) events.EventStore {
+				return events.NewDatabaseEventStore(db)
+			},
+			// Async event processor
+			func(taskQueue *queue.TaskQueue, eventStore events.EventStore, eventBus events.EventBus) *events.AsyncEventProcessor {
+				return events.NewAsyncEventProcessor(taskQueue, eventStore, eventBus, events.DefaultRetryConfig())
+			},
+		),
+		
 		// 业务领域模块
 		userDomain.Module,
 		authDomain.Module,
@@ -572,6 +611,34 @@ func main() {
 		// HTTP 服务器
 		fx.Provide(NewHTTPServer),
 
+		// 初始化事件系统
+		fx.Invoke(func(
+			eventBus events.EventBus,
+			asyncProcessor *events.AsyncEventProcessor,
+			taskProcessor *queue.TaskProcessor,
+			logger loggerPkg.Logger,
+		) {
+			// Initialize global event bus
+			events.InitEventBus(eventBus)
+			
+			// Register cross-domain event handlers
+			crossDomainHandlers := events.NewCrossDomainEventHandlers()
+			if err := crossDomainHandlers.RegisterCrossDomainHandlers(eventBus); err != nil {
+				logger.Error("Failed to register cross-domain event handlers", loggerPkg.ErrorField(err))
+			}
+			
+			// Register notification handler
+			notificationHandler := events.NewNotificationHandler()
+			if err := eventBus.Subscribe(notificationHandler.EventTypes(), notificationHandler); err != nil {
+				logger.Error("Failed to register notification handler", loggerPkg.ErrorField(err))
+			}
+			
+			// Register event processing handlers with the task processor
+			events.RegisterEventHandlers(taskProcessor, asyncProcessor)
+			
+			logger.Info("Event system initialized successfully")
+		}),
+		
 		// 启动服务
 		fx.Invoke(startServer),
 	)

@@ -34,6 +34,19 @@ type ServerGroupResponseData struct {
 	UpdatedAt string `json:"updated_at" example:"2024-01-01T00:00:00Z"`
 }
 
+// ErrorResponse represents an error response structure
+type ErrorResponse struct {
+	Error   string         `json:"error"`
+	Message string         `json:"message"`
+	Details map[string]any `json:"details,omitempty"`
+}
+
+// SuccessResponse represents a success response structure
+type SuccessResponse struct {
+	Message string `json:"message"`
+	Data    any    `json:"data,omitempty"`
+}
+
 // Success sends a successful response
 func Success(c *gin.Context, data any) {
 	c.JSON(http.StatusOK, APIResponse{
@@ -123,6 +136,11 @@ func InternalServerError(c *gin.Context, message string, details ...string) {
 		msg = message + ": " + details[0]
 	}
 	Error(c, http.StatusInternalServerError, 5000, msg)
+}
+
+// ErrorJSON sends an error response with ErrorResponse structure
+func ErrorJSON(c *gin.Context, httpStatus int, errorResponse ErrorResponse) {
+	c.JSON(httpStatus, errorResponse)
 }
 
 // OKPaginated sends a paginated response with custom message

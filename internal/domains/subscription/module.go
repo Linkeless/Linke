@@ -11,7 +11,36 @@ import (
 	"linke/internal/domains/subscription/handlers"
 	"linke/internal/domains/subscription/usecases/implementations"
 	"linke/internal/domains/subscription/usecases/interfaces"
+	"linke/internal/shared/cache"
 )
+
+// NewSubscriptionPlanServiceWithCache creates a subscription plan service with cache support
+func NewSubscriptionPlanServiceWithCache(
+	db *gorm.DB,
+	cacheManager cache.CacheManager,
+	cacheKeys *cache.AllCacheKeys,
+) interfaces.SubscriptionPlanService {
+	return implementations.NewSubscriptionPlanServiceWithCache(
+		db,
+		cacheManager,
+		cacheKeys,
+	)
+}
+
+// NewUserSubscriptionServiceWithCache creates a user subscription service with cache support
+func NewUserSubscriptionServiceWithCache(
+	db *gorm.DB,
+	subscriptionPlanService interfaces.SubscriptionPlanService,
+	cacheManager cache.CacheManager,
+	cacheKeys *cache.AllCacheKeys,
+) interfaces.UserSubscriptionService {
+	return implementations.NewUserSubscriptionServiceWithCache(
+		db,
+		subscriptionPlanService,
+		cacheManager,
+		cacheKeys,
+	)
+}
 
 // NewSubscriptionOrderServiceWithInvoice creates a subscription order service with invoice service dependency
 func NewSubscriptionOrderServiceWithInvoice(
@@ -21,14 +50,18 @@ func NewSubscriptionOrderServiceWithInvoice(
 	paymentService paymentInterfaces.PaymentService,
 	couponService couponInterfaces.CouponService,
 	invoiceService invoiceInterfaces.InvoiceService,
+	cacheManager cache.CacheManager,
+	cacheKeys *cache.AllCacheKeys,
 ) interfaces.SubscriptionOrderService {
-	return implementations.NewSubscriptionOrderService(
+	return implementations.NewSubscriptionOrderServiceWithCache(
 		db,
 		subscriptionPlanService,
 		userSubscriptionService,
 		paymentService,
 		couponService,
 		invoiceService,
+		cacheManager,
+		cacheKeys,
 	)
 }
 
@@ -51,14 +84,14 @@ var Module = fx.Module("subscription",
 		),
 	),
 
-	// 提供基础服务实现
+	// 提供基础服务实现（带缓存支持）
 	fx.Provide(
 		fx.Annotate(
-			implementations.NewSubscriptionPlanService,
+			NewSubscriptionPlanServiceWithCache,
 			fx.As(new(interfaces.SubscriptionPlanService)),
 		),
 		fx.Annotate(
-			implementations.NewUserSubscriptionService,
+			NewUserSubscriptionServiceWithCache,
 			fx.As(new(interfaces.UserSubscriptionService)),
 		),
 	),

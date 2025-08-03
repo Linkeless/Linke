@@ -21,6 +21,8 @@ type Config struct {
 	Log      LogConfig
 	API      APIConfig
 	Payment  PaymentSecurityConfig
+	Cache    CacheConfig
+	Versioning VersioningConfig
 }
 
 type ServerConfig struct {
@@ -90,6 +92,44 @@ type PaymentSecurityConfig struct {
 	// Security headers
 	RequireHTTPS             bool     `json:"require_https"`
 	MaxRequestSize           int64    `json:"max_request_size"`           // in bytes
+}
+
+type CacheConfig struct {
+	DefaultTTL      int  `json:"default_ttl"`        // in seconds
+	EnableMetrics   bool `json:"enable_metrics"`
+	EnableDebugLog  bool `json:"enable_debug_log"`
+}
+
+type VersioningConfig struct {
+	// Strategy defines how version is extracted from requests
+	Strategy string `json:"strategy"` // url_path, header, query, content_type
+	
+	// DefaultVersion is used when no version is specified
+	DefaultVersion string `json:"default_version"`
+	
+	// MinVersion is the minimum supported version
+	MinVersion string `json:"min_version"`
+	
+	// MaxVersion is the maximum supported version  
+	MaxVersion string `json:"max_version"`
+	
+	// HeaderName is the header name for header strategy
+	HeaderName string `json:"header_name"`
+	
+	// QueryParam is the query parameter name for query strategy
+	QueryParam string `json:"query_param"`
+	
+	// URLPrefix is the URL prefix for path strategy
+	URLPrefix string `json:"url_prefix"`
+	
+	// EnableDeprecationHeaders adds deprecation headers to responses
+	EnableDeprecationHeaders bool `json:"enable_deprecation_headers"`
+	
+	// EnableAutoMigration enables automatic version migration for compatible versions
+	EnableAutoMigration bool `json:"enable_auto_migration"`
+	
+	// SunsetV1Date is the sunset date for version 1 (ISO 8601 format)
+	SunsetV1Date string `json:"sunset_v1_date"`
 }
 
 func LoadConfig() *Config {
@@ -190,6 +230,23 @@ func LoadConfig() *Config {
 			NotifyRateBurst:        getEnvInt("PAYMENT_NOTIFY_RATE_BURST", 2),
 			RequireHTTPS:           getEnvBool("PAYMENT_REQUIRE_HTTPS", false),
 			MaxRequestSize:         int64(getEnvInt("PAYMENT_MAX_REQUEST_SIZE", 1048576)), // 1MB default
+		},
+		Cache: CacheConfig{
+			DefaultTTL:      getEnvInt("CACHE_DEFAULT_TTL", 300), // 5 minutes default
+			EnableMetrics:   getEnvBool("CACHE_ENABLE_METRICS", false),
+			EnableDebugLog:  getEnvBool("CACHE_ENABLE_DEBUG_LOG", false),
+		},
+		Versioning: VersioningConfig{
+			Strategy:                 getEnv("API_VERSION_STRATEGY", "url_path"),
+			DefaultVersion:           getEnv("API_DEFAULT_VERSION", "1.0.0"),
+			MinVersion:               getEnv("API_MIN_VERSION", "1.0.0"),
+			MaxVersion:               getEnv("API_MAX_VERSION", "2.0.0"),
+			HeaderName:               getEnv("API_VERSION_HEADER", "X-API-Version"),
+			QueryParam:               getEnv("API_VERSION_QUERY_PARAM", "version"),
+			URLPrefix:                getEnv("API_URL_PREFIX", "/api"),
+			EnableDeprecationHeaders: getEnvBool("API_ENABLE_DEPRECATION_HEADERS", true),
+			EnableAutoMigration:      getEnvBool("API_ENABLE_AUTO_MIGRATION", false),
+			SunsetV1Date:             getEnv("API_SUNSET_V1_DATE", "2025-12-31T23:59:59Z"),
 		},
 	}
 }
