@@ -9,6 +9,7 @@ import (
 
 	"linke/internal/domains/payment/entities"
 	"linke/internal/domains/payment/usecases/interfaces"
+	userEntities "linke/internal/domains/user/entities"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/response"
 )
@@ -479,8 +480,16 @@ func (h *PaymentMethodHandler) GetPaymentMethodUsageStats(c *gin.Context) {
 // Helper methods
 
 // getUserIDFromContext extracts user ID from the gin context
-// This assumes the authentication middleware sets the user ID in the context
+// This assumes the authentication middleware sets the user object in the context
 func (h *PaymentMethodHandler) getUserIDFromContext(c *gin.Context) uint {
+	// Try to get user from context using the standard middleware key
+	if userValue, exists := c.Get("auth_user"); exists {
+		if user, ok := userValue.(*userEntities.User); ok {
+			return user.ID
+		}
+	}
+	
+	// Fallback: try the old key for backward compatibility
 	if userID, exists := c.Get("user_id"); exists {
 		if id, ok := userID.(uint); ok {
 			return id

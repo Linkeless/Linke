@@ -1,5 +1,9 @@
 package cache
 
+// DEPRECATED: This file has been merged into monitoring.go
+// The MultiLevelCacheMonitor functionality is now part of the unified CacheMonitoringHandler
+// This file is kept for backwards compatibility but should not be used directly
+
 import (
 	"context"
 	"fmt"
@@ -20,14 +24,14 @@ type MultiLevelCacheMonitor struct {
 	logger          logger.Logger
 
 	// Performance tracking
-	performanceMetrics *PerformanceMetrics
-	alertThresholds    *AlertThresholds
+	performanceMetrics *DeprecatedPerformanceMetrics
+	alertThresholds    *DeprecatedAlertThresholds
 
 	mu sync.RWMutex
 }
 
-// PerformanceMetrics tracks detailed performance metrics
-type PerformanceMetrics struct {
+// DeprecatedPerformanceMetrics tracks detailed performance metrics (DEPRECATED - use monitoring.go)
+type DeprecatedPerformanceMetrics struct {
 	StartTime time.Time `json:"start_time" swaggertype:"string" format:"date-time" example:"2023-01-01T00:00:00Z"`
 
 	// Response time metrics (in milliseconds)
@@ -53,8 +57,8 @@ type PerformanceMetrics struct {
 	PromotionAccuracy float64 `json:"promotion_accuracy"` // Accuracy of promotion decisions
 }
 
-// AlertThresholds defines when to trigger alerts
-type AlertThresholds struct {
+// DeprecatedAlertThresholds defines when to trigger alerts (DEPRECATED - use monitoring.go)
+type DeprecatedAlertThresholds struct {
 	MaxL1HitRateDropPercent     float64 `json:"max_l1_hit_rate_drop_percent"`
 	MaxL2ResponseTimeMs         float64 `json:"max_l2_response_time_ms"`
 	MaxMemoryUsagePercent       float64 `json:"max_memory_usage_percent"`
@@ -62,13 +66,13 @@ type AlertThresholds struct {
 	MinPromotionAccuracyPercent float64 `json:"min_promotion_accuracy_percent"`
 }
 
-// CacheHealthStatus represents the overall health of the cache system
-type CacheHealthStatus struct {
+// DeprecatedCacheHealthStatus represents the overall health of the cache system (DEPRECATED - use monitoring.go)
+type DeprecatedCacheHealthStatus struct {
 	Overall     string                  `json:"overall"`
 	Components  map[string]string       `json:"components"`
 	Issues      []string                `json:"issues"`
 	Metrics     *MultiLevelCacheMetrics `json:"metrics"`
-	Performance *PerformanceMetrics     `json:"performance"`
+	Performance *DeprecatedPerformanceMetrics `json:"performance"`
 	Timestamp   time.Time               `json:"timestamp" swaggertype:"string" format:"date-time" example:"2023-01-01T00:00:00Z"`
 }
 
@@ -84,13 +88,13 @@ func NewMultiLevelCacheMonitor(
 		warmer:          warmer,
 		invalidator:     invalidator,
 		logger:          logger,
-		performanceMetrics: &PerformanceMetrics{
+		performanceMetrics: &DeprecatedPerformanceMetrics{
 			StartTime:       time.Now(),
 			HourlyHitRates:  make([]float64, 24),
 			HourlyMissRates: make([]float64, 24),
 			HourlyEvictions: make([]int64, 24),
 		},
-		alertThresholds: &AlertThresholds{
+		alertThresholds: &DeprecatedAlertThresholds{
 			MaxL1HitRateDropPercent:     20.0,
 			MaxL2ResponseTimeMs:         100.0,
 			MaxMemoryUsagePercent:       85.0,
@@ -100,56 +104,26 @@ func NewMultiLevelCacheMonitor(
 	}
 }
 
-// RegisterRoutes registers monitoring endpoints
+// RegisterRoutes registers monitoring endpoints (DEPRECATED - functionality moved to CacheMonitoringHandler)
 func (mlcm *MultiLevelCacheMonitor) RegisterRoutes(router *gin.RouterGroup) {
-	monitorGroup := router.Group("/cache/monitor")
-	{
-		monitorGroup.GET("/health", mlcm.GetHealth)
-		monitorGroup.GET("/metrics", mlcm.GetMetrics)
-		monitorGroup.GET("/performance", mlcm.GetPerformanceMetrics)
-		monitorGroup.GET("/dashboard", mlcm.GetDashboard)
-		monitorGroup.GET("/alerts", mlcm.GetAlerts)
-		monitorGroup.POST("/benchmark", mlcm.RunBenchmark)
-		monitorGroup.GET("/warming/status", mlcm.GetWarmingStatus)
-		monitorGroup.POST("/warming/trigger", mlcm.TriggerWarming)
-		monitorGroup.GET("/invalidation/metrics", mlcm.GetInvalidationMetrics)
-	}
+	// DEPRECATED: This functionality has been merged into CacheMonitoringHandler
+	// These routes are no longer registered to avoid conflicts
+	// The unified CacheMonitoringHandler now provides all cache monitoring endpoints
 }
 
-// GetHealth returns comprehensive health status
-// @Summary Get multi-level cache health
-// @Description Get comprehensive health status of multi-level cache system
-// @Tags Cache Monitoring
-// @Accept json
-// @Produce json
-// @Success 200 {object} response.Response{data=CacheHealthStatus}
-// @Router /admin/cache/monitor/health [get]
+// GetHealth returns comprehensive health status (DEPRECATED - use CacheMonitoringHandler.GetMultiLevelHealth)
 func (mlcm *MultiLevelCacheMonitor) GetHealth(c *gin.Context) {
 	health := mlcm.checkHealth(c.Request.Context())
 	response.Success(c, health)
 }
 
-// GetMetrics returns detailed cache metrics
-// @Summary Get multi-level cache metrics
-// @Description Get detailed metrics for multi-level cache system
-// @Tags Cache Monitoring
-// @Accept json
-// @Produce json
-// @Success 200 {object} response.Response{data=MultiLevelCacheMetrics}
-// @Router /admin/cache/monitor/metrics [get]
+// GetMetrics returns detailed cache metrics (DEPRECATED - use CacheMonitoringHandler.GetMultiLevelMetrics)
 func (mlcm *MultiLevelCacheMonitor) GetMetrics(c *gin.Context) {
 	metrics := mlcm.multilevelCache.GetMetrics()
 	response.Success(c, metrics)
 }
 
-// GetPerformanceMetrics returns performance analysis
-// @Summary Get cache performance metrics
-// @Description Get detailed performance analysis of cache system
-// @Tags Cache Monitoring
-// @Accept json
-// @Produce json
-// @Success 200 {object} response.Response{data=PerformanceMetrics}
-// @Router /admin/cache/monitor/performance [get]
+// GetPerformanceMetrics returns performance analysis (DEPRECATED - use CacheMonitoringHandler.GetPerformanceMetrics)
 func (mlcm *MultiLevelCacheMonitor) GetPerformanceMetrics(c *gin.Context) {
 	mlcm.updatePerformanceMetrics()
 
@@ -160,14 +134,7 @@ func (mlcm *MultiLevelCacheMonitor) GetPerformanceMetrics(c *gin.Context) {
 	response.Success(c, performance)
 }
 
-// GetDashboard returns dashboard data
-// @Summary Get cache dashboard data
-// @Description Get comprehensive dashboard data for cache monitoring
-// @Tags Cache Monitoring
-// @Accept json
-// @Produce json
-// @Success 200 {object} response.Response{data=map[string]interface{}}
-// @Router /admin/cache/monitor/dashboard [get]
+// GetDashboard returns dashboard data (DEPRECATED - use CacheMonitoringHandler.GetDashboard)
 func (mlcm *MultiLevelCacheMonitor) GetDashboard(c *gin.Context) {
 	dashboard := map[string]interface{}{
 		"health":       mlcm.checkHealth(c.Request.Context()),
@@ -181,40 +148,19 @@ func (mlcm *MultiLevelCacheMonitor) GetDashboard(c *gin.Context) {
 	response.Success(c, dashboard)
 }
 
-// GetAlerts checks and returns active alerts
-// @Summary Get cache system alerts
-// @Description Get active alerts for cache system health and performance
-// @Tags Cache Monitoring
-// @Accept json
-// @Produce json
-// @Success 200 {object} response.Response{data=[]string}
-// @Router /admin/cache/monitor/alerts [get]
+// GetAlerts checks and returns active alerts (DEPRECATED - use CacheMonitoringHandler.GetAlerts)
 func (mlcm *MultiLevelCacheMonitor) GetAlerts(c *gin.Context) {
 	alerts := mlcm.checkAlerts()
 	response.Success(c, alerts)
 }
 
-// RunBenchmark runs a performance benchmark
-// @Summary Run cache benchmark
-// @Description Run performance benchmark on cache system
-// @Tags Cache Monitoring
-// @Accept json
-// @Produce json
-// @Success 200 {object} response.Response{data=map[string]interface{}}
-// @Router /admin/cache/monitor/benchmark [post]
+// RunBenchmark runs a performance benchmark (DEPRECATED - use CacheMonitoringHandler.RunBenchmark)
 func (mlcm *MultiLevelCacheMonitor) RunBenchmark(c *gin.Context) {
 	result := mlcm.runBenchmark(c.Request.Context())
 	response.Success(c, result)
 }
 
-// GetWarmingStatus returns cache warming status
-// @Summary Get cache warming status
-// @Description Get status and metrics of cache warming operations
-// @Tags Cache Monitoring
-// @Accept json
-// @Produce json
-// @Success 200 {object} response.Response{data=WarmingMetrics}
-// @Router /admin/cache/monitor/warming/status [get]
+// GetWarmingStatus returns cache warming status (DEPRECATED - use CacheMonitoringHandler.GetWarmingStatus)
 func (mlcm *MultiLevelCacheMonitor) GetWarmingStatus(c *gin.Context) {
 	if mlcm.warmer != nil {
 		metrics := mlcm.warmer.GetMetrics()
@@ -224,15 +170,7 @@ func (mlcm *MultiLevelCacheMonitor) GetWarmingStatus(c *gin.Context) {
 	}
 }
 
-// TriggerWarming manually triggers cache warming
-// @Summary Trigger cache warming
-// @Description Manually trigger cache warming for specified prefixes
-// @Tags Cache Monitoring
-// @Accept json
-// @Produce json
-// @Param request body map[string]interface{} true "Warming request"
-// @Success 200 {object} response.Response{data=map[string]interface{}}
-// @Router /admin/cache/monitor/warming/trigger [post]
+// TriggerWarming manually triggers cache warming (DEPRECATED - use CacheMonitoringHandler.TriggerWarming)
 func (mlcm *MultiLevelCacheMonitor) TriggerWarming(c *gin.Context) {
 	var req struct {
 		Prefixes []string `json:"prefixes"`
@@ -264,14 +202,7 @@ func (mlcm *MultiLevelCacheMonitor) TriggerWarming(c *gin.Context) {
 	})
 }
 
-// GetInvalidationMetrics returns cache invalidation metrics
-// @Summary Get cache invalidation metrics
-// @Description Get metrics for event-driven cache invalidation
-// @Tags Cache Monitoring
-// @Accept json
-// @Produce json
-// @Success 200 {object} response.Response{data=map[string]int64}
-// @Router /admin/cache/monitor/invalidation/metrics [get]
+// GetInvalidationMetrics returns cache invalidation metrics (DEPRECATED - use CacheMonitoringHandler.GetInvalidationMetrics)
 func (mlcm *MultiLevelCacheMonitor) GetInvalidationMetrics(c *gin.Context) {
 	if mlcm.invalidator != nil {
 		metrics := mlcm.invalidator.GetMetrics()
@@ -283,8 +214,8 @@ func (mlcm *MultiLevelCacheMonitor) GetInvalidationMetrics(c *gin.Context) {
 
 // Private methods
 
-func (mlcm *MultiLevelCacheMonitor) checkHealth(ctx context.Context) *CacheHealthStatus {
-	health := &CacheHealthStatus{
+func (mlcm *MultiLevelCacheMonitor) checkHealth(ctx context.Context) *DeprecatedCacheHealthStatus {
+	health := &DeprecatedCacheHealthStatus{
 		Components: make(map[string]string),
 		Issues:     make([]string, 0),
 		Timestamp:  time.Now(),

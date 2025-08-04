@@ -3360,6 +3360,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
       summary: Flush cache
       tags:
       - Cache
@@ -3380,6 +3382,8 @@ paths:
                 data:
                   $ref: '#/definitions/cache.MetricsReport'
               type: object
+      security:
+      - BearerAuth: []
       summary: Get cache metrics
       tags:
       - Cache
@@ -3406,6 +3410,8 @@ paths:
                 data:
                   $ref: '#/definitions/cache.Metrics'
               type: object
+      security:
+      - BearerAuth: []
       summary: Get cache metrics by prefix
       tags:
       - Cache
@@ -3428,6 +3434,8 @@ paths:
                     type: string
                   type: array
               type: object
+      security:
+      - BearerAuth: []
       summary: Get cache system alerts
       tags:
       - Cache Monitoring
@@ -3449,6 +3457,8 @@ paths:
                   additionalProperties: true
                   type: object
               type: object
+      security:
+      - BearerAuth: []
       summary: Run cache benchmark
       tags:
       - Cache Monitoring
@@ -3470,6 +3480,8 @@ paths:
                   additionalProperties: true
                   type: object
               type: object
+      security:
+      - BearerAuth: []
       summary: Get cache dashboard data
       tags:
       - Cache Monitoring
@@ -3490,6 +3502,8 @@ paths:
                 data:
                   $ref: '#/definitions/cache.CacheHealthStatus'
               type: object
+      security:
+      - BearerAuth: []
       summary: Get multi-level cache health
       tags:
       - Cache Monitoring
@@ -3513,6 +3527,8 @@ paths:
                     type: integer
                   type: object
               type: object
+      security:
+      - BearerAuth: []
       summary: Get cache invalidation metrics
       tags:
       - Cache Monitoring
@@ -3533,6 +3549,8 @@ paths:
                 data:
                   $ref: '#/definitions/cache.MultiLevelCacheMetrics'
               type: object
+      security:
+      - BearerAuth: []
       summary: Get multi-level cache metrics
       tags:
       - Cache Monitoring
@@ -3553,6 +3571,8 @@ paths:
                 data:
                   $ref: '#/definitions/cache.PerformanceMetrics'
               type: object
+      security:
+      - BearerAuth: []
       summary: Get cache performance metrics
       tags:
       - Cache Monitoring
@@ -3573,6 +3593,8 @@ paths:
                 data:
                   $ref: '#/definitions/cache.WarmingMetrics'
               type: object
+      security:
+      - BearerAuth: []
       summary: Get cache warming status
       tags:
       - Cache Monitoring
@@ -3602,6 +3624,8 @@ paths:
                   additionalProperties: true
                   type: object
               type: object
+      security:
+      - BearerAuth: []
       summary: Trigger cache warming
       tags:
       - Cache Monitoring
@@ -3623,6 +3647,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
       summary: Delete cache by pattern
       tags:
       - Cache
@@ -3638,6 +3664,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
       summary: Reset cache metrics
       tags:
       - Cache
@@ -3658,6 +3686,8 @@ paths:
                 data:
                   $ref: '#/definitions/cache.CacheStats'
               type: object
+      security:
+      - BearerAuth: []
       summary: Get cache statistics
       tags:
       - Cache

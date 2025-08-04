@@ -20,7 +20,15 @@ var Module = fx.Module("cache",
 			fx.As(new(CacheManager)),
 		),
 		NewAllCacheKeys,
-		NewCacheMonitoringHandler,
+		// Enhanced cache monitoring handler with optional multi-level support
+		func(
+			manager CacheManager,
+			collector MetricsCollector,
+			logger logger.Logger,
+		) *CacheMonitoringHandler {
+			// For basic cache module, no multi-level manager available
+			return NewCacheMonitoringHandler(manager, collector, nil, logger)
+		},
 		NewCacheHealthCheck,
 	),
 )
@@ -35,7 +43,16 @@ var MultiLevelModule = fx.Module("multilevel-cache",
 			fx.As(new(MultiLevelCacheManager)),
 		),
 		NewAllCacheKeys,
-		NewCacheMonitoringHandler,
+		// Enhanced cache monitoring handler WITH multi-level support
+		func(
+			manager CacheManager,
+			collector MetricsCollector,
+			multiLevelMgr MultiLevelCacheManager,
+			logger logger.Logger,
+		) *CacheMonitoringHandler {
+			// For multi-level cache module, provide the multi-level manager
+			return NewCacheMonitoringHandler(manager, collector, multiLevelMgr, logger)
+		},
 		NewCacheHealthCheck,
 	),
 )

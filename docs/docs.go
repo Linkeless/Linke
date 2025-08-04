@@ -17,6 +17,11 @@ const docTemplate = `{
     "paths": {
         "/admin/cache/flush": {
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Flush all cache entries (use with caution)",
                 "consumes": [
                     "application/json"
@@ -40,6 +45,11 @@ const docTemplate = `{
         },
         "/admin/cache/metrics": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get comprehensive cache performance metrics",
                 "consumes": [
                     "application/json"
@@ -75,6 +85,11 @@ const docTemplate = `{
         },
         "/admin/cache/metrics/{prefix}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get cache performance metrics for a specific prefix",
                 "consumes": [
                     "application/json"
@@ -119,6 +134,11 @@ const docTemplate = `{
         },
         "/admin/cache/monitor/alerts": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get active alerts for cache system health and performance",
                 "consumes": [
                     "application/json"
@@ -157,6 +177,11 @@ const docTemplate = `{
         },
         "/admin/cache/monitor/benchmark": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Run performance benchmark on cache system",
                 "consumes": [
                     "application/json"
@@ -193,6 +218,11 @@ const docTemplate = `{
         },
         "/admin/cache/monitor/dashboard": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get comprehensive dashboard data for cache monitoring",
                 "consumes": [
                     "application/json"
@@ -229,6 +259,11 @@ const docTemplate = `{
         },
         "/admin/cache/monitor/health": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get comprehensive health status of multi-level cache system",
                 "consumes": [
                     "application/json"
@@ -264,6 +299,11 @@ const docTemplate = `{
         },
         "/admin/cache/monitor/invalidation/metrics": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get metrics for event-driven cache invalidation",
                 "consumes": [
                     "application/json"
@@ -303,6 +343,11 @@ const docTemplate = `{
         },
         "/admin/cache/monitor/metrics": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get detailed metrics for multi-level cache system",
                 "consumes": [
                     "application/json"
@@ -338,6 +383,11 @@ const docTemplate = `{
         },
         "/admin/cache/monitor/performance": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get detailed performance analysis of cache system",
                 "consumes": [
                     "application/json"
@@ -373,6 +423,11 @@ const docTemplate = `{
         },
         "/admin/cache/monitor/warming/status": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get status and metrics of cache warming operations",
                 "consumes": [
                     "application/json"
@@ -408,6 +463,11 @@ const docTemplate = `{
         },
         "/admin/cache/monitor/warming/trigger": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Manually trigger cache warming for specified prefixes",
                 "consumes": [
                     "application/json"
@@ -456,6 +516,11 @@ const docTemplate = `{
         },
         "/admin/cache/pattern/{pattern}": {
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete cache entries matching a specific pattern",
                 "consumes": [
                     "application/json"
@@ -488,6 +553,11 @@ const docTemplate = `{
         },
         "/admin/cache/reset-metrics": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Reset all cache performance metrics",
                 "consumes": [
                     "application/json"
@@ -511,6 +581,11 @@ const docTemplate = `{
         },
         "/admin/cache/stats": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get low-level cache statistics from Redis",
                 "consumes": [
                     "application/json"

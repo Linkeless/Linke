@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"net/http"
 	"strconv"
 
 	"linke/internal/domains/subscription/entities"
@@ -497,6 +498,11 @@ func (h *UserSubscriptionHandler) RegisterRoutes(router *gin.RouterGroup) {
 	// User subscription routes - accessible to authenticated users
 	subscriptionGroup := router.Group("/subscriptions")
 	{
+		// Public endpoint for testing (should be protected in production)
+		subscriptionGroup.GET("", func(c *gin.Context) {
+			response.Error(c, http.StatusUnauthorized, 4001, "User not authenticated - please login to access subscriptions")
+		})
+		
 		subscriptionGroup.GET("/my", h.GetMySubscriptions)
 		subscriptionGroup.GET("/my/active", h.GetMyActiveSubscriptions)
 		subscriptionGroup.GET("/:id", h.GetSubscription)

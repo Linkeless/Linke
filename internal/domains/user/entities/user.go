@@ -76,6 +76,11 @@ func (u *User) IsActive() bool {
 	return u.Status == UserStatusActive && !u.IsDeleted()
 }
 
+// GetID returns the user's ID (required for middleware interface)
+func (u *User) GetID() uint {
+	return u.ID
+}
+
 // IsAdmin checks if the user is an admin
 func (u *User) IsAdmin() bool {
 	return u.Role == UserRoleAdmin && u.IsActive()

@@ -637,6 +637,10 @@ func (h *UsageAlertHandler) RegisterRoutes(router *gin.RouterGroup) {
 		usageAlertGroup.GET("/configurations/:id", h.GetAlertConfiguration)
 		usageAlertGroup.PUT("/configurations/:id", h.UpdateAlertConfiguration)
 		usageAlertGroup.DELETE("/configurations/:id", h.DeleteAlertConfiguration)
+		
+		// Alias for /config to match API expectations
+		usageAlertGroup.GET("/config", h.GetAlertConfigurations)
+		usageAlertGroup.POST("/config", h.CreateAlertConfiguration)
 
 		// Alert management routes
 		usageAlertGroup.GET("", h.GetUsageAlerts)
