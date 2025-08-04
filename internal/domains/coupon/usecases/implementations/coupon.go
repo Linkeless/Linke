@@ -22,7 +22,6 @@ func NewCouponService(db *gorm.DB) *CouponService {
 	}
 }
 
-
 // CreateCoupon creates a new coupon
 func (s *CouponService) CreateCoupon(ctx context.Context, creatorID uint64, req *interfaces.CreateCouponRequest) (*entities.Coupon, error) {
 	// Validate and normalize code
@@ -174,7 +173,7 @@ func (s *CouponService) GetPublicCoupons(ctx context.Context, limit int) ([]*ent
 	query := s.db.WithContext(ctx).
 		Where("status = ? AND is_public = ?", entities.CouponStatusActive, true).
 		Order("created_at DESC")
-		
+
 	if limit > 0 {
 		query = query.Limit(limit)
 	}
@@ -342,12 +341,12 @@ func (s *CouponService) UseCoupon(ctx context.Context, couponID, userID uint64, 
 	}
 
 	discountAmount := coupon.CalculateDiscount(orderAmount)
-	
+
 	var actualOrderID uint64
 	if orderID != nil {
 		actualOrderID = *orderID
 	}
-	
+
 	if err := s.useCouponInternal(ctx, couponID, userID, actualOrderID, discountAmount, orderAmount, coupon.Currency); err != nil {
 		return nil, err
 	}
@@ -558,14 +557,14 @@ func (s *CouponService) GetCouponStatistics(ctx context.Context, couponID uint64
 	}
 
 	stats := map[string]any{
-		"coupon_id":            coupon.ID,
-		"coupon_code":          coupon.Code,
-		"status":               coupon.Status,
-		"max_uses":             coupon.MaxUses,
-		"used_count":           coupon.UsedCount,
-		"total_usages":         totalUsages,
+		"coupon_id":             coupon.ID,
+		"coupon_code":           coupon.Code,
+		"status":                coupon.Status,
+		"max_uses":              coupon.MaxUses,
+		"used_count":            coupon.UsedCount,
+		"total_usages":          totalUsages,
 		"total_discount_amount": totalDiscountAmount,
-		"remaining_uses":       coupon.MaxUses - coupon.UsedCount,
+		"remaining_uses":        coupon.MaxUses - coupon.UsedCount,
 	}
 
 	if coupon.MaxUses > 0 {

@@ -27,7 +27,7 @@ func NewSubscriptionPlanServiceWithCache(
 	cacheKeys *cache.AllCacheKeys,
 ) interfaces.SubscriptionPlanService {
 	baseService := NewSubscriptionPlanService(db)
-	
+
 	planCache := cache.NewCacheAside[entities.SubscriptionPlan](
 		cacheManager.GetCache(),
 		cache.CachePrefixPlan,
@@ -39,9 +39,9 @@ func NewSubscriptionPlanServiceWithCache(
 
 	return &CachedSubscriptionPlanService{
 		SubscriptionPlanService: baseService,
-		cacheManager:           cacheManager,
-		cacheKeys:              cacheKeys,
-		planCache:              planCache,
+		cacheManager:            cacheManager,
+		cacheKeys:               cacheKeys,
+		planCache:               planCache,
 	}
 }
 
@@ -55,7 +55,7 @@ func (s *CachedSubscriptionPlanService) CreateSubscriptionPlan(ctx context.Conte
 	// Write-through: cache the new plan
 	if plan != nil {
 		if err := s.planCache.Set(ctx, plan); err != nil {
-			logger.Error("Failed to cache new plan", 
+			logger.Error("Failed to cache new plan",
 				logger.Uint("plan_id", plan.ID),
 				logger.Error2("error", err))
 		}
@@ -70,30 +70,30 @@ func (s *CachedSubscriptionPlanService) CreateSubscriptionPlan(ctx context.Conte
 // GetSubscriptionPlan gets a subscription plan by ID with caching
 func (s *CachedSubscriptionPlanService) GetSubscriptionPlan(ctx context.Context, planID uint) (*entities.SubscriptionPlan, error) {
 	cacheKey := s.cacheKeys.Subscription.PlanByID(planID)
-	
+
 	plan, err := s.planCache.Get(ctx, cacheKey, func() (*entities.SubscriptionPlan, error) {
 		return s.SubscriptionPlanService.GetSubscriptionPlan(ctx, planID)
 	})
-	
+
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return plan, nil
 }
 
 // GetSubscriptionPlanByCode gets a subscription plan by code with caching
 func (s *CachedSubscriptionPlanService) GetSubscriptionPlanByCode(ctx context.Context, code string) (*entities.SubscriptionPlan, error) {
 	cacheKey := fmt.Sprintf("code:%s", code)
-	
+
 	plan, err := s.planCache.Get(ctx, cacheKey, func() (*entities.SubscriptionPlan, error) {
 		return s.SubscriptionPlanService.GetSubscriptionPlanByCode(ctx, code)
 	})
-	
+
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return plan, nil
 }
 
@@ -101,7 +101,7 @@ func (s *CachedSubscriptionPlanService) GetSubscriptionPlanByCode(ctx context.Co
 func (s *CachedSubscriptionPlanService) GetSubscriptionPlans(ctx context.Context, req *interfaces.GetSubscriptionPlansRequest) ([]*entities.SubscriptionPlan, int64, error) {
 	// For complex queries with filters, we'll cache based on the query parameters
 	cacheKey := s.buildListCacheKey(req)
-	
+
 	// Use cache decorator for list results
 	cached, err := s.cacheManager.GetCache().Get(ctx, cacheKey)
 	if err == nil && cached != nil {
@@ -113,13 +113,13 @@ func (s *CachedSubscriptionPlanService) GetSubscriptionPlans(ctx context.Context
 			return result.Plans, result.Total, nil
 		}
 	}
-	
+
 	// Cache miss - fetch from database
 	plans, total, err := s.SubscriptionPlanService.GetSubscriptionPlans(ctx, req)
 	if err != nil {
 		return nil, 0, err
 	}
-	
+
 	// Cache the result
 	result := struct {
 		Plans []*entities.SubscriptionPlan `json:"plans"`
@@ -128,11 +128,11 @@ func (s *CachedSubscriptionPlanService) GetSubscriptionPlans(ctx context.Context
 		Plans: plans,
 		Total: total,
 	}
-	
+
 	if data, err := json.Marshal(result); err == nil {
 		_ = s.cacheManager.GetCache().Set(ctx, cacheKey, data, cache.MediumCacheTTL)
 	}
-	
+
 	return plans, total, nil
 }
 
@@ -142,7 +142,7 @@ func (s *CachedSubscriptionPlanService) GetVisibleSubscriptionPlans(ctx context.
 	if currency != "" {
 		cacheKey = fmt.Sprintf("%s:currency:%s", cacheKey, currency)
 	}
-	
+
 	cached, err := s.cacheManager.GetCache().Get(ctx, cacheKey)
 	if err == nil && cached != nil {
 		var plans []*entities.SubscriptionPlan
@@ -150,25 +150,25 @@ func (s *CachedSubscriptionPlanService) GetVisibleSubscriptionPlans(ctx context.
 			return plans, nil
 		}
 	}
-	
+
 	// Cache miss - fetch from database
 	plans, err := s.SubscriptionPlanService.GetVisibleSubscriptionPlans(ctx, currency)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Cache the result
 	if data, err := json.Marshal(plans); err == nil {
 		_ = s.cacheManager.GetCache().Set(ctx, cacheKey, data, cache.LongCacheTTL)
 	}
-	
+
 	return plans, nil
 }
 
 // GetPopularSubscriptionPlans gets popular plans with caching
 func (s *CachedSubscriptionPlanService) GetPopularSubscriptionPlans(ctx context.Context, limit int) ([]*entities.SubscriptionPlan, error) {
 	cacheKey := fmt.Sprintf("popular:limit:%d", limit)
-	
+
 	cached, err := s.cacheManager.GetCache().Get(ctx, cacheKey)
 	if err == nil && cached != nil {
 		var plans []*entities.SubscriptionPlan
@@ -176,18 +176,18 @@ func (s *CachedSubscriptionPlanService) GetPopularSubscriptionPlans(ctx context.
 			return plans, nil
 		}
 	}
-	
+
 	// Cache miss - fetch from database
 	plans, err := s.SubscriptionPlanService.GetPopularSubscriptionPlans(ctx, limit)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Cache the result
 	if data, err := json.Marshal(plans); err == nil {
 		_ = s.cacheManager.GetCache().Set(ctx, cacheKey, data, cache.LongCacheTTL)
 	}
-	
+
 	return plans, nil
 }
 
@@ -204,7 +204,7 @@ func (s *CachedSubscriptionPlanService) UpdateSubscriptionPlan(ctx context.Conte
 	// Write-through: cache the updated plan
 	if plan != nil {
 		if err := s.planCache.Set(ctx, plan); err != nil {
-			logger.Error("Failed to cache updated plan", 
+			logger.Error("Failed to cache updated plan",
 				logger.Uint("plan_id", plan.ID),
 				logger.Error2("error", err))
 		}
@@ -239,7 +239,7 @@ func (s *CachedSubscriptionPlanService) ToggleSubscriptionPlanStatus(ctx context
 	// Write-through: cache the updated plan
 	if plan != nil {
 		if err := s.planCache.Set(ctx, plan); err != nil {
-			logger.Error("Failed to cache plan after status toggle", 
+			logger.Error("Failed to cache plan after status toggle",
 				logger.Uint("plan_id", plan.ID),
 				logger.Error2("error", err))
 		}
@@ -267,7 +267,7 @@ func (s *CachedSubscriptionPlanService) invalidatePlanCaches(ctx context.Context
 	// Invalidate specific plan caches
 	planByIDKey := s.cacheKeys.Subscription.PlanByID(planID)
 	if err := s.planCache.Invalidate(ctx, planByIDKey); err != nil {
-		logger.Error("Failed to invalidate plan by ID cache", 
+		logger.Error("Failed to invalidate plan by ID cache",
 			logger.Uint("plan_id", planID),
 			logger.Error2("error", err))
 	}
@@ -276,7 +276,7 @@ func (s *CachedSubscriptionPlanService) invalidatePlanCaches(ctx context.Context
 	if plan, err := s.SubscriptionPlanService.GetSubscriptionPlan(ctx, planID); err == nil && plan != nil {
 		codeKey := fmt.Sprintf("code:%s", plan.Code)
 		if err := s.planCache.Invalidate(ctx, codeKey); err != nil {
-			logger.Error("Failed to invalidate plan by code cache", 
+			logger.Error("Failed to invalidate plan by code cache",
 				logger.String("code", plan.Code),
 				logger.Error2("error", err))
 		}
@@ -294,11 +294,11 @@ func (s *CachedSubscriptionPlanService) invalidateListCaches(ctx context.Context
 		"popular:*",
 		"visible:*",
 	}
-	
+
 	for _, pattern := range patterns {
 		fullPattern := cache.CachePrefixPlan + pattern
 		if err := s.cacheManager.GetCache().DeleteByPattern(ctx, fullPattern); err != nil {
-			logger.Error("Failed to invalidate plan list cache pattern", 
+			logger.Error("Failed to invalidate plan list cache pattern",
 				logger.String("pattern", fullPattern),
 				logger.Error2("error", err))
 		}
@@ -308,7 +308,7 @@ func (s *CachedSubscriptionPlanService) invalidateListCaches(ctx context.Context
 func (s *CachedSubscriptionPlanService) buildListCacheKey(req *interfaces.GetSubscriptionPlansRequest) string {
 	var keyParts []string
 	keyParts = append(keyParts, "list")
-	
+
 	if req.Status != "" {
 		keyParts = append(keyParts, "status", req.Status)
 	}
@@ -324,9 +324,9 @@ func (s *CachedSubscriptionPlanService) buildListCacheKey(req *interfaces.GetSub
 	if req.Recommended != nil {
 		keyParts = append(keyParts, "recommended", fmt.Sprintf("%t", *req.Recommended))
 	}
-	
+
 	keyParts = append(keyParts, fmt.Sprintf("limit:%d", req.Limit))
 	keyParts = append(keyParts, fmt.Sprintf("offset:%d", req.Offset))
-	
+
 	return cache.CachePrefixPlan + strings.Join(keyParts, ":")
 }

@@ -21,27 +21,52 @@ type SubscriptionOrderService struct {
 	subscriptionPlanService interfaces.SubscriptionPlanService
 	userSubscriptionService interfaces.UserSubscriptionService
 	paymentService          paymentInterfaces.PaymentService
+	paymentMethodService    paymentInterfaces.PaymentMethodService
 	couponService           couponInterfaces.CouponService
 	invoiceService          invoiceInterfaces.InvoiceService
 }
 
-func NewSubscriptionOrderService(db *gorm.DB, subscriptionPlanService interfaces.SubscriptionPlanService, userSubscriptionService interfaces.UserSubscriptionService, paymentService paymentInterfaces.PaymentService, couponService couponInterfaces.CouponService, invoiceService invoiceInterfaces.InvoiceService) *SubscriptionOrderService {
+func NewSubscriptionOrderService(db *gorm.DB, subscriptionPlanService interfaces.SubscriptionPlanService, userSubscriptionService interfaces.UserSubscriptionService, paymentService paymentInterfaces.PaymentService, paymentMethodService paymentInterfaces.PaymentMethodService, couponService couponInterfaces.CouponService, invoiceService invoiceInterfaces.InvoiceService) *SubscriptionOrderService {
 	return &SubscriptionOrderService{
 		db:                      db,
 		subscriptionPlanService: subscriptionPlanService,
 		userSubscriptionService: userSubscriptionService,
 		paymentService:          paymentService,
+		paymentMethodService:    paymentMethodService,
 		couponService:           couponService,
 		invoiceService:          invoiceService,
 	}
 }
-
 
 // CreateSubscriptionOrder creates a new subscription order with payment
 func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context, req *interfaces.CreateSubscriptionOrderRequest) (*interfaces.CreateSubscriptionOrderResponse, error) {
 	// SECURITY: Check for duplicate pending orders to prevent order spam
 	if err := sos.checkDuplicateOrders(ctx, req.UserID, req.SubscriptionPlanID, req.OrderType); err != nil {
 		return nil, fmt.Errorf("duplicate order check failed: %w", err)
+	}
+
+	// Resolve payment method if using saved payment methods
+	finalPaymentGateway := req.PaymentGateway
+	finalPaymentMethod := req.PaymentMethod
+	var usedPaymentMethodID *uint
+
+	if req.UseDefaultPayment {
+		// Use default payment method for the specified gateway
+		defaultPaymentMethod, err := sos.paymentMethodService.GetDefaultPaymentMethodByGateway(ctx, req.UserID, req.PaymentGateway)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get default payment method: %w", err)
+		}
+		finalPaymentMethod = defaultPaymentMethod.Method
+		usedPaymentMethodID = &defaultPaymentMethod.ID
+	} else if req.PaymentMethodID != nil {
+		// Use specific saved payment method
+		paymentMethod, err := sos.paymentMethodService.GetPaymentMethod(ctx, req.UserID, *req.PaymentMethodID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get payment method: %w", err)
+		}
+		finalPaymentGateway = paymentMethod.Gateway
+		finalPaymentMethod = paymentMethod.Method
+		usedPaymentMethodID = req.PaymentMethodID
 	}
 
 	// Get subscription plan
@@ -153,8 +178,8 @@ func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context
 		TotalAmount:        totalAmount,
 		BillingPeriodStart: billingPeriodStart,
 		BillingPeriodEnd:   billingPeriodEnd,
-		PaymentGateway:     req.PaymentGateway,
-		PaymentMethod:      req.PaymentMethod,
+		PaymentGateway:     finalPaymentGateway,
+		PaymentMethod:      finalPaymentMethod,
 		CouponCode:         req.CouponCode,
 		Metadata:           req.Metadata,
 	}
@@ -176,8 +201,8 @@ func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context
 		Amount:              totalAmount,
 		Currency:            plan.Currency,
 		Description:         fmt.Sprintf("Subscription: %s", plan.Name),
-		BillingName:         fmt.Sprintf("User %d", req.UserID), // TODO: Get actual user name
-		BillingEmail:        fmt.Sprintf("user%d@example.com", req.UserID), // TODO: Get actual user email
+		BillingName:         fmt.Sprintf("User %d", req.UserID),                // TODO: Get actual user name
+		BillingEmail:        fmt.Sprintf("user%d@example.com", req.UserID),     // TODO: Get actual user email
 		DueDate:             time.Now().AddDate(0, 0, 30).Format("2006-01-02"), // 30 days from now
 	}
 
@@ -191,10 +216,10 @@ func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context
 	// Create payment order from invoice
 	paymentReq := &paymentInterfaces.CreatePaymentOrderRequest{
 		UserID:              req.UserID,
-		SubscriptionOrderID: &order.ID,    // Keep the order reference for service activation
-		InvoiceID:           &invoice.ID,   // Add invoice reference for invoice payment tracking
-		Gateway:             req.PaymentGateway,
-		PaymentMethod:       req.PaymentMethod,
+		SubscriptionOrderID: &order.ID,   // Keep the order reference for service activation
+		InvoiceID:           &invoice.ID, // Add invoice reference for invoice payment tracking
+		Gateway:             finalPaymentGateway,
+		PaymentMethod:       finalPaymentMethod,
 		Amount:              totalAmount,
 		Currency:            plan.Currency,
 		Subject:             fmt.Sprintf("Invoice %s - Subscription: %s", invoice.InvoiceNumber, plan.Name),
@@ -240,11 +265,24 @@ func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context
 		// Don't fail the entire process, just log the error
 	}
 
+	// Update payment method usage statistics if a saved payment method was used
+	if usedPaymentMethodID != nil {
+		// Note: We mark as successful here since the payment record was created successfully
+		// The actual payment completion will be tracked separately in payment webhooks
+		if _, err := sos.paymentMethodService.GetPaymentMethodUsageStats(ctx, req.UserID, *usedPaymentMethodID); err == nil {
+			// Payment method exists and can be tracked - we could add this to a queue for async processing
+			logger.Info("Payment method usage tracked",
+				logger.Uint("payment_method_id", *usedPaymentMethodID),
+				logger.Uint("user_id", req.UserID))
+		}
+	}
+
 	logger.Info("Subscription order created successfully",
 		logger.Uint("order_id", order.ID),
 		logger.String("order_number", orderNumber),
 		logger.Uint("user_id", req.UserID),
-		logger.Uint("plan_id", req.SubscriptionPlanID))
+		logger.Uint("plan_id", req.SubscriptionPlanID),
+		logger.Any("used_payment_method_id", usedPaymentMethodID))
 
 	// Return response
 	response := &interfaces.CreateSubscriptionOrderResponse{
@@ -285,7 +323,7 @@ func (sos *SubscriptionOrderService) ProcessOrderPaymentSuccess(ctx context.Cont
 		tx.Rollback()
 		return fmt.Errorf("order %d cannot be processed in status: %s", orderID, order.Status)
 	}
-	
+
 	// Only allow processing from pending or confirmed status
 	if order.Status != entities.OrderStatusPending && order.Status != entities.OrderStatusConfirmed {
 		tx.Rollback()
@@ -1349,9 +1387,9 @@ type BulkUpdateOrdersRequest struct {
 
 // BulkUpdateResult represents the result of bulk operations
 type BulkUpdateResult struct {
-	Successful []uint                 `json:"successful"`
-	Failed     []BulkUpdateFailure    `json:"failed"`
-	Summary    map[string]any `json:"summary"`
+	Successful []uint              `json:"successful"`
+	Failed     []BulkUpdateFailure `json:"failed"`
+	Summary    map[string]any      `json:"summary"`
 }
 
 // BulkUpdateFailure represents a failed bulk operation
@@ -1462,3 +1500,117 @@ func (sos *SubscriptionOrderService) checkDuplicateOrders(ctx context.Context, u
 	return nil
 }
 
+// QuickPurchase creates a payment directly without creating order/invoice first
+// Order and invoice are created asynchronously after payment success
+func (sos *SubscriptionOrderService) QuickPurchase(ctx context.Context, req *interfaces.QuickPurchaseRequest) (*interfaces.QuickPurchaseResponse, error) {
+	// SECURITY: Check for duplicate pending orders to prevent order spam
+	if err := sos.checkDuplicateOrders(ctx, req.UserID, req.PlanID, entities.OrderTypeNew); err != nil {
+		return nil, fmt.Errorf("duplicate order check failed: %w", err)
+	}
+
+	// Get subscription plan
+	plan, err := sos.subscriptionPlanService.GetSubscriptionPlan(ctx, req.PlanID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid subscription plan: %w", err)
+	}
+
+	if !plan.IsAvailableForPurchase() {
+		return nil, fmt.Errorf("subscription plan is not available for purchase")
+	}
+
+	// Calculate amounts
+	amount := plan.Price
+	setupFee := plan.SetupFee
+	var discountAmount, couponDiscountAmount float64 = 0.0, 0.0
+	var discountInfo *interfaces.QuickPurchaseDiscountInfo
+
+	// Apply coupon discount if provided
+	if req.CouponCode != "" {
+		validateReq := &couponInterfaces.ValidateCouponRequest{
+			Code:        req.CouponCode,
+			UserID:      uint64(req.UserID),
+			OrderAmount: amount + setupFee,
+			PlanID:      uint64(req.PlanID),
+			Currency:    plan.Currency,
+		}
+
+		validateResp, err := sos.couponService.ValidateCoupon(ctx, validateReq)
+		if err != nil {
+			logger.Error("Failed to validate coupon", logger.Error2("error", err), logger.String("coupon_code", req.CouponCode))
+			return nil, fmt.Errorf("failed to validate coupon: %w", err)
+		}
+
+		if !validateResp.Valid {
+			return nil, fmt.Errorf("coupon validation failed: %s", validateResp.Message)
+		}
+
+		couponDiscountAmount = validateResp.DiscountAmount
+		discountAmount = couponDiscountAmount
+
+		// Create discount info for response
+		discountInfo = &interfaces.QuickPurchaseDiscountInfo{
+			CouponCode:     req.CouponCode,
+			DiscountAmount: discountAmount,
+			OriginalAmount: amount + setupFee,
+			FinalAmount:    validateResp.FinalAmount,
+		}
+	}
+
+	totalAmount := amount + setupFee - discountAmount
+
+	// SECURITY: Price protection - validate final amount is reasonable
+	if totalAmount < 0 {
+		return nil, fmt.Errorf("invalid total amount: negative value not allowed")
+	}
+
+	// Prevent excessive discounts (more than 95% off)
+	originalTotal := amount + setupFee
+	if originalTotal > 0 && discountAmount > (originalTotal*0.95) {
+		return nil, fmt.Errorf("discount amount %.2f exceeds maximum allowed (95%% of original price)", discountAmount)
+	}
+
+	// Validate amounts are within reasonable limits
+	maxAllowedAmount := 10000.0 // $10,000 max
+	if totalAmount > maxAllowedAmount {
+		return nil, fmt.Errorf("total amount %.2f exceeds maximum allowed amount %.2f", totalAmount, maxAllowedAmount)
+	}
+
+	// Create payment order directly
+	paymentReq := &paymentInterfaces.CreatePaymentOrderRequest{
+		UserID:         req.UserID,
+		Gateway:        req.PaymentGateway,
+		PaymentMethod:  req.PaymentMethod,
+		Amount:         totalAmount,
+		Currency:       plan.Currency,
+		Subject:        fmt.Sprintf("Quick Purchase - Subscription: %s", plan.Name),
+		Body:           fmt.Sprintf("Quick purchase for %s subscription plan", plan.Name),
+		ClientIP:       req.ClientIP,
+		ReturnURL:      req.ReturnURL,
+		ExpiredMinutes: 30, // 30 minutes expiration
+		Metadata:       req.Metadata,
+	}
+
+	paymentRecord, err := sos.paymentService.CreatePaymentOrder(ctx, paymentReq)
+	if err != nil {
+		logger.Error("Failed to create payment order for quick purchase", logger.Error2("error", err))
+		return nil, fmt.Errorf("failed to create payment order: %w", err)
+	}
+
+	logger.Info("Quick purchase payment created successfully",
+		logger.String("payment_no", paymentRecord.PaymentNo),
+		logger.Uint("user_id", req.UserID),
+		logger.Uint("plan_id", req.PlanID),
+		logger.Any("total_amount", totalAmount))
+
+	// Build response
+	response := &interfaces.QuickPurchaseResponse{
+		PaymentRecord: paymentRecord.ToUserResponse(),
+		PaymentURL:    paymentRecord.PaymentURL,
+		QRCodeURL:     paymentRecord.QRCodeURL,
+		ExpiredAt:     *paymentRecord.ExpiredAt,
+		PlanInfo:      plan.ToResponse(),
+		DiscountInfo:  discountInfo,
+	}
+
+	return response, nil
+}

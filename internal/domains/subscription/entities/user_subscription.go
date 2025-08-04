@@ -45,6 +45,14 @@ type UserSubscription struct {
 	CancellationReason string     `json:"cancellation_reason,omitempty" gorm:"size:255"`      // 取消原因
 	CancelAtPeriodEnd  bool       `json:"cancel_at_period_end" gorm:"not null;default:false"` // 是否在期末取消
 
+	// Pause Information
+	PausedAt         *time.Time `json:"paused_at,omitempty" gorm:"index"`                                                     // 暂停时间
+	PauseReason      string     `json:"pause_reason,omitempty" gorm:"size:255"`                                               // 暂停原因
+	PausedByAdminID  *uint      `json:"paused_by_admin_id,omitempty" gorm:"index"`                                            // 暂停操作的管理员ID
+	MaxPauseDuration int        `json:"max_pause_duration" gorm:"not null;default:90;comment:Maximum pause duration in days"` // 最大暂停天数
+	ResumedAt        *time.Time `json:"resumed_at,omitempty" gorm:"index"`                                                    // 恢复时间
+	ResumedByAdminID *uint      `json:"resumed_by_admin_id,omitempty" gorm:"index"`                                           // 恢复操作的管理员ID
+
 	// Auto-renewal Information
 	AutoRenew         bool       `json:"auto_renew" gorm:"not null;default:false"`      // 是否自动续费
 	RenewalAttempts   int        `json:"renewal_attempts" gorm:"not null;default:0"`    // 续费尝试次数
@@ -130,6 +138,12 @@ func (us *UserSubscription) IsActive() bool {
 	return !us.IsDeleted()
 }
 
+// IsActiveForService checks if the subscription is active for service usage
+// This excludes paused subscriptions from accessing services
+func (us *UserSubscription) IsActiveForService() bool {
+	return us.IsActive() && !us.IsPaused()
+}
+
 // IsInTrial checks if the subscription is in trial period
 func (us *UserSubscription) IsInTrial() bool {
 	if us.TrialEndDate == nil {
@@ -149,6 +163,11 @@ func (us *UserSubscription) IsExpired() bool {
 // IsCancelled checks if the subscription is cancelled
 func (us *UserSubscription) IsCancelled() bool {
 	return us.Status == UserSubscriptionStatusCancelled
+}
+
+// IsPaused checks if the subscription is paused
+func (us *UserSubscription) IsPaused() bool {
+	return us.Status == UserSubscriptionStatusPaused
 }
 
 // IsDeleted checks if the subscription is soft deleted
@@ -272,6 +291,53 @@ func (us *UserSubscription) AddTrafficUsage(bytes int64) bool {
 	return false
 }
 
+// CanBePaused checks if the subscription can be paused
+func (us *UserSubscription) CanBePaused() bool {
+	// Only active subscriptions can be paused
+	return us.Status == UserSubscriptionStatusActive && !us.IsDeleted()
+}
+
+// CanBeResumed checks if the subscription can be resumed
+func (us *UserSubscription) CanBeResumed() bool {
+	// Only paused subscriptions can be resumed
+	return us.Status == UserSubscriptionStatusPaused && !us.IsDeleted()
+}
+
+// GetPauseDuration returns the current pause duration in days
+func (us *UserSubscription) GetPauseDuration() int {
+	if us.PausedAt == nil {
+		return 0
+	}
+	return int(time.Since(*us.PausedAt).Hours() / 24)
+}
+
+// IsMaxPauseDurationExceeded checks if the maximum pause duration has been exceeded
+func (us *UserSubscription) IsMaxPauseDurationExceeded() bool {
+	if us.PausedAt == nil {
+		return false
+	}
+	pauseDays := us.GetPauseDuration()
+	return pauseDays >= us.MaxPauseDuration
+}
+
+// ShouldAutoResume checks if the subscription should be automatically resumed
+func (us *UserSubscription) ShouldAutoResume() bool {
+	return us.IsPaused() && us.IsMaxPauseDurationExceeded()
+}
+
+// GetRemainingPauseDays returns the remaining days before auto-resume
+func (us *UserSubscription) GetRemainingPauseDays() int {
+	if us.PausedAt == nil {
+		return 0
+	}
+	pauseDays := us.GetPauseDuration()
+	remaining := us.MaxPauseDuration - pauseDays
+	if remaining < 0 {
+		return 0
+	}
+	return remaining
+}
+
 // UserSubscriptionResponse represents the user subscription data structure for API responses
 type UserSubscriptionResponse struct {
 	ID                 uint       `json:"id" example:"1"`                                                // Subscription ID
@@ -292,6 +358,12 @@ type UserSubscriptionResponse struct {
 	CancelledAt        *time.Time `json:"cancelled_at,omitempty" example:"2024-06-01T00:00:00Z"`         // Cancelled date
 	CancellationReason string     `json:"cancellation_reason,omitempty" example:"User request"`          // Cancellation reason
 	CancelAtPeriodEnd  bool       `json:"cancel_at_period_end" example:"false"`                          // Cancel at period end
+	PausedAt           *time.Time `json:"paused_at,omitempty" example:"2024-06-01T00:00:00Z"`            // Paused date
+	PauseReason        string     `json:"pause_reason,omitempty" example:"User request"`                 // Pause reason
+	PausedByAdminID    *uint      `json:"paused_by_admin_id,omitempty" example:"1"`                      // Admin who paused
+	MaxPauseDuration   int        `json:"max_pause_duration" example:"90"`                               // Maximum pause duration in days
+	ResumedAt          *time.Time `json:"resumed_at,omitempty" example:"2024-08-01T00:00:00Z"`           // Resumed date
+	ResumedByAdminID   *uint      `json:"resumed_by_admin_id,omitempty" example:"1"`                     // Admin who resumed
 	AutoRenew          bool       `json:"auto_renew" example:"true"`                                     // Auto renewal enabled
 	RenewalAttempts    int        `json:"renewal_attempts" example:"0"`                                  // Renewal attempts count
 	LastRenewalFailed  *time.Time `json:"last_renewal_failed,omitempty" example:"2024-01-10T10:30:00Z"`  // Last renewal failure
@@ -305,9 +377,13 @@ type UserSubscriptionResponse struct {
 	SubscriptionPlan *SubscriptionPlanResponse `json:"subscription_plan,omitempty"` // Plan info
 
 	// Computed fields
-	IsInTrial bool `json:"is_in_trial"` // Trial status
-	IsExpired bool `json:"is_expired"`  // Expiry status
-	DaysLeft  int  `json:"days_left"`   // Days until expiry (-1 for lifetime)
+	IsInTrial                  bool `json:"is_in_trial"`                    // Trial status
+	IsExpired                  bool `json:"is_expired"`                     // Expiry status
+	IsPaused                   bool `json:"is_paused"`                      // Pause status
+	DaysLeft                   int  `json:"days_left"`                      // Days until expiry (-1 for lifetime)
+	PauseDurationDays          int  `json:"pause_duration_days"`            // Current pause duration in days
+	RemainingPauseDays         int  `json:"remaining_pause_days"`           // Remaining pause days before auto-resume
+	IsMaxPauseDurationExceeded bool `json:"is_max_pause_duration_exceeded"` // Whether max pause duration is exceeded
 }
 
 // ToResponse converts UserSubscription to UserSubscriptionResponse
@@ -331,6 +407,12 @@ func (us *UserSubscription) ToResponse() *UserSubscriptionResponse {
 		CancelledAt:        us.CancelledAt,
 		CancellationReason: us.CancellationReason,
 		CancelAtPeriodEnd:  us.CancelAtPeriodEnd,
+		PausedAt:           us.PausedAt,
+		PauseReason:        us.PauseReason,
+		PausedByAdminID:    us.PausedByAdminID,
+		MaxPauseDuration:   us.MaxPauseDuration,
+		ResumedAt:          us.ResumedAt,
+		ResumedByAdminID:   us.ResumedByAdminID,
 		AutoRenew:          us.AutoRenew,
 		RenewalAttempts:    us.RenewalAttempts,
 		LastRenewalFailed:  us.LastRenewalFailed,
@@ -340,9 +422,13 @@ func (us *UserSubscription) ToResponse() *UserSubscriptionResponse {
 		UpdatedAt:          us.UpdatedAt,
 
 		// Computed fields
-		IsInTrial: us.IsInTrial(),
-		IsExpired: us.IsExpired(),
-		DaysLeft:  us.DaysUntilExpiry(),
+		IsInTrial:                  us.IsInTrial(),
+		IsExpired:                  us.IsExpired(),
+		IsPaused:                   us.IsPaused(),
+		DaysLeft:                   us.DaysUntilExpiry(),
+		PauseDurationDays:          us.GetPauseDuration(),
+		RemainingPauseDays:         us.GetRemainingPauseDays(),
+		IsMaxPauseDurationExceeded: us.IsMaxPauseDurationExceeded(),
 	}
 
 	// Note: Related data should be populated at the application layer

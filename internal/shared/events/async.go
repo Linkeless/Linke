@@ -97,9 +97,9 @@ func (bus *AsyncEventBus) PublishAsync(ctx context.Context, event Event) error {
 		Type:     TaskTypeEventProcessing,
 		MaxRetry: bus.asyncProcessor.retryConfig.MaxRetries,
 		Payload: map[string]interface{}{
-			"event_data":  string(eventData),
-			"event_id":    event.EventID(),
-			"event_type":  event.EventType(),
+			"event_data":     string(eventData),
+			"event_id":       event.EventID(),
+			"event_type":     event.EventType(),
 			"correlation_id": extractCorrelationID(event),
 		},
 	}
@@ -347,11 +347,11 @@ func (h *EventReplayHandler) deserializeStoredEvent(storedEvent *StoredEvent) (E
 
 // EventMetrics provides metrics for event processing
 type EventMetrics struct {
-	ProcessedEvents      int64 `json:"processed_events"`
-	FailedEvents         int64 `json:"failed_events"`
-	DeadLetterEvents     int64 `json:"dead_letter_events"`
+	ProcessedEvents       int64         `json:"processed_events"`
+	FailedEvents          int64         `json:"failed_events"`
+	DeadLetterEvents      int64         `json:"dead_letter_events"`
 	AverageProcessingTime time.Duration `json:"average_processing_time"`
-	QueueLength          int64 `json:"queue_length"`
+	QueueLength           int64         `json:"queue_length"`
 }
 
 // GetMetrics returns event processing metrics

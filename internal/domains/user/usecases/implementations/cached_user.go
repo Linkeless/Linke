@@ -50,8 +50,8 @@ func (s *CachedUserService) getUserFromCache(ctx context.Context, key string) (*
 
 	var user entities.User
 	if err := json.Unmarshal(data, &user); err != nil {
-		s.logger.Warn("Failed to unmarshal cached user", 
-			logger.String("key", key), 
+		s.logger.Warn("Failed to unmarshal cached user",
+			logger.String("key", key),
 			logger.ErrorField(err))
 		// Delete corrupted cache entry
 		s.cacheManager.GetCache().Delete(ctx, key)
@@ -69,15 +69,15 @@ func (s *CachedUserService) setUserInCache(ctx context.Context, key string, user
 
 	data, err := json.Marshal(user)
 	if err != nil {
-		s.logger.Error("Failed to marshal user for cache", 
-			logger.String("key", key), 
+		s.logger.Error("Failed to marshal user for cache",
+			logger.String("key", key),
 			logger.ErrorField(err))
 		return
 	}
 
 	if err := s.cacheManager.GetCache().Set(ctx, key, data, ttl); err != nil {
-		s.logger.Error("Failed to set user in cache", 
-			logger.String("key", key), 
+		s.logger.Error("Failed to set user in cache",
+			logger.String("key", key),
 			logger.ErrorField(err))
 	}
 }
@@ -155,8 +155,8 @@ func (s *CachedUserService) CreateUser(ctx context.Context, user *entities.User)
 		s.setUserInCache(ctx, keyByUsername, user, ttl)
 	}
 
-	s.logger.Info("User created and cached", 
-		logger.Uint("user_id", user.ID), 
+	s.logger.Info("User created and cached",
+		logger.Uint("user_id", user.ID),
 		logger.String("email", user.Email))
 
 	return nil
@@ -268,7 +268,7 @@ func (s *CachedUserService) UpdateUser(ctx context.Context, user *entities.User)
 		s.setUserInCache(ctx, keyByUsername, user, ttl)
 	}
 
-	s.logger.Info("User updated and cache refreshed", 
+	s.logger.Info("User updated and cache refreshed",
 		logger.Uint("user_id", user.ID))
 
 	return nil
@@ -291,7 +291,7 @@ func (s *CachedUserService) SoftDeleteUser(ctx context.Context, id uint) error {
 		s.invalidateUserCacheByID(ctx, id)
 	}
 
-	s.logger.Info("User soft deleted and cache invalidated", 
+	s.logger.Info("User soft deleted and cache invalidated",
 		logger.Uint("user_id", id))
 
 	return nil
@@ -307,7 +307,7 @@ func (s *CachedUserService) RestoreUser(ctx context.Context, id uint) error {
 	// Invalidate cache to ensure fresh data on next access
 	s.invalidateUserCacheByID(ctx, id)
 
-	s.logger.Info("User restored and cache invalidated", 
+	s.logger.Info("User restored and cache invalidated",
 		logger.Uint("user_id", id))
 
 	return nil
@@ -330,7 +330,7 @@ func (s *CachedUserService) HardDeleteUser(ctx context.Context, id uint) error {
 		s.invalidateUserCacheByID(ctx, id)
 	}
 
-	s.logger.Warn("User hard deleted and cache invalidated", 
+	s.logger.Warn("User hard deleted and cache invalidated",
 		logger.Uint("user_id", id))
 
 	return nil
@@ -362,8 +362,8 @@ func (s *CachedUserService) UpdateUserStatus(ctx context.Context, id uint, statu
 		s.setUserInCache(ctx, keyByUsername, user, ttl)
 	}
 
-	s.logger.Info("User status updated and cache refreshed", 
-		logger.Uint("user_id", id), 
+	s.logger.Info("User status updated and cache refreshed",
+		logger.Uint("user_id", id),
 		logger.String("new_status", status))
 
 	return user, nil
@@ -395,8 +395,8 @@ func (s *CachedUserService) UpdateUserRole(ctx context.Context, id uint, role st
 		s.setUserInCache(ctx, keyByUsername, user, ttl)
 	}
 
-	s.logger.Info("User role updated and cache refreshed", 
-		logger.Uint("user_id", id), 
+	s.logger.Info("User role updated and cache refreshed",
+		logger.Uint("user_id", id),
 		logger.String("new_role", role))
 
 	return user, nil
@@ -429,8 +429,8 @@ func (s *CachedUserService) BatchDeleteUsers(ctx context.Context, ids []uint) (*
 		s.cacheManager.GetCache().DeleteByPattern(ctx, pattern)
 	}
 
-	s.logger.Info("Batch delete completed and caches invalidated", 
-		logger.Int("deleted_count", result.DeletedCount), 
+	s.logger.Info("Batch delete completed and caches invalidated",
+		logger.Int("deleted_count", result.DeletedCount),
 		logger.Int("failed_count", len(result.FailedIDs)))
 
 	return result, nil
@@ -450,8 +450,8 @@ func (s *CachedUserService) BatchRestoreUsers(ctx context.Context, ids []uint) (
 		s.cacheManager.GetCache().DeleteByPattern(ctx, pattern)
 	}
 
-	s.logger.Info("Batch restore completed and caches invalidated", 
-		logger.Int("restored_count", result.RestoredCount), 
+	s.logger.Info("Batch restore completed and caches invalidated",
+		logger.Int("restored_count", result.RestoredCount),
 		logger.Int("failed_count", len(result.FailedIDs)))
 
 	return result, nil

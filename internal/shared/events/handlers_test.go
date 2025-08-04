@@ -16,7 +16,7 @@ func TestCrossDomainEventHandlers(t *testing.T) {
 		defer bus.Close()
 
 		handlers := NewCrossDomainEventHandlers()
-		
+
 		var publishedEvents []Event
 		var mu sync.Mutex
 
@@ -30,7 +30,7 @@ func TestCrossDomainEventHandlers(t *testing.T) {
 				return nil
 			},
 		)
-		
+
 		err := bus.Subscribe([]string{EventTypeOrderPaid}, testHandler)
 		require.NoError(t, err)
 
@@ -75,7 +75,7 @@ func TestCrossDomainEventHandlers(t *testing.T) {
 		defer bus.Close()
 
 		handlers := NewCrossDomainEventHandlers()
-		
+
 		var publishedEvents []Event
 		var mu sync.Mutex
 
@@ -89,7 +89,7 @@ func TestCrossDomainEventHandlers(t *testing.T) {
 				return nil
 			},
 		)
-		
+
 		err := bus.Subscribe([]string{EventTypeInvoiceCreated, EventTypeSubscriptionActivated}, testHandler)
 		require.NoError(t, err)
 
@@ -118,7 +118,7 @@ func TestCrossDomainEventHandlers(t *testing.T) {
 		// Check that invoice created and subscription activated events were published
 		mu.Lock()
 		assert.Len(t, publishedEvents, 2)
-		
+
 		var invoiceEvent, subscriptionEvent Event
 		for _, event := range publishedEvents {
 			switch event.EventType() {
@@ -128,7 +128,7 @@ func TestCrossDomainEventHandlers(t *testing.T) {
 				subscriptionEvent = event
 			}
 		}
-		
+
 		assert.NotNil(t, invoiceEvent)
 		assert.NotNil(t, subscriptionEvent)
 		mu.Unlock()
@@ -139,7 +139,7 @@ func TestCrossDomainEventHandlers(t *testing.T) {
 		defer bus.Close()
 
 		handlers := NewCrossDomainEventHandlers()
-		
+
 		var publishedEvents []Event
 		var mu sync.Mutex
 
@@ -153,7 +153,7 @@ func TestCrossDomainEventHandlers(t *testing.T) {
 				return nil
 			},
 		)
-		
+
 		err := bus.Subscribe([]string{EventTypeUserStatusChanged}, testHandler)
 		require.NoError(t, err)
 
@@ -195,7 +195,7 @@ func TestCrossDomainEventHandlers(t *testing.T) {
 		defer bus.Close()
 
 		handlers := NewCrossDomainEventHandlers()
-		
+
 		var publishedEvents []Event
 		var mu sync.Mutex
 
@@ -209,7 +209,7 @@ func TestCrossDomainEventHandlers(t *testing.T) {
 				return nil
 			},
 		)
-		
+
 		err := bus.Subscribe([]string{EventTypeSubscriptionCancelled}, testHandler)
 		require.NoError(t, err)
 
@@ -257,7 +257,7 @@ func TestCrossDomainEventHandlers(t *testing.T) {
 		defer bus.Close()
 
 		handlers := NewCrossDomainEventHandlers()
-		
+
 		var publishedEvents []Event
 		var mu sync.Mutex
 
@@ -271,7 +271,7 @@ func TestCrossDomainEventHandlers(t *testing.T) {
 				return nil
 			},
 		)
-		
+
 		err := bus.Subscribe([]string{EventTypeOrderCancelled}, testHandler)
 		require.NoError(t, err)
 
@@ -316,7 +316,7 @@ func TestCrossDomainEventHandlers(t *testing.T) {
 		defer bus.Close()
 
 		handlers := NewCrossDomainEventHandlers()
-		
+
 		err := handlers.RegisterCrossDomainHandlers(bus)
 		require.NoError(t, err)
 
@@ -428,7 +428,7 @@ func TestEventHandlerErrorCases(t *testing.T) {
 func BenchmarkCrossDomainHandlers(b *testing.B) {
 	bus := NewInMemoryEventBus()
 	defer bus.Close()
-	
+
 	// Set up a minimal event bus for benchmarking
 	InitEventBus(bus)
 
@@ -459,7 +459,7 @@ func TestHandlerChaining(t *testing.T) {
 		defer bus.Close()
 
 		handlers := NewCrossDomainEventHandlers()
-		
+
 		var allEvents []Event
 		var mu sync.Mutex
 
@@ -477,7 +477,7 @@ func TestHandlerChaining(t *testing.T) {
 				return nil
 			},
 		)
-		
+
 		err := bus.Subscribe([]string{
 			EventTypeOrderPaid,
 			EventTypeInvoiceCreated,
@@ -526,7 +526,7 @@ func TestHandlerChaining(t *testing.T) {
 		// Should now have invoice created and subscription activated events
 		mu.Lock()
 		assert.GreaterOrEqual(t, len(allEvents), 3) // Original order event + invoice + subscription
-		
+
 		var hasInvoiceEvent, hasSubscriptionEvent bool
 		for _, event := range allEvents {
 			switch event.EventType() {
@@ -536,7 +536,7 @@ func TestHandlerChaining(t *testing.T) {
 				hasSubscriptionEvent = true
 			}
 		}
-		
+
 		assert.True(t, hasInvoiceEvent, "Expected invoice created event")
 		assert.True(t, hasSubscriptionEvent, "Expected subscription activated event")
 		mu.Unlock()

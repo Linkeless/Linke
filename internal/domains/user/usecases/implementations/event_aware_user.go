@@ -44,14 +44,14 @@ func (s *EventAwareUserService) CreateUser(ctx context.Context, user *entities.U
 		events.EventTypeUserCreated,
 		user.ID,
 		map[string]interface{}{
-			"user_id":      user.ID,
-			"email":        user.Email,
-			"name":         user.Name,
-			"username":     user.Username,
-			"provider":     user.Provider,
-			"status":       user.Status,
-			"role":         user.Role,
-			"created_at":   user.CreatedAt,
+			"user_id":    user.ID,
+			"email":      user.Email,
+			"name":       user.Name,
+			"username":   user.Username,
+			"provider":   user.Provider,
+			"status":     user.Status,
+			"role":       user.Role,
+			"created_at": user.CreatedAt,
 		},
 	)
 
@@ -93,9 +93,9 @@ func (s *EventAwareUserService) UpdateUser(ctx context.Context, user *entities.U
 
 	// Create event data with before/after comparison
 	eventData := map[string]interface{}{
-		"user_id":     user.ID,
-		"updated_at":  user.UpdatedAt,
-		"changes":     make(map[string]interface{}),
+		"user_id":    user.ID,
+		"updated_at": user.UpdatedAt,
+		"changes":    make(map[string]interface{}),
 	}
 
 	// Track what changed
@@ -384,10 +384,10 @@ func (s *EventAwareUserService) UpdateUserRole(ctx context.Context, id uint, rol
 			events.EventTypeUserUpdated,
 			id,
 			map[string]interface{}{
-				"user_id":    id,
-				"old_role":   originalUser.Role,
-				"new_role":   role,
-				"changed_at": updatedUser.UpdatedAt,
+				"user_id":     id,
+				"old_role":    originalUser.Role,
+				"new_role":    role,
+				"changed_at":  updatedUser.UpdatedAt,
 				"change_type": "role_update",
 			},
 		)

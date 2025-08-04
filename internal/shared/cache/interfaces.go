@@ -30,6 +30,18 @@ type CacheManager interface {
 	GetStats(ctx context.Context) (*CacheStats, error)
 }
 
+// MultiLevelCacheManager extends CacheManager with multi-level capabilities
+type MultiLevelCacheManager interface {
+	CacheManager
+	GetMultiLevelCache() *MultiLevelCache
+	GetL1Cache() *MemoryCache
+	GetL2Cache() Cache
+	GetWarmer() *CacheWarmer
+	GetInvalidator() *EventDrivenInvalidator
+	GetMonitor() *MultiLevelCacheMonitor
+	SwitchStrategy(writeStrategy WriteStrategy, readStrategy ReadStrategy) error
+}
+
 type CacheStats struct {
 	Hits       int64
 	Misses     int64
@@ -64,10 +76,10 @@ type CacheTags interface {
 }
 
 type CacheOptions struct {
-	TTL              time.Duration
-	Tags             []string
-	SkipCompression  bool
-	RefreshOnMiss    bool
+	TTL                  time.Duration
+	Tags                 []string
+	SkipCompression      bool
+	RefreshOnMiss        bool
 	StaleWhileRevalidate bool
 }
 
@@ -123,10 +135,10 @@ const (
 )
 
 const (
-	DefaultCacheTTL     = 5 * time.Minute
-	ShortCacheTTL       = 1 * time.Minute
-	MediumCacheTTL      = 15 * time.Minute
-	LongCacheTTL        = 1 * time.Hour
-	SessionCacheTTL     = 24 * time.Hour
-	ConfigCacheTTL      = 12 * time.Hour
+	DefaultCacheTTL = 5 * time.Minute
+	ShortCacheTTL   = 1 * time.Minute
+	MediumCacheTTL  = 15 * time.Minute
+	LongCacheTTL    = 1 * time.Hour
+	SessionCacheTTL = 24 * time.Hour
+	ConfigCacheTTL  = 12 * time.Hour
 )

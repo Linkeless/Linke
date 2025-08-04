@@ -42,7 +42,7 @@ import (
 	"linke/internal/shared/cache"
 	"linke/internal/shared/events"
 	"linke/internal/shared/versioning"
-	
+
 	// 业务领域模块
 	authDomain "linke/internal/domains/auth"
 	couponDomain "linke/internal/domains/coupon"
@@ -56,10 +56,10 @@ import (
 	// Handler 导入
 	authHandlers "linke/internal/domains/auth/handlers"
 	invoiceHandlers "linke/internal/domains/invoice/handlers"
-	subscriptionHandlers "linke/internal/domains/subscription/handlers"
-	userHandlers "linke/internal/domains/user/handlers"
 	paymentHandlers "linke/internal/domains/payment/handlers"
 	serverHandlers "linke/internal/domains/server/handlers"
+	subscriptionHandlers "linke/internal/domains/subscription/handlers"
+	userHandlers "linke/internal/domains/user/handlers"
 
 	// 应用层
 	applicationLayer "linke/internal/application"
@@ -163,16 +163,16 @@ func (s *stubInviteCodeService) GetUserInviteCodeUsage(ctx context.Context, user
 
 func (s *stubInviteCodeService) GetInviteCodeStatistics(ctx context.Context, inviteCodeID uint) (map[string]any, error) {
 	return map[string]any{
-		"total_codes": 0,
-		"used_codes": 0,
+		"total_codes":  0,
+		"used_codes":   0,
 		"active_codes": 0,
 	}, nil
 }
 
 func (s *stubInviteCodeService) GetUserInviteCodeStatistics(ctx context.Context, userID uint) (map[string]any, error) {
 	return map[string]any{
-		"total_codes": 0,
-		"used_codes": 0,
+		"total_codes":  0,
+		"used_codes":   0,
 		"active_codes": 0,
 	}, nil
 }
@@ -230,6 +230,7 @@ func NewHTTPServer(
 	adminUserHandler *userHandlers.AdminUserHandler,
 	subscriptionOrderHandler *subscriptionHandlers.SubscriptionOrderHandler,
 	userSubscriptionHandler *subscriptionHandlers.UserSubscriptionHandler,
+	quickPurchaseHandler *subscriptionHandlers.QuickPurchaseHandler,
 	invoiceHandler *invoiceHandlers.InvoiceHandler,
 	paymentHandler *paymentHandlers.PaymentHandler,
 	serverHandler *serverHandlers.ServerAPIHandler,
@@ -258,7 +259,7 @@ func NewHTTPServer(
 	// API 路由组 - Apply versioning middleware
 	api := router.Group("/api")
 	api.Use(versionMiddleware.Middleware())
-	
+
 	// Version-specific route groups
 	apiV1 := api.Group("/v1")
 	// apiV2 := api.Group("/v2") // Reserved for future v2 endpoints
@@ -287,19 +288,19 @@ func NewHTTPServer(
 		authGroup.POST("/refresh", authHandler.RefreshToken)
 		authGroup.GET("/profile", authHandler.GetProfile)
 		authGroup.POST("/change-password", authHandler.ChangePassword)
-		
+
 		// OAuth 提供商路由
 		authGroup.GET("/providers", authHandler.GetProviders)
-		
+
 		// OAuth 认证启动路由 - 使用动态参数匹配 handler 预期
 		authGroup.GET("/:provider", authHandler.Login)
-		
+
 		// OAuth 回调路由 - 使用动态参数匹配 handler 预期
 		authGroup.GET("/:provider/callback", authHandler.Callback)
-		
+
 		// 通用回调路由（兼容性）
 		authGroup.GET("/callback", authHandler.Callback)
-		
+
 		// 额外的 OAuth 端点
 		authGroup.POST("/url", authHandler.GetAuthURL)
 		authGroup.POST("/token", authHandler.ExchangeToken)
@@ -329,11 +330,14 @@ func NewHTTPServer(
 	// 订阅路由 (/api/v1/subscription)
 	subscriptionGroup := apiV1.Group("/subscription")
 	{
+		// 快速购买
+		subscriptionGroup.POST("/quick-purchase", quickPurchaseHandler.QuickPurchase)
+
 		// 订单相关
 		subscriptionGroup.POST("/orders", subscriptionOrderHandler.CreateSubscriptionOrder)
 		subscriptionGroup.GET("/orders/my", subscriptionOrderHandler.GetMySubscriptionOrders)
 		subscriptionGroup.GET("/orders/:id", subscriptionOrderHandler.GetSubscriptionOrder)
-		
+
 		// 订阅管理相关
 		subscriptionGroup.GET("/my", userSubscriptionHandler.GetMySubscriptions)
 		subscriptionGroup.GET("/my/active", userSubscriptionHandler.GetMyActiveSubscriptions)
@@ -395,7 +399,7 @@ func (h *AppHandler) HealthCheck(c *gin.Context) {
 // CreateTask 创建任务
 func (h *TaskHandler) CreateTask(c *gin.Context) {
 	var req struct {
-		Type    string                 `json:"type" binding:"required"`
+		Type    string         `json:"type" binding:"required"`
 		Payload map[string]any `json:"payload" binding:"required"`
 	}
 
@@ -469,7 +473,7 @@ func main() {
 		fx.Provide(func(cfg *config.Config) (*database.Database, error) {
 			db, err := database.NewDatabase(cfg)
 			if err != nil {
-				return nil, fmt.Errorf("database connection failed - host: %s:%s, database: %s, error: %w", 
+				return nil, fmt.Errorf("database connection failed - host: %s:%s, database: %s, error: %w",
 					cfg.Database.Host, cfg.Database.Port, cfg.Database.Name, err)
 			}
 			return db, nil
@@ -487,7 +491,7 @@ func main() {
 				Format: cfg.Log.Format,
 				Output: cfg.Log.Output,
 			}); err != nil {
-				return nil, fmt.Errorf("logger initialization failed - level: %s, format: %s, output: %s, error: %w", 
+				return nil, fmt.Errorf("logger initialization failed - level: %s, format: %s, output: %s, error: %w",
 					cfg.Log.Level, cfg.Log.Format, cfg.Log.Output, err)
 			}
 			return loggerPkg.GetGlobalLogger(), nil
@@ -520,13 +524,13 @@ func main() {
 		fx.Provide(func(db *database.Database, cfg *config.Config) (*redis.Client, error) {
 			client := db.GetRedis()
 			if client == nil {
-				return nil, fmt.Errorf("redis client initialization failed - host: %s:%s, db: %d", 
+				return nil, fmt.Errorf("redis client initialization failed - host: %s:%s, db: %d",
 					cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.DB)
 			}
 			// 测试Redis连接
 			ctx := context.Background()
 			if err := client.Ping(ctx).Err(); err != nil {
-				return nil, fmt.Errorf("redis connection test failed - host: %s:%s, db: %d, error: %w", 
+				return nil, fmt.Errorf("redis connection test failed - host: %s:%s, db: %d, error: %w",
 					cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.DB, err)
 			}
 			return client, nil
@@ -537,7 +541,7 @@ func main() {
 			func(redisClient *redis.Client, cfg *config.Config) (*queue.TaskQueue, error) {
 				taskQueue := queue.NewTaskQueue(redisClient)
 				if taskQueue == nil {
-					return nil, fmt.Errorf("task queue initialization failed - redis: %s:%s, db: %d", 
+					return nil, fmt.Errorf("task queue initialization failed - redis: %s:%s, db: %d",
 						cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.DB)
 				}
 				return taskQueue, nil
@@ -545,7 +549,7 @@ func main() {
 			func(redisClient *redis.Client, cfg *config.Config) (*queue.TaskProcessor, error) {
 				taskProcessor := queue.NewTaskProcessor(redisClient)
 				if taskProcessor == nil {
-					return nil, fmt.Errorf("task processor initialization failed - redis: %s:%s, db: %d", 
+					return nil, fmt.Errorf("task processor initialization failed - redis: %s:%s, db: %d",
 						cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.DB)
 				}
 				return taskProcessor, nil
@@ -558,7 +562,7 @@ func main() {
 					DB:       redisClient.Options().DB,
 				})
 				if asynqClient == nil {
-					return nil, fmt.Errorf("asynq client initialization failed - redis: %s:%s, db: %d", 
+					return nil, fmt.Errorf("asynq client initialization failed - redis: %s:%s, db: %d",
 						cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.DB)
 				}
 				return asynqClient, nil
@@ -567,10 +571,10 @@ func main() {
 
 		// 缓存系统
 		cache.Module,
-		
+
 		// 版本控制系统
 		versioning.Module,
-		
+
 		// 事件系统
 		fx.Provide(
 			// Event bus
@@ -587,7 +591,7 @@ func main() {
 				return events.NewAsyncEventProcessor(taskQueue, eventStore, eventBus, events.DefaultRetryConfig())
 			},
 		),
-		
+
 		// 业务领域模块
 		userDomain.Module,
 		authDomain.Module,
@@ -620,25 +624,25 @@ func main() {
 		) {
 			// Initialize global event bus
 			events.InitEventBus(eventBus)
-			
+
 			// Register cross-domain event handlers
 			crossDomainHandlers := events.NewCrossDomainEventHandlers()
 			if err := crossDomainHandlers.RegisterCrossDomainHandlers(eventBus); err != nil {
 				logger.Error("Failed to register cross-domain event handlers", loggerPkg.ErrorField(err))
 			}
-			
+
 			// Register notification handler
 			notificationHandler := events.NewNotificationHandler()
 			if err := eventBus.Subscribe(notificationHandler.EventTypes(), notificationHandler); err != nil {
 				logger.Error("Failed to register notification handler", loggerPkg.ErrorField(err))
 			}
-			
+
 			// Register event processing handlers with the task processor
 			events.RegisterEventHandlers(taskProcessor, asyncProcessor)
-			
+
 			logger.Info("Event system initialized successfully")
 		}),
-		
+
 		// 启动服务
 		fx.Invoke(startServer),
 	)
@@ -678,7 +682,7 @@ func startServer(
 			go func() {
 				loggerPkg.Info("Starting task processor")
 				if err := taskProcessor.Start(ctx); err != nil {
-					loggerPkg.Error("Task processor startup failed", 
+					loggerPkg.Error("Task processor startup failed",
 						loggerPkg.ErrorField(err),
 						loggerPkg.String("component", "task_processor"),
 						loggerPkg.String("action", "start"))
@@ -690,11 +694,11 @@ func startServer(
 			// 启动 HTTP 服务器
 			go func() {
 				addr := fmt.Sprintf(":%s", httpServer.config.Server.Port)
-				loggerPkg.Info("Starting HTTP server", 
+				loggerPkg.Info("Starting HTTP server",
 					loggerPkg.String("port", httpServer.config.Server.Port),
 					loggerPkg.String("address", addr))
 				if err := httpServer.Start(); err != nil && err != http.ErrServerClosed {
-					loggerPkg.Fatal("HTTP server startup failed", 
+					loggerPkg.Fatal("HTTP server startup failed",
 						loggerPkg.ErrorField(err),
 						loggerPkg.String("address", addr),
 						loggerPkg.String("component", "http_server"))
@@ -764,12 +768,12 @@ func handleMigrationCommand(runMigration bool, migrateCommand, migrateVersion, m
 	)
 
 	// 验证数据库连接
-	loggerPkg.Info("Validating database connection", 
+	loggerPkg.Info("Validating database connection",
 		loggerPkg.String("host", cfg.Database.Host),
 		loggerPkg.String("port", cfg.Database.Port),
 		loggerPkg.String("database", cfg.Database.Name))
 	if err := migrationService.ValidateConnection(); err != nil {
-		loggerPkg.Fatal("Database connection failed", 
+		loggerPkg.Fatal("Database connection failed",
 			loggerPkg.ErrorField(err),
 			loggerPkg.String("host", cfg.Database.Host),
 			loggerPkg.String("port", cfg.Database.Port),
@@ -795,8 +799,8 @@ func handleMigrationCommand(runMigration bool, migrateCommand, migrateVersion, m
 
 	// 执行迁移命令
 	if err := executeMigrationCommand(migrationService, command, migrateVersion, migrateSteps); err != nil {
-		loggerPkg.Fatal("Migration command failed", 
-			loggerPkg.ErrorField(err), 
+		loggerPkg.Fatal("Migration command failed",
+			loggerPkg.ErrorField(err),
 			loggerPkg.String("command", command),
 			loggerPkg.String("version", migrateVersion),
 			loggerPkg.String("steps", migrateSteps))

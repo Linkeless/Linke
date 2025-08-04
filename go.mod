@@ -11,6 +11,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/hibiken/asynq v0.25.1
 	github.com/joho/godotenv v1.5.1
+	github.com/jung-kurt/gofpdf/v2 v2.17.3
 	github.com/stretchr/testify v1.10.0
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.0

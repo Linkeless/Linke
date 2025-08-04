@@ -3,6 +3,7 @@ package interfaces
 import (
 	"context"
 	"linke/internal/domains/invoice/entities"
+	"time"
 )
 
 // InvoiceService defines the interface for invoice operations
@@ -21,8 +22,21 @@ type InvoiceService interface {
 
 	// Invoice generation and sending
 	GenerateInvoicePDF(ctx context.Context, invoiceID uint) ([]byte, error)
+	GenerateInvoicePDFWithOptions(ctx context.Context, invoiceID uint, options *PDFGenerationRequest) ([]byte, string, error)
+	GenerateBulkInvoicePDFs(ctx context.Context, invoiceIDs []uint, options *PDFGenerationRequest) ([]byte, error) // Returns ZIP
 	SendInvoice(ctx context.Context, invoiceID uint, emailRequest *SendInvoiceRequest) error
+	SendInvoiceWithPDF(ctx context.Context, invoiceID uint, emailRequest *SendInvoiceRequest, pdfOptions *PDFGenerationRequest) error
 	ResendInvoice(ctx context.Context, invoiceID uint) error
+
+	// Advanced PDF and download features
+	GetInvoicePDFCached(ctx context.Context, invoiceID uint, template string) ([]byte, error)
+	DownloadInvoiceAsZip(ctx context.Context, invoiceIDs []uint) ([]byte, string, error)
+	GetInvoiceDownloadHistory(ctx context.Context, userID uint) ([]*InvoiceDownloadRecord, error)
+
+	// Template and language support
+	GetAvailableTemplates(ctx context.Context) ([]string, error)
+	GetAvailableLanguages(ctx context.Context) ([]string, error)
+	ValidateTemplate(ctx context.Context, template string) (bool, error)
 
 	// Invoice status management
 	MarkInvoiceAsPaid(ctx context.Context, invoiceID uint, paymentDate string) error
@@ -117,4 +131,52 @@ type SendInvoiceRequest struct {
 	Subject  string `json:"subject,omitempty" example:"Your Invoice"`
 	Message  string `json:"message,omitempty" example:"Please find your invoice attached"`
 	SendCopy bool   `json:"send_copy,omitempty" example:"true"`
+}
+
+// PDFGenerationRequest represents options for PDF generation
+type PDFGenerationRequest struct {
+	Template     string            `json:"template,omitempty" example:"professional"`
+	Language     string            `json:"language,omitempty" example:"en"`
+	Watermark    string            `json:"watermark,omitempty" example:"DRAFT"`
+	SaveToDisk   bool              `json:"save_to_disk,omitempty" example:"false"`
+	IncludeQR    bool              `json:"include_qr,omitempty" example:"true"`
+	CompanyInfo  *CompanyInfo      `json:"company_info,omitempty"`
+	CustomFields map[string]string `json:"custom_fields,omitempty"`
+}
+
+// CompanyInfo contains company information for invoice PDF
+type CompanyInfo struct {
+	Name          string `json:"name,omitempty" example:"Acme Corp"`
+	Address       string `json:"address,omitempty" example:"123 Business Ave"`
+	City          string `json:"city,omitempty" example:"New York"`
+	State         string `json:"state,omitempty" example:"NY"`
+	ZIP           string `json:"zip,omitempty" example:"10001"`
+	Country       string `json:"country,omitempty" example:"US"`
+	Phone         string `json:"phone,omitempty" example:"+1-555-123-4567"`
+	Email         string `json:"email,omitempty" example:"contact@acme.com"`
+	Website       string `json:"website,omitempty" example:"https://acme.com"`
+	TaxID         string `json:"tax_id,omitempty" example:"12-3456789"`
+	BankAccount   string `json:"bank_account,omitempty" example:"1234567890"`
+	RoutingNumber string `json:"routing_number,omitempty" example:"123456789"`
+	Logo          string `json:"logo,omitempty" example:"./assets/logo.png"`
+}
+
+// InvoiceDownloadRecord represents a download history record
+type InvoiceDownloadRecord struct {
+	ID           uint      `json:"id" example:"1"`
+	UserID       uint      `json:"user_id" example:"1"`
+	InvoiceID    uint      `json:"invoice_id" example:"1"`
+	Template     string    `json:"template" example:"professional"`
+	Language     string    `json:"language" example:"en"`
+	IPAddress    string    `json:"ip_address" example:"192.168.1.1"`
+	UserAgent    string    `json:"user_agent" example:"Mozilla/5.0..."`
+	DownloadedAt time.Time `json:"downloaded_at" example:"2024-01-01T00:00:00Z"`
+}
+
+// BulkDownloadRequest represents a request for bulk download
+type BulkDownloadRequest struct {
+	InvoiceIDs []uint                `json:"invoice_ids" binding:"required" example:"[1,2,3]"`
+	PDFOptions *PDFGenerationRequest `json:"pdf_options,omitempty"`
+	Format     string                `json:"format,omitempty" example:"zip"` // zip, individual
+	IncludeCSV bool                  `json:"include_csv,omitempty" example:"true"`
 }

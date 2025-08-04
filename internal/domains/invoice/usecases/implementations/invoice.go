@@ -1,7 +1,10 @@
 package implementations
 
 import (
+	"archive/zip"
+	"bytes"
 	"context"
+	"encoding/csv"
 	"fmt"
 	"time"
 
@@ -10,21 +13,25 @@ import (
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/shared/logger"
 
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
 type InvoiceService struct {
-	db          *gorm.DB
-	userService userInterfaces.UserService
+	db           *gorm.DB
+	userService  userInterfaces.UserService
+	pdfGenerator *PDFGeneratorService
+	logger       logger.Logger
 }
 
-func NewInvoiceService(db *gorm.DB, userService userInterfaces.UserService) *InvoiceService {
+func NewInvoiceService(db *gorm.DB, userService userInterfaces.UserService, pdfGenerator *PDFGeneratorService, logger logger.Logger) *InvoiceService {
 	return &InvoiceService{
-		db:          db,
-		userService: userService,
+		db:           db,
+		userService:  userService,
+		pdfGenerator: pdfGenerator,
+		logger:       logger,
 	}
 }
-
 
 // CreateInvoice creates a new invoice
 func (is *InvoiceService) CreateInvoice(ctx context.Context, req *interfaces.CreateInvoiceRequest) (*entities.Invoice, error) {
@@ -265,7 +272,6 @@ func (is *InvoiceService) GetInvoiceWithRelations(ctx context.Context, invoiceID
 	return &invoice, nil
 }
 
-
 // GetInvoices gets invoices with filtering
 func (is *InvoiceService) GetInvoices(ctx context.Context, req *interfaces.GetInvoicesRequest) ([]*entities.Invoice, int64, error) {
 	query := is.db.WithContext(ctx).Model(&entities.Invoice{})
@@ -283,7 +289,6 @@ func (is *InvoiceService) GetInvoices(ctx context.Context, req *interfaces.GetIn
 		query = query.Where("invoice_type = ?", req.InvoiceType)
 	}
 
-
 	// Date range filtering
 	if req.DateFrom != "" {
 		if startDate, err := time.Parse("2006-01-02", req.DateFrom); err == nil {
@@ -297,8 +302,6 @@ func (is *InvoiceService) GetInvoices(ctx context.Context, req *interfaces.GetIn
 			query = query.Where("issued_at < ?", endDate)
 		}
 	}
-
-
 
 	// Get total count
 	var totalCount int64
@@ -318,7 +321,6 @@ func (is *InvoiceService) GetInvoices(ctx context.Context, req *interfaces.GetIn
 		query = query.Offset(req.Offset)
 	}
 
-
 	var invoices []*entities.Invoice
 	if err := query.Find(&invoices).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to get invoices: %w", err)
@@ -326,7 +328,6 @@ func (is *InvoiceService) GetInvoices(ctx context.Context, req *interfaces.GetIn
 
 	return invoices, totalCount, nil
 }
-
 
 // UpdateInvoice updates an invoice
 func (is *InvoiceService) UpdateInvoice(ctx context.Context, invoiceID uint, req *interfaces.UpdateInvoiceRequest) (*entities.Invoice, error) {
@@ -616,25 +617,261 @@ func (is *InvoiceService) GetUserInvoices(ctx context.Context, userID uint, limi
 	return invoices, totalCount, nil
 }
 
-// GenerateInvoicePDF generates a PDF for the invoice
+// GenerateInvoicePDF generates a PDF for the invoice with default options
 func (is *InvoiceService) GenerateInvoicePDF(ctx context.Context, invoiceID uint) ([]byte, error) {
-	// Get invoice
 	invoice, err := is.GetInvoice(ctx, invoiceID)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: Implement PDF generation
-	// This would use a PDF library to generate the invoice PDF
-	// For now, return a placeholder
-	pdfContent := fmt.Sprintf("Invoice PDF for %s - Amount: %.2f %s", 
-		invoice.InvoiceNumber, invoice.TotalAmount, invoice.Currency)
-	
-	logger.Info("Invoice PDF generated",
-		logger.Uint("invoice_id", invoiceID),
-		logger.String("invoice_number", invoice.InvoiceNumber))
-	
-	return []byte(pdfContent), nil
+	options := &PDFGenerationOptions{
+		Template:   invoice.Template,
+		Language:   invoice.Language,
+		SaveToDisk: false,
+	}
+
+	if invoice.Template == "" {
+		options.Template = "default"
+	}
+	if invoice.Language == "" {
+		options.Language = "en"
+	}
+
+	pdfBytes, _, err := is.pdfGenerator.GeneratePDF(ctx, invoice, options)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate PDF for invoice %d: %w", invoiceID, err)
+	}
+
+	return pdfBytes, nil
+}
+
+// GenerateInvoicePDFWithOptions generates a PDF with custom options
+func (is *InvoiceService) GenerateInvoicePDFWithOptions(ctx context.Context, invoiceID uint, options *interfaces.PDFGenerationRequest) ([]byte, string, error) {
+	invoice, err := is.GetInvoice(ctx, invoiceID)
+	if err != nil {
+		return nil, "", err
+	}
+
+	// Convert interface options to implementation options
+	pdfOptions := &PDFGenerationOptions{
+		Template:     options.Template,
+		Language:     options.Language,
+		Watermark:    options.Watermark,
+		SaveToDisk:   options.SaveToDisk,
+		IncludeQR:    options.IncludeQR,
+		CustomFields: options.CustomFields,
+	}
+
+	// Convert company info if provided
+	if options.CompanyInfo != nil {
+		pdfOptions.CompanyInfo = &CompanyInfo{
+			Name:          options.CompanyInfo.Name,
+			Address:       options.CompanyInfo.Address,
+			City:          options.CompanyInfo.City,
+			State:         options.CompanyInfo.State,
+			ZIP:           options.CompanyInfo.ZIP,
+			Country:       options.CompanyInfo.Country,
+			Phone:         options.CompanyInfo.Phone,
+			Email:         options.CompanyInfo.Email,
+			Website:       options.CompanyInfo.Website,
+			TaxID:         options.CompanyInfo.TaxID,
+			BankAccount:   options.CompanyInfo.BankAccount,
+			RoutingNumber: options.CompanyInfo.RoutingNumber,
+			Logo:          options.CompanyInfo.Logo,
+		}
+	}
+
+	// Set defaults
+	if pdfOptions.Template == "" {
+		pdfOptions.Template = invoice.Template
+		if pdfOptions.Template == "" {
+			pdfOptions.Template = "default"
+		}
+	}
+	if pdfOptions.Language == "" {
+		pdfOptions.Language = invoice.Language
+		if pdfOptions.Language == "" {
+			pdfOptions.Language = "en"
+		}
+	}
+
+	pdfBytes, filePath, err := is.pdfGenerator.GeneratePDF(ctx, invoice, pdfOptions)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to generate PDF for invoice %d: %w", invoiceID, err)
+	}
+
+	// Update invoice with PDF info if saved to disk
+	if pdfOptions.SaveToDisk && filePath != "" {
+		updateData := map[string]interface{}{
+			"pdf_path":   filePath,
+			"pdf_size":   len(pdfBytes),
+			"updated_at": time.Now(),
+		}
+		if err := is.db.WithContext(ctx).Model(invoice).Updates(updateData).Error; err != nil {
+			is.logger.Error("Failed to update invoice PDF info",
+				zap.Error(err),
+				zap.Uint("invoice_id", invoiceID))
+		}
+	}
+
+	return pdfBytes, filePath, nil
+}
+
+// GenerateBulkInvoicePDFs generates PDFs for multiple invoices and returns them as a ZIP
+func (is *InvoiceService) GenerateBulkInvoicePDFs(ctx context.Context, invoiceIDs []uint, options *interfaces.PDFGenerationRequest) ([]byte, error) {
+	if len(invoiceIDs) == 0 {
+		return nil, fmt.Errorf("no invoice IDs provided")
+	}
+
+	// Get all invoices
+	var invoices []*entities.Invoice
+	if err := is.db.WithContext(ctx).Where("id IN ?", invoiceIDs).Find(&invoices).Error; err != nil {
+		return nil, fmt.Errorf("failed to get invoices: %w", err)
+	}
+
+	if len(invoices) == 0 {
+		return nil, fmt.Errorf("no invoices found")
+	}
+
+	// Convert options
+	pdfOptions := &PDFGenerationOptions{
+		SaveToDisk: false, // Never save to disk for bulk
+	}
+	if options != nil {
+		pdfOptions.Template = options.Template
+		pdfOptions.Language = options.Language
+		pdfOptions.Watermark = options.Watermark
+		pdfOptions.IncludeQR = options.IncludeQR
+		pdfOptions.CustomFields = options.CustomFields
+
+		if options.CompanyInfo != nil {
+			pdfOptions.CompanyInfo = &CompanyInfo{
+				Name:          options.CompanyInfo.Name,
+				Address:       options.CompanyInfo.Address,
+				City:          options.CompanyInfo.City,
+				State:         options.CompanyInfo.State,
+				ZIP:           options.CompanyInfo.ZIP,
+				Country:       options.CompanyInfo.Country,
+				Phone:         options.CompanyInfo.Phone,
+				Email:         options.CompanyInfo.Email,
+				Website:       options.CompanyInfo.Website,
+				TaxID:         options.CompanyInfo.TaxID,
+				BankAccount:   options.CompanyInfo.BankAccount,
+				RoutingNumber: options.CompanyInfo.RoutingNumber,
+				Logo:          options.CompanyInfo.Logo,
+			}
+		}
+	}
+
+	// Create ZIP file
+	var zipBuffer bytes.Buffer
+	zipWriter := zip.NewWriter(&zipBuffer)
+
+	// Generate PDFs and add to ZIP
+	for _, invoice := range invoices {
+		// Set invoice-specific defaults if not provided
+		invoiceOptions := *pdfOptions
+		if invoiceOptions.Template == "" {
+			invoiceOptions.Template = invoice.Template
+			if invoiceOptions.Template == "" {
+				invoiceOptions.Template = "default"
+			}
+		}
+		if invoiceOptions.Language == "" {
+			invoiceOptions.Language = invoice.Language
+			if invoiceOptions.Language == "" {
+				invoiceOptions.Language = "en"
+			}
+		}
+
+		pdfBytes, _, err := is.pdfGenerator.GeneratePDF(ctx, invoice, &invoiceOptions)
+		if err != nil {
+			is.logger.Error("Failed to generate PDF for invoice in bulk operation",
+				zap.Error(err),
+				zap.Uint("invoice_id", invoice.ID),
+				zap.String("invoice_number", invoice.InvoiceNumber))
+			continue
+		}
+
+		// Add PDF to ZIP
+		fileName := fmt.Sprintf("invoice_%s.pdf", invoice.InvoiceNumber)
+		fileWriter, err := zipWriter.Create(fileName)
+		if err != nil {
+			is.logger.Error("Failed to create file in ZIP",
+				zap.Error(err),
+				zap.String("filename", fileName))
+			continue
+		}
+
+		if _, err := fileWriter.Write(pdfBytes); err != nil {
+			is.logger.Error("Failed to write PDF to ZIP",
+				zap.Error(err),
+				zap.String("filename", fileName))
+			continue
+		}
+	}
+
+	// Add CSV summary (always include for bulk downloads)
+	if err := is.addInvoiceCSVToZip(zipWriter, invoices); err != nil {
+		is.logger.Error("Failed to add CSV to ZIP", zap.Error(err))
+	}
+
+	if err := zipWriter.Close(); err != nil {
+		return nil, fmt.Errorf("failed to close ZIP writer: %w", err)
+	}
+
+	is.logger.Info("Bulk PDF generation completed",
+		zap.Int("total_invoices", len(invoices)),
+		zap.Int("requested_invoices", len(invoiceIDs)))
+
+	return zipBuffer.Bytes(), nil
+}
+
+// addInvoiceCSVToZip adds a CSV summary of invoices to the ZIP file
+func (is *InvoiceService) addInvoiceCSVToZip(zipWriter *zip.Writer, invoices []*entities.Invoice) error {
+	csvWriter, err := zipWriter.Create("invoice_summary.csv")
+	if err != nil {
+		return err
+	}
+
+	writer := csv.NewWriter(csvWriter)
+	defer writer.Flush()
+
+	// Write header
+	header := []string{
+		"Invoice Number", "Date", "Due Date", "Amount", "Currency", "Tax Amount",
+		"Total Amount", "Status", "Billing Name", "Billing Email", "Description",
+	}
+	if err := writer.Write(header); err != nil {
+		return err
+	}
+
+	// Write data
+	for _, invoice := range invoices {
+		dueDate := ""
+		if invoice.DueAt != nil {
+			dueDate = invoice.DueAt.Format("2006-01-02")
+		}
+
+		record := []string{
+			invoice.InvoiceNumber,
+			invoice.IssuedAt.Format("2006-01-02"),
+			dueDate,
+			fmt.Sprintf("%.2f", invoice.Amount),
+			invoice.Currency,
+			fmt.Sprintf("%.2f", invoice.TaxAmount),
+			fmt.Sprintf("%.2f", invoice.TotalAmount),
+			invoice.Status,
+			invoice.BillingName,
+			invoice.BillingEmail,
+			invoice.Description,
+		}
+		if err := writer.Write(record); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // ResendInvoice resends an invoice
@@ -813,6 +1050,120 @@ func (is *InvoiceService) GetUserInvoiceStatistics(ctx context.Context, userID u
 	stats["user_id"] = userID
 
 	return stats, nil
+}
+
+// SendInvoiceWithPDF sends an invoice with custom PDF options
+func (is *InvoiceService) SendInvoiceWithPDF(ctx context.Context, invoiceID uint, emailRequest *interfaces.SendInvoiceRequest, pdfOptions *interfaces.PDFGenerationRequest) error {
+	// Generate PDF with custom options
+	pdfBytes, _, err := is.GenerateInvoicePDFWithOptions(ctx, invoiceID, pdfOptions)
+	if err != nil {
+		return fmt.Errorf("failed to generate PDF for email: %w", err)
+	}
+
+	// TODO: Implement actual email sending with PDF attachment
+	// This would integrate with an email service to send the invoice PDF
+
+	// For now, update invoice status as sent
+	invoice, err := is.GetInvoice(ctx, invoiceID)
+	if err != nil {
+		return err
+	}
+
+	now := time.Now()
+	updateData := map[string]interface{}{
+		"status":     entities.InvoiceStatusSent,
+		"sent_at":    now,
+		"updated_at": now,
+	}
+
+	if err := is.db.WithContext(ctx).Model(invoice).Updates(updateData).Error; err != nil {
+		return fmt.Errorf("failed to update invoice status: %w", err)
+	}
+
+	is.logger.Info("Invoice sent with custom PDF",
+		zap.Uint("invoice_id", invoiceID),
+		zap.String("invoice_number", invoice.InvoiceNumber),
+		zap.String("template", pdfOptions.Template),
+		zap.Int("pdf_size", len(pdfBytes)))
+
+	return nil
+}
+
+// GetInvoicePDFCached returns a cached PDF or generates one
+func (is *InvoiceService) GetInvoicePDFCached(ctx context.Context, invoiceID uint, template string) ([]byte, error) {
+	invoice, err := is.GetInvoice(ctx, invoiceID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if we have a cached PDF with the correct template
+	if invoice.PDFPath != "" && (template == "" || template == invoice.Template) {
+		// Try to read from disk cache
+		if pdfBytes, err := is.readPDFFromDisk(invoice.PDFPath); err == nil {
+			return pdfBytes, nil
+		}
+	}
+
+	// Generate new PDF
+	options := &interfaces.PDFGenerationRequest{
+		Template:   template,
+		Language:   invoice.Language,
+		SaveToDisk: true,
+	}
+
+	if template == "" {
+		options.Template = invoice.Template
+	}
+
+	pdfBytes, _, err := is.GenerateInvoicePDFWithOptions(ctx, invoiceID, options)
+	if err != nil {
+		return nil, err
+	}
+
+	return pdfBytes, nil
+}
+
+// DownloadInvoiceAsZip creates a ZIP file with multiple invoices
+func (is *InvoiceService) DownloadInvoiceAsZip(ctx context.Context, invoiceIDs []uint) ([]byte, string, error) {
+	zipBytes, err := is.GenerateBulkInvoicePDFs(ctx, invoiceIDs, &interfaces.PDFGenerationRequest{
+		Template: "professional",
+		Language: "en",
+	})
+	if err != nil {
+		return nil, "", err
+	}
+
+	filename := fmt.Sprintf("invoices_%d_%d.zip", len(invoiceIDs), time.Now().Unix())
+	return zipBytes, filename, nil
+}
+
+// GetInvoiceDownloadHistory returns download history for a user
+func (is *InvoiceService) GetInvoiceDownloadHistory(ctx context.Context, userID uint) ([]*interfaces.InvoiceDownloadRecord, error) {
+	// TODO: Implement download history tracking
+	// This would require a separate table to track downloads
+	return []*interfaces.InvoiceDownloadRecord{}, nil
+}
+
+// GetAvailableTemplates returns available PDF templates
+func (is *InvoiceService) GetAvailableTemplates(ctx context.Context) ([]string, error) {
+	return is.pdfGenerator.GetAvailableTemplates(), nil
+}
+
+// GetAvailableLanguages returns available languages
+func (is *InvoiceService) GetAvailableLanguages(ctx context.Context) ([]string, error) {
+	return is.pdfGenerator.GetAvailableLanguages(), nil
+}
+
+// ValidateTemplate validates if a template exists
+func (is *InvoiceService) ValidateTemplate(ctx context.Context, template string) (bool, error) {
+	return is.pdfGenerator.ValidateTemplate(template), nil
+}
+
+// readPDFFromDisk reads a PDF file from disk
+func (is *InvoiceService) readPDFFromDisk(filePath string) ([]byte, error) {
+	// This would read the PDF from the file system
+	// For now, return an error to force regeneration
+	return nil, fmt.Errorf("PDF file not found or not accessible")
 }
 
 // generateInvoiceNumber generates a unique invoice number

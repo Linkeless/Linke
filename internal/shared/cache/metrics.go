@@ -11,12 +11,12 @@ import (
 type MetricType string
 
 const (
-	MetricHit       MetricType = "hit"
-	MetricMiss      MetricType = "miss"
-	MetricSet       MetricType = "set"
-	MetricDelete    MetricType = "delete"
-	MetricError     MetricType = "error"
-	MetricEviction  MetricType = "eviction"
+	MetricHit      MetricType = "hit"
+	MetricMiss     MetricType = "miss"
+	MetricSet      MetricType = "set"
+	MetricDelete   MetricType = "delete"
+	MetricError    MetricType = "error"
+	MetricEviction MetricType = "eviction"
 )
 
 type MetricsCollector interface {
@@ -32,28 +32,28 @@ type MetricsCollector interface {
 }
 
 type Metrics struct {
-	Hits       int64   `json:"hits"`
-	Misses     int64   `json:"misses"`
-	Sets       int64   `json:"sets"`
-	Deletes    int64   `json:"deletes"`
-	Errors     int64   `json:"errors"`
-	Evictions  int64   `json:"evictions"`
-	HitRate    float64 `json:"hit_rate"`
-	MissRate   float64 `json:"miss_rate"`
-	ErrorRate  float64 `json:"error_rate"`
-	TotalOps   int64   `json:"total_operations"`
+	Hits      int64   `json:"hits"`
+	Misses    int64   `json:"misses"`
+	Sets      int64   `json:"sets"`
+	Deletes   int64   `json:"deletes"`
+	Errors    int64   `json:"errors"`
+	Evictions int64   `json:"evictions"`
+	HitRate   float64 `json:"hit_rate"`
+	MissRate  float64 `json:"miss_rate"`
+	ErrorRate float64 `json:"error_rate"`
+	TotalOps  int64   `json:"total_operations"`
 }
 
 type DefaultMetricsCollector struct {
 	mu sync.RWMutex
-	
+
 	hits      atomic.Int64
 	misses    atomic.Int64
 	sets      atomic.Int64
 	deletes   atomic.Int64
 	errors    atomic.Int64
 	evictions atomic.Int64
-	
+
 	prefixMetrics map[string]*prefixMetric
 }
 
@@ -109,10 +109,10 @@ func (mc *DefaultMetricsCollector) GetMetrics() *Metrics {
 	deletes := mc.deletes.Load()
 	errors := mc.errors.Load()
 	evictions := mc.evictions.Load()
-	
+
 	totalReads := hits + misses
 	totalOps := totalReads + sets + deletes
-	
+
 	var hitRate, missRate, errorRate float64
 	if totalReads > 0 {
 		hitRate = float64(hits) / float64(totalReads) * 100
@@ -121,7 +121,7 @@ func (mc *DefaultMetricsCollector) GetMetrics() *Metrics {
 	if totalOps > 0 {
 		errorRate = float64(errors) / float64(totalOps) * 100
 	}
-	
+
 	return &Metrics{
 		Hits:      hits,
 		Misses:    misses,
@@ -140,21 +140,21 @@ func (mc *DefaultMetricsCollector) GetMetricsByPrefix(prefix string) *Metrics {
 	mc.mu.RLock()
 	pm, exists := mc.prefixMetrics[prefix]
 	mc.mu.RUnlock()
-	
+
 	if !exists {
 		return &Metrics{}
 	}
-	
+
 	hits := pm.hits.Load()
 	misses := pm.misses.Load()
 	sets := pm.sets.Load()
 	deletes := pm.deletes.Load()
 	errors := pm.errors.Load()
 	evictions := pm.evictions.Load()
-	
+
 	totalReads := hits + misses
 	totalOps := totalReads + sets + deletes
-	
+
 	var hitRate, missRate, errorRate float64
 	if totalReads > 0 {
 		hitRate = float64(hits) / float64(totalReads) * 100
@@ -163,7 +163,7 @@ func (mc *DefaultMetricsCollector) GetMetricsByPrefix(prefix string) *Metrics {
 	if totalOps > 0 {
 		errorRate = float64(errors) / float64(totalOps) * 100
 	}
-	
+
 	return &Metrics{
 		Hits:      hits,
 		Misses:    misses,
@@ -185,7 +185,7 @@ func (mc *DefaultMetricsCollector) Reset() {
 	mc.deletes.Store(0)
 	mc.errors.Store(0)
 	mc.evictions.Store(0)
-	
+
 	mc.mu.Lock()
 	mc.prefixMetrics = make(map[string]*prefixMetric)
 	mc.mu.Unlock()
@@ -193,11 +193,11 @@ func (mc *DefaultMetricsCollector) Reset() {
 
 func (mc *DefaultMetricsCollector) recordPrefixMetric(key string, metricType MetricType) {
 	prefix := extractPrefix(key)
-	
+
 	mc.mu.RLock()
 	pm, exists := mc.prefixMetrics[prefix]
 	mc.mu.RUnlock()
-	
+
 	if !exists {
 		mc.mu.Lock()
 		pm, exists = mc.prefixMetrics[prefix]
@@ -207,7 +207,7 @@ func (mc *DefaultMetricsCollector) recordPrefixMetric(key string, metricType Met
 		}
 		mc.mu.Unlock()
 	}
-	
+
 	switch metricType {
 	case MetricHit:
 		pm.hits.Add(1)
@@ -247,53 +247,53 @@ func NewMetricsCacheWrapper(cache Cache, collector MetricsCollector) Cache {
 
 func (mw *MetricsCacheWrapper) Get(ctx context.Context, key string) ([]byte, error) {
 	result, err := mw.cache.Get(ctx, key)
-	
+
 	if err != nil {
 		mw.collector.RecordError(ctx, key, "get")
 		return nil, err
 	}
-	
+
 	if result == nil {
 		mw.collector.RecordMiss(ctx, key)
 	} else {
 		mw.collector.RecordHit(ctx, key)
 	}
-	
+
 	return result, nil
 }
 
 func (mw *MetricsCacheWrapper) Set(ctx context.Context, key string, value []byte, ttl time.Duration) error {
 	err := mw.cache.Set(ctx, key, value, ttl)
-	
+
 	if err != nil {
 		mw.collector.RecordError(ctx, key, "set")
 		return err
 	}
-	
+
 	mw.collector.RecordSet(ctx, key, ttl)
 	return nil
 }
 
 func (mw *MetricsCacheWrapper) Delete(ctx context.Context, key string) error {
 	err := mw.cache.Delete(ctx, key)
-	
+
 	if err != nil {
 		mw.collector.RecordError(ctx, key, "delete")
 		return err
 	}
-	
+
 	mw.collector.RecordDelete(ctx, key)
 	return nil
 }
 
 func (mw *MetricsCacheWrapper) DeleteByPattern(ctx context.Context, pattern string) error {
 	err := mw.cache.DeleteByPattern(ctx, pattern)
-	
+
 	if err != nil {
 		mw.collector.RecordError(ctx, pattern, "deleteByPattern")
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -310,10 +310,10 @@ func (mw *MetricsCacheWrapper) Flush(ctx context.Context) error {
 }
 
 type MetricsReport struct {
-	Timestamp     time.Time              `json:"timestamp"`
-	GlobalMetrics *Metrics               `json:"global_metrics"`
-	PrefixMetrics map[string]*Metrics    `json:"prefix_metrics"`
-	TopPrefixes   []PrefixMetricSummary  `json:"top_prefixes"`
+	Timestamp     time.Time             `json:"timestamp"`
+	GlobalMetrics *Metrics              `json:"global_metrics"`
+	PrefixMetrics map[string]*Metrics   `json:"prefix_metrics"`
+	TopPrefixes   []PrefixMetricSummary `json:"top_prefixes"`
 }
 
 type PrefixMetricSummary struct {
@@ -325,7 +325,7 @@ type PrefixMetricSummary struct {
 
 func GenerateMetricsReport(collector MetricsCollector) *MetricsReport {
 	globalMetrics := collector.GetMetrics()
-	
+
 	prefixMap := make(map[string]*Metrics)
 	prefixes := []string{
 		CachePrefixUser,
@@ -339,7 +339,7 @@ func GenerateMetricsReport(collector MetricsCollector) *MetricsReport {
 		CachePrefixSession,
 		CachePrefixConfig,
 	}
-	
+
 	var topPrefixes []PrefixMetricSummary
 	for _, prefix := range prefixes {
 		metrics := collector.GetMetricsByPrefix(prefix)
@@ -353,7 +353,7 @@ func GenerateMetricsReport(collector MetricsCollector) *MetricsReport {
 			})
 		}
 	}
-	
+
 	return &MetricsReport{
 		Timestamp:     time.Now(),
 		GlobalMetrics: globalMetrics,

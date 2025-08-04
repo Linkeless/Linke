@@ -30,7 +30,7 @@ func NewVersion(major, minor, patch int) Version {
 func ParseVersion(versionStr string) (Version, error) {
 	// Remove 'v' prefix if present
 	versionStr = strings.TrimPrefix(versionStr, "v")
-	
+
 	// Handle simple version like "1" -> "1.0.0"
 	if !strings.Contains(versionStr, ".") {
 		major, err := strconv.Atoi(versionStr)
@@ -39,22 +39,22 @@ func ParseVersion(versionStr string) (Version, error) {
 		}
 		return NewVersion(major, 0, 0), nil
 	}
-	
+
 	parts := strings.Split(versionStr, ".")
 	if len(parts) < 2 || len(parts) > 3 {
 		return Version{}, fmt.Errorf("invalid version format: %s", versionStr)
 	}
-	
+
 	major, err := strconv.Atoi(parts[0])
 	if err != nil {
 		return Version{}, fmt.Errorf("invalid major version: %s", parts[0])
 	}
-	
+
 	minor, err := strconv.Atoi(parts[1])
 	if err != nil {
 		return Version{}, fmt.Errorf("invalid minor version: %s", parts[1])
 	}
-	
+
 	patch := 0
 	if len(parts) == 3 {
 		patch, err = strconv.Atoi(parts[2])
@@ -62,7 +62,7 @@ func ParseVersion(versionStr string) (Version, error) {
 			return Version{}, fmt.Errorf("invalid patch version: %s", parts[2])
 		}
 	}
-	
+
 	return NewVersion(major, minor, patch), nil
 }
 
@@ -78,8 +78,9 @@ func (v Version) ShortString() string {
 
 // Compare compares two versions. Returns:
 // -1 if v < other
-//  0 if v == other
-//  1 if v > other
+//
+//	0 if v == other
+//	1 if v > other
 func (v Version) Compare(other Version) int {
 	if v.Major != other.Major {
 		if v.Major < other.Major {
@@ -87,21 +88,21 @@ func (v Version) Compare(other Version) int {
 		}
 		return 1
 	}
-	
+
 	if v.Minor != other.Minor {
 		if v.Minor < other.Minor {
 			return -1
 		}
 		return 1
 	}
-	
+
 	if v.Patch != other.Patch {
 		if v.Patch < other.Patch {
 			return -1
 		}
 		return 1
 	}
-	
+
 	return 0
 }
 
@@ -133,7 +134,7 @@ type VersionExtractor interface {
 // VersionInfo contains metadata about a version
 type VersionInfo struct {
 	Version     Version    `json:"version"`
-	Status      string     `json:"status"`      // active, deprecated, sunset
+	Status      string     `json:"status"` // active, deprecated, sunset
 	SunsetDate  *time.Time `json:"sunset_date,omitempty"`
 	Description string     `json:"description"`
 	Released    time.Time  `json:"released"`
@@ -165,31 +166,31 @@ func (vi VersionInfo) DaysUntilSunset() int {
 type VersionConfig struct {
 	// Strategy defines how version is extracted from requests
 	Strategy VersioningStrategy `json:"strategy"`
-	
+
 	// DefaultVersion is used when no version is specified
 	DefaultVersion Version `json:"default_version"`
-	
+
 	// SupportedVersions lists all supported versions with their metadata
 	SupportedVersions []VersionInfo `json:"supported_versions"`
-	
+
 	// MinVersion is the minimum supported version
 	MinVersion Version `json:"min_version"`
-	
+
 	// MaxVersion is the maximum supported version
 	MaxVersion Version `json:"max_version"`
-	
+
 	// HeaderName is the header name for header strategy (default: "X-API-Version")
 	HeaderName string `json:"header_name,omitempty"`
-	
+
 	// QueryParam is the query parameter name for query strategy (default: "version")
 	QueryParam string `json:"query_param,omitempty"`
-	
+
 	// URLPrefix is the URL prefix for path strategy (default: "/api")
 	URLPrefix string `json:"url_prefix,omitempty"`
-	
+
 	// EnableDeprecationHeaders adds deprecation headers to responses
 	EnableDeprecationHeaders bool `json:"enable_deprecation_headers"`
-	
+
 	// EnableAutoMigration enables automatic version migration for compatible versions
 	EnableAutoMigration bool `json:"enable_auto_migration"`
 }
@@ -199,7 +200,7 @@ func DefaultVersionConfig() VersionConfig {
 	now := time.Now()
 	v1 := NewVersion(1, 0, 0)
 	v2 := NewVersion(2, 0, 0)
-	
+
 	return VersionConfig{
 		Strategy:       URLPathStrategy,
 		DefaultVersion: v1,
@@ -240,8 +241,8 @@ func (vc VersionConfig) GetVersionInfo(version Version) *VersionInfo {
 // IsVersionSupported checks if a version is supported
 func (vc VersionConfig) IsVersionSupported(version Version) bool {
 	return vc.GetVersionInfo(version) != nil &&
-		   version.Compare(vc.MinVersion) >= 0 &&
-		   version.Compare(vc.MaxVersion) <= 0
+		version.Compare(vc.MinVersion) >= 0 &&
+		version.Compare(vc.MaxVersion) <= 0
 }
 
 // GetLatestVersion returns the latest supported version
@@ -257,9 +258,9 @@ func (vc VersionConfig) GetLatestVersion() Version {
 
 // VersionContext represents version information in the request context
 type VersionContext struct {
-	RequestedVersion Version     `json:"requested_version"`
-	ResolvedVersion  Version     `json:"resolved_version"`
-	VersionInfo      VersionInfo `json:"version_info"`
+	RequestedVersion Version            `json:"requested_version"`
+	ResolvedVersion  Version            `json:"resolved_version"`
+	VersionInfo      VersionInfo        `json:"version_info"`
 	Strategy         VersioningStrategy `json:"strategy"`
 }
 

@@ -22,7 +22,6 @@ func NewSubscriptionPlanService(db *gorm.DB) *SubscriptionPlanService {
 	}
 }
 
-
 // CreateSubscriptionPlan creates a new subscription plan
 func (s *SubscriptionPlanService) CreateSubscriptionPlan(ctx context.Context, creatorID uint, req *interfaces.CreateSubscriptionPlanRequest) (*entities.SubscriptionPlan, error) {
 	// Validate and normalize code
@@ -362,7 +361,7 @@ func (s *SubscriptionPlanService) ToggleSubscriptionPlanStatus(ctx context.Conte
 		return nil, fmt.Errorf("failed to reload toggled subscription plan: %w", err)
 	}
 
-	logger.Info("Subscription plan status toggled successfully", 
+	logger.Info("Subscription plan status toggled successfully",
 		logger.Uint("plan_id", plan.ID),
 		logger.String("new_status", plan.Status))
 

@@ -23,7 +23,6 @@ func NewShadowsocksServerService(db *database.Database) *ShadowsocksServerServic
 	}
 }
 
-
 // CreateShadowsocksServer creates a new shadowsocks server
 func (s *ShadowsocksServerService) CreateShadowsocksServer(ctx context.Context, req *interfaces.CreateShadowsocksServerRequest) (*entities.ShadowsocksServer, error) {
 	// Set default values
@@ -267,11 +266,11 @@ func (s *ShadowsocksServerService) GetServersByGroup(ctx context.Context, groupI
 // GetVisibleServers retrieves visible shadowsocks servers with optional group filter
 func (s *ShadowsocksServerService) GetVisibleServers(ctx context.Context, groupID *uint) ([]*entities.ShadowsocksServer, error) {
 	query := s.db.DB.WithContext(ctx).Where("show = ?", 1)
-	
+
 	if groupID != nil {
 		query = query.Where("group_id = ?", *groupID)
 	}
-	
+
 	var servers []*entities.ShadowsocksServer
 	if err := query.Order("sort ASC, created_at DESC").Find(&servers).Error; err != nil {
 		return nil, fmt.Errorf("failed to get visible servers: %w", err)
@@ -284,15 +283,15 @@ func (s *ShadowsocksServerService) UpdateServerStatus(ctx context.Context, serve
 	result := s.db.DB.WithContext(ctx).Model(&entities.ShadowsocksServer{}).
 		Where("id = ?", serverID).
 		Update("show", status)
-	
+
 	if result.Error != nil {
 		return fmt.Errorf("failed to update server status: %w", result.Error)
 	}
-	
+
 	if result.RowsAffected == 0 {
 		return fmt.Errorf("shadowsocks server not found")
 	}
-	
+
 	return nil
 }
 
@@ -301,17 +300,17 @@ func (s *ShadowsocksServerService) BulkUpdateServers(ctx context.Context, server
 	if len(serverIDs) == 0 {
 		return nil
 	}
-	
+
 	updates["updated_at"] = int(time.Now().Unix())
-	
+
 	result := s.db.DB.WithContext(ctx).Model(&entities.ShadowsocksServer{}).
 		Where("id IN ?", serverIDs).
 		Updates(updates)
-	
+
 	if result.Error != nil {
 		return fmt.Errorf("failed to bulk update servers: %w", result.Error)
 	}
-	
+
 	return nil
 }
 
@@ -323,12 +322,12 @@ func (s *ShadowsocksServerService) CheckServerHealth(ctx context.Context, server
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return map[string]interface{}{
-		"server_id": serverID,
-		"status":    "unknown", // TODO: Implement actual health check
-		"host":      server.Host,
-		"port":      server.Port,
+		"server_id":  serverID,
+		"status":     "unknown", // TODO: Implement actual health check
+		"host":       server.Host,
+		"port":       server.Port,
 		"checked_at": time.Now(),
 	}, nil
 }
@@ -341,15 +340,15 @@ func (s *ShadowsocksServerService) GetServerStatistics(ctx context.Context, serv
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return map[string]interface{}{
-		"server_id":     serverID,
-		"connections":   0,    // TODO: Implement actual stats
-		"bandwidth_up":  0,    // TODO: Implement actual stats
-		"bandwidth_down": 0,   // TODO: Implement actual stats
-		"uptime":        "0s", // TODO: Implement actual stats
-		"last_updated":  time.Now(),
-		"name":          server.Name,
-		"host":          server.Host,
+		"server_id":      serverID,
+		"connections":    0,    // TODO: Implement actual stats
+		"bandwidth_up":   0,    // TODO: Implement actual stats
+		"bandwidth_down": 0,    // TODO: Implement actual stats
+		"uptime":         "0s", // TODO: Implement actual stats
+		"last_updated":   time.Now(),
+		"name":           server.Name,
+		"host":           server.Host,
 	}, nil
 }

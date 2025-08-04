@@ -22,7 +22,6 @@ func NewServerGroupService(db *database.Database) *ServerGroupService {
 	}
 }
 
-
 // CreateServerGroup creates a new server group
 func (s *ServerGroupService) CreateServerGroup(ctx context.Context, req *interfaces.CreateServerGroupRequest) (*entities.ServerGroup, error) {
 	// Check if server group with the same name already exists

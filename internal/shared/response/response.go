@@ -8,9 +8,9 @@ import (
 
 // APIResponse represents the standard API response structure
 type APIResponse struct {
-	Code    int         `json:"code"`
-	Message string      `json:"message"`
-	Data    any `json:"data,omitempty"`
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Data    any    `json:"data,omitempty"`
 }
 
 // PaginationResponse represents pagination data structure
@@ -22,7 +22,7 @@ type PaginationResponse struct {
 
 // ListResponse represents a paginated list response
 type ListResponse struct {
-	Items      any         `json:"items"`
+	Items      any                 `json:"items"`
 	Pagination *PaginationResponse `json:"pagination"`
 }
 
@@ -146,12 +146,12 @@ func ErrorJSON(c *gin.Context, httpStatus int, errorResponse ErrorResponse) {
 // OKPaginated sends a paginated response with custom message
 func OKPaginated(c *gin.Context, message string, data any, total int64, limit int, offset int) {
 	response := struct {
-		Code    int         `json:"code"`
-		Message string      `json:"message"`
-		Data    any `json:"data"`
-		Total   int64       `json:"total"`
-		Limit   int         `json:"limit"`
-		Offset  int         `json:"offset"`
+		Code    int    `json:"code"`
+		Message string `json:"message"`
+		Data    any    `json:"data"`
+		Total   int64  `json:"total"`
+		Limit   int    `json:"limit"`
+		Offset  int    `json:"offset"`
 	}{
 		Code:    0,
 		Message: message,

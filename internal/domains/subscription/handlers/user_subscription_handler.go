@@ -335,3 +335,179 @@ type CancelSubscriptionRequest struct {
 	Reason            string `json:"reason" binding:"required,min=1,max=255" example:"No longer needed"`
 	CancelAtPeriodEnd bool   `json:"cancel_at_period_end" example:"true"`
 }
+
+// PauseUserSubscription godoc
+// @Summary [Admin] Pause user subscription
+// @Description Pause a user subscription (admin only)
+// @Tags Admin-Subscription
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Subscription ID"
+// @Param request body interfaces.PauseSubscriptionRequest true "Pause subscription request"
+// @Success 200 {object} response.StandardResponse{data=entities.UserSubscriptionResponse}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 401 {object} response.UnauthorizedResponse
+// @Failure 403 {object} response.ForbiddenResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
+// @Router /admin/subscriptions/{id}/pause [post]
+func (h *UserSubscriptionHandler) PauseUserSubscription(c *gin.Context) {
+	// Get current user from context
+	userValue, exists := c.Get(middleware.AuthContextKey)
+	if !exists {
+		response.Unauthorized(c, "Authentication required")
+		return
+	}
+
+	user, ok := userValue.(*userEntities.User)
+	if !ok {
+		response.Unauthorized(c, "Invalid user context")
+		return
+	}
+
+	// Check admin permission
+	if !user.IsAdmin() {
+		response.Forbidden(c, "Admin access required")
+		return
+	}
+
+	// Parse subscription ID
+	subscriptionIDStr := c.Param("id")
+	subscriptionID, err := strconv.ParseUint(subscriptionIDStr, 10, 32)
+	if err != nil {
+		response.BadRequest(c, "Invalid subscription ID", "Subscription ID must be a valid number")
+		return
+	}
+
+	// Parse request body
+	var req interfaces.PauseSubscriptionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request body", err.Error())
+		return
+	}
+
+	// Pause subscription
+	subscription, err := h.userSubscriptionService.PauseUserSubscription(c.Request.Context(), uint(subscriptionID), &req, user.ID)
+	if err != nil {
+		logger.Error("Failed to pause subscription",
+			logger.Error2("error", err),
+			logger.Uint("subscription_id", uint(subscriptionID)),
+			logger.Uint("admin_user_id", user.ID))
+
+		if err.Error() == "failed to get subscription: record not found" {
+			response.NotFound(c, "Subscription not found")
+			return
+		}
+
+		if err.Error() == "subscription cannot be paused - only active subscriptions can be paused" ||
+			err.Error() == "subscription is already paused" {
+			response.BadRequest(c, "Cannot pause subscription", err.Error())
+			return
+		}
+
+		response.InternalServerError(c, "Failed to pause subscription", err.Error())
+		return
+	}
+
+	response.OK(c, "Subscription paused successfully", subscription.ToResponse())
+}
+
+// ResumeUserSubscription godoc
+// @Summary [Admin] Resume user subscription
+// @Description Resume a paused user subscription (admin only)
+// @Tags Admin-Subscription
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Subscription ID"
+// @Param request body interfaces.ResumeSubscriptionRequest true "Resume subscription request"
+// @Success 200 {object} response.StandardResponse{data=entities.UserSubscriptionResponse}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 401 {object} response.UnauthorizedResponse
+// @Failure 403 {object} response.ForbiddenResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
+// @Router /admin/subscriptions/{id}/resume [post]
+func (h *UserSubscriptionHandler) ResumeUserSubscription(c *gin.Context) {
+	// Get current user from context
+	userValue, exists := c.Get(middleware.AuthContextKey)
+	if !exists {
+		response.Unauthorized(c, "Authentication required")
+		return
+	}
+
+	user, ok := userValue.(*userEntities.User)
+	if !ok {
+		response.Unauthorized(c, "Invalid user context")
+		return
+	}
+
+	// Check admin permission
+	if !user.IsAdmin() {
+		response.Forbidden(c, "Admin access required")
+		return
+	}
+
+	// Parse subscription ID
+	subscriptionIDStr := c.Param("id")
+	subscriptionID, err := strconv.ParseUint(subscriptionIDStr, 10, 32)
+	if err != nil {
+		response.BadRequest(c, "Invalid subscription ID", "Subscription ID must be a valid number")
+		return
+	}
+
+	// Parse request body (optional)
+	var req interfaces.ResumeSubscriptionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		// Use default values if no body provided
+		req = interfaces.ResumeSubscriptionRequest{
+			AdjustBillingDate: true, // Default to adjusting billing dates
+		}
+	}
+
+	// Resume subscription
+	subscription, err := h.userSubscriptionService.ResumeUserSubscription(c.Request.Context(), uint(subscriptionID), &req, user.ID)
+	if err != nil {
+		logger.Error("Failed to resume subscription",
+			logger.Error2("error", err),
+			logger.Uint("subscription_id", uint(subscriptionID)),
+			logger.Uint("admin_user_id", user.ID))
+
+		if err.Error() == "failed to get subscription: record not found" {
+			response.NotFound(c, "Subscription not found")
+			return
+		}
+
+		if err.Error() == "subscription cannot be resumed - only paused subscriptions can be resumed" ||
+			err.Error() == "subscription has expired and cannot be resumed" {
+			response.BadRequest(c, "Cannot resume subscription", err.Error())
+			return
+		}
+
+		response.InternalServerError(c, "Failed to resume subscription", err.Error())
+		return
+	}
+
+	response.OK(c, "Subscription resumed successfully", subscription.ToResponse())
+}
+
+// RegisterRoutes registers all user subscription routes
+func (h *UserSubscriptionHandler) RegisterRoutes(router *gin.RouterGroup) {
+	// User subscription routes - accessible to authenticated users
+	subscriptionGroup := router.Group("/subscriptions")
+	{
+		subscriptionGroup.GET("/my", h.GetMySubscriptions)
+		subscriptionGroup.GET("/my/active", h.GetMyActiveSubscriptions)
+		subscriptionGroup.GET("/:id", h.GetSubscription)
+		subscriptionGroup.POST("/:id/cancel", h.CancelSubscription)
+		subscriptionGroup.GET("/:id/traffic-stats", h.GetSubscriptionTrafficStats)
+	}
+
+	// Admin subscription management routes
+	adminGroup := router.Group("/admin/subscriptions")
+	{
+		adminGroup.POST("/:id/pause", h.PauseUserSubscription)
+		adminGroup.POST("/:id/resume", h.ResumeUserSubscription)
+	}
+}

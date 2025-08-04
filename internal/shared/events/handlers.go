@@ -41,7 +41,7 @@ func (h *CrossDomainEventHandlers) PaymentCompletedHandler() EventHandler {
 			// 1. Update order status to "paid"
 			// 2. Activate subscription
 			// 3. Send confirmation notifications
-			
+
 			// For now, we'll publish follow-up events to demonstrate the flow
 			if orderData, ok := paymentEvent.EventData().(map[string]interface{}); ok {
 				if orderIDFloat, exists := orderData["order_id"]; exists {
@@ -188,12 +188,12 @@ func (h *CrossDomainEventHandlers) SubscriptionExpiredHandler() EventHandler {
 				EventTypeUserStatusChanged,
 				subscriptionEvent.UserID,
 				map[string]interface{}{
-					"user_id":       subscriptionEvent.UserID,
-					"old_status":    "active",
-					"new_status":    "expired",
-					"reason":        "subscription_expired",
+					"user_id":         subscriptionEvent.UserID,
+					"old_status":      "active",
+					"new_status":      "expired",
+					"reason":          "subscription_expired",
 					"subscription_id": subscriptionEvent.SubscriptionID,
-					"changed_at":    subscriptionEvent.EventTime(),
+					"changed_at":      subscriptionEvent.EventTime(),
 				},
 			)
 
@@ -434,12 +434,14 @@ func (h *CrossDomainEventHandlers) RegisterCrossDomainHandlers(eventBus EventBus
 // NotificationHandler handles events that require user notifications
 type NotificationHandler struct {
 	logger logger.Logger
+	id     string
 }
 
 // NewNotificationHandler creates a new notification handler
 func NewNotificationHandler() *NotificationHandler {
 	return &NotificationHandler{
 		logger: logger.GetGlobalLogger(),
+		id:     generateEventID(), // Generate unique ID for handler
 	}
 }
 
@@ -489,4 +491,9 @@ func (h *NotificationHandler) EventTypes() []string {
 		EventTypeUserCreated,
 		EventTypeSubscriptionActivated,
 	}
+}
+
+// ID returns the unique identifier for this handler
+func (h *NotificationHandler) ID() string {
+	return h.id
 }

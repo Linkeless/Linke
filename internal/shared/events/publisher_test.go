@@ -333,7 +333,7 @@ func TestEnhancedEventBus(t *testing.T) {
 func TestEventMiddleware(t *testing.T) {
 	t.Run("LoggingMiddleware processes events", func(t *testing.T) {
 		middleware := LoggingMiddleware()
-		
+
 		var processedEvent Event
 		next := func(ctx context.Context, event Event) error {
 			processedEvent = event
@@ -351,7 +351,7 @@ func TestEventMiddleware(t *testing.T) {
 
 	t.Run("RetryMiddleware retries on failure", func(t *testing.T) {
 		middleware := RetryMiddleware(2)
-		
+
 		attemptCount := 0
 		next := func(ctx context.Context, event Event) error {
 			attemptCount++
@@ -372,9 +372,9 @@ func TestEventMiddleware(t *testing.T) {
 
 	t.Run("EventProcessingMiddleware adds metadata", func(t *testing.T) {
 		middleware := EventProcessingMiddleware()
-		
+
 		ctx := context.WithValue(context.Background(), "correlation_id", "test-correlation-123")
-		
+
 		var processedEvent Event
 		next := func(ctx context.Context, event Event) error {
 			processedEvent = event
@@ -385,7 +385,7 @@ func TestEventMiddleware(t *testing.T) {
 
 		err := middleware.Process(ctx, event, next)
 		require.NoError(t, err)
-		
+
 		// Check correlation ID was set
 		correlationID := extractCorrelationID(processedEvent)
 		assert.Equal(t, "test-correlation-123", correlationID)

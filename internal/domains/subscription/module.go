@@ -48,6 +48,7 @@ func NewSubscriptionOrderServiceWithInvoice(
 	subscriptionPlanService interfaces.SubscriptionPlanService,
 	userSubscriptionService interfaces.UserSubscriptionService,
 	paymentService paymentInterfaces.PaymentService,
+	paymentMethodService paymentInterfaces.PaymentMethodService,
 	couponService couponInterfaces.CouponService,
 	invoiceService invoiceInterfaces.InvoiceService,
 	cacheManager cache.CacheManager,
@@ -58,6 +59,7 @@ func NewSubscriptionOrderServiceWithInvoice(
 		subscriptionPlanService,
 		userSubscriptionService,
 		paymentService,
+		paymentMethodService,
 		couponService,
 		invoiceService,
 		cacheManager,
@@ -82,6 +84,15 @@ var Module = fx.Module("subscription",
 			repositories.NewUserSubscriptionRepository,
 			fx.As(new(interfaces.UserSubscriptionRepository)),
 		),
+		// Usage tracking repositories
+		fx.Annotate(
+			repositories.NewUsageRepository,
+			fx.As(new(interfaces.UsageRepository)),
+		),
+		fx.Annotate(
+			repositories.NewAlertRepository,
+			fx.As(new(interfaces.AlertRepository)),
+		),
 	),
 
 	// 提供基础服务实现（带缓存支持）
@@ -93,6 +104,15 @@ var Module = fx.Module("subscription",
 		fx.Annotate(
 			NewUserSubscriptionServiceWithCache,
 			fx.As(new(interfaces.UserSubscriptionService)),
+		),
+		// Usage tracking services
+		fx.Annotate(
+			implementations.NewUsageAlertService,
+			fx.As(new(interfaces.UsageAlertService)),
+		),
+		fx.Annotate(
+			implementations.NewUsageTrackingService,
+			fx.As(new(interfaces.UsageTrackingService)),
 		),
 	),
 
@@ -109,6 +129,9 @@ var Module = fx.Module("subscription",
 	fx.Provide(
 		handlers.NewSubscriptionOrderHandler,
 		handlers.NewUserSubscriptionHandler,
+		handlers.NewQuickPurchaseHandler,
+		handlers.NewUsageAlertHandler,
+		handlers.NewUsageHandler,
 	),
 
 	// 提供扩展服务（这些可能没有接口定义）
@@ -130,6 +153,8 @@ type ServiceProvider struct {
 	SubscriptionPlanService  interfaces.SubscriptionPlanService
 	UserSubscriptionService  interfaces.UserSubscriptionService
 	SubscriptionOrderService interfaces.SubscriptionOrderService
+	UsageTrackingService     interfaces.UsageTrackingService
+	UsageAlertService        interfaces.UsageAlertService
 }
 
 // NewServiceProvider 创建订阅服务提供者
@@ -137,11 +162,15 @@ func NewServiceProvider(
 	planService interfaces.SubscriptionPlanService,
 	userSubService interfaces.UserSubscriptionService,
 	orderService interfaces.SubscriptionOrderService,
+	usageTrackingService interfaces.UsageTrackingService,
+	usageAlertService interfaces.UsageAlertService,
 ) *ServiceProvider {
 	return &ServiceProvider{
 		SubscriptionPlanService:  planService,
 		UserSubscriptionService:  userSubService,
 		SubscriptionOrderService: orderService,
+		UsageTrackingService:     usageTrackingService,
+		UsageAlertService:        usageAlertService,
 	}
 }
 

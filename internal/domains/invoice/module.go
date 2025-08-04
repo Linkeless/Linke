@@ -1,6 +1,9 @@
 package invoice
 
 import (
+	"os"
+	"path/filepath"
+
 	"go.uber.org/fx"
 	"gorm.io/gorm"
 
@@ -8,6 +11,7 @@ import (
 	"linke/internal/domains/invoice/handlers"
 	"linke/internal/domains/invoice/usecases/implementations"
 	"linke/internal/domains/invoice/usecases/interfaces"
+	"linke/internal/shared/logger"
 )
 
 // Module Invoice 领域模块
@@ -27,6 +31,8 @@ var Module = fx.Module("invoice",
 			implementations.NewInvoiceService,
 			fx.As(new(interfaces.InvoiceService)),
 		),
+		// 提供 PDF 生成服务
+		NewPDFGeneratorServiceWithConfig,
 	),
 
 	// 提供 Handler 实现
@@ -51,6 +57,18 @@ func NewServiceProvider(invoiceService interfaces.InvoiceService) *ServiceProvid
 	return &ServiceProvider{
 		InvoiceService: invoiceService,
 	}
+}
+
+// NewPDFGeneratorServiceWithConfig 创建 PDF 生成服务（带配置）
+func NewPDFGeneratorServiceWithConfig(logger logger.Logger) *implementations.PDFGeneratorService {
+	// 获取输出目录，默认为 ./data/invoices
+	outputDir := os.Getenv("INVOICE_PDF_OUTPUT_DIR")
+	if outputDir == "" {
+		wd, _ := os.Getwd()
+		outputDir = filepath.Join(wd, "data", "invoices")
+	}
+
+	return implementations.NewPDFGeneratorService(outputDir, logger)
 }
 
 // 对外暴露的服务提供者模块

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"linke/internal/domains/subscription/entities"
+	"linke/internal/domains/subscription/usecases/interfaces"
 	"linke/internal/shared/logger"
 )
 
@@ -247,7 +248,7 @@ func (s *UserSubscriptionService) GetNotificationPreferences(ctx context.Context
 // ============= Additional Subscription Management Methods =============
 
 // PauseUserSubscription pauses a user subscription
-func (s *UserSubscriptionService) PauseUserSubscription(ctx context.Context, subscriptionID uint, reason string, adminUserID uint) (*entities.UserSubscription, error) {
+func (s *UserSubscriptionService) PauseUserSubscription(ctx context.Context, subscriptionID uint, req *interfaces.PauseSubscriptionRequest, adminUserID uint) (*entities.UserSubscription, error) {
 	// Start transaction
 	tx := s.db.WithContext(ctx).Begin()
 	defer func() {
@@ -263,19 +264,36 @@ func (s *UserSubscriptionService) PauseUserSubscription(ctx context.Context, sub
 		return nil, fmt.Errorf("failed to get subscription: %w", err)
 	}
 
-	// Validate subscription can be paused
-	if subscription.Status != entities.UserSubscriptionStatusActive {
+	// Validate subscription can be paused using entity method
+	if !subscription.CanBePaused() {
 		tx.Rollback()
-		return nil, fmt.Errorf("only active subscriptions can be paused")
+		return nil, fmt.Errorf("subscription cannot be paused - only active subscriptions can be paused")
 	}
 
-	// Update subscription status
+	// Check if subscription is already paused
+	if subscription.IsPaused() {
+		tx.Rollback()
+		return nil, fmt.Errorf("subscription is already paused")
+	}
+
+	// Set max pause duration (use request value or default)
+	maxPauseDuration := 90 // Default 90 days
+	if req.MaxPauseDuration != nil && *req.MaxPauseDuration > 0 {
+		maxPauseDuration = *req.MaxPauseDuration
+	}
+
+	// Update subscription with pause information
 	now := time.Now()
 	oldStatus := subscription.Status
 	updates := map[string]interface{}{
-		"status":     entities.UserSubscriptionStatusPaused,
-		"updated_at": now,
-		"notes":      reason,
+		"status":              entities.UserSubscriptionStatusPaused,
+		"paused_at":           &now,
+		"pause_reason":        req.Reason,
+		"paused_by_admin_id":  &adminUserID,
+		"max_pause_duration":  maxPauseDuration,
+		"resumed_at":          nil, // Clear any previous resume time
+		"resumed_by_admin_id": nil, // Clear any previous resume admin
+		"updated_at":          now,
 	}
 
 	if err := tx.Model(&subscription).Updates(updates).Error; err != nil {
@@ -290,16 +308,22 @@ func (s *UserSubscriptionService) PauseUserSubscription(ctx context.Context, sub
 	logger.Info("Subscription paused successfully",
 		logger.Uint("subscription_id", subscriptionID),
 		logger.Uint("user_id", subscription.UserID),
-		logger.String("reason", reason),
-		logger.String("old_status", string(oldStatus)))
+		logger.String("reason", req.Reason),
+		logger.String("old_status", string(oldStatus)),
+		logger.Uint("admin_user_id", adminUserID),
+		logger.Int("max_pause_duration_days", maxPauseDuration))
 
 	// Commit transaction
 	if err := tx.Commit().Error; err != nil {
 		return nil, fmt.Errorf("failed to commit subscription pause: %w", err)
 	}
 
-	// Reload subscription with updates
+	// Update subscription with new values for return
 	subscription.Status = entities.UserSubscriptionStatusPaused
+	subscription.PausedAt = &now
+	subscription.PauseReason = req.Reason
+	subscription.PausedByAdminID = &adminUserID
+	subscription.MaxPauseDuration = maxPauseDuration
 
 	logger.Info("Subscription paused successfully",
 		logger.Uint("subscription_id", subscriptionID),
@@ -309,7 +333,7 @@ func (s *UserSubscriptionService) PauseUserSubscription(ctx context.Context, sub
 }
 
 // ResumeUserSubscription resumes a paused user subscription
-func (s *UserSubscriptionService) ResumeUserSubscription(ctx context.Context, subscriptionID uint, adminUserID uint) (*entities.UserSubscription, error) {
+func (s *UserSubscriptionService) ResumeUserSubscription(ctx context.Context, subscriptionID uint, req *interfaces.ResumeSubscriptionRequest, adminUserID uint) (*entities.UserSubscription, error) {
 	// Start transaction
 	tx := s.db.WithContext(ctx).Begin()
 	defer func() {
@@ -325,25 +349,60 @@ func (s *UserSubscriptionService) ResumeUserSubscription(ctx context.Context, su
 		return nil, fmt.Errorf("failed to get subscription: %w", err)
 	}
 
-	// Validate subscription can be resumed
-	if subscription.Status != entities.UserSubscriptionStatusPaused {
+	// Validate subscription can be resumed using entity method
+	if !subscription.CanBeResumed() {
 		tx.Rollback()
-		return nil, fmt.Errorf("only paused subscriptions can be resumed")
+		return nil, fmt.Errorf("subscription cannot be resumed - only paused subscriptions can be resumed")
 	}
 
 	// Check if subscription has expired while paused
-	if subscription.EndDate != nil && subscription.EndDate.Before(time.Now()) {
+	if subscription.IsExpired() {
 		tx.Rollback()
 		return nil, fmt.Errorf("subscription has expired and cannot be resumed")
 	}
 
-	// Update subscription status
+	// Calculate pause duration for billing adjustments
+	var pauseDuration time.Duration
+	if subscription.PausedAt != nil {
+		pauseDuration = time.Since(*subscription.PausedAt)
+	}
+
+	// Update subscription status and resume information
 	now := time.Now()
 	oldStatus := subscription.Status
 	updates := map[string]interface{}{
-		"status":            entities.UserSubscriptionStatusActive,
-		"traffic_suspended": false, // Clear traffic suspension on resume
-		"updated_at":        now,
+		"status":              entities.UserSubscriptionStatusActive,
+		"resumed_at":          &now,
+		"resumed_by_admin_id": &adminUserID,
+		"traffic_suspended":   false, // Clear traffic suspension on resume
+		"updated_at":          now,
+	}
+
+	// Adjust billing dates if requested and pause duration is significant (more than 1 day)
+	if req.AdjustBillingDate && pauseDuration > 24*time.Hour {
+		pauseDays := int(pauseDuration.Hours() / 24)
+
+		// Extend current period end by pause duration
+		if subscription.CurrentPeriodEnd != nil {
+			newCurrentPeriodEnd := subscription.CurrentPeriodEnd.AddDate(0, 0, pauseDays)
+			updates["current_period_end"] = &newCurrentPeriodEnd
+		}
+
+		// Extend next billing date by pause duration
+		if subscription.NextBillingDate != nil {
+			newNextBillingDate := subscription.NextBillingDate.AddDate(0, 0, pauseDays)
+			updates["next_billing_date"] = &newNextBillingDate
+		}
+
+		// Extend end date by pause duration if not lifetime
+		if subscription.EndDate != nil {
+			newEndDate := subscription.EndDate.AddDate(0, 0, pauseDays)
+			updates["end_date"] = &newEndDate
+		}
+
+		logger.Info("Billing dates adjusted for pause duration",
+			logger.Uint("subscription_id", subscriptionID),
+			logger.Int("pause_days", pauseDays))
 	}
 
 	if err := tx.Model(&subscription).Updates(updates).Error; err != nil {
@@ -358,15 +417,20 @@ func (s *UserSubscriptionService) ResumeUserSubscription(ctx context.Context, su
 	logger.Info("Subscription resumed successfully",
 		logger.Uint("subscription_id", subscriptionID),
 		logger.Uint("user_id", subscription.UserID),
-		logger.String("old_status", string(oldStatus)))
+		logger.String("old_status", string(oldStatus)),
+		logger.Uint("admin_user_id", adminUserID),
+		logger.Duration("pause_duration", pauseDuration),
+		logger.String("billing_adjusted", fmt.Sprintf("%t", req.AdjustBillingDate)))
 
 	// Commit transaction
 	if err := tx.Commit().Error; err != nil {
 		return nil, fmt.Errorf("failed to commit subscription resume: %w", err)
 	}
 
-	// Reload subscription with updates
+	// Update subscription with new values for return
 	subscription.Status = entities.UserSubscriptionStatusActive
+	subscription.ResumedAt = &now
+	subscription.ResumedByAdminID = &adminUserID
 	subscription.TrafficSuspended = false
 
 	logger.Info("Subscription resumed successfully",
@@ -374,6 +438,54 @@ func (s *UserSubscriptionService) ResumeUserSubscription(ctx context.Context, su
 		logger.Uint("user_id", subscription.UserID))
 
 	return &subscription, nil
+}
+
+// CheckAndProcessAutoResume checks for paused subscriptions that should be auto-resumed
+func (s *UserSubscriptionService) CheckAndProcessAutoResume(ctx context.Context) error {
+	logger.Info("Starting auto-resume check for paused subscriptions")
+
+	// Find paused subscriptions that should be auto-resumed
+	var subscriptions []entities.UserSubscription
+	if err := s.db.WithContext(ctx).
+		Where("status = ? AND paused_at IS NOT NULL AND paused_at <= ?",
+			entities.UserSubscriptionStatusPaused,
+			time.Now().AddDate(0, 0, -90)). // Default 90 days ago
+		Find(&subscriptions).Error; err != nil {
+		return fmt.Errorf("failed to find subscriptions for auto-resume: %w", err)
+	}
+
+	autoResumedCount := 0
+	for _, subscription := range subscriptions {
+		// Use entity method to check if should auto-resume
+		if subscription.ShouldAutoResume() {
+			// Auto-resume with billing adjustment
+			req := &interfaces.ResumeSubscriptionRequest{
+				AdjustBillingDate: true,
+			}
+
+			// Use system admin ID (0) for auto-resume
+			_, err := s.ResumeUserSubscription(ctx, subscription.ID, req, 0)
+			if err != nil {
+				logger.Error("Failed to auto-resume subscription",
+					logger.Uint("subscription_id", subscription.ID),
+					logger.Uint("user_id", subscription.UserID),
+					logger.Error2("error", err))
+				continue
+			}
+
+			autoResumedCount++
+			logger.Info("Auto-resumed subscription due to max pause duration exceeded",
+				logger.Uint("subscription_id", subscription.ID),
+				logger.Uint("user_id", subscription.UserID),
+				logger.Int("pause_days", subscription.GetPauseDuration()))
+		}
+	}
+
+	logger.Info("Auto-resume check completed",
+		logger.Int("checked_subscriptions", len(subscriptions)),
+		logger.Int("auto_resumed_count", autoResumedCount))
+
+	return nil
 }
 
 // ResetTrafficUsage resets traffic usage for a subscription

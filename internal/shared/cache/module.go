@@ -3,6 +3,7 @@ package cache
 import (
 	"linke/internal/shared/config"
 	"linke/internal/shared/database"
+	"linke/internal/shared/logger"
 	"time"
 
 	"go.uber.org/fx"
@@ -17,6 +18,21 @@ var Module = fx.Module("cache",
 		fx.Annotate(
 			NewRedisCacheManagerWithMetrics,
 			fx.As(new(CacheManager)),
+		),
+		NewAllCacheKeys,
+		NewCacheMonitoringHandler,
+		NewCacheHealthCheck,
+	),
+)
+
+var MultiLevelModule = fx.Module("multilevel-cache",
+	fx.Provide(
+		NewMultiLevelCacheConfig,
+		NewMemoryCacheConfig,
+		NewMultiLevelCacheFromConfig,
+		fx.Annotate(
+			NewMultiLevelCacheManagerFromConfig,
+			fx.As(new(MultiLevelCacheManager)),
 		),
 		NewAllCacheKeys,
 		NewCacheMonitoringHandler,
@@ -69,9 +85,9 @@ type CacheProviders struct {
 	Manager   CacheManager
 	Keys      *AllCacheKeys
 	Metrics   *CacheMetrics
-	UserCache *CacheAside[any]      `name:"userCache"`
-	PlanCache *CacheAside[any]      `name:"planCache"`
-	AuthCache *CacheDecorator       `name:"authCache"`
+	UserCache *CacheAside[any] `name:"userCache"`
+	PlanCache *CacheAside[any] `name:"planCache"`
+	AuthCache *CacheDecorator  `name:"authCache"`
 }
 
 func ProvideDomainCaches(manager CacheManager, keys *AllCacheKeys) CacheProviders {
@@ -96,4 +112,47 @@ func ProvideDomainCaches(manager CacheManager, keys *AllCacheKeys) CacheProvider
 			ShortCacheTTL,
 		),
 	}
+}
+
+// Multi-level cache configuration functions
+
+func NewMultiLevelCacheConfig(cfg *config.Config) *MultiLevelCacheConfig {
+	return &MultiLevelCacheConfig{
+		EnableL1:         true,
+		EnableL2:         true,
+		WriteStrategy:    WriteStrategyThrough,
+		ReadStrategy:     ReadStrategyPromotion,
+		PromotionRatio:   0.8,
+		ReplicationDelay: 100 * time.Millisecond,
+		L1Config:         NewMemoryCacheConfig(cfg),
+		L2Config:         NewCacheConfig(cfg),
+	}
+}
+
+func NewMemoryCacheConfig(cfg *config.Config) *MemoryCacheConfig {
+	return &MemoryCacheConfig{
+		MaxSize:         1000,
+		DefaultTTL:      DefaultCacheTTL,
+		EvictionPolicy:  EvictionPolicyLRU,
+		CleanupInterval: 1 * time.Minute,
+	}
+}
+
+func NewMultiLevelCacheFromConfig(
+	config *MultiLevelCacheConfig,
+	l2Cache Cache,
+	collector MetricsCollector,
+	logger logger.Logger,
+) *MultiLevelCache {
+	return NewMultiLevelCache(config, l2Cache, collector, logger)
+}
+
+func NewMultiLevelCacheManagerFromConfig(
+	config *MultiLevelCacheConfig,
+	l2Cache Cache,
+	cacheKeys *AllCacheKeys,
+	collector MetricsCollector,
+	logger logger.Logger,
+) MultiLevelCacheManager {
+	return NewMultiLevelCacheManager(config, l2Cache, cacheKeys, collector, logger)
 }

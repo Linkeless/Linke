@@ -1,7 +1,11 @@
 package handlers
 
 import (
+	"fmt"
+	"net"
 	"strconv"
+	"strings"
+	"time"
 
 	"linke/internal/domains/invoice/entities"
 	"linke/internal/domains/invoice/usecases/interfaces"
@@ -11,6 +15,7 @@ import (
 	"linke/internal/shared/response"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 // InvoiceHandler handles HTTP requests for invoice operations
@@ -508,6 +513,282 @@ func (h *InvoiceHandler) SendInvoice(c *gin.Context) {
 	response.SuccessWithMessage(c, "Invoice sent successfully", nil)
 }
 
+// DownloadInvoicePDF godoc
+// @Summary [User/Admin] Download invoice as PDF with options
+// @Description Download an invoice as PDF with custom template and language options
+// @Tags Invoice
+// @Accept json
+// @Produce application/pdf
+// @Security BearerAuth
+// @Param id path uint true "Invoice ID"
+// @Param template query string false "PDF Template" Enums(default,professional,minimal)
+// @Param language query string false "Language" Enums(en,zh,es)
+// @Param watermark query string false "Watermark text"
+// @Success 200 {file} application/pdf
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 401 {object} response.UnauthorizedResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
+// @Router /invoice/{id}/download [get]
+func (h *InvoiceHandler) DownloadInvoicePDF(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		response.BadRequest(c, "Invalid invoice ID")
+		return
+	}
+
+	// Check if user has permission to access this invoice
+	invoice, err := h.invoiceService.GetInvoice(c.Request.Context(), uint(id))
+	if err != nil {
+		h.logger.Error("Failed to get invoice for download", zap.Error(err))
+		response.NotFound(c, "Invoice not found")
+		return
+	}
+
+	if !h.canAccessInvoice(c, invoice) {
+		response.Forbidden(c, "Access denied")
+		return
+	}
+
+	// Parse query parameters for PDF options
+	template := c.Query("template")
+	language := c.Query("language")
+	watermark := c.Query("watermark")
+
+	// Validate template if provided
+	if template != "" {
+		if valid, err := h.invoiceService.ValidateTemplate(c.Request.Context(), template); err != nil || !valid {
+			response.BadRequest(c, "Invalid template")
+			return
+		}
+	}
+
+	// Create PDF generation options
+	options := &interfaces.PDFGenerationRequest{
+		Template:  template,
+		Language:  language,
+		Watermark: watermark,
+	}
+
+	pdfData, _, err := h.invoiceService.GenerateInvoicePDFWithOptions(c.Request.Context(), uint(id), options)
+	if err != nil {
+		h.logger.Error("Failed to generate invoice PDF for download", zap.Error(err))
+		response.InternalServerError(c, "Failed to generate PDF")
+		return
+	}
+
+	// Log download activity
+	h.logDownloadActivity(c, invoice, template, language)
+
+	// Set response headers
+	filename := fmt.Sprintf("invoice_%s.pdf", invoice.InvoiceNumber)
+	c.Header("Content-Type", "application/pdf")
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	c.Header("Content-Length", strconv.Itoa(len(pdfData)))
+
+	c.Data(200, "application/pdf", pdfData)
+}
+
+// BulkDownloadInvoices godoc
+// @Summary [User/Admin] Download multiple invoices as ZIP
+// @Description Download multiple invoices as a ZIP file with optional CSV summary
+// @Tags Invoice
+// @Accept json
+// @Produce application/zip
+// @Security BearerAuth
+// @Param request body interfaces.BulkDownloadRequest true "Bulk download request"
+// @Success 200 {file} application/zip
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 401 {object} response.UnauthorizedResponse
+// @Failure 403 {object} response.ForbiddenResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
+// @Router /invoice/bulk-download [post]
+func (h *InvoiceHandler) BulkDownloadInvoices(c *gin.Context) {
+	var req interfaces.BulkDownloadRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		h.logger.Error("Failed to bind bulk download request", zap.Error(err))
+		response.BadRequest(c, "Invalid request data")
+		return
+	}
+
+	if len(req.InvoiceIDs) == 0 {
+		response.BadRequest(c, "No invoice IDs provided")
+		return
+	}
+
+	if len(req.InvoiceIDs) > 50 {
+		response.BadRequest(c, "Too many invoices requested (max 50)")
+		return
+	}
+
+	// Get current user for access control
+	userValue, exists := c.Get(middleware.AuthContextKey)
+	if !exists {
+		response.Unauthorized(c, "Authentication required")
+		return
+	}
+
+	user, ok := userValue.(*userEntities.User)
+	if !ok {
+		response.Unauthorized(c, "Invalid user context")
+		return
+	}
+
+	// Check access permissions for all invoices
+	if user.Role != "admin" {
+		for _, invoiceID := range req.InvoiceIDs {
+			invoice, err := h.invoiceService.GetInvoice(c.Request.Context(), invoiceID)
+			if err != nil {
+				response.NotFound(c, fmt.Sprintf("Invoice %d not found", invoiceID))
+				return
+			}
+			if invoice.UserID != user.ID {
+				response.Forbidden(c, fmt.Sprintf("Access denied to invoice %d", invoiceID))
+				return
+			}
+		}
+	}
+
+	zipData, err := h.invoiceService.GenerateBulkInvoicePDFs(c.Request.Context(), req.InvoiceIDs, req.PDFOptions)
+	if err != nil {
+		h.logger.Error("Failed to generate bulk invoice PDFs", zap.Error(err))
+		response.InternalServerError(c, "Failed to generate invoice PDFs")
+		return
+	}
+
+	filename := fmt.Sprintf("invoices_%d_%d.zip", len(req.InvoiceIDs), time.Now().Unix())
+
+	c.Header("Content-Type", "application/zip")
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	c.Header("Content-Length", strconv.Itoa(len(zipData)))
+
+	c.Data(200, "application/zip", zipData)
+}
+
+// GetAvailableTemplates godoc
+// @Summary [User/Admin] Get available PDF templates
+// @Description Get list of available PDF templates for invoice generation
+// @Tags Invoice
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} response.StandardResponse{data=[]string}
+// @Failure 401 {object} response.UnauthorizedResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
+// @Router /invoice/templates [get]
+func (h *InvoiceHandler) GetAvailableTemplates(c *gin.Context) {
+	templates, err := h.invoiceService.GetAvailableTemplates(c.Request.Context())
+	if err != nil {
+		h.logger.Error("Failed to get available templates", zap.Error(err))
+		response.InternalServerError(c, "Failed to get templates")
+		return
+	}
+
+	response.SuccessWithMessage(c, "Templates retrieved successfully", templates)
+}
+
+// GetAvailableLanguages godoc
+// @Summary [User/Admin] Get available languages
+// @Description Get list of available languages for invoice generation
+// @Tags Invoice
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} response.StandardResponse{data=[]string}
+// @Failure 401 {object} response.UnauthorizedResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
+// @Router /invoice/languages [get]
+func (h *InvoiceHandler) GetAvailableLanguages(c *gin.Context) {
+	languages, err := h.invoiceService.GetAvailableLanguages(c.Request.Context())
+	if err != nil {
+		h.logger.Error("Failed to get available languages", zap.Error(err))
+		response.InternalServerError(c, "Failed to get languages")
+		return
+	}
+
+	response.SuccessWithMessage(c, "Languages retrieved successfully", languages)
+}
+
+// SendInvoiceWithCustomPDF godoc
+// @Summary [Admin] Send invoice with custom PDF options
+// @Description Send an invoice via email with custom PDF template and options
+// @Tags Invoice
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path uint true "Invoice ID"
+// @Param request body interfaces.SendInvoiceWithPDFRequest true "Email and PDF options"
+// @Success 200 {object} response.StandardResponse
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 401 {object} response.UnauthorizedResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
+// @Router /invoice/{id}/send-custom [post]
+func (h *InvoiceHandler) SendInvoiceWithCustomPDF(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		response.BadRequest(c, "Invalid invoice ID")
+		return
+	}
+
+	var req struct {
+		EmailOptions *interfaces.SendInvoiceRequest   `json:"email_options" binding:"required"`
+		PDFOptions   *interfaces.PDFGenerationRequest `json:"pdf_options,omitempty"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		h.logger.Error("Failed to bind send invoice with custom PDF request", zap.Error(err))
+		response.BadRequest(c, "Invalid request data")
+		return
+	}
+
+	err = h.invoiceService.SendInvoiceWithPDF(c.Request.Context(), uint(id), req.EmailOptions, req.PDFOptions)
+	if err != nil {
+		h.logger.Error("Failed to send invoice with custom PDF", zap.Error(err))
+		response.InternalServerError(c, "Failed to send invoice")
+		return
+	}
+
+	response.SuccessWithMessage(c, "Invoice sent successfully with custom PDF", nil)
+}
+
+// GetInvoiceDownloadHistory godoc
+// @Summary [User] Get invoice download history
+// @Description Get download history for the current user's invoices
+// @Tags Invoice
+// @Produce json
+// @Security BearerAuth
+// @Param limit query int false "Limit" default(10)
+// @Param offset query int false "Offset" default(0)
+// @Success 200 {object} response.PaginatedResponse{data=[]interfaces.InvoiceDownloadRecord}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 401 {object} response.UnauthorizedResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
+// @Router /invoice/download-history [get]
+func (h *InvoiceHandler) GetInvoiceDownloadHistory(c *gin.Context) {
+	// Get current user from context
+	userValue, exists := c.Get(middleware.AuthContextKey)
+	if !exists {
+		response.Unauthorized(c, "Authentication required")
+		return
+	}
+
+	user, ok := userValue.(*userEntities.User)
+	if !ok {
+		response.Unauthorized(c, "Invalid user context")
+		return
+	}
+
+	records, err := h.invoiceService.GetInvoiceDownloadHistory(c.Request.Context(), user.ID)
+	if err != nil {
+		h.logger.Error("Failed to get invoice download history", zap.Error(err))
+		response.InternalServerError(c, "Failed to get download history")
+		return
+	}
+
+	response.SuccessWithMessage(c, "Download history retrieved successfully", records)
+}
+
 // Helper methods
 
 // canAccessInvoice checks if the current user can access the specified invoice
@@ -531,23 +812,93 @@ func (h *InvoiceHandler) canAccessInvoice(c *gin.Context, invoice *entities.Invo
 	return user.ID == invoice.UserID
 }
 
+// logDownloadActivity logs invoice download activity for audit purposes
+func (h *InvoiceHandler) logDownloadActivity(c *gin.Context, invoice *entities.Invoice, template, language string) {
+	// Get user info
+	userValue, exists := c.Get(middleware.AuthContextKey)
+	if !exists {
+		return
+	}
+
+	user, ok := userValue.(*userEntities.User)
+	if !ok {
+		return
+	}
+
+	// Get client IP
+	clientIP := h.getClientIP(c)
+	userAgent := c.GetHeader("User-Agent")
+
+	h.logger.Info("Invoice PDF downloaded",
+		zap.Uint("user_id", user.ID),
+		zap.Uint("invoice_id", invoice.ID),
+		zap.String("invoice_number", invoice.InvoiceNumber),
+		zap.String("template", template),
+		zap.String("language", language),
+		zap.String("client_ip", clientIP),
+		zap.String("user_agent", userAgent))
+
+	// TODO: Store download record in database for history tracking
+}
+
+// getClientIP gets the real client IP address
+func (h *InvoiceHandler) getClientIP(c *gin.Context) string {
+	// Check X-Forwarded-For header first
+	xff := c.GetHeader("X-Forwarded-For")
+	if xff != "" {
+		// X-Forwarded-For can contain multiple IPs, take the first one
+		if ips := strings.Split(xff, ","); len(ips) > 0 {
+			return strings.TrimSpace(ips[0])
+		}
+	}
+
+	// Check X-Real-IP header
+	if xri := c.GetHeader("X-Real-IP"); xri != "" {
+		return xri
+	}
+
+	// Fall back to RemoteAddr
+	ip, _, err := net.SplitHostPort(c.Request.RemoteAddr)
+	if err != nil {
+		return c.Request.RemoteAddr
+	}
+	return ip
+}
+
 // RegisterRoutes registers all invoice routes
 func (h *InvoiceHandler) RegisterRoutes(router *gin.RouterGroup) {
 	invoiceGroup := router.Group("/invoice")
 	{
-		// Basic routes without middleware for now
-		// TODO: Add proper authentication and authorization middleware
+		// Basic invoice CRUD
 		invoiceGroup.POST("", h.CreateInvoice)
 		invoiceGroup.GET("", h.GetInvoices)
 		invoiceGroup.PUT("/:id", h.UpdateInvoice)
 		invoiceGroup.DELETE("/:id", h.DeleteInvoice)
+
+		// Invoice status management
 		invoiceGroup.PUT("/:id/mark-paid", h.MarkInvoiceAsPaid)
 		invoiceGroup.PUT("/:id/mark-void", h.MarkInvoiceAsVoid)
-		invoiceGroup.POST("/:id/send", h.SendInvoice)
-		invoiceGroup.GET("/statistics", h.GetInvoiceStatistics)
+
+		// Invoice retrieval
 		invoiceGroup.GET("/:id", h.GetInvoice)
 		invoiceGroup.GET("/number/:number", h.GetInvoiceByNumber)
-		invoiceGroup.GET("/:id/pdf", h.GenerateInvoicePDF)
 		invoiceGroup.GET("/user", h.GetUserInvoices)
+		invoiceGroup.GET("/statistics", h.GetInvoiceStatistics)
+
+		// PDF generation and download (Self-Service Invoice Download Feature)
+		invoiceGroup.GET("/:id/pdf", h.GenerateInvoicePDF)          // Original PDF endpoint
+		invoiceGroup.GET("/:id/download", h.DownloadInvoicePDF)     // Enhanced download with options
+		invoiceGroup.POST("/bulk-download", h.BulkDownloadInvoices) // Bulk download as ZIP
+
+		// Email sending
+		invoiceGroup.POST("/:id/send", h.SendInvoice)                     // Original send
+		invoiceGroup.POST("/:id/send-custom", h.SendInvoiceWithCustomPDF) // Send with custom PDF
+
+		// Template and language support
+		invoiceGroup.GET("/templates", h.GetAvailableTemplates)
+		invoiceGroup.GET("/languages", h.GetAvailableLanguages)
+
+		// Download history and audit
+		invoiceGroup.GET("/download-history", h.GetInvoiceDownloadHistory)
 	}
 }

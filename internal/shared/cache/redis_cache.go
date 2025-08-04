@@ -87,7 +87,7 @@ func (rc *RedisCache) Delete(ctx context.Context, key string) error {
 func (rc *RedisCache) DeleteByPattern(ctx context.Context, pattern string) error {
 	var cursor uint64
 	var keys []string
-	
+
 	for {
 		var batch []string
 		var err error
@@ -95,28 +95,28 @@ func (rc *RedisCache) DeleteByPattern(ctx context.Context, pattern string) error
 		if err != nil {
 			return &CacheError{Op: "scan", Pattern: pattern, Err: err}
 		}
-		
+
 		keys = append(keys, batch...)
-		
+
 		if cursor == 0 {
 			break
 		}
 	}
-	
+
 	if len(keys) == 0 {
 		return nil
 	}
-	
+
 	pipe := rc.client.Pipeline()
 	for _, key := range keys {
 		pipe.Del(ctx, key)
 	}
-	
+
 	_, err := pipe.Exec(ctx)
 	if err != nil {
 		return &CacheError{Op: "delete", Pattern: pattern, Err: err}
 	}
-	
+
 	return nil
 }
 
@@ -147,15 +147,15 @@ func (rc *RedisCache) Flush(ctx context.Context) error {
 func (rc *RedisCache) compress(data []byte) ([]byte, error) {
 	var buf bytes.Buffer
 	gz := gzip.NewWriter(&buf)
-	
+
 	if _, err := gz.Write(data); err != nil {
 		return nil, err
 	}
-	
+
 	if err := gz.Close(); err != nil {
 		return nil, err
 	}
-	
+
 	return buf.Bytes(), nil
 }
 
@@ -165,7 +165,7 @@ func (rc *RedisCache) decompress(data []byte) ([]byte, error) {
 		return nil, err
 	}
 	defer r.Close()
-	
+
 	return io.ReadAll(r)
 }
 
@@ -187,16 +187,16 @@ func (tc *TypedRedisCache[T]) Get(ctx context.Context, key string) (*T, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	if data == nil {
 		return nil, nil
 	}
-	
+
 	var result T
 	if err := json.Unmarshal(data, &result); err != nil {
 		return nil, &CacheError{Op: "unmarshal", Key: fullKey, Err: err}
 	}
-	
+
 	return &result, nil
 }
 
@@ -206,7 +206,7 @@ func (tc *TypedRedisCache[T]) Set(ctx context.Context, key string, value *T, ttl
 	if err != nil {
 		return &CacheError{Op: "marshal", Key: fullKey, Err: err}
 	}
-	
+
 	return tc.cache.Set(ctx, fullKey, data, ttl)
 }
 
@@ -248,7 +248,7 @@ func (rcm *RedisCacheManager) GetTypedCache(prefix string) TypedCache[any] {
 	if tc, exists := rcm.typedCaches[prefix]; exists {
 		return tc
 	}
-	
+
 	tc := NewTypedRedisCache[any](rcm.cache, prefix)
 	rcm.typedCaches[prefix] = tc
 	return tc
@@ -268,16 +268,16 @@ func (rcm *RedisCacheManager) GetStats(ctx context.Context) (*CacheStats, error)
 	if err != nil {
 		return nil, &CacheError{Op: "stats", Key: "*", Err: err}
 	}
-	
+
 	dbSize, err := rcm.cache.client.DBSize(ctx).Result()
 	if err != nil {
 		return nil, &CacheError{Op: "dbsize", Key: "*", Err: err}
 	}
-	
+
 	stats := &CacheStats{
 		TotalKeys: dbSize,
 	}
-	
+
 	return stats, nil
 }
 
@@ -295,7 +295,7 @@ func (rct *RedisCacheTags) AddToTag(ctx context.Context, tag string, keys ...str
 	for i, key := range keys {
 		members[i] = key
 	}
-	
+
 	return rct.client.SAdd(ctx, tagKey, members...).Err()
 }
 
@@ -306,22 +306,22 @@ func (rct *RedisCacheTags) GetByTag(ctx context.Context, tag string) ([]string, 
 
 func (rct *RedisCacheTags) InvalidateTag(ctx context.Context, tag string) error {
 	tagKey := fmt.Sprintf("tag:%s", tag)
-	
+
 	keys, err := rct.GetByTag(ctx, tag)
 	if err != nil {
 		return err
 	}
-	
+
 	if len(keys) == 0 {
 		return nil
 	}
-	
+
 	pipe := rct.client.Pipeline()
 	for _, key := range keys {
 		pipe.Del(ctx, key)
 	}
 	pipe.Del(ctx, tagKey)
-	
+
 	_, err = pipe.Exec(ctx)
 	return err
 }
@@ -332,6 +332,6 @@ func (rct *RedisCacheTags) RemoveFromTag(ctx context.Context, tag string, keys .
 	for i, key := range keys {
 		members[i] = key
 	}
-	
+
 	return rct.client.SRem(ctx, tagKey, members...).Err()
 }

@@ -3,6 +3,7 @@ package events
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -91,12 +92,14 @@ func (e *BaseEvent) GetMetadata(key string) (interface{}, bool) {
 type EventHandler interface {
 	Handle(ctx context.Context, event Event) error
 	EventTypes() []string
+	ID() string
 }
 
 // EventHandlerFunc is an adapter to allow the use of ordinary functions as EventHandlers
 type EventHandlerFunc struct {
 	HandlerFunc func(ctx context.Context, event Event) error
 	Types       []string
+	HandlerID   string // Unique identifier for comparison
 }
 
 func (h EventHandlerFunc) Handle(ctx context.Context, event Event) error {
@@ -107,17 +110,31 @@ func (h EventHandlerFunc) EventTypes() []string {
 	return h.Types
 }
 
+func (h EventHandlerFunc) ID() string {
+	return h.HandlerID
+}
+
 // NewEventHandler creates a new event handler function
 func NewEventHandler(eventTypes []string, handlerFunc func(ctx context.Context, event Event) error) EventHandler {
 	return EventHandlerFunc{
 		HandlerFunc: handlerFunc,
 		Types:       eventTypes,
+		HandlerID:   generateEventID(), // Generate unique ID for handler
 	}
 }
 
 // EventEnvelope wraps an event with additional context information
 type EventEnvelope struct {
-	Event     Event                  `json:"event"`
+	Event     Event                  `json:"-"` // Skip JSON serialization, handled by custom methods
+	Context   map[string]interface{} `json:"context,omitempty"`
+	Headers   map[string]string      `json:"headers,omitempty"`
+	CreatedAt time.Time              `json:"created_at"`
+}
+
+// eventEnvelopeJSON is used for JSON serialization/deserialization
+type eventEnvelopeJSON struct {
+	EventType string                 `json:"event_type"`
+	EventData json.RawMessage        `json:"event_data"`
 	Context   map[string]interface{} `json:"context,omitempty"`
 	Headers   map[string]string      `json:"headers,omitempty"`
 	CreatedAt time.Time              `json:"created_at"`
@@ -131,6 +148,54 @@ func NewEventEnvelope(event Event) *EventEnvelope {
 		Headers:   make(map[string]string),
 		CreatedAt: time.Now(),
 	}
+}
+
+// MarshalJSON implements custom JSON marshaling for EventEnvelope
+func (e *EventEnvelope) MarshalJSON() ([]byte, error) {
+	if e.Event == nil {
+		return nil, fmt.Errorf("event cannot be nil")
+	}
+
+	// Serialize the event to JSON
+	eventData, err := json.Marshal(e.Event)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal event: %w", err)
+	}
+
+	// Create the JSON representation
+	envJSON := eventEnvelopeJSON{
+		EventType: e.Event.EventType(),
+		EventData: eventData,
+		Context:   e.Context,
+		Headers:   e.Headers,
+		CreatedAt: e.CreatedAt,
+	}
+
+	return json.Marshal(envJSON)
+}
+
+// UnmarshalJSON implements custom JSON unmarshaling for EventEnvelope
+func (e *EventEnvelope) UnmarshalJSON(data []byte) error {
+	var envJSON eventEnvelopeJSON
+	if err := json.Unmarshal(data, &envJSON); err != nil {
+		return fmt.Errorf("failed to unmarshal event envelope: %w", err)
+	}
+
+	// Reconstruct the event based on the raw event data
+	// We'll unmarshal into a BaseEvent since we can't determine the exact type
+	// This is a limitation, but the Event interface methods will still work
+	var baseEvent BaseEvent
+	if err := json.Unmarshal(envJSON.EventData, &baseEvent); err != nil {
+		return fmt.Errorf("failed to unmarshal event data: %w", err)
+	}
+
+	// Set the envelope fields
+	e.Event = &baseEvent
+	e.Context = envJSON.Context
+	e.Headers = envJSON.Headers
+	e.CreatedAt = envJSON.CreatedAt
+
+	return nil
 }
 
 // SerializeEvent serializes an event to JSON
@@ -221,6 +286,8 @@ const (
 	EventTypeSubscriptionCreated   = "subscription.created"
 	EventTypeSubscriptionUpdated   = "subscription.updated"
 	EventTypeSubscriptionActivated = "subscription.activated"
+	EventTypeSubscriptionPaused    = "subscription.paused"
+	EventTypeSubscriptionResumed   = "subscription.resumed"
 	EventTypeSubscriptionExpired   = "subscription.expired"
 	EventTypeSubscriptionCancelled = "subscription.cancelled"
 	EventTypeSubscriptionRenewed   = "subscription.renewed"
@@ -309,6 +376,8 @@ func NewServerEvent(eventType string, serverID uint, data interface{}) *ServerEv
 
 // Helper function to generate event IDs
 func generateEventID() string {
-	// Simple ID generation - in production, use a proper UUID library
-	return time.Now().Format("20060102150405") + "-" + "event"
+	// Generate ID with nanosecond precision to ensure uniqueness
+	// Format: YYYYMMDDHHMMSS-nanoseconds-event
+	now := time.Now()
+	return now.Format("20060102150405") + "-" + fmt.Sprintf("%d", now.UnixNano()) + "-event"
 }

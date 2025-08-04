@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	
+
 	"linke/internal/shared/logger"
 	"linke/internal/shared/response"
 )
@@ -49,21 +49,21 @@ func (vr *VersionRouter) handlerKey(method, path string) string {
 // RegisterHandler 为特定版本注册处理器
 func (vr *VersionRouter) RegisterHandler(method, path string, version Version, handler HandlerFunc) {
 	key := vr.handlerKey(method, path)
-	
+
 	versionedHandler := VersionedHandler{
 		Version: version,
 		Handler: handler,
 		Method:  method,
 		Path:    path,
 	}
-	
+
 	vr.handlers[key] = append(vr.handlers[key], versionedHandler)
-	
+
 	// 按版本排序处理器（最新的在前）以支持回退逻辑
 	sort.Slice(vr.handlers[key], func(i, j int) bool {
 		return vr.handlers[key][i].Version.Compare(vr.handlers[key][j].Version) > 0
 	})
-	
+
 	vr.logger.Debug("Registered versioned handler",
 		zap.String("method", method),
 		zap.String("path", path),
@@ -77,14 +77,14 @@ func (vr *VersionRouter) BuildRoutes() {
 		if len(handlers) == 0 {
 			continue
 		}
-		
+
 		// Create a version dispatch handler for this route
 		dispatchHandler := vr.createVersionDispatchHandler(handlers)
-		
+
 		// Extract method and path from key
 		method := handlers[0].Method
 		path := handlers[0].Path
-		
+
 		// Register the route with Gin
 		switch method {
 		case "GET":
@@ -107,7 +107,7 @@ func (vr *VersionRouter) BuildRoutes() {
 				zap.String("path", path),
 			)
 		}
-		
+
 		vr.logger.Info("Built versioned route",
 			zap.String("method", method),
 			zap.String("path", path),
@@ -128,9 +128,9 @@ func (vr *VersionRouter) createVersionDispatchHandler(handlers []VersionedHandle
 			})
 			return
 		}
-		
+
 		requestedVersion := versionCtx.ResolvedVersion
-		
+
 		// Find exact version match first
 		for _, handler := range handlers {
 			if handler.Version.Compare(requestedVersion) == 0 {
@@ -142,7 +142,7 @@ func (vr *VersionRouter) createVersionDispatchHandler(handlers []VersionedHandle
 				return
 			}
 		}
-		
+
 		// If auto-migration is enabled, find compatible version
 		if vr.config.EnableAutoMigration {
 			compatibleHandler := vr.findCompatibleHandler(handlers, requestedVersion)
@@ -152,16 +152,16 @@ func (vr *VersionRouter) createVersionDispatchHandler(handlers []VersionedHandle
 					zap.String("compatible_version", compatibleHandler.Version.String()),
 					zap.String("path", c.Request.URL.Path),
 				)
-				
+
 				// Add header to indicate version migration
 				c.Header("X-API-Version-Migrated-From", compatibleHandler.Version.String())
 				c.Header("X-API-Version-Migrated-To", requestedVersion.String())
-				
+
 				compatibleHandler.Handler(c)
 				return
 			}
 		}
-		
+
 		// No compatible handler found
 		vr.handleNoCompatibleVersion(c, requestedVersion, handlers)
 	}
@@ -175,7 +175,7 @@ func (vr *VersionRouter) findCompatibleHandler(handlers []VersionedHandler, requ
 			return &handler
 		}
 	}
-	
+
 	// If no backward compatible version, try the latest available version
 	// that's lower than requested (for graceful degradation)
 	for _, handler := range handlers {
@@ -183,7 +183,7 @@ func (vr *VersionRouter) findCompatibleHandler(handlers []VersionedHandler, requ
 			return &handler
 		}
 	}
-	
+
 	return nil
 }
 
@@ -194,23 +194,23 @@ func (vr *VersionRouter) handleNoCompatibleVersion(c *gin.Context, requestedVers
 		zap.String("path", c.Request.URL.Path),
 		zap.String("method", c.Request.Method),
 	)
-	
+
 	availableVersions := make([]string, len(handlers))
 	for i, handler := range handlers {
 		availableVersions[i] = handler.Version.String()
 	}
-	
+
 	errorResponse := response.ErrorResponse{
 		Error:   "version_not_implemented",
 		Message: fmt.Sprintf("Version %s is not implemented for this endpoint", requestedVersion.String()),
 		Details: map[string]any{
-			"requested_version":   requestedVersion.String(),
-			"available_versions":  availableVersions,
+			"requested_version":  requestedVersion.String(),
+			"available_versions": availableVersions,
 			"endpoint":           fmt.Sprintf("%s %s", c.Request.Method, c.Request.URL.Path),
 			"migration_required": true,
 		},
 	}
-	
+
 	response.ErrorJSON(c, http.StatusNotImplemented, errorResponse)
 }
 
@@ -248,7 +248,7 @@ func (vr *VersionRouter) Use(middleware ...gin.HandlerFunc) gin.IRoutes {
 // GetVersionInfo returns information about registered handlers
 func (vr *VersionRouter) GetVersionInfo() map[string]any {
 	routeInfo := make(map[string][]map[string]any)
-	
+
 	for key, handlers := range vr.handlers {
 		handlerInfo := make([]map[string]any, len(handlers))
 		for i, handler := range handlers {
@@ -260,11 +260,11 @@ func (vr *VersionRouter) GetVersionInfo() map[string]any {
 		}
 		routeInfo[key] = handlerInfo
 	}
-	
+
 	return map[string]any{
-		"routes":        routeInfo,
-		"total_routes":  len(vr.handlers),
-		"config":        vr.config,
+		"routes":       routeInfo,
+		"total_routes": len(vr.handlers),
+		"config":       vr.config,
 	}
 }
 
@@ -294,7 +294,7 @@ func (vhw *VersionedHandlerWrapper) WrapHandler(handler gin.HandlerFunc, support
 			})
 			return
 		}
-		
+
 		// Check if handler supports the requested version
 		if len(supportedVersions) > 0 {
 			supported := false
@@ -304,21 +304,21 @@ func (vhw *VersionedHandlerWrapper) WrapHandler(handler gin.HandlerFunc, support
 					break
 				}
 			}
-			
+
 			if !supported {
 				errorResponse := response.ErrorResponse{
 					Error:   "version_not_supported",
 					Message: fmt.Sprintf("This endpoint does not support version %s", versionCtx.ResolvedVersion.String()),
 					Details: map[string]any{
-						"requested_version":   versionCtx.ResolvedVersion.String(),
-						"supported_versions":  supportedVersions,
+						"requested_version":  versionCtx.ResolvedVersion.String(),
+						"supported_versions": supportedVersions,
 					},
 				}
 				response.ErrorJSON(c, http.StatusNotImplemented, errorResponse)
 				return
 			}
 		}
-		
+
 		// Call the original handler
 		handler(c)
 	}

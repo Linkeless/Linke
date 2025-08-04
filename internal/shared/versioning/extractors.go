@@ -26,23 +26,23 @@ func NewURLPathExtractor(urlPrefix string) *URLPathExtractor {
 // ExtractVersion 从 URL 路径中提取版本，如 /api/v1/users
 func (e *URLPathExtractor) ExtractVersion(c *gin.Context) (Version, error) {
 	path := c.Request.URL.Path
-	
+
 	// Remove the URL prefix
 	if e.URLPrefix != "" && strings.HasPrefix(path, e.URLPrefix) {
 		path = strings.TrimPrefix(path, e.URLPrefix)
 	}
-	
+
 	// Remove leading slash
 	path = strings.TrimPrefix(path, "/")
-	
+
 	// Extract version from path like "v1/users" or "v2.1/users"
 	versionPattern := regexp.MustCompile(`^v(\d+(?:\.\d+)?(?:\.\d+)?)/`)
 	matches := versionPattern.FindStringSubmatch(path)
-	
+
 	if len(matches) < 2 {
 		return Version{}, fmt.Errorf("no version found in URL path: %s", c.Request.URL.Path)
 	}
-	
+
 	return ParseVersion(matches[1])
 }
 
@@ -67,7 +67,7 @@ func (e *HeaderExtractor) ExtractVersion(c *gin.Context) (Version, error) {
 	if versionStr == "" {
 		return Version{}, fmt.Errorf("version header %s not found", e.HeaderName)
 	}
-	
+
 	return ParseVersion(versionStr)
 }
 
@@ -92,7 +92,7 @@ func (e *QueryExtractor) ExtractVersion(c *gin.Context) (Version, error) {
 	if versionStr == "" {
 		return Version{}, fmt.Errorf("version query parameter %s not found", e.QueryParam)
 	}
-	
+
 	return ParseVersion(versionStr)
 }
 
@@ -117,16 +117,16 @@ func (e *ContentTypeExtractor) ExtractVersion(c *gin.Context) (Version, error) {
 	if acceptHeader == "" {
 		return Version{}, fmt.Errorf("Accept header not found")
 	}
-	
+
 	// Parse media type with version parameter
 	// 示例: application/vnd.api+json;version=1
 	versionPattern := regexp.MustCompile(regexp.QuoteMeta(e.MediaType) + `;\s*version=(\d+(?:\.\d+)?(?:\.\d+)?)`)
 	matches := versionPattern.FindStringSubmatch(acceptHeader)
-	
+
 	if len(matches) < 2 {
 		return Version{}, fmt.Errorf("no version found in Accept header: %s", acceptHeader)
 	}
-	
+
 	return ParseVersion(matches[1])
 }
 
@@ -145,7 +145,7 @@ func NewCompositeExtractor(extractors ...VersionExtractor) *CompositeExtractor {
 // ExtractVersion tries extractors in order until one succeeds
 func (e *CompositeExtractor) ExtractVersion(c *gin.Context) (Version, error) {
 	var lastError error
-	
+
 	for _, extractor := range e.Extractors {
 		if version, err := extractor.ExtractVersion(c); err == nil {
 			return version, nil
@@ -153,11 +153,11 @@ func (e *CompositeExtractor) ExtractVersion(c *gin.Context) (Version, error) {
 			lastError = err
 		}
 	}
-	
+
 	if lastError != nil {
 		return Version{}, fmt.Errorf("all version extractors failed, last error: %w", lastError)
 	}
-	
+
 	return Version{}, fmt.Errorf("no version extractors provided")
 }
 
@@ -183,7 +183,7 @@ func CreateCompositeExtractor(config VersionConfig) VersionExtractor {
 	extractors := []VersionExtractor{
 		CreateExtractor(config),
 	}
-	
+
 	// Add fallback extractors
 	if config.Strategy != HeaderStrategy {
 		extractors = append(extractors, NewHeaderExtractor(config.HeaderName))
@@ -191,6 +191,6 @@ func CreateCompositeExtractor(config VersionConfig) VersionExtractor {
 	if config.Strategy != QueryStrategy {
 		extractors = append(extractors, NewQueryExtractor(config.QueryParam))
 	}
-	
+
 	return NewCompositeExtractor(extractors...)
 }

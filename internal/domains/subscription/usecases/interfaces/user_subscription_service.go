@@ -21,8 +21,8 @@ type UserSubscriptionService interface {
 	// Subscription management
 	CancelUserSubscription(ctx context.Context, subscriptionID uint, reason string, cancelAtPeriodEnd bool) error
 	RenewUserSubscription(ctx context.Context, subscriptionID uint) error
-	PauseUserSubscription(ctx context.Context, subscriptionID uint, reason string, adminUserID uint) (*entities.UserSubscription, error)
-	ResumeUserSubscription(ctx context.Context, subscriptionID uint, adminUserID uint) (*entities.UserSubscription, error)
+	PauseUserSubscription(ctx context.Context, subscriptionID uint, req *PauseSubscriptionRequest, adminUserID uint) (*entities.UserSubscription, error)
+	ResumeUserSubscription(ctx context.Context, subscriptionID uint, req *ResumeSubscriptionRequest, adminUserID uint) (*entities.UserSubscription, error)
 
 	// Traffic and usage management
 	UpdateTrafficUsage(ctx context.Context, subscriptionID uint, usedBytes int64) error
@@ -68,4 +68,15 @@ type GetUserSubscriptionsRequest struct {
 	Status string `form:"status,omitempty" binding:"omitempty,oneof=active paused cancelled expired trial" example:"active"`
 	Limit  int    `form:"limit,omitempty" binding:"omitempty,min=1,max=100" example:"10"`
 	Offset int    `form:"offset,omitempty" binding:"omitempty,min=0" example:"0"`
+}
+
+// PauseSubscriptionRequest represents the request to pause a user subscription
+type PauseSubscriptionRequest struct {
+	Reason           string `json:"reason" binding:"required,max=255" example:"User requested pause"`
+	MaxPauseDuration *int   `json:"max_pause_duration,omitempty" binding:"omitempty,min=1,max=365" example:"90"` // Override default max pause duration
+}
+
+// ResumeSubscriptionRequest represents the request to resume a user subscription
+type ResumeSubscriptionRequest struct {
+	AdjustBillingDate bool `json:"adjust_billing_date,omitempty" example:"true"` // Whether to adjust billing dates based on pause duration
 }

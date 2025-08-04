@@ -22,7 +22,6 @@ func NewPaymentConfigService(db *gorm.DB) *PaymentConfigService {
 	}
 }
 
-
 // CreatePaymentConfig creates a new payment config
 func (pcs *PaymentConfigService) CreatePaymentConfig(ctx context.Context, req *interfaces.CreatePaymentConfigRequest) (*entities.PaymentConfig, error) {
 	// Check if config already exists

@@ -26,6 +26,9 @@ type SubscriptionOrderService interface {
 
 	// Order statistics
 	GetOrderStatistics(ctx context.Context, fromDate, toDate time.Time) (map[string]interface{}, error)
+
+	// Quick Purchase
+	QuickPurchase(ctx context.Context, req *QuickPurchaseRequest) (*QuickPurchaseResponse, error)
 }
 
 // CreateSubscriptionOrderRequest represents the request to create a subscription order
@@ -36,6 +39,8 @@ type CreateSubscriptionOrderRequest struct {
 	CouponCode         string `json:"coupon_code,omitempty" example:"SAVE20"`
 	PaymentGateway     string `json:"payment_gateway" binding:"required" example:"epay"`
 	PaymentMethod      string `json:"payment_method" binding:"required" example:"alipay"`
+	PaymentMethodID    *uint  `json:"payment_method_id,omitempty" example:"1"`       // Optional: Use saved payment method
+	UseDefaultPayment  bool   `json:"use_default_payment,omitempty" example:"false"` // Use user's default payment method
 	ReturnURL          string `json:"return_url,omitempty" example:"https://example.com/payment/return"`
 	Metadata           string `json:"metadata,omitempty"`
 }
@@ -59,4 +64,36 @@ type GetSubscriptionOrdersRequest struct {
 	DateTo    string `form:"date_to,omitempty" example:"2024-12-31"`
 	Limit     int    `form:"limit,omitempty" example:"10"`
 	Offset    int    `form:"offset,omitempty" example:"0"`
+}
+
+// QuickPurchaseRequest represents the request for quick purchase
+type QuickPurchaseRequest struct {
+	UserID            uint   `json:"user_id" binding:"required" example:"1"`
+	PlanID            uint   `json:"plan_id" binding:"required" example:"1"`
+	PaymentGateway    string `json:"payment_gateway" binding:"required" example:"epay"`
+	PaymentMethod     string `json:"payment_method" binding:"required" example:"alipay"`
+	PaymentMethodID   *uint  `json:"payment_method_id,omitempty" example:"1"`       // Optional: Use saved payment method
+	UseDefaultPayment bool   `json:"use_default_payment,omitempty" example:"false"` // Use user's default payment method
+	CouponCode        string `json:"coupon_code,omitempty" example:"SAVE20"`
+	ClientIP          string `json:"client_ip,omitempty" example:"192.168.1.1"`
+	ReturnURL         string `json:"return_url,omitempty" example:"https://example.com/payment/return"`
+	Metadata          string `json:"metadata,omitempty"`
+}
+
+// QuickPurchaseResponse represents the response for quick purchase
+type QuickPurchaseResponse struct {
+	PaymentRecord *paymentEntities.PaymentRecordResponse `json:"payment_record"`
+	PaymentURL    string                                 `json:"payment_url"`
+	QRCodeURL     string                                 `json:"qr_code_url,omitempty"`
+	ExpiredAt     time.Time                              `json:"expired_at"`
+	PlanInfo      *entities.SubscriptionPlanResponse     `json:"plan_info"`
+	DiscountInfo  *QuickPurchaseDiscountInfo             `json:"discount_info,omitempty"`
+}
+
+// QuickPurchaseDiscountInfo represents discount information in quick purchase response
+type QuickPurchaseDiscountInfo struct {
+	CouponCode     string  `json:"coupon_code"`
+	DiscountAmount float64 `json:"discount_amount"`
+	OriginalAmount float64 `json:"original_amount"`
+	FinalAmount    float64 `json:"final_amount"`
 }

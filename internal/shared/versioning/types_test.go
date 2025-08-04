@@ -52,19 +52,19 @@ func TestParseVersion(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := ParseVersion(tt.versionStr)
-			
+
 			if tt.expectError {
 				if err == nil {
 					t.Errorf("expected error for version %s, but got none", tt.versionStr)
 				}
 				return
 			}
-			
+
 			if err != nil {
 				t.Errorf("unexpected error for version %s: %v", tt.versionStr, err)
 				return
 			}
-			
+
 			if result.Compare(tt.expected) != 0 {
 				t.Errorf("version %s: expected %s, got %s", tt.versionStr, tt.expected.String(), result.String())
 			}
@@ -127,7 +127,7 @@ func TestVersionCompare(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := tt.v1.Compare(tt.v2)
 			if result != tt.expected {
-				t.Errorf("compare %s vs %s: expected %d, got %d", 
+				t.Errorf("compare %s vs %s: expected %d, got %d",
 					tt.v1.String(), tt.v2.String(), tt.expected, result)
 			}
 		})
@@ -177,7 +177,7 @@ func TestVersionCompatibility(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := tt.v1.IsCompatibleWith(tt.v2)
 			if result != tt.expected {
-				t.Errorf("compatibility %s with %s: expected %t, got %t", 
+				t.Errorf("compatibility %s with %s: expected %t, got %t",
 					tt.v1.String(), tt.v2.String(), tt.expected, result)
 			}
 		})
@@ -211,7 +211,7 @@ func TestVersionString(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := tt.version.String()
 			if result != tt.expected {
-				t.Errorf("version string for %+v: expected %s, got %s", 
+				t.Errorf("version string for %+v: expected %s, got %s",
 					tt.version, tt.expected, result)
 			}
 		})
@@ -240,7 +240,7 @@ func TestVersionShortString(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := tt.version.ShortString()
 			if result != tt.expected {
-				t.Errorf("short string for %+v: expected %s, got %s", 
+				t.Errorf("short string for %+v: expected %s, got %s",
 					tt.version, tt.expected, result)
 			}
 		})
@@ -253,11 +253,11 @@ func TestVersionInfo(t *testing.T) {
 	pastDate := now.Add(-30 * 24 * time.Hour)  // 30 days ago
 
 	tests := []struct {
-		name           string
-		versionInfo    VersionInfo
+		name             string
+		versionInfo      VersionInfo
 		expectDeprecated bool
-		expectSunset   bool
-		expectedDays   int
+		expectSunset     bool
+		expectedDays     int
 	}{
 		{
 			name: "active version",
@@ -315,22 +315,22 @@ func TestVersionInfo(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.versionInfo.IsDeprecated() != tt.expectDeprecated {
-				t.Errorf("IsDeprecated: expected %t, got %t", 
+				t.Errorf("IsDeprecated: expected %t, got %t",
 					tt.expectDeprecated, tt.versionInfo.IsDeprecated())
 			}
-			
+
 			if tt.versionInfo.IsSunset() != tt.expectSunset {
-				t.Errorf("IsSunset: expected %t, got %t", 
+				t.Errorf("IsSunset: expected %t, got %t",
 					tt.expectSunset, tt.versionInfo.IsSunset())
 			}
-			
+
 			days := tt.versionInfo.DaysUntilSunset()
 			// Allow some tolerance for test execution time
 			if tt.expectedDays >= 0 && (days < tt.expectedDays-1 || days > tt.expectedDays+1) {
-				t.Errorf("DaysUntilSunset: expected ~%d, got %d", 
+				t.Errorf("DaysUntilSunset: expected ~%d, got %d",
 					tt.expectedDays, days)
 			} else if tt.expectedDays < 0 && days != -1 {
-				t.Errorf("DaysUntilSunset: expected %d, got %d", 
+				t.Errorf("DaysUntilSunset: expected %d, got %d",
 					tt.expectedDays, days)
 			}
 		})
@@ -339,47 +339,47 @@ func TestVersionInfo(t *testing.T) {
 
 func TestVersionConfigValidation(t *testing.T) {
 	config := DefaultVersionConfig()
-	
+
 	t.Run("default config is valid", func(t *testing.T) {
 		if len(config.SupportedVersions) == 0 {
 			t.Error("default config should have supported versions")
 		}
-		
+
 		if !config.IsVersionSupported(config.DefaultVersion) {
 			t.Error("default version should be supported")
 		}
-		
+
 		if config.DefaultVersion.Compare(config.MinVersion) < 0 {
 			t.Error("default version should be >= min version")
 		}
-		
+
 		if config.DefaultVersion.Compare(config.MaxVersion) > 0 {
 			t.Error("default version should be <= max version")
 		}
 	})
-	
+
 	t.Run("version support check", func(t *testing.T) {
 		v1 := NewVersion(1, 0, 0)
 		v2 := NewVersion(2, 0, 0)
 		v3 := NewVersion(3, 0, 0) // unsupported
-		
+
 		if !config.IsVersionSupported(v1) {
 			t.Error("v1 should be supported")
 		}
-		
+
 		if !config.IsVersionSupported(v2) {
 			t.Error("v2 should be supported")
 		}
-		
+
 		if config.IsVersionSupported(v3) {
 			t.Error("v3 should not be supported")
 		}
 	})
-	
+
 	t.Run("latest version", func(t *testing.T) {
 		latest := config.GetLatestVersion()
 		if latest.Compare(config.MaxVersion) != 0 {
-			t.Errorf("latest version should be max version, got %s, expected %s", 
+			t.Errorf("latest version should be max version, got %s, expected %s",
 				latest.String(), config.MaxVersion.String())
 		}
 	})

@@ -28,7 +28,7 @@ var Module = fx.Module("user",
 	fx.Provide(
 		// 提供基础的 UserService 实现
 		implementations.NewUserService,
-		
+
 		// 提供带缓存的 UserService 实现
 		implementations.NewCachedUserService,
 

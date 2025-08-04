@@ -89,7 +89,7 @@ func (psm *PaymentSecurityMiddleware) PaymentNotifySecurityMiddleware() gin.Hand
 func (psm *PaymentSecurityMiddleware) SignatureValidationMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		gateway := c.Param("gateway")
-		
+
 		if !psm.config.RequireSignature {
 			c.Next()
 			return
@@ -97,7 +97,7 @@ func (psm *PaymentSecurityMiddleware) SignatureValidationMiddleware() gin.Handle
 
 		// Get raw request data for signature validation
 		var requestData map[string]interface{}
-		
+
 		contentType := c.GetHeader("Content-Type")
 		if contentType == "application/json" {
 			if err := c.ShouldBindJSON(&requestData); err != nil {
@@ -114,7 +114,7 @@ func (psm *PaymentSecurityMiddleware) SignatureValidationMiddleware() gin.Handle
 				c.Abort()
 				return
 			}
-			
+
 			requestData = make(map[string]interface{})
 			for key, values := range c.Request.PostForm {
 				if len(values) > 0 {
@@ -140,7 +140,7 @@ func (psm *PaymentSecurityMiddleware) SignatureValidationMiddleware() gin.Handle
 // validateIPWhitelist checks if the client IP is in the whitelist for the gateway
 func (psm *PaymentSecurityMiddleware) validateIPWhitelist(c *gin.Context, gateway string) bool {
 	clientIP := c.ClientIP()
-	
+
 	var whitelist []string
 	switch gateway {
 	case "epay":
@@ -184,7 +184,7 @@ func (psm *PaymentSecurityMiddleware) validateIPWhitelist(c *gin.Context, gatewa
 func (psm *PaymentSecurityMiddleware) validateReplayProtection(c *gin.Context, gateway string) bool {
 	// Create a unique request identifier
 	requestID := psm.generateRequestID(c, gateway)
-	
+
 	// Check if request exists in Redis
 	key := fmt.Sprintf("payment_notify:%s:%s", gateway, requestID)
 	exists, err := psm.redis.Exists(c.Request.Context(), key).Result()
@@ -213,14 +213,14 @@ func (psm *PaymentSecurityMiddleware) generateRequestID(c *gin.Context, gateway 
 	// Include timestamp, IP, and request content hash for uniqueness
 	timestamp := strconv.FormatInt(time.Now().Unix()/60, 10) // Round to minute for time window
 	clientIP := c.ClientIP()
-	
+
 	// Create content hash (simplified - real implementation should include request body)
-	contentHash := fmt.Sprintf("%s-%s-%s-%s", 
-		c.Request.Method, 
-		c.Request.URL.Path, 
-		clientIP, 
+	contentHash := fmt.Sprintf("%s-%s-%s-%s",
+		c.Request.Method,
+		c.Request.URL.Path,
+		clientIP,
 		timestamp)
-	
+
 	hasher := sha256.New()
 	hasher.Write([]byte(contentHash))
 	return hex.EncodeToString(hasher.Sum(nil))[:16] // Use first 16 chars
@@ -264,7 +264,7 @@ func (psm *PaymentSecurityMiddleware) validateEpaySignature(data map[string]inte
 	signData := make(map[string]interface{})
 	for k, v := range data {
 		if k != "sign" && k != "sign_type" {
-			signData[k] = v  
+			signData[k] = v
 		}
 	}
 
@@ -305,7 +305,7 @@ func (psm *PaymentSecurityMiddleware) validateEpusdtSignature(data map[string]in
 	}
 
 	// Remove sign from data for calculation
-	signData := make(map[string]interface{}) 
+	signData := make(map[string]interface{})
 	for k, v := range data {
 		if k != "sign" {
 			signData[k] = v
@@ -335,7 +335,7 @@ func (psm *PaymentSecurityMiddleware) generateEpusdtSignature(data map[string]in
 	}
 
 	queryString := strings.Join(params, "&")
-	
+
 	// Calculate HMAC-SHA256
 	mac := hmac.New(sha256.New, []byte(signKey))
 	mac.Write([]byte(queryString))

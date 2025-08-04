@@ -13,15 +13,15 @@ import (
 )
 
 type Config struct {
-	Server   ServerConfig
-	Database DatabaseConfig
-	Redis    RedisConfig
-	OAuth2   OAuth2Config
-	JWT      JWTConfig
-	Log      LogConfig
-	API      APIConfig
-	Payment  PaymentSecurityConfig
-	Cache    CacheConfig
+	Server     ServerConfig
+	Database   DatabaseConfig
+	Redis      RedisConfig
+	OAuth2     OAuth2Config
+	JWT        JWTConfig
+	Log        LogConfig
+	API        APIConfig
+	Payment    PaymentSecurityConfig
+	Cache      CacheConfig
 	Versioning VersioningConfig
 }
 
@@ -72,62 +72,62 @@ type LogConfig struct {
 
 type PaymentSecurityConfig struct {
 	// Signature verification
-	RequireSignature          bool     `json:"require_signature"`
-	EpaySignKey              string   `json:"epay_sign_key"`
-	EpusdtSignKey            string   `json:"epusdt_sign_key"`
-	
+	RequireSignature bool   `json:"require_signature"`
+	EpaySignKey      string `json:"epay_sign_key"`
+	EpusdtSignKey    string `json:"epusdt_sign_key"`
+
 	// IP whitelist
-	EnableIPWhitelist        bool     `json:"enable_ip_whitelist"`
-	EpayIPWhitelist          []string `json:"epay_ip_whitelist"`
-	EpusdtIPWhitelist        []string `json:"epusdt_ip_whitelist"`
-	
+	EnableIPWhitelist bool     `json:"enable_ip_whitelist"`
+	EpayIPWhitelist   []string `json:"epay_ip_whitelist"`
+	EpusdtIPWhitelist []string `json:"epusdt_ip_whitelist"`
+
 	// Replay attack prevention
-	EnableReplayProtection   bool     `json:"enable_replay_protection"`
-	ReplayTimeWindowMinutes  int      `json:"replay_time_window_minutes"`
-	
+	EnableReplayProtection  bool `json:"enable_replay_protection"`
+	ReplayTimeWindowMinutes int  `json:"replay_time_window_minutes"`
+
 	// Rate limiting
-	NotifyRateLimit          int      `json:"notify_rate_limit"`          // requests per minute
-	NotifyRateBurst          int      `json:"notify_rate_burst"`          // burst size
-	
+	NotifyRateLimit int `json:"notify_rate_limit"` // requests per minute
+	NotifyRateBurst int `json:"notify_rate_burst"` // burst size
+
 	// Security headers
-	RequireHTTPS             bool     `json:"require_https"`
-	MaxRequestSize           int64    `json:"max_request_size"`           // in bytes
+	RequireHTTPS   bool  `json:"require_https"`
+	MaxRequestSize int64 `json:"max_request_size"` // in bytes
 }
 
 type CacheConfig struct {
-	DefaultTTL      int  `json:"default_ttl"`        // in seconds
-	EnableMetrics   bool `json:"enable_metrics"`
-	EnableDebugLog  bool `json:"enable_debug_log"`
+	DefaultTTL     int  `json:"default_ttl"` // in seconds
+	EnableMetrics  bool `json:"enable_metrics"`
+	EnableDebugLog bool `json:"enable_debug_log"`
 }
 
 type VersioningConfig struct {
 	// Strategy defines how version is extracted from requests
 	Strategy string `json:"strategy"` // url_path, header, query, content_type
-	
+
 	// DefaultVersion is used when no version is specified
 	DefaultVersion string `json:"default_version"`
-	
+
 	// MinVersion is the minimum supported version
 	MinVersion string `json:"min_version"`
-	
-	// MaxVersion is the maximum supported version  
+
+	// MaxVersion is the maximum supported version
 	MaxVersion string `json:"max_version"`
-	
+
 	// HeaderName is the header name for header strategy
 	HeaderName string `json:"header_name"`
-	
+
 	// QueryParam is the query parameter name for query strategy
 	QueryParam string `json:"query_param"`
-	
+
 	// URLPrefix is the URL prefix for path strategy
 	URLPrefix string `json:"url_prefix"`
-	
+
 	// EnableDeprecationHeaders adds deprecation headers to responses
 	EnableDeprecationHeaders bool `json:"enable_deprecation_headers"`
-	
+
 	// EnableAutoMigration enables automatic version migration for compatible versions
 	EnableAutoMigration bool `json:"enable_auto_migration"`
-	
+
 	// SunsetV1Date is the sunset date for version 1 (ISO 8601 format)
 	SunsetV1Date string `json:"sunset_v1_date"`
 }
@@ -136,7 +136,7 @@ func LoadConfig() *Config {
 	if err := godotenv.Load(); err != nil {
 		// Use standard log here since logger might not be initialized yet
 		// This is informational only, not an error
-		fmt.Printf("INFO: No .env file found in current directory (%s), using environment variables only\n", 
+		fmt.Printf("INFO: No .env file found in current directory (%s), using environment variables only\n",
 			getCurrentDirectory())
 	} else {
 		fmt.Printf("INFO: Configuration loaded from .env file in %s\n", getCurrentDirectory())
@@ -219,22 +219,22 @@ func LoadConfig() *Config {
 		},
 		Payment: PaymentSecurityConfig{
 			RequireSignature:        getEnvBool("PAYMENT_REQUIRE_SIGNATURE", true),
-			EpaySignKey:            getEnv("EPAY_SIGN_KEY", ""),
-			EpusdtSignKey:          getEnv("EPUSDT_SIGN_KEY", ""),
-			EnableIPWhitelist:      getEnvBool("PAYMENT_ENABLE_IP_WHITELIST", false),
-			EpayIPWhitelist:        getEnvStringSlice("EPAY_IP_WHITELIST", []string{}),
-			EpusdtIPWhitelist:      getEnvStringSlice("EPUSDT_IP_WHITELIST", []string{}),
-			EnableReplayProtection: getEnvBool("PAYMENT_ENABLE_REPLAY_PROTECTION", true),
+			EpaySignKey:             getEnv("EPAY_SIGN_KEY", ""),
+			EpusdtSignKey:           getEnv("EPUSDT_SIGN_KEY", ""),
+			EnableIPWhitelist:       getEnvBool("PAYMENT_ENABLE_IP_WHITELIST", false),
+			EpayIPWhitelist:         getEnvStringSlice("EPAY_IP_WHITELIST", []string{}),
+			EpusdtIPWhitelist:       getEnvStringSlice("EPUSDT_IP_WHITELIST", []string{}),
+			EnableReplayProtection:  getEnvBool("PAYMENT_ENABLE_REPLAY_PROTECTION", true),
 			ReplayTimeWindowMinutes: getEnvInt("PAYMENT_REPLAY_TIME_WINDOW_MINUTES", 5),
-			NotifyRateLimit:        getEnvInt("PAYMENT_NOTIFY_RATE_LIMIT", 10),
-			NotifyRateBurst:        getEnvInt("PAYMENT_NOTIFY_RATE_BURST", 2),
-			RequireHTTPS:           getEnvBool("PAYMENT_REQUIRE_HTTPS", false),
-			MaxRequestSize:         int64(getEnvInt("PAYMENT_MAX_REQUEST_SIZE", 1048576)), // 1MB default
+			NotifyRateLimit:         getEnvInt("PAYMENT_NOTIFY_RATE_LIMIT", 10),
+			NotifyRateBurst:         getEnvInt("PAYMENT_NOTIFY_RATE_BURST", 2),
+			RequireHTTPS:            getEnvBool("PAYMENT_REQUIRE_HTTPS", false),
+			MaxRequestSize:          int64(getEnvInt("PAYMENT_MAX_REQUEST_SIZE", 1048576)), // 1MB default
 		},
 		Cache: CacheConfig{
-			DefaultTTL:      getEnvInt("CACHE_DEFAULT_TTL", 300), // 5 minutes default
-			EnableMetrics:   getEnvBool("CACHE_ENABLE_METRICS", false),
-			EnableDebugLog:  getEnvBool("CACHE_ENABLE_DEBUG_LOG", false),
+			DefaultTTL:     getEnvInt("CACHE_DEFAULT_TTL", 300), // 5 minutes default
+			EnableMetrics:  getEnvBool("CACHE_ENABLE_METRICS", false),
+			EnableDebugLog: getEnvBool("CACHE_ENABLE_DEBUG_LOG", false),
 		},
 		Versioning: VersioningConfig{
 			Strategy:                 getEnv("API_VERSION_STRATEGY", "url_path"),
@@ -308,7 +308,7 @@ func GenerateSecureJWTKey() string {
 	bytes := make([]byte, 32) // 256 bits
 	if _, err := rand.Read(bytes); err != nil {
 		// Keep log.Fatal for cryptographic failures that indicate system problems
-		log.Fatal("❌ CRITICAL: Failed to generate secure random bytes: " + err.Error() + 
+		log.Fatal("❌ CRITICAL: Failed to generate secure random bytes: " + err.Error() +
 			"\n   This indicates a serious system problem with the cryptographic subsystem." +
 			"\n   Please check your system's random number generator.")
 	}

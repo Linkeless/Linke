@@ -18,7 +18,6 @@ import (
 	"gorm.io/gorm"
 )
 
-
 // PaymentService represents the unified payment service
 type PaymentService struct {
 	db                       *gorm.DB
@@ -34,7 +33,6 @@ func NewPaymentService(db *gorm.DB) *PaymentService {
 		gateways: make(map[string]interfaces.PaymentGateway),
 	}
 }
-
 
 // RegisterGateway registers a payment gateway
 func (ps *PaymentService) RegisterGateway(name string, gateway interfaces.PaymentGateway) error {
@@ -259,7 +257,7 @@ func (ps *PaymentService) ProcessNotification(ctx context.Context, gateway strin
 
 	// SECURITY: Enhanced idempotency check
 	notifyHash := ps.generateNotificationHash(data)
-	
+
 	// Safely get client IP from context (set by middleware)
 	var clientIP string
 	if ip := ctx.Value("client_ip"); ip != nil {
@@ -270,7 +268,7 @@ func (ps *PaymentService) ProcessNotification(ctx context.Context, gateway strin
 	if clientIP == "" {
 		clientIP = "unknown" // Fallback
 	}
-	
+
 	// Check for exact duplicate (same hash)
 	if paymentRecord.LastNotifyHash == notifyHash {
 		logger.Warn("Duplicate notification detected, ignoring",
@@ -280,7 +278,7 @@ func (ps *PaymentService) ProcessNotification(ctx context.Context, gateway strin
 			logger.String("client_ip", clientIP))
 		return nil // Silently ignore duplicate notifications
 	}
-	
+
 	// Check for time-based replay attack protection
 	if paymentRecord.LastNotifyTime != nil {
 		timeSinceLastNotify := time.Since(*paymentRecord.LastNotifyTime)
@@ -292,7 +290,7 @@ func (ps *PaymentService) ProcessNotification(ctx context.Context, gateway strin
 			return fmt.Errorf("notification rate limit exceeded")
 		}
 	}
-	
+
 	// Check for suspicious IP changes (optional security measure)
 	if paymentRecord.NotifySource != "" && paymentRecord.NotifySource != clientIP {
 		logger.Warn("Notification source IP changed",
@@ -388,7 +386,7 @@ func (ps *PaymentService) processOrderCompletion(ctx context.Context, paymentRec
 			if err := ps.invoiceService.MarkInvoiceAsPaid(ctx, *paymentRecord.InvoiceID, paidAt); err != nil {
 				return fmt.Errorf("failed to mark invoice as paid: %w", err)
 			}
-			
+
 			logger.Info("Invoice marked as paid",
 				logger.Uint("invoice_id", *paymentRecord.InvoiceID),
 				logger.String("payment_no", paymentRecord.PaymentNo))

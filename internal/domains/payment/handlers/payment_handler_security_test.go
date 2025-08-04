@@ -97,6 +97,223 @@ func (m *MockPaymentService) GeneratePaymentNo() (string, error) {
 	return args.String(0), args.Error(1)
 }
 
+// MockPaymentConfigService for testing
+type MockPaymentConfigService struct {
+	mock.Mock
+}
+
+func (m *MockPaymentConfigService) CreatePaymentConfig(ctx context.Context, req *interfaces.CreatePaymentConfigRequest) (*entities.PaymentConfig, error) {
+	args := m.Called(ctx, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*entities.PaymentConfig), args.Error(1)
+}
+
+func (m *MockPaymentConfigService) GetPaymentConfig(ctx context.Context, configID uint) (*entities.PaymentConfig, error) {
+	args := m.Called(ctx, configID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*entities.PaymentConfig), args.Error(1)
+}
+
+func (m *MockPaymentConfigService) GetPaymentConfigByGateway(ctx context.Context, gateway string) (*entities.PaymentConfig, error) {
+	args := m.Called(ctx, gateway)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*entities.PaymentConfig), args.Error(1)
+}
+
+func (m *MockPaymentConfigService) UpdatePaymentConfig(ctx context.Context, configID uint, req *interfaces.UpdatePaymentConfigRequest) (*entities.PaymentConfig, error) {
+	args := m.Called(ctx, configID, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*entities.PaymentConfig), args.Error(1)
+}
+
+func (m *MockPaymentConfigService) DeletePaymentConfig(ctx context.Context, configID uint) error {
+	args := m.Called(ctx, configID)
+	return args.Error(0)
+}
+
+func (m *MockPaymentConfigService) GetPaymentConfigs(ctx context.Context, req *interfaces.GetPaymentConfigsRequest) ([]*entities.PaymentConfig, int64, error) {
+	args := m.Called(ctx, req)
+	if args.Get(0) == nil {
+		return nil, args.Get(1).(int64), args.Error(2)
+	}
+	return args.Get(0).([]*entities.PaymentConfig), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockPaymentConfigService) GetActivePaymentConfigs(ctx context.Context, currency string) ([]*entities.PaymentConfig, error) {
+	args := m.Called(ctx, currency)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*entities.PaymentConfig), args.Error(1)
+}
+
+func (m *MockPaymentConfigService) GetPaymentConfigsByGateway(ctx context.Context, gateway string) ([]*entities.PaymentConfig, error) {
+	args := m.Called(ctx, gateway)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*entities.PaymentConfig), args.Error(1)
+}
+
+func (m *MockPaymentConfigService) TogglePaymentConfig(ctx context.Context, configID uint) (*entities.PaymentConfig, error) {
+	args := m.Called(ctx, configID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*entities.PaymentConfig), args.Error(1)
+}
+
+// MockPaymentRetryService for testing
+type MockPaymentRetryService struct {
+	mock.Mock
+}
+
+func (m *MockPaymentRetryService) InitiateRetry(ctx context.Context, paymentRecord *entities.PaymentRecord, failureType, failureCode, errorMessage string) (*entities.PaymentRetry, error) {
+	args := m.Called(ctx, paymentRecord, failureType, failureCode, errorMessage)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*entities.PaymentRetry), args.Error(1)
+}
+
+func (m *MockPaymentRetryService) ProcessPendingRetries(ctx context.Context, batchSize int) (int, error) {
+	args := m.Called(ctx, batchSize)
+	return args.Int(0), args.Error(1)
+}
+
+func (m *MockPaymentRetryService) ProcessRetry(ctx context.Context, retryID uint) (*interfaces.RetryResult, error) {
+	args := m.Called(ctx, retryID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*interfaces.RetryResult), args.Error(1)
+}
+
+func (m *MockPaymentRetryService) CancelRetry(ctx context.Context, retryID uint, reason string) error {
+	args := m.Called(ctx, retryID, reason)
+	return args.Error(0)
+}
+
+func (m *MockPaymentRetryService) ResetRetry(ctx context.Context, retryID uint) error {
+	args := m.Called(ctx, retryID)
+	return args.Error(0)
+}
+
+func (m *MockPaymentRetryService) GetRetryStrategy(ctx context.Context, gateway, paymentMethod string) (*entities.RetryStrategyConfig, error) {
+	args := m.Called(ctx, gateway, paymentMethod)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*entities.RetryStrategyConfig), args.Error(1)
+}
+
+func (m *MockPaymentRetryService) UpdateRetryStrategy(ctx context.Context, gateway, paymentMethod string, config *entities.RetryStrategyConfig) error {
+	args := m.Called(ctx, gateway, paymentMethod, config)
+	return args.Error(0)
+}
+
+func (m *MockPaymentRetryService) CalculateNextRetryTime(ctx context.Context, retry *entities.PaymentRetry) time.Time {
+	args := m.Called(ctx, retry)
+	return args.Get(0).(time.Time)
+}
+
+func (m *MockPaymentRetryService) GetRetryByPaymentID(ctx context.Context, paymentRecordID uint) (*entities.PaymentRetry, error) {
+	args := m.Called(ctx, paymentRecordID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*entities.PaymentRetry), args.Error(1)
+}
+
+func (m *MockPaymentRetryService) GetRetryWithHistory(ctx context.Context, retryID uint) (*interfaces.RetryWithHistory, error) {
+	args := m.Called(ctx, retryID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*interfaces.RetryWithHistory), args.Error(1)
+}
+
+func (m *MockPaymentRetryService) GetActiveRetries(ctx context.Context, filters *interfaces.RetryFilters, limit, offset int) ([]*entities.PaymentRetry, int64, error) {
+	args := m.Called(ctx, filters, limit, offset)
+	if args.Get(0) == nil {
+		return nil, args.Get(1).(int64), args.Error(2)
+	}
+	return args.Get(0).([]*entities.PaymentRetry), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockPaymentRetryService) GetRetryHistory(ctx context.Context, retryID uint) ([]*entities.PaymentRetryHistory, error) {
+	args := m.Called(ctx, retryID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*entities.PaymentRetryHistory), args.Error(1)
+}
+
+func (m *MockPaymentRetryService) GetRetryStatistics(ctx context.Context, gateway string, days int) (*interfaces.RetryStatistics, error) {
+	args := m.Called(ctx, gateway, days)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*interfaces.RetryStatistics), args.Error(1)
+}
+
+func (m *MockPaymentRetryService) GetFailureAnalysis(ctx context.Context, gateway string, days int) (*interfaces.FailureAnalysis, error) {
+	args := m.Called(ctx, gateway, days)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*interfaces.FailureAnalysis), args.Error(1)
+}
+
+func (m *MockPaymentRetryService) GetRetryHealthMetrics(ctx context.Context) (*interfaces.RetryHealthMetrics, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*interfaces.RetryHealthMetrics), args.Error(1)
+}
+
+func (m *MockPaymentRetryService) GetRetriesForAdmin(ctx context.Context, filters *interfaces.AdminRetryFilters) (*interfaces.AdminRetryResponse, error) {
+	args := m.Called(ctx, filters)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*interfaces.AdminRetryResponse), args.Error(1)
+}
+
+func (m *MockPaymentRetryService) BulkCancelRetries(ctx context.Context, retryIDs []uint, reason string) error {
+	args := m.Called(ctx, retryIDs, reason)
+	return args.Error(0)
+}
+
+func (m *MockPaymentRetryService) BulkResetRetries(ctx context.Context, retryIDs []uint) error {
+	args := m.Called(ctx, retryIDs)
+	return args.Error(0)
+}
+
+func (m *MockPaymentRetryService) ClassifyFailure(ctx context.Context, gateway, paymentMethod, errorCode, errorMessage string) string {
+	args := m.Called(ctx, gateway, paymentMethod, errorCode, errorMessage)
+	return args.String(0)
+}
+
+func (m *MockPaymentRetryService) ShouldRetryPayment(ctx context.Context, paymentRecord *entities.PaymentRecord, errorCode string) bool {
+	args := m.Called(ctx, paymentRecord, errorCode)
+	return args.Bool(0)
+}
+
+func (m *MockPaymentRetryService) NotifyRetryAttempt(ctx context.Context, retry *entities.PaymentRetry, attempt *entities.PaymentRetryHistory) error {
+	args := m.Called(ctx, retry, attempt)
+	return args.Error(0)
+}
+
 // Security Tests
 
 func TestPaymentNotify_SecurityValidation(t *testing.T) {
@@ -172,7 +389,9 @@ func TestPaymentNotify_SecurityValidation(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
 			mockPaymentService := new(MockPaymentService)
-			handler := NewPaymentHandler(mockPaymentService, nil)
+			mockPaymentConfigService := new(MockPaymentConfigService)
+			mockPaymentRetryService := new(MockPaymentRetryService)
+			handler := NewPaymentHandler(mockPaymentService, mockPaymentConfigService, mockPaymentRetryService)
 
 			// Create request
 			var req *http.Request
@@ -264,11 +483,13 @@ func TestPaymentNotify_IPWhitelistValidation(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
 			mockPaymentService := new(MockPaymentService)
+			mockPaymentConfigService := new(MockPaymentConfigService)
+			mockPaymentRetryService := new(MockPaymentRetryService)
 			if tt.expectedStatus == 200 {
 				mockPaymentService.On("ProcessNotification", mock.Anything, "epay", mock.Anything).Return(nil)
 			}
 
-			handler := NewPaymentHandler(mockPaymentService, nil)
+			handler := NewPaymentHandler(mockPaymentService, mockPaymentConfigService, mockPaymentRetryService)
 
 			// Create request
 			body := `{"out_trade_no": "test123", "trade_status": "TRADE_SUCCESS"}`
@@ -298,9 +519,11 @@ func TestPaymentNotify_RateLimiting(t *testing.T) {
 
 	// Setup
 	mockPaymentService := new(MockPaymentService)
+	mockPaymentConfigService := new(MockPaymentConfigService)
+	mockPaymentRetryService := new(MockPaymentRetryService)
 	mockPaymentService.On("ProcessNotification", mock.Anything, "epay", mock.Anything).Return(nil)
 
-	handler := NewPaymentHandler(mockPaymentService, nil)
+	handler := NewPaymentHandler(mockPaymentService, mockPaymentConfigService, mockPaymentRetryService)
 
 	// Setup Gin router with rate limiting
 	router := gin.New()
@@ -372,9 +595,11 @@ func BenchmarkPaymentNotify_ValidRequest(b *testing.B) {
 
 	// Setup
 	mockPaymentService := new(MockPaymentService)
+	mockPaymentConfigService := new(MockPaymentConfigService)
+	mockPaymentRetryService := new(MockPaymentRetryService)
 	mockPaymentService.On("ProcessNotification", mock.Anything, "epay", mock.Anything).Return(nil)
 
-	handler := NewPaymentHandler(mockPaymentService, nil)
+	handler := NewPaymentHandler(mockPaymentService, mockPaymentConfigService, mockPaymentRetryService)
 
 	// Prepare request
 	body := `{"out_trade_no": "test123", "trade_status": "TRADE_SUCCESS"}`

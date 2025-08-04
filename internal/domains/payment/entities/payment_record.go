@@ -17,7 +17,7 @@ type PaymentRecord struct {
 	// Foreign Keys
 	UserID              uint  `json:"user_id" gorm:"not null;index"`
 	SubscriptionOrderID *uint `json:"subscription_order_id,omitempty" gorm:"index"` // 关联的订阅订单
-	InvoiceID           *uint `json:"invoice_id,omitempty" gorm:"index"`             // 关联的发票
+	InvoiceID           *uint `json:"invoice_id,omitempty" gorm:"index"`            // 关联的发票
 
 	// Payment Information
 	PaymentNo     string `json:"payment_no" gorm:"uniqueIndex;size:100;not null"`   // 支付单号（系统生成）
@@ -46,12 +46,12 @@ type PaymentRecord struct {
 	NotifiedAt *time.Time `json:"notified_at,omitempty" gorm:"index"` // 回调通知时间
 
 	// Idempotency Protection
-	LastNotifyHash string    `json:"last_notify_hash,omitempty" gorm:"size:64;index"` // 最后一次通知的hash，用于防重放
-	NotifyCount    int       `json:"notify_count" gorm:"default:0"`                   // 通知次数，用于检测重复通知
-	
+	LastNotifyHash string `json:"last_notify_hash,omitempty" gorm:"size:64;index"` // 最后一次通知的hash，用于防重放
+	NotifyCount    int    `json:"notify_count" gorm:"default:0"`                   // 通知次数，用于检测重复通知
+
 	// Security Enhancement
-	LastNotifyTime *time.Time `json:"last_notify_time,omitempty" gorm:"index"`        // 最后一次通知时间，用于时间窗口验证
-	NotifySource   string     `json:"notify_source,omitempty" gorm:"size:45"`         // 通知来源IP，用于异常检测
+	LastNotifyTime *time.Time `json:"last_notify_time,omitempty" gorm:"index"` // 最后一次通知时间，用于时间窗口验证
+	NotifySource   string     `json:"notify_source,omitempty" gorm:"size:45"`  // 通知来源IP，用于异常检测
 
 	// Refund Information
 	RefundAmount float64    `json:"refund_amount" gorm:"type:decimal(10,2);default:0"` // 退款金额
@@ -285,16 +285,16 @@ func (pr *PaymentRecord) ToSecureResponse() *PaymentRecordResponse {
 		Currency:      pr.Currency,
 		Status:        pr.Status,
 		// Payment URLs are omitted after expiration for security
-		PaymentURL:    pr.getSecurePaymentURL(),
-		QRCodeURL:     pr.getSecureQRCodeURL(),
-		ExpiredAt:     pr.ExpiredAt,
-		PaidAt:        pr.PaidAt,
-		RefundAmount:  pr.RefundAmount,
-		RefundStatus:  pr.RefundStatus,
-		RefundedAt:    pr.RefundedAt,
-		RefundReason:  pr.RefundReason,
-		CreatedAt:     pr.CreatedAt,
-		UpdatedAt:     pr.UpdatedAt,
+		PaymentURL:   pr.getSecurePaymentURL(),
+		QRCodeURL:    pr.getSecureQRCodeURL(),
+		ExpiredAt:    pr.ExpiredAt,
+		PaidAt:       pr.PaidAt,
+		RefundAmount: pr.RefundAmount,
+		RefundStatus: pr.RefundStatus,
+		RefundedAt:   pr.RefundedAt,
+		RefundReason: pr.RefundReason,
+		CreatedAt:    pr.CreatedAt,
+		UpdatedAt:    pr.UpdatedAt,
 
 		// Computed fields
 		IsExpired:        pr.IsExpired(),
@@ -310,11 +310,11 @@ func (pr *PaymentRecord) maskTransactionID() string {
 	if pr.TransactionID == "" {
 		return ""
 	}
-	
+
 	if len(pr.TransactionID) <= 8 {
 		return strings.Repeat("*", len(pr.TransactionID))
 	}
-	
+
 	// Show first 4 and last 4 characters, mask the middle
 	return pr.TransactionID[:4] + strings.Repeat("*", len(pr.TransactionID)-8) + pr.TransactionID[len(pr.TransactionID)-4:]
 }

@@ -26,7 +26,6 @@ func NewUserSubscriptionService(db *gorm.DB, subscriptionPlanService interfaces.
 	}
 }
 
-
 // CreateUserSubscription creates a new user subscription
 func (s *UserSubscriptionService) CreateUserSubscription(ctx context.Context, req *interfaces.CreateSubscriptionRequest) (*entities.UserSubscription, error) {
 	// Get the subscription plan
@@ -383,7 +382,6 @@ func (s *UserSubscriptionService) GetUserSubscriptionsWithRelations(ctx context.
 	return subscriptions, totalCount, nil
 }
 
-
 // GetActiveUserSubscription gets the active subscription for a user and plan
 func (s *UserSubscriptionService) GetActiveUserSubscription(ctx context.Context, userID, planID uint) (*entities.UserSubscription, error) {
 	var subscription entities.UserSubscription
@@ -532,8 +530,8 @@ func (s *UserSubscriptionService) CancelUserSubscription(ctx context.Context, su
 
 	now := time.Now()
 	updates := map[string]any{
-		"cancelled_at":        &now,
-		"cancellation_reason": reason,
+		"cancelled_at":         &now,
+		"cancellation_reason":  reason,
 		"cancel_at_period_end": cancelAtPeriodEnd,
 	}
 
@@ -995,7 +993,6 @@ func (s *UserSubscriptionService) UpdateTrafficUsage(ctx context.Context, subscr
 	return nil
 }
 
-
 // GetSubscriptionTrafficStats gets traffic statistics for a subscription
 func (s *UserSubscriptionService) GetSubscriptionTrafficStats(ctx context.Context, subscriptionID uint) (map[string]any, error) {
 	subscription, err := s.GetUserSubscription(ctx, subscriptionID)
@@ -1004,10 +1001,10 @@ func (s *UserSubscriptionService) GetSubscriptionTrafficStats(ctx context.Contex
 	}
 
 	stats := map[string]any{
-		"traffic_limit": subscription.TrafficLimit,
-		"traffic_used":  subscription.TrafficUsed,
+		"traffic_limit":     subscription.TrafficLimit,
+		"traffic_used":      subscription.TrafficUsed,
 		"traffic_remaining": subscription.TrafficLimit - subscription.TrafficUsed,
-		"usage_percentage": float64(subscription.TrafficUsed) / float64(subscription.TrafficLimit) * 100,
+		"usage_percentage":  float64(subscription.TrafficUsed) / float64(subscription.TrafficLimit) * 100,
 	}
 
 	return stats, nil
@@ -1078,4 +1075,3 @@ func (s *UserSubscriptionService) GetSubscriptionStatistics(ctx context.Context)
 
 	return stats, nil
 }
-

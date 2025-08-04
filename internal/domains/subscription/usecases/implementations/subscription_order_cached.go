@@ -30,6 +30,7 @@ func NewSubscriptionOrderServiceWithCache(
 	subscriptionPlanService interfaces.SubscriptionPlanService,
 	userSubscriptionService interfaces.UserSubscriptionService,
 	paymentService paymentInterfaces.PaymentService,
+	paymentMethodService paymentInterfaces.PaymentMethodService,
 	couponService couponInterfaces.CouponService,
 	invoiceService invoiceInterfaces.InvoiceService,
 	cacheManager cache.CacheManager,
@@ -40,10 +41,11 @@ func NewSubscriptionOrderServiceWithCache(
 		subscriptionPlanService,
 		userSubscriptionService,
 		paymentService,
+		paymentMethodService,
 		couponService,
 		invoiceService,
 	)
-	
+
 	orderCache := cache.NewCacheAside[entities.SubscriptionOrder](
 		cacheManager.GetCache(),
 		cache.CachePrefixSubscription,
@@ -55,9 +57,9 @@ func NewSubscriptionOrderServiceWithCache(
 
 	return &CachedSubscriptionOrderService{
 		SubscriptionOrderService: baseService,
-		cacheManager:            cacheManager,
-		cacheKeys:               cacheKeys,
-		orderCache:              orderCache,
+		cacheManager:             cacheManager,
+		cacheKeys:                cacheKeys,
+		orderCache:               orderCache,
 	}
 }
 
@@ -90,7 +92,7 @@ func (sos *CachedSubscriptionOrderService) CreateSubscriptionOrder(ctx context.C
 		}
 
 		if err := sos.orderCache.Set(ctx, order); err != nil {
-			logger.Error("Failed to cache new order", 
+			logger.Error("Failed to cache new order",
 				logger.Uint("order_id", order.ID),
 				logger.Error2("error", err))
 		}
@@ -111,22 +113,22 @@ func (sos *CachedSubscriptionOrderService) CreateSubscriptionOrder(ctx context.C
 // GetSubscriptionOrder gets order by ID with caching
 func (sos *CachedSubscriptionOrderService) GetSubscriptionOrder(ctx context.Context, orderID uint) (*entities.SubscriptionOrder, error) {
 	cacheKey := sos.cacheKeys.Subscription.OrderByID(orderID)
-	
+
 	order, err := sos.orderCache.Get(ctx, cacheKey, func() (*entities.SubscriptionOrder, error) {
 		return sos.SubscriptionOrderService.GetSubscriptionOrder(ctx, orderID)
 	})
-	
+
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return order, nil
 }
 
 // GetSubscriptionOrderByNumber gets order by order number with caching
 func (sos *CachedSubscriptionOrderService) GetSubscriptionOrderByNumber(ctx context.Context, orderNumber string) (*entities.SubscriptionOrder, error) {
 	cacheKey := sos.cacheKeys.Subscription.OrderByNumber(orderNumber)
-	
+
 	cached, err := sos.cacheManager.GetCache().Get(ctx, cacheKey)
 	if err == nil && cached != nil {
 		var order entities.SubscriptionOrder
@@ -134,27 +136,27 @@ func (sos *CachedSubscriptionOrderService) GetSubscriptionOrderByNumber(ctx cont
 			return &order, nil
 		}
 	}
-	
+
 	// Cache miss - fetch from database
 	order, err := sos.SubscriptionOrderService.GetSubscriptionOrderByNumber(ctx, orderNumber)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Cache the result
 	if order != nil {
 		if data, err := json.Marshal(order); err == nil {
 			_ = sos.cacheManager.GetCache().Set(ctx, cacheKey, data, cache.MediumCacheTTL)
 		}
 	}
-	
+
 	return order, nil
 }
 
 // GetSubscriptionOrders gets orders with caching for list results
 func (sos *CachedSubscriptionOrderService) GetSubscriptionOrders(ctx context.Context, req *interfaces.GetSubscriptionOrdersRequest) ([]*entities.SubscriptionOrder, int64, error) {
 	cacheKey := sos.buildOrderListCacheKey(req)
-	
+
 	// Use cache decorator for list results
 	cached, err := sos.cacheManager.GetCache().Get(ctx, cacheKey)
 	if err == nil && cached != nil {
@@ -166,13 +168,13 @@ func (sos *CachedSubscriptionOrderService) GetSubscriptionOrders(ctx context.Con
 			return result.Orders, result.Total, nil
 		}
 	}
-	
+
 	// Cache miss - fetch from database
 	orders, total, err := sos.SubscriptionOrderService.GetSubscriptionOrders(ctx, req)
 	if err != nil {
 		return nil, 0, err
 	}
-	
+
 	// Cache the result
 	result := struct {
 		Orders []*entities.SubscriptionOrder `json:"orders"`
@@ -181,18 +183,18 @@ func (sos *CachedSubscriptionOrderService) GetSubscriptionOrders(ctx context.Con
 		Orders: orders,
 		Total:  total,
 	}
-	
+
 	if data, err := json.Marshal(result); err == nil {
 		_ = sos.cacheManager.GetCache().Set(ctx, cacheKey, data, cache.MediumCacheTTL)
 	}
-	
+
 	return orders, total, nil
 }
 
 // GetUserSubscriptionOrders gets user orders with caching
 func (sos *CachedSubscriptionOrderService) GetUserSubscriptionOrders(ctx context.Context, userID uint, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
 	cacheKey := fmt.Sprintf("%s:limit:%d:offset:%d", sos.cacheKeys.Subscription.UserOrders(userID), limit, offset)
-	
+
 	cached, err := sos.cacheManager.GetCache().Get(ctx, cacheKey)
 	if err == nil && cached != nil {
 		var result struct {
@@ -203,13 +205,13 @@ func (sos *CachedSubscriptionOrderService) GetUserSubscriptionOrders(ctx context
 			return result.Orders, result.Total, nil
 		}
 	}
-	
+
 	// Cache miss - fetch from database
 	orders, total, err := sos.SubscriptionOrderService.GetUserSubscriptionOrders(ctx, userID, limit, offset)
 	if err != nil {
 		return nil, 0, err
 	}
-	
+
 	// Cache the result
 	result := struct {
 		Orders []*entities.SubscriptionOrder `json:"orders"`
@@ -218,11 +220,11 @@ func (sos *CachedSubscriptionOrderService) GetUserSubscriptionOrders(ctx context
 		Orders: orders,
 		Total:  total,
 	}
-	
+
 	if data, err := json.Marshal(result); err == nil {
 		_ = sos.cacheManager.GetCache().Set(ctx, cacheKey, data, cache.MediumCacheTTL)
 	}
-	
+
 	return orders, total, nil
 }
 
@@ -268,13 +270,13 @@ func (sos *CachedSubscriptionOrderService) CancelSubscriptionOrder(ctx context.C
 	return nil
 }
 
-// Note: ExpireSubscriptionOrder, DeleteSubscriptionOrder, and ProcessExpiredOrders 
+// Note: ExpireSubscriptionOrder, DeleteSubscriptionOrder, and ProcessExpiredOrders
 // are not implemented in the base service
 
 // GetOrderStatistics gets statistics with caching
 func (sos *CachedSubscriptionOrderService) GetOrderStatistics(ctx context.Context, fromDate, toDate time.Time) (map[string]any, error) {
 	cacheKey := fmt.Sprintf("stats:order:from:%s:to:%s", fromDate.Format("2006-01-02"), toDate.Format("2006-01-02"))
-	
+
 	cached, err := sos.cacheManager.GetCache().Get(ctx, cacheKey)
 	if err == nil && cached != nil {
 		var stats map[string]any
@@ -282,17 +284,17 @@ func (sos *CachedSubscriptionOrderService) GetOrderStatistics(ctx context.Contex
 			return stats, nil
 		}
 	}
-	
+
 	stats, err := sos.SubscriptionOrderService.GetOrderStatistics(ctx, fromDate, toDate)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Cache statistics with medium TTL
 	if data, err := json.Marshal(stats); err == nil {
 		_ = sos.cacheManager.GetCache().Set(ctx, cacheKey, data, cache.MediumCacheTTL)
 	}
-	
+
 	return stats, nil
 }
 
@@ -302,14 +304,14 @@ func (sos *CachedSubscriptionOrderService) invalidateOrderCaches(ctx context.Con
 	// Invalidate specific order caches
 	orderByIDKey := sos.cacheKeys.Subscription.OrderByID(orderID)
 	if err := sos.orderCache.Invalidate(ctx, orderByIDKey); err != nil {
-		logger.Error("Failed to invalidate order by ID cache", 
+		logger.Error("Failed to invalidate order by ID cache",
 			logger.Uint("order_id", orderID),
 			logger.Error2("error", err))
 	}
 
 	orderByNumberKey := sos.cacheKeys.Subscription.OrderByNumber(orderNumber)
 	if err := sos.cacheManager.GetCache().Delete(ctx, orderByNumberKey); err != nil {
-		logger.Error("Failed to invalidate order by number cache", 
+		logger.Error("Failed to invalidate order by number cache",
 			logger.String("order_number", orderNumber),
 			logger.Error2("error", err))
 	}
@@ -325,7 +327,7 @@ func (sos *CachedSubscriptionOrderService) invalidateUserOrderCaches(ctx context
 	// Invalidate user-specific order caches
 	userOrdersKey := sos.cacheKeys.Subscription.UserOrders(userID)
 	if err := sos.cacheManager.GetCache().Delete(ctx, userOrdersKey); err != nil {
-		logger.Error("Failed to invalidate user orders cache", 
+		logger.Error("Failed to invalidate user orders cache",
 			logger.Uint("user_id", userID),
 			logger.Error2("error", err))
 	}
@@ -335,10 +337,10 @@ func (sos *CachedSubscriptionOrderService) invalidateUserOrderCaches(ctx context
 		fmt.Sprintf("%s:*", userOrdersKey),
 		fmt.Sprintf("list:*user:%d*", userID),
 	}
-	
+
 	for _, pattern := range patterns {
 		if err := sos.cacheManager.GetCache().DeleteByPattern(ctx, pattern); err != nil {
-			logger.Error("Failed to invalidate user order list cache", 
+			logger.Error("Failed to invalidate user order list cache",
 				logger.String("pattern", pattern),
 				logger.Error2("error", err))
 		}
@@ -351,10 +353,10 @@ func (sos *CachedSubscriptionOrderService) invalidateOrderListCaches(ctx context
 		cache.CachePrefixSubscription + "list:order:*",
 		cache.CachePrefixSubscription + "stats:*",
 	}
-	
+
 	for _, pattern := range patterns {
 		if err := sos.cacheManager.GetCache().DeleteByPattern(ctx, pattern); err != nil {
-			logger.Error("Failed to invalidate order list cache pattern", 
+			logger.Error("Failed to invalidate order list cache pattern",
 				logger.String("pattern", pattern),
 				logger.Error2("error", err))
 		}
@@ -368,10 +370,10 @@ func (sos *CachedSubscriptionOrderService) invalidateAllOrderCaches(ctx context.
 		cache.CachePrefixSubscription + "list:order:*",
 		cache.CachePrefixSubscription + "stats:*",
 	}
-	
+
 	for _, pattern := range patterns {
 		if err := sos.cacheManager.GetCache().DeleteByPattern(ctx, pattern); err != nil {
-			logger.Error("Failed to invalidate all order caches", 
+			logger.Error("Failed to invalidate all order caches",
 				logger.String("pattern", pattern),
 				logger.Error2("error", err))
 		}
@@ -383,7 +385,7 @@ func (sos *CachedSubscriptionOrderService) invalidateAllOrderCaches(ctx context.
 func (sos *CachedSubscriptionOrderService) buildOrderListCacheKey(req *interfaces.GetSubscriptionOrdersRequest) string {
 	var keyParts []string
 	keyParts = append(keyParts, "list", "order")
-	
+
 	if req.UserID > 0 {
 		keyParts = append(keyParts, "user", fmt.Sprintf("%d", req.UserID))
 	}
@@ -399,9 +401,16 @@ func (sos *CachedSubscriptionOrderService) buildOrderListCacheKey(req *interface
 	if req.DateTo != "" {
 		keyParts = append(keyParts, "to", req.DateTo)
 	}
-	
+
 	keyParts = append(keyParts, fmt.Sprintf("limit:%d", req.Limit))
 	keyParts = append(keyParts, fmt.Sprintf("offset:%d", req.Offset))
-	
+
 	return cache.CachePrefixSubscription + strings.Join(keyParts, ":")
+}
+
+// QuickPurchase delegates to base service (no caching needed for payment creation)
+func (sos *CachedSubscriptionOrderService) QuickPurchase(ctx context.Context, req *interfaces.QuickPurchaseRequest) (*interfaces.QuickPurchaseResponse, error) {
+	// Quick purchase doesn't need caching since it's just creating a payment
+	// The actual order/invoice creation happens asynchronously after payment success
+	return sos.SubscriptionOrderService.QuickPurchase(ctx, req)
 }

@@ -9,7 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	
+
 	"linke/internal/shared/logger"
 )
 
@@ -18,11 +18,11 @@ type MigrationFunc func(from, to Version, data any) (any, error)
 
 // FieldMapping defines how to map fields between versions
 type FieldMapping struct {
-	FromField   string      `json:"from_field"`
-	ToField     string      `json:"to_field"`
-	Transform   string      `json:"transform,omitempty"` // transformation type
-	DefaultValue any        `json:"default_value,omitempty"`
-	Required    bool        `json:"required"`
+	FromField    string `json:"from_field"`
+	ToField      string `json:"to_field"`
+	Transform    string `json:"transform,omitempty"` // transformation type
+	DefaultValue any    `json:"default_value,omitempty"`
+	Required     bool   `json:"required"`
 }
 
 // VersionMigration defines how to migrate between two versions
@@ -56,7 +56,7 @@ func (mr *MigrationRegistry) migrationKey(from, to Version) string {
 func (mr *MigrationRegistry) RegisterMigration(migration VersionMigration) {
 	key := mr.migrationKey(migration.FromVersion, migration.ToVersion)
 	mr.migrations[key] = migration
-	
+
 	mr.logger.Info("Registered version migration",
 		zap.String("from_version", migration.FromVersion.String()),
 		zap.String("to_version", migration.ToVersion.String()),
@@ -78,17 +78,17 @@ func (mr *MigrationRegistry) Migrate(from, to Version, data any) (any, error) {
 	if from.Compare(to) == 0 {
 		return data, nil
 	}
-	
+
 	migration, exists := mr.GetMigration(from, to)
 	if !exists {
 		return nil, fmt.Errorf("no migration found from version %s to %s", from.String(), to.String())
 	}
-	
+
 	// Use custom migration function if available
 	if migration.CustomFunc != nil {
 		return migration.CustomFunc(from, to, data)
 	}
-	
+
 	// Use field mappings for migration
 	return mr.migrateWithMappings(*migration, data)
 }
@@ -100,13 +100,13 @@ func (mr *MigrationRegistry) migrateWithMappings(migration VersionMigration, dat
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert data to map: %w", err)
 	}
-	
+
 	result := make(map[string]any)
-	
+
 	// Apply field mappings
 	for _, mapping := range migration.Mappings {
 		value, exists := dataMap[mapping.FromField]
-		
+
 		// Handle missing required fields
 		if !exists && mapping.Required {
 			if mapping.DefaultValue != nil {
@@ -115,12 +115,12 @@ func (mr *MigrationRegistry) migrateWithMappings(migration VersionMigration, dat
 				return nil, fmt.Errorf("required field %s is missing and no default value provided", mapping.FromField)
 			}
 		}
-		
+
 		// Use default value if field doesn't exist
 		if !exists && mapping.DefaultValue != nil {
 			value = mapping.DefaultValue
 		}
-		
+
 		// Apply transformation if specified
 		if mapping.Transform != "" && value != nil {
 			transformedValue, err := mr.applyTransform(mapping.Transform, value)
@@ -134,13 +134,13 @@ func (mr *MigrationRegistry) migrateWithMappings(migration VersionMigration, dat
 				value = transformedValue
 			}
 		}
-		
+
 		// Set the mapped field
 		if value != nil {
 			result[mapping.ToField] = value
 		}
 	}
-	
+
 	// Copy any unmapped fields that don't conflict
 	for key, value := range dataMap {
 		if _, exists := result[key]; !exists {
@@ -152,14 +152,14 @@ func (mr *MigrationRegistry) migrateWithMappings(migration VersionMigration, dat
 					break
 				}
 			}
-			
+
 			// If not renamed, copy the field
 			if !isRenamed {
 				result[key] = value
 			}
 		}
 	}
-	
+
 	return result, nil
 }
 
@@ -169,13 +169,13 @@ func (mr *MigrationRegistry) toMap(data any) (map[string]any, error) {
 	if dataMap, ok := data.(map[string]any); ok {
 		return dataMap, nil
 	}
-	
+
 	// Convert via JSON marshaling/unmarshaling
 	jsonBytes, err := json.Marshal(data)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var result map[string]any
 	err = json.Unmarshal(jsonBytes, &result)
 	return result, err
@@ -273,14 +273,14 @@ func (rm *ResponseMigrator) MigrateResponse(c *gin.Context, data any, responseVe
 	if !exists {
 		return data, nil // No version context, return data as-is
 	}
-	
+
 	requestedVersion := versionCtx.RequestedVersion
-	
+
 	// If versions match, no migration needed
 	if responseVersion.Compare(requestedVersion) == 0 {
 		return data, nil
 	}
-	
+
 	// Perform migration
 	migratedData, err := rm.registry.Migrate(responseVersion, requestedVersion, data)
 	if err != nil {
@@ -291,16 +291,16 @@ func (rm *ResponseMigrator) MigrateResponse(c *gin.Context, data any, responseVe
 		)
 		return nil, err
 	}
-	
+
 	// Add migration headers
 	c.Header("X-API-Response-Migrated-From", responseVersion.String())
 	c.Header("X-API-Response-Migrated-To", requestedVersion.String())
-	
+
 	rm.logger.Debug("Response migration successful",
 		zap.String("from_version", responseVersion.String()),
 		zap.String("to_version", requestedVersion.String()),
 	)
-	
+
 	return migratedData, nil
 }
 
@@ -309,13 +309,13 @@ func (rm *ResponseMigrator) Middleware(responseVersion Version) gin.HandlerFunc 
 	return func(c *gin.Context) {
 		// Continue with the request
 		c.Next()
-		
+
 		// Check if response needs migration
 		if c.Writer.Status() >= 200 && c.Writer.Status() < 300 {
 			// Note: This is a placeholder for response migration
 			// In practice, you would need to capture and migrate the response body
 			// which requires more complex middleware implementation
-			
+
 			c.Header("X-API-Response-Version", responseVersion.String())
 		}
 	}
@@ -325,7 +325,7 @@ func (rm *ResponseMigrator) Middleware(responseVersion Version) gin.HandlerFunc 
 func PrebuiltMigrations(log logger.Logger) map[string]VersionMigration {
 	v1 := NewVersion(1, 0, 0)
 	v2 := NewVersion(2, 0, 0)
-	
+
 	return map[string]VersionMigration{
 		"user_v1_to_v2": {
 			FromVersion: v1,
@@ -365,7 +365,7 @@ func NewAutoMigrationBuilder(log logger.Logger) *AutoMigrationBuilder {
 // BuildMigration builds migration mappings from struct tags
 func (amb *AutoMigrationBuilder) BuildMigration(fromStruct, toStruct any, fromVersion, toVersion Version) VersionMigration {
 	mappings := amb.extractMappings(fromStruct, toStruct)
-	
+
 	return VersionMigration{
 		FromVersion: fromVersion,
 		ToVersion:   toVersion,
@@ -376,17 +376,17 @@ func (amb *AutoMigrationBuilder) BuildMigration(fromStruct, toStruct any, fromVe
 // extractMappings extracts field mappings from struct tags
 func (amb *AutoMigrationBuilder) extractMappings(fromStruct, toStruct any) []FieldMapping {
 	var mappings []FieldMapping
-	
+
 	fromType := reflect.TypeOf(fromStruct)
 	toType := reflect.TypeOf(toStruct)
-	
+
 	if fromType.Kind() == reflect.Ptr {
 		fromType = fromType.Elem()
 	}
 	if toType.Kind() == reflect.Ptr {
 		toType = toType.Elem()
 	}
-	
+
 	// Map fields from source struct
 	for i := 0; i < fromType.NumField(); i++ {
 		fromField := fromType.Field(i)
@@ -394,9 +394,9 @@ func (amb *AutoMigrationBuilder) extractMappings(fromStruct, toStruct any) []Fie
 		if jsonTag == "" || jsonTag == "-" {
 			continue
 		}
-		
+
 		fromFieldName := strings.Split(jsonTag, ",")[0]
-		
+
 		// Find corresponding field in target struct
 		for j := 0; j < toType.NumField(); j++ {
 			toField := toType.Field(j)
@@ -404,9 +404,9 @@ func (amb *AutoMigrationBuilder) extractMappings(fromStruct, toStruct any) []Fie
 			if toJsonTag == "" || toJsonTag == "-" {
 				continue
 			}
-			
+
 			toFieldName := strings.Split(toJsonTag, ",")[0]
-			
+
 			// Check if fields match by name or migration tag
 			if fromFieldName == toFieldName || fromField.Tag.Get("migrate") == toFieldName {
 				mapping := FieldMapping{
@@ -414,18 +414,17 @@ func (amb *AutoMigrationBuilder) extractMappings(fromStruct, toStruct any) []Fie
 					ToField:   toFieldName,
 					Required:  strings.Contains(toField.Tag.Get("json"), "required"),
 				}
-				
+
 				// Add transformation if specified
 				if transform := fromField.Tag.Get("transform"); transform != "" {
 					mapping.Transform = transform
 				}
-				
+
 				mappings = append(mappings, mapping)
 				break
 			}
 		}
 	}
-	
+
 	return mappings
 }
-

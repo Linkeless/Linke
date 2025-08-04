@@ -2,9 +2,9 @@ package versioning
 
 import (
 	"time"
-	
+
 	"go.uber.org/fx"
-	
+
 	"linke/internal/shared/config"
 )
 
@@ -12,16 +12,16 @@ import (
 var Module = fx.Module("versioning",
 	// 提供版本配置
 	fx.Provide(NewVersionConfigFromConfig),
-	
+
 	// 提供版本中间件
 	fx.Provide(NewVersionMiddleware),
-	
+
 	// Provide migration registry
 	fx.Provide(NewMigrationRegistry),
-	
+
 	// Provide response migrator
 	fx.Provide(NewResponseMigrator),
-	
+
 	// Provide auto migration builder
 	fx.Provide(NewAutoMigrationBuilder),
 )
@@ -32,7 +32,7 @@ func NewVersionConfigFromConfig(cfg *config.Config) VersionConfig {
 	defaultVersion, _ := ParseVersion(cfg.Versioning.DefaultVersion)
 	minVersion, _ := ParseVersion(cfg.Versioning.MinVersion)
 	maxVersion, _ := ParseVersion(cfg.Versioning.MaxVersion)
-	
+
 	// Parse strategy
 	var strategy VersioningStrategy
 	switch cfg.Versioning.Strategy {
@@ -45,7 +45,7 @@ func NewVersionConfigFromConfig(cfg *config.Config) VersionConfig {
 	default:
 		strategy = URLPathStrategy
 	}
-	
+
 	// Parse sunset date
 	var sunsetDate *time.Time
 	if cfg.Versioning.SunsetV1Date != "" {
@@ -53,7 +53,7 @@ func NewVersionConfigFromConfig(cfg *config.Config) VersionConfig {
 			sunsetDate = &parsed
 		}
 	}
-	
+
 	// 创建版本信息
 	now := time.Now()
 	supportedVersions := []VersionInfo{
@@ -71,7 +71,7 @@ func NewVersionConfigFromConfig(cfg *config.Config) VersionConfig {
 			Released:    now.AddDate(0, -6, 0), // Released 6 months ago
 		},
 	}
-	
+
 	return VersionConfig{
 		Strategy:                 strategy,
 		DefaultVersion:           defaultVersion,

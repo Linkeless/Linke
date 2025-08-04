@@ -118,11 +118,12 @@ func (bus *InMemoryEventBus) Unsubscribe(eventTypes []string, handler EventHandl
 	for _, eventType := range eventTypes {
 		if handlers, exists := bus.handlers[eventType]; exists {
 			for i, h := range handlers {
-				if h == handler {
+				if h.ID() == handler.ID() {
 					// Remove handler from slice
 					bus.handlers[eventType] = append(handlers[:i], handlers[i+1:]...)
 					bus.logger.Info("Event handler unsubscribed",
-						logger.String("event_type", eventType))
+						logger.String("event_type", eventType),
+						logger.String("handler_id", handler.ID()))
 					break
 				}
 			}

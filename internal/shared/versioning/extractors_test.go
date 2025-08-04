@@ -9,7 +9,7 @@ import (
 
 func TestURLPathExtractor(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	
+
 	tests := []struct {
 		name        string
 		urlPrefix   string
@@ -58,27 +58,27 @@ func TestURLPathExtractor(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			extractor := NewURLPathExtractor(tt.urlPrefix)
-			
+
 			// Create a test request
 			req := httptest.NewRequest("GET", tt.path, nil)
 			w := httptest.NewRecorder()
 			c, _ := gin.CreateTestContext(w)
 			c.Request = req
-			
+
 			version, err := extractor.ExtractVersion(c)
-			
+
 			if tt.expectError {
 				if err == nil {
 					t.Errorf("expected error for path %s, but got none", tt.path)
 				}
 				return
 			}
-			
+
 			if err != nil {
 				t.Errorf("unexpected error for path %s: %v", tt.path, err)
 				return
 			}
-			
+
 			if version.Compare(tt.expected) != 0 {
 				t.Errorf("path %s: expected %s, got %s", tt.path, tt.expected.String(), version.String())
 			}
@@ -88,7 +88,7 @@ func TestURLPathExtractor(t *testing.T) {
 
 func TestHeaderExtractor(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	
+
 	tests := []struct {
 		name        string
 		headerName  string
@@ -131,7 +131,7 @@ func TestHeaderExtractor(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			extractor := NewHeaderExtractor(tt.headerName)
-			
+
 			// Create a test request
 			req := httptest.NewRequest("GET", "/api/users", nil)
 			if tt.headerValue != "" {
@@ -140,23 +140,23 @@ func TestHeaderExtractor(t *testing.T) {
 			w := httptest.NewRecorder()
 			c, _ := gin.CreateTestContext(w)
 			c.Request = req
-			
+
 			version, err := extractor.ExtractVersion(c)
-			
+
 			if tt.expectError {
 				if err == nil {
 					t.Errorf("expected error for header %s=%s, but got none", tt.headerName, tt.headerValue)
 				}
 				return
 			}
-			
+
 			if err != nil {
 				t.Errorf("unexpected error for header %s=%s: %v", tt.headerName, tt.headerValue, err)
 				return
 			}
-			
+
 			if version.Compare(tt.expected) != 0 {
-				t.Errorf("header %s=%s: expected %s, got %s", 
+				t.Errorf("header %s=%s: expected %s, got %s",
 					tt.headerName, tt.headerValue, tt.expected.String(), version.String())
 			}
 		})
@@ -165,7 +165,7 @@ func TestHeaderExtractor(t *testing.T) {
 
 func TestQueryExtractor(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	
+
 	tests := []struct {
 		name        string
 		queryParam  string
@@ -208,7 +208,7 @@ func TestQueryExtractor(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			extractor := NewQueryExtractor(tt.queryParam)
-			
+
 			// Create a test request
 			path := "/api/users"
 			if tt.queryValue != "" {
@@ -218,23 +218,23 @@ func TestQueryExtractor(t *testing.T) {
 			w := httptest.NewRecorder()
 			c, _ := gin.CreateTestContext(w)
 			c.Request = req
-			
+
 			version, err := extractor.ExtractVersion(c)
-			
+
 			if tt.expectError {
 				if err == nil {
 					t.Errorf("expected error for query %s=%s, but got none", tt.queryParam, tt.queryValue)
 				}
 				return
 			}
-			
+
 			if err != nil {
 				t.Errorf("unexpected error for query %s=%s: %v", tt.queryParam, tt.queryValue, err)
 				return
 			}
-			
+
 			if version.Compare(tt.expected) != 0 {
-				t.Errorf("query %s=%s: expected %s, got %s", 
+				t.Errorf("query %s=%s: expected %s, got %s",
 					tt.queryParam, tt.queryValue, tt.expected.String(), version.String())
 			}
 		})
@@ -243,7 +243,7 @@ func TestQueryExtractor(t *testing.T) {
 
 func TestContentTypeExtractor(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	
+
 	tests := []struct {
 		name        string
 		mediaType   string
@@ -298,7 +298,7 @@ func TestContentTypeExtractor(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			extractor := NewContentTypeExtractor(tt.mediaType)
-			
+
 			// Create a test request
 			req := httptest.NewRequest("GET", "/api/users", nil)
 			if tt.acceptValue != "" {
@@ -307,23 +307,23 @@ func TestContentTypeExtractor(t *testing.T) {
 			w := httptest.NewRecorder()
 			c, _ := gin.CreateTestContext(w)
 			c.Request = req
-			
+
 			version, err := extractor.ExtractVersion(c)
-			
+
 			if tt.expectError {
 				if err == nil {
 					t.Errorf("expected error for Accept=%s, but got none", tt.acceptValue)
 				}
 				return
 			}
-			
+
 			if err != nil {
 				t.Errorf("unexpected error for Accept=%s: %v", tt.acceptValue, err)
 				return
 			}
-			
+
 			if version.Compare(tt.expected) != 0 {
-				t.Errorf("Accept=%s: expected %s, got %s", 
+				t.Errorf("Accept=%s: expected %s, got %s",
 					tt.acceptValue, tt.expected.String(), version.String())
 			}
 		})
@@ -332,67 +332,67 @@ func TestContentTypeExtractor(t *testing.T) {
 
 func TestCompositeExtractor(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	
+
 	t.Run("tries extractors in order", func(t *testing.T) {
 		urlExtractor := NewURLPathExtractor("/api")
 		headerExtractor := NewHeaderExtractor("X-API-Version")
 		queryExtractor := NewQueryExtractor("version")
-		
+
 		composite := NewCompositeExtractor(urlExtractor, headerExtractor, queryExtractor)
-		
+
 		// Test URL path extraction (first extractor succeeds)
 		req := httptest.NewRequest("GET", "/api/v2/users", nil)
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
 		c.Request = req
-		
+
 		version, err := composite.ExtractVersion(c)
 		if err != nil {
 			t.Errorf("unexpected error: %v", err)
 		}
-		
+
 		expected := NewVersion(2, 0, 0)
 		if version.Compare(expected) != 0 {
 			t.Errorf("expected %s, got %s", expected.String(), version.String())
 		}
 	})
-	
+
 	t.Run("falls back to second extractor", func(t *testing.T) {
 		urlExtractor := NewURLPathExtractor("/api")
 		headerExtractor := NewHeaderExtractor("X-API-Version")
-		
+
 		composite := NewCompositeExtractor(urlExtractor, headerExtractor)
-		
+
 		// Create request without version in URL but with header
 		req := httptest.NewRequest("GET", "/api/users", nil)
 		req.Header.Set("X-API-Version", "v1")
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
 		c.Request = req
-		
+
 		version, err := composite.ExtractVersion(c)
 		if err != nil {
 			t.Errorf("unexpected error: %v", err)
 		}
-		
+
 		expected := NewVersion(1, 0, 0)
 		if version.Compare(expected) != 0 {
 			t.Errorf("expected %s, got %s", expected.String(), version.String())
 		}
 	})
-	
+
 	t.Run("all extractors fail", func(t *testing.T) {
 		urlExtractor := NewURLPathExtractor("/api")
 		headerExtractor := NewHeaderExtractor("X-API-Version")
-		
+
 		composite := NewCompositeExtractor(urlExtractor, headerExtractor)
-		
+
 		// Create request without version anywhere
 		req := httptest.NewRequest("GET", "/api/users", nil)
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
 		c.Request = req
-		
+
 		_, err := composite.ExtractVersion(c)
 		if err == nil {
 			t.Error("expected error when all extractors fail")
@@ -450,7 +450,7 @@ func TestCreateExtractor(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			extractor := CreateExtractor(tt.config)
-			
+
 			// Check the type of the extractor
 			extractorType := getExtractorType(extractor)
 			if extractorType != tt.expected {

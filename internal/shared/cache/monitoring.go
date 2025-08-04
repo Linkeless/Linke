@@ -57,15 +57,15 @@ func (h *CacheMonitoringHandler) GetMetrics(c *gin.Context) {
 // @Router /api/v1/admin/cache/metrics/{prefix} [get]
 func (h *CacheMonitoringHandler) GetMetricsByPrefix(c *gin.Context) {
 	prefix := c.Param("prefix")
-	
+
 	if prefix == "" {
 		response.BadRequest(c, "Prefix is required")
 		return
 	}
-	
+
 	prefixWithColon := prefix + ":"
 	metrics := h.collector.GetMetricsByPrefix(prefixWithColon)
-	
+
 	response.Success(c, metrics)
 }
 
@@ -79,13 +79,13 @@ func (h *CacheMonitoringHandler) GetMetricsByPrefix(c *gin.Context) {
 // @Router /api/v1/admin/cache/stats [get]
 func (h *CacheMonitoringHandler) GetCacheStats(c *gin.Context) {
 	ctx := c.Request.Context()
-	
+
 	stats, err := h.manager.GetStats(ctx)
 	if err != nil {
 		response.Error(c, http.StatusInternalServerError, 500, err.Error())
 		return
 	}
-	
+
 	response.Success(c, stats)
 }
 
@@ -100,7 +100,7 @@ func (h *CacheMonitoringHandler) GetCacheStats(c *gin.Context) {
 func (h *CacheMonitoringHandler) ResetMetrics(c *gin.Context) {
 	h.collector.Reset()
 	response.Success(c, map[string]string{
-		"message": "Cache metrics reset successfully",
+		"message":  "Cache metrics reset successfully",
 		"reset_at": time.Now().Format(time.RFC3339),
 	})
 }
@@ -115,16 +115,16 @@ func (h *CacheMonitoringHandler) ResetMetrics(c *gin.Context) {
 // @Router /api/v1/admin/cache/flush [delete]
 func (h *CacheMonitoringHandler) FlushCache(c *gin.Context) {
 	ctx := c.Request.Context()
-	
+
 	if err := h.manager.GetCache().Flush(ctx); err != nil {
 		response.Error(c, http.StatusInternalServerError, 500, err.Error())
 		return
 	}
-	
+
 	h.collector.Reset()
-	
+
 	response.Success(c, map[string]string{
-		"message": "Cache flushed successfully",
+		"message":    "Cache flushed successfully",
 		"flushed_at": time.Now().Format(time.RFC3339),
 	})
 }
@@ -140,22 +140,22 @@ func (h *CacheMonitoringHandler) FlushCache(c *gin.Context) {
 // @Router /api/v1/admin/cache/pattern/{pattern} [delete]
 func (h *CacheMonitoringHandler) DeleteByPattern(c *gin.Context) {
 	pattern := c.Param("pattern")
-	
+
 	if pattern == "" {
 		response.BadRequest(c, "Pattern is required")
 		return
 	}
-	
+
 	ctx := c.Request.Context()
-	
+
 	if err := h.manager.InvalidateCache(ctx, pattern); err != nil {
 		response.Error(c, http.StatusInternalServerError, 500, err.Error())
 		return
 	}
-	
+
 	response.Success(c, map[string]any{
-		"message": "Cache entries deleted successfully",
-		"pattern": pattern,
+		"message":    "Cache entries deleted successfully",
+		"pattern":    pattern,
 		"deleted_at": time.Now().Format(time.RFC3339),
 	})
 }
@@ -175,9 +175,9 @@ func NewCacheHealthCheck(manager CacheManager, collector MetricsCollector) *Cach
 func (ch *CacheHealthCheck) Check(ctx context.Context) map[string]any {
 	testKey := "health:check:" + time.Now().Format("20060102150405")
 	testValue := []byte("healthy")
-	
+
 	cache := ch.manager.GetCache()
-	
+
 	setErr := cache.Set(ctx, testKey, testValue, 10*time.Second)
 	if setErr != nil {
 		return map[string]any{
@@ -185,7 +185,7 @@ func (ch *CacheHealthCheck) Check(ctx context.Context) map[string]any {
 			"error":  setErr.Error(),
 		}
 	}
-	
+
 	getValue, getErr := cache.Get(ctx, testKey)
 	if getErr != nil {
 		return map[string]any{
@@ -193,23 +193,23 @@ func (ch *CacheHealthCheck) Check(ctx context.Context) map[string]any {
 			"error":  getErr.Error(),
 		}
 	}
-	
+
 	_ = cache.Delete(ctx, testKey)
-	
+
 	if string(getValue) != string(testValue) {
 		return map[string]any{
 			"status": "unhealthy",
 			"error":  "cache read/write mismatch",
 		}
 	}
-	
+
 	metrics := ch.collector.GetMetrics()
-	
+
 	return map[string]any{
-		"status":   "healthy",
-		"hit_rate": metrics.HitRate,
+		"status":    "healthy",
+		"hit_rate":  metrics.HitRate,
 		"total_ops": metrics.TotalOps,
-		"errors":   metrics.Errors,
+		"errors":    metrics.Errors,
 	}
 }
 
@@ -224,7 +224,7 @@ func NewCacheMetricsMiddleware(collector MetricsCollector, enabled bool) gin.Han
 			c.Next()
 			return
 		}
-		
+
 		c.Set("cache_metrics_collector", collector)
 		c.Next()
 	}
