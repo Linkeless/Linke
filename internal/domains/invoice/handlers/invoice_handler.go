@@ -901,31 +901,4 @@ func (h *InvoiceHandler) RegisterRoutes(router *gin.RouterGroup) {
 		// Download history and audit
 		invoiceGroup.GET("/download-history", h.GetInvoiceDownloadHistory)
 	}
-	
-	// Add plural aliases for common API conventions
-	invoicesGroup := router.Group("/invoices")
-	{
-		// Basic CRUD aliases (plural form)
-		invoicesGroup.GET("", h.GetInvoices)
-		invoicesGroup.POST("", h.CreateInvoice)
-		invoicesGroup.GET("/:id", h.GetInvoice)
-		invoicesGroup.PUT("/:id", h.UpdateInvoice)
-		invoicesGroup.DELETE("/:id", h.DeleteInvoice)
-		
-		// Common endpoints
-		invoicesGroup.GET("/my", h.GetUserInvoices)  // Alias for /invoice/user
-		invoicesGroup.GET("/statistics", h.GetInvoiceStatistics)
-		
-		// PDF and download endpoints
-		invoicesGroup.GET("/:id/pdf", h.GenerateInvoicePDF)
-		invoicesGroup.GET("/:id/download", h.DownloadInvoicePDF)
-		invoicesGroup.POST("/bulk-download", h.BulkDownloadInvoices)
-		
-		// Status management
-		invoicesGroup.PUT("/:id/mark-paid", h.MarkInvoiceAsPaid)
-		invoicesGroup.PUT("/:id/mark-void", h.MarkInvoiceAsVoid)
-		
-		// Email sending
-		invoicesGroup.POST("/:id/send", h.SendInvoice)
-	}
 }

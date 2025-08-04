@@ -619,7 +619,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/payments/configs": {
+        "/admin/payment/configs": {
             "get": {
                 "security": [
                     {
@@ -806,7 +806,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/payments/configs/{id}": {
+        "/admin/payment/configs/{id}": {
             "put": {
                 "security": [
                     {
@@ -959,7 +959,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/payments/retries": {
+        "/admin/payment/retries": {
             "get": {
                 "security": [
                     {
@@ -1149,7 +1149,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/payments/retries/bulk-cancel": {
+        "/admin/payment/retries/bulk-cancel": {
             "post": {
                 "security": [
                     {
@@ -1212,7 +1212,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/payments/retries/bulk-reset": {
+        "/admin/payment/retries/bulk-reset": {
             "post": {
                 "security": [
                     {
@@ -1275,7 +1275,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/payments/retries/health": {
+        "/admin/payment/retries/health": {
             "get": {
                 "security": [
                     {
@@ -1333,7 +1333,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/payments/retries/statistics": {
+        "/admin/payment/retries/statistics": {
             "get": {
                 "security": [
                     {
@@ -1416,7 +1416,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/payments/retries/{id}": {
+        "/admin/payment/retries/{id}": {
             "get": {
                 "security": [
                     {
@@ -1495,7 +1495,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/payments/retries/{id}/cancel": {
+        "/admin/payment/retries/{id}/cancel": {
             "post": {
                 "security": [
                     {
@@ -1571,7 +1571,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/payments/retries/{id}/reset": {
+        "/admin/payment/retries/{id}/reset": {
             "post": {
                 "security": [
                     {
@@ -5432,7 +5432,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/payments/configs": {
+        "/payment/configs": {
             "get": {
                 "description": "Get active payment configurations for public display",
                 "consumes": [
@@ -5485,7 +5485,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/payments/methods": {
+        "/payment/methods": {
             "get": {
                 "description": "Get available payment methods grouped by gateway",
                 "consumes": [
@@ -5532,7 +5532,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/payments/notify/{gateway}": {
+        "/payment/notify/{gateway}": {
             "post": {
                 "description": "Handle payment notification from gateway",
                 "consumes": [
@@ -5580,7 +5580,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/payments/orders": {
+        "/payment/orders": {
             "post": {
                 "security": [
                     {
@@ -5649,7 +5649,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/payments/orders/my": {
+        "/payment/orders/my": {
             "get": {
                 "security": [
                     {
@@ -5723,7 +5723,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/payments/orders/{payment_no}": {
+        "/payment/orders/{payment_no}": {
             "get": {
                 "security": [
                     {
@@ -6058,7 +6058,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/subscription-orders": {
+        "/subscription/orders": {
             "post": {
                 "security": [
                     {
@@ -6115,7 +6115,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/subscription-orders/my": {
+        "/subscription/orders/my": {
             "get": {
                 "security": [
                     {
@@ -6189,7 +6189,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/subscription-orders/{id}": {
+        "/subscription/orders/{id}": {
             "get": {
                 "security": [
                     {

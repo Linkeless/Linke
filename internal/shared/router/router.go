@@ -4,13 +4,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/swaggo/files"
 	"github.com/swaggo/gin-swagger"
-	
+
 	"linke/internal/shared/cache"
 	"linke/internal/shared/config"
 	loggerPkg "linke/internal/shared/logger"
 	"linke/internal/shared/middleware"
 	"linke/internal/shared/versioning"
-	
+
 	// Handler imports
 	authHandlers "linke/internal/domains/auth/handlers"
 	authInterfaces "linke/internal/domains/auth/usecases/interfaces"
@@ -75,7 +75,7 @@ func SetupRoutes(
 	// API versioning routes - version info endpoints
 	router.GET("/api/version", versionMiddleware.VersionInfo())
 	router.GET("/api/health", versionMiddleware.HealthCheck())
-	logger.Info("Registered versioning routes", 
+	logger.Info("Registered versioning routes",
 		loggerPkg.String("route1", "/api/version"),
 		loggerPkg.String("route2", "/api/health"))
 
@@ -86,7 +86,7 @@ func SetupRoutes(
 	// Version-specific route groups
 	apiV1 := api.Group("/v1")
 	// apiV2 := api.Group("/v2") // Reserved for future v2 endpoints
-	logger.Info("Created API route groups", 
+	logger.Info("Created API route groups",
 		loggerPkg.String("base", "/api"),
 		loggerPkg.String("v1", "/api/v1"))
 
@@ -147,7 +147,7 @@ func SetupRoutes(
 	adminGroup := apiV1.Group("/admin")
 	adminGroup.Use(middleware.AuthMiddleware(newAuthServiceAdapter(authService)))
 	adminGroup.Use(middleware.RequireAdmin())
-	
+
 	// Admin user routes (/api/v1/admin/users)
 	adminUserGroup := adminGroup.Group("/users")
 	{
@@ -169,7 +169,7 @@ func SetupRoutes(
 		adminUserGroup.POST("/batch/delete", adminUserHandler.BatchDeleteUsers)
 		adminUserGroup.POST("/batch/restore", adminUserHandler.BatchRestoreUsers)
 	}
-	
+
 	// Admin cache routes (/api/v1/admin/cache) - using RegisterRoutes method
 	logger.Info("Registering cache monitoring routes", loggerPkg.String("prefix", "/api/v1/admin"))
 	if cacheMonitoringHandler == nil {
@@ -179,8 +179,8 @@ func SetupRoutes(
 		logger.Info("Successfully registered cache monitoring routes")
 	}
 
-	// Admin payment routes (/api/v1/admin/payments)
-	adminPaymentGroup := adminGroup.Group("/payments")
+	// Admin payment routes (/api/v1/admin/payment)
+	adminPaymentGroup := adminGroup.Group("/payment")
 	{
 		// Payment configuration management routes
 		adminPaymentGroup.POST("/configs", paymentHandler.CreatePaymentConfig)
@@ -198,7 +198,7 @@ func SetupRoutes(
 		adminPaymentGroup.GET("/retries/statistics", paymentHandler.GetRetryStatistics)
 		adminPaymentGroup.GET("/retries/health", paymentHandler.GetRetryHealthMetrics)
 	}
-	logger.Info("Registered admin payment routes", loggerPkg.String("prefix", "/api/v1/admin/payments"))
+	logger.Info("Registered admin payment routes", loggerPkg.String("prefix", "/api/v1/admin/payment"))
 
 	// Admin subscription routes (/api/v1/admin/subscriptions)
 	// TODO: Add subscription pause/resume routes when methods are implemented
@@ -221,15 +221,6 @@ func SetupRoutes(
 		subscriptionGroup.GET("/orders/:id", middleware.AuthMiddleware(newAuthServiceAdapter(authService)), subscriptionOrderHandler.GetSubscriptionOrder)
 	}
 
-	// Subscription orders routes plural form (/api/v1/subscription-orders)
-	subscriptionOrdersGroup := apiV1.Group("/subscription-orders")
-	subscriptionOrdersGroup.Use(middleware.AuthMiddleware(newAuthServiceAdapter(authService)))
-	{
-		subscriptionOrdersGroup.POST("", subscriptionOrderHandler.CreateSubscriptionOrder)
-		subscriptionOrdersGroup.GET("/my", subscriptionOrderHandler.GetMySubscriptionOrders)
-		subscriptionOrdersGroup.GET("/:id", subscriptionOrderHandler.GetSubscriptionOrder)
-	}
-
 	// User subscription management routes (/api/v1/subscriptions) - using RegisterRoutes method
 	logger.Info("Registering user subscription routes")
 	if userSubscriptionHandler == nil {
@@ -248,7 +239,7 @@ func SetupRoutes(
 		logger.Info("Successfully registered usage tracking routes")
 	}
 
-	// Usage alert routes (/api/v1/usage-alerts) - using RegisterRoutes method  
+	// Usage alert routes (/api/v1/usage-alerts) - using RegisterRoutes method
 	logger.Info("Registering usage alert routes")
 	if usageAlertHandler == nil {
 		logger.Error("Usage alert handler is nil - routes will not be registered")
@@ -277,19 +268,6 @@ func SetupRoutes(
 		paymentGroup.GET("/configs", paymentHandler.GetPaymentConfigs)
 		// Webhook endpoint - no auth needed (uses signature validation)
 		paymentGroup.POST("/notify/:gateway", paymentHandler.PaymentNotify)
-	}
-
-	// Payment routes plural form (/api/v1/payments) - providing common plural API paths
-	paymentsGroup := apiV1.Group("/payments")
-	{
-		paymentsGroup.POST("/orders", middleware.AuthMiddleware(newAuthServiceAdapter(authService)), paymentHandler.CreatePaymentOrder)
-		paymentsGroup.GET("/orders/:payment_no", middleware.AuthMiddleware(newAuthServiceAdapter(authService)), paymentHandler.GetPaymentOrder)
-		paymentsGroup.GET("/orders/my", middleware.AuthMiddleware(newAuthServiceAdapter(authService)), paymentHandler.GetMyPaymentOrders)
-		// Public endpoint - no auth needed
-		paymentsGroup.GET("/methods", paymentHandler.GetAvailablePaymentMethods)
-		paymentsGroup.GET("/configs", paymentHandler.GetPaymentConfigs)
-		// Webhook endpoint - no auth needed (uses signature validation)
-		paymentsGroup.POST("/notify/:gateway", paymentHandler.PaymentNotify)
 	}
 
 	// Payment methods management routes (/api/v1/payment-methods) - requires authentication
@@ -323,33 +301,33 @@ func SetupRoutes(
 
 	// Log all registered routes for debugging
 	routes := router.Routes()
-	logger.Info("HTTP route registration completed successfully", 
+	logger.Info("HTTP route registration completed successfully",
 		loggerPkg.Int("total_routes", len(routes)))
-	
+
 	// Log important routes for verification
 	importantRoutes := []string{
 		"/api/v1/admin/cache/metrics",
-		"/api/v1/admin/cache/stats", 
-		"/api/v1/admin/payments/configs",
-		"/api/v1/admin/payments/retries",
+		"/api/v1/admin/cache/stats",
+		"/api/v1/admin/payment/configs",
+		"/api/v1/admin/payment/retries",
 		"/api/v1/payment-methods",
 		"/api/v1/payment-methods/*/validate",
-		"/api/v1/payments/orders",
+		"/api/v1/payment/orders",
 		"/api/v1/subscriptions/my",
-		"/api/v1/subscription-orders",
+		"/api/v1/subscription/orders",
 		"/api/v1/usage/current/*",
 		"/api/v1/usage-alerts",
 		"/api/v1/auth/providers",
 		"/api/v1/invoice/*/pdf",
 	}
-	
+
 	for _, route := range routes {
 		for _, important := range importantRoutes {
-			if route.Path == important || 
-			   (important[len(important)-1] == '*' && 
-			    len(route.Path) >= len(important)-1 && 
-			    route.Path[:len(important)-1] == important[:len(important)-1]) {
-				logger.Info("Verified important route", 
+			if route.Path == important ||
+				(important[len(important)-1] == '*' &&
+					len(route.Path) >= len(important)-1 &&
+					route.Path[:len(important)-1] == important[:len(important)-1]) {
+				logger.Info("Verified important route",
 					loggerPkg.String("method", route.Method),
 					loggerPkg.String("path", route.Path))
 				break

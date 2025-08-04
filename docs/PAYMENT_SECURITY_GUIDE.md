@@ -134,7 +134,7 @@ server {
     listen 443 ssl;
     server_name yourdomain.com;
     
-    location /api/v1/payments/notify/ {
+    location /api/v1/payment/notify/ {
         # 限制请求体大小
         client_max_body_size 1M;
         
@@ -243,18 +243,18 @@ make security-test
 
 ```bash
 # 测试签名验证
-curl -X POST http://localhost:8080/api/v1/payments/notify/epay \
+curl -X POST http://localhost:8080/api/v1/payment/notify/epay \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "out_trade_no=test123&trade_status=TRADE_SUCCESS&sign=invalid"
 
 # 测试IP白名单
-curl -X POST http://localhost:8080/api/v1/payments/notify/epay \
+curl -X POST http://localhost:8080/api/v1/payment/notify/epay \
   -H "X-Real-IP: 1.2.3.4" \
   -H "Content-Type: application/json" \
   -d '{"out_trade_no":"test123","trade_status":"TRADE_SUCCESS"}'
 
 # 测试请求大小限制
-curl -X POST http://localhost:8080/api/v1/payments/notify/epay \
+curl -X POST http://localhost:8080/api/v1/payment/notify/epay \
   -H "Content-Type: application/json" \
   -d "$(python -c 'print("{\"data\":\"" + "x"*2000000 + "\"}")')"
 ```

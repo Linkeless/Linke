@@ -396,10 +396,10 @@ func TestPaymentNotify_SecurityValidation(t *testing.T) {
 			// Create request
 			var req *http.Request
 			if tt.contentType == "application/x-www-form-urlencoded" {
-				req = httptest.NewRequest("POST", "/payments/notify/"+tt.gateway, strings.NewReader(tt.body))
+				req = httptest.NewRequest("POST", "/payment/notify/"+tt.gateway, strings.NewReader(tt.body))
 				req.Header.Set("Content-Type", tt.contentType)
 			} else {
-				req = httptest.NewRequest("POST", "/payments/notify/"+tt.gateway, bytes.NewBufferString(tt.body))
+				req = httptest.NewRequest("POST", "/payment/notify/"+tt.gateway, bytes.NewBufferString(tt.body))
 				req.Header.Set("Content-Type", tt.contentType)
 			}
 
@@ -493,7 +493,7 @@ func TestPaymentNotify_IPWhitelistValidation(t *testing.T) {
 
 			// Create request
 			body := `{"out_trade_no": "test123", "trade_status": "TRADE_SUCCESS"}`
-			req := httptest.NewRequest("POST", "/payments/notify/epay", bytes.NewBufferString(body))
+			req := httptest.NewRequest("POST", "/payment/notify/epay", bytes.NewBufferString(body))
 			req.Header.Set("Content-Type", "application/json")
 			req.RemoteAddr = tt.clientIP + ":12345"
 
@@ -503,7 +503,7 @@ func TestPaymentNotify_IPWhitelistValidation(t *testing.T) {
 			// Setup Gin router with middleware
 			router := gin.New()
 			router.Use(securityMiddleware.PaymentNotifySecurityMiddleware())
-			router.POST("/payments/notify/:gateway", handler.PaymentNotify)
+			router.POST("/payment/notify/:gateway", handler.PaymentNotify)
 
 			// Execute
 			router.ServeHTTP(w, req)
@@ -528,14 +528,14 @@ func TestPaymentNotify_RateLimiting(t *testing.T) {
 	// Setup Gin router with rate limiting
 	router := gin.New()
 	router.Use(middleware.PaymentNotifyRateLimit(2, 1)) // 2 per minute, burst 1
-	router.POST("/payments/notify/:gateway", handler.PaymentNotify)
+	router.POST("/payment/notify/:gateway", handler.PaymentNotify)
 
 	// Test multiple requests from same IP
 	body := `{"out_trade_no": "test123", "trade_status": "TRADE_SUCCESS"}`
 	clientIP := "192.168.1.100"
 
 	// First request should succeed
-	req1 := httptest.NewRequest("POST", "/payments/notify/epay", bytes.NewBufferString(body))
+	req1 := httptest.NewRequest("POST", "/payment/notify/epay", bytes.NewBufferString(body))
 	req1.Header.Set("Content-Type", "application/json")
 	req1.RemoteAddr = clientIP + ":12345"
 	w1 := httptest.NewRecorder()
@@ -543,7 +543,7 @@ func TestPaymentNotify_RateLimiting(t *testing.T) {
 	assert.Equal(t, 200, w1.Code, "First request should succeed")
 
 	// Second request should be rate limited
-	req2 := httptest.NewRequest("POST", "/payments/notify/epay", bytes.NewBufferString(body))
+	req2 := httptest.NewRequest("POST", "/payment/notify/epay", bytes.NewBufferString(body))
 	req2.Header.Set("Content-Type", "application/json")
 	req2.RemoteAddr = clientIP + ":12346"
 	w2 := httptest.NewRecorder()
@@ -607,7 +607,7 @@ func BenchmarkPaymentNotify_ValidRequest(b *testing.B) {
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			req := httptest.NewRequest("POST", "/payments/notify/epay", bytes.NewBufferString(body))
+			req := httptest.NewRequest("POST", "/payment/notify/epay", bytes.NewBufferString(body))
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 

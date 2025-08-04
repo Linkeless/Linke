@@ -613,7 +613,7 @@
                 }
             }
         },
-        "/admin/payments/configs": {
+        "/admin/payment/configs": {
             "get": {
                 "security": [
                     {
@@ -800,7 +800,7 @@
                 }
             }
         },
-        "/admin/payments/configs/{id}": {
+        "/admin/payment/configs/{id}": {
             "put": {
                 "security": [
                     {
@@ -953,7 +953,7 @@
                 }
             }
         },
-        "/admin/payments/retries": {
+        "/admin/payment/retries": {
             "get": {
                 "security": [
                     {
@@ -1143,7 +1143,7 @@
                 }
             }
         },
-        "/admin/payments/retries/bulk-cancel": {
+        "/admin/payment/retries/bulk-cancel": {
             "post": {
                 "security": [
                     {
@@ -1206,7 +1206,7 @@
                 }
             }
         },
-        "/admin/payments/retries/bulk-reset": {
+        "/admin/payment/retries/bulk-reset": {
             "post": {
                 "security": [
                     {
@@ -1269,7 +1269,7 @@
                 }
             }
         },
-        "/admin/payments/retries/health": {
+        "/admin/payment/retries/health": {
             "get": {
                 "security": [
                     {
@@ -1327,7 +1327,7 @@
                 }
             }
         },
-        "/admin/payments/retries/statistics": {
+        "/admin/payment/retries/statistics": {
             "get": {
                 "security": [
                     {
@@ -1410,7 +1410,7 @@
                 }
             }
         },
-        "/admin/payments/retries/{id}": {
+        "/admin/payment/retries/{id}": {
             "get": {
                 "security": [
                     {
@@ -1489,7 +1489,7 @@
                 }
             }
         },
-        "/admin/payments/retries/{id}/cancel": {
+        "/admin/payment/retries/{id}/cancel": {
             "post": {
                 "security": [
                     {
@@ -1565,7 +1565,7 @@
                 }
             }
         },
-        "/admin/payments/retries/{id}/reset": {
+        "/admin/payment/retries/{id}/reset": {
             "post": {
                 "security": [
                     {
@@ -5426,7 +5426,7 @@
                 }
             }
         },
-        "/payments/configs": {
+        "/payment/configs": {
             "get": {
                 "description": "Get active payment configurations for public display",
                 "consumes": [
@@ -5479,7 +5479,7 @@
                 }
             }
         },
-        "/payments/methods": {
+        "/payment/methods": {
             "get": {
                 "description": "Get available payment methods grouped by gateway",
                 "consumes": [
@@ -5526,7 +5526,7 @@
                 }
             }
         },
-        "/payments/notify/{gateway}": {
+        "/payment/notify/{gateway}": {
             "post": {
                 "description": "Handle payment notification from gateway",
                 "consumes": [
@@ -5574,7 +5574,7 @@
                 }
             }
         },
-        "/payments/orders": {
+        "/payment/orders": {
             "post": {
                 "security": [
                     {
@@ -5643,7 +5643,7 @@
                 }
             }
         },
-        "/payments/orders/my": {
+        "/payment/orders/my": {
             "get": {
                 "security": [
                     {
@@ -5717,7 +5717,7 @@
                 }
             }
         },
-        "/payments/orders/{payment_no}": {
+        "/payment/orders/{payment_no}": {
             "get": {
                 "security": [
                     {
@@ -6052,7 +6052,7 @@
                 }
             }
         },
-        "/subscription-orders": {
+        "/subscription/orders": {
             "post": {
                 "security": [
                     {
@@ -6109,7 +6109,7 @@
                 }
             }
         },
-        "/subscription-orders/my": {
+        "/subscription/orders/my": {
             "get": {
                 "security": [
                     {
@@ -6183,7 +6183,7 @@
                 }
             }
         },
-        "/subscription-orders/{id}": {
+        "/subscription/orders/{id}": {
             "get": {
                 "security": [
                     {

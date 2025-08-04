@@ -221,7 +221,7 @@ func (w *PaymentRetryWorker) handleProcessPaymentRetry(ctx context.Context, task
 
 #### 获取支付重试
 ```http
-GET /admin/payments/retries
+GET /admin/payment/retries
 查询参数:
 - user_id: 按用户 ID 过滤
 - gateway: 按网关过滤 (epay, epusdt)
@@ -233,32 +233,32 @@ GET /admin/payments/retries
 
 #### 获取重试详情
 ```http
-GET /admin/payments/retries/{id}
+GET /admin/payment/retries/{id}
 响应: 包含完整历史记录的详细重试信息
 ```
 
 #### 取消重试
 ```http
-POST /admin/payments/retries/{id}/cancel
+POST /admin/payment/retries/{id}/cancel
 请求体: { "reason": "管理员手动取消" }
 ```
 
 #### 重置重试
 ```http
-POST /admin/payments/retries/{id}/reset
+POST /admin/payment/retries/{id}/reset
 ```
 
 #### 批量操作
 ```http
-POST /admin/payments/retries/bulk-cancel
-POST /admin/payments/retries/bulk-reset
+POST /admin/payment/retries/bulk-cancel
+POST /admin/payment/retries/bulk-reset
 请求体: { "retry_ids": [1,2,3], "reason": "批量操作" }
 ```
 
 #### 统计和健康状态
 ```http
-GET /admin/payments/retries/statistics?gateway=epay&days=30
-GET /admin/payments/retries/health
+GET /admin/payment/retries/statistics?gateway=epay&days=30
+GET /admin/payment/retries/health
 ```
 
 ## 配置

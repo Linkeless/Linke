@@ -11,9 +11,9 @@ import (
 // Module 应用层模块
 // 提供跨领域业务协调、复杂业务工作流和应用级服务
 var Module = fx.Module("application",
-	// 应用级服务 (简化版本)
+	// 应用级服务 (完整版本)
 	fx.Provide(
-		services.NewSimpleApplicationService,
+		services.NewApplicationService,
 	),
 
 	// 业务工作流 (完整实现)
@@ -23,9 +23,9 @@ var Module = fx.Module("application",
 		workflows.NewReferralWorkflow,
 	),
 
-	// 应用级处理器 (简化版本)
+	// 应用级处理器 (完整版本)
 	fx.Provide(
-		handlers.NewSimpleApplicationHandler,
+		handlers.NewApplicationHandler,
 		handlers.NewTaskHandler,
 	),
 

@@ -56,7 +56,7 @@ type CreatePaymentOrderRequest struct {
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /payments/orders [post]
+// @Router /payment/orders [post]
 func (h *PaymentHandler) CreatePaymentOrder(c *gin.Context) {
 	// Get current user from context
 	userValue, exists := c.Get(middleware.AuthContextKey)
@@ -88,7 +88,7 @@ func (h *PaymentHandler) CreatePaymentOrder(c *gin.Context) {
 	clientIP := c.ClientIP()
 
 	// Build notify URL
-	notifyURL := "https://" + c.Request.Host + "/api/v1/payments/notify/" + req.Gateway
+	notifyURL := "https://" + c.Request.Host + "/api/v1/payment/notify/" + req.Gateway
 
 	// Create payment service request
 	paymentReq := &interfaces.CreatePaymentOrderRequest{
@@ -132,7 +132,7 @@ func (h *PaymentHandler) CreatePaymentOrder(c *gin.Context) {
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /payments/orders/{payment_no} [get]
+// @Router /payment/orders/{payment_no} [get]
 func (h *PaymentHandler) GetPaymentOrder(c *gin.Context) {
 	// Get current user from context
 	userValue, exists := c.Get(middleware.AuthContextKey)
@@ -187,7 +187,7 @@ func (h *PaymentHandler) GetPaymentOrder(c *gin.Context) {
 // @Success 200 {object} response.PaginatedResponse{data=[]entities.PaymentRecordResponse}
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /payments/orders/my [get]
+// @Router /payment/orders/my [get]
 func (h *PaymentHandler) GetMyPaymentOrders(c *gin.Context) {
 	// Get current user from context
 	userValue, exists := c.Get(middleware.AuthContextKey)
@@ -241,7 +241,7 @@ func (h *PaymentHandler) GetMyPaymentOrders(c *gin.Context) {
 // @Produce json
 // @Success 200 {object} response.StandardResponse{data=map[string][]string}
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /payments/methods [get]
+// @Router /payment/methods [get]
 func (h *PaymentHandler) GetAvailablePaymentMethods(c *gin.Context) {
 	// Get available payment methods
 	methods, err := h.paymentService.GetAvailablePaymentMethods(c.Request.Context())
@@ -263,7 +263,7 @@ func (h *PaymentHandler) GetAvailablePaymentMethods(c *gin.Context) {
 // @Param currency query string false "Filter by currency" example("CNY")
 // @Success 200 {object} response.StandardResponse{data=[]entities.PaymentConfigResponse}
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /payments/configs [get]
+// @Router /payment/configs [get]
 func (h *PaymentHandler) GetActivePaymentConfigs(c *gin.Context) {
 	currency := c.Query("currency")
 
@@ -294,7 +294,7 @@ func (h *PaymentHandler) GetActivePaymentConfigs(c *gin.Context) {
 // @Success 200 {string} string "success"
 // @Failure 400 {string} string "fail"
 // @Failure 500 {string} string "fail"
-// @Router /payments/notify/{gateway} [post]
+// @Router /payment/notify/{gateway} [post]
 func (h *PaymentHandler) PaymentNotify(c *gin.Context) {
 	gateway := c.Param("gateway")
 	if gateway == "" {
@@ -433,7 +433,7 @@ func (h *PaymentHandler) parseNotificationData(c *gin.Context, gateway string) (
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /admin/payments/configs [post]
+// @Router /admin/payment/configs [post]
 func (h *PaymentHandler) CreatePaymentConfig(c *gin.Context) {
 	// Get current user from context
 	userValue, exists := c.Get(middleware.AuthContextKey)
@@ -490,7 +490,7 @@ func (h *PaymentHandler) CreatePaymentConfig(c *gin.Context) {
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /admin/payments/configs [get]
+// @Router /admin/payment/configs [get]
 func (h *PaymentHandler) GetPaymentConfigs(c *gin.Context) {
 	// Get current user from context
 	userValue, exists := c.Get(middleware.AuthContextKey)
@@ -550,7 +550,7 @@ func (h *PaymentHandler) GetPaymentConfigs(c *gin.Context) {
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /admin/payments/configs/{id} [put]
+// @Router /admin/payment/configs/{id} [put]
 func (h *PaymentHandler) UpdatePaymentConfig(c *gin.Context) {
 	// Get current user from context
 	userValue, exists := c.Get(middleware.AuthContextKey)
@@ -615,7 +615,7 @@ func (h *PaymentHandler) UpdatePaymentConfig(c *gin.Context) {
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /admin/payments/configs/{id} [delete]
+// @Router /admin/payment/configs/{id} [delete]
 func (h *PaymentHandler) DeletePaymentConfig(c *gin.Context) {
 	// Get current user from context
 	userValue, exists := c.Get(middleware.AuthContextKey)
@@ -686,7 +686,7 @@ func (h *PaymentHandler) DeletePaymentConfig(c *gin.Context) {
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /admin/payments/retries [get]
+// @Router /admin/payment/retries [get]
 func (h *PaymentHandler) GetPaymentRetries(c *gin.Context) {
 	// Get current user from context
 	userValue, exists := c.Get(middleware.AuthContextKey)
@@ -813,7 +813,7 @@ func (h *PaymentHandler) GetPaymentRetries(c *gin.Context) {
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /admin/payments/retries/{id} [get]
+// @Router /admin/payment/retries/{id} [get]
 func (h *PaymentHandler) GetPaymentRetry(c *gin.Context) {
 	// Get current user from context
 	userValue, exists := c.Get(middleware.AuthContextKey)
@@ -872,7 +872,7 @@ func (h *PaymentHandler) GetPaymentRetry(c *gin.Context) {
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /admin/payments/retries/{id}/cancel [post]
+// @Router /admin/payment/retries/{id}/cancel [post]
 func (h *PaymentHandler) CancelPaymentRetry(c *gin.Context) {
 	// Get current user from context
 	userValue, exists := c.Get(middleware.AuthContextKey)
@@ -932,7 +932,7 @@ func (h *PaymentHandler) CancelPaymentRetry(c *gin.Context) {
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /admin/payments/retries/{id}/reset [post]
+// @Router /admin/payment/retries/{id}/reset [post]
 func (h *PaymentHandler) ResetPaymentRetry(c *gin.Context) {
 	// Get current user from context
 	userValue, exists := c.Get(middleware.AuthContextKey)
@@ -984,7 +984,7 @@ func (h *PaymentHandler) ResetPaymentRetry(c *gin.Context) {
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /admin/payments/retries/bulk-cancel [post]
+// @Router /admin/payment/retries/bulk-cancel [post]
 func (h *PaymentHandler) BulkCancelPaymentRetries(c *gin.Context) {
 	// Get current user from context
 	userValue, exists := c.Get(middleware.AuthContextKey)
@@ -1046,7 +1046,7 @@ func (h *PaymentHandler) BulkCancelPaymentRetries(c *gin.Context) {
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /admin/payments/retries/bulk-reset [post]
+// @Router /admin/payment/retries/bulk-reset [post]
 func (h *PaymentHandler) BulkResetPaymentRetries(c *gin.Context) {
 	// Get current user from context
 	userValue, exists := c.Get(middleware.AuthContextKey)
@@ -1109,7 +1109,7 @@ func (h *PaymentHandler) BulkResetPaymentRetries(c *gin.Context) {
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /admin/payments/retries/statistics [get]
+// @Router /admin/payment/retries/statistics [get]
 func (h *PaymentHandler) GetRetryStatistics(c *gin.Context) {
 	// Get current user from context
 	userValue, exists := c.Get(middleware.AuthContextKey)
@@ -1165,7 +1165,7 @@ func (h *PaymentHandler) GetRetryStatistics(c *gin.Context) {
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /admin/payments/retries/health [get]
+// @Router /admin/payment/retries/health [get]
 func (h *PaymentHandler) GetRetryHealthMetrics(c *gin.Context) {
 	// Get current user from context
 	userValue, exists := c.Get(middleware.AuthContextKey)

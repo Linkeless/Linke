@@ -3691,7 +3691,7 @@ paths:
       summary: Get cache statistics
       tags:
       - Cache
-  /admin/payments/configs:
+  /admin/payment/configs:
     get:
       consumes:
       - application/json
@@ -3809,7 +3809,7 @@ paths:
       summary: '[Admin] Create payment config'
       tags:
       - Admin-Payment-Management
-  /admin/payments/configs/{id}:
+  /admin/payment/configs/{id}:
     delete:
       consumes:
       - application/json
@@ -3905,7 +3905,7 @@ paths:
       summary: '[Admin] Update payment config'
       tags:
       - Admin-Payment-Management
-  /admin/payments/retries:
+  /admin/payment/retries:
     get:
       consumes:
       - application/json
@@ -4036,7 +4036,7 @@ paths:
       summary: '[Admin] Get payment retries'
       tags:
       - Admin-Payment-Retry
-  /admin/payments/retries/{id}:
+  /admin/payment/retries/{id}:
     get:
       consumes:
       - application/json
@@ -4084,7 +4084,7 @@ paths:
       summary: '[Admin] Get payment retry details'
       tags:
       - Admin-Payment-Retry
-  /admin/payments/retries/{id}/cancel:
+  /admin/payment/retries/{id}/cancel:
     post:
       consumes:
       - application/json
@@ -4133,7 +4133,7 @@ paths:
       summary: '[Admin] Cancel payment retry'
       tags:
       - Admin-Payment-Retry
-  /admin/payments/retries/{id}/reset:
+  /admin/payment/retries/{id}/reset:
     post:
       consumes:
       - application/json
@@ -4176,7 +4176,7 @@ paths:
       summary: '[Admin] Reset payment retry'
       tags:
       - Admin-Payment-Retry
-  /admin/payments/retries/bulk-cancel:
+  /admin/payment/retries/bulk-cancel:
     post:
       consumes:
       - application/json
@@ -4216,7 +4216,7 @@ paths:
       summary: '[Admin] Bulk cancel payment retries'
       tags:
       - Admin-Payment-Retry
-  /admin/payments/retries/bulk-reset:
+  /admin/payment/retries/bulk-reset:
     post:
       consumes:
       - application/json
@@ -4256,7 +4256,7 @@ paths:
       summary: '[Admin] Bulk reset payment retries'
       tags:
       - Admin-Payment-Retry
-  /admin/payments/retries/health:
+  /admin/payment/retries/health:
     get:
       consumes:
       - application/json
@@ -4290,7 +4290,7 @@ paths:
       summary: '[Admin] Get retry system health metrics'
       tags:
       - Admin-Payment-Retry
-  /admin/payments/retries/statistics:
+  /admin/payment/retries/statistics:
     get:
       consumes:
       - application/json
@@ -6712,7 +6712,7 @@ paths:
       summary: Get default payment method
       tags:
       - payment-methods
-  /payments/configs:
+  /payment/configs:
     get:
       consumes:
       - application/json
@@ -6744,7 +6744,7 @@ paths:
       summary: '[Public] Get active payment configs'
       tags:
       - User-Payment
-  /payments/methods:
+  /payment/methods:
     get:
       consumes:
       - application/json
@@ -6772,7 +6772,7 @@ paths:
       summary: '[Public] Get available payment methods'
       tags:
       - User-Payment
-  /payments/notify/{gateway}:
+  /payment/notify/{gateway}:
     post:
       consumes:
       - application/json
@@ -6804,7 +6804,7 @@ paths:
       summary: '[Webhook] Payment notification'
       tags:
       - User-Payment
-  /payments/orders:
+  /payment/orders:
     post:
       consumes:
       - application/json
@@ -6845,7 +6845,7 @@ paths:
       summary: '[User] Create payment order'
       tags:
       - User-Payment
-  /payments/orders/{payment_no}:
+  /payment/orders/{payment_no}:
     get:
       consumes:
       - application/json
@@ -6893,7 +6893,7 @@ paths:
       summary: '[User] Get payment order'
       tags:
       - User-Payment
-  /payments/orders/my:
+  /payment/orders/my:
     get:
       consumes:
       - application/json
@@ -7104,7 +7104,7 @@ paths:
       summary: Get UniProxy Users
       tags:
       - Server-API
-  /subscription-orders:
+  /subscription/orders:
     post:
       consumes:
       - application/json
@@ -7140,7 +7140,7 @@ paths:
       summary: '[User] Create subscription order'
       tags:
       - User-Subscription
-  /subscription-orders/{id}:
+  /subscription/orders/{id}:
     get:
       consumes:
       - application/json
@@ -7188,7 +7188,7 @@ paths:
       summary: '[User] Get subscription order'
       tags:
       - User-Subscription
-  /subscription-orders/my:
+  /subscription/orders/my:
     get:
       consumes:
       - application/json

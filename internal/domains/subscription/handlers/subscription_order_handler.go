@@ -35,7 +35,7 @@ func NewSubscriptionOrderHandler(subscriptionOrderService interfaces.Subscriptio
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /subscription-orders [post]
+// @Router /subscription/orders [post]
 func (h *SubscriptionOrderHandler) CreateSubscriptionOrder(c *gin.Context) {
 	// Get current user from context
 	userValue, exists := c.Get(middleware.AuthContextKey)
@@ -88,7 +88,7 @@ func (h *SubscriptionOrderHandler) CreateSubscriptionOrder(c *gin.Context) {
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /subscription-orders/{id} [get]
+// @Router /subscription/orders/{id} [get]
 func (h *SubscriptionOrderHandler) GetSubscriptionOrder(c *gin.Context) {
 	// Get current user from context
 	userValue, exists := c.Get(middleware.AuthContextKey)
@@ -144,7 +144,7 @@ func (h *SubscriptionOrderHandler) GetSubscriptionOrder(c *gin.Context) {
 // @Success 200 {object} response.PaginatedResponse{data=[]entities.SubscriptionOrderResponse}
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /subscription-orders/my [get]
+// @Router /subscription/orders/my [get]
 func (h *SubscriptionOrderHandler) GetMySubscriptionOrders(c *gin.Context) {
 	// Get current user from context
 	userValue, exists := c.Get(middleware.AuthContextKey)
