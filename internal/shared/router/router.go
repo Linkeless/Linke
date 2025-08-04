@@ -164,8 +164,8 @@ func SetupRoutes(
 		adminUserGroup.GET("/provider", adminUserHandler.ListUsersByProvider)
 		adminUserGroup.GET("/deleted", adminUserHandler.ListDeletedUsers)
 		adminUserGroup.GET("/search", adminUserHandler.SearchUsers)
-		adminUserGroup.POST("/batch/delete", adminUserHandler.BatchDeleteUsers)
-		adminUserGroup.POST("/batch/restore", adminUserHandler.BatchRestoreUsers)
+		adminUserGroup.POST("/bulk/delete", adminUserHandler.BatchDeleteUsers)
+		adminUserGroup.POST("/bulk/restore", adminUserHandler.BatchRestoreUsers)
 	}
 
 	// Admin cache routes (/api/v1/admin/cache) - using RegisterRoutes method
@@ -191,8 +191,8 @@ func SetupRoutes(
 		adminPaymentGroup.GET("/retries/:id", paymentHandler.GetPaymentRetry)
 		adminPaymentGroup.POST("/retries/:id/cancel", paymentHandler.CancelPaymentRetry)
 		adminPaymentGroup.POST("/retries/:id/reset", paymentHandler.ResetPaymentRetry)
-		adminPaymentGroup.POST("/retries/bulk-cancel", paymentHandler.BulkCancelPaymentRetries)
-		adminPaymentGroup.POST("/retries/bulk-reset", paymentHandler.BulkResetPaymentRetries)
+		adminPaymentGroup.POST("/retries/bulk/cancel", paymentHandler.BulkCancelPaymentRetries)
+		adminPaymentGroup.POST("/retries/bulk/reset", paymentHandler.BulkResetPaymentRetries)
 		adminPaymentGroup.GET("/retries/statistics", paymentHandler.GetRetryStatistics)
 		adminPaymentGroup.GET("/retries/health", paymentHandler.GetRetryHealthMetrics)
 	}

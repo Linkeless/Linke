@@ -600,7 +600,7 @@ func (h *AdminUserHandler) GetUserStats(c *gin.Context) {
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /admin/users/batch/delete [post]
+// @Router /admin/users/bulk/delete [post]
 func (h *AdminUserHandler) BatchDeleteUsers(c *gin.Context) {
 	var requestData struct {
 		IDs []uint `json:"ids" binding:"required,min=1,max=100"`
@@ -753,7 +753,7 @@ func (h *AdminUserHandler) PatchUser(c *gin.Context) {
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /admin/users/batch/restore [post]
+// @Router /admin/users/bulk/restore [post]
 func (h *AdminUserHandler) BatchRestoreUsers(c *gin.Context) {
 	var requestData struct {
 		IDs []uint `json:"ids" binding:"required,min=1,max=100"`

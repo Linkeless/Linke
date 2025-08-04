@@ -7542,6 +7542,520 @@ paths:
       summary: Get queue status
       tags:
       - Task-System
+  /usage/{subscription_id}/current:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve current usage statistics for all usage types of a subscription
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.CurrentUsageResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get current usage for a subscription
+      tags:
+      - usage
+  /usage/{subscription_id}/current/{usage_type}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve current usage statistics for a specific usage type of
+        a subscription
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      - description: Usage Type
+        enum:
+        - traffic
+        - api_call
+        - storage
+        - bandwidth
+        - connections
+        in: path
+        name: usage_type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.CurrentUsageResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get current usage for a specific usage type
+      tags:
+      - usage
+  /usage/{subscription_id}/history:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve historical usage data with configurable time range and
+        granularity
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      - description: Usage Type Filter
+        in: query
+        name: usage_type
+        type: string
+      - description: Start Time (RFC3339)
+        format: date-time
+        in: query
+        name: start_time
+        type: string
+      - description: End Time (RFC3339)
+        format: date-time
+        in: query
+        name: end_time
+        type: string
+      - default: daily
+        description: Data Granularity
+        enum:
+        - hourly
+        - daily
+        - weekly
+        - monthly
+        in: query
+        name: granularity
+        type: string
+      - default: 50
+        description: Limit
+        in: query
+        maximum: 1000
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      - default: false
+        description: Include detailed breakdown
+        in: query
+        name: include_details
+        type: boolean
+      - description: Source Type Filter
+        in: query
+        name: source_type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.UsageHistoryResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get usage history for a subscription
+      tags:
+      - usage
+  /usage/{subscription_id}/predictions:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve usage predictions for all usage types
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/entities.UsagePrediction'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get usage predictions for a subscription
+      tags:
+      - usage
+  /usage/{subscription_id}/predictions/{usage_type}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve usage predictions for a specific usage type
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      - description: Usage Type
+        enum:
+        - traffic
+        - api_call
+        - storage
+        - bandwidth
+        - connections
+        in: path
+        name: usage_type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/entities.UsagePrediction'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get usage predictions for a specific usage type
+      tags:
+      - usage
+  /usage/{subscription_id}/realtime:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve real-time usage data with current rates and predictions
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.RealTimeUsageResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get real-time usage data for a subscription
+      tags:
+      - usage
+  /usage/{subscription_id}/statistics:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed usage statistics with breakdown by various dimensions
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      - description: Usage Type Filter
+        in: query
+        name: usage_type
+        type: string
+      - default: monthly
+        description: Time Period
+        in: query
+        name: period
+        type: string
+      - description: Start Time (RFC3339)
+        format: date-time
+        in: query
+        name: start_time
+        type: string
+      - description: End Time (RFC3339)
+        format: date-time
+        in: query
+        name: end_time
+        type: string
+      - description: Group By Dimensions (comma-separated)
+        in: query
+        name: group_by
+        type: string
+      - default: false
+        description: Include period comparison
+        in: query
+        name: include_comparison
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.UsageStatistics'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get usage statistics for a subscription
+      tags:
+      - usage
+  /usage/{subscription_id}/summary:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve aggregated usage summary for a specific period
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      - default: monthly
+        description: Time Period
+        enum:
+        - daily
+        - weekly
+        - monthly
+        - custom
+        in: query
+        name: period
+        type: string
+      - description: Period Start Time (RFC3339)
+        format: date-time
+        in: query
+        name: period_start
+        type: string
+      - description: Period End Time (RFC3339)
+        format: date-time
+        in: query
+        name: period_end
+        type: string
+      - description: Comma-separated usage types filter
+        in: query
+        name: usage_types
+        type: string
+      - default: false
+        description: Include detailed breakdown
+        in: query
+        name: include_breakdown
+        type: boolean
+      - default: false
+        description: Include usage predictions
+        in: query
+        name: include_predictions
+        type: boolean
+      - default: false
+        description: Compare with previous period
+        in: query
+        name: compare_with_previous
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.UsageSummary'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get usage summary for a subscription
+      tags:
+      - usage
+  /usage/{subscription_id}/trends:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve usage trends with optional anomaly detection and predictions
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      - description: Usage Type Filter
+        in: query
+        name: usage_type
+        type: string
+      - default: 30d
+        description: Time Period
+        enum:
+        - 7d
+        - 30d
+        - 90d
+        - 365d
+        in: query
+        name: period
+        type: string
+      - default: daily
+        description: Data Granularity
+        enum:
+        - hourly
+        - daily
+        - weekly
+        in: query
+        name: granularity
+        type: string
+      - default: false
+        description: Include usage predictions
+        in: query
+        name: include_predictions
+        type: boolean
+      - default: false
+        description: Include anomaly detection
+        in: query
+        name: include_anomalies
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.UsageTrendsResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get usage trends for a subscription
+      tags:
+      - usage
   /usage/admin/cleanup:
     post:
       consumes:
@@ -7889,6 +8403,166 @@ paths:
       summary: Get usage alerts for a subscription
       tags:
       - alerts
+  /usage/alerts/{subscription_id}/history:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed alert history with optional filters
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      - description: Alert Configuration ID Filter
+        in: query
+        name: alert_configuration_id
+        type: integer
+      - description: Usage Type Filter
+        in: query
+        name: usage_type
+        type: string
+      - description: Start Time (RFC3339)
+        format: date-time
+        in: query
+        name: start_time
+        type: string
+      - description: End Time (RFC3339)
+        format: date-time
+        in: query
+        name: end_time
+        type: string
+      - default: true
+        description: Include resolved alerts
+        in: query
+        name: include_resolved
+        type: boolean
+      - default: false
+        description: Include notification history
+        in: query
+        name: include_notifications
+        type: boolean
+      - default: 50
+        description: Limit
+        in: query
+        maximum: 1000
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.AlertHistoryResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get alert history for a subscription
+      tags:
+      - alerts
+  /usage/alerts/{subscription_id}/statistics:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed alert statistics and trends
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      - description: Usage Type Filter
+        in: query
+        name: usage_type
+        type: string
+      - description: Severity Filter
+        enum:
+        - info
+        - warning
+        - error
+        - critical
+        in: query
+        name: severity
+        type: string
+      - default: 30d
+        description: Time Period
+        enum:
+        - 24h
+        - 7d
+        - 30d
+        - 90d
+        - 365d
+        in: query
+        name: period
+        type: string
+      - description: Start Time (RFC3339)
+        format: date-time
+        in: query
+        name: start_time
+        type: string
+      - description: End Time (RFC3339)
+        format: date-time
+        in: query
+        name: end_time
+        type: string
+      - description: Group By
+        enum:
+        - hour
+        - day
+        - week
+        - month
+        - severity
+        - usage_type
+        in: query
+        name: group_by
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.AlertStatisticsResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get alert statistics for a subscription
+      tags:
+      - alerts
   /usage/alerts/bulk-resolve:
     post:
       consumes:
@@ -8156,166 +8830,6 @@ paths:
       summary: Get alert configurations for a subscription
       tags:
       - alerts
-  /usage/alerts/history/{subscription_id}:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve detailed alert history with optional filters
-      parameters:
-      - description: Subscription ID
-        in: path
-        name: subscription_id
-        required: true
-        type: integer
-      - description: Alert Configuration ID Filter
-        in: query
-        name: alert_configuration_id
-        type: integer
-      - description: Usage Type Filter
-        in: query
-        name: usage_type
-        type: string
-      - description: Start Time (RFC3339)
-        format: date-time
-        in: query
-        name: start_time
-        type: string
-      - description: End Time (RFC3339)
-        format: date-time
-        in: query
-        name: end_time
-        type: string
-      - default: true
-        description: Include resolved alerts
-        in: query
-        name: include_resolved
-        type: boolean
-      - default: false
-        description: Include notification history
-        in: query
-        name: include_notifications
-        type: boolean
-      - default: 50
-        description: Limit
-        in: query
-        maximum: 1000
-        name: limit
-        type: integer
-      - default: 0
-        description: Offset
-        in: query
-        name: offset
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.AlertHistoryResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Response'
-      summary: Get alert history for a subscription
-      tags:
-      - alerts
-  /usage/alerts/statistics/{subscription_id}:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve detailed alert statistics and trends
-      parameters:
-      - description: Subscription ID
-        in: path
-        name: subscription_id
-        required: true
-        type: integer
-      - description: Usage Type Filter
-        in: query
-        name: usage_type
-        type: string
-      - description: Severity Filter
-        enum:
-        - info
-        - warning
-        - error
-        - critical
-        in: query
-        name: severity
-        type: string
-      - default: 30d
-        description: Time Period
-        enum:
-        - 24h
-        - 7d
-        - 30d
-        - 90d
-        - 365d
-        in: query
-        name: period
-        type: string
-      - description: Start Time (RFC3339)
-        format: date-time
-        in: query
-        name: start_time
-        type: string
-      - description: End Time (RFC3339)
-        format: date-time
-        in: query
-        name: end_time
-        type: string
-      - description: Group By
-        enum:
-        - hour
-        - day
-        - week
-        - month
-        - severity
-        - usage_type
-        in: query
-        name: group_by
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.AlertStatisticsResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Response'
-      summary: Get alert statistics for a subscription
-      tags:
-      - alerts
   /usage/alerts/test-notification:
     post:
       consumes:
@@ -8351,94 +8865,6 @@ paths:
       summary: Test a notification channel
       tags:
       - alerts
-  /usage/current/{subscription_id}:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve current usage statistics for all usage types of a subscription
-      parameters:
-      - description: Subscription ID
-        in: path
-        name: subscription_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.CurrentUsageResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Response'
-      summary: Get current usage for a subscription
-      tags:
-      - usage
-  /usage/current/{subscription_id}/{usage_type}:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve current usage statistics for a specific usage type of
-        a subscription
-      parameters:
-      - description: Subscription ID
-        in: path
-        name: subscription_id
-        required: true
-        type: integer
-      - description: Usage Type
-        enum:
-        - traffic
-        - api_call
-        - storage
-        - bandwidth
-        - connections
-        in: path
-        name: usage_type
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.CurrentUsageResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Response'
-      summary: Get current usage for a specific usage type
-      tags:
-      - usage
   /usage/export:
     post:
       consumes:
@@ -8472,361 +8898,6 @@ paths:
           schema:
             $ref: '#/definitions/response.Response'
       summary: Export usage data
-      tags:
-      - usage
-  /usage/history/{subscription_id}:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve historical usage data with configurable time range and
-        granularity
-      parameters:
-      - description: Subscription ID
-        in: path
-        name: subscription_id
-        required: true
-        type: integer
-      - description: Usage Type Filter
-        in: query
-        name: usage_type
-        type: string
-      - description: Start Time (RFC3339)
-        format: date-time
-        in: query
-        name: start_time
-        type: string
-      - description: End Time (RFC3339)
-        format: date-time
-        in: query
-        name: end_time
-        type: string
-      - default: daily
-        description: Data Granularity
-        enum:
-        - hourly
-        - daily
-        - weekly
-        - monthly
-        in: query
-        name: granularity
-        type: string
-      - default: 50
-        description: Limit
-        in: query
-        maximum: 1000
-        name: limit
-        type: integer
-      - default: 0
-        description: Offset
-        in: query
-        name: offset
-        type: integer
-      - default: false
-        description: Include detailed breakdown
-        in: query
-        name: include_details
-        type: boolean
-      - description: Source Type Filter
-        in: query
-        name: source_type
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.UsageHistoryResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Response'
-      summary: Get usage history for a subscription
-      tags:
-      - usage
-  /usage/predictions/{subscription_id}:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve usage predictions for all usage types
-      parameters:
-      - description: Subscription ID
-        in: path
-        name: subscription_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/entities.UsagePrediction'
-                  type: array
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Response'
-      summary: Get usage predictions for a subscription
-      tags:
-      - usage
-  /usage/predictions/{subscription_id}/{usage_type}:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve usage predictions for a specific usage type
-      parameters:
-      - description: Subscription ID
-        in: path
-        name: subscription_id
-        required: true
-        type: integer
-      - description: Usage Type
-        enum:
-        - traffic
-        - api_call
-        - storage
-        - bandwidth
-        - connections
-        in: path
-        name: usage_type
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/entities.UsagePrediction'
-                  type: array
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Response'
-      summary: Get usage predictions for a specific usage type
-      tags:
-      - usage
-  /usage/realtime/{subscription_id}:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve real-time usage data with current rates and predictions
-      parameters:
-      - description: Subscription ID
-        in: path
-        name: subscription_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.RealTimeUsageResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Response'
-      summary: Get real-time usage data for a subscription
-      tags:
-      - usage
-  /usage/statistics/{subscription_id}:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve detailed usage statistics with breakdown by various dimensions
-      parameters:
-      - description: Subscription ID
-        in: path
-        name: subscription_id
-        required: true
-        type: integer
-      - description: Usage Type Filter
-        in: query
-        name: usage_type
-        type: string
-      - default: monthly
-        description: Time Period
-        in: query
-        name: period
-        type: string
-      - description: Start Time (RFC3339)
-        format: date-time
-        in: query
-        name: start_time
-        type: string
-      - description: End Time (RFC3339)
-        format: date-time
-        in: query
-        name: end_time
-        type: string
-      - description: Group By Dimensions (comma-separated)
-        in: query
-        name: group_by
-        type: string
-      - default: false
-        description: Include period comparison
-        in: query
-        name: include_comparison
-        type: boolean
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.UsageStatistics'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Response'
-      summary: Get usage statistics for a subscription
-      tags:
-      - usage
-  /usage/summary/{subscription_id}:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve aggregated usage summary for a specific period
-      parameters:
-      - description: Subscription ID
-        in: path
-        name: subscription_id
-        required: true
-        type: integer
-      - default: monthly
-        description: Time Period
-        enum:
-        - daily
-        - weekly
-        - monthly
-        - custom
-        in: query
-        name: period
-        type: string
-      - description: Period Start Time (RFC3339)
-        format: date-time
-        in: query
-        name: period_start
-        type: string
-      - description: Period End Time (RFC3339)
-        format: date-time
-        in: query
-        name: period_end
-        type: string
-      - description: Comma-separated usage types filter
-        in: query
-        name: usage_types
-        type: string
-      - default: false
-        description: Include detailed breakdown
-        in: query
-        name: include_breakdown
-        type: boolean
-      - default: false
-        description: Include usage predictions
-        in: query
-        name: include_predictions
-        type: boolean
-      - default: false
-        description: Compare with previous period
-        in: query
-        name: compare_with_previous
-        type: boolean
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.UsageSummary'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Response'
-      summary: Get usage summary for a subscription
       tags:
       - usage
   /usage/top:
@@ -8888,77 +8959,6 @@ paths:
       tags:
       - usage
       - admin
-  /usage/trends/{subscription_id}:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve usage trends with optional anomaly detection and predictions
-      parameters:
-      - description: Subscription ID
-        in: path
-        name: subscription_id
-        required: true
-        type: integer
-      - description: Usage Type Filter
-        in: query
-        name: usage_type
-        type: string
-      - default: 30d
-        description: Time Period
-        enum:
-        - 7d
-        - 30d
-        - 90d
-        - 365d
-        in: query
-        name: period
-        type: string
-      - default: daily
-        description: Data Granularity
-        enum:
-        - hourly
-        - daily
-        - weekly
-        in: query
-        name: granularity
-        type: string
-      - default: false
-        description: Include usage predictions
-        in: query
-        name: include_predictions
-        type: boolean
-      - default: false
-        description: Include anomaly detection
-        in: query
-        name: include_anomalies
-        type: boolean
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.UsageTrendsResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Response'
-      summary: Get usage trends for a subscription
-      tags:
-      - usage
   /user/profile:
     get:
       consumes:

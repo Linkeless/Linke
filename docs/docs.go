@@ -7380,245 +7380,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/usage/alerts/history/{subscription_id}": {
-            "get": {
-                "description": "Retrieve detailed alert history with optional filters",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "alerts"
-                ],
-                "summary": "Get alert history for a subscription",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Subscription ID",
-                        "name": "subscription_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Alert Configuration ID Filter",
-                        "name": "alert_configuration_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Usage Type Filter",
-                        "name": "usage_type",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "Start Time (RFC3339)",
-                        "name": "start_time",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "End Time (RFC3339)",
-                        "name": "end_time",
-                        "in": "query"
-                    },
-                    {
-                        "type": "boolean",
-                        "default": true,
-                        "description": "Include resolved alerts",
-                        "name": "include_resolved",
-                        "in": "query"
-                    },
-                    {
-                        "type": "boolean",
-                        "default": false,
-                        "description": "Include notification history",
-                        "name": "include_notifications",
-                        "in": "query"
-                    },
-                    {
-                        "maximum": 1000,
-                        "type": "integer",
-                        "default": 50,
-                        "description": "Limit",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 0,
-                        "description": "Offset",
-                        "name": "offset",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/interfaces.AlertHistoryResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/usage/alerts/statistics/{subscription_id}": {
-            "get": {
-                "description": "Retrieve detailed alert statistics and trends",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "alerts"
-                ],
-                "summary": "Get alert statistics for a subscription",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Subscription ID",
-                        "name": "subscription_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Usage Type Filter",
-                        "name": "usage_type",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "info",
-                            "warning",
-                            "error",
-                            "critical"
-                        ],
-                        "type": "string",
-                        "description": "Severity Filter",
-                        "name": "severity",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "24h",
-                            "7d",
-                            "30d",
-                            "90d",
-                            "365d"
-                        ],
-                        "type": "string",
-                        "default": "30d",
-                        "description": "Time Period",
-                        "name": "period",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "Start Time (RFC3339)",
-                        "name": "start_time",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "End Time (RFC3339)",
-                        "name": "end_time",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "hour",
-                            "day",
-                            "week",
-                            "month",
-                            "severity",
-                            "usage_type"
-                        ],
-                        "type": "string",
-                        "description": "Group By",
-                        "name": "group_by",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/interfaces.AlertStatisticsResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    }
-                }
-            }
-        },
         "/usage/alerts/test-notification": {
             "post": {
                 "description": "Send a test notification to verify channel configuration",
@@ -8022,9 +7783,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/usage/current/{subscription_id}": {
+        "/usage/alerts/{subscription_id}/history": {
             "get": {
-                "description": "Retrieve current usage statistics for all usage types of a subscription",
+                "description": "Retrieve detailed alert history with optional filters",
                 "consumes": [
                     "application/json"
                 ],
@@ -8032,9 +7793,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "usage"
+                    "alerts"
                 ],
-                "summary": "Get current usage for a subscription",
+                "summary": "Get alert history for a subscription",
                 "parameters": [
                     {
                         "type": "integer",
@@ -8042,6 +7803,61 @@ const docTemplate = `{
                         "name": "subscription_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Alert Configuration ID Filter",
+                        "name": "alert_configuration_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Usage Type Filter",
+                        "name": "usage_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Start Time (RFC3339)",
+                        "name": "start_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "End Time (RFC3339)",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Include resolved alerts",
+                        "name": "include_resolved",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Include notification history",
+                        "name": "include_notifications",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000,
+                        "type": "integer",
+                        "default": 50,
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -8056,7 +7872,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/interfaces.CurrentUsageResponse"
+                                            "$ref": "#/definitions/interfaces.AlertHistoryResponse"
                                         }
                                     }
                                 }
@@ -8084,9 +7900,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/usage/current/{subscription_id}/{usage_type}": {
+        "/usage/alerts/{subscription_id}/statistics": {
             "get": {
-                "description": "Retrieve current usage statistics for a specific usage type of a subscription",
+                "description": "Retrieve detailed alert statistics and trends",
                 "consumes": [
                     "application/json"
                 ],
@@ -8094,9 +7910,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "usage"
+                    "alerts"
                 ],
-                "summary": "Get current usage for a specific usage type",
+                "summary": "Get alert statistics for a subscription",
                 "parameters": [
                     {
                         "type": "integer",
@@ -8106,18 +7922,64 @@ const docTemplate = `{
                         "required": true
                     },
                     {
+                        "type": "string",
+                        "description": "Usage Type Filter",
+                        "name": "usage_type",
+                        "in": "query"
+                    },
+                    {
                         "enum": [
-                            "traffic",
-                            "api_call",
-                            "storage",
-                            "bandwidth",
-                            "connections"
+                            "info",
+                            "warning",
+                            "error",
+                            "critical"
                         ],
                         "type": "string",
-                        "description": "Usage Type",
-                        "name": "usage_type",
-                        "in": "path",
-                        "required": true
+                        "description": "Severity Filter",
+                        "name": "severity",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "24h",
+                            "7d",
+                            "30d",
+                            "90d",
+                            "365d"
+                        ],
+                        "type": "string",
+                        "default": "30d",
+                        "description": "Time Period",
+                        "name": "period",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Start Time (RFC3339)",
+                        "name": "start_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "End Time (RFC3339)",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "hour",
+                            "day",
+                            "week",
+                            "month",
+                            "severity",
+                            "usage_type"
+                        ],
+                        "type": "string",
+                        "description": "Group By",
+                        "name": "group_by",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -8132,7 +7994,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/interfaces.CurrentUsageResponse"
+                                            "$ref": "#/definitions/interfaces.AlertStatisticsResponse"
                                         }
                                     }
                                 }
@@ -8218,7 +8080,235 @@ const docTemplate = `{
                 }
             }
         },
-        "/usage/history/{subscription_id}": {
+        "/usage/top": {
+            "get": {
+                "description": "Retrieve subscriptions with highest usage for administration",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "usage",
+                    "admin"
+                ],
+                "summary": "Get top usage subscriptions",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Usage Type Filter",
+                        "name": "usage_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "24h",
+                        "description": "Time Period (e.g., 24h, 7d, 30d)",
+                        "name": "period",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "total_usage",
+                            "average_usage",
+                            "peak_usage"
+                        ],
+                        "type": "string",
+                        "default": "total_usage",
+                        "description": "Order By",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Include zero usage subscriptions",
+                        "name": "include_zero",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.TopUsageResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/{subscription_id}/current": {
+            "get": {
+                "description": "Retrieve current usage statistics for all usage types of a subscription",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "usage"
+                ],
+                "summary": "Get current usage for a subscription",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription ID",
+                        "name": "subscription_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.CurrentUsageResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/{subscription_id}/current/{usage_type}": {
+            "get": {
+                "description": "Retrieve current usage statistics for a specific usage type of a subscription",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "usage"
+                ],
+                "summary": "Get current usage for a specific usage type",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription ID",
+                        "name": "subscription_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "traffic",
+                            "api_call",
+                            "storage",
+                            "bandwidth",
+                            "connections"
+                        ],
+                        "type": "string",
+                        "description": "Usage Type",
+                        "name": "usage_type",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.CurrentUsageResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/{subscription_id}/history": {
             "get": {
                 "description": "Retrieve historical usage data with configurable time range and granularity",
                 "consumes": [
@@ -8341,7 +8431,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/usage/predictions/{subscription_id}": {
+        "/usage/{subscription_id}/predictions": {
             "get": {
                 "description": "Retrieve usage predictions for all usage types",
                 "consumes": [
@@ -8406,7 +8496,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/usage/predictions/{subscription_id}/{usage_type}": {
+        "/usage/{subscription_id}/predictions/{usage_type}": {
             "get": {
                 "description": "Retrieve usage predictions for a specific usage type",
                 "consumes": [
@@ -8485,7 +8575,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/usage/realtime/{subscription_id}": {
+        "/usage/{subscription_id}/realtime": {
             "get": {
                 "description": "Retrieve real-time usage data with current rates and predictions",
                 "consumes": [
@@ -8547,7 +8637,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/usage/statistics/{subscription_id}": {
+        "/usage/{subscription_id}/statistics": {
             "get": {
                 "description": "Retrieve detailed usage statistics with breakdown by various dimensions",
                 "consumes": [
@@ -8649,7 +8739,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/usage/summary/{subscription_id}": {
+        "/usage/{subscription_id}/summary": {
             "get": {
                 "description": "Retrieve aggregated usage summary for a specific period",
                 "consumes": [
@@ -8765,97 +8855,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/usage/top": {
-            "get": {
-                "description": "Retrieve subscriptions with highest usage for administration",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "usage",
-                    "admin"
-                ],
-                "summary": "Get top usage subscriptions",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Usage Type Filter",
-                        "name": "usage_type",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "default": "24h",
-                        "description": "Time Period (e.g., 24h, 7d, 30d)",
-                        "name": "period",
-                        "in": "query"
-                    },
-                    {
-                        "maximum": 100,
-                        "type": "integer",
-                        "default": 10,
-                        "description": "Limit",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "total_usage",
-                            "average_usage",
-                            "peak_usage"
-                        ],
-                        "type": "string",
-                        "default": "total_usage",
-                        "description": "Order By",
-                        "name": "order_by",
-                        "in": "query"
-                    },
-                    {
-                        "type": "boolean",
-                        "default": false,
-                        "description": "Include zero usage subscriptions",
-                        "name": "include_zero",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/interfaces.TopUsageResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/usage/trends/{subscription_id}": {
+        "/usage/{subscription_id}/trends": {
             "get": {
                 "description": "Retrieve usage trends with optional anomaly detection and predictions",
                 "consumes": [

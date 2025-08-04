@@ -984,7 +984,7 @@ func (h *PaymentHandler) ResetPaymentRetry(c *gin.Context) {
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /admin/payment/retries/bulk-cancel [post]
+// @Router /admin/payment/retries/bulk/cancel [post]
 func (h *PaymentHandler) BulkCancelPaymentRetries(c *gin.Context) {
 	// Get current user from context
 	userValue, exists := c.Get(middleware.AuthContextKey)
@@ -1046,7 +1046,7 @@ func (h *PaymentHandler) BulkCancelPaymentRetries(c *gin.Context) {
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /admin/payment/retries/bulk-reset [post]
+// @Router /admin/payment/retries/bulk/reset [post]
 func (h *PaymentHandler) BulkResetPaymentRetries(c *gin.Context) {
 	// Get current user from context
 	userValue, exists := c.Get(middleware.AuthContextKey)
