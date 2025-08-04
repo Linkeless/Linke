@@ -11,6 +11,7 @@ import (
 	"linke/internal/shared/config"
 	"linke/internal/shared/database"
 	loggerPkg "linke/internal/shared/logger"
+	"linke/internal/shared/middleware"
 	"linke/internal/shared/queue"
 	routerPkg "linke/internal/shared/router"
 	"linke/internal/shared/versioning"
@@ -97,6 +98,9 @@ func NewHTTPServer(
 
 	// 添加中间件
 	router.Use(gin.Recovery())
+	
+	// 添加 CORS 中间件
+	router.Use(middleware.CORSFromConfig(cfg))
 
 	// 设置路由
 	routerPkg.SetupRoutes(
