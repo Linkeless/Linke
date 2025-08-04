@@ -50,7 +50,12 @@ Linke 是基于 Go 语言构建的现代化服务管理平台，采用 VSA (垂�
 **VSA + 清洁架构设计:**
 ```
 internal/
-├── application/          # 跨领域协调层 (工作流编排)
+├── application/          # 应用层 (工作流编排和启动逻辑)
+│   ├── bootstrap/       # Fx 依赖注入和应用启动
+│   ├── server/          # HTTP 服务器配置
+│   ├── handlers/        # 应用级处理器
+│   ├── services/        # 应用服务
+│   └── workflows/       # 跨领域工作流
 ├── domains/             # 业务领域 (垂直切片)
 │   ├── auth/           # JWT管理、OAuth2、登录安全
 │   ├── user/           # 用户生命周期、多级缓存
@@ -63,9 +68,14 @@ internal/
     ├── cache/          # 多级缓存系统 (内存+Redis)
     ├── events/         # 事件驱动架构、发布订阅
     ├── versioning/     # API版本管理中间件
+    ├── database/       # 数据库连接和迁移CLI
+    ├── router/         # HTTP路由配置
+    ├── config/         # 配置管理
     ├── constants/      # 系统常量定义
     ├── entities/       # 基础实体类型
-    └── handlers/       # 通用HTTP处理函数
+    ├── middleware/     # HTTP中间件
+    ├── queue/          # 任务队列系统
+    └── stubs/          # 临时存根实现
 ```
 
 **领域内部结构 (清洁架构):**
@@ -103,6 +113,12 @@ domains/[领域]/
 
 ## 核心架构模式
 
+**Uber/Fx 依赖注入架构:**
+- **应用启动**: `internal/application/bootstrap/app.go` 包含完整的 Fx 应用配置
+- **模块化**: 每个领域都有独立的 `module.go` 文件定义 Fx 模块
+- **启动顺序**: 配置 → 数据库 → 缓存 → 事件系统 → 业务领域 → HTTP路由
+- **生命周期管理**: Fx hooks 管理组件启动和关闭
+
 **事件驱动架构 (`shared/events`):**
 - **事件总线**: 内存总线、Redis分布式总线、度量装饰器
 - **事件存储**: 基于GORM的持久化事件存储，支持回放和查询
@@ -128,7 +144,14 @@ domains/[领域]/
 - **幂等性**: 防重放攻击、基于缓存的去重检查
 - **监控告警**: 重试成功率、处理延时、系统健康度指标
 
+**集成式数据库迁移:**
+- **命令行集成**: 迁移命令直接集成到主应用中，通过命令行参数调用
+- **迁移CLI**: `internal/shared/database/migration_cli.go` 处理所有迁移逻辑
+- **支持命令**: up, down, reset, status, list, force, goto, steps, fix-dirty
+- **环境变量**: 使用相同的数据库配置，无需额外配置
+
 **Go 代码规范 (Uber指南):**
+- **main.go 最小化**: 仅 69 行，只负责命令行解析和应用启动
 - 使用 `shared/entities/BaseEntity` 减少结构体重复
 - 使用 `shared/constants` 统一错误消息和状态值
 - 使用 `shared/handlers` 通用函数处理ID解析、JSON绑定
@@ -138,9 +161,10 @@ domains/[领域]/
 ## 关键开发要点
 
 **启动应用程序:**
-- 应用程序使用uber/fx进行依赖注入，启动顺序: 配置 → 数据库 → 缓存 → 事件系统 → 业务领域 → HTTP路由
-- 支持集成式数据库迁移: 使用 `-migrate-command` 参数直接运行迁移
-- 支持多种运行模式: 普通模式、迁移模式、安全检查模式
+- **bootstrap 模式**: `internal/application/bootstrap.NewApplication()` 创建 Fx 应用
+- **依赖注入**: 所有组件通过 Fx 自动注入，包括数据库、缓存、事件系统等
+- **路由配置**: HTTP 路由在 `internal/shared/router/router.go` 中统一配置
+- **迁移集成**: 支持通过命令行参数直接运行数据库迁移
 
 **缓存失效策略:**
 - 用户数据更新时自动失效相关缓存 (ID、邮箱、用户名)
@@ -173,3 +197,19 @@ domains/[领域]/
 - **缓存连接失败**: 检查Redis连接配置和网络
 - **支付重试失败**: 查看重试配置和失败分类规则
 - **事件处理异常**: 检查事件总线配置和订阅者注册
+- **Fx 依赖注入错误**: 检查模块间的接口依赖和循环引用
+
+## 重要开发注意事项
+
+**添加新功能时:**
+1. **领域优先**: 在对应的 `domains/` 目录下创建实体、用例和适配器
+2. **接口契约**: 先定义 `interfaces/` 中的服务契约
+3. **依赖注入**: 在领域的 `module.go` 中注册 Fx 提供者
+4. **路由注册**: 在 `shared/router/router.go` 中添加 HTTP 路由
+5. **缓存考虑**: 对于频繁访问的数据，创建缓存装饰器
+
+**修改现有代码时:**
+- 遵循现有的 VSA + Clean Architecture 模式
+- 保持 `main.go` 的简洁性，避免在其中添加业务逻辑
+- 使用事件驱动模式处理跨领域交互
+- 优先使用现有的共享基础设施组件
