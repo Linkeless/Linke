@@ -446,7 +446,7 @@ func (r *alertRepository) GetTopAlertConfigurations(ctx context.Context, subscri
 			Threshold:             result.Threshold,
 			AlertCount:            result.AlertCount,
 			LastAlertFired:        result.LastAlertFired,
-			AverageResolutionTime: avgResolution,
+			AverageResolutionTime: avgResolution.String(),
 		}
 	}
 

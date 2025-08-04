@@ -49,7 +49,7 @@ type PaymentRetry struct {
 	// Timestamp Fields
 	CreatedAt time.Time      `json:"created_at" gorm:"not null;index"`
 	UpdatedAt time.Time      `json:"updated_at" gorm:"not null"`
-	DeletedAt gorm.DeletedAt `json:"deleted_at,omitempty" gorm:"index"`
+	DeletedAt gorm.DeletedAt `json:"-" gorm:"index" swaggerignore:"true"`
 }
 
 // TableName returns the table name for PaymentRetry model
@@ -117,7 +117,7 @@ type PaymentRetryHistory struct {
 	// Timestamp Fields
 	CreatedAt time.Time      `json:"created_at" gorm:"not null;index"`
 	UpdatedAt time.Time      `json:"updated_at" gorm:"not null"`
-	DeletedAt gorm.DeletedAt `json:"deleted_at,omitempty" gorm:"index"`
+	DeletedAt gorm.DeletedAt `json:"-" gorm:"index" swaggerignore:"true"`
 }
 
 // TableName returns the table name for PaymentRetryHistory model
@@ -375,19 +375,19 @@ type PaymentRetryResponse struct {
 	PaymentRecordID uint       `json:"payment_record_id"`
 	AttemptNumber   int        `json:"attempt_number"`
 	MaxAttempts     int        `json:"max_attempts"`
-	NextRetryAt     time.Time  `json:"next_retry_at"`
-	LastAttemptAt   time.Time  `json:"last_attempt_at"`
+	NextRetryAt     time.Time  `json:"next_retry_at" swaggertype:"string" format:"date-time" example:"2024-01-01T12:00:00Z"`
+	LastAttemptAt   time.Time  `json:"last_attempt_at" swaggertype:"string" format:"date-time" example:"2024-01-01T11:00:00Z"`
 	RetryStrategy   string     `json:"retry_strategy"`
 	Status          string     `json:"status"`
 	FailureType     string     `json:"failure_type,omitempty"`
 	LastFailureCode string     `json:"last_failure_code,omitempty"`
 	TotalDelayTime  int        `json:"total_delay_time"`
-	CompletedAt     *time.Time `json:"completed_at,omitempty"`
-	CancelledAt     *time.Time `json:"cancelled_at,omitempty"`
-	SuccessfulAt    *time.Time `json:"successful_at,omitempty"`
+	CompletedAt     *time.Time `json:"completed_at,omitempty" swaggertype:"string" format:"date-time" example:"2024-01-01T13:00:00Z"`
+	CancelledAt     *time.Time `json:"cancelled_at,omitempty" swaggertype:"string" format:"date-time" example:"2024-01-01T12:30:00Z"`
+	SuccessfulAt    *time.Time `json:"successful_at,omitempty" swaggertype:"string" format:"date-time" example:"2024-01-01T12:15:00Z"`
 	Notes           string     `json:"notes,omitempty"`
-	CreatedAt       time.Time  `json:"created_at"`
-	UpdatedAt       time.Time  `json:"updated_at"`
+	CreatedAt       time.Time  `json:"created_at" swaggertype:"string" format:"date-time" example:"2024-01-01T10:00:00Z"`
+	UpdatedAt       time.Time  `json:"updated_at" swaggertype:"string" format:"date-time" example:"2024-01-01T10:00:00Z"`
 }
 
 // ToResponse converts PaymentRetry to PaymentRetryResponse
@@ -417,16 +417,16 @@ func (pr *PaymentRetry) ToResponse() *PaymentRetryResponse {
 type PaymentRetryHistoryResponse struct {
 	ID                uint       `json:"id"`
 	AttemptNumber     int        `json:"attempt_number"`
-	AttemptedAt       time.Time  `json:"attempted_at"`
+	AttemptedAt       time.Time  `json:"attempted_at" swaggertype:"string" format:"date-time" example:"2024-01-01T12:00:00Z"`
 	Duration          int        `json:"duration"`
 	Status            string     `json:"status"`
 	ResponseCode      string     `json:"response_code,omitempty"`
 	ResponseMessage   string     `json:"response_message,omitempty"`
 	ErrorType         string     `json:"error_type,omitempty"`
 	FailureReason     string     `json:"failure_reason,omitempty"`
-	NextRetryAt       *time.Time `json:"next_retry_at,omitempty"`
+	NextRetryAt       *time.Time `json:"next_retry_at,omitempty" swaggertype:"string" format:"date-time" example:"2024-01-01T13:00:00Z"`
 	DelayFromPrevious int        `json:"delay_from_previous"`
-	CreatedAt         time.Time  `json:"created_at"`
+	CreatedAt         time.Time  `json:"created_at" swaggertype:"string" format:"date-time" example:"2024-01-01T12:00:00Z"`
 }
 
 // ToResponse converts PaymentRetryHistory to PaymentRetryHistoryResponse

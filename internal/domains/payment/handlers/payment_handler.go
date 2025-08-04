@@ -1206,6 +1206,6 @@ type CancelRetryRequest struct {
 
 // BulkRetryActionRequest represents the request for bulk retry actions
 type BulkRetryActionRequest struct {
-	RetryIDs []uint `json:"retry_ids" binding:"required" example:"[1,2,3]"`
+	RetryIDs []uint `json:"retry_ids" binding:"required"`
 	Reason   string `json:"reason,omitempty" example:"Bulk operation by admin"`
 }

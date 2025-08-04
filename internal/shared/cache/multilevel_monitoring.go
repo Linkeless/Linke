@@ -28,7 +28,7 @@ type MultiLevelCacheMonitor struct {
 
 // PerformanceMetrics tracks detailed performance metrics
 type PerformanceMetrics struct {
-	StartTime time.Time `json:"start_time"`
+	StartTime time.Time `json:"start_time" swaggertype:"string" format:"date-time" example:"2023-01-01T00:00:00Z"`
 
 	// Response time metrics (in milliseconds)
 	L1AvgResponseTime float64 `json:"l1_avg_response_time"`
@@ -69,7 +69,7 @@ type CacheHealthStatus struct {
 	Issues      []string                `json:"issues"`
 	Metrics     *MultiLevelCacheMetrics `json:"metrics"`
 	Performance *PerformanceMetrics     `json:"performance"`
-	Timestamp   time.Time               `json:"timestamp"`
+	Timestamp   time.Time               `json:"timestamp" swaggertype:"string" format:"date-time" example:"2023-01-01T00:00:00Z"`
 }
 
 // NewMultiLevelCacheMonitor creates a new multi-level cache monitor
@@ -123,7 +123,7 @@ func (mlcm *MultiLevelCacheMonitor) RegisterRoutes(router *gin.RouterGroup) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} response.Response{data=CacheHealthStatus}
-// @Router /api/v1/admin/cache/monitor/health [get]
+// @Router /admin/cache/monitor/health [get]
 func (mlcm *MultiLevelCacheMonitor) GetHealth(c *gin.Context) {
 	health := mlcm.checkHealth(c.Request.Context())
 	response.Success(c, health)
@@ -136,7 +136,7 @@ func (mlcm *MultiLevelCacheMonitor) GetHealth(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} response.Response{data=MultiLevelCacheMetrics}
-// @Router /api/v1/admin/cache/monitor/metrics [get]
+// @Router /admin/cache/monitor/metrics [get]
 func (mlcm *MultiLevelCacheMonitor) GetMetrics(c *gin.Context) {
 	metrics := mlcm.multilevelCache.GetMetrics()
 	response.Success(c, metrics)
@@ -149,7 +149,7 @@ func (mlcm *MultiLevelCacheMonitor) GetMetrics(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} response.Response{data=PerformanceMetrics}
-// @Router /api/v1/admin/cache/monitor/performance [get]
+// @Router /admin/cache/monitor/performance [get]
 func (mlcm *MultiLevelCacheMonitor) GetPerformanceMetrics(c *gin.Context) {
 	mlcm.updatePerformanceMetrics()
 
@@ -167,7 +167,7 @@ func (mlcm *MultiLevelCacheMonitor) GetPerformanceMetrics(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} response.Response{data=map[string]interface{}}
-// @Router /api/v1/admin/cache/monitor/dashboard [get]
+// @Router /admin/cache/monitor/dashboard [get]
 func (mlcm *MultiLevelCacheMonitor) GetDashboard(c *gin.Context) {
 	dashboard := map[string]interface{}{
 		"health":       mlcm.checkHealth(c.Request.Context()),
@@ -188,7 +188,7 @@ func (mlcm *MultiLevelCacheMonitor) GetDashboard(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} response.Response{data=[]string}
-// @Router /api/v1/admin/cache/monitor/alerts [get]
+// @Router /admin/cache/monitor/alerts [get]
 func (mlcm *MultiLevelCacheMonitor) GetAlerts(c *gin.Context) {
 	alerts := mlcm.checkAlerts()
 	response.Success(c, alerts)
@@ -201,7 +201,7 @@ func (mlcm *MultiLevelCacheMonitor) GetAlerts(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} response.Response{data=map[string]interface{}}
-// @Router /api/v1/admin/cache/monitor/benchmark [post]
+// @Router /admin/cache/monitor/benchmark [post]
 func (mlcm *MultiLevelCacheMonitor) RunBenchmark(c *gin.Context) {
 	result := mlcm.runBenchmark(c.Request.Context())
 	response.Success(c, result)
@@ -214,7 +214,7 @@ func (mlcm *MultiLevelCacheMonitor) RunBenchmark(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} response.Response{data=WarmingMetrics}
-// @Router /api/v1/admin/cache/monitor/warming/status [get]
+// @Router /admin/cache/monitor/warming/status [get]
 func (mlcm *MultiLevelCacheMonitor) GetWarmingStatus(c *gin.Context) {
 	if mlcm.warmer != nil {
 		metrics := mlcm.warmer.GetMetrics()
@@ -232,7 +232,7 @@ func (mlcm *MultiLevelCacheMonitor) GetWarmingStatus(c *gin.Context) {
 // @Produce json
 // @Param request body map[string]interface{} true "Warming request"
 // @Success 200 {object} response.Response{data=map[string]interface{}}
-// @Router /api/v1/admin/cache/monitor/warming/trigger [post]
+// @Router /admin/cache/monitor/warming/trigger [post]
 func (mlcm *MultiLevelCacheMonitor) TriggerWarming(c *gin.Context) {
 	var req struct {
 		Prefixes []string `json:"prefixes"`
@@ -271,7 +271,7 @@ func (mlcm *MultiLevelCacheMonitor) TriggerWarming(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} response.Response{data=map[string]int64}
-// @Router /api/v1/admin/cache/monitor/invalidation/metrics [get]
+// @Router /admin/cache/monitor/invalidation/metrics [get]
 func (mlcm *MultiLevelCacheMonitor) GetInvalidationMetrics(c *gin.Context) {
 	if mlcm.invalidator != nil {
 		metrics := mlcm.invalidator.GetMetrics()

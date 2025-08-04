@@ -1,5 +1,194 @@
 basePath: /api/v1
 definitions:
+  cache.CacheHealthStatus:
+    properties:
+      components:
+        additionalProperties:
+          type: string
+        type: object
+      issues:
+        items:
+          type: string
+        type: array
+      metrics:
+        $ref: '#/definitions/cache.MultiLevelCacheMetrics'
+      overall:
+        type: string
+      performance:
+        $ref: '#/definitions/cache.PerformanceMetrics'
+      timestamp:
+        example: "2023-01-01T00:00:00Z"
+        format: date-time
+        type: string
+    type: object
+  cache.CacheStats:
+    properties:
+      deletes:
+        format: int64
+        type: integer
+      evictions:
+        format: int64
+        type: integer
+      hitRate:
+        format: float64
+        type: number
+      hits:
+        format: int64
+        type: integer
+      memoryUsed:
+        format: int64
+        type: integer
+      misses:
+        format: int64
+        type: integer
+      sets:
+        format: int64
+        type: integer
+      totalKeys:
+        format: int64
+        type: integer
+    type: object
+  cache.MemoryCacheMetrics:
+    type: object
+  cache.Metrics:
+    properties:
+      deletes:
+        type: integer
+      error_rate:
+        type: number
+      errors:
+        type: integer
+      evictions:
+        type: integer
+      hit_rate:
+        type: number
+      hits:
+        type: integer
+      miss_rate:
+        type: number
+      misses:
+        type: integer
+      sets:
+        type: integer
+      total_operations:
+        type: integer
+    type: object
+  cache.MetricsReport:
+    properties:
+      global_metrics:
+        $ref: '#/definitions/cache.Metrics'
+      prefix_metrics:
+        additionalProperties:
+          $ref: '#/definitions/cache.Metrics'
+        type: object
+      timestamp:
+        type: string
+      top_prefixes:
+        items:
+          $ref: '#/definitions/cache.PrefixMetricSummary'
+        type: array
+    type: object
+  cache.MultiLevelCacheMetrics:
+    properties:
+      demotions:
+        type: integer
+      l1_hit_rate:
+        type: number
+      l1_hits:
+        description: Multi-level specific metrics
+        type: integer
+      l1_metrics:
+        $ref: '#/definitions/cache.MemoryCacheMetrics'
+      l2_hit_rate:
+        type: number
+      l2_hits:
+        type: integer
+      l2_metrics:
+        $ref: '#/definitions/cache.Metrics'
+      overall_hit_rate:
+        description: Computed metrics
+        type: number
+      promotions:
+        type: integer
+      total_misses:
+        type: integer
+      write_behinds:
+        type: integer
+    type: object
+  cache.PerformanceMetrics:
+    properties:
+      cache_consistency:
+        description: L1-L2 consistency score
+        type: number
+      data_freshness:
+        description: Quality metrics
+        type: number
+      hourly_evictions:
+        items:
+          type: integer
+        type: array
+      hourly_hit_rates:
+        description: Trend data (last 24h)
+        items:
+          type: number
+        type: array
+      hourly_miss_rates:
+        items:
+          type: number
+        type: array
+      l1_avg_response_time:
+        description: Response time metrics (in milliseconds)
+        type: number
+      l1_cost_per_hit:
+        description: Cost metrics
+        type: number
+      l2_avg_response_time:
+        type: number
+      l2_cost_per_hit:
+        type: number
+      memory_efficiency:
+        description: Cache efficiency
+        type: number
+      promotion_accuracy:
+        description: Accuracy of promotion decisions
+        type: number
+      start_time:
+        example: "2023-01-01T00:00:00Z"
+        format: date-time
+        type: string
+      storage_efficiency:
+        description: Useful data / Total storage * 100
+        type: number
+    type: object
+  cache.PrefixMetricSummary:
+    properties:
+      error_rate:
+        type: number
+      hit_rate:
+        type: number
+      prefix:
+        type: string
+      total_operations:
+        type: integer
+    type: object
+  cache.WarmingMetrics:
+    properties:
+      error_count:
+        type: integer
+      items_per_second:
+        type: number
+      last_warm_time:
+        example: "2023-01-01T00:00:00Z"
+        format: date-time
+        type: string
+      success_count:
+        type: integer
+      total_warmed:
+        type: integer
+      warming_duration:
+        example: 1h30m
+        type: string
+    type: object
   dto.SubscriptionOrderBasicDTO:
     properties:
       amount:
@@ -71,6 +260,119 @@ definitions:
       username:
         example: johndoe
         type: string
+    type: object
+  entities.AlertConfigurationResponse:
+    properties:
+      cooldown_minutes:
+        description: Cooldown in minutes
+        example: 60
+        type: integer
+      created_at:
+        description: Creation time
+        example: "2024-01-01T00:00:00Z"
+        format: date-time
+        type: string
+      description:
+        description: Description
+        example: Alert when traffic usage reaches 80%
+        type: string
+      id:
+        description: Configuration ID
+        example: 1
+        type: integer
+      is_enabled:
+        description: Whether enabled
+        example: true
+        type: boolean
+      name:
+        description: Alert name
+        example: Traffic 80% Alert
+        type: string
+      notification_channels:
+        description: Notification channels
+        items:
+          $ref: '#/definitions/entities.NotificationChannel'
+        type: array
+      priority:
+        description: Priority level
+        example: medium
+        type: string
+      threshold:
+        description: Threshold value
+        example: 80
+        type: number
+      threshold_type:
+        description: Threshold type
+        example: percentage
+        type: string
+      updated_at:
+        description: Update time
+        example: "2024-01-01T00:00:00Z"
+        format: date-time
+        type: string
+      usage_type:
+        description: Usage type to monitor
+        example: traffic
+        type: string
+      user_subscription_id:
+        description: Subscription ID
+        example: 1
+        type: integer
+    type: object
+  entities.CreatePaymentMethodRequest:
+    properties:
+      billing_country:
+        example: CN
+        type: string
+      billing_postcode:
+        example: "100000"
+        type: string
+      brand:
+        example: Alipay
+        type: string
+      display_name:
+        example: My Alipay Account
+        maxLength: 100
+        type: string
+      expiry_month:
+        example: 12
+        type: integer
+      expiry_year:
+        example: 2025
+        type: integer
+      gateway:
+        example: epay
+        type: string
+      gateway_customer_id:
+        example: cus_1234567890
+        type: string
+      masked_info:
+        example: ali***@example.com
+        maxLength: 100
+        type: string
+      method:
+        example: alipay
+        type: string
+      payment_token:
+        example: tok_1234567890
+        type: string
+      set_as_default:
+        example: false
+        type: boolean
+      type:
+        enum:
+        - card
+        - bank_account
+        - digital_wallet
+        - crypto
+        example: card
+        type: string
+    required:
+    - display_name
+    - gateway
+    - method
+    - payment_token
+    - type
     type: object
   entities.CreateUserRequest:
     properties:
@@ -144,6 +446,7 @@ definitions:
         type: string
       created_at:
         example: "2024-01-01T00:00:00Z"
+        format: date-time
         type: string
       currency:
         example: USD
@@ -157,6 +460,7 @@ definitions:
         type: string
       due_at:
         example: "2024-01-31T23:59:59Z"
+        format: date-time
         type: string
       full_address:
         type: string
@@ -174,6 +478,7 @@ definitions:
         type: boolean
       issued_at:
         example: "2024-01-01T00:00:00Z"
+        format: date-time
         type: string
       language:
         example: en
@@ -183,6 +488,7 @@ definitions:
         type: string
       paid_at:
         example: "2024-01-15T10:30:00Z"
+        format: date-time
         type: string
       payment_method:
         example: credit_card
@@ -198,6 +504,7 @@ definitions:
         type: integer
       sent_at:
         example: "2024-01-01T12:00:00Z"
+        format: date-time
         type: string
       status:
         example: sent
@@ -227,6 +534,7 @@ definitions:
         type: number
       updated_at:
         example: "2024-01-01T00:00:00Z"
+        format: date-time
         type: string
       user:
         allOf:
@@ -236,6 +544,7 @@ definitions:
         example: 1
         type: integer
       voided_at:
+        format: date-time
         type: string
     type: object
   entities.Method:
@@ -273,6 +582,39 @@ definitions:
       sort_order:
         description: Sort order
         type: integer
+    type: object
+  entities.NotificationChannel:
+    properties:
+      enabled:
+        type: boolean
+      settings:
+        additionalProperties:
+          type: string
+        description: additional settings for the channel
+        type: object
+      target:
+        description: email address, webhook URL, etc.
+        type: string
+      type:
+        description: email, webhook, in_app, sms
+        type: string
+    type: object
+  entities.NotificationResult:
+    properties:
+      channel:
+        type: string
+      error:
+        type: string
+      message:
+        type: string
+      sent_at:
+        example: "2024-01-01T12:00:00Z"
+        format: date-time
+        type: string
+      success:
+        type: boolean
+      target:
+        type: string
     type: object
   entities.PaymentConfigResponse:
     properties:
@@ -329,6 +671,117 @@ definitions:
         description: Update time
         example: "2024-01-01T00:00:00Z"
         type: string
+    type: object
+  entities.PaymentMethodListResponse:
+    properties:
+      default_method:
+        $ref: '#/definitions/entities.PaymentMethodResponse'
+      payment_methods:
+        items:
+          $ref: '#/definitions/entities.PaymentMethodResponse'
+        type: array
+      total:
+        example: 5
+        type: integer
+    type: object
+  entities.PaymentMethodResponse:
+    properties:
+      billing_country:
+        description: Billing country
+        example: CN
+        type: string
+      billing_postcode:
+        description: Billing postcode
+        example: "100000"
+        type: string
+      brand:
+        description: Brand/provider
+        example: Alipay
+        type: string
+      can_be_used:
+        description: Usability status
+        type: boolean
+      created_at:
+        description: Creation time
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      display_name:
+        description: User-friendly name
+        example: My Alipay Account
+        type: string
+      expiry_month:
+        description: Expiry month (cards only)
+        example: 12
+        type: integer
+      expiry_year:
+        description: Expiry year (cards only)
+        example: 2025
+        type: integer
+      failed_uses:
+        description: Failed payment count
+        example: 1
+        type: integer
+      failure_rate:
+        description: Failure rate
+        type: number
+      gateway:
+        description: Payment gateway
+        example: epay
+        type: string
+      id:
+        description: Payment method ID
+        example: 1
+        type: integer
+      is_active:
+        description: Is active
+        example: true
+        type: boolean
+      is_default:
+        description: Is default payment method
+        example: true
+        type: boolean
+      is_expired:
+        description: Computed fields
+        type: boolean
+      last_used_at:
+        description: Last used
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      last_validated_at:
+        description: Last validation
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      masked_info:
+        description: Masked payment info
+        example: ali***@example.com
+        type: string
+      method:
+        description: Payment method
+        example: alipay
+        type: string
+      needs_validation:
+        description: Validation requirement
+        type: boolean
+      status:
+        description: Status
+        example: active
+        type: string
+      successful_uses:
+        description: Successful payment count
+        example: 5
+        type: integer
+      type:
+        description: Payment method type
+        example: card
+        type: string
+      updated_at:
+        description: Update time
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      user_id:
+        description: User ID
+        example: 1
+        type: integer
     type: object
   entities.PaymentRecordResponse:
     properties:
@@ -449,6 +902,132 @@ definitions:
         description: User ID
         example: 1
         type: integer
+    type: object
+  entities.PaymentRetry:
+    properties:
+      attempt_number:
+        description: Retry Information
+        type: integer
+      backoff_factor:
+        description: Backoff multiplier
+        type: number
+      cancelled_at:
+        description: When retry sequence was cancelled
+        type: string
+      completed_at:
+        description: When retry sequence completed
+        type: string
+      created_at:
+        description: Timestamp Fields
+        type: string
+      failure_type:
+        description: temporary, permanent, network, gateway, business
+        type: string
+      gateway_config:
+        description: Gateway-specific Configuration
+        type: string
+      id:
+        description: Primary Key
+        type: integer
+      initial_delay:
+        description: Retry Configuration
+        type: integer
+      last_attempt_at:
+        description: Last attempt time
+        type: string
+      last_error_message:
+        description: Last error message
+        type: string
+      last_failure_code:
+        description: Last error/failure code
+        type: string
+      max_attempts:
+        description: Maximum retry attempts
+        type: integer
+      max_delay:
+        description: Maximum delay in seconds (24 hours)
+        type: integer
+      metadata:
+        description: Metadata
+        type: string
+      next_retry_at:
+        description: Next retry time
+        type: string
+      notes:
+        description: Admin notes
+        type: string
+      payment_record_id:
+        description: Foreign Keys
+        type: integer
+      retry_strategy:
+        description: 'Strategy type: exponential, linear, custom'
+        type: string
+      status:
+        description: Status and State
+        type: string
+      successful_at:
+        description: When payment finally succeeded
+        type: string
+      total_delay_time:
+        description: Tracking Information
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  entities.PaymentRetryHistory:
+    properties:
+      attempt_number:
+        description: Attempt Information
+        type: integer
+      attempted_at:
+        description: When this attempt was made
+        type: string
+      created_at:
+        description: Timestamp Fields
+        type: string
+      delay_from_previous:
+        description: Delay from previous attempt (seconds)
+        type: integer
+      duration:
+        description: Duration of attempt in milliseconds
+        type: integer
+      error_type:
+        description: Type of error encountered
+        type: string
+      failure_reason:
+        description: Detailed failure reason
+        type: string
+      id:
+        description: Primary Key
+        type: integer
+      metadata:
+        description: Metadata
+        type: string
+      next_retry_at:
+        description: Next Retry Information
+        type: string
+      payment_record_id:
+        type: integer
+      payment_retry_id:
+        description: Foreign Keys
+        type: integer
+      request_data:
+        description: Technical Details
+        type: string
+      response_code:
+        description: Gateway response code
+        type: string
+      response_data:
+        description: Response from gateway (sanitized)
+        type: string
+      response_message:
+        description: Gateway response message
+        type: string
+      status:
+        description: Result Information
+        type: string
+      updated_at:
+        type: string
     type: object
   entities.SubscriptionOrderResponse:
     properties:
@@ -682,6 +1261,195 @@ definitions:
         example: "2024-01-01T00:00:00Z"
         type: string
     type: object
+  entities.UpdatePaymentMethodRequest:
+    properties:
+      billing_country:
+        example: CN
+        type: string
+      billing_postcode:
+        example: "100000"
+        type: string
+      display_name:
+        example: Updated Payment Method
+        maxLength: 100
+        type: string
+      expiry_month:
+        example: 12
+        type: integer
+      expiry_year:
+        example: 2026
+        type: integer
+      is_active:
+        example: true
+        type: boolean
+    type: object
+  entities.UsageAlertResponse:
+    properties:
+      alert_configuration_id:
+        description: Configuration ID
+        example: 1
+        type: integer
+      created_at:
+        description: Creation time
+        example: "2024-01-01T12:00:00Z"
+        format: date-time
+        type: string
+      current_usage:
+        description: Current usage (bytes)
+        example: 8589934592
+        type: integer
+      duration_since_first_fired:
+        description: Duration since first fired (as string)
+        example: 30m
+        type: string
+      fired_at:
+        description: When fired
+        example: "2024-01-01T12:00:00Z"
+        format: date-time
+        type: string
+      id:
+        description: Alert ID
+        example: 1
+        type: integer
+      is_active:
+        description: Whether alert is active
+        example: true
+        type: boolean
+      is_resolved:
+        description: Whether alert is resolved
+        example: false
+        type: boolean
+      last_notification_sent:
+        description: Last notification time
+        example: "2024-01-01T12:30:00Z"
+        format: date-time
+        type: string
+      message:
+        description: Alert message
+        example: Traffic usage has reached 80% of your limit
+        type: string
+      metadata:
+        description: Additional metadata
+        type: string
+      notification_channels:
+        description: Notification channels used
+        type: string
+      notification_results:
+        description: Notification results
+        items:
+          $ref: '#/definitions/entities.NotificationResult'
+        type: array
+      notifications_sent:
+        description: Notifications sent count
+        example: 3
+        type: integer
+      resolved_at:
+        description: When resolved
+        example: "2024-01-01T13:00:00Z"
+        format: date-time
+        type: string
+      severity:
+        description: Alert severity
+        example: warning
+        type: string
+      status:
+        description: Alert status
+        example: fired
+        type: string
+      threshold_value:
+        description: Threshold that was exceeded
+        example: 80
+        type: number
+      updated_at:
+        description: Update time
+        example: "2024-01-01T12:00:00Z"
+        format: date-time
+        type: string
+      usage_limit:
+        description: Usage limit (bytes)
+        example: 10737418240
+        type: integer
+      usage_percent:
+        description: Usage percentage
+        example: 80.5
+        type: number
+      usage_type:
+        description: Usage type
+        example: traffic
+        type: string
+      user_subscription_id:
+        description: Subscription ID
+        example: 1
+        type: integer
+    type: object
+  entities.UsagePrediction:
+    properties:
+      based_on_days:
+        type: integer
+      confidence:
+        type: number
+      current_usage:
+        type: integer
+      estimated_days_left:
+        description: Days until limit reached
+        type: integer
+      predicted_usage:
+        type: integer
+      prediction_date:
+        type: string
+      prediction_type:
+        description: daily, weekly, monthly, period_end
+        type: string
+      trend:
+        description: increasing, decreasing, stable
+        type: string
+      usage_type:
+        type: string
+      user_subscription_id:
+        type: integer
+    type: object
+  entities.UsageSummary:
+    properties:
+      generated_at:
+        type: string
+      period:
+        type: string
+      period_end:
+        type: string
+      period_start:
+        type: string
+      total_records:
+        type: integer
+      total_usage:
+        type: integer
+      usage_by_type:
+        additionalProperties:
+          $ref: '#/definitions/entities.UsageTypeStats'
+        type: object
+      user_subscription_id:
+        type: integer
+    type: object
+  entities.UsageTypeStats:
+    properties:
+      average_amount:
+        type: number
+      first_usage:
+        type: string
+      last_usage:
+        type: string
+      max_amount:
+        type: integer
+      min_amount:
+        type: integer
+      record_count:
+        type: integer
+      total_amount:
+        type: integer
+      unit:
+        type: string
+      usage_type:
+        type: string
+    type: object
   entities.UserResponse:
     properties:
       avatar:
@@ -751,10 +1519,12 @@ definitions:
       cancelled_at:
         description: Cancelled date
         example: "2024-06-01T00:00:00Z"
+        format: date-time
         type: string
       created_at:
         description: Creation time
         example: "2024-01-01T00:00:00Z"
+        format: date-time
         type: string
       currency:
         description: Currency
@@ -763,10 +1533,12 @@ definitions:
       current_period_end:
         description: Current period end
         example: "2024-02-01T00:00:00Z"
+        format: date-time
         type: string
       current_period_start:
         description: Current period start
         example: "2024-01-01T00:00:00Z"
+        format: date-time
         type: string
       days_left:
         description: Days until expiry (-1 for lifetime)
@@ -774,6 +1546,7 @@ definitions:
       end_date:
         description: End date
         example: "2024-12-31T23:59:59Z"
+        format: date-time
         type: string
       id:
         description: Subscription ID
@@ -785,22 +1558,54 @@ definitions:
       is_in_trial:
         description: Computed fields
         type: boolean
+      is_max_pause_duration_exceeded:
+        description: Whether max pause duration is exceeded
+        type: boolean
+      is_paused:
+        description: Pause status
+        type: boolean
       last_renewal_failed:
         description: Last renewal failure
         example: "2024-01-10T10:30:00Z"
+        format: date-time
         type: string
       last_used_at:
         description: Last used
         example: "2024-01-15T10:30:00Z"
+        format: date-time
         type: string
+      max_pause_duration:
+        description: Maximum pause duration in days
+        example: 90
+        type: integer
       next_billing_date:
         description: Next billing
         example: "2024-02-01T00:00:00Z"
+        format: date-time
         type: string
+      pause_duration_days:
+        description: Current pause duration in days
+        type: integer
+      pause_reason:
+        description: Pause reason
+        example: User request
+        type: string
+      paused_at:
+        description: Paused date
+        example: "2024-06-01T00:00:00Z"
+        format: date-time
+        type: string
+      paused_by_admin_id:
+        description: Admin who paused
+        example: 1
+        type: integer
       price:
         description: Price
         example: 29.99
         type: number
+      remaining_pause_days:
+        description: Remaining pause days before auto-resume
+        type: integer
       renewal_attempts:
         description: Renewal attempts count
         example: 0
@@ -809,9 +1614,19 @@ definitions:
         description: Renewal failure reason
         example: Payment failed
         type: string
+      resumed_at:
+        description: Resumed date
+        example: "2024-08-01T00:00:00Z"
+        format: date-time
+        type: string
+      resumed_by_admin_id:
+        description: Admin who resumed
+        example: 1
+        type: integer
       start_date:
         description: Start date
         example: "2024-01-01T00:00:00Z"
+        format: date-time
         type: string
       status:
         description: Status
@@ -828,10 +1643,12 @@ definitions:
       trial_end_date:
         description: Trial end
         example: "2024-01-08T00:00:00Z"
+        format: date-time
         type: string
       updated_at:
         description: Update time
         example: "2024-01-01T00:00:00Z"
+        format: date-time
         type: string
       user:
         allOf:
@@ -845,6 +1662,26 @@ definitions:
         description: Unique identifier
         example: 550e8400-e29b-41d4-a716-446655440000
         type: string
+    type: object
+  handlers.BulkRetryActionRequest:
+    properties:
+      reason:
+        example: Bulk operation by admin
+        type: string
+      retry_ids:
+        items:
+          type: integer
+        type: array
+    required:
+    - retry_ids
+    type: object
+  handlers.CancelRetryRequest:
+    properties:
+      reason:
+        example: Manual cancellation by admin
+        type: string
+    required:
+    - reason
     type: object
   handlers.CancelSubscriptionRequest:
     properties:
@@ -976,6 +1813,176 @@ definitions:
       username:
         type: string
     type: object
+  interfaces.AdminRetryResponse:
+    properties:
+      page:
+        type: integer
+      page_size:
+        type: integer
+      retries:
+        items:
+          $ref: '#/definitions/entities.PaymentRetry'
+        type: array
+      statistics:
+        $ref: '#/definitions/interfaces.AdminRetryStatistics'
+      total_count:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  interfaces.AdminRetryStatistics:
+    properties:
+      average_attempts:
+        type: number
+      average_delay_time:
+        type: number
+      cancelled_retries:
+        type: integer
+      completed_retries:
+        type: integer
+      failed_retries:
+        type: integer
+      in_progress_retries:
+        type: integer
+      overall_success_rate:
+        type: number
+      pending_retries:
+        type: integer
+      total_retries:
+        type: integer
+    type: object
+  interfaces.AlertDistribution:
+    properties:
+      by_day_of_week:
+        additionalProperties:
+          format: int64
+          type: integer
+        description: Day of week (0-6)
+        type: object
+      by_hour:
+        additionalProperties:
+          format: int64
+          type: integer
+        description: Hour of day (0-23)
+        type: object
+      by_severity:
+        additionalProperties:
+          format: int64
+          type: integer
+        type: object
+      by_status:
+        additionalProperties:
+          format: int64
+          type: integer
+        type: object
+      by_usage_type:
+        additionalProperties:
+          format: int64
+          type: integer
+        type: object
+    type: object
+  interfaces.AlertHistoryEntry:
+    properties:
+      acknowledged_at:
+        type: string
+      acknowledged_by:
+        type: integer
+      alert:
+        $ref: '#/definitions/entities.UsageAlertResponse'
+      configuration:
+        $ref: '#/definitions/entities.AlertConfigurationResponse'
+      notification_history:
+        items:
+          $ref: '#/definitions/entities.NotificationResult'
+        type: array
+      resolution_time:
+        type: string
+    type: object
+  interfaces.AlertHistoryResponse:
+    properties:
+      alert_history:
+        items:
+          $ref: '#/definitions/interfaces.AlertHistoryEntry'
+        type: array
+      pagination:
+        $ref: '#/definitions/interfaces.PaginationInfo'
+      summary:
+        $ref: '#/definitions/interfaces.AlertHistorySummary'
+      total_count:
+        type: integer
+    type: object
+  interfaces.AlertHistorySummary:
+    properties:
+      average_resolution_time:
+        type: string
+      fastest_resolution:
+        type: string
+      notification_failures:
+        type: integer
+      notifications_sent:
+        type: integer
+      slowest_resolution:
+        type: string
+      total_alerts:
+        type: integer
+      unresolved_count:
+        type: integer
+    type: object
+  interfaces.AlertStatisticsResponse:
+    properties:
+      distribution:
+        $ref: '#/definitions/interfaces.AlertDistribution'
+      generated_at:
+        type: string
+      period:
+        type: string
+      summary:
+        $ref: '#/definitions/interfaces.AlertsSummary'
+      top_configurations:
+        items:
+          $ref: '#/definitions/interfaces.TopAlertConfiguration'
+        type: array
+      trends:
+        items:
+          $ref: '#/definitions/interfaces.AlertTrendEntry'
+        type: array
+    type: object
+  interfaces.AlertTrendEntry:
+    properties:
+      alert_count:
+        type: integer
+      period:
+        type: string
+      severity:
+        type: string
+      timestamp:
+        type: string
+      usage_type:
+        type: string
+    type: object
+  interfaces.AlertsSummary:
+    properties:
+      active_alerts:
+        type: integer
+      alerts_this_month:
+        type: integer
+      alerts_this_week:
+        type: integer
+      alerts_today:
+        type: integer
+      critical_alerts:
+        type: integer
+      high_alerts:
+        type: integer
+      low_alerts:
+        type: integer
+      medium_alerts:
+        type: integer
+      resolved_alerts:
+        type: integer
+      total_alerts:
+        type: integer
+    type: object
   interfaces.AuthorizeURLRequest:
     properties:
       provider:
@@ -990,6 +1997,155 @@ definitions:
         type: string
     required:
     - provider
+    type: object
+  interfaces.BulkDownloadRequest:
+    properties:
+      format:
+        description: zip, individual
+        example: zip
+        type: string
+      include_csv:
+        example: true
+        type: boolean
+      invoice_ids:
+        items:
+          type: integer
+        type: array
+      pdf_options:
+        $ref: '#/definitions/interfaces.PDFGenerationRequest'
+    required:
+    - invoice_ids
+    type: object
+  interfaces.BulkResolveAlertsRequest:
+    properties:
+      alert_ids:
+        items:
+          type: integer
+        minItems: 1
+        type: array
+      reason:
+        type: string
+      resolved_by:
+        type: integer
+      usage_type:
+        type: string
+      user_subscription_id:
+        type: integer
+    required:
+    - alert_ids
+    type: object
+  interfaces.BulkResolveAlertsResponse:
+    properties:
+      errors:
+        items:
+          type: string
+        type: array
+      failed_ids:
+        items:
+          type: integer
+        type: array
+      resolved_count:
+        type: integer
+    type: object
+  interfaces.CleanupResult:
+    properties:
+      alerts_deleted:
+        type: integer
+      completed_at:
+        type: string
+      operation_time:
+        type: string
+      records_deleted:
+        type: integer
+      space_freed:
+        description: in bytes
+        type: integer
+    type: object
+  interfaces.CompanyInfo:
+    properties:
+      address:
+        example: 123 Business Ave
+        type: string
+      bank_account:
+        example: "1234567890"
+        type: string
+      city:
+        example: New York
+        type: string
+      country:
+        example: US
+        type: string
+      email:
+        example: contact@acme.com
+        type: string
+      logo:
+        example: ./assets/logo.png
+        type: string
+      name:
+        example: Acme Corp
+        type: string
+      phone:
+        example: +1-555-123-4567
+        type: string
+      routing_number:
+        example: "123456789"
+        type: string
+      state:
+        example: NY
+        type: string
+      tax_id:
+        example: 12-3456789
+        type: string
+      website:
+        example: https://acme.com
+        type: string
+      zip:
+        example: "10001"
+        type: string
+    type: object
+  interfaces.CreateAlertConfigRequest:
+    properties:
+      cooldown_minutes:
+        description: 1 minute to 1 week
+        maximum: 10080
+        minimum: 1
+        type: integer
+      description:
+        type: string
+      is_enabled:
+        type: boolean
+      name:
+        maxLength: 100
+        type: string
+      notification_channels:
+        items:
+          $ref: '#/definitions/entities.NotificationChannel'
+        type: array
+      priority:
+        enum:
+        - low
+        - medium
+        - high
+        - critical
+        type: string
+      threshold:
+        minimum: 0
+        type: number
+      threshold_type:
+        enum:
+        - percentage
+        - absolute
+        type: string
+      usage_type:
+        type: string
+      user_subscription_id:
+        type: integer
+    required:
+    - name
+    - threshold
+    - threshold_type
+    - usage_type
+    - user_subscription_id
     type: object
   interfaces.CreateInvoiceRequest:
     properties:
@@ -1124,12 +2280,20 @@ definitions:
       payment_method:
         example: alipay
         type: string
+      payment_method_id:
+        description: 'Optional: Use saved payment method'
+        example: 1
+        type: integer
       return_url:
         example: https://example.com/payment/return
         type: string
       subscription_plan_id:
         example: 1
         type: integer
+      use_default_payment:
+        description: Use user's default payment method
+        example: false
+        type: boolean
       user_id:
         example: 1
         type: integer
@@ -1140,6 +2304,156 @@ definitions:
     - subscription_plan_id
     - user_id
     type: object
+  interfaces.CurrentUsageDetails:
+    properties:
+      current_usage:
+        type: integer
+      is_exceeded:
+        type: boolean
+      is_unlimited:
+        type: boolean
+      last_recorded:
+        type: string
+      period_end:
+        type: string
+      period_start:
+        type: string
+      record_count:
+        type: integer
+      remaining_usage:
+        type: integer
+      unit:
+        type: string
+      usage_limit:
+        type: integer
+      usage_percent:
+        type: number
+      usage_type:
+        type: string
+    type: object
+  interfaces.CurrentUsageResponse:
+    properties:
+      last_updated:
+        type: string
+      period_end:
+        type: string
+      period_start:
+        type: string
+      total_usage:
+        type: integer
+      usage_by_type:
+        additionalProperties:
+          $ref: '#/definitions/interfaces.CurrentUsageDetails'
+        type: object
+      user_subscription_id:
+        type: integer
+    type: object
+  interfaces.ExportUsageRequest:
+    properties:
+      end_time:
+        type: string
+      format:
+        description: csv, json, xlsx
+        type: string
+      granularity:
+        type: string
+      include_metadata:
+        type: boolean
+      include_raw_data:
+        type: boolean
+      start_time:
+        type: string
+      usage_type:
+        type: string
+      user_subscription_id:
+        type: integer
+    type: object
+  interfaces.ExportUsageResponse:
+    properties:
+      download_url:
+        type: string
+      expires_at:
+        type: string
+      file_name:
+        type: string
+      file_size:
+        type: integer
+      format:
+        type: string
+      generated_at:
+        type: string
+      record_count:
+        type: integer
+    type: object
+  interfaces.GatewayHealthMetric:
+    properties:
+      active_retries:
+        type: integer
+      average_attempts:
+        type: number
+      gateway:
+        type: string
+      health_status:
+        description: healthy, degraded, critical
+        type: string
+      processing_rate:
+        type: number
+      queue_depth:
+        type: integer
+      success_rate:
+        type: number
+    type: object
+  interfaces.GetAlertConfigsResponse:
+    properties:
+      alert_configurations:
+        items:
+          $ref: '#/definitions/entities.AlertConfigurationResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/interfaces.PaginationInfo'
+      total_count:
+        type: integer
+    type: object
+  interfaces.GetUsageAlertsResponse:
+    properties:
+      pagination:
+        $ref: '#/definitions/interfaces.PaginationInfo'
+      summary:
+        $ref: '#/definitions/interfaces.AlertsSummary'
+      total_count:
+        type: integer
+      usage_alerts:
+        items:
+          $ref: '#/definitions/entities.UsageAlertResponse'
+        type: array
+    type: object
+  interfaces.InvoiceDownloadRecord:
+    properties:
+      downloaded_at:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      id:
+        example: 1
+        type: integer
+      invoice_id:
+        example: 1
+        type: integer
+      ip_address:
+        example: 192.168.1.1
+        type: string
+      language:
+        example: en
+        type: string
+      template:
+        example: professional
+        type: string
+      user_agent:
+        example: Mozilla/5.0...
+        type: string
+      user_id:
+        example: 1
+        type: integer
+    type: object
   interfaces.LoginRequest:
     properties:
       email:
@@ -1149,6 +2463,197 @@ definitions:
     required:
     - email
     - password
+    type: object
+  interfaces.PDFGenerationRequest:
+    properties:
+      company_info:
+        $ref: '#/definitions/interfaces.CompanyInfo'
+      custom_fields:
+        additionalProperties:
+          type: string
+        type: object
+      include_qr:
+        example: true
+        type: boolean
+      language:
+        example: en
+        type: string
+      save_to_disk:
+        example: false
+        type: boolean
+      template:
+        example: professional
+        type: string
+      watermark:
+        example: DRAFT
+        type: string
+    type: object
+  interfaces.PaginationInfo:
+    properties:
+      current_page:
+        type: integer
+      has_next:
+        type: boolean
+      has_previous:
+        type: boolean
+      page_size:
+        type: integer
+      total_count:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  interfaces.PauseSubscriptionRequest:
+    properties:
+      max_pause_duration:
+        description: Override default max pause duration
+        example: 90
+        maximum: 365
+        minimum: 1
+        type: integer
+      reason:
+        example: User requested pause
+        maxLength: 255
+        type: string
+    required:
+    - reason
+    type: object
+  interfaces.PaymentMethodUsageStats:
+    properties:
+      average_amount:
+        type: number
+      failed_uses:
+        type: integer
+      failure_rate:
+        type: number
+      last_used:
+        type: string
+      payment_method_id:
+        type: integer
+      recent_uses_30_days:
+        type: integer
+      success_rate:
+        type: number
+      successful_uses:
+        type: integer
+      total_amount:
+        type: number
+      total_uses:
+        type: integer
+    type: object
+  interfaces.QuickPurchaseDiscountInfo:
+    properties:
+      coupon_code:
+        type: string
+      discount_amount:
+        type: number
+      final_amount:
+        type: number
+      original_amount:
+        type: number
+    type: object
+  interfaces.QuickPurchaseRequest:
+    properties:
+      client_ip:
+        example: 192.168.1.1
+        type: string
+      coupon_code:
+        example: SAVE20
+        type: string
+      metadata:
+        type: string
+      payment_gateway:
+        example: epay
+        type: string
+      payment_method:
+        example: alipay
+        type: string
+      payment_method_id:
+        description: 'Optional: Use saved payment method'
+        example: 1
+        type: integer
+      plan_id:
+        example: 1
+        type: integer
+      return_url:
+        example: https://example.com/payment/return
+        type: string
+      use_default_payment:
+        description: Use user's default payment method
+        example: false
+        type: boolean
+      user_id:
+        example: 1
+        type: integer
+    required:
+    - payment_gateway
+    - payment_method
+    - plan_id
+    - user_id
+    type: object
+  interfaces.QuickPurchaseResponse:
+    properties:
+      discount_info:
+        $ref: '#/definitions/interfaces.QuickPurchaseDiscountInfo'
+      expired_at:
+        type: string
+      payment_record:
+        type: object
+      payment_url:
+        type: string
+      plan_info:
+        $ref: '#/definitions/entities.SubscriptionPlanResponse'
+      qr_code_url:
+        type: string
+    type: object
+  interfaces.RealTimeUsageData:
+    properties:
+      current_usage:
+        type: integer
+      estimated_time_left:
+        description: Time until limit reached (as string)
+        type: string
+      is_exceeded:
+        type: boolean
+      is_near_limit:
+        type: boolean
+      last_updated:
+        type: string
+      recent_usage:
+        description: Usage in last hour
+        type: integer
+      remaining_usage:
+        type: integer
+      trend_direction:
+        type: string
+      usage_limit:
+        type: integer
+      usage_percent:
+        type: number
+      usage_rate:
+        description: Usage per hour
+        type: number
+      usage_type:
+        type: string
+    type: object
+  interfaces.RealTimeUsageResponse:
+    properties:
+      alert_count:
+        type: integer
+      last_updated:
+        type: string
+      predictions:
+        items:
+          $ref: '#/definitions/entities.UsagePrediction'
+        type: array
+      update_frequency:
+        type: string
+      usage_by_type:
+        additionalProperties:
+          $ref: '#/definitions/interfaces.RealTimeUsageData'
+        type: object
+      user_subscription_id:
+        type: integer
     type: object
   interfaces.RegisterRequest:
     properties:
@@ -1163,6 +2668,72 @@ definitions:
     required:
     - email
     - password
+    type: object
+  interfaces.ResumeSubscriptionRequest:
+    properties:
+      adjust_billing_date:
+        description: Whether to adjust billing dates based on pause duration
+        example: true
+        type: boolean
+    type: object
+  interfaces.RetryHealthMetrics:
+    properties:
+      alerts_triggered:
+        items:
+          type: string
+        type: array
+      average_retry_delay:
+        type: number
+      gateway_health:
+        items:
+          $ref: '#/definitions/interfaces.GatewayHealthMetric'
+        type: array
+      overdue_retries:
+        type: integer
+      success_rate_7d:
+        type: number
+      success_rate_24h:
+        type: number
+      system_recommendations:
+        items:
+          type: string
+        type: array
+      total_active_retries:
+        type: integer
+    type: object
+  interfaces.RetryStatistics:
+    properties:
+      average_attempts:
+        type: number
+      average_delay_time:
+        type: number
+      cancelled_retries:
+        type: integer
+      failed_retries:
+        type: integer
+      from_date:
+        type: string
+      gateway:
+        type: string
+      payment_method:
+        type: string
+      success_rate:
+        type: number
+      successful_retries:
+        type: integer
+      to_date:
+        type: string
+      total_retries:
+        type: integer
+    type: object
+  interfaces.RetryWithHistory:
+    properties:
+      history:
+        items:
+          $ref: '#/definitions/entities.PaymentRetryHistory'
+        type: array
+      retry:
+        $ref: '#/definitions/entities.PaymentRetry'
     type: object
   interfaces.SendInvoiceRequest:
     properties:
@@ -1183,6 +2754,148 @@ definitions:
         type: string
     required:
     - to_email
+    type: object
+  interfaces.TestNotificationRequest:
+    properties:
+      channel:
+        $ref: '#/definitions/entities.NotificationChannel'
+      test_message:
+        type: string
+      user_subscription_id:
+        type: integer
+    required:
+    - channel
+    - user_subscription_id
+    type: object
+  interfaces.TestNotificationResponse:
+    properties:
+      details:
+        type: string
+      error:
+        type: string
+      message:
+        type: string
+      response_time:
+        type: string
+      success:
+        type: boolean
+    type: object
+  interfaces.TopAlertConfiguration:
+    properties:
+      alert_count:
+        type: integer
+      average_resolution_time:
+        type: string
+      configuration_id:
+        type: integer
+      last_alert_fired:
+        type: string
+      name:
+        type: string
+      threshold:
+        type: number
+      usage_type:
+        type: string
+    type: object
+  interfaces.TopUsageResponse:
+    properties:
+      generated_at:
+        type: string
+      period:
+        type: string
+      top_subscriptions:
+        items:
+          $ref: '#/definitions/interfaces.TopUsageSubscription'
+        type: array
+      total_count:
+        type: integer
+    type: object
+  interfaces.TopUsageSubscription:
+    properties:
+      average_usage:
+        type: number
+      peak_usage:
+        type: integer
+      period:
+        type: string
+      period_end:
+        type: string
+      period_start:
+        type: string
+      record_count:
+        type: integer
+      total_usage:
+        type: integer
+      usage_type:
+        type: string
+      user_id:
+        type: integer
+      user_subscription_id:
+        type: integer
+    type: object
+  interfaces.TrendSummary:
+    properties:
+      anomaly_count:
+        type: integer
+      average_usage:
+        type: number
+      lowest_usage:
+        type: integer
+      lowest_usage_time:
+        type: string
+      overall_trend:
+        description: increasing, decreasing, stable
+        type: string
+      peak_usage:
+        type: integer
+      peak_usage_time:
+        type: string
+      predicted_growth_rate:
+        description: '% per period'
+        type: number
+      trend_strength:
+        description: 0-1 scale
+        type: number
+      variability_score:
+        description: 0-1 scale
+        type: number
+    type: object
+  interfaces.UpdateAlertConfigRequest:
+    properties:
+      cooldown_minutes:
+        maximum: 10080
+        minimum: 1
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      is_enabled:
+        type: boolean
+      name:
+        maxLength: 100
+        type: string
+      notification_channels:
+        items:
+          $ref: '#/definitions/entities.NotificationChannel'
+        type: array
+      priority:
+        enum:
+        - low
+        - medium
+        - high
+        - critical
+        type: string
+      threshold:
+        minimum: 0
+        type: number
+      threshold_type:
+        enum:
+        - percentage
+        - absolute
+        type: string
+    required:
+    - id
     type: object
   interfaces.UpdateInvoiceRequest:
     properties:
@@ -1264,6 +2977,150 @@ definitions:
         type: integer
       supported_currencies:
         example: CNY
+        type: string
+    type: object
+  interfaces.UsageAnomaly:
+    properties:
+      actual_usage:
+        type: integer
+      anomaly_type:
+        description: spike, drop, pattern_change
+        type: string
+      confidence:
+        type: number
+      deviation_score:
+        type: number
+      expected_usage:
+        type: integer
+      timestamp:
+        type: string
+      usage_type:
+        type: string
+    type: object
+  interfaces.UsageHistoryEntry:
+    properties:
+      period:
+        type: string
+      period_end:
+        type: string
+      period_start:
+        type: string
+      record_count:
+        type: integer
+      total_usage:
+        type: integer
+      usage_by_type:
+        additionalProperties:
+          $ref: '#/definitions/entities.UsageTypeStats'
+        type: object
+    type: object
+  interfaces.UsageHistoryResponse:
+    properties:
+      granularity:
+        type: string
+      pagination:
+        $ref: '#/definitions/interfaces.PaginationInfo'
+      summary:
+        $ref: '#/definitions/entities.UsageSummary'
+      total_records:
+        type: integer
+      usage_history:
+        items:
+          $ref: '#/definitions/interfaces.UsageHistoryEntry'
+        type: array
+      user_subscription_id:
+        type: integer
+    type: object
+  interfaces.UsageStatistics:
+    properties:
+      average_usage:
+        type: number
+      end_time:
+        type: string
+      generated_at:
+        type: string
+      peak_usage:
+        type: integer
+      peak_usage_time:
+        type: string
+      period:
+        type: string
+      start_time:
+        type: string
+      total_records:
+        type: integer
+      total_usage:
+        type: integer
+      usage_by_day_of_week:
+        additionalProperties:
+          format: int64
+          type: integer
+        description: Day of week (0-6) -> usage
+        type: object
+      usage_by_hour:
+        additionalProperties:
+          format: int64
+          type: integer
+        description: Hour of day (0-23) -> usage
+        type: object
+      usage_by_source:
+        additionalProperties:
+          format: int64
+          type: integer
+        description: Source type -> usage
+        type: object
+      usage_by_type:
+        additionalProperties:
+          $ref: '#/definitions/entities.UsageTypeStats'
+        type: object
+      user_subscription_id:
+        type: integer
+    type: object
+  interfaces.UsageTrendEntry:
+    properties:
+      moving_avg:
+        type: number
+      record_count:
+        type: integer
+      timestamp:
+        type: string
+      trend_direction:
+        description: up, down, stable
+        type: string
+      usage_amount:
+        type: integer
+      usage_type:
+        type: string
+    type: object
+  interfaces.UsageTrendsResponse:
+    properties:
+      anomalies:
+        items:
+          $ref: '#/definitions/interfaces.UsageAnomaly'
+        type: array
+      granularity:
+        type: string
+      period:
+        type: string
+      predictions:
+        items:
+          $ref: '#/definitions/entities.UsagePrediction'
+        type: array
+      summary:
+        $ref: '#/definitions/interfaces.TrendSummary'
+      trends:
+        items:
+          $ref: '#/definitions/interfaces.UsageTrendEntry'
+        type: array
+      user_subscription_id:
+        type: integer
+    type: object
+  response.APIResponse:
+    properties:
+      code:
+        type: integer
+      data: {}
+      message:
         type: string
     type: object
   response.BadRequestResponse:
@@ -1400,6 +3257,21 @@ definitions:
         example: google
         type: string
     type: object
+  response.Response:
+    description: Standard API response format
+    properties:
+      code:
+        description: Response code (0 for success, non-zero for errors)
+        example: 0
+        type: integer
+      data:
+        description: Response data (optional)
+        type: object
+      message:
+        description: Response message
+        example: success
+        type: string
+    type: object
   response.SearchResponse:
     description: Search response format with pagination and query information
     properties:
@@ -1476,6 +3348,319 @@ info:
   title: Linke API
   version: "1.0"
 paths:
+  /admin/cache/flush:
+    delete:
+      consumes:
+      - application/json
+      description: Flush all cache entries (use with caution)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Flush cache
+      tags:
+      - Cache
+  /admin/cache/metrics:
+    get:
+      consumes:
+      - application/json
+      description: Get comprehensive cache performance metrics
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/cache.MetricsReport'
+              type: object
+      summary: Get cache metrics
+      tags:
+      - Cache
+  /admin/cache/metrics/{prefix}:
+    get:
+      consumes:
+      - application/json
+      description: Get cache performance metrics for a specific prefix
+      parameters:
+      - description: Cache prefix (user, subscription, payment, etc.)
+        in: path
+        name: prefix
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/cache.Metrics'
+              type: object
+      summary: Get cache metrics by prefix
+      tags:
+      - Cache
+  /admin/cache/monitor/alerts:
+    get:
+      consumes:
+      - application/json
+      description: Get active alerts for cache system health and performance
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    type: string
+                  type: array
+              type: object
+      summary: Get cache system alerts
+      tags:
+      - Cache Monitoring
+  /admin/cache/monitor/benchmark:
+    post:
+      consumes:
+      - application/json
+      description: Run performance benchmark on cache system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+      summary: Run cache benchmark
+      tags:
+      - Cache Monitoring
+  /admin/cache/monitor/dashboard:
+    get:
+      consumes:
+      - application/json
+      description: Get comprehensive dashboard data for cache monitoring
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+      summary: Get cache dashboard data
+      tags:
+      - Cache Monitoring
+  /admin/cache/monitor/health:
+    get:
+      consumes:
+      - application/json
+      description: Get comprehensive health status of multi-level cache system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/cache.CacheHealthStatus'
+              type: object
+      summary: Get multi-level cache health
+      tags:
+      - Cache Monitoring
+  /admin/cache/monitor/invalidation/metrics:
+    get:
+      consumes:
+      - application/json
+      description: Get metrics for event-driven cache invalidation
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties:
+                    format: int64
+                    type: integer
+                  type: object
+              type: object
+      summary: Get cache invalidation metrics
+      tags:
+      - Cache Monitoring
+  /admin/cache/monitor/metrics:
+    get:
+      consumes:
+      - application/json
+      description: Get detailed metrics for multi-level cache system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/cache.MultiLevelCacheMetrics'
+              type: object
+      summary: Get multi-level cache metrics
+      tags:
+      - Cache Monitoring
+  /admin/cache/monitor/performance:
+    get:
+      consumes:
+      - application/json
+      description: Get detailed performance analysis of cache system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/cache.PerformanceMetrics'
+              type: object
+      summary: Get cache performance metrics
+      tags:
+      - Cache Monitoring
+  /admin/cache/monitor/warming/status:
+    get:
+      consumes:
+      - application/json
+      description: Get status and metrics of cache warming operations
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/cache.WarmingMetrics'
+              type: object
+      summary: Get cache warming status
+      tags:
+      - Cache Monitoring
+  /admin/cache/monitor/warming/trigger:
+    post:
+      consumes:
+      - application/json
+      description: Manually trigger cache warming for specified prefixes
+      parameters:
+      - description: Warming request
+        in: body
+        name: request
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+      summary: Trigger cache warming
+      tags:
+      - Cache Monitoring
+  /admin/cache/pattern/{pattern}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete cache entries matching a specific pattern
+      parameters:
+      - description: Cache key pattern (e.g., user:*, subscription:123:*)
+        in: path
+        name: pattern
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Delete cache by pattern
+      tags:
+      - Cache
+  /admin/cache/reset-metrics:
+    post:
+      consumes:
+      - application/json
+      description: Reset all cache performance metrics
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Reset cache metrics
+      tags:
+      - Cache
+  /admin/cache/stats:
+    get:
+      consumes:
+      - application/json
+      description: Get low-level cache statistics from Redis
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/cache.CacheStats'
+              type: object
+      summary: Get cache statistics
+      tags:
+      - Cache
   /admin/payments/configs:
     get:
       consumes:
@@ -1690,6 +3875,551 @@ paths:
       summary: '[Admin] Update payment config'
       tags:
       - Admin-Payment-Management
+  /admin/payments/retries:
+    get:
+      consumes:
+      - application/json
+      description: Get payment retries with filtering and pagination
+      parameters:
+      - description: Filter by user ID
+        example: 1
+        in: query
+        name: user_id
+        type: integer
+      - description: Filter by gateway
+        example: '"epay"'
+        in: query
+        name: gateway
+        type: string
+      - description: Filter by payment method
+        example: '"alipay"'
+        in: query
+        name: payment_method
+        type: string
+      - description: Filter by retry status
+        enum:
+        - pending
+        - in_progress
+        - completed
+        - failed
+        - cancelled
+        example: '"pending"'
+        in: query
+        name: status
+        type: string
+      - description: Filter by failure type
+        enum:
+        - temporary
+        - permanent
+        - network
+        - gateway
+        - business
+        example: '"temporary"'
+        in: query
+        name: failure_type
+        type: string
+      - description: Filter from date (RFC3339)
+        example: '"2024-01-01T00:00:00Z"'
+        in: query
+        name: from_date
+        type: string
+      - description: Filter to date (RFC3339)
+        example: '"2024-12-31T23:59:59Z"'
+        in: query
+        name: to_date
+        type: string
+      - description: Minimum attempts
+        example: 1
+        in: query
+        name: min_attempts
+        type: integer
+      - description: Maximum attempts
+        example: 5
+        in: query
+        name: max_attempts
+        type: integer
+      - description: Include retry history
+        example: false
+        in: query
+        name: include_history
+        type: boolean
+      - description: Sort by field
+        enum:
+        - created_at
+        - next_retry_at
+        - attempt_number
+        example: '"created_at"'
+        in: query
+        name: sort_by
+        type: string
+      - description: Sort order
+        enum:
+        - asc
+        - desc
+        example: '"desc"'
+        in: query
+        name: sort_order
+        type: string
+      - description: Limit results
+        example: 20
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - description: Offset results
+        example: 0
+        in: query
+        minimum: 0
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.PaginatedResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.AdminRetryResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Get payment retries'
+      tags:
+      - Admin-Payment-Retry
+  /admin/payments/retries/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get detailed payment retry information with history
+      parameters:
+      - description: Retry ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.RetryWithHistory'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Get payment retry details'
+      tags:
+      - Admin-Payment-Retry
+  /admin/payments/retries/{id}/cancel:
+    post:
+      consumes:
+      - application/json
+      description: Cancel a payment retry sequence
+      parameters:
+      - description: Retry ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Cancel reason
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CancelRetryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Cancel payment retry'
+      tags:
+      - Admin-Payment-Retry
+  /admin/payments/retries/{id}/reset:
+    post:
+      consumes:
+      - application/json
+      description: Reset a payment retry sequence to start over
+      parameters:
+      - description: Retry ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Reset payment retry'
+      tags:
+      - Admin-Payment-Retry
+  /admin/payments/retries/bulk-cancel:
+    post:
+      consumes:
+      - application/json
+      description: Cancel multiple payment retry sequences
+      parameters:
+      - description: Retry IDs and reason
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.BulkRetryActionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Bulk cancel payment retries'
+      tags:
+      - Admin-Payment-Retry
+  /admin/payments/retries/bulk-reset:
+    post:
+      consumes:
+      - application/json
+      description: Reset multiple payment retry sequences
+      parameters:
+      - description: Retry IDs
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.BulkRetryActionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Bulk reset payment retries'
+      tags:
+      - Admin-Payment-Retry
+  /admin/payments/retries/health:
+    get:
+      consumes:
+      - application/json
+      description: Get overall health metrics for the retry system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.RetryHealthMetrics'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Get retry system health metrics'
+      tags:
+      - Admin-Payment-Retry
+  /admin/payments/retries/statistics:
+    get:
+      consumes:
+      - application/json
+      description: Get payment retry statistics for a specific gateway
+      parameters:
+      - description: Gateway name
+        example: '"epay"'
+        in: query
+        name: gateway
+        required: true
+        type: string
+      - description: Number of days to analyze
+        example: 30
+        in: query
+        maximum: 365
+        minimum: 1
+        name: days
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.RetryStatistics'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Get retry statistics'
+      tags:
+      - Admin-Payment-Retry
+  /admin/subscriptions/{id}/pause:
+    post:
+      consumes:
+      - application/json
+      description: Pause a user subscription (admin only)
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Pause subscription request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/interfaces.PauseSubscriptionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.UserSubscriptionResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Pause user subscription'
+      tags:
+      - Admin-Subscription
+  /admin/subscriptions/{id}/resume:
+    post:
+      consumes:
+      - application/json
+      description: Resume a paused user subscription (admin only)
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Resume subscription request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/interfaces.ResumeSubscriptionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.UserSubscriptionResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Resume user subscription'
+      tags:
+      - Admin-Subscription
   /admin/users:
     get:
       consumes:
@@ -2454,7 +5184,7 @@ paths:
       summary: '[Admin] Get user statistics'
       tags:
       - Admin-User-Management
-  /api/v1/app/system/health:
+  /app/system/health:
     get:
       consumes:
       - application/json
@@ -3013,6 +5743,65 @@ paths:
       summary: '[Admin] Update an invoice'
       tags:
       - Invoice
+  /invoice/{id}/download:
+    get:
+      consumes:
+      - application/json
+      description: Download an invoice as PDF with custom template and language options
+      parameters:
+      - description: Invoice ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: PDF Template
+        enum:
+        - default
+        - professional
+        - minimal
+        in: query
+        name: template
+        type: string
+      - description: Language
+        enum:
+        - en
+        - zh
+        - es
+        in: query
+        name: language
+        type: string
+      - description: Watermark text
+        in: query
+        name: watermark
+        type: string
+      produces:
+      - application/pdf
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User/Admin] Download invoice as PDF with options'
+      tags:
+      - Invoice
   /invoice/{id}/mark-paid:
     put:
       consumes:
@@ -3191,6 +5980,166 @@ paths:
       summary: '[Admin] Send invoice via email'
       tags:
       - Invoice
+  /invoice/{id}/send-custom:
+    post:
+      consumes:
+      - application/json
+      description: Send an invoice via email with custom PDF template and options
+      parameters:
+      - description: Invoice ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Email options
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/interfaces.SendInvoiceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Send invoice with custom PDF options'
+      tags:
+      - Invoice
+  /invoice/bulk-download:
+    post:
+      consumes:
+      - application/json
+      description: Download multiple invoices as a ZIP file with optional CSV summary
+      parameters:
+      - description: Bulk download request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/interfaces.BulkDownloadRequest'
+      produces:
+      - application/zip
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User/Admin] Download multiple invoices as ZIP'
+      tags:
+      - Invoice
+  /invoice/download-history:
+    get:
+      description: Get download history for the current user's invoices
+      parameters:
+      - default: 10
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.PaginatedResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/interfaces.InvoiceDownloadRecord'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User] Get invoice download history'
+      tags:
+      - Invoice
+  /invoice/languages:
+    get:
+      description: Get list of available languages for invoice generation
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  items:
+                    type: string
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User/Admin] Get available languages'
+      tags:
+      - Invoice
   /invoice/number/{number}:
     get:
       description: Get a specific invoice by its invoice number
@@ -3275,6 +6224,36 @@ paths:
       summary: '[Admin] Get invoice statistics'
       tags:
       - Invoice
+  /invoice/templates:
+    get:
+      description: Get list of available PDF templates for invoice generation
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  items:
+                    type: string
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User/Admin] Get available PDF templates'
+      tags:
+      - Invoice
   /invoice/user:
     get:
       description: Get a list of invoices for the authenticated user
@@ -3320,6 +6299,389 @@ paths:
       summary: '[User] Get current user''s invoices'
       tags:
       - Invoice
+  /payment-methods:
+    get:
+      description: Retrieve all payment methods for the authenticated user
+      parameters:
+      - description: Filter by payment gateway
+        in: query
+        name: gateway
+        type: string
+      - description: Show only active payment methods
+        in: query
+        name: active_only
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.PaymentMethodListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: List all payment methods
+      tags:
+      - payment-methods
+    post:
+      consumes:
+      - application/json
+      description: Add a new payment method for the authenticated user
+      parameters:
+      - description: Payment method creation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/entities.CreatePaymentMethodRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.PaymentMethodResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new payment method
+      tags:
+      - payment-methods
+  /payment-methods/{id}:
+    delete:
+      description: Soft delete a payment method for the authenticated user
+      parameters:
+      - description: Payment method ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a payment method
+      tags:
+      - payment-methods
+    get:
+      description: Retrieve a specific payment method for the authenticated user
+      parameters:
+      - description: Payment method ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.PaymentMethodResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get a payment method by ID
+      tags:
+      - payment-methods
+    put:
+      consumes:
+      - application/json
+      description: Update details of an existing payment method
+      parameters:
+      - description: Payment method ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Payment method update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/entities.UpdatePaymentMethodRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.PaymentMethodResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a payment method
+      tags:
+      - payment-methods
+  /payment-methods/{id}/default:
+    put:
+      description: Set a payment method as the default for the user
+      parameters:
+      - description: Payment method ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.PaymentMethodResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Set a payment method as default
+      tags:
+      - payment-methods
+  /payment-methods/{id}/stats:
+    get:
+      description: Retrieve usage statistics for a specific payment method
+      parameters:
+      - description: Payment method ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.PaymentMethodUsageStats'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get payment method usage statistics
+      tags:
+      - payment-methods
+  /payment-methods/{id}/validate:
+    post:
+      description: Validate a payment method with the payment gateway
+      parameters:
+      - description: Payment method ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.PaymentMethodResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Validate a payment method
+      tags:
+      - payment-methods
+  /payment-methods/default:
+    get:
+      description: Retrieve the default payment method for the authenticated user
+      parameters:
+      - description: Filter by payment gateway
+        in: query
+        name: gateway
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.PaymentMethodResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get default payment method
+      tags:
+      - payment-methods
   /payments/configs:
     get:
       consumes:
@@ -3842,6 +7204,52 @@ paths:
       summary: '[User] Get my subscription orders'
       tags:
       - User-Subscription
+  /subscription/quick-purchase:
+    post:
+      consumes:
+      - application/json
+      description: Create a payment directly for subscription without creating order/invoice
+        first. Order and invoice are created asynchronously after payment success.
+      parameters:
+      - description: Quick purchase data
+        in: body
+        name: purchase
+        required: true
+        schema:
+          $ref: '#/definitions/interfaces.QuickPurchaseRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.QuickPurchaseResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User] Quick purchase subscription'
+      tags:
+      - User-Subscription
   /subscriptions/{id}:
     get:
       consumes:
@@ -4140,6 +7548,1423 @@ paths:
       summary: Get queue status
       tags:
       - Task-System
+  /usage/admin/cleanup:
+    post:
+      consumes:
+      - application/json
+      description: Remove old usage data and alerts (admin only)
+      parameters:
+      - description: Delete data older than this date (RFC3339)
+        format: date-time
+        in: query
+        name: older_than
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.CleanupResult'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Cleanup old usage data
+      tags:
+      - usage
+      - admin
+  /usage/admin/reset/{subscription_id}:
+    post:
+      consumes:
+      - application/json
+      description: Reset usage counters for a specific subscription and usage type
+        (admin only)
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      - description: Usage Type
+        enum:
+        - traffic
+        - api_call
+        - storage
+        - bandwidth
+        - connections
+        in: query
+        name: usage_type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Reset usage for a subscription
+      tags:
+      - usage
+      - admin
+  /usage/admin/sync/{subscription_id}:
+    post:
+      consumes:
+      - application/json
+      description: Sync usage limits with subscription plan settings (admin only)
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Sync subscription limits
+      tags:
+      - usage
+      - admin
+  /usage/alerts/{alert_id}/acknowledge:
+    post:
+      consumes:
+      - application/json
+      description: Mark a usage alert as acknowledged
+      parameters:
+      - description: Alert ID
+        in: path
+        name: alert_id
+        required: true
+        type: integer
+      - description: Acknowledge Request
+        in: body
+        name: request
+        schema:
+          additionalProperties:
+            type: integer
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Acknowledge a usage alert
+      tags:
+      - alerts
+  /usage/alerts/{alert_id}/resolve:
+    post:
+      consumes:
+      - application/json
+      description: Mark a usage alert as resolved
+      parameters:
+      - description: Alert ID
+        in: path
+        name: alert_id
+        required: true
+        type: integer
+      - description: Resolve Request
+        in: body
+        name: request
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Resolve a usage alert
+      tags:
+      - alerts
+  /usage/alerts/{alert_id}/suppress:
+    post:
+      consumes:
+      - application/json
+      description: Suppress a usage alert for a specified duration
+      parameters:
+      - description: Alert ID
+        in: path
+        name: alert_id
+        required: true
+        type: integer
+      - description: Suppress Request
+        in: body
+        name: request
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Suppress a usage alert
+      tags:
+      - alerts
+  /usage/alerts/{subscription_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve usage alerts with optional filtering
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      - description: Alert Configuration ID Filter
+        in: query
+        name: alert_configuration_id
+        type: integer
+      - description: Usage Type Filter
+        in: query
+        name: usage_type
+        type: string
+      - description: Status Filter
+        enum:
+        - fired
+        - resolved
+        - suppressed
+        - acknowledged
+        in: query
+        name: status
+        type: string
+      - description: Severity Filter
+        enum:
+        - info
+        - warning
+        - error
+        - critical
+        in: query
+        name: severity
+        type: string
+      - description: Active Status Filter
+        in: query
+        name: is_active
+        type: boolean
+      - description: Resolved Status Filter
+        in: query
+        name: is_resolved
+        type: boolean
+      - description: Start Time (RFC3339)
+        format: date-time
+        in: query
+        name: start_time
+        type: string
+      - description: End Time (RFC3339)
+        format: date-time
+        in: query
+        name: end_time
+        type: string
+      - default: 50
+        description: Limit
+        in: query
+        maximum: 1000
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      - default: fired_at
+        description: Order By
+        enum:
+        - fired_at
+        - resolved_at
+        - severity
+        - usage_percent
+        in: query
+        name: order_by
+        type: string
+      - default: desc
+        description: Order Direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: order_direction
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.GetUsageAlertsResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get usage alerts for a subscription
+      tags:
+      - alerts
+  /usage/alerts/bulk-resolve:
+    post:
+      consumes:
+      - application/json
+      description: Resolve multiple usage alerts at once
+      parameters:
+      - description: Bulk Resolve Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/interfaces.BulkResolveAlertsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.BulkResolveAlertsResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Bulk resolve usage alerts
+      tags:
+      - alerts
+  /usage/alerts/configs:
+    post:
+      consumes:
+      - application/json
+      description: Create a new alert configuration for usage monitoring
+      parameters:
+      - description: Alert Configuration Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/interfaces.CreateAlertConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.AlertConfigurationResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Create a new alert configuration
+      tags:
+      - alerts
+  /usage/alerts/configs/{config_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete (soft delete) an alert configuration
+      parameters:
+      - description: Configuration ID
+        in: path
+        name: config_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Delete an alert configuration
+      tags:
+      - alerts
+    get:
+      consumes:
+      - application/json
+      description: Retrieve details of a specific alert configuration
+      parameters:
+      - description: Configuration ID
+        in: path
+        name: config_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.AlertConfigurationResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get a specific alert configuration
+      tags:
+      - alerts
+    put:
+      consumes:
+      - application/json
+      description: Update an existing alert configuration
+      parameters:
+      - description: Configuration ID
+        in: path
+        name: config_id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/interfaces.UpdateAlertConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.AlertConfigurationResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Update an alert configuration
+      tags:
+      - alerts
+  /usage/alerts/configs/{subscription_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all alert configurations for a specific subscription
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      - description: Usage Type Filter
+        in: query
+        name: usage_type
+        type: string
+      - description: Enabled Status Filter
+        in: query
+        name: is_enabled
+        type: boolean
+      - description: Priority Filter
+        enum:
+        - low
+        - medium
+        - high
+        - critical
+        in: query
+        name: priority
+        type: string
+      - default: 50
+        description: Limit
+        in: query
+        maximum: 1000
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      - default: created_at
+        description: Order By
+        enum:
+        - name
+        - threshold
+        - priority
+        - created_at
+        in: query
+        name: order_by
+        type: string
+      - default: desc
+        description: Order Direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: order_direction
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.GetAlertConfigsResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get alert configurations for a subscription
+      tags:
+      - alerts
+  /usage/alerts/history/{subscription_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed alert history with optional filters
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      - description: Alert Configuration ID Filter
+        in: query
+        name: alert_configuration_id
+        type: integer
+      - description: Usage Type Filter
+        in: query
+        name: usage_type
+        type: string
+      - description: Start Time (RFC3339)
+        format: date-time
+        in: query
+        name: start_time
+        type: string
+      - description: End Time (RFC3339)
+        format: date-time
+        in: query
+        name: end_time
+        type: string
+      - default: true
+        description: Include resolved alerts
+        in: query
+        name: include_resolved
+        type: boolean
+      - default: false
+        description: Include notification history
+        in: query
+        name: include_notifications
+        type: boolean
+      - default: 50
+        description: Limit
+        in: query
+        maximum: 1000
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.AlertHistoryResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get alert history for a subscription
+      tags:
+      - alerts
+  /usage/alerts/statistics/{subscription_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed alert statistics and trends
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      - description: Usage Type Filter
+        in: query
+        name: usage_type
+        type: string
+      - description: Severity Filter
+        enum:
+        - info
+        - warning
+        - error
+        - critical
+        in: query
+        name: severity
+        type: string
+      - default: 30d
+        description: Time Period
+        enum:
+        - 24h
+        - 7d
+        - 30d
+        - 90d
+        - 365d
+        in: query
+        name: period
+        type: string
+      - description: Start Time (RFC3339)
+        format: date-time
+        in: query
+        name: start_time
+        type: string
+      - description: End Time (RFC3339)
+        format: date-time
+        in: query
+        name: end_time
+        type: string
+      - description: Group By
+        enum:
+        - hour
+        - day
+        - week
+        - month
+        - severity
+        - usage_type
+        in: query
+        name: group_by
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.AlertStatisticsResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get alert statistics for a subscription
+      tags:
+      - alerts
+  /usage/alerts/test-notification:
+    post:
+      consumes:
+      - application/json
+      description: Send a test notification to verify channel configuration
+      parameters:
+      - description: Test Notification Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/interfaces.TestNotificationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.TestNotificationResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Test a notification channel
+      tags:
+      - alerts
+  /usage/current/{subscription_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve current usage statistics for all usage types of a subscription
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.CurrentUsageResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get current usage for a subscription
+      tags:
+      - usage
+  /usage/current/{subscription_id}/{usage_type}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve current usage statistics for a specific usage type of
+        a subscription
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      - description: Usage Type
+        enum:
+        - traffic
+        - api_call
+        - storage
+        - bandwidth
+        - connections
+        in: path
+        name: usage_type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.CurrentUsageResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get current usage for a specific usage type
+      tags:
+      - usage
+  /usage/export:
+    post:
+      consumes:
+      - application/json
+      description: Export usage data in various formats (CSV, JSON, XLSX)
+      parameters:
+      - description: Export Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/interfaces.ExportUsageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.ExportUsageResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Export usage data
+      tags:
+      - usage
+  /usage/history/{subscription_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve historical usage data with configurable time range and
+        granularity
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      - description: Usage Type Filter
+        in: query
+        name: usage_type
+        type: string
+      - description: Start Time (RFC3339)
+        format: date-time
+        in: query
+        name: start_time
+        type: string
+      - description: End Time (RFC3339)
+        format: date-time
+        in: query
+        name: end_time
+        type: string
+      - default: daily
+        description: Data Granularity
+        enum:
+        - hourly
+        - daily
+        - weekly
+        - monthly
+        in: query
+        name: granularity
+        type: string
+      - default: 50
+        description: Limit
+        in: query
+        maximum: 1000
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      - default: false
+        description: Include detailed breakdown
+        in: query
+        name: include_details
+        type: boolean
+      - description: Source Type Filter
+        in: query
+        name: source_type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.UsageHistoryResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get usage history for a subscription
+      tags:
+      - usage
+  /usage/predictions/{subscription_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve usage predictions for all usage types
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/entities.UsagePrediction'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get usage predictions for a subscription
+      tags:
+      - usage
+  /usage/predictions/{subscription_id}/{usage_type}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve usage predictions for a specific usage type
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      - description: Usage Type
+        enum:
+        - traffic
+        - api_call
+        - storage
+        - bandwidth
+        - connections
+        in: path
+        name: usage_type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/entities.UsagePrediction'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get usage predictions for a specific usage type
+      tags:
+      - usage
+  /usage/realtime/{subscription_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve real-time usage data with current rates and predictions
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.RealTimeUsageResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get real-time usage data for a subscription
+      tags:
+      - usage
+  /usage/statistics/{subscription_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed usage statistics with breakdown by various dimensions
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      - description: Usage Type Filter
+        in: query
+        name: usage_type
+        type: string
+      - default: monthly
+        description: Time Period
+        in: query
+        name: period
+        type: string
+      - description: Start Time (RFC3339)
+        format: date-time
+        in: query
+        name: start_time
+        type: string
+      - description: End Time (RFC3339)
+        format: date-time
+        in: query
+        name: end_time
+        type: string
+      - description: Group By Dimensions (comma-separated)
+        in: query
+        name: group_by
+        type: string
+      - default: false
+        description: Include period comparison
+        in: query
+        name: include_comparison
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.UsageStatistics'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get usage statistics for a subscription
+      tags:
+      - usage
+  /usage/summary/{subscription_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve aggregated usage summary for a specific period
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      - default: monthly
+        description: Time Period
+        enum:
+        - daily
+        - weekly
+        - monthly
+        - custom
+        in: query
+        name: period
+        type: string
+      - description: Period Start Time (RFC3339)
+        format: date-time
+        in: query
+        name: period_start
+        type: string
+      - description: Period End Time (RFC3339)
+        format: date-time
+        in: query
+        name: period_end
+        type: string
+      - description: Comma-separated usage types filter
+        in: query
+        name: usage_types
+        type: string
+      - default: false
+        description: Include detailed breakdown
+        in: query
+        name: include_breakdown
+        type: boolean
+      - default: false
+        description: Include usage predictions
+        in: query
+        name: include_predictions
+        type: boolean
+      - default: false
+        description: Compare with previous period
+        in: query
+        name: compare_with_previous
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.UsageSummary'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get usage summary for a subscription
+      tags:
+      - usage
+  /usage/top:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve subscriptions with highest usage for administration
+      parameters:
+      - description: Usage Type Filter
+        in: query
+        name: usage_type
+        type: string
+      - default: 24h
+        description: Time Period (e.g., 24h, 7d, 30d)
+        in: query
+        name: period
+        type: string
+      - default: 10
+        description: Limit
+        in: query
+        maximum: 100
+        name: limit
+        type: integer
+      - default: total_usage
+        description: Order By
+        enum:
+        - total_usage
+        - average_usage
+        - peak_usage
+        in: query
+        name: order_by
+        type: string
+      - default: false
+        description: Include zero usage subscriptions
+        in: query
+        name: include_zero
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.TopUsageResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get top usage subscriptions
+      tags:
+      - usage
+      - admin
+  /usage/trends/{subscription_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve usage trends with optional anomaly detection and predictions
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      - description: Usage Type Filter
+        in: query
+        name: usage_type
+        type: string
+      - default: 30d
+        description: Time Period
+        enum:
+        - 7d
+        - 30d
+        - 90d
+        - 365d
+        in: query
+        name: period
+        type: string
+      - default: daily
+        description: Data Granularity
+        enum:
+        - hourly
+        - daily
+        - weekly
+        in: query
+        name: granularity
+        type: string
+      - default: false
+        description: Include usage predictions
+        in: query
+        name: include_predictions
+        type: boolean
+      - default: false
+        description: Include anomaly detection
+        in: query
+        name: include_anomalies
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.UsageTrendsResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get usage trends for a subscription
+      tags:
+      - usage
   /user/password:
     put:
       consumes:

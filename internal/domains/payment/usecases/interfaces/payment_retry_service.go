@@ -164,8 +164,8 @@ type AdminRetryStatistics struct {
 type RetryConfiguration struct {
 	Enabled                    bool                                     `json:"enabled"`
 	MaxConcurrentRetries       int                                      `json:"max_concurrent_retries"`
-	ProcessingInterval         time.Duration                            `json:"processing_interval"`
-	HealthCheckInterval        time.Duration                            `json:"health_check_interval"`
+	ProcessingInterval         string                                   `json:"processing_interval" swaggertype:"string"`
+	HealthCheckInterval        string                                   `json:"health_check_interval" swaggertype:"string"`
 	DefaultStrategy            *entities.RetryStrategyConfig            `json:"default_strategy"`
 	GatewayStrategies          map[string]*entities.RetryStrategyConfig `json:"gateway_strategies"`
 	FailureClassificationRules map[string]*FailureClassificationRule    `json:"failure_classification_rules"`
@@ -201,7 +201,7 @@ type RetryMonitoringSettings struct {
 	AlertsEnabled      bool             `json:"alerts_enabled"`
 	HealthCheckEnabled bool             `json:"health_check_enabled"`
 	LogLevel           string           `json:"log_level"`
-	RetentionPeriod    time.Duration    `json:"retention_period"`
+	RetentionPeriod    string           `json:"retention_period" swaggertype:"string"`
 	AlertThresholds    *AlertThresholds `json:"alert_thresholds"`
 }
 

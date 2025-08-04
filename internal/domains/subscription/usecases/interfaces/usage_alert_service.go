@@ -131,7 +131,7 @@ type TestNotificationRequest struct {
 type TestNotificationResponse struct {
 	Success      bool          `json:"success"`
 	Message      string        `json:"message"`
-	ResponseTime time.Duration `json:"response_time"`
+	ResponseTime string        `json:"response_time" swaggertype:"string"`
 	Details      string        `json:"details,omitempty"`
 	Error        string        `json:"error,omitempty"`
 }
@@ -218,7 +218,7 @@ type TopAlertConfiguration struct {
 	Threshold             float64       `json:"threshold"`
 	AlertCount            int64         `json:"alert_count"`
 	LastAlertFired        time.Time     `json:"last_alert_fired"`
-	AverageResolutionTime time.Duration `json:"average_resolution_time"`
+	AverageResolutionTime string `json:"average_resolution_time" swaggertype:"string"`
 }
 
 // AlertHistoryRequest represents a request for alert history
@@ -247,7 +247,7 @@ type AlertHistoryEntry struct {
 	Alert               *entities.UsageAlertResponse         `json:"alert"`
 	Configuration       *entities.AlertConfigurationResponse `json:"configuration"`
 	NotificationHistory []*entities.NotificationResult       `json:"notification_history,omitempty"`
-	ResolutionTime      *time.Duration                       `json:"resolution_time,omitempty"`
+	ResolutionTime      *string                              `json:"resolution_time,omitempty" swaggertype:"string"`
 	AcknowledgedBy      *uint                                `json:"acknowledged_by,omitempty"`
 	AcknowledgedAt      *time.Time                           `json:"acknowledged_at,omitempty"`
 }
@@ -255,9 +255,9 @@ type AlertHistoryEntry struct {
 // AlertHistorySummary represents summary of alert history
 type AlertHistorySummary struct {
 	TotalAlerts           int64         `json:"total_alerts"`
-	AverageResolutionTime time.Duration `json:"average_resolution_time"`
-	FastestResolution     time.Duration `json:"fastest_resolution"`
-	SlowestResolution     time.Duration `json:"slowest_resolution"`
+	AverageResolutionTime string `json:"average_resolution_time" swaggertype:"string"`
+	FastestResolution     string `json:"fastest_resolution" swaggertype:"string"`
+	SlowestResolution     string `json:"slowest_resolution" swaggertype:"string"`
 	UnresolvedCount       int64         `json:"unresolved_count"`
 	NotificationsSent     int64         `json:"notifications_sent"`
 	NotificationFailures  int64         `json:"notification_failures"`

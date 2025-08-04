@@ -716,7 +716,7 @@ func (h *InvoiceHandler) GetAvailableLanguages(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path uint true "Invoice ID"
-// @Param request body interfaces.SendInvoiceWithPDFRequest true "Email and PDF options"
+// @Param request body interfaces.SendInvoiceRequest true "Email options"
 // @Success 200 {object} response.StandardResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse

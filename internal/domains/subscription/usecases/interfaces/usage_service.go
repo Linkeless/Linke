@@ -283,7 +283,7 @@ type RealTimeUsageResponse struct {
 	UserSubscriptionID uint                          `json:"user_subscription_id"`
 	UsageByType        map[string]*RealTimeUsageData `json:"usage_by_type"`
 	LastUpdated        time.Time                     `json:"last_updated"`
-	UpdateFrequency    time.Duration                 `json:"update_frequency"`
+	UpdateFrequency    string                        `json:"update_frequency" swaggertype:"string"`
 	AlertCount         int                           `json:"alert_count"`
 	Predictions        []*entities.UsagePrediction   `json:"predictions,omitempty"`
 }
@@ -297,7 +297,7 @@ type RealTimeUsageData struct {
 	RemainingUsage    int64         `json:"remaining_usage"`
 	RecentUsage       int64         `json:"recent_usage"`        // Usage in last hour
 	UsageRate         float64       `json:"usage_rate"`          // Usage per hour
-	EstimatedTimeLeft time.Duration `json:"estimated_time_left"` // Time until limit reached
+	EstimatedTimeLeft string        `json:"estimated_time_left" swaggertype:"string"` // Time until limit reached (as string)
 	LastUpdated       time.Time     `json:"last_updated"`
 	TrendDirection    string        `json:"trend_direction"`
 	IsNearLimit       bool          `json:"is_near_limit"`
@@ -309,7 +309,7 @@ type CleanupResult struct {
 	RecordsDeleted int64         `json:"records_deleted"`
 	AlertsDeleted  int64         `json:"alerts_deleted"`
 	SpaceFreed     int64         `json:"space_freed"` // in bytes
-	OperationTime  time.Duration `json:"operation_time"`
+	OperationTime  string        `json:"operation_time" swaggertype:"string"`
 	CompletedAt    time.Time     `json:"completed_at"`
 }
 

@@ -44,7 +44,7 @@ func NewPaymentMethodHandler(
 // @Failure 422 {object} response.APIResponse
 // @Failure 500 {object} response.APIResponse
 // @Security BearerAuth
-// @Router /api/v1/payment-methods [post]
+// @Router /payment-methods [post]
 func (h *PaymentMethodHandler) CreatePaymentMethod(c *gin.Context) {
 	userID := h.getUserIDFromContext(c)
 	if userID == 0 {
@@ -103,7 +103,7 @@ func (h *PaymentMethodHandler) CreatePaymentMethod(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse
 // @Failure 500 {object} response.APIResponse
 // @Security BearerAuth
-// @Router /api/v1/payment-methods/{id} [get]
+// @Router /payment-methods/{id} [get]
 func (h *PaymentMethodHandler) GetPaymentMethod(c *gin.Context) {
 	userID := h.getUserIDFromContext(c)
 	if userID == 0 {
@@ -144,7 +144,7 @@ func (h *PaymentMethodHandler) GetPaymentMethod(c *gin.Context) {
 // @Failure 401 {object} response.APIResponse
 // @Failure 500 {object} response.APIResponse
 // @Security BearerAuth
-// @Router /api/v1/payment-methods [get]
+// @Router /payment-methods [get]
 func (h *PaymentMethodHandler) ListPaymentMethods(c *gin.Context) {
 	userID := h.getUserIDFromContext(c)
 	if userID == 0 {
@@ -207,7 +207,7 @@ func (h *PaymentMethodHandler) ListPaymentMethods(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse
 // @Failure 500 {object} response.APIResponse
 // @Security BearerAuth
-// @Router /api/v1/payment-methods/{id} [put]
+// @Router /payment-methods/{id} [put]
 func (h *PaymentMethodHandler) UpdatePaymentMethod(c *gin.Context) {
 	userID := h.getUserIDFromContext(c)
 	if userID == 0 {
@@ -258,7 +258,7 @@ func (h *PaymentMethodHandler) UpdatePaymentMethod(c *gin.Context) {
 // @Failure 422 {object} response.APIResponse
 // @Failure 500 {object} response.APIResponse
 // @Security BearerAuth
-// @Router /api/v1/payment-methods/{id}/default [put]
+// @Router /payment-methods/{id}/default [put]
 func (h *PaymentMethodHandler) SetDefaultPaymentMethod(c *gin.Context) {
 	userID := h.getUserIDFromContext(c)
 	if userID == 0 {
@@ -305,7 +305,7 @@ func (h *PaymentMethodHandler) SetDefaultPaymentMethod(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse
 // @Failure 500 {object} response.APIResponse
 // @Security BearerAuth
-// @Router /api/v1/payment-methods/{id} [delete]
+// @Router /payment-methods/{id} [delete]
 func (h *PaymentMethodHandler) DeletePaymentMethod(c *gin.Context) {
 	userID := h.getUserIDFromContext(c)
 	if userID == 0 {
@@ -348,7 +348,7 @@ func (h *PaymentMethodHandler) DeletePaymentMethod(c *gin.Context) {
 // @Failure 422 {object} response.APIResponse
 // @Failure 500 {object} response.APIResponse
 // @Security BearerAuth
-// @Router /api/v1/payment-methods/{id}/validate [post]
+// @Router /payment-methods/{id}/validate [post]
 func (h *PaymentMethodHandler) ValidatePaymentMethod(c *gin.Context) {
 	userID := h.getUserIDFromContext(c)
 	if userID == 0 {
@@ -400,7 +400,7 @@ func (h *PaymentMethodHandler) ValidatePaymentMethod(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse
 // @Failure 500 {object} response.APIResponse
 // @Security BearerAuth
-// @Router /api/v1/payment-methods/default [get]
+// @Router /payment-methods/default [get]
 func (h *PaymentMethodHandler) GetDefaultPaymentMethod(c *gin.Context) {
 	userID := h.getUserIDFromContext(c)
 	if userID == 0 {
@@ -446,7 +446,7 @@ func (h *PaymentMethodHandler) GetDefaultPaymentMethod(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse
 // @Failure 500 {object} response.APIResponse
 // @Security BearerAuth
-// @Router /api/v1/payment-methods/{id}/stats [get]
+// @Router /payment-methods/{id}/stats [get]
 func (h *PaymentMethodHandler) GetPaymentMethodUsageStats(c *gin.Context) {
 	userID := h.getUserIDFromContext(c)
 	if userID == 0 {

@@ -5,7 +5,6 @@ import (
 	"time"
 
 	invoiceEntities "linke/internal/domains/invoice/entities"
-	paymentEntities "linke/internal/domains/payment/entities"
 	"linke/internal/domains/subscription/entities"
 )
 
@@ -49,7 +48,7 @@ type CreateSubscriptionOrderRequest struct {
 type CreateSubscriptionOrderResponse struct {
 	Order         *entities.SubscriptionOrderResponse    `json:"order"`
 	Invoice       *invoiceEntities.InvoiceResponse       `json:"invoice"`
-	PaymentRecord *paymentEntities.PaymentRecordResponse `json:"payment_record"`
+	PaymentRecord interface{} `json:"payment_record" swaggertype:"object"`
 	PaymentURL    string                                 `json:"payment_url"`
 	QRCodeURL     string                                 `json:"qr_code_url,omitempty"`
 	ExpiredAt     time.Time                              `json:"expired_at"`
@@ -82,7 +81,7 @@ type QuickPurchaseRequest struct {
 
 // QuickPurchaseResponse represents the response for quick purchase
 type QuickPurchaseResponse struct {
-	PaymentRecord *paymentEntities.PaymentRecordResponse `json:"payment_record"`
+	PaymentRecord interface{} `json:"payment_record" swaggertype:"object"`
 	PaymentURL    string                                 `json:"payment_url"`
 	QRCodeURL     string                                 `json:"qr_code_url,omitempty"`
 	ExpiredAt     time.Time                              `json:"expired_at"`

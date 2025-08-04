@@ -40,7 +40,7 @@ func (h *CacheMonitoringHandler) RegisterRoutes(router *gin.RouterGroup) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} response.Response{data=MetricsReport}
-// @Router /api/v1/admin/cache/metrics [get]
+// @Router /admin/cache/metrics [get]
 func (h *CacheMonitoringHandler) GetMetrics(c *gin.Context) {
 	report := GenerateMetricsReport(h.collector)
 	response.Success(c, report)
@@ -54,7 +54,7 @@ func (h *CacheMonitoringHandler) GetMetrics(c *gin.Context) {
 // @Produce json
 // @Param prefix path string true "Cache prefix (user, subscription, payment, etc.)"
 // @Success 200 {object} response.Response{data=Metrics}
-// @Router /api/v1/admin/cache/metrics/{prefix} [get]
+// @Router /admin/cache/metrics/{prefix} [get]
 func (h *CacheMonitoringHandler) GetMetricsByPrefix(c *gin.Context) {
 	prefix := c.Param("prefix")
 
@@ -76,7 +76,7 @@ func (h *CacheMonitoringHandler) GetMetricsByPrefix(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} response.Response{data=CacheStats}
-// @Router /api/v1/admin/cache/stats [get]
+// @Router /admin/cache/stats [get]
 func (h *CacheMonitoringHandler) GetCacheStats(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -96,7 +96,7 @@ func (h *CacheMonitoringHandler) GetCacheStats(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} response.Response
-// @Router /api/v1/admin/cache/reset-metrics [post]
+// @Router /admin/cache/reset-metrics [post]
 func (h *CacheMonitoringHandler) ResetMetrics(c *gin.Context) {
 	h.collector.Reset()
 	response.Success(c, map[string]string{
@@ -112,7 +112,7 @@ func (h *CacheMonitoringHandler) ResetMetrics(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} response.Response
-// @Router /api/v1/admin/cache/flush [delete]
+// @Router /admin/cache/flush [delete]
 func (h *CacheMonitoringHandler) FlushCache(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -137,7 +137,7 @@ func (h *CacheMonitoringHandler) FlushCache(c *gin.Context) {
 // @Produce json
 // @Param pattern path string true "Cache key pattern (e.g., user:*, subscription:123:*)"
 // @Success 200 {object} response.Response
-// @Router /api/v1/admin/cache/pattern/{pattern} [delete]
+// @Router /admin/cache/pattern/{pattern} [delete]
 func (h *CacheMonitoringHandler) DeleteByPattern(c *gin.Context) {
 	pattern := c.Param("pattern")
 

@@ -58,11 +58,11 @@ func (h *UsageHandler) RegisterRoutes(router *gin.RouterGroup) {
 		// Alert configuration endpoints
 		alerts := usage.Group("/alerts")
 		{
-			alerts.GET("/configs/:subscription_id", h.usageAlertHandler.GetAlertConfigurations)
+			alerts.GET("/configs/subscription/:subscription_id", h.usageAlertHandler.GetAlertConfigurations)
 			alerts.POST("/configs", h.usageAlertHandler.CreateAlertConfiguration)
+			alerts.GET("/configs/:config_id", h.usageAlertHandler.GetAlertConfiguration)
 			alerts.PUT("/configs/:config_id", h.usageAlertHandler.UpdateAlertConfiguration)
 			alerts.DELETE("/configs/:config_id", h.usageAlertHandler.DeleteAlertConfiguration)
-			alerts.GET("/configs/:config_id", h.usageAlertHandler.GetAlertConfiguration)
 
 			// Alert management
 			alerts.GET("/:subscription_id", h.usageAlertHandler.GetUsageAlerts)
@@ -102,7 +102,7 @@ func (h *UsageHandler) RegisterRoutes(router *gin.RouterGroup) {
 // @Failure 400 {object} response.Response
 // @Failure 404 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/usage/current/{subscription_id} [get]
+// @Router /usage/current/{subscription_id} [get]
 func (h *UsageHandler) GetCurrentUsage(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
 	if err != nil {
@@ -131,7 +131,7 @@ func (h *UsageHandler) GetCurrentUsage(c *gin.Context) {
 // @Failure 400 {object} response.Response
 // @Failure 404 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/usage/current/{subscription_id}/{usage_type} [get]
+// @Router /usage/current/{subscription_id}/{usage_type} [get]
 func (h *UsageHandler) GetCurrentUsageByType(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
 	if err != nil {
@@ -175,7 +175,7 @@ func (h *UsageHandler) GetCurrentUsageByType(c *gin.Context) {
 // @Failure 400 {object} response.Response
 // @Failure 404 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/usage/history/{subscription_id} [get]
+// @Router /usage/history/{subscription_id} [get]
 func (h *UsageHandler) GetUsageHistory(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
 	if err != nil {
@@ -249,7 +249,7 @@ func (h *UsageHandler) GetUsageHistory(c *gin.Context) {
 // @Failure 400 {object} response.Response
 // @Failure 404 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/usage/summary/{subscription_id} [get]
+// @Router /usage/summary/{subscription_id} [get]
 func (h *UsageHandler) GetUsageSummary(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
 	if err != nil {
@@ -312,7 +312,7 @@ func (h *UsageHandler) GetUsageSummary(c *gin.Context) {
 // @Failure 400 {object} response.Response
 // @Failure 404 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/usage/statistics/{subscription_id} [get]
+// @Router /usage/statistics/{subscription_id} [get]
 func (h *UsageHandler) GetUsageStatistics(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
 	if err != nil {
@@ -366,7 +366,7 @@ func (h *UsageHandler) GetUsageStatistics(c *gin.Context) {
 // @Failure 400 {object} response.Response
 // @Failure 404 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/usage/trends/{subscription_id} [get]
+// @Router /usage/trends/{subscription_id} [get]
 func (h *UsageHandler) GetUsageTrends(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
 	if err != nil {
@@ -403,7 +403,7 @@ func (h *UsageHandler) GetUsageTrends(c *gin.Context) {
 // @Failure 400 {object} response.Response
 // @Failure 404 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/usage/predictions/{subscription_id} [get]
+// @Router /usage/predictions/{subscription_id} [get]
 func (h *UsageHandler) GetUsagePredictions(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
 	if err != nil {
@@ -432,7 +432,7 @@ func (h *UsageHandler) GetUsagePredictions(c *gin.Context) {
 // @Failure 400 {object} response.Response
 // @Failure 404 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/usage/predictions/{subscription_id}/{usage_type} [get]
+// @Router /usage/predictions/{subscription_id}/{usage_type} [get]
 func (h *UsageHandler) GetUsagePredictionsByType(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
 	if err != nil {
@@ -468,7 +468,7 @@ func (h *UsageHandler) GetUsagePredictionsByType(c *gin.Context) {
 // @Failure 400 {object} response.Response
 // @Failure 404 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/usage/realtime/{subscription_id} [get]
+// @Router /usage/realtime/{subscription_id} [get]
 func (h *UsageHandler) GetRealTimeUsage(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
 	if err != nil {
@@ -497,7 +497,7 @@ func (h *UsageHandler) GetRealTimeUsage(c *gin.Context) {
 // @Success 200 {object} response.Response{data=interfaces.ExportUsageResponse}
 // @Failure 400 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/usage/export [post]
+// @Router /usage/export [post]
 func (h *UsageHandler) ExportUsageData(c *gin.Context) {
 	var req interfaces.ExportUsageRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -530,7 +530,7 @@ func (h *UsageHandler) ExportUsageData(c *gin.Context) {
 // @Success 200 {object} response.Response{data=interfaces.TopUsageResponse}
 // @Failure 400 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/usage/top [get]
+// @Router /usage/top [get]
 func (h *UsageHandler) GetTopUsageSubscriptions(c *gin.Context) {
 	req := &interfaces.TopUsageRequest{
 		UsageType:   c.Query("usage_type"),
@@ -580,7 +580,7 @@ func (h *UsageHandler) GetTopUsageSubscriptions(c *gin.Context) {
 // @Success 200 {object} response.Response{data=interfaces.CleanupResult}
 // @Failure 400 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/usage/admin/cleanup [post]
+// @Router /usage/admin/cleanup [post]
 func (h *UsageHandler) CleanupOldUsageData(c *gin.Context) {
 	olderThanStr := c.Query("older_than")
 	if olderThanStr == "" {
@@ -615,7 +615,7 @@ func (h *UsageHandler) CleanupOldUsageData(c *gin.Context) {
 // @Failure 400 {object} response.Response
 // @Failure 404 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/usage/admin/reset/{subscription_id} [post]
+// @Router /usage/admin/reset/{subscription_id} [post]
 func (h *UsageHandler) ResetUsageForSubscription(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
 	if err != nil {
@@ -649,7 +649,7 @@ func (h *UsageHandler) ResetUsageForSubscription(c *gin.Context) {
 // @Failure 400 {object} response.Response
 // @Failure 404 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/usage/admin/sync/{subscription_id} [post]
+// @Router /usage/admin/sync/{subscription_id} [post]
 func (h *UsageHandler) SyncSubscriptionLimits(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
 	if err != nil {

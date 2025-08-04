@@ -345,32 +345,32 @@ type UserSubscriptionResponse struct {
 	SubscriptionPlanID uint       `json:"subscription_plan_id" example:"1"`                              // Plan ID
 	UUID               string     `json:"uuid" example:"550e8400-e29b-41d4-a716-446655440000"`           // Unique identifier
 	Status             string     `json:"status" example:"active"`                                       // Status
-	StartDate          time.Time  `json:"start_date" example:"2024-01-01T00:00:00Z"`                     // Start date
-	EndDate            *time.Time `json:"end_date,omitempty" example:"2024-12-31T23:59:59Z"`             // End date
-	TrialEndDate       *time.Time `json:"trial_end_date,omitempty" example:"2024-01-08T00:00:00Z"`       // Trial end
-	CurrentPeriodStart *time.Time `json:"current_period_start,omitempty" example:"2024-01-01T00:00:00Z"` // Current period start
-	CurrentPeriodEnd   *time.Time `json:"current_period_end,omitempty" example:"2024-02-01T00:00:00Z"`   // Current period end
-	NextBillingDate    *time.Time `json:"next_billing_date,omitempty" example:"2024-02-01T00:00:00Z"`    // Next billing
+	StartDate          time.Time  `json:"start_date" swaggertype:"string" format:"date-time" example:"2024-01-01T00:00:00Z"`                     // Start date
+	EndDate            *time.Time `json:"end_date,omitempty" swaggertype:"string" format:"date-time" example:"2024-12-31T23:59:59Z"`             // End date
+	TrialEndDate       *time.Time `json:"trial_end_date,omitempty" swaggertype:"string" format:"date-time" example:"2024-01-08T00:00:00Z"`       // Trial end
+	CurrentPeriodStart *time.Time `json:"current_period_start,omitempty" swaggertype:"string" format:"date-time" example:"2024-01-01T00:00:00Z"` // Current period start
+	CurrentPeriodEnd   *time.Time `json:"current_period_end,omitempty" swaggertype:"string" format:"date-time" example:"2024-02-01T00:00:00Z"`   // Current period end
+	NextBillingDate    *time.Time `json:"next_billing_date,omitempty" swaggertype:"string" format:"date-time" example:"2024-02-01T00:00:00Z"`    // Next billing
 	Price              float64    `json:"price" example:"29.99"`                                         // Price
 	Currency           string     `json:"currency" example:"USD"`                                        // Currency
 	BillingCycle       string     `json:"billing_cycle" example:"monthly"`                               // Billing cycle
 	BillingInterval    int        `json:"billing_interval" example:"1"`                                  // Billing interval
-	CancelledAt        *time.Time `json:"cancelled_at,omitempty" example:"2024-06-01T00:00:00Z"`         // Cancelled date
+	CancelledAt        *time.Time `json:"cancelled_at,omitempty" swaggertype:"string" format:"date-time" example:"2024-06-01T00:00:00Z"`         // Cancelled date
 	CancellationReason string     `json:"cancellation_reason,omitempty" example:"User request"`          // Cancellation reason
 	CancelAtPeriodEnd  bool       `json:"cancel_at_period_end" example:"false"`                          // Cancel at period end
-	PausedAt           *time.Time `json:"paused_at,omitempty" example:"2024-06-01T00:00:00Z"`            // Paused date
+	PausedAt           *time.Time `json:"paused_at,omitempty" swaggertype:"string" format:"date-time" example:"2024-06-01T00:00:00Z"`            // Paused date
 	PauseReason        string     `json:"pause_reason,omitempty" example:"User request"`                 // Pause reason
 	PausedByAdminID    *uint      `json:"paused_by_admin_id,omitempty" example:"1"`                      // Admin who paused
 	MaxPauseDuration   int        `json:"max_pause_duration" example:"90"`                               // Maximum pause duration in days
-	ResumedAt          *time.Time `json:"resumed_at,omitempty" example:"2024-08-01T00:00:00Z"`           // Resumed date
+	ResumedAt          *time.Time `json:"resumed_at,omitempty" swaggertype:"string" format:"date-time" example:"2024-08-01T00:00:00Z"`           // Resumed date
 	ResumedByAdminID   *uint      `json:"resumed_by_admin_id,omitempty" example:"1"`                     // Admin who resumed
 	AutoRenew          bool       `json:"auto_renew" example:"true"`                                     // Auto renewal enabled
 	RenewalAttempts    int        `json:"renewal_attempts" example:"0"`                                  // Renewal attempts count
-	LastRenewalFailed  *time.Time `json:"last_renewal_failed,omitempty" example:"2024-01-10T10:30:00Z"`  // Last renewal failure
+	LastRenewalFailed  *time.Time `json:"last_renewal_failed,omitempty" swaggertype:"string" format:"date-time" example:"2024-01-10T10:30:00Z"`  // Last renewal failure
 	RenewalFailReason  string     `json:"renewal_fail_reason,omitempty" example:"Payment failed"`        // Renewal failure reason
-	LastUsedAt         *time.Time `json:"last_used_at,omitempty" example:"2024-01-15T10:30:00Z"`         // Last used
-	CreatedAt          time.Time  `json:"created_at" example:"2024-01-01T00:00:00Z"`                     // Creation time
-	UpdatedAt          time.Time  `json:"updated_at" example:"2024-01-01T00:00:00Z"`                     // Update time
+	LastUsedAt         *time.Time `json:"last_used_at,omitempty" swaggertype:"string" format:"date-time" example:"2024-01-15T10:30:00Z"`         // Last used
+	CreatedAt          time.Time  `json:"created_at" swaggertype:"string" format:"date-time" example:"2024-01-01T00:00:00Z"`                     // Creation time
+	UpdatedAt          time.Time  `json:"updated_at" swaggertype:"string" format:"date-time" example:"2024-01-01T00:00:00Z"`                     // Update time
 
 	// Related data
 	User             *dto.UserBasicDTO         `json:"user,omitempty"`              // User info

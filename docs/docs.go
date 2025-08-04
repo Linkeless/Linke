@@ -15,6 +15,535 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/admin/cache/flush": {
+            "delete": {
+                "description": "Flush all cache entries (use with caution)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cache"
+                ],
+                "summary": "Flush cache",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/cache/metrics": {
+            "get": {
+                "description": "Get comprehensive cache performance metrics",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cache"
+                ],
+                "summary": "Get cache metrics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cache.MetricsReport"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/cache/metrics/{prefix}": {
+            "get": {
+                "description": "Get cache performance metrics for a specific prefix",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cache"
+                ],
+                "summary": "Get cache metrics by prefix",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Cache prefix (user, subscription, payment, etc.)",
+                        "name": "prefix",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cache.Metrics"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/cache/monitor/alerts": {
+            "get": {
+                "description": "Get active alerts for cache system health and performance",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cache Monitoring"
+                ],
+                "summary": "Get cache system alerts",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/cache/monitor/benchmark": {
+            "post": {
+                "description": "Run performance benchmark on cache system",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cache Monitoring"
+                ],
+                "summary": "Run cache benchmark",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/cache/monitor/dashboard": {
+            "get": {
+                "description": "Get comprehensive dashboard data for cache monitoring",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cache Monitoring"
+                ],
+                "summary": "Get cache dashboard data",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/cache/monitor/health": {
+            "get": {
+                "description": "Get comprehensive health status of multi-level cache system",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cache Monitoring"
+                ],
+                "summary": "Get multi-level cache health",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cache.CacheHealthStatus"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/cache/monitor/invalidation/metrics": {
+            "get": {
+                "description": "Get metrics for event-driven cache invalidation",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cache Monitoring"
+                ],
+                "summary": "Get cache invalidation metrics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "integer",
+                                                "format": "int64"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/cache/monitor/metrics": {
+            "get": {
+                "description": "Get detailed metrics for multi-level cache system",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cache Monitoring"
+                ],
+                "summary": "Get multi-level cache metrics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cache.MultiLevelCacheMetrics"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/cache/monitor/performance": {
+            "get": {
+                "description": "Get detailed performance analysis of cache system",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cache Monitoring"
+                ],
+                "summary": "Get cache performance metrics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cache.PerformanceMetrics"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/cache/monitor/warming/status": {
+            "get": {
+                "description": "Get status and metrics of cache warming operations",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cache Monitoring"
+                ],
+                "summary": "Get cache warming status",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cache.WarmingMetrics"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/cache/monitor/warming/trigger": {
+            "post": {
+                "description": "Manually trigger cache warming for specified prefixes",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cache Monitoring"
+                ],
+                "summary": "Trigger cache warming",
+                "parameters": [
+                    {
+                        "description": "Warming request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/cache/pattern/{pattern}": {
+            "delete": {
+                "description": "Delete cache entries matching a specific pattern",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cache"
+                ],
+                "summary": "Delete cache by pattern",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Cache key pattern (e.g., user:*, subscription:123:*)",
+                        "name": "pattern",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/cache/reset-metrics": {
+            "post": {
+                "description": "Reset all cache performance metrics",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cache"
+                ],
+                "summary": "Reset cache metrics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/cache/stats": {
+            "get": {
+                "description": "Get low-level cache statistics from Redis",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cache"
+                ],
+                "summary": "Get cache statistics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cache.CacheStats"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/admin/payments/configs": {
             "get": {
                 "security": [
@@ -320,6 +849,861 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/payments/retries": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get payment retries with filtering and pagination",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Payment-Retry"
+                ],
+                "summary": "[Admin] Get payment retries",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "example": 1,
+                        "description": "Filter by user ID",
+                        "name": "user_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "\"epay\"",
+                        "description": "Filter by gateway",
+                        "name": "gateway",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "\"alipay\"",
+                        "description": "Filter by payment method",
+                        "name": "payment_method",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "pending",
+                            "in_progress",
+                            "completed",
+                            "failed",
+                            "cancelled"
+                        ],
+                        "type": "string",
+                        "example": "\"pending\"",
+                        "description": "Filter by retry status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "temporary",
+                            "permanent",
+                            "network",
+                            "gateway",
+                            "business"
+                        ],
+                        "type": "string",
+                        "example": "\"temporary\"",
+                        "description": "Filter by failure type",
+                        "name": "failure_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "\"2024-01-01T00:00:00Z\"",
+                        "description": "Filter from date (RFC3339)",
+                        "name": "from_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "\"2024-12-31T23:59:59Z\"",
+                        "description": "Filter to date (RFC3339)",
+                        "name": "to_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 1,
+                        "description": "Minimum attempts",
+                        "name": "min_attempts",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 5,
+                        "description": "Maximum attempts",
+                        "name": "max_attempts",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "example": false,
+                        "description": "Include retry history",
+                        "name": "include_history",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "created_at",
+                            "next_retry_at",
+                            "attempt_number"
+                        ],
+                        "type": "string",
+                        "example": "\"created_at\"",
+                        "description": "Sort by field",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "example": "\"desc\"",
+                        "description": "Sort order",
+                        "name": "sort_order",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "example": 20,
+                        "description": "Limit results",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "example": 0,
+                        "description": "Offset results",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.PaginatedResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.AdminRetryResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/payments/retries/bulk-cancel": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Cancel multiple payment retry sequences",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Payment-Retry"
+                ],
+                "summary": "[Admin] Bulk cancel payment retries",
+                "parameters": [
+                    {
+                        "description": "Retry IDs and reason",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.BulkRetryActionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/payments/retries/bulk-reset": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Reset multiple payment retry sequences",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Payment-Retry"
+                ],
+                "summary": "[Admin] Bulk reset payment retries",
+                "parameters": [
+                    {
+                        "description": "Retry IDs",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.BulkRetryActionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/payments/retries/health": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get overall health metrics for the retry system",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Payment-Retry"
+                ],
+                "summary": "[Admin] Get retry system health metrics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.RetryHealthMetrics"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/payments/retries/statistics": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get payment retry statistics for a specific gateway",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Payment-Retry"
+                ],
+                "summary": "[Admin] Get retry statistics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "\"epay\"",
+                        "description": "Gateway name",
+                        "name": "gateway",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "maximum": 365,
+                        "minimum": 1,
+                        "type": "integer",
+                        "example": 30,
+                        "description": "Number of days to analyze",
+                        "name": "days",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.RetryStatistics"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/payments/retries/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get detailed payment retry information with history",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Payment-Retry"
+                ],
+                "summary": "[Admin] Get payment retry details",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Retry ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.RetryWithHistory"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/payments/retries/{id}/cancel": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Cancel a payment retry sequence",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Payment-Retry"
+                ],
+                "summary": "[Admin] Cancel payment retry",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Retry ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Cancel reason",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CancelRetryRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/payments/retries/{id}/reset": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Reset a payment retry sequence to start over",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Payment-Retry"
+                ],
+                "summary": "[Admin] Reset payment retry",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Retry ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/subscriptions/{id}/pause": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Pause a user subscription (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Subscription"
+                ],
+                "summary": "[Admin] Pause user subscription",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Pause subscription request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.PauseSubscriptionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/entities.UserSubscriptionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/subscriptions/{id}/resume": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Resume a paused user subscription (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Subscription"
+                ],
+                "summary": "[Admin] Resume user subscription",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Resume subscription request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.ResumeSubscriptionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/entities.UserSubscriptionResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -1565,7 +2949,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/app/system/health": {
+        "/app/system/health": {
             "get": {
                 "description": "检查系统各组件健康状态",
                 "consumes": [
@@ -2242,6 +3626,195 @@ const docTemplate = `{
                 }
             }
         },
+        "/invoice/bulk-download": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Download multiple invoices as a ZIP file with optional CSV summary",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/zip"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "[User/Admin] Download multiple invoices as ZIP",
+                "parameters": [
+                    {
+                        "description": "Bulk download request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.BulkDownloadRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/invoice/download-history": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get download history for the current user's invoices",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "[User] Get invoice download history",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.PaginatedResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/interfaces.InvoiceDownloadRecord"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/invoice/languages": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get list of available languages for invoice generation",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "[User/Admin] Get available languages",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/invoice/number/{number}": {
             "get": {
                 "security": [
@@ -2365,6 +3938,58 @@ const docTemplate = `{
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/invoice/templates": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get list of available PDF templates for invoice generation",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "[User/Admin] Get available PDF templates",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "401": {
@@ -2633,6 +4258,95 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/invoice/{id}/download": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Download an invoice as PDF with custom template and language options",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/pdf"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "[User/Admin] Download invoice as PDF with options",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Invoice ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "default",
+                            "professional",
+                            "minimal"
+                        ],
+                        "type": "string",
+                        "description": "PDF Template",
+                        "name": "template",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "en",
+                            "zh",
+                            "es"
+                        ],
+                        "type": "string",
+                        "description": "Language",
+                        "name": "language",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Watermark text",
+                        "name": "watermark",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
                         }
                     },
                     "400": {
@@ -2935,6 +4649,709 @@ const docTemplate = `{
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/invoice/{id}/send-custom": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Send an invoice via email with custom PDF template and options",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Invoice"
+                ],
+                "summary": "[Admin] Send invoice with custom PDF options",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Invoice ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Email options",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.SendInvoiceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/payment-methods": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve all payment methods for the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payment-methods"
+                ],
+                "summary": "List all payment methods",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by payment gateway",
+                        "name": "gateway",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Show only active payment methods",
+                        "name": "active_only",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/entities.PaymentMethodListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Add a new payment method for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payment-methods"
+                ],
+                "summary": "Create a new payment method",
+                "parameters": [
+                    {
+                        "description": "Payment method creation request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entities.CreatePaymentMethodRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/entities.PaymentMethodResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/payment-methods/default": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve the default payment method for the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payment-methods"
+                ],
+                "summary": "Get default payment method",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by payment gateway",
+                        "name": "gateway",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/entities.PaymentMethodResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/payment-methods/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve a specific payment method for the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payment-methods"
+                ],
+                "summary": "Get a payment method by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Payment method ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/entities.PaymentMethodResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update details of an existing payment method",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payment-methods"
+                ],
+                "summary": "Update a payment method",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Payment method ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Payment method update request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entities.UpdatePaymentMethodRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/entities.PaymentMethodResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Soft delete a payment method for the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payment-methods"
+                ],
+                "summary": "Delete a payment method",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Payment method ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/payment-methods/{id}/default": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Set a payment method as the default for the user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payment-methods"
+                ],
+                "summary": "Set a payment method as default",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Payment method ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/entities.PaymentMethodResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/payment-methods/{id}/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve usage statistics for a specific payment method",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payment-methods"
+                ],
+                "summary": "Get payment method usage statistics",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Payment method ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.PaymentMethodUsageStats"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/payment-methods/{id}/validate": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Validate a payment method with the payment gateway",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payment-methods"
+                ],
+                "summary": "Validate a payment method",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Payment method ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/entities.PaymentMethodResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
                         }
                     }
                 }
@@ -3776,6 +6193,81 @@ const docTemplate = `{
                 }
             }
         },
+        "/subscription/quick-purchase": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a payment directly for subscription without creating order/invoice first. Order and invoice are created asynchronously after payment success.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Quick purchase subscription",
+                "parameters": [
+                    {
+                        "description": "Quick purchase data",
+                        "name": "purchase",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.QuickPurchaseRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.QuickPurchaseResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/subscriptions/my": {
             "get": {
                 "security": [
@@ -4259,6 +6751,2182 @@ const docTemplate = `{
                 }
             }
         },
+        "/usage/admin/cleanup": {
+            "post": {
+                "description": "Remove old usage data and alerts (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "usage",
+                    "admin"
+                ],
+                "summary": "Cleanup old usage data",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Delete data older than this date (RFC3339)",
+                        "name": "older_than",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.CleanupResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/admin/reset/{subscription_id}": {
+            "post": {
+                "description": "Reset usage counters for a specific subscription and usage type (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "usage",
+                    "admin"
+                ],
+                "summary": "Reset usage for a subscription",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription ID",
+                        "name": "subscription_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "traffic",
+                            "api_call",
+                            "storage",
+                            "bandwidth",
+                            "connections"
+                        ],
+                        "type": "string",
+                        "description": "Usage Type",
+                        "name": "usage_type",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/admin/sync/{subscription_id}": {
+            "post": {
+                "description": "Sync usage limits with subscription plan settings (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "usage",
+                    "admin"
+                ],
+                "summary": "Sync subscription limits",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription ID",
+                        "name": "subscription_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/alerts/bulk-resolve": {
+            "post": {
+                "description": "Resolve multiple usage alerts at once",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "alerts"
+                ],
+                "summary": "Bulk resolve usage alerts",
+                "parameters": [
+                    {
+                        "description": "Bulk Resolve Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.BulkResolveAlertsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.BulkResolveAlertsResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/alerts/configs": {
+            "post": {
+                "description": "Create a new alert configuration for usage monitoring",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "alerts"
+                ],
+                "summary": "Create a new alert configuration",
+                "parameters": [
+                    {
+                        "description": "Alert Configuration Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.CreateAlertConfigRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/entities.AlertConfigurationResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/alerts/configs/{config_id}": {
+            "get": {
+                "description": "Retrieve details of a specific alert configuration",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "alerts"
+                ],
+                "summary": "Get a specific alert configuration",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Configuration ID",
+                        "name": "config_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/entities.AlertConfigurationResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Update an existing alert configuration",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "alerts"
+                ],
+                "summary": "Update an alert configuration",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Configuration ID",
+                        "name": "config_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.UpdateAlertConfigRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/entities.AlertConfigurationResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete (soft delete) an alert configuration",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "alerts"
+                ],
+                "summary": "Delete an alert configuration",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Configuration ID",
+                        "name": "config_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/alerts/configs/{subscription_id}": {
+            "get": {
+                "description": "Retrieve all alert configurations for a specific subscription",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "alerts"
+                ],
+                "summary": "Get alert configurations for a subscription",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription ID",
+                        "name": "subscription_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Usage Type Filter",
+                        "name": "usage_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Enabled Status Filter",
+                        "name": "is_enabled",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "low",
+                            "medium",
+                            "high",
+                            "critical"
+                        ],
+                        "type": "string",
+                        "description": "Priority Filter",
+                        "name": "priority",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000,
+                        "type": "integer",
+                        "default": 50,
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "name",
+                            "threshold",
+                            "priority",
+                            "created_at"
+                        ],
+                        "type": "string",
+                        "default": "created_at",
+                        "description": "Order By",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "default": "desc",
+                        "description": "Order Direction",
+                        "name": "order_direction",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.GetAlertConfigsResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/alerts/history/{subscription_id}": {
+            "get": {
+                "description": "Retrieve detailed alert history with optional filters",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "alerts"
+                ],
+                "summary": "Get alert history for a subscription",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription ID",
+                        "name": "subscription_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Alert Configuration ID Filter",
+                        "name": "alert_configuration_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Usage Type Filter",
+                        "name": "usage_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Start Time (RFC3339)",
+                        "name": "start_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "End Time (RFC3339)",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Include resolved alerts",
+                        "name": "include_resolved",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Include notification history",
+                        "name": "include_notifications",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000,
+                        "type": "integer",
+                        "default": 50,
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.AlertHistoryResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/alerts/statistics/{subscription_id}": {
+            "get": {
+                "description": "Retrieve detailed alert statistics and trends",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "alerts"
+                ],
+                "summary": "Get alert statistics for a subscription",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription ID",
+                        "name": "subscription_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Usage Type Filter",
+                        "name": "usage_type",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "info",
+                            "warning",
+                            "error",
+                            "critical"
+                        ],
+                        "type": "string",
+                        "description": "Severity Filter",
+                        "name": "severity",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "24h",
+                            "7d",
+                            "30d",
+                            "90d",
+                            "365d"
+                        ],
+                        "type": "string",
+                        "default": "30d",
+                        "description": "Time Period",
+                        "name": "period",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Start Time (RFC3339)",
+                        "name": "start_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "End Time (RFC3339)",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "hour",
+                            "day",
+                            "week",
+                            "month",
+                            "severity",
+                            "usage_type"
+                        ],
+                        "type": "string",
+                        "description": "Group By",
+                        "name": "group_by",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.AlertStatisticsResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/alerts/test-notification": {
+            "post": {
+                "description": "Send a test notification to verify channel configuration",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "alerts"
+                ],
+                "summary": "Test a notification channel",
+                "parameters": [
+                    {
+                        "description": "Test Notification Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.TestNotificationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.TestNotificationResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/alerts/{alert_id}/acknowledge": {
+            "post": {
+                "description": "Mark a usage alert as acknowledged",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "alerts"
+                ],
+                "summary": "Acknowledge a usage alert",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Alert ID",
+                        "name": "alert_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Acknowledge Request",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "integer"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/alerts/{alert_id}/resolve": {
+            "post": {
+                "description": "Mark a usage alert as resolved",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "alerts"
+                ],
+                "summary": "Resolve a usage alert",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Alert ID",
+                        "name": "alert_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Resolve Request",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/alerts/{alert_id}/suppress": {
+            "post": {
+                "description": "Suppress a usage alert for a specified duration",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "alerts"
+                ],
+                "summary": "Suppress a usage alert",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Alert ID",
+                        "name": "alert_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Suppress Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/alerts/{subscription_id}": {
+            "get": {
+                "description": "Retrieve usage alerts with optional filtering",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "alerts"
+                ],
+                "summary": "Get usage alerts for a subscription",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription ID",
+                        "name": "subscription_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Alert Configuration ID Filter",
+                        "name": "alert_configuration_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Usage Type Filter",
+                        "name": "usage_type",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "fired",
+                            "resolved",
+                            "suppressed",
+                            "acknowledged"
+                        ],
+                        "type": "string",
+                        "description": "Status Filter",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "info",
+                            "warning",
+                            "error",
+                            "critical"
+                        ],
+                        "type": "string",
+                        "description": "Severity Filter",
+                        "name": "severity",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Active Status Filter",
+                        "name": "is_active",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Resolved Status Filter",
+                        "name": "is_resolved",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Start Time (RFC3339)",
+                        "name": "start_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "End Time (RFC3339)",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000,
+                        "type": "integer",
+                        "default": 50,
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "fired_at",
+                            "resolved_at",
+                            "severity",
+                            "usage_percent"
+                        ],
+                        "type": "string",
+                        "default": "fired_at",
+                        "description": "Order By",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "default": "desc",
+                        "description": "Order Direction",
+                        "name": "order_direction",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.GetUsageAlertsResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/current/{subscription_id}": {
+            "get": {
+                "description": "Retrieve current usage statistics for all usage types of a subscription",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "usage"
+                ],
+                "summary": "Get current usage for a subscription",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription ID",
+                        "name": "subscription_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.CurrentUsageResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/current/{subscription_id}/{usage_type}": {
+            "get": {
+                "description": "Retrieve current usage statistics for a specific usage type of a subscription",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "usage"
+                ],
+                "summary": "Get current usage for a specific usage type",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription ID",
+                        "name": "subscription_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "traffic",
+                            "api_call",
+                            "storage",
+                            "bandwidth",
+                            "connections"
+                        ],
+                        "type": "string",
+                        "description": "Usage Type",
+                        "name": "usage_type",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.CurrentUsageResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/export": {
+            "post": {
+                "description": "Export usage data in various formats (CSV, JSON, XLSX)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "usage"
+                ],
+                "summary": "Export usage data",
+                "parameters": [
+                    {
+                        "description": "Export Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.ExportUsageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.ExportUsageResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/history/{subscription_id}": {
+            "get": {
+                "description": "Retrieve historical usage data with configurable time range and granularity",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "usage"
+                ],
+                "summary": "Get usage history for a subscription",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription ID",
+                        "name": "subscription_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Usage Type Filter",
+                        "name": "usage_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Start Time (RFC3339)",
+                        "name": "start_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "End Time (RFC3339)",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "hourly",
+                            "daily",
+                            "weekly",
+                            "monthly"
+                        ],
+                        "type": "string",
+                        "default": "daily",
+                        "description": "Data Granularity",
+                        "name": "granularity",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000,
+                        "type": "integer",
+                        "default": 50,
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Include detailed breakdown",
+                        "name": "include_details",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Source Type Filter",
+                        "name": "source_type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.UsageHistoryResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/predictions/{subscription_id}": {
+            "get": {
+                "description": "Retrieve usage predictions for all usage types",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "usage"
+                ],
+                "summary": "Get usage predictions for a subscription",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription ID",
+                        "name": "subscription_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/entities.UsagePrediction"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/predictions/{subscription_id}/{usage_type}": {
+            "get": {
+                "description": "Retrieve usage predictions for a specific usage type",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "usage"
+                ],
+                "summary": "Get usage predictions for a specific usage type",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription ID",
+                        "name": "subscription_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "traffic",
+                            "api_call",
+                            "storage",
+                            "bandwidth",
+                            "connections"
+                        ],
+                        "type": "string",
+                        "description": "Usage Type",
+                        "name": "usage_type",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/entities.UsagePrediction"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/realtime/{subscription_id}": {
+            "get": {
+                "description": "Retrieve real-time usage data with current rates and predictions",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "usage"
+                ],
+                "summary": "Get real-time usage data for a subscription",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription ID",
+                        "name": "subscription_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.RealTimeUsageResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/statistics/{subscription_id}": {
+            "get": {
+                "description": "Retrieve detailed usage statistics with breakdown by various dimensions",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "usage"
+                ],
+                "summary": "Get usage statistics for a subscription",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription ID",
+                        "name": "subscription_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Usage Type Filter",
+                        "name": "usage_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "monthly",
+                        "description": "Time Period",
+                        "name": "period",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Start Time (RFC3339)",
+                        "name": "start_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "End Time (RFC3339)",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Group By Dimensions (comma-separated)",
+                        "name": "group_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Include period comparison",
+                        "name": "include_comparison",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.UsageStatistics"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/summary/{subscription_id}": {
+            "get": {
+                "description": "Retrieve aggregated usage summary for a specific period",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "usage"
+                ],
+                "summary": "Get usage summary for a subscription",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription ID",
+                        "name": "subscription_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "daily",
+                            "weekly",
+                            "monthly",
+                            "custom"
+                        ],
+                        "type": "string",
+                        "default": "monthly",
+                        "description": "Time Period",
+                        "name": "period",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Period Start Time (RFC3339)",
+                        "name": "period_start",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Period End Time (RFC3339)",
+                        "name": "period_end",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated usage types filter",
+                        "name": "usage_types",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Include detailed breakdown",
+                        "name": "include_breakdown",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Include usage predictions",
+                        "name": "include_predictions",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Compare with previous period",
+                        "name": "compare_with_previous",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/entities.UsageSummary"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/top": {
+            "get": {
+                "description": "Retrieve subscriptions with highest usage for administration",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "usage",
+                    "admin"
+                ],
+                "summary": "Get top usage subscriptions",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Usage Type Filter",
+                        "name": "usage_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "24h",
+                        "description": "Time Period (e.g., 24h, 7d, 30d)",
+                        "name": "period",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "total_usage",
+                            "average_usage",
+                            "peak_usage"
+                        ],
+                        "type": "string",
+                        "default": "total_usage",
+                        "description": "Order By",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Include zero usage subscriptions",
+                        "name": "include_zero",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.TopUsageResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/trends/{subscription_id}": {
+            "get": {
+                "description": "Retrieve usage trends with optional anomaly detection and predictions",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "usage"
+                ],
+                "summary": "Get usage trends for a subscription",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription ID",
+                        "name": "subscription_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Usage Type Filter",
+                        "name": "usage_type",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "7d",
+                            "30d",
+                            "90d",
+                            "365d"
+                        ],
+                        "type": "string",
+                        "default": "30d",
+                        "description": "Time Period",
+                        "name": "period",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "hourly",
+                            "daily",
+                            "weekly"
+                        ],
+                        "type": "string",
+                        "default": "daily",
+                        "description": "Data Granularity",
+                        "name": "granularity",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Include usage predictions",
+                        "name": "include_predictions",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Include anomaly detection",
+                        "name": "include_anomalies",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.UsageTrendsResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/user/password": {
             "put": {
                 "security": [
@@ -4437,6 +9105,281 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "cache.CacheHealthStatus": {
+            "type": "object",
+            "properties": {
+                "components": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "issues": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "metrics": {
+                    "$ref": "#/definitions/cache.MultiLevelCacheMetrics"
+                },
+                "overall": {
+                    "type": "string"
+                },
+                "performance": {
+                    "$ref": "#/definitions/cache.PerformanceMetrics"
+                },
+                "timestamp": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2023-01-01T00:00:00Z"
+                }
+            }
+        },
+        "cache.CacheStats": {
+            "type": "object",
+            "properties": {
+                "deletes": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "evictions": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "hitRate": {
+                    "type": "number",
+                    "format": "float64"
+                },
+                "hits": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "memoryUsed": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "misses": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "sets": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "totalKeys": {
+                    "type": "integer",
+                    "format": "int64"
+                }
+            }
+        },
+        "cache.MemoryCacheMetrics": {
+            "type": "object"
+        },
+        "cache.Metrics": {
+            "type": "object",
+            "properties": {
+                "deletes": {
+                    "type": "integer"
+                },
+                "error_rate": {
+                    "type": "number"
+                },
+                "errors": {
+                    "type": "integer"
+                },
+                "evictions": {
+                    "type": "integer"
+                },
+                "hit_rate": {
+                    "type": "number"
+                },
+                "hits": {
+                    "type": "integer"
+                },
+                "miss_rate": {
+                    "type": "number"
+                },
+                "misses": {
+                    "type": "integer"
+                },
+                "sets": {
+                    "type": "integer"
+                },
+                "total_operations": {
+                    "type": "integer"
+                }
+            }
+        },
+        "cache.MetricsReport": {
+            "type": "object",
+            "properties": {
+                "global_metrics": {
+                    "$ref": "#/definitions/cache.Metrics"
+                },
+                "prefix_metrics": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/cache.Metrics"
+                    }
+                },
+                "timestamp": {
+                    "type": "string"
+                },
+                "top_prefixes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/cache.PrefixMetricSummary"
+                    }
+                }
+            }
+        },
+        "cache.MultiLevelCacheMetrics": {
+            "type": "object",
+            "properties": {
+                "demotions": {
+                    "type": "integer"
+                },
+                "l1_hit_rate": {
+                    "type": "number"
+                },
+                "l1_hits": {
+                    "description": "Multi-level specific metrics",
+                    "type": "integer"
+                },
+                "l1_metrics": {
+                    "$ref": "#/definitions/cache.MemoryCacheMetrics"
+                },
+                "l2_hit_rate": {
+                    "type": "number"
+                },
+                "l2_hits": {
+                    "type": "integer"
+                },
+                "l2_metrics": {
+                    "$ref": "#/definitions/cache.Metrics"
+                },
+                "overall_hit_rate": {
+                    "description": "Computed metrics",
+                    "type": "number"
+                },
+                "promotions": {
+                    "type": "integer"
+                },
+                "total_misses": {
+                    "type": "integer"
+                },
+                "write_behinds": {
+                    "type": "integer"
+                }
+            }
+        },
+        "cache.PerformanceMetrics": {
+            "type": "object",
+            "properties": {
+                "cache_consistency": {
+                    "description": "L1-L2 consistency score",
+                    "type": "number"
+                },
+                "data_freshness": {
+                    "description": "Quality metrics",
+                    "type": "number"
+                },
+                "hourly_evictions": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "hourly_hit_rates": {
+                    "description": "Trend data (last 24h)",
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    }
+                },
+                "hourly_miss_rates": {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    }
+                },
+                "l1_avg_response_time": {
+                    "description": "Response time metrics (in milliseconds)",
+                    "type": "number"
+                },
+                "l1_cost_per_hit": {
+                    "description": "Cost metrics",
+                    "type": "number"
+                },
+                "l2_avg_response_time": {
+                    "type": "number"
+                },
+                "l2_cost_per_hit": {
+                    "type": "number"
+                },
+                "memory_efficiency": {
+                    "description": "Cache efficiency",
+                    "type": "number"
+                },
+                "promotion_accuracy": {
+                    "description": "Accuracy of promotion decisions",
+                    "type": "number"
+                },
+                "start_time": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2023-01-01T00:00:00Z"
+                },
+                "storage_efficiency": {
+                    "description": "Useful data / Total storage * 100",
+                    "type": "number"
+                }
+            }
+        },
+        "cache.PrefixMetricSummary": {
+            "type": "object",
+            "properties": {
+                "error_rate": {
+                    "type": "number"
+                },
+                "hit_rate": {
+                    "type": "number"
+                },
+                "prefix": {
+                    "type": "string"
+                },
+                "total_operations": {
+                    "type": "integer"
+                }
+            }
+        },
+        "cache.WarmingMetrics": {
+            "type": "object",
+            "properties": {
+                "error_count": {
+                    "type": "integer"
+                },
+                "items_per_second": {
+                    "type": "number"
+                },
+                "last_warm_time": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2023-01-01T00:00:00Z"
+                },
+                "success_count": {
+                    "type": "integer"
+                },
+                "total_warmed": {
+                    "type": "integer"
+                },
+                "warming_duration": {
+                    "type": "string",
+                    "example": "1h30m"
+                }
+            }
+        },
         "dto.SubscriptionOrderBasicDTO": {
             "type": "object",
             "properties": {
@@ -4535,6 +9478,152 @@ const docTemplate = `{
                 }
             }
         },
+        "entities.AlertConfigurationResponse": {
+            "type": "object",
+            "properties": {
+                "cooldown_minutes": {
+                    "description": "Cooldown in minutes",
+                    "type": "integer",
+                    "example": 60
+                },
+                "created_at": {
+                    "description": "Creation time",
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "description": {
+                    "description": "Description",
+                    "type": "string",
+                    "example": "Alert when traffic usage reaches 80%"
+                },
+                "id": {
+                    "description": "Configuration ID",
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_enabled": {
+                    "description": "Whether enabled",
+                    "type": "boolean",
+                    "example": true
+                },
+                "name": {
+                    "description": "Alert name",
+                    "type": "string",
+                    "example": "Traffic 80% Alert"
+                },
+                "notification_channels": {
+                    "description": "Notification channels",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.NotificationChannel"
+                    }
+                },
+                "priority": {
+                    "description": "Priority level",
+                    "type": "string",
+                    "example": "medium"
+                },
+                "threshold": {
+                    "description": "Threshold value",
+                    "type": "number",
+                    "example": 80
+                },
+                "threshold_type": {
+                    "description": "Threshold type",
+                    "type": "string",
+                    "example": "percentage"
+                },
+                "updated_at": {
+                    "description": "Update time",
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "usage_type": {
+                    "description": "Usage type to monitor",
+                    "type": "string",
+                    "example": "traffic"
+                },
+                "user_subscription_id": {
+                    "description": "Subscription ID",
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "entities.CreatePaymentMethodRequest": {
+            "type": "object",
+            "required": [
+                "display_name",
+                "gateway",
+                "method",
+                "payment_token",
+                "type"
+            ],
+            "properties": {
+                "billing_country": {
+                    "type": "string",
+                    "example": "CN"
+                },
+                "billing_postcode": {
+                    "type": "string",
+                    "example": "100000"
+                },
+                "brand": {
+                    "type": "string",
+                    "example": "Alipay"
+                },
+                "display_name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "My Alipay Account"
+                },
+                "expiry_month": {
+                    "type": "integer",
+                    "example": 12
+                },
+                "expiry_year": {
+                    "type": "integer",
+                    "example": 2025
+                },
+                "gateway": {
+                    "type": "string",
+                    "example": "epay"
+                },
+                "gateway_customer_id": {
+                    "type": "string",
+                    "example": "cus_1234567890"
+                },
+                "masked_info": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "ali***@example.com"
+                },
+                "method": {
+                    "type": "string",
+                    "example": "alipay"
+                },
+                "payment_token": {
+                    "type": "string",
+                    "example": "tok_1234567890"
+                },
+                "set_as_default": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "card",
+                        "bank_account",
+                        "digital_wallet",
+                        "crypto"
+                    ],
+                    "example": "card"
+                }
+            }
+        },
         "entities.CreateUserRequest": {
             "type": "object",
             "required": [
@@ -4630,6 +9719,7 @@ const docTemplate = `{
                 },
                 "created_at": {
                     "type": "string",
+                    "format": "date-time",
                     "example": "2024-01-01T00:00:00Z"
                 },
                 "currency": {
@@ -4648,6 +9738,7 @@ const docTemplate = `{
                 },
                 "due_at": {
                     "type": "string",
+                    "format": "date-time",
                     "example": "2024-01-31T23:59:59Z"
                 },
                 "full_address": {
@@ -4671,6 +9762,7 @@ const docTemplate = `{
                 },
                 "issued_at": {
                     "type": "string",
+                    "format": "date-time",
                     "example": "2024-01-01T00:00:00Z"
                 },
                 "language": {
@@ -4683,6 +9775,7 @@ const docTemplate = `{
                 },
                 "paid_at": {
                     "type": "string",
+                    "format": "date-time",
                     "example": "2024-01-15T10:30:00Z"
                 },
                 "payment_method": {
@@ -4703,6 +9796,7 @@ const docTemplate = `{
                 },
                 "sent_at": {
                     "type": "string",
+                    "format": "date-time",
                     "example": "2024-01-01T12:00:00Z"
                 },
                 "status": {
@@ -4742,6 +9836,7 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string",
+                    "format": "date-time",
                     "example": "2024-01-01T00:00:00Z"
                 },
                 "user": {
@@ -4757,7 +9852,8 @@ const docTemplate = `{
                     "example": 1
                 },
                 "voided_at": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date-time"
                 }
             }
         },
@@ -4807,6 +9903,54 @@ const docTemplate = `{
                 "sort_order": {
                     "description": "Sort order",
                     "type": "integer"
+                }
+            }
+        },
+        "entities.NotificationChannel": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "settings": {
+                    "description": "additional settings for the channel",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "target": {
+                    "description": "email address, webhook URL, etc.",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "email, webhook, in_app, sms",
+                    "type": "string"
+                }
+            }
+        },
+        "entities.NotificationResult": {
+            "type": "object",
+            "properties": {
+                "channel": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "sent_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-01T12:00:00Z"
+                },
+                "success": {
+                    "type": "boolean"
+                },
+                "target": {
+                    "type": "string"
                 }
             }
         },
@@ -4879,6 +10023,150 @@ const docTemplate = `{
                     "description": "Update time",
                     "type": "string",
                     "example": "2024-01-01T00:00:00Z"
+                }
+            }
+        },
+        "entities.PaymentMethodListResponse": {
+            "type": "object",
+            "properties": {
+                "default_method": {
+                    "$ref": "#/definitions/entities.PaymentMethodResponse"
+                },
+                "payment_methods": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.PaymentMethodResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 5
+                }
+            }
+        },
+        "entities.PaymentMethodResponse": {
+            "type": "object",
+            "properties": {
+                "billing_country": {
+                    "description": "Billing country",
+                    "type": "string",
+                    "example": "CN"
+                },
+                "billing_postcode": {
+                    "description": "Billing postcode",
+                    "type": "string",
+                    "example": "100000"
+                },
+                "brand": {
+                    "description": "Brand/provider",
+                    "type": "string",
+                    "example": "Alipay"
+                },
+                "can_be_used": {
+                    "description": "Usability status",
+                    "type": "boolean"
+                },
+                "created_at": {
+                    "description": "Creation time",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "display_name": {
+                    "description": "User-friendly name",
+                    "type": "string",
+                    "example": "My Alipay Account"
+                },
+                "expiry_month": {
+                    "description": "Expiry month (cards only)",
+                    "type": "integer",
+                    "example": 12
+                },
+                "expiry_year": {
+                    "description": "Expiry year (cards only)",
+                    "type": "integer",
+                    "example": 2025
+                },
+                "failed_uses": {
+                    "description": "Failed payment count",
+                    "type": "integer",
+                    "example": 1
+                },
+                "failure_rate": {
+                    "description": "Failure rate",
+                    "type": "number"
+                },
+                "gateway": {
+                    "description": "Payment gateway",
+                    "type": "string",
+                    "example": "epay"
+                },
+                "id": {
+                    "description": "Payment method ID",
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_active": {
+                    "description": "Is active",
+                    "type": "boolean",
+                    "example": true
+                },
+                "is_default": {
+                    "description": "Is default payment method",
+                    "type": "boolean",
+                    "example": true
+                },
+                "is_expired": {
+                    "description": "Computed fields",
+                    "type": "boolean"
+                },
+                "last_used_at": {
+                    "description": "Last used",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "last_validated_at": {
+                    "description": "Last validation",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "masked_info": {
+                    "description": "Masked payment info",
+                    "type": "string",
+                    "example": "ali***@example.com"
+                },
+                "method": {
+                    "description": "Payment method",
+                    "type": "string",
+                    "example": "alipay"
+                },
+                "needs_validation": {
+                    "description": "Validation requirement",
+                    "type": "boolean"
+                },
+                "status": {
+                    "description": "Status",
+                    "type": "string",
+                    "example": "active"
+                },
+                "successful_uses": {
+                    "description": "Successful payment count",
+                    "type": "integer",
+                    "example": 5
+                },
+                "type": {
+                    "description": "Payment method type",
+                    "type": "string",
+                    "example": "card"
+                },
+                "updated_at": {
+                    "description": "Update time",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "user_id": {
+                    "description": "User ID",
+                    "type": "integer",
+                    "example": 1
                 }
             }
         },
@@ -5037,6 +10325,177 @@ const docTemplate = `{
                     "description": "User ID",
                     "type": "integer",
                     "example": 1
+                }
+            }
+        },
+        "entities.PaymentRetry": {
+            "type": "object",
+            "properties": {
+                "attempt_number": {
+                    "description": "Retry Information",
+                    "type": "integer"
+                },
+                "backoff_factor": {
+                    "description": "Backoff multiplier",
+                    "type": "number"
+                },
+                "cancelled_at": {
+                    "description": "When retry sequence was cancelled",
+                    "type": "string"
+                },
+                "completed_at": {
+                    "description": "When retry sequence completed",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "Timestamp Fields",
+                    "type": "string"
+                },
+                "failure_type": {
+                    "description": "temporary, permanent, network, gateway, business",
+                    "type": "string"
+                },
+                "gateway_config": {
+                    "description": "Gateway-specific Configuration",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "Primary Key",
+                    "type": "integer"
+                },
+                "initial_delay": {
+                    "description": "Retry Configuration",
+                    "type": "integer"
+                },
+                "last_attempt_at": {
+                    "description": "Last attempt time",
+                    "type": "string"
+                },
+                "last_error_message": {
+                    "description": "Last error message",
+                    "type": "string"
+                },
+                "last_failure_code": {
+                    "description": "Last error/failure code",
+                    "type": "string"
+                },
+                "max_attempts": {
+                    "description": "Maximum retry attempts",
+                    "type": "integer"
+                },
+                "max_delay": {
+                    "description": "Maximum delay in seconds (24 hours)",
+                    "type": "integer"
+                },
+                "metadata": {
+                    "description": "Metadata",
+                    "type": "string"
+                },
+                "next_retry_at": {
+                    "description": "Next retry time",
+                    "type": "string"
+                },
+                "notes": {
+                    "description": "Admin notes",
+                    "type": "string"
+                },
+                "payment_record_id": {
+                    "description": "Foreign Keys",
+                    "type": "integer"
+                },
+                "retry_strategy": {
+                    "description": "Strategy type: exponential, linear, custom",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Status and State",
+                    "type": "string"
+                },
+                "successful_at": {
+                    "description": "When payment finally succeeded",
+                    "type": "string"
+                },
+                "total_delay_time": {
+                    "description": "Tracking Information",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "entities.PaymentRetryHistory": {
+            "type": "object",
+            "properties": {
+                "attempt_number": {
+                    "description": "Attempt Information",
+                    "type": "integer"
+                },
+                "attempted_at": {
+                    "description": "When this attempt was made",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "Timestamp Fields",
+                    "type": "string"
+                },
+                "delay_from_previous": {
+                    "description": "Delay from previous attempt (seconds)",
+                    "type": "integer"
+                },
+                "duration": {
+                    "description": "Duration of attempt in milliseconds",
+                    "type": "integer"
+                },
+                "error_type": {
+                    "description": "Type of error encountered",
+                    "type": "string"
+                },
+                "failure_reason": {
+                    "description": "Detailed failure reason",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "Primary Key",
+                    "type": "integer"
+                },
+                "metadata": {
+                    "description": "Metadata",
+                    "type": "string"
+                },
+                "next_retry_at": {
+                    "description": "Next Retry Information",
+                    "type": "string"
+                },
+                "payment_record_id": {
+                    "type": "integer"
+                },
+                "payment_retry_id": {
+                    "description": "Foreign Keys",
+                    "type": "integer"
+                },
+                "request_data": {
+                    "description": "Technical Details",
+                    "type": "string"
+                },
+                "response_code": {
+                    "description": "Gateway response code",
+                    "type": "string"
+                },
+                "response_data": {
+                    "description": "Response from gateway (sanitized)",
+                    "type": "string"
+                },
+                "response_message": {
+                    "description": "Gateway response message",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Result Information",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
@@ -5342,6 +10801,263 @@ const docTemplate = `{
                 }
             }
         },
+        "entities.UpdatePaymentMethodRequest": {
+            "type": "object",
+            "properties": {
+                "billing_country": {
+                    "type": "string",
+                    "example": "CN"
+                },
+                "billing_postcode": {
+                    "type": "string",
+                    "example": "100000"
+                },
+                "display_name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "Updated Payment Method"
+                },
+                "expiry_month": {
+                    "type": "integer",
+                    "example": 12
+                },
+                "expiry_year": {
+                    "type": "integer",
+                    "example": 2026
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "entities.UsageAlertResponse": {
+            "type": "object",
+            "properties": {
+                "alert_configuration_id": {
+                    "description": "Configuration ID",
+                    "type": "integer",
+                    "example": 1
+                },
+                "created_at": {
+                    "description": "Creation time",
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-01T12:00:00Z"
+                },
+                "current_usage": {
+                    "description": "Current usage (bytes)",
+                    "type": "integer",
+                    "example": 8589934592
+                },
+                "duration_since_first_fired": {
+                    "description": "Duration since first fired (as string)",
+                    "type": "string",
+                    "example": "30m"
+                },
+                "fired_at": {
+                    "description": "When fired",
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-01T12:00:00Z"
+                },
+                "id": {
+                    "description": "Alert ID",
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_active": {
+                    "description": "Whether alert is active",
+                    "type": "boolean",
+                    "example": true
+                },
+                "is_resolved": {
+                    "description": "Whether alert is resolved",
+                    "type": "boolean",
+                    "example": false
+                },
+                "last_notification_sent": {
+                    "description": "Last notification time",
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-01T12:30:00Z"
+                },
+                "message": {
+                    "description": "Alert message",
+                    "type": "string",
+                    "example": "Traffic usage has reached 80% of your limit"
+                },
+                "metadata": {
+                    "description": "Additional metadata",
+                    "type": "string"
+                },
+                "notification_channels": {
+                    "description": "Notification channels used",
+                    "type": "string"
+                },
+                "notification_results": {
+                    "description": "Notification results",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.NotificationResult"
+                    }
+                },
+                "notifications_sent": {
+                    "description": "Notifications sent count",
+                    "type": "integer",
+                    "example": 3
+                },
+                "resolved_at": {
+                    "description": "When resolved",
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-01T13:00:00Z"
+                },
+                "severity": {
+                    "description": "Alert severity",
+                    "type": "string",
+                    "example": "warning"
+                },
+                "status": {
+                    "description": "Alert status",
+                    "type": "string",
+                    "example": "fired"
+                },
+                "threshold_value": {
+                    "description": "Threshold that was exceeded",
+                    "type": "number",
+                    "example": 80
+                },
+                "updated_at": {
+                    "description": "Update time",
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-01T12:00:00Z"
+                },
+                "usage_limit": {
+                    "description": "Usage limit (bytes)",
+                    "type": "integer",
+                    "example": 10737418240
+                },
+                "usage_percent": {
+                    "description": "Usage percentage",
+                    "type": "number",
+                    "example": 80.5
+                },
+                "usage_type": {
+                    "description": "Usage type",
+                    "type": "string",
+                    "example": "traffic"
+                },
+                "user_subscription_id": {
+                    "description": "Subscription ID",
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "entities.UsagePrediction": {
+            "type": "object",
+            "properties": {
+                "based_on_days": {
+                    "type": "integer"
+                },
+                "confidence": {
+                    "type": "number"
+                },
+                "current_usage": {
+                    "type": "integer"
+                },
+                "estimated_days_left": {
+                    "description": "Days until limit reached",
+                    "type": "integer"
+                },
+                "predicted_usage": {
+                    "type": "integer"
+                },
+                "prediction_date": {
+                    "type": "string"
+                },
+                "prediction_type": {
+                    "description": "daily, weekly, monthly, period_end",
+                    "type": "string"
+                },
+                "trend": {
+                    "description": "increasing, decreasing, stable",
+                    "type": "string"
+                },
+                "usage_type": {
+                    "type": "string"
+                },
+                "user_subscription_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entities.UsageSummary": {
+            "type": "object",
+            "properties": {
+                "generated_at": {
+                    "type": "string"
+                },
+                "period": {
+                    "type": "string"
+                },
+                "period_end": {
+                    "type": "string"
+                },
+                "period_start": {
+                    "type": "string"
+                },
+                "total_records": {
+                    "type": "integer"
+                },
+                "total_usage": {
+                    "type": "integer"
+                },
+                "usage_by_type": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/entities.UsageTypeStats"
+                    }
+                },
+                "user_subscription_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entities.UsageTypeStats": {
+            "type": "object",
+            "properties": {
+                "average_amount": {
+                    "type": "number"
+                },
+                "first_usage": {
+                    "type": "string"
+                },
+                "last_usage": {
+                    "type": "string"
+                },
+                "max_amount": {
+                    "type": "integer"
+                },
+                "min_amount": {
+                    "type": "integer"
+                },
+                "record_count": {
+                    "type": "integer"
+                },
+                "total_amount": {
+                    "type": "integer"
+                },
+                "unit": {
+                    "type": "string"
+                },
+                "usage_type": {
+                    "type": "string"
+                }
+            }
+        },
         "entities.UserResponse": {
             "type": "object",
             "properties": {
@@ -5436,11 +11152,13 @@ const docTemplate = `{
                 "cancelled_at": {
                     "description": "Cancelled date",
                     "type": "string",
+                    "format": "date-time",
                     "example": "2024-06-01T00:00:00Z"
                 },
                 "created_at": {
                     "description": "Creation time",
                     "type": "string",
+                    "format": "date-time",
                     "example": "2024-01-01T00:00:00Z"
                 },
                 "currency": {
@@ -5451,11 +11169,13 @@ const docTemplate = `{
                 "current_period_end": {
                     "description": "Current period end",
                     "type": "string",
+                    "format": "date-time",
                     "example": "2024-02-01T00:00:00Z"
                 },
                 "current_period_start": {
                     "description": "Current period start",
                     "type": "string",
+                    "format": "date-time",
                     "example": "2024-01-01T00:00:00Z"
                 },
                 "days_left": {
@@ -5465,6 +11185,7 @@ const docTemplate = `{
                 "end_date": {
                     "description": "End date",
                     "type": "string",
+                    "format": "date-time",
                     "example": "2024-12-31T23:59:59Z"
                 },
                 "id": {
@@ -5480,25 +11201,65 @@ const docTemplate = `{
                     "description": "Computed fields",
                     "type": "boolean"
                 },
+                "is_max_pause_duration_exceeded": {
+                    "description": "Whether max pause duration is exceeded",
+                    "type": "boolean"
+                },
+                "is_paused": {
+                    "description": "Pause status",
+                    "type": "boolean"
+                },
                 "last_renewal_failed": {
                     "description": "Last renewal failure",
                     "type": "string",
+                    "format": "date-time",
                     "example": "2024-01-10T10:30:00Z"
                 },
                 "last_used_at": {
                     "description": "Last used",
                     "type": "string",
+                    "format": "date-time",
                     "example": "2024-01-15T10:30:00Z"
+                },
+                "max_pause_duration": {
+                    "description": "Maximum pause duration in days",
+                    "type": "integer",
+                    "example": 90
                 },
                 "next_billing_date": {
                     "description": "Next billing",
                     "type": "string",
+                    "format": "date-time",
                     "example": "2024-02-01T00:00:00Z"
+                },
+                "pause_duration_days": {
+                    "description": "Current pause duration in days",
+                    "type": "integer"
+                },
+                "pause_reason": {
+                    "description": "Pause reason",
+                    "type": "string",
+                    "example": "User request"
+                },
+                "paused_at": {
+                    "description": "Paused date",
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-06-01T00:00:00Z"
+                },
+                "paused_by_admin_id": {
+                    "description": "Admin who paused",
+                    "type": "integer",
+                    "example": 1
                 },
                 "price": {
                     "description": "Price",
                     "type": "number",
                     "example": 29.99
+                },
+                "remaining_pause_days": {
+                    "description": "Remaining pause days before auto-resume",
+                    "type": "integer"
                 },
                 "renewal_attempts": {
                     "description": "Renewal attempts count",
@@ -5510,9 +11271,21 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Payment failed"
                 },
+                "resumed_at": {
+                    "description": "Resumed date",
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-08-01T00:00:00Z"
+                },
+                "resumed_by_admin_id": {
+                    "description": "Admin who resumed",
+                    "type": "integer",
+                    "example": 1
+                },
                 "start_date": {
                     "description": "Start date",
                     "type": "string",
+                    "format": "date-time",
                     "example": "2024-01-01T00:00:00Z"
                 },
                 "status": {
@@ -5536,11 +11309,13 @@ const docTemplate = `{
                 "trial_end_date": {
                     "description": "Trial end",
                     "type": "string",
+                    "format": "date-time",
                     "example": "2024-01-08T00:00:00Z"
                 },
                 "updated_at": {
                     "description": "Update time",
                     "type": "string",
+                    "format": "date-time",
                     "example": "2024-01-01T00:00:00Z"
                 },
                 "user": {
@@ -5560,6 +11335,36 @@ const docTemplate = `{
                     "description": "Unique identifier",
                     "type": "string",
                     "example": "550e8400-e29b-41d4-a716-446655440000"
+                }
+            }
+        },
+        "handlers.BulkRetryActionRequest": {
+            "type": "object",
+            "required": [
+                "retry_ids"
+            ],
+            "properties": {
+                "reason": {
+                    "type": "string",
+                    "example": "Bulk operation by admin"
+                },
+                "retry_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "handlers.CancelRetryRequest": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "reason": {
+                    "type": "string",
+                    "example": "Manual cancellation by admin"
                 }
             }
         },
@@ -5749,6 +11554,262 @@ const docTemplate = `{
                 }
             }
         },
+        "interfaces.AdminRetryResponse": {
+            "type": "object",
+            "properties": {
+                "page": {
+                    "type": "integer"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "retries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.PaymentRetry"
+                    }
+                },
+                "statistics": {
+                    "$ref": "#/definitions/interfaces.AdminRetryStatistics"
+                },
+                "total_count": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "interfaces.AdminRetryStatistics": {
+            "type": "object",
+            "properties": {
+                "average_attempts": {
+                    "type": "number"
+                },
+                "average_delay_time": {
+                    "type": "number"
+                },
+                "cancelled_retries": {
+                    "type": "integer"
+                },
+                "completed_retries": {
+                    "type": "integer"
+                },
+                "failed_retries": {
+                    "type": "integer"
+                },
+                "in_progress_retries": {
+                    "type": "integer"
+                },
+                "overall_success_rate": {
+                    "type": "number"
+                },
+                "pending_retries": {
+                    "type": "integer"
+                },
+                "total_retries": {
+                    "type": "integer"
+                }
+            }
+        },
+        "interfaces.AlertDistribution": {
+            "type": "object",
+            "properties": {
+                "by_day_of_week": {
+                    "description": "Day of week (0-6)",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "by_hour": {
+                    "description": "Hour of day (0-23)",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "by_severity": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "by_status": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "by_usage_type": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            }
+        },
+        "interfaces.AlertHistoryEntry": {
+            "type": "object",
+            "properties": {
+                "acknowledged_at": {
+                    "type": "string"
+                },
+                "acknowledged_by": {
+                    "type": "integer"
+                },
+                "alert": {
+                    "$ref": "#/definitions/entities.UsageAlertResponse"
+                },
+                "configuration": {
+                    "$ref": "#/definitions/entities.AlertConfigurationResponse"
+                },
+                "notification_history": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.NotificationResult"
+                    }
+                },
+                "resolution_time": {
+                    "type": "string"
+                }
+            }
+        },
+        "interfaces.AlertHistoryResponse": {
+            "type": "object",
+            "properties": {
+                "alert_history": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/interfaces.AlertHistoryEntry"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/interfaces.PaginationInfo"
+                },
+                "summary": {
+                    "$ref": "#/definitions/interfaces.AlertHistorySummary"
+                },
+                "total_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "interfaces.AlertHistorySummary": {
+            "type": "object",
+            "properties": {
+                "average_resolution_time": {
+                    "type": "string"
+                },
+                "fastest_resolution": {
+                    "type": "string"
+                },
+                "notification_failures": {
+                    "type": "integer"
+                },
+                "notifications_sent": {
+                    "type": "integer"
+                },
+                "slowest_resolution": {
+                    "type": "string"
+                },
+                "total_alerts": {
+                    "type": "integer"
+                },
+                "unresolved_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "interfaces.AlertStatisticsResponse": {
+            "type": "object",
+            "properties": {
+                "distribution": {
+                    "$ref": "#/definitions/interfaces.AlertDistribution"
+                },
+                "generated_at": {
+                    "type": "string"
+                },
+                "period": {
+                    "type": "string"
+                },
+                "summary": {
+                    "$ref": "#/definitions/interfaces.AlertsSummary"
+                },
+                "top_configurations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/interfaces.TopAlertConfiguration"
+                    }
+                },
+                "trends": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/interfaces.AlertTrendEntry"
+                    }
+                }
+            }
+        },
+        "interfaces.AlertTrendEntry": {
+            "type": "object",
+            "properties": {
+                "alert_count": {
+                    "type": "integer"
+                },
+                "period": {
+                    "type": "string"
+                },
+                "severity": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string"
+                },
+                "usage_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "interfaces.AlertsSummary": {
+            "type": "object",
+            "properties": {
+                "active_alerts": {
+                    "type": "integer"
+                },
+                "alerts_this_month": {
+                    "type": "integer"
+                },
+                "alerts_this_week": {
+                    "type": "integer"
+                },
+                "alerts_today": {
+                    "type": "integer"
+                },
+                "critical_alerts": {
+                    "type": "integer"
+                },
+                "high_alerts": {
+                    "type": "integer"
+                },
+                "low_alerts": {
+                    "type": "integer"
+                },
+                "medium_alerts": {
+                    "type": "integer"
+                },
+                "resolved_alerts": {
+                    "type": "integer"
+                },
+                "total_alerts": {
+                    "type": "integer"
+                }
+            }
+        },
         "interfaces.AuthorizeURLRequest": {
             "type": "object",
             "required": [
@@ -5769,6 +11830,217 @@ const docTemplate = `{
                 },
                 "state": {
                     "type": "string"
+                }
+            }
+        },
+        "interfaces.BulkDownloadRequest": {
+            "type": "object",
+            "required": [
+                "invoice_ids"
+            ],
+            "properties": {
+                "format": {
+                    "description": "zip, individual",
+                    "type": "string",
+                    "example": "zip"
+                },
+                "include_csv": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "invoice_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "pdf_options": {
+                    "$ref": "#/definitions/interfaces.PDFGenerationRequest"
+                }
+            }
+        },
+        "interfaces.BulkResolveAlertsRequest": {
+            "type": "object",
+            "required": [
+                "alert_ids"
+            ],
+            "properties": {
+                "alert_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "resolved_by": {
+                    "type": "integer"
+                },
+                "usage_type": {
+                    "type": "string"
+                },
+                "user_subscription_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "interfaces.BulkResolveAlertsResponse": {
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "failed_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "resolved_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "interfaces.CleanupResult": {
+            "type": "object",
+            "properties": {
+                "alerts_deleted": {
+                    "type": "integer"
+                },
+                "completed_at": {
+                    "type": "string"
+                },
+                "operation_time": {
+                    "type": "string"
+                },
+                "records_deleted": {
+                    "type": "integer"
+                },
+                "space_freed": {
+                    "description": "in bytes",
+                    "type": "integer"
+                }
+            }
+        },
+        "interfaces.CompanyInfo": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "example": "123 Business Ave"
+                },
+                "bank_account": {
+                    "type": "string",
+                    "example": "1234567890"
+                },
+                "city": {
+                    "type": "string",
+                    "example": "New York"
+                },
+                "country": {
+                    "type": "string",
+                    "example": "US"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "contact@acme.com"
+                },
+                "logo": {
+                    "type": "string",
+                    "example": "./assets/logo.png"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Acme Corp"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+1-555-123-4567"
+                },
+                "routing_number": {
+                    "type": "string",
+                    "example": "123456789"
+                },
+                "state": {
+                    "type": "string",
+                    "example": "NY"
+                },
+                "tax_id": {
+                    "type": "string",
+                    "example": "12-3456789"
+                },
+                "website": {
+                    "type": "string",
+                    "example": "https://acme.com"
+                },
+                "zip": {
+                    "type": "string",
+                    "example": "10001"
+                }
+            }
+        },
+        "interfaces.CreateAlertConfigRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "threshold",
+                "threshold_type",
+                "usage_type",
+                "user_subscription_id"
+            ],
+            "properties": {
+                "cooldown_minutes": {
+                    "description": "1 minute to 1 week",
+                    "type": "integer",
+                    "maximum": 10080,
+                    "minimum": 1
+                },
+                "description": {
+                    "type": "string"
+                },
+                "is_enabled": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "notification_channels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.NotificationChannel"
+                    }
+                },
+                "priority": {
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "critical"
+                    ]
+                },
+                "threshold": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "threshold_type": {
+                    "type": "string",
+                    "enum": [
+                        "percentage",
+                        "absolute"
+                    ]
+                },
+                "usage_type": {
+                    "type": "string"
+                },
+                "user_subscription_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -5961,6 +12233,11 @@ const docTemplate = `{
                     "type": "string",
                     "example": "alipay"
                 },
+                "payment_method_id": {
+                    "description": "Optional: Use saved payment method",
+                    "type": "integer",
+                    "example": 1
+                },
                 "return_url": {
                     "type": "string",
                     "example": "https://example.com/payment/return"
@@ -5968,6 +12245,235 @@ const docTemplate = `{
                 "subscription_plan_id": {
                     "type": "integer",
                     "example": 1
+                },
+                "use_default_payment": {
+                    "description": "Use user's default payment method",
+                    "type": "boolean",
+                    "example": false
+                },
+                "user_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "interfaces.CurrentUsageDetails": {
+            "type": "object",
+            "properties": {
+                "current_usage": {
+                    "type": "integer"
+                },
+                "is_exceeded": {
+                    "type": "boolean"
+                },
+                "is_unlimited": {
+                    "type": "boolean"
+                },
+                "last_recorded": {
+                    "type": "string"
+                },
+                "period_end": {
+                    "type": "string"
+                },
+                "period_start": {
+                    "type": "string"
+                },
+                "record_count": {
+                    "type": "integer"
+                },
+                "remaining_usage": {
+                    "type": "integer"
+                },
+                "unit": {
+                    "type": "string"
+                },
+                "usage_limit": {
+                    "type": "integer"
+                },
+                "usage_percent": {
+                    "type": "number"
+                },
+                "usage_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "interfaces.CurrentUsageResponse": {
+            "type": "object",
+            "properties": {
+                "last_updated": {
+                    "type": "string"
+                },
+                "period_end": {
+                    "type": "string"
+                },
+                "period_start": {
+                    "type": "string"
+                },
+                "total_usage": {
+                    "type": "integer"
+                },
+                "usage_by_type": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/interfaces.CurrentUsageDetails"
+                    }
+                },
+                "user_subscription_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "interfaces.ExportUsageRequest": {
+            "type": "object",
+            "properties": {
+                "end_time": {
+                    "type": "string"
+                },
+                "format": {
+                    "description": "csv, json, xlsx",
+                    "type": "string"
+                },
+                "granularity": {
+                    "type": "string"
+                },
+                "include_metadata": {
+                    "type": "boolean"
+                },
+                "include_raw_data": {
+                    "type": "boolean"
+                },
+                "start_time": {
+                    "type": "string"
+                },
+                "usage_type": {
+                    "type": "string"
+                },
+                "user_subscription_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "interfaces.ExportUsageResponse": {
+            "type": "object",
+            "properties": {
+                "download_url": {
+                    "type": "string"
+                },
+                "expires_at": {
+                    "type": "string"
+                },
+                "file_name": {
+                    "type": "string"
+                },
+                "file_size": {
+                    "type": "integer"
+                },
+                "format": {
+                    "type": "string"
+                },
+                "generated_at": {
+                    "type": "string"
+                },
+                "record_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "interfaces.GatewayHealthMetric": {
+            "type": "object",
+            "properties": {
+                "active_retries": {
+                    "type": "integer"
+                },
+                "average_attempts": {
+                    "type": "number"
+                },
+                "gateway": {
+                    "type": "string"
+                },
+                "health_status": {
+                    "description": "healthy, degraded, critical",
+                    "type": "string"
+                },
+                "processing_rate": {
+                    "type": "number"
+                },
+                "queue_depth": {
+                    "type": "integer"
+                },
+                "success_rate": {
+                    "type": "number"
+                }
+            }
+        },
+        "interfaces.GetAlertConfigsResponse": {
+            "type": "object",
+            "properties": {
+                "alert_configurations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.AlertConfigurationResponse"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/interfaces.PaginationInfo"
+                },
+                "total_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "interfaces.GetUsageAlertsResponse": {
+            "type": "object",
+            "properties": {
+                "pagination": {
+                    "$ref": "#/definitions/interfaces.PaginationInfo"
+                },
+                "summary": {
+                    "$ref": "#/definitions/interfaces.AlertsSummary"
+                },
+                "total_count": {
+                    "type": "integer"
+                },
+                "usage_alerts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.UsageAlertResponse"
+                    }
+                }
+            }
+        },
+        "interfaces.InvoiceDownloadRecord": {
+            "type": "object",
+            "properties": {
+                "downloaded_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "invoice_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "ip_address": {
+                    "type": "string",
+                    "example": "192.168.1.1"
+                },
+                "language": {
+                    "type": "string",
+                    "example": "en"
+                },
+                "template": {
+                    "type": "string",
+                    "example": "professional"
+                },
+                "user_agent": {
+                    "type": "string",
+                    "example": "Mozilla/5.0..."
                 },
                 "user_id": {
                     "type": "integer",
@@ -5990,6 +12496,283 @@ const docTemplate = `{
                 }
             }
         },
+        "interfaces.PDFGenerationRequest": {
+            "type": "object",
+            "properties": {
+                "company_info": {
+                    "$ref": "#/definitions/interfaces.CompanyInfo"
+                },
+                "custom_fields": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "include_qr": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "language": {
+                    "type": "string",
+                    "example": "en"
+                },
+                "save_to_disk": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "template": {
+                    "type": "string",
+                    "example": "professional"
+                },
+                "watermark": {
+                    "type": "string",
+                    "example": "DRAFT"
+                }
+            }
+        },
+        "interfaces.PaginationInfo": {
+            "type": "object",
+            "properties": {
+                "current_page": {
+                    "type": "integer"
+                },
+                "has_next": {
+                    "type": "boolean"
+                },
+                "has_previous": {
+                    "type": "boolean"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "total_count": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "interfaces.PauseSubscriptionRequest": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "max_pause_duration": {
+                    "description": "Override default max pause duration",
+                    "type": "integer",
+                    "maximum": 365,
+                    "minimum": 1,
+                    "example": 90
+                },
+                "reason": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "User requested pause"
+                }
+            }
+        },
+        "interfaces.PaymentMethodUsageStats": {
+            "type": "object",
+            "properties": {
+                "average_amount": {
+                    "type": "number"
+                },
+                "failed_uses": {
+                    "type": "integer"
+                },
+                "failure_rate": {
+                    "type": "number"
+                },
+                "last_used": {
+                    "type": "string"
+                },
+                "payment_method_id": {
+                    "type": "integer"
+                },
+                "recent_uses_30_days": {
+                    "type": "integer"
+                },
+                "success_rate": {
+                    "type": "number"
+                },
+                "successful_uses": {
+                    "type": "integer"
+                },
+                "total_amount": {
+                    "type": "number"
+                },
+                "total_uses": {
+                    "type": "integer"
+                }
+            }
+        },
+        "interfaces.QuickPurchaseDiscountInfo": {
+            "type": "object",
+            "properties": {
+                "coupon_code": {
+                    "type": "string"
+                },
+                "discount_amount": {
+                    "type": "number"
+                },
+                "final_amount": {
+                    "type": "number"
+                },
+                "original_amount": {
+                    "type": "number"
+                }
+            }
+        },
+        "interfaces.QuickPurchaseRequest": {
+            "type": "object",
+            "required": [
+                "payment_gateway",
+                "payment_method",
+                "plan_id",
+                "user_id"
+            ],
+            "properties": {
+                "client_ip": {
+                    "type": "string",
+                    "example": "192.168.1.1"
+                },
+                "coupon_code": {
+                    "type": "string",
+                    "example": "SAVE20"
+                },
+                "metadata": {
+                    "type": "string"
+                },
+                "payment_gateway": {
+                    "type": "string",
+                    "example": "epay"
+                },
+                "payment_method": {
+                    "type": "string",
+                    "example": "alipay"
+                },
+                "payment_method_id": {
+                    "description": "Optional: Use saved payment method",
+                    "type": "integer",
+                    "example": 1
+                },
+                "plan_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "return_url": {
+                    "type": "string",
+                    "example": "https://example.com/payment/return"
+                },
+                "use_default_payment": {
+                    "description": "Use user's default payment method",
+                    "type": "boolean",
+                    "example": false
+                },
+                "user_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "interfaces.QuickPurchaseResponse": {
+            "type": "object",
+            "properties": {
+                "discount_info": {
+                    "$ref": "#/definitions/interfaces.QuickPurchaseDiscountInfo"
+                },
+                "expired_at": {
+                    "type": "string"
+                },
+                "payment_record": {
+                    "type": "object"
+                },
+                "payment_url": {
+                    "type": "string"
+                },
+                "plan_info": {
+                    "$ref": "#/definitions/entities.SubscriptionPlanResponse"
+                },
+                "qr_code_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "interfaces.RealTimeUsageData": {
+            "type": "object",
+            "properties": {
+                "current_usage": {
+                    "type": "integer"
+                },
+                "estimated_time_left": {
+                    "description": "Time until limit reached (as string)",
+                    "type": "string"
+                },
+                "is_exceeded": {
+                    "type": "boolean"
+                },
+                "is_near_limit": {
+                    "type": "boolean"
+                },
+                "last_updated": {
+                    "type": "string"
+                },
+                "recent_usage": {
+                    "description": "Usage in last hour",
+                    "type": "integer"
+                },
+                "remaining_usage": {
+                    "type": "integer"
+                },
+                "trend_direction": {
+                    "type": "string"
+                },
+                "usage_limit": {
+                    "type": "integer"
+                },
+                "usage_percent": {
+                    "type": "number"
+                },
+                "usage_rate": {
+                    "description": "Usage per hour",
+                    "type": "number"
+                },
+                "usage_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "interfaces.RealTimeUsageResponse": {
+            "type": "object",
+            "properties": {
+                "alert_count": {
+                    "type": "integer"
+                },
+                "last_updated": {
+                    "type": "string"
+                },
+                "predictions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.UsagePrediction"
+                    }
+                },
+                "update_frequency": {
+                    "type": "string"
+                },
+                "usage_by_type": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/interfaces.RealTimeUsageData"
+                    }
+                },
+                "user_subscription_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "interfaces.RegisterRequest": {
             "type": "object",
             "required": [
@@ -6007,6 +12790,106 @@ const docTemplate = `{
                 "password": {
                     "type": "string",
                     "minLength": 6
+                }
+            }
+        },
+        "interfaces.ResumeSubscriptionRequest": {
+            "type": "object",
+            "properties": {
+                "adjust_billing_date": {
+                    "description": "Whether to adjust billing dates based on pause duration",
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "interfaces.RetryHealthMetrics": {
+            "type": "object",
+            "properties": {
+                "alerts_triggered": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "average_retry_delay": {
+                    "type": "number"
+                },
+                "gateway_health": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/interfaces.GatewayHealthMetric"
+                    }
+                },
+                "overdue_retries": {
+                    "type": "integer"
+                },
+                "success_rate_24h": {
+                    "type": "number"
+                },
+                "success_rate_7d": {
+                    "type": "number"
+                },
+                "system_recommendations": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "total_active_retries": {
+                    "type": "integer"
+                }
+            }
+        },
+        "interfaces.RetryStatistics": {
+            "type": "object",
+            "properties": {
+                "average_attempts": {
+                    "type": "number"
+                },
+                "average_delay_time": {
+                    "type": "number"
+                },
+                "cancelled_retries": {
+                    "type": "integer"
+                },
+                "failed_retries": {
+                    "type": "integer"
+                },
+                "from_date": {
+                    "type": "string"
+                },
+                "gateway": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "success_rate": {
+                    "type": "number"
+                },
+                "successful_retries": {
+                    "type": "integer"
+                },
+                "to_date": {
+                    "type": "string"
+                },
+                "total_retries": {
+                    "type": "integer"
+                }
+            }
+        },
+        "interfaces.RetryWithHistory": {
+            "type": "object",
+            "properties": {
+                "history": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.PaymentRetryHistory"
+                    }
+                },
+                "retry": {
+                    "$ref": "#/definitions/entities.PaymentRetry"
                 }
             }
         },
@@ -6035,6 +12918,216 @@ const docTemplate = `{
                 "to_email": {
                     "type": "string",
                     "example": "customer@example.com"
+                }
+            }
+        },
+        "interfaces.TestNotificationRequest": {
+            "type": "object",
+            "required": [
+                "channel",
+                "user_subscription_id"
+            ],
+            "properties": {
+                "channel": {
+                    "$ref": "#/definitions/entities.NotificationChannel"
+                },
+                "test_message": {
+                    "type": "string"
+                },
+                "user_subscription_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "interfaces.TestNotificationResponse": {
+            "type": "object",
+            "properties": {
+                "details": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "response_time": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "interfaces.TopAlertConfiguration": {
+            "type": "object",
+            "properties": {
+                "alert_count": {
+                    "type": "integer"
+                },
+                "average_resolution_time": {
+                    "type": "string"
+                },
+                "configuration_id": {
+                    "type": "integer"
+                },
+                "last_alert_fired": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "threshold": {
+                    "type": "number"
+                },
+                "usage_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "interfaces.TopUsageResponse": {
+            "type": "object",
+            "properties": {
+                "generated_at": {
+                    "type": "string"
+                },
+                "period": {
+                    "type": "string"
+                },
+                "top_subscriptions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/interfaces.TopUsageSubscription"
+                    }
+                },
+                "total_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "interfaces.TopUsageSubscription": {
+            "type": "object",
+            "properties": {
+                "average_usage": {
+                    "type": "number"
+                },
+                "peak_usage": {
+                    "type": "integer"
+                },
+                "period": {
+                    "type": "string"
+                },
+                "period_end": {
+                    "type": "string"
+                },
+                "period_start": {
+                    "type": "string"
+                },
+                "record_count": {
+                    "type": "integer"
+                },
+                "total_usage": {
+                    "type": "integer"
+                },
+                "usage_type": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                },
+                "user_subscription_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "interfaces.TrendSummary": {
+            "type": "object",
+            "properties": {
+                "anomaly_count": {
+                    "type": "integer"
+                },
+                "average_usage": {
+                    "type": "number"
+                },
+                "lowest_usage": {
+                    "type": "integer"
+                },
+                "lowest_usage_time": {
+                    "type": "string"
+                },
+                "overall_trend": {
+                    "description": "increasing, decreasing, stable",
+                    "type": "string"
+                },
+                "peak_usage": {
+                    "type": "integer"
+                },
+                "peak_usage_time": {
+                    "type": "string"
+                },
+                "predicted_growth_rate": {
+                    "description": "% per period",
+                    "type": "number"
+                },
+                "trend_strength": {
+                    "description": "0-1 scale",
+                    "type": "number"
+                },
+                "variability_score": {
+                    "description": "0-1 scale",
+                    "type": "number"
+                }
+            }
+        },
+        "interfaces.UpdateAlertConfigRequest": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "cooldown_minutes": {
+                    "type": "integer",
+                    "maximum": 10080,
+                    "minimum": 1
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_enabled": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "notification_channels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.NotificationChannel"
+                    }
+                },
+                "priority": {
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "critical"
+                    ]
+                },
+                "threshold": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "threshold_type": {
+                    "type": "string",
+                    "enum": [
+                        "percentage",
+                        "absolute"
+                    ]
                 }
             }
         },
@@ -6151,6 +13244,221 @@ const docTemplate = `{
                 "supported_currencies": {
                     "type": "string",
                     "example": "CNY"
+                }
+            }
+        },
+        "interfaces.UsageAnomaly": {
+            "type": "object",
+            "properties": {
+                "actual_usage": {
+                    "type": "integer"
+                },
+                "anomaly_type": {
+                    "description": "spike, drop, pattern_change",
+                    "type": "string"
+                },
+                "confidence": {
+                    "type": "number"
+                },
+                "deviation_score": {
+                    "type": "number"
+                },
+                "expected_usage": {
+                    "type": "integer"
+                },
+                "timestamp": {
+                    "type": "string"
+                },
+                "usage_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "interfaces.UsageHistoryEntry": {
+            "type": "object",
+            "properties": {
+                "period": {
+                    "type": "string"
+                },
+                "period_end": {
+                    "type": "string"
+                },
+                "period_start": {
+                    "type": "string"
+                },
+                "record_count": {
+                    "type": "integer"
+                },
+                "total_usage": {
+                    "type": "integer"
+                },
+                "usage_by_type": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/entities.UsageTypeStats"
+                    }
+                }
+            }
+        },
+        "interfaces.UsageHistoryResponse": {
+            "type": "object",
+            "properties": {
+                "granularity": {
+                    "type": "string"
+                },
+                "pagination": {
+                    "$ref": "#/definitions/interfaces.PaginationInfo"
+                },
+                "summary": {
+                    "$ref": "#/definitions/entities.UsageSummary"
+                },
+                "total_records": {
+                    "type": "integer"
+                },
+                "usage_history": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/interfaces.UsageHistoryEntry"
+                    }
+                },
+                "user_subscription_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "interfaces.UsageStatistics": {
+            "type": "object",
+            "properties": {
+                "average_usage": {
+                    "type": "number"
+                },
+                "end_time": {
+                    "type": "string"
+                },
+                "generated_at": {
+                    "type": "string"
+                },
+                "peak_usage": {
+                    "type": "integer"
+                },
+                "peak_usage_time": {
+                    "type": "string"
+                },
+                "period": {
+                    "type": "string"
+                },
+                "start_time": {
+                    "type": "string"
+                },
+                "total_records": {
+                    "type": "integer"
+                },
+                "total_usage": {
+                    "type": "integer"
+                },
+                "usage_by_day_of_week": {
+                    "description": "Day of week (0-6) -\u003e usage",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "usage_by_hour": {
+                    "description": "Hour of day (0-23) -\u003e usage",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "usage_by_source": {
+                    "description": "Source type -\u003e usage",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "usage_by_type": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/entities.UsageTypeStats"
+                    }
+                },
+                "user_subscription_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "interfaces.UsageTrendEntry": {
+            "type": "object",
+            "properties": {
+                "moving_avg": {
+                    "type": "number"
+                },
+                "record_count": {
+                    "type": "integer"
+                },
+                "timestamp": {
+                    "type": "string"
+                },
+                "trend_direction": {
+                    "description": "up, down, stable",
+                    "type": "string"
+                },
+                "usage_amount": {
+                    "type": "integer"
+                },
+                "usage_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "interfaces.UsageTrendsResponse": {
+            "type": "object",
+            "properties": {
+                "anomalies": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/interfaces.UsageAnomaly"
+                    }
+                },
+                "granularity": {
+                    "type": "string"
+                },
+                "period": {
+                    "type": "string"
+                },
+                "predictions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.UsagePrediction"
+                    }
+                },
+                "summary": {
+                    "$ref": "#/definitions/interfaces.TrendSummary"
+                },
+                "trends": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/interfaces.UsageTrendEntry"
+                    }
+                },
+                "user_subscription_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.APIResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "message": {
+                    "type": "string"
                 }
             }
         },
@@ -6345,6 +13653,26 @@ const docTemplate = `{
                     "description": "OAuth provider",
                     "type": "string",
                     "example": "google"
+                }
+            }
+        },
+        "response.Response": {
+            "description": "Standard API response format",
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "Response code (0 for success, non-zero for errors)",
+                    "type": "integer",
+                    "example": 0
+                },
+                "data": {
+                    "description": "Response data (optional)",
+                    "type": "object"
+                },
+                "message": {
+                    "description": "Response message",
+                    "type": "string",
+                    "example": "success"
                 }
             }
         },

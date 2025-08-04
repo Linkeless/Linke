@@ -742,8 +742,8 @@ func getDefaultRetryConfiguration() *interfaces.RetryConfiguration {
 	return &interfaces.RetryConfiguration{
 		Enabled:              true,
 		MaxConcurrentRetries: 100,
-		ProcessingInterval:   time.Minute * 5,
-		HealthCheckInterval:  time.Minute * 15,
+		ProcessingInterval:   (time.Minute * 5).String(),
+		HealthCheckInterval:  (time.Minute * 15).String(),
 		DefaultStrategy: &entities.RetryStrategyConfig{
 			MaxAttempts:      3,
 			InitialDelay:     3600,  // 1 hour
@@ -767,7 +767,7 @@ func getDefaultRetryConfiguration() *interfaces.RetryConfiguration {
 			AlertsEnabled:      true,
 			HealthCheckEnabled: true,
 			LogLevel:           "info",
-			RetentionPeriod:    time.Hour * 24 * 30, // 30 days
+			RetentionPeriod:    (time.Hour * 24 * 30).String(), // 30 days
 			AlertThresholds: &interfaces.AlertThresholds{
 				MaxPendingRetries:  50,
 				MaxOverdueRetries:  10,

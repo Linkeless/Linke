@@ -640,7 +640,7 @@ func (s *usageAlertService) TestNotificationChannel(ctx context.Context, req *in
 
 	response := &interfaces.TestNotificationResponse{
 		Success:      err == nil,
-		ResponseTime: responseTime,
+		ResponseTime: responseTime.String(),
 	}
 
 	if err != nil {
@@ -765,7 +765,7 @@ func (s *usageAlertService) GetAlertHistory(ctx context.Context, req *interfaces
 
 		// Calculate resolution time
 		if alert.IsResolved() && alert.ResolvedAt != nil {
-			resolutionTime := alert.ResolvedAt.Sub(alert.FiredAt)
+			resolutionTime := alert.ResolvedAt.Sub(alert.FiredAt).String()
 			entry.ResolutionTime = &resolutionTime
 		}
 
@@ -981,9 +981,9 @@ func (s *usageAlertService) calculateAlertHistorySummary(alerts []*entities.Usag
 
 	return &interfaces.AlertHistorySummary{
 		TotalAlerts:           int64(len(alerts)),
-		AverageResolutionTime: averageResolutionTime,
-		FastestResolution:     fastestResolution,
-		SlowestResolution:     slowestResolution,
+		AverageResolutionTime: averageResolutionTime.String(),
+		FastestResolution:     fastestResolution.String(),
+		SlowestResolution:     slowestResolution.String(),
 		UnresolvedCount:       unresolvedCount,
 		NotificationsSent:     notificationsSent,
 		NotificationFailures:  notificationFailures,

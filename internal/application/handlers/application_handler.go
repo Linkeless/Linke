@@ -35,7 +35,7 @@ func NewApplicationHandler(
 // @Accept json
 // @Produce json
 // @Success 200 {object} map[string]interface{} "健康检查结果"
-// @Router /api/v1/app/system/health [get]
+// @Router /app/system/health [get]
 func (h *ApplicationHandler) HealthCheck(c *gin.Context) {
 	ctx := c.Request.Context()
 

@@ -217,11 +217,11 @@ type InvoiceResponse struct {
 	CompanyName         string     `json:"company_name,omitempty" example:"Acme Corp"`
 	CompanyTaxID        string     `json:"company_tax_id,omitempty" example:"12-3456789"`
 	CompanyAddress      string     `json:"company_address,omitempty" example:"456 Business Ave"`
-	IssuedAt            time.Time  `json:"issued_at" example:"2024-01-01T00:00:00Z"`
-	DueAt               *time.Time `json:"due_at,omitempty" example:"2024-01-31T23:59:59Z"`
-	PaidAt              *time.Time `json:"paid_at,omitempty" example:"2024-01-15T10:30:00Z"`
-	SentAt              *time.Time `json:"sent_at,omitempty" example:"2024-01-01T12:00:00Z"`
-	VoidedAt            *time.Time `json:"voided_at,omitempty"`
+	IssuedAt            time.Time  `json:"issued_at" swaggertype:"string" format:"date-time" example:"2024-01-01T00:00:00Z"`
+	DueAt               *time.Time `json:"due_at,omitempty" swaggertype:"string" format:"date-time" example:"2024-01-31T23:59:59Z"`
+	PaidAt              *time.Time `json:"paid_at,omitempty" swaggertype:"string" format:"date-time" example:"2024-01-15T10:30:00Z"`
+	SentAt              *time.Time `json:"sent_at,omitempty" swaggertype:"string" format:"date-time" example:"2024-01-01T12:00:00Z"`
+	VoidedAt            *time.Time `json:"voided_at,omitempty" swaggertype:"string" format:"date-time"`
 	PaymentMethod       string     `json:"payment_method,omitempty" example:"credit_card"`
 	PaymentReference    string     `json:"payment_reference,omitempty" example:"txn_123456"`
 	Template            string     `json:"template,omitempty" example:"default"`
@@ -230,8 +230,8 @@ type InvoiceResponse struct {
 	PDFSize             int64      `json:"pdf_size,omitempty" example:"12345"`
 	Description         string     `json:"description,omitempty" example:"Monthly subscription"`
 	Notes               string     `json:"notes,omitempty" example:"Thank you for your business"`
-	CreatedAt           time.Time  `json:"created_at" example:"2024-01-01T00:00:00Z"`
-	UpdatedAt           time.Time  `json:"updated_at" example:"2024-01-01T00:00:00Z"`
+	CreatedAt           time.Time  `json:"created_at" swaggertype:"string" format:"date-time" example:"2024-01-01T00:00:00Z"`
+	UpdatedAt           time.Time  `json:"updated_at" swaggertype:"string" format:"date-time" example:"2024-01-01T00:00:00Z"`
 
 	// Related data (to be populated at application layer)
 	User              *dto.UserBasicDTO              `json:"user,omitempty"`

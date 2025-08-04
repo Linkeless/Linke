@@ -24,7 +24,7 @@ type WarmingConfig struct {
 	Strategy       WarmingStrategy `json:"strategy"`
 	BatchSize      int             `json:"batch_size"`
 	ConcurrentJobs int             `json:"concurrent_jobs"`
-	WarmingTTL     time.Duration   `json:"warming_ttl"`
+	WarmingTTL     time.Duration   `json:"warming_ttl" swaggertype:"string" example:"1h"`
 	Schedule       string          `json:"schedule"`  // Cron expression for scheduled warming
 	Prefixes       []string        `json:"prefixes"`  // Prefixes to warm
 	MaxItems       int             `json:"max_items"` // Maximum items to warm per prefix
@@ -43,8 +43,8 @@ type WarmingMetrics struct {
 	TotalWarmed     int64         `json:"total_warmed"`
 	SuccessCount    int64         `json:"success_count"`
 	ErrorCount      int64         `json:"error_count"`
-	LastWarmTime    time.Time     `json:"last_warm_time"`
-	WarmingDuration time.Duration `json:"warming_duration"`
+	LastWarmTime    time.Time     `json:"last_warm_time" swaggertype:"string" format:"date-time" example:"2023-01-01T00:00:00Z"`
+	WarmingDuration time.Duration `json:"warming_duration" swaggertype:"string" example:"1h30m"`
 	ItemsPerSecond  float64       `json:"items_per_second"`
 }
 

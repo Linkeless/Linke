@@ -43,7 +43,7 @@ func NewUsageAlertHandler(usageAlertService interfaces.UsageAlertService) *Usage
 // @Failure 400 {object} response.Response
 // @Failure 404 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/usage/alerts/configs/{subscription_id} [get]
+// @Router /usage/alerts/configs/{subscription_id} [get]
 func (h *UsageAlertHandler) GetAlertConfigurations(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
 	if err != nil {
@@ -101,7 +101,7 @@ func (h *UsageAlertHandler) GetAlertConfigurations(c *gin.Context) {
 // @Success 201 {object} response.Response{data=entities.AlertConfigurationResponse}
 // @Failure 400 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/usage/alerts/configs [post]
+// @Router /usage/alerts/configs [post]
 func (h *UsageAlertHandler) CreateAlertConfiguration(c *gin.Context) {
 	var req interfaces.CreateAlertConfigRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -130,7 +130,7 @@ func (h *UsageAlertHandler) CreateAlertConfiguration(c *gin.Context) {
 // @Failure 400 {object} response.Response
 // @Failure 404 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/usage/alerts/configs/{config_id} [put]
+// @Router /usage/alerts/configs/{config_id} [put]
 func (h *UsageAlertHandler) UpdateAlertConfiguration(c *gin.Context) {
 	configID, err := strconv.ParseUint(c.Param("config_id"), 10, 32)
 	if err != nil {
@@ -166,7 +166,7 @@ func (h *UsageAlertHandler) UpdateAlertConfiguration(c *gin.Context) {
 // @Failure 400 {object} response.Response
 // @Failure 404 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/usage/alerts/configs/{config_id} [delete]
+// @Router /usage/alerts/configs/{config_id} [delete]
 func (h *UsageAlertHandler) DeleteAlertConfiguration(c *gin.Context) {
 	configID, err := strconv.ParseUint(c.Param("config_id"), 10, 32)
 	if err != nil {
@@ -194,7 +194,7 @@ func (h *UsageAlertHandler) DeleteAlertConfiguration(c *gin.Context) {
 // @Failure 400 {object} response.Response
 // @Failure 404 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/usage/alerts/configs/{config_id} [get]
+// @Router /usage/alerts/configs/{config_id} [get]
 func (h *UsageAlertHandler) GetAlertConfiguration(c *gin.Context) {
 	configID, err := strconv.ParseUint(c.Param("config_id"), 10, 32)
 	if err != nil {
@@ -236,7 +236,7 @@ func (h *UsageAlertHandler) GetAlertConfiguration(c *gin.Context) {
 // @Failure 400 {object} response.Response
 // @Failure 404 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/usage/alerts/{subscription_id} [get]
+// @Router /usage/alerts/{subscription_id} [get]
 func (h *UsageAlertHandler) GetUsageAlerts(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
 	if err != nil {
@@ -322,7 +322,7 @@ func (h *UsageAlertHandler) GetUsageAlerts(c *gin.Context) {
 // @Failure 400 {object} response.Response
 // @Failure 404 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/usage/alerts/{alert_id}/resolve [post]
+// @Router /usage/alerts/{alert_id}/resolve [post]
 func (h *UsageAlertHandler) ResolveAlert(c *gin.Context) {
 	alertID, err := strconv.ParseUint(c.Param("alert_id"), 10, 32)
 	if err != nil {
@@ -358,7 +358,7 @@ func (h *UsageAlertHandler) ResolveAlert(c *gin.Context) {
 // @Failure 400 {object} response.Response
 // @Failure 404 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/usage/alerts/{alert_id}/acknowledge [post]
+// @Router /usage/alerts/{alert_id}/acknowledge [post]
 func (h *UsageAlertHandler) AcknowledgeAlert(c *gin.Context) {
 	alertID, err := strconv.ParseUint(c.Param("alert_id"), 10, 32)
 	if err != nil {
@@ -398,7 +398,7 @@ func (h *UsageAlertHandler) AcknowledgeAlert(c *gin.Context) {
 // @Failure 400 {object} response.Response
 // @Failure 404 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/usage/alerts/{alert_id}/suppress [post]
+// @Router /usage/alerts/{alert_id}/suppress [post]
 func (h *UsageAlertHandler) SuppressAlert(c *gin.Context) {
 	alertID, err := strconv.ParseUint(c.Param("alert_id"), 10, 32)
 	if err != nil {
@@ -442,7 +442,7 @@ func (h *UsageAlertHandler) SuppressAlert(c *gin.Context) {
 // @Success 200 {object} response.Response{data=interfaces.BulkResolveAlertsResponse}
 // @Failure 400 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/usage/alerts/bulk-resolve [post]
+// @Router /usage/alerts/bulk-resolve [post]
 func (h *UsageAlertHandler) BulkResolveAlerts(c *gin.Context) {
 	var req interfaces.BulkResolveAlertsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -478,7 +478,7 @@ func (h *UsageAlertHandler) BulkResolveAlerts(c *gin.Context) {
 // @Failure 400 {object} response.Response
 // @Failure 404 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/usage/alerts/statistics/{subscription_id} [get]
+// @Router /usage/alerts/statistics/{subscription_id} [get]
 func (h *UsageAlertHandler) GetAlertStatistics(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
 	if err != nil {
@@ -535,7 +535,7 @@ func (h *UsageAlertHandler) GetAlertStatistics(c *gin.Context) {
 // @Failure 400 {object} response.Response
 // @Failure 404 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/usage/alerts/history/{subscription_id} [get]
+// @Router /usage/alerts/history/{subscription_id} [get]
 func (h *UsageAlertHandler) GetAlertHistory(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
 	if err != nil {
@@ -606,7 +606,7 @@ func (h *UsageAlertHandler) GetAlertHistory(c *gin.Context) {
 // @Success 200 {object} response.Response{data=interfaces.TestNotificationResponse}
 // @Failure 400 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/usage/alerts/test-notification [post]
+// @Router /usage/alerts/test-notification [post]
 func (h *UsageAlertHandler) TestNotificationChannel(c *gin.Context) {
 	var req interfaces.TestNotificationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -624,5 +624,32 @@ func (h *UsageAlertHandler) TestNotificationChannel(c *gin.Context) {
 		response.SuccessWithMessage(c, "Test notification sent successfully", result)
 	} else {
 		response.Error(c, http.StatusBadRequest, 4000, "Test notification failed")
+	}
+}
+
+// RegisterRoutes registers all usage alert routes
+func (h *UsageAlertHandler) RegisterRoutes(router *gin.RouterGroup) {
+	usageAlertGroup := router.Group("/usage-alerts")
+	{
+		// Alert configuration routes
+		usageAlertGroup.GET("/configurations", h.GetAlertConfigurations)
+		usageAlertGroup.POST("/configurations", h.CreateAlertConfiguration)
+		usageAlertGroup.GET("/configurations/:id", h.GetAlertConfiguration)
+		usageAlertGroup.PUT("/configurations/:id", h.UpdateAlertConfiguration)
+		usageAlertGroup.DELETE("/configurations/:id", h.DeleteAlertConfiguration)
+
+		// Alert management routes
+		usageAlertGroup.GET("", h.GetUsageAlerts)
+		usageAlertGroup.POST("/:id/resolve", h.ResolveAlert)
+		usageAlertGroup.POST("/:id/acknowledge", h.AcknowledgeAlert)
+		usageAlertGroup.POST("/:id/suppress", h.SuppressAlert)
+		usageAlertGroup.POST("/bulk/resolve", h.BulkResolveAlerts)
+
+		// Alert statistics and history
+		usageAlertGroup.GET("/statistics", h.GetAlertStatistics)
+		usageAlertGroup.GET("/history", h.GetAlertHistory)
+
+		// Test notification
+		usageAlertGroup.POST("/test-notification", h.TestNotificationChannel)
 	}
 }

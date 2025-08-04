@@ -231,9 +231,14 @@ func NewHTTPServer(
 	subscriptionOrderHandler *subscriptionHandlers.SubscriptionOrderHandler,
 	userSubscriptionHandler *subscriptionHandlers.UserSubscriptionHandler,
 	quickPurchaseHandler *subscriptionHandlers.QuickPurchaseHandler,
+	usageHandler *subscriptionHandlers.UsageHandler,
+	usageAlertHandler *subscriptionHandlers.UsageAlertHandler,
 	invoiceHandler *invoiceHandlers.InvoiceHandler,
 	paymentHandler *paymentHandlers.PaymentHandler,
+	paymentMethodHandler *paymentHandlers.PaymentMethodHandler,
 	serverHandler *serverHandlers.ServerAPIHandler,
+	// Cache monitoring handlers
+	cacheMonitoringHandler *cache.CacheMonitoringHandler,
 	// Versioning middleware
 	versionMiddleware *versioning.VersionMiddleware,
 ) *HTTPServer {
@@ -315,8 +320,11 @@ func NewHTTPServer(
 		userGroup.POST("/change-password", userProfileHandler.ChangePassword)
 	}
 
+	// 管理员路由组 (/api/v1/admin)
+	adminGroup := apiV1.Group("/admin")
+	
 	// 管理员用户路由 (/api/v1/admin/users)
-	adminUserGroup := apiV1.Group("/admin/users")
+	adminUserGroup := adminGroup.Group("/users")
 	{
 		adminUserGroup.POST("", adminUserHandler.CreateUser)
 		adminUserGroup.GET("", adminUserHandler.ListUsers)
@@ -326,6 +334,9 @@ func NewHTTPServer(
 		adminUserGroup.POST("/:id/restore", adminUserHandler.RestoreUser)
 		adminUserGroup.GET("/stats", adminUserHandler.GetUserStats)
 	}
+	
+	// 管理员缓存路由 (/api/v1/admin/cache) - 使用RegisterRoutes方法
+	cacheMonitoringHandler.RegisterRoutes(adminGroup)
 
 	// 订阅路由 (/api/v1/subscription)
 	subscriptionGroup := apiV1.Group("/subscription")
@@ -337,14 +348,16 @@ func NewHTTPServer(
 		subscriptionGroup.POST("/orders", subscriptionOrderHandler.CreateSubscriptionOrder)
 		subscriptionGroup.GET("/orders/my", subscriptionOrderHandler.GetMySubscriptionOrders)
 		subscriptionGroup.GET("/orders/:id", subscriptionOrderHandler.GetSubscriptionOrder)
-
-		// 订阅管理相关
-		subscriptionGroup.GET("/my", userSubscriptionHandler.GetMySubscriptions)
-		subscriptionGroup.GET("/my/active", userSubscriptionHandler.GetMyActiveSubscriptions)
-		subscriptionGroup.GET("/:id", userSubscriptionHandler.GetSubscription)
-		subscriptionGroup.POST("/:id/cancel", userSubscriptionHandler.CancelSubscription)
-		subscriptionGroup.GET("/:id/traffic-stats", userSubscriptionHandler.GetSubscriptionTrafficStats)
 	}
+
+	// 用户订阅管理路由 (/api/v1/subscriptions) - 使用RegisterRoutes方法
+	userSubscriptionHandler.RegisterRoutes(apiV1)
+
+	// 使用量追踪路由 (/api/v1/usage) - 使用RegisterRoutes方法
+	usageHandler.RegisterRoutes(apiV1)
+
+	// 使用量告警路由 (/api/v1/usage-alerts) - 使用RegisterRoutes方法  
+	usageAlertHandler.RegisterRoutes(apiV1)
 
 	// 发票路由 (/api/v1/invoice) - 使用RegisterRoutes方法
 	invoiceHandler.RegisterRoutes(apiV1)
@@ -357,6 +370,20 @@ func NewHTTPServer(
 		paymentGroup.GET("/my-orders", paymentHandler.GetMyPaymentOrders)
 		paymentGroup.GET("/methods", paymentHandler.GetAvailablePaymentMethods)
 		paymentGroup.POST("/notify/:gateway", paymentHandler.PaymentNotify)
+	}
+
+	// 支付方式管理路由 (/api/v1/payment-methods)
+	paymentMethodsGroup := apiV1.Group("/payment-methods")
+	{
+		paymentMethodsGroup.POST("", paymentMethodHandler.CreatePaymentMethod)
+		paymentMethodsGroup.GET("/:id", paymentMethodHandler.GetPaymentMethod)
+		paymentMethodsGroup.GET("", paymentMethodHandler.ListPaymentMethods)
+		paymentMethodsGroup.PUT("/:id", paymentMethodHandler.UpdatePaymentMethod)
+		paymentMethodsGroup.DELETE("/:id", paymentMethodHandler.DeletePaymentMethod)
+		// TODO: Implement activate/deactivate methods
+		// paymentMethodsGroup.POST("/:id/activate", paymentMethodHandler.ActivatePaymentMethod)
+		// paymentMethodsGroup.POST("/:id/deactivate", paymentMethodHandler.DeactivatePaymentMethod)
+		paymentMethodsGroup.POST("/:id/set-default", paymentMethodHandler.SetDefaultPaymentMethod)
 	}
 
 	// 服务器路由 (/api/v1/server)

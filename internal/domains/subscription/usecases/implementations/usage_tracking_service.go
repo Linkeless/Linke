@@ -984,7 +984,7 @@ func (s *usageTrackingService) CleanupOldUsageData(ctx context.Context, olderTha
 		RecordsDeleted: recordsDeleted,
 		AlertsDeleted:  alertsDeleted,
 		SpaceFreed:     recordsDeleted * 100, // Rough estimate of bytes freed
-		OperationTime:  operationTime,
+		OperationTime:  operationTime.String(),
 		CompletedAt:    time.Now(),
 	}, nil
 }
@@ -1036,7 +1036,7 @@ func (s *usageTrackingService) GetRealTimeUsage(ctx context.Context, subscriptio
 			RemainingUsage:    details.RemainingUsage,
 			RecentUsage:       recentUsage,
 			UsageRate:         usageRate,
-			EstimatedTimeLeft: estimatedTimeLeft,
+			EstimatedTimeLeft: estimatedTimeLeft.String(),
 			LastUpdated:       details.LastRecorded,
 			TrendDirection:    trendDirection,
 			IsNearLimit:       isNearLimit,
@@ -1055,7 +1055,7 @@ func (s *usageTrackingService) GetRealTimeUsage(ctx context.Context, subscriptio
 		UserSubscriptionID: subscriptionID,
 		UsageByType:        usageByType,
 		LastUpdated:        currentUsageResp.LastUpdated,
-		UpdateFrequency:    5 * time.Minute, // Recommend 5-minute updates
+		UpdateFrequency:    (5 * time.Minute).String(), // Recommend 5-minute updates
 		AlertCount:         alertCount,
 		Predictions:        predictions,
 	}, nil

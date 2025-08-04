@@ -175,7 +175,7 @@ type InvoiceDownloadRecord struct {
 
 // BulkDownloadRequest represents a request for bulk download
 type BulkDownloadRequest struct {
-	InvoiceIDs []uint                `json:"invoice_ids" binding:"required" example:"[1,2,3]"`
+	InvoiceIDs []uint                `json:"invoice_ids" binding:"required"`
 	PDFOptions *PDFGenerationRequest `json:"pdf_options,omitempty"`
 	Format     string                `json:"format,omitempty" example:"zip"` // zip, individual
 	IncludeCSV bool                  `json:"include_csv,omitempty" example:"true"`

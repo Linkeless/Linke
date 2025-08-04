@@ -1,46 +1,46 @@
-# Quick Purchase Feature
+# 快捷购买功能
 
-## Overview
+## 概述
 
-The Quick Purchase feature allows users to purchase subscriptions with a single API call that handles payment creation directly. This streamlines the subscription purchasing process by reducing the number of steps required compared to the traditional order → invoice → payment flow.
+快捷购买功能允许用户通过单个 API 调用直接处理支付创建来购买订阅。这简化了订阅购买流程，相比传统的订单 → 发票 → 支付流程，减少了所需的步骤数量。
 
-## Implementation Details
+## 实现详情
 
-### Architecture
+### 架构
 
-The Quick Purchase feature follows the project's clean architecture pattern and integrates with the existing subscription, payment, and coupon domains.
+快捷购买功能遵循项目的清洁架构模式，并与现有的订阅、支付和优惠券领域集成。
 
-### Key Components
+### 关键组件
 
-1. **Handler**: `/internal/domains/subscription/handlers/quick_purchase_handler.go`
-   - Handles HTTP requests for quick purchase
-   - Validates user authentication and input
-   - Extracts client IP for payment processing
+1. **处理器**: `/internal/domains/subscription/handlers/quick_purchase_handler.go`
+   - 处理快捷购买的 HTTP 请求
+   - 验证用户身份认证和输入
+   - 提取客户端 IP 用于支付处理
 
-2. **Service Interface**: `/internal/domains/subscription/usecases/interfaces/subscription_order_service.go`
-   - Added `QuickPurchase` method to the service interface
-   - Defined `QuickPurchaseRequest` and `QuickPurchaseResponse` structures
+2. **服务接口**: `/internal/domains/subscription/usecases/interfaces/subscription_order_service.go`
+   - 在服务接口中添加了 `QuickPurchase` 方法
+   - 定义了 `QuickPurchaseRequest` 和 `QuickPurchaseResponse` 结构
 
-3. **Service Implementation**: `/internal/domains/subscription/usecases/implementations/subscription_order.go`
-   - Implements the core quick purchase logic
-   - Validates subscription plan availability
-   - Applies coupon discounts if provided
-   - Creates payment directly without creating order/invoice first
+3. **服务实现**: `/internal/domains/subscription/usecases/implementations/subscription_order.go`
+   - 实现核心快捷购买逻辑
+   - 验证订阅计划可用性
+   - 如果提供了优惠券，应用优惠券折扣
+   - 直接创建支付，无需先创建订单/发票
 
-4. **Route Registration**: `/cmd/server/main.go`
-   - Registered the quick purchase endpoint at `POST /api/v1/subscription/quick-purchase`
+4. **路由注册**: `/cmd/server/main.go`
+   - 在 `POST /api/v1/subscription/quick-purchase` 注册快捷购买端点
 
-## API Usage
+## API 使用
 
-### Endpoint
+### 端点
 ```
 POST /api/v1/subscription/quick-purchase
 ```
 
-### Authentication
-Requires Bearer token authentication.
+### 身份认证
+需要 Bearer token 认证。
 
-### Request Body
+### 请求体
 ```json
 {
   "user_id": 1,
@@ -54,11 +54,11 @@ Requires Bearer token authentication.
 }
 ```
 
-### Response
+### 响应
 ```json
 {
   "status": "success",
-  "message": "Quick purchase created successfully",
+  "message": "快捷购买创建成功",
   "data": {
     "payment_record": {
       "payment_no": "PAY20240101123456",
@@ -71,7 +71,7 @@ Requires Bearer token authentication.
     "expired_at": "2024-01-01T12:30:00Z",
     "plan_info": {
       "id": 1,
-      "name": "Premium Plan",
+      "name": "高级套餐",
       "price": 29.99,
       "currency": "USD",
       "billing_cycle": "monthly"
@@ -86,75 +86,75 @@ Requires Bearer token authentication.
 }
 ```
 
-## Flow Description
+## 流程描述
 
-### Quick Purchase Flow
-1. **Validation**: 
-   - Checks for duplicate pending orders
-   - Validates subscription plan availability
-   - Validates coupon if provided
+### 快捷购买流程
+1. **验证**: 
+   - 检查重复的待处理订单
+   - 验证订阅计划可用性
+   - 如果提供了优惠券，进行验证
 
-2. **Price Calculation**:
-   - Calculates base amount and setup fees
-   - Applies coupon discounts
-   - Validates final amount is reasonable
+2. **价格计算**:
+   - 计算基础金额和设置费用
+   - 应用优惠券折扣
+   - 验证最终金额是否合理
 
-3. **Payment Creation**:
-   - Creates payment order directly
-   - Returns payment URL to user
-   - No order or invoice created at this stage
+3. **支付创建**:
+   - 直接创建支付订单
+   - 向用户返回支付 URL
+   - 此阶段不创建订单或发票
 
-4. **Asynchronous Processing**:
-   - After payment success, order and invoice are created automatically
-   - Subscription is activated upon successful payment
+4. **异步处理**:
+   - 支付成功后，自动创建订单和发票
+   - 支付成功后激活订阅
 
-### Security Features
+### 安全功能
 
-- **Duplicate Order Prevention**: Checks for existing pending orders
-- **Rate Limiting**: Prevents spam with 5-minute cooldown
-- **Price Protection**: Validates amounts and prevents excessive discounts
-- **Input Validation**: Validates all input parameters
-- **Authentication**: Requires valid user authentication
+- **重复订单预防**: 检查现有的待处理订单
+- **频率限制**: 通过 5 分钟冷却时间防止垃圾请求
+- **价格保护**: 验证金额并防止过度折扣
+- **输入验证**: 验证所有输入参数
+- **身份认证**: 需要有效的用户身份认证
 
-### Error Handling
+### 错误处理
 
-The API returns appropriate HTTP status codes and error messages:
+API 返回适当的 HTTP 状态码和错误消息：
 
-- `400 Bad Request`: Invalid input data or validation errors
-- `401 Unauthorized`: Missing or invalid authentication
-- `403 Forbidden`: User trying to create purchase for another user
-- `500 Internal Server Error`: Server-side errors
+- `400 Bad Request`: 无效的输入数据或验证错误
+- `401 Unauthorized`: 缺少或无效的身份认证
+- `403 Forbidden`: 用户尝试为其他用户创建购买
+- `500 Internal Server Error`: 服务器端错误
 
-## Testing
+## 测试
 
-The implementation includes comprehensive unit tests in:
+实现包含以下位置的综合单元测试：
 - `/internal/domains/subscription/handlers/quick_purchase_handler_test.go`
 
-Tests cover:
-- Successful quick purchase scenarios
-- Authentication failures
-- Invalid request data
-- Service layer errors
+测试覆盖：
+- 成功的快捷购买场景
+- 身份认证失败
+- 无效的请求数据
+- 服务层错误
 
-## Benefits
+## 优势
 
-1. **Improved User Experience**: Single API call for subscription purchase
-2. **Reduced Latency**: Fewer round trips between client and server
-3. **Simplified Integration**: Easier for frontend applications to implement
-4. **Maintained Security**: All existing security validations are preserved
-5. **Backwards Compatibility**: Existing order/invoice flow remains available
+1. **改善用户体验**: 单个 API 调用即可完成订阅购买
+2. **降低延迟**: 减少客户端和服务器之间的往返次数
+3. **简化集成**: 前端应用程序更容易实现
+4. **维护安全性**: 保留所有现有的安全验证
+5. **向后兼容**: 现有的订单/发票流程仍然可用
 
-## Future Enhancements
+## 未来增强
 
-1. **Async Order Creation**: Implement proper async processing for order/invoice creation after payment success
-2. **Payment Webhooks**: Handle payment status updates to trigger order/subscription creation
-3. **Retry Mechanism**: Add retry logic for failed async operations
-4. **Metrics**: Add monitoring and metrics for quick purchase success rates
+1. **异步订单创建**: 为支付成功后的订单/发票创建实现适当的异步处理
+2. **支付 Webhook**: 处理支付状态更新以触发订单/订阅创建
+3. **重试机制**: 为失败的异步操作添加重试逻辑
+4. **指标**: 为快捷购买成功率添加监控和指标
 
-## Configuration
+## 配置
 
-No additional configuration is required. The feature uses existing:
-- Payment gateway configurations
-- Coupon service settings
-- Subscription plan data
-- Security settings
+无需额外配置。该功能使用现有的：
+- 支付网关配置
+- 优惠券服务设置
+- 订阅计划数据
+- 安全设置

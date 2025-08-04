@@ -1,42 +1,42 @@
-# Smart Payment Retry Strategy Implementation
+# 智能支付重试策略实现
 
-This document details the comprehensive implementation of the Smart Payment Retry Strategy feature for the Linke payment system, based on the requirements outlined in `SUBSCRIPTION_OPTIMIZATION.md`.
+本文档详细介绍了 Linke 支付系统智能支付重试策略功能的全面实现，基于 `SUBSCRIPTION_OPTIMIZATION.md` 中概述的需求。
 
-## Overview
+## 概述
 
-The Smart Payment Retry Strategy intelligently retries failed payments using configurable retry strategies, exponential backoff algorithms, and failure type classification. This system significantly improves payment success rates while reducing manual intervention.
+智能支付重试策略使用可配置的重试策略、指数回退算法和失败类型分类，智能地重试失败的支付。该系统显著提高支付成功率，同时减少手动干预。
 
-## Key Features
+## 关键功能
 
-### 1. Intelligent Retry Logic
-- **Exponential Backoff**: Default strategy with 1 hour, 6 hours, and 24 hours delays
-- **Linear Backoff**: Alternative strategy for specific gateways
-- **Custom Strategies**: Gateway-specific retry configurations
-- **Failure Classification**: Automatic classification of temporary vs permanent failures
+### 1. 智能重试逻辑
+- **指数回退**: 默认策略，延迟时间为 1 小时、6 小时和 24 小时
+- **线性回退**: 特定网关的替代策略
+- **自定义策略**: 网关特定的重试配置
+- **失败分类**: 自动分类临时失败与永久失败
 
-### 2. Configurable Retry Strategies
-- **Per-Gateway Configuration**: Different strategies for different payment gateways
-- **Per-Payment Method**: Fine-tuned strategies for specific payment methods
-- **Dynamic Configuration**: Runtime updates without system restart
-- **Default Fallbacks**: Comprehensive default strategies for all supported gateways
+### 2. 可配置重试策略
+- **按网关配置**: 不同支付网关使用不同策略
+- **按支付方式**: 特定支付方式的精细化策略
+- **动态配置**: 运行时更新，无需重启系统
+- **默认回退**: 所有支持网关的全面默认策略
 
-### 3. Comprehensive Monitoring
-- **Real-time Health Metrics**: System-wide retry health monitoring
-- **Gateway-specific Statistics**: Success rates and performance metrics per gateway
-- **Failure Pattern Analysis**: Automatic detection of common failure patterns
-- **Alert System**: Configurable alerts for system health issues
+### 3. 全面监控
+- **实时健康指标**: 系统级重试健康监控
+- **网关特定统计**: 每个网关的成功率和性能指标
+- **失败模式分析**: 自动检测常见失败模式
+- **告警系统**: 系统健康问题的可配置告警
 
-### 4. Admin Management Interface
-- **Retry Queue Management**: View and manage all active retries
-- **Bulk Operations**: Cancel or reset multiple retries at once
-- **Detailed Analytics**: Comprehensive statistics and reporting
-- **Manual Intervention**: Admin override capabilities
+### 4. 管理员管理界面
+- **重试队列管理**: 查看和管理所有活跃重试
+- **批量操作**: 一次取消或重置多个重试
+- **详细分析**: 全面的统计和报告
+- **手动干预**: 管理员覆盖功能
 
-## Architecture
+## 架构
 
-### Database Schema
+### 数据库架构
 
-#### Payment Retries Table
+#### 支付重试表
 ```sql
 CREATE TABLE payment_retries (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -48,11 +48,11 @@ CREATE TABLE payment_retries (
     retry_strategy VARCHAR(50) NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'pending',
     failure_type VARCHAR(30) NULL,
-    -- ... additional fields
+    -- ... 其他字段
 );
 ```
 
-#### Payment Retry History Table
+#### 支付重试历史表
 ```sql
 CREATE TABLE payment_retry_histories (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -61,15 +61,15 @@ CREATE TABLE payment_retry_histories (
     attempt_number INT NOT NULL,
     attempted_at TIMESTAMP NOT NULL,
     status VARCHAR(20) NOT NULL,
-    -- ... additional fields
+    -- ... 其他字段
 );
 ```
 
-### Service Architecture
+### 服务架构
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     Payment Module                         │
+│                     支付模块                              │
 ├─────────────────────────────────────────────────────────────┤
 │  PaymentRetryService                                        │
 │  ├─── InitiateRetry()                                       │
@@ -89,11 +89,11 @@ CREATE TABLE payment_retry_histories (
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Implementation Details
+## 实现细节
 
-### 1. Retry Entities
+### 1. 重试实体
 
-#### PaymentRetry Entity
+#### PaymentRetry 实体
 ```go
 type PaymentRetry struct {
     ID              uint      `json:"id"`
@@ -104,11 +104,11 @@ type PaymentRetry struct {
     RetryStrategy   string    `json:"retry_strategy"`
     Status          string    `json:"status"`
     FailureType     string    `json:"failure_type"`
-    // ... additional fields
+    // ... 其他字段
 }
 ```
 
-#### PaymentRetryHistory Entity
+#### PaymentRetryHistory 实体
 ```go
 type PaymentRetryHistory struct {
     ID              uint      `json:"id"`
@@ -118,20 +118,20 @@ type PaymentRetryHistory struct {
     Status          string    `json:"status"`
     Duration        int       `json:"duration"`
     ResponseCode    string    `json:"response_code"`
-    // ... additional fields
+    // ... 其他字段
 }
 ```
 
-### 2. Retry Strategies
+### 2. 重试策略
 
-#### Default Retry Configuration
+#### 默认重试配置
 ```go
 var DefaultRetryStrategies = map[string]RetryStrategyConfig{
     PaymentGatewayEpay: {
         Gateway:           PaymentGatewayEpay,
         MaxAttempts:       3,
-        InitialDelay:      3600,  // 1 hour
-        MaxDelay:          86400, // 24 hours
+        InitialDelay:      3600,  // 1 小时
+        MaxDelay:          86400, // 24 小时
         BackoffFactor:     2.0,
         Strategy:          RetryStrategyExponential,
         FailureTypes:      []string{FailureTypeTemporary, FailureTypeNetwork, FailureTypeGateway},
@@ -139,24 +139,24 @@ var DefaultRetryStrategies = map[string]RetryStrategyConfig{
         EnableAfterHours:  true,
         MaxConcurrent:     5,
     },
-    // ... other gateways
+    // ... 其他网关
 }
 ```
 
-#### Exponential Backoff Algorithm
+#### 指数退避算法
 ```go
 func (pr *PaymentRetry) calculateExponentialDelay() int {
     if pr.AttemptNumber == 0 {
         return pr.InitialDelay
     }
     
-    // Calculate: initial_delay * (backoff_factor ^ attempt_number)
+    // 计算: initial_delay * (backoff_factor ^ attempt_number)
     delay := float64(pr.InitialDelay)
     for i := 0; i < pr.AttemptNumber; i++ {
         delay *= pr.BackoffFactor
     }
     
-    // Ensure we don't exceed max delay
+    // 确保不超过最大延迟
     if int(delay) > pr.MaxDelay {
         return pr.MaxDelay
     }
@@ -165,34 +165,34 @@ func (pr *PaymentRetry) calculateExponentialDelay() int {
 }
 ```
 
-### 3. Failure Classification
+### 3. 故障分类
 
-#### Automatic Failure Type Detection
+#### 自动故障类型检测
 ```go
 func (s *paymentRetryService) ClassifyFailure(ctx context.Context, gateway, paymentMethod, errorCode, errorMessage string) string {
-    // Permanent failure patterns
+    // 永久性故障模式
     permanentPatterns := []string{
         "invalid card", "card expired", "insufficient funds",
         "card declined", "invalid account", "account closed",
     }
     
-    // Network failure patterns
+    // 网络故障模式
     networkPatterns := []string{
         "timeout", "network", "connection", "dns", "ssl",
     }
     
-    // Gateway failure patterns
+    // 网关故障模式
     gatewayPatterns := []string{
         "gateway", "service unavailable", "server error", "maintenance",
     }
     
-    // Classification logic...
+    // 分类逻辑...
 }
 ```
 
-### 4. Task Queue Integration
+### 4. 任务队列集成
 
-#### Retry Task Worker
+#### 重试任务工作器
 ```go
 type PaymentRetryWorker struct {
     retryService interfaces.PaymentRetryService
@@ -204,222 +204,222 @@ func (w *PaymentRetryWorker) handleProcessPaymentRetry(ctx context.Context, task
         RetryID uint `json:"retry_id"`
     }
     
-    // Unmarshal payload and process retry
+    // 解析负载并处理重试
     // ...
 }
 ```
 
-#### Scheduled Processing
-- **Pending Retries**: Processed every 5 minutes
-- **Health Checks**: Performed every 15 minutes  
-- **Cleanup Tasks**: Daily maintenance at 2 AM
-- **Retry Notifications**: Real-time notifications for retry events
+#### 计划任务处理
+- **待处理重试**: 每 5 分钟处理一次
+- **健康检查**: 每 15 分钟执行一次  
+- **清理任务**: 每日凌晨 2 点进行维护
+- **重试通知**: 重试事件的实时通知
 
-## API Endpoints
+## API 端点
 
-### Admin Retry Management
+### 管理员重试管理
 
-#### Get Payment Retries
+#### 获取支付重试
 ```http
 GET /admin/payments/retries
-Query Parameters:
-- user_id: Filter by user ID
-- gateway: Filter by gateway (epay, epusdt)
-- status: Filter by retry status
-- failure_type: Filter by failure type
-- from_date, to_date: Date range filter
-- limit, offset: Pagination
+查询参数:
+- user_id: 按用户 ID 过滤
+- gateway: 按网关过滤 (epay, epusdt)
+- status: 按重试状态过滤
+- failure_type: 按故障类型过滤
+- from_date, to_date: 日期范围过滤
+- limit, offset: 分页
 ```
 
-#### Get Retry Details
+#### 获取重试详情
 ```http
 GET /admin/payments/retries/{id}
-Response: Detailed retry information with complete history
+响应: 包含完整历史记录的详细重试信息
 ```
 
-#### Cancel Retry
+#### 取消重试
 ```http
 POST /admin/payments/retries/{id}/cancel
-Body: { "reason": "Manual cancellation by admin" }
+请求体: { "reason": "管理员手动取消" }
 ```
 
-#### Reset Retry
+#### 重置重试
 ```http
 POST /admin/payments/retries/{id}/reset
 ```
 
-#### Bulk Operations
+#### 批量操作
 ```http
 POST /admin/payments/retries/bulk-cancel
 POST /admin/payments/retries/bulk-reset
-Body: { "retry_ids": [1,2,3], "reason": "Bulk operation" }
+请求体: { "retry_ids": [1,2,3], "reason": "批量操作" }
 ```
 
-#### Statistics and Health
+#### 统计和健康状态
 ```http
 GET /admin/payments/retries/statistics?gateway=epay&days=30
 GET /admin/payments/retries/health
 ```
 
-## Configuration
+## 配置
 
-### Environment Variables
+### 环境变量
 ```bash
-# Retry System Configuration
+# 重试系统配置
 RETRY_ENABLED=true
 RETRY_MAX_CONCURRENT=100
 RETRY_PROCESSING_INTERVAL=5m
 RETRY_HEALTH_CHECK_INTERVAL=15m
 
-# Notification Settings
+# 通知设置
 RETRY_NOTIFICATIONS_ENABLED=true
 RETRY_NOTIFY_ON_FAILURE=true
 RETRY_NOTIFY_ON_SUCCESS=false
 ```
 
-### Gateway-Specific Configuration
+### 网关特定配置
 ```go
-// Runtime configuration updates
+// 运行时配置更新
 retryService.UpdateRetryStrategy(ctx, "epay", "alipay", &RetryStrategyConfig{
     MaxAttempts:      5,
-    InitialDelay:     1800, // 30 minutes
-    MaxDelay:         43200, // 12 hours
+    InitialDelay:     1800, // 30 分钟
+    MaxDelay:         43200, // 12 小时
     BackoffFactor:    1.5,
     Strategy:         RetryStrategyExponential,
 })
 ```
 
-## Monitoring and Alerting
+## 监控和告警
 
-### Health Metrics
-- **Total Active Retries**: Current number of pending/in-progress retries
-- **Overdue Retries**: Retries that should have been processed but weren't
-- **Success Rates**: 24-hour and 7-day success rates
-- **Gateway Health**: Per-gateway performance metrics
+### 健康指标
+- **活跃重试总数**: 当前待处理/进行中的重试数量
+- **逾期重试**: 应该已被处理但未处理的重试
+- **成功率**: 24 小时和 7 天的成功率
+- **网关健康状态**: 每个网关的性能指标
 
-### Automatic Alerts
-- High number of pending retries (>50)
-- High number of overdue retries (>10)
-- Low success rate (<80%)
-- Gateway-specific health issues
+### 自动告警
+- 待处理重试数量过多 (>50)
+- 逾期重试数量过多 (>10)
+- 成功率过低 (<80%)
+- 网关特定健康问题
 
-### Logging
-All retry operations are comprehensively logged with structured logging:
+### 日志记录
+所有重试操作都通过结构化日志进行全面记录:
 ```go
-logger.Info("Payment retry initiated successfully",
+logger.Info("支付重试启动成功",
     logger.Uint("retry_id", retry.ID),
     logger.Uint("payment_record_id", paymentRecord.ID),
     logger.String("next_retry_at", retry.NextRetryAt.String()),
 )
 ```
 
-## Testing
+## 测试
 
-### Unit Tests
-Comprehensive test coverage for:
-- Retry service operations
-- Exponential backoff calculations
-- Failure classification logic
-- Repository operations
-- Worker task processing
+### 单元测试
+全面测试覆盖:
+- 重试服务操作
+- 指数退避计算
+- 故障分类逻辑
+- 仓储操作
+- 工作器任务处理
 
-### Integration Tests
-- End-to-end retry workflows
-- Database operations
-- Queue integration
-- API endpoint testing
+### 集成测试
+- 端到端重试工作流
+- 数据库操作
+- 队列集成
+- API 端点测试
 
-## Migration
+## 迁移
 
-### Database Migration
+### 数据库迁移
 ```bash
-# Apply retry tables migration
+# 应用重试表迁移
 make migrate-up
 
-# Verify migration status
+# 验证迁移状态
 make migrate-status
 ```
 
-### Deployment Steps
-1. **Deploy Database Changes**: Apply migration 000017
-2. **Deploy Application**: Update application with retry services
-3. **Configure Retry Strategies**: Set up gateway-specific configurations
-4. **Enable Processing**: Start retry workers and processing
-5. **Monitor Health**: Verify system health and metrics
+### 部署步骤
+1. **部署数据库变更**: 应用迁移 000017
+2. **部署应用程序**: 使用重试服务更新应用程序
+3. **配置重试策略**: 设置网关特定配置
+4. **启用处理**: 启动重试工作器和处理
+5. **监控健康状态**: 验证系统健康状态和指标
 
-## Performance Considerations
+## 性能考虑
 
-### Scalability
-- **Horizontal Scaling**: Multiple worker instances can process retries
-- **Queue Partitioning**: Separate queues for different priorities
-- **Database Optimization**: Proper indexing for retry queries
-- **Cache Integration**: Cached strategies and configurations
+### 可扩展性
+- **水平扩展**: 多个工作器实例可以处理重试
+- **队列分区**: 不同优先级的独立队列
+- **数据库优化**: 重试查询的适当索引
+- **缓存集成**: 缓存策略和配置
 
-### Resource Management
-- **Memory Usage**: Efficient data structures and object pooling
-- **Database Connections**: Connection pooling and query optimization
-- **Queue Processing**: Configurable concurrency limits
-- **Cleanup**: Automatic cleanup of old retry records
+### 资源管理
+- **内存使用**: 高效的数据结构和对象池
+- **数据库连接**: 连接池和查询优化
+- **队列处理**: 可配置的并发限制
+- **清理**: 自动清理旧重试记录
 
-## Security
+## 安全
 
-### Access Control
-- **Admin-Only Access**: Retry management restricted to admin users
-- **Rate Limiting**: API endpoint rate limiting
-- **Input Validation**: Comprehensive request validation
-- **Audit Logging**: All admin actions are logged
+### 访问控制
+- **仅管理员访问**: 重试管理仅限管理员用户
+- **频率限制**: API 端点频率限制
+- **输入验证**: 全面的请求验证
+- **审计日志**: 记录所有管理员操作
 
-### Data Protection
-- **Sensitive Data**: Payment data is properly masked in logs
-- **Encryption**: Sensitive configuration data encryption
-- **Access Logs**: Comprehensive access logging for security monitoring
+### 数据保护
+- **敏感数据**: 日志中的支付数据正确脱敏
+- **加密**: 敏感配置数据加密
+- **访问日志**: 全面的访问日志用于安全监控
 
-## Troubleshooting
+## 故障排除
 
-### Common Issues
+### 常见问题
 
-#### High Retry Queue Depth
-**Symptoms**: Large number of pending retries
-**Causes**: Gateway issues, network problems, configuration errors
-**Solutions**: 
-- Check gateway health
-- Verify network connectivity
-- Review retry configurations
-- Scale worker instances
+#### 重试队列深度过高
+**症状**: 大量待处理重试
+**原因**: 网关问题、网络问题、配置错误
+**解决方案**: 
+- 检查网关健康状态
+- 验证网络连接
+- 检查重试配置
+- 扩展工作器实例
 
-#### Low Success Rates
-**Symptoms**: Retries consistently failing
-**Causes**: Permanent failures being retried, incorrect classification
-**Solutions**:
-- Review failure classification rules
-- Update retry strategies
-- Check gateway-specific issues
+#### 成功率过低
+**症状**: 重试持续失败
+**原因**: 永久性故障被重试、分类错误
+**解决方案**:
+- 检查故障分类规则
+- 更新重试策略
+- 检查网关特定问题
 
-#### Performance Issues
-**Symptoms**: Slow retry processing
-**Causes**: Database bottlenecks, queue overload
-**Solutions**:
-- Optimize database queries
-- Scale worker instances
-- Review queue configuration
+#### 性能问题
+**症状**: 重试处理缓慢
+**原因**: 数据库瓶颈、队列过载
+**解决方案**:
+- 优化数据库查询
+- 扩展工作器实例
+- 检查队列配置
 
-## Future Enhancements
+## 未来增强
 
-### Planned Features
-1. **Machine Learning Classification**: AI-powered failure classification
-2. **Adaptive Retry Strategies**: Dynamic strategy adjustment based on success rates
-3. **Advanced Analytics**: Predictive analytics for payment success
-4. **Multi-region Support**: Distributed retry processing
-5. **Enhanced Notifications**: Rich notifications with payment context
+### 计划功能
+1. **机器学习分类**: AI 驱动的故障分类
+2. **自适应重试策略**: 基于成功率的动态策略调整
+3. **高级分析**: 支付成功的预测分析
+4. **多区域支持**: 分布式重试处理
+5. **增强通知**: 带有支付上下文的丰富通知
 
-### Performance Optimizations
-1. **Caching Layer**: Redis-based caching for configurations
-2. **Database Sharding**: Horizontal database scaling
-3. **Async Processing**: Non-blocking retry processing
-4. **Batch Operations**: Bulk retry processing capabilities
+### 性能优化
+1. **缓存层**: 基于 Redis 的配置缓存
+2. **数据库分片**: 水平数据库扩展
+3. **异步处理**: 非阻塞重试处理
+4. **批量操作**: 批量重试处理能力
 
-## Conclusion
+## 结论
 
-The Smart Payment Retry Strategy implementation provides a robust, scalable, and intelligent solution for handling payment failures. With comprehensive monitoring, flexible configuration, and powerful admin tools, this system significantly improves payment success rates while reducing operational overhead.
+智能支付重试策略实现提供了一个强大、可扩展且智能的支付故障处理解决方案。通过全面的监控、灵活的配置和强大的管理工具，该系统显著提高了支付成功率，同时减少了运营开销。
 
-The implementation follows clean architecture principles, provides extensive test coverage, and includes comprehensive documentation for maintenance and future enhancements.
+该实现遵循清洁架构原则，提供广泛的测试覆盖，并包含用于维护和未来增强的全面文档。

@@ -137,7 +137,7 @@ type NotificationResult struct {
 	Target  string    `json:"target"`
 	Success bool      `json:"success"`
 	Message string    `json:"message"`
-	SentAt  time.Time `json:"sent_at"`
+	SentAt  time.Time `json:"sent_at" swaggertype:"string" format:"date-time" example:"2024-01-01T12:00:00Z"`
 	Error   string    `json:"error,omitempty"`
 }
 
@@ -341,7 +341,7 @@ func (ua *UsageAlert) ToResponse() *UsageAlertResponse {
 		Metadata:                ua.Metadata,
 		IsActive:                ua.IsActive(),
 		IsResolved:              ua.IsResolved(),
-		DurationSinceFirstFired: ua.GetDurationSinceFirstFired(),
+		DurationSinceFirstFired: ua.GetDurationSinceFirstFired().String(),
 		CreatedAt:               ua.CreatedAt,
 		UpdatedAt:               ua.UpdatedAt,
 	}
@@ -362,8 +362,8 @@ type AlertConfigurationResponse struct {
 	Name                 string                `json:"name" example:"Traffic 80% Alert"`                           // Alert name
 	Description          string                `json:"description" example:"Alert when traffic usage reaches 80%"` // Description
 	Priority             string                `json:"priority" example:"medium"`                                  // Priority level
-	CreatedAt            time.Time             `json:"created_at" example:"2024-01-01T00:00:00Z"`                  // Creation time
-	UpdatedAt            time.Time             `json:"updated_at" example:"2024-01-01T00:00:00Z"`                  // Update time
+	CreatedAt            time.Time             `json:"created_at" swaggertype:"string" format:"date-time" example:"2024-01-01T00:00:00Z"`                  // Creation time
+	UpdatedAt            time.Time             `json:"updated_at" swaggertype:"string" format:"date-time" example:"2024-01-01T00:00:00Z"`                  // Update time
 }
 
 // UsageAlertResponse represents the usage alert data structure for API responses
@@ -378,17 +378,17 @@ type UsageAlertResponse struct {
 	UsagePercent            float64              `json:"usage_percent" example:"80.5"`                                    // Usage percentage
 	Status                  string               `json:"status" example:"fired"`                                          // Alert status
 	Severity                string               `json:"severity" example:"warning"`                                      // Alert severity
-	FiredAt                 time.Time            `json:"fired_at" example:"2024-01-01T12:00:00Z"`                         // When fired
-	ResolvedAt              *time.Time           `json:"resolved_at,omitempty" example:"2024-01-01T13:00:00Z"`            // When resolved
+	FiredAt                 time.Time            `json:"fired_at" swaggertype:"string" format:"date-time" example:"2024-01-01T12:00:00Z"`                         // When fired
+	ResolvedAt              *time.Time           `json:"resolved_at,omitempty" swaggertype:"string" format:"date-time" example:"2024-01-01T13:00:00Z"`            // When resolved
 	NotificationsSent       int                  `json:"notifications_sent" example:"3"`                                  // Notifications sent count
-	LastNotificationSent    *time.Time           `json:"last_notification_sent,omitempty" example:"2024-01-01T12:30:00Z"` // Last notification time
+	LastNotificationSent    *time.Time           `json:"last_notification_sent,omitempty" swaggertype:"string" format:"date-time" example:"2024-01-01T12:30:00Z"` // Last notification time
 	NotificationChannels    string               `json:"notification_channels"`                                           // Notification channels used
 	NotificationResults     []NotificationResult `json:"notification_results"`                                            // Notification results
 	Message                 string               `json:"message" example:"Traffic usage has reached 80% of your limit"`   // Alert message
 	Metadata                string               `json:"metadata,omitempty"`                                              // Additional metadata
 	IsActive                bool                 `json:"is_active" example:"true"`                                        // Whether alert is active
 	IsResolved              bool                 `json:"is_resolved" example:"false"`                                     // Whether alert is resolved
-	DurationSinceFirstFired time.Duration        `json:"duration_since_first_fired" example:"30m"`                        // Duration since first fired
-	CreatedAt               time.Time            `json:"created_at" example:"2024-01-01T12:00:00Z"`                       // Creation time
-	UpdatedAt               time.Time            `json:"updated_at" example:"2024-01-01T12:00:00Z"`                       // Update time
+	DurationSinceFirstFired string               `json:"duration_since_first_fired" example:"30m" swaggertype:"string"`   // Duration since first fired (as string)
+	CreatedAt               time.Time            `json:"created_at" swaggertype:"string" format:"date-time" example:"2024-01-01T12:00:00Z"`                       // Creation time
+	UpdatedAt               time.Time            `json:"updated_at" swaggertype:"string" format:"date-time" example:"2024-01-01T12:00:00Z"`                       // Update time
 }

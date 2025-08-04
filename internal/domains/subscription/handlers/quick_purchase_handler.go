@@ -3,6 +3,7 @@ package handlers
 import (
 	"net"
 
+	paymententities "linke/internal/domains/payment/entities"
 	"linke/internal/domains/subscription/usecases/interfaces"
 	userEntities "linke/internal/domains/user/entities"
 	"linke/internal/shared/logger"
@@ -95,10 +96,16 @@ func (h *QuickPurchaseHandler) QuickPurchase(c *gin.Context) {
 		return
 	}
 
+	// Type assert PaymentRecord to get the payment number for logging
+	var paymentNo string
+	if paymentRecord, ok := purchaseResponse.PaymentRecord.(*paymententities.PaymentRecordResponse); ok {
+		paymentNo = paymentRecord.PaymentNo
+	}
+	
 	logger.Info("Quick purchase created successfully",
 		logger.Uint("user_id", user.ID),
 		logger.Uint("plan_id", req.PlanID),
-		logger.String("payment_no", purchaseResponse.PaymentRecord.PaymentNo))
+		logger.String("payment_no", paymentNo))
 
 	response.CreatedWithMessage(c, "Quick purchase created successfully", purchaseResponse)
 }
