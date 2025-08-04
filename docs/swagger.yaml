@@ -1696,17 +1696,6 @@ definitions:
     required:
     - reason
     type: object
-  handlers.ChangePasswordRequest:
-    properties:
-      new_password:
-        minLength: 6
-        type: string
-      old_password:
-        type: string
-    required:
-    - new_password
-    - old_password
-    type: object
   handlers.CreatePaymentOrderRequest:
     properties:
       amount:
@@ -3669,7 +3658,7 @@ paths:
       summary: Reset cache metrics
       tags:
       - Cache
-  /admin/cache/stats:
+  /admin/cache/statistics:
     get:
       consumes:
       - application/json
@@ -5185,7 +5174,7 @@ paths:
       summary: '[Admin] Search users'
       tags:
       - Admin-User-Management
-  /admin/users/stats:
+  /admin/users/statistics:
     get:
       consumes:
       - application/json
@@ -5367,31 +5356,6 @@ paths:
       security:
       - BearerAuth: []
       summary: User logout
-      tags:
-      - auth
-  /auth/profile:
-    get:
-      consumes:
-      - application/json
-      description: Get current user's profile information
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.StandardResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Get user profile
       tags:
       - auth
   /auth/providers:
@@ -6587,7 +6551,7 @@ paths:
       summary: Set a payment method as default
       tags:
       - payment-methods
-  /payment-methods/{id}/stats:
+  /payment-methods/{id}/statistics:
     get:
       description: Retrieve usage statistics for a specific payment method
       parameters:
@@ -8995,42 +8959,6 @@ paths:
       summary: Get usage trends for a subscription
       tags:
       - usage
-  /user/password:
-    put:
-      consumes:
-      - application/json
-      description: Change user's own password
-      parameters:
-      - description: Password change data
-        in: body
-        name: passwords
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.ChangePasswordRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.MessageOnlyResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[User] Change password'
-      tags:
-      - User-Profile
   /user/profile:
     get:
       consumes:

@@ -579,7 +579,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/cache/stats": {
+        "/admin/cache/statistics": {
             "get": {
                 "security": [
                     {
@@ -2305,7 +2305,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/users/stats": {
+        "/admin/users/statistics": {
             "get": {
                 "security": [
                     {
@@ -3171,46 +3171,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/response.MessageOnlyResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/auth/profile": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get current user's profile information",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Get user profile",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.StandardResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -5286,7 +5246,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/payment-methods/{id}/stats": {
+        "/payment-methods/{id}/statistics": {
             "get": {
                 "security": [
                     {
@@ -9002,63 +8962,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/password": {
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Change user's own password",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User-Profile"
-                ],
-                "summary": "[User] Change password",
-                "parameters": [
-                    {
-                        "description": "Password change data",
-                        "name": "passwords",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ChangePasswordRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.MessageOnlyResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/user/profile": {
             "get": {
                 "security": [
@@ -11458,22 +11361,6 @@ const docTemplate = `{
                     "maxLength": 255,
                     "minLength": 1,
                     "example": "No longer needed"
-                }
-            }
-        },
-        "handlers.ChangePasswordRequest": {
-            "type": "object",
-            "required": [
-                "new_password",
-                "old_password"
-            ],
-            "properties": {
-                "new_password": {
-                    "type": "string",
-                    "minLength": 6
-                },
-                "old_password": {
-                    "type": "string"
                 }
             }
         },

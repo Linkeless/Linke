@@ -48,7 +48,7 @@ paymentMethodGroup := apiV1.Group("/payment-methods")
     paymentMethodGroup.POST("/:id/validate", paymentMethodHandler.ValidatePaymentMethod)
     
     // 获取支付方式使用统计
-    paymentMethodGroup.GET("/:id/stats", paymentMethodHandler.GetPaymentMethodUsageStats)
+    paymentMethodGroup.GET("/:id/statistics", paymentMethodHandler.GetPaymentMethodUsageStats)
 }
 ```
 
@@ -100,7 +100,7 @@ paymentMethodGroup := apiV1.Group("/payment-methods")
 - **响应**: 验证结果和已更新的支付方式
 
 ### 9. 获取使用统计
-- **端点**: `GET /api/v1/payment-methods/{id}/stats`
+- **端点**: `GET /api/v1/payment-methods/{id}/statistics`
 - **安全**: 用户所有权验证
 - **响应**: 支付方式的使用统计
 

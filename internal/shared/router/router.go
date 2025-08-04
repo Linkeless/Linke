@@ -112,8 +112,7 @@ func SetupRoutes(
 		authGroup.POST("/login", authHandler.LoginLocal)
 		authGroup.POST("/logout", authHandler.Logout)
 		authGroup.POST("/refresh", authHandler.RefreshToken)
-		authGroup.GET("/profile", authHandler.GetProfile)
-		authGroup.POST("/change-password", authHandler.ChangePassword)
+		authGroup.POST("/change-password", middleware.AuthMiddleware(newAuthServiceAdapter(authService)), authHandler.ChangePassword)
 
 		// OAuth provider routes
 		authGroup.GET("/providers", authHandler.GetProviders)
@@ -139,8 +138,7 @@ func SetupRoutes(
 	{
 		userGroup.GET("/profile", userProfileHandler.GetProfile)
 		userGroup.PUT("/profile", userProfileHandler.UpdateProfile)
-		userGroup.POST("/change-password", userProfileHandler.ChangePassword)
-		userGroup.PUT("/password", userProfileHandler.ChangePassword) // Alias for change-password
+		// Password change functionality is handled by /api/v1/auth/change-password
 	}
 
 	// Admin route group (/api/v1/admin) - requires authentication and admin privileges
@@ -162,7 +160,7 @@ func SetupRoutes(
 		adminUserGroup.PUT("/:id/role", adminUserHandler.UpdateUserRole)
 		adminUserGroup.PUT("/:id/status", adminUserHandler.UpdateUserStatus)
 		adminUserGroup.POST("/:id/reset-password", adminUserHandler.ResetUserPassword)
-		adminUserGroup.GET("/stats", adminUserHandler.GetUserStats)
+		adminUserGroup.GET("/statistics", adminUserHandler.GetUserStats)
 		adminUserGroup.GET("/provider", adminUserHandler.ListUsersByProvider)
 		adminUserGroup.GET("/deleted", adminUserHandler.ListDeletedUsers)
 		adminUserGroup.GET("/search", adminUserHandler.SearchUsers)
@@ -265,7 +263,7 @@ func SetupRoutes(
 		paymentGroup.GET("/orders/my", middleware.AuthMiddleware(newAuthServiceAdapter(authService)), paymentHandler.GetMyPaymentOrders)
 		// Public endpoint - no auth needed
 		paymentGroup.GET("/methods", paymentHandler.GetAvailablePaymentMethods)
-		paymentGroup.GET("/configs", paymentHandler.GetPaymentConfigs)
+		paymentGroup.GET("/configs", paymentHandler.GetActivePaymentConfigs)
 		// Webhook endpoint - no auth needed (uses signature validation)
 		paymentGroup.POST("/notify/:gateway", paymentHandler.PaymentNotify)
 	}
@@ -281,9 +279,8 @@ func SetupRoutes(
 		paymentMethodsGroup.DELETE("/:id", paymentMethodHandler.DeletePaymentMethod)
 		paymentMethodsGroup.POST("/:id/validate", paymentMethodHandler.ValidatePaymentMethod)
 		paymentMethodsGroup.GET("/default", paymentMethodHandler.GetDefaultPaymentMethod)
-		paymentMethodsGroup.POST("/:id/set-default", paymentMethodHandler.SetDefaultPaymentMethod)
-		paymentMethodsGroup.PUT("/:id/default", paymentMethodHandler.SetDefaultPaymentMethod) // Alias for set-default
-		paymentMethodsGroup.GET("/:id/stats", paymentMethodHandler.GetPaymentMethodUsageStats)
+		paymentMethodsGroup.PUT("/:id/default", paymentMethodHandler.SetDefaultPaymentMethod)
+		paymentMethodsGroup.GET("/:id/statistics", paymentMethodHandler.GetPaymentMethodUsageStats)
 	}
 
 	// Server routes (/api/v1/server)
@@ -307,7 +304,7 @@ func SetupRoutes(
 	// Log important routes for verification
 	importantRoutes := []string{
 		"/api/v1/admin/cache/metrics",
-		"/api/v1/admin/cache/stats",
+		"/api/v1/admin/cache/statistics",
 		"/api/v1/admin/payment/configs",
 		"/api/v1/admin/payment/retries",
 		"/api/v1/payment-methods",

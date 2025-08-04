@@ -447,7 +447,7 @@ func (h *PaymentMethodHandler) GetDefaultPaymentMethod(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse
 // @Failure 500 {object} response.APIResponse
 // @Security BearerAuth
-// @Router /payment-methods/{id}/stats [get]
+// @Router /payment-methods/{id}/statistics [get]
 func (h *PaymentMethodHandler) GetPaymentMethodUsageStats(c *gin.Context) {
 	userID := h.getUserIDFromContext(c)
 	if userID == 0 {

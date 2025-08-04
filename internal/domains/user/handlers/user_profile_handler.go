@@ -133,71 +133,12 @@ func (h *UserProfileHandler) UpdateProfile(c *gin.Context) {
 	response.Success(c, user.ToResponse())
 }
 
-// ChangePassword godoc
-// @Summary [User] Change password
-// @Description Change user's own password
-// @Tags User-Profile
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param passwords body ChangePasswordRequest true "Password change data"
-// @Success 200 {object} response.MessageOnlyResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /user/password [put]
-func (h *UserProfileHandler) ChangePassword(c *gin.Context) {
-	// Get current user from context
-	userValue, exists := c.Get(middleware.AuthContextKey)
-	if !exists {
-		response.Unauthorized(c, "Authentication required")
-		return
-	}
-
-	currentUser, ok := userValue.(*entities.User)
-	if !ok {
-		response.Unauthorized(c, "Invalid user context")
-		return
-	}
-
-	// Only allow local account users to change password
-	if currentUser.Provider != entities.ProviderLocal {
-		response.BadRequest(c, "Password change is only available for local accounts")
-		return
-	}
-
-	var req ChangePasswordRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, err.Error())
-		return
-	}
-
-	// Validate password length
-	if len(req.NewPassword) < 6 {
-		response.BadRequest(c, "New password must be at least 6 characters")
-		return
-	}
-
-	// Here you would implement password change logic
-	// For now, we'll just return success
-	// TODO: Implement actual password change with verification
-
-	logger.Info("Password changed successfully",
-		logger.Uint("user_id", currentUser.ID),
-	)
-
-	response.SuccessWithMessage(c, "Password changed successfully", nil)
-}
+// ChangePassword has been removed - password changes are now handled by /api/v1/auth/change-password
+// This consolidates password functionality in the auth domain where it belongs.
 
 // UserProfileUpdateRequest represents the structure for profile updates
 type UserProfileUpdateRequest struct {
 	Username string `json:"username"`
-	Name     string `json:"name"`
+	Name     string `json:"name"`  
 	Avatar   string `json:"avatar"`
-}
-
-// ChangePasswordRequest represents the structure for password change
-type ChangePasswordRequest struct {
-	OldPassword string `json:"old_password" binding:"required"`
-	NewPassword string `json:"new_password" binding:"required,min=6"`
 }

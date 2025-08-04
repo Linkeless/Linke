@@ -580,17 +580,8 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	response.SuccessWithMessage(c, "Password changed successfully", nil)
 }
 
-// GetProfile godoc
-// @Summary Get user profile
-// @Description Get current user's profile information
-// @Tags auth
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Success 200 {object} response.StandardResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /auth/profile [get]
+// GetProfile - DEPRECATED: This method is no longer routed
+// Use /api/v1/user/profile instead via UserProfileHandler
 func (h *AuthHandler) GetProfile(c *gin.Context) {
 	user, exists := c.Get(middleware.AuthContextKey)
 	if !exists {

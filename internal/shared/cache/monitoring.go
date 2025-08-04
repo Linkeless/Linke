@@ -59,7 +59,7 @@ func (h *CacheMonitoringHandler) RegisterRoutes(router *gin.RouterGroup) {
 		// Basic cache monitoring routes
 		cacheGroup.GET("/metrics", h.GetMetrics)
 		cacheGroup.GET("/metrics/:prefix", h.GetMetricsByPrefix)
-		cacheGroup.GET("/stats", h.GetCacheStats)
+		cacheGroup.GET("/statistics", h.GetCacheStats)
 		cacheGroup.POST("/reset-metrics", h.ResetMetrics)
 		cacheGroup.DELETE("/flush", h.FlushCache)
 		cacheGroup.DELETE("/pattern/:pattern", h.DeleteByPattern)
@@ -126,7 +126,7 @@ func (h *CacheMonitoringHandler) GetMetricsByPrefix(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} response.Response{data=CacheStats}
-// @Router /admin/cache/stats [get]
+// @Router /admin/cache/statistics [get]
 func (h *CacheMonitoringHandler) GetCacheStats(c *gin.Context) {
 	ctx := c.Request.Context()
 

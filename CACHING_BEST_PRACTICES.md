@@ -190,7 +190,7 @@ var Module = fx.Module("subscription",
 ### 监控端点
 - `GET /api/v1/admin/cache/metrics` - 整体缓存性能
 - `GET /api/v1/admin/cache/metrics/{prefix}` - 特定领域指标
-- `GET /api/v1/admin/cache/stats` - Redis 统计信息
+- `GET /api/v1/admin/cache/statistics` - Redis 统计信息
 
 ### 关键指标
 ```json

@@ -575,7 +575,7 @@ func (h *AdminUserHandler) ListUsersByProvider(c *gin.Context) {
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /admin/users/stats [get]
+// @Router /admin/users/statistics [get]
 func (h *AdminUserHandler) GetUserStats(c *gin.Context) {
 	stats, err := h.userService.GetUserStats(c.Request.Context())
 	if err != nil {
