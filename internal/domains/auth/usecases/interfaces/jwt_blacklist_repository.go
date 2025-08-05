@@ -5,18 +5,18 @@ import (
 	"time"
 
 	"linke/internal/domains/auth/entities"
+	"linke/internal/shared/framework"
 )
 
 // JWTBlacklistRepository defines the interface for JWT blacklist data access operations
 type JWTBlacklistRepository interface {
-	// Basic CRUD operations
-	Create(ctx context.Context, blacklist *entities.JWTBlacklist) error
-	GetByTokenHash(ctx context.Context, tokenHash string) (*entities.JWTBlacklist, error)
-	Delete(ctx context.Context, tokenHash string) error
+	framework.TimeBasedRepository[entities.JWTBlacklist, string]
 
 	// Token blacklisting operations
+	GetByTokenHash(ctx context.Context, tokenHash string) (*entities.JWTBlacklist, error)
 	IsTokenBlacklisted(ctx context.Context, tokenHash string) (bool, error)
 	BlacklistToken(ctx context.Context, tokenHash string, userID *uint, reason string, expiresAt time.Time) error
+	Delete(ctx context.Context, tokenHash string) error
 
 	// User-wide operations
 	BlacklistAllUserTokens(ctx context.Context, userID uint, reason string, beforeTime time.Time, expiresAt time.Time) error
@@ -24,7 +24,6 @@ type JWTBlacklistRepository interface {
 	GetUserBlacklistedTokens(ctx context.Context, userID uint) ([]*entities.JWTBlacklist, error)
 
 	// List operations with pagination
-	List(ctx context.Context, limit, offset int) ([]*entities.JWTBlacklist, int64, error)
 	ListByUser(ctx context.Context, userID uint, limit, offset int) ([]*entities.JWTBlacklist, int64, error)
 	ListByReason(ctx context.Context, reason string, limit, offset int) ([]*entities.JWTBlacklist, int64, error)
 
@@ -34,7 +33,6 @@ type JWTBlacklistRepository interface {
 	DeleteOlderThan(ctx context.Context, before time.Time) (int64, error)
 
 	// Statistics
-	CountTotal(ctx context.Context) (int64, error)
 	CountByReason(ctx context.Context, reason string) (int64, error)
 	CountByUser(ctx context.Context, userID uint) (int64, error)
 	CountExpired(ctx context.Context) (int64, error)
@@ -42,5 +40,4 @@ type JWTBlacklistRepository interface {
 
 	// Time-based queries
 	GetExpiredBefore(ctx context.Context, before time.Time, limit int) ([]*entities.JWTBlacklist, error)
-	GetCreatedAfter(ctx context.Context, after time.Time, limit, offset int) ([]*entities.JWTBlacklist, int64, error)
 }

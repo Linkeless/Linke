@@ -6,30 +6,26 @@ import (
 	"time"
 )
 
-// PaymentService defines the interface for payment service operations
+// PaymentService defines payment-specific operations
 type PaymentService interface {
-	// Gateway management
+	// Gateway management (domain-specific)
 	RegisterGateway(name string, gateway PaymentGateway) error
 	GetGateway(name string) (PaymentGateway, error)
 
-	// Payment order operations
+	// Payment-specific operations that don't fit generic patterns
 	CreatePaymentOrder(ctx context.Context, req *CreatePaymentOrderRequest) (*entities.PaymentRecord, error)
 	GetPaymentRecord(ctx context.Context, paymentNo string) (*entities.PaymentRecord, error)
 	GetPaymentRecordByOutTradeNo(ctx context.Context, outTradeNo string) (*entities.PaymentRecord, error)
-
-	// Payment processing
 	UpdatePaymentStatus(ctx context.Context, paymentNo string, status string, transactionID string, paidAt *time.Time) error
 	ProcessNotification(ctx context.Context, gateway string, data map[string]interface{}) error
-
-	// User payment records
-	GetUserPaymentRecords(ctx context.Context, userID uint, limit, offset int) ([]*entities.PaymentRecord, int64, error)
 	GetAvailablePaymentMethods(ctx context.Context) (map[string][]string, error)
+	GeneratePaymentNo() (string, error)
 
 	// Service dependencies
 	SetSubscriptionOrderService(subscriptionOrderService SubscriptionOrderServiceInterface)
 
-	// Utility
-	GeneratePaymentNo() (string, error)
+	// Legacy method support for backward compatibility
+	GetUserPaymentRecords(ctx context.Context, userID uint, limit, offset int) ([]*entities.PaymentRecord, int64, error)
 }
 
 // PaymentGateway interface defines the methods that all payment gateways must implement

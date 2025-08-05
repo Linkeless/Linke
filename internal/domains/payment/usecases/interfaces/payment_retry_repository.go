@@ -5,18 +5,15 @@ import (
 	"time"
 
 	"linke/internal/domains/payment/entities"
+	"linke/internal/shared/framework"
 )
 
 // PaymentRetryRepository defines the interface for payment retry data access
 type PaymentRetryRepository interface {
-	// Basic CRUD operations
-	Create(ctx context.Context, retry *entities.PaymentRetry) error
-	GetByID(ctx context.Context, id uint) (*entities.PaymentRetry, error)
-	GetByPaymentRecordID(ctx context.Context, paymentRecordID uint) (*entities.PaymentRetry, error)
-	Update(ctx context.Context, retry *entities.PaymentRetry) error
-	Delete(ctx context.Context, id uint) error
+	framework.TimeBasedRepository[entities.PaymentRetry, uint]
 
-	// Query operations
+	// Specific queries
+	GetByPaymentRecordID(ctx context.Context, paymentRecordID uint) (*entities.PaymentRetry, error)
 	GetPendingRetries(ctx context.Context, limit int) ([]*entities.PaymentRetry, error)
 	GetRetriesDueForProcessing(ctx context.Context, beforeTime time.Time, limit int) ([]*entities.PaymentRetry, error)
 	GetActiveRetriesForGateway(ctx context.Context, gateway string) ([]*entities.PaymentRetry, error)
@@ -34,20 +31,15 @@ type PaymentRetryRepository interface {
 
 	// Bulk operations
 	MarkRetriesAsInProgress(ctx context.Context, ids []uint) error
-	UpdateRetryStatus(ctx context.Context, id uint, status string) error
 }
 
 // PaymentRetryHistoryRepository defines the interface for payment retry history data access
 type PaymentRetryHistoryRepository interface {
-	// Basic CRUD operations
-	Create(ctx context.Context, history *entities.PaymentRetryHistory) error
-	GetByID(ctx context.Context, id uint) (*entities.PaymentRetryHistory, error)
+	framework.TimeBasedRepository[entities.PaymentRetryHistory, uint]
+
+	// Specific queries
 	GetByRetryID(ctx context.Context, retryID uint) ([]*entities.PaymentRetryHistory, error)
 	GetByPaymentRecordID(ctx context.Context, paymentRecordID uint) ([]*entities.PaymentRetryHistory, error)
-	Update(ctx context.Context, history *entities.PaymentRetryHistory) error
-	Delete(ctx context.Context, id uint) error
-
-	// Query operations
 	GetRecentAttempts(ctx context.Context, retryID uint, limit int) ([]*entities.PaymentRetryHistory, error)
 	GetAttemptsForPayment(ctx context.Context, paymentRecordID uint) ([]*entities.PaymentRetryHistory, error)
 

@@ -8,153 +8,62 @@ import (
 
 	"linke/internal/domains/payment/entities"
 	"linke/internal/domains/payment/usecases/interfaces"
-	"linke/internal/shared/logger"
+	"linke/internal/shared/framework"
+	"linke/internal/shared/repository"
 )
 
 // paymentRetryHistoryRepository implements PaymentRetryHistoryRepository interface
 type paymentRetryHistoryRepository struct {
-	db *gorm.DB
+	*repository.TimeBasedRepositoryImpl[entities.PaymentRetryHistory, uint]
 }
 
 // NewPaymentRetryHistoryRepository creates a new payment retry history repository
-func NewPaymentRetryHistoryRepository(db *gorm.DB) interfaces.PaymentRetryHistoryRepository {
+func NewPaymentRetryHistoryRepository(db *gorm.DB, logger framework.Logger) interfaces.PaymentRetryHistoryRepository {
 	return &paymentRetryHistoryRepository{
-		db: db,
+		TimeBasedRepositoryImpl: repository.NewTimeBasedRepository[entities.PaymentRetryHistory, uint](db, logger),
 	}
 }
 
-// Basic CRUD operations
-
-func (r *paymentRetryHistoryRepository) Create(ctx context.Context, history *entities.PaymentRetryHistory) error {
-	if err := r.db.WithContext(ctx).Create(history).Error; err != nil {
-		logger.Error("Failed to create payment retry history",
-			logger.Error2("error", err),
-			logger.Uint("payment_retry_id", history.PaymentRetryID),
-			logger.Int("attempt_number", history.AttemptNumber),
-		)
-		return fmt.Errorf("failed to create payment retry history: %w", err)
-	}
-
-	logger.Debug("Payment retry history created",
-		logger.Uint("history_id", history.ID),
-		logger.Uint("payment_retry_id", history.PaymentRetryID),
-		logger.Int("attempt_number", history.AttemptNumber),
-		logger.String("status", history.Status),
-	)
-
-	return nil
-}
-
-func (r *paymentRetryHistoryRepository) GetByID(ctx context.Context, id uint) (*entities.PaymentRetryHistory, error) {
-	var history entities.PaymentRetryHistory
-	if err := r.db.WithContext(ctx).First(&history, id).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, fmt.Errorf("payment retry history not found: %d", id)
-		}
-		logger.Error("Failed to get payment retry history by ID",
-			logger.Error2("error", err),
-			logger.Uint("history_id", id),
-		)
-		return nil, fmt.Errorf("failed to get payment retry history: %w", err)
-	}
-
-	return &history, nil
-}
+// Query operations
 
 func (r *paymentRetryHistoryRepository) GetByRetryID(ctx context.Context, retryID uint) ([]*entities.PaymentRetryHistory, error) {
 	var histories []*entities.PaymentRetryHistory
-	if err := r.db.WithContext(ctx).
-		Where("payment_retry_id = ?", retryID).
-		Order("attempt_number ASC").
-		Find(&histories).Error; err != nil {
-		logger.Error("Failed to get payment retry histories by retry ID",
-			logger.Error2("error", err),
-			logger.Uint("payment_retry_id", retryID),
-		)
-		return nil, fmt.Errorf("failed to get payment retry histories: %w", err)
+	if err := r.GetDB().WithContext(ctx).Where("payment_retry_id = ?", retryID).
+		Order("created_at ASC").Find(&histories).Error; err != nil {
+		return nil, fmt.Errorf("failed to get payment retry history by retry ID: %w", err)
 	}
-
 	return histories, nil
 }
 
 func (r *paymentRetryHistoryRepository) GetByPaymentRecordID(ctx context.Context, paymentRecordID uint) ([]*entities.PaymentRetryHistory, error) {
 	var histories []*entities.PaymentRetryHistory
-	if err := r.db.WithContext(ctx).
-		Where("payment_record_id = ?", paymentRecordID).
-		Order("attempted_at ASC").
+	if err := r.GetDB().WithContext(ctx).
+		Joins("JOIN payment_retries ON payment_retry_histories.payment_retry_id = payment_retries.id").
+		Where("payment_retries.payment_record_id = ?", paymentRecordID).
+		Order("payment_retry_histories.created_at ASC").
 		Find(&histories).Error; err != nil {
-		logger.Error("Failed to get payment retry histories by payment record ID",
-			logger.Error2("error", err),
-			logger.Uint("payment_record_id", paymentRecordID),
-		)
-		return nil, fmt.Errorf("failed to get payment retry histories: %w", err)
+		return nil, fmt.Errorf("failed to get payment retry history by payment record ID: %w", err)
 	}
-
 	return histories, nil
 }
 
-func (r *paymentRetryHistoryRepository) Update(ctx context.Context, history *entities.PaymentRetryHistory) error {
-	if err := r.db.WithContext(ctx).Save(history).Error; err != nil {
-		logger.Error("Failed to update payment retry history",
-			logger.Error2("error", err),
-			logger.Uint("history_id", history.ID),
-		)
-		return fmt.Errorf("failed to update payment retry history: %w", err)
-	}
-
-	return nil
-}
-
-func (r *paymentRetryHistoryRepository) Delete(ctx context.Context, id uint) error {
-	if err := r.db.WithContext(ctx).Delete(&entities.PaymentRetryHistory{}, id).Error; err != nil {
-		logger.Error("Failed to delete payment retry history",
-			logger.Error2("error", err),
-			logger.Uint("history_id", id),
-		)
-		return fmt.Errorf("failed to delete payment retry history: %w", err)
-	}
-
-	return nil
-}
-
-// Query operations
-
 func (r *paymentRetryHistoryRepository) GetRecentAttempts(ctx context.Context, retryID uint, limit int) ([]*entities.PaymentRetryHistory, error) {
 	var histories []*entities.PaymentRetryHistory
-	query := r.db.WithContext(ctx).
-		Where("payment_retry_id = ?", retryID).
-		Order("attempted_at DESC")
-
+	query := r.GetDB().WithContext(ctx).Where("payment_retry_id = ?", retryID).
+		Order("created_at DESC")
+	
 	if limit > 0 {
 		query = query.Limit(limit)
 	}
-
+	
 	if err := query.Find(&histories).Error; err != nil {
-		logger.Error("Failed to get recent retry attempts",
-			logger.Error2("error", err),
-			logger.Uint("payment_retry_id", retryID),
-			logger.Int("limit", limit),
-		)
-		return nil, fmt.Errorf("failed to get recent retry attempts: %w", err)
+		return nil, fmt.Errorf("failed to get recent attempts: %w", err)
 	}
-
 	return histories, nil
 }
 
 func (r *paymentRetryHistoryRepository) GetAttemptsForPayment(ctx context.Context, paymentRecordID uint) ([]*entities.PaymentRetryHistory, error) {
-	var histories []*entities.PaymentRetryHistory
-	if err := r.db.WithContext(ctx).
-		Where("payment_record_id = ?", paymentRecordID).
-		Order("attempted_at ASC").
-		Find(&histories).Error; err != nil {
-		logger.Error("Failed to get attempts for payment",
-			logger.Error2("error", err),
-			logger.Uint("payment_record_id", paymentRecordID),
-		)
-		return nil, fmt.Errorf("failed to get attempts for payment: %w", err)
-	}
-
-	return histories, nil
+	return r.GetByPaymentRecordID(ctx, paymentRecordID)
 }
 
 // Statistics
@@ -164,7 +73,7 @@ func (r *paymentRetryHistoryRepository) GetAttemptStatistics(ctx context.Context
 		TotalAttempts   int     `gorm:"column:total_attempts"`
 		SuccessfulCount int     `gorm:"column:successful_count"`
 		FailedCount     int     `gorm:"column:failed_count"`
-		TimeoutCount    int     `gorm:"column:timeout_count"`
+		TimeoutCount    int     `gorm:"column:timeout_count"`  
 		ErrorCount      int     `gorm:"column:error_count"`
 		AverageDuration float64 `gorm:"column:average_duration"`
 		TotalDuration   int     `gorm:"column:total_duration"`
@@ -173,21 +82,17 @@ func (r *paymentRetryHistoryRepository) GetAttemptStatistics(ctx context.Context
 	query := `
 		SELECT 
 			COUNT(*) as total_attempts,
-			COUNT(CASE WHEN status = 'success' THEN 1 END) as successful_count,
-			COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed_count,
-			COUNT(CASE WHEN status = 'timeout' THEN 1 END) as timeout_count,
-			COUNT(CASE WHEN status = 'error' THEN 1 END) as error_count,
-			AVG(duration) as average_duration,
-			SUM(duration) as total_duration
+			COUNT(CASE WHEN response_status = 'success' THEN 1 END) as successful_count,
+			COUNT(CASE WHEN response_status = 'failed' THEN 1 END) as failed_count,
+			COUNT(CASE WHEN response_status = 'timeout' THEN 1 END) as timeout_count,
+			COUNT(CASE WHEN response_status = 'error' THEN 1 END) as error_count,
+			AVG(duration_ms) as average_duration,
+			SUM(duration_ms) as total_duration
 		FROM payment_retry_histories
 		WHERE payment_retry_id = ?
 	`
 
-	if err := r.db.WithContext(ctx).Raw(query, retryID).Scan(&stats).Error; err != nil {
-		logger.Error("Failed to get attempt statistics",
-			logger.Error2("error", err),
-			logger.Uint("payment_retry_id", retryID),
-		)
+	if err := r.GetDB().WithContext(ctx).Raw(query, retryID).Scan(&stats).Error; err != nil {
 		return nil, fmt.Errorf("failed to get attempt statistics: %w", err)
 	}
 
@@ -208,50 +113,33 @@ func (r *paymentRetryHistoryRepository) GetFailurePatterns(ctx context.Context, 
 
 	query := `
 		SELECT 
-			prh.error_type,
-			prh.failure_reason,
+			response_error_type as error_type,
+			response_error_message as failure_reason,
 			COUNT(*) as count,
-			COUNT(CASE WHEN prh.status = 'success' THEN 1 END) * 100.0 / COUNT(*) as success_rate,
-			AVG(pr.attempt_number) as average_attempts
+			AVG(CASE WHEN response_status = 'success' THEN 1.0 ELSE 0.0 END) * 100 as success_rate,
+			AVG(attempt_number) as average_attempts
 		FROM payment_retry_histories prh
 		JOIN payment_retries pr ON prh.payment_retry_id = pr.id
 		JOIN payment_records p ON pr.payment_record_id = p.id
 		WHERE p.gateway = ? 
-		  AND prh.attempted_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
-		  AND prh.error_type IS NOT NULL
-		  AND prh.failure_reason IS NOT NULL
-		GROUP BY prh.error_type, prh.failure_reason
-		HAVING count >= 2
-		ORDER BY count DESC, success_rate ASC
+			AND prh.created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
+			AND response_error_type IS NOT NULL
+		GROUP BY response_error_type, response_error_message
+		ORDER BY count DESC
 		LIMIT 50
 	`
 
-	rows, err := r.db.WithContext(ctx).Raw(query, gateway, days).Rows()
+	rows, err := r.GetDB().WithContext(ctx).Raw(query, gateway, days).Rows()
 	if err != nil {
-		logger.Error("Failed to get failure patterns",
-			logger.Error2("error", err),
-			logger.String("gateway", gateway),
-			logger.Int("days", days),
-		)
 		return nil, fmt.Errorf("failed to get failure patterns: %w", err)
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		var pattern interfaces.FailurePattern
-		if err := rows.Scan(
-			&pattern.ErrorType,
-			&pattern.FailureReason,
-			&pattern.Count,
-			&pattern.SuccessRate,
-			&pattern.AverageAttempts,
-		); err != nil {
-			logger.Warn("Failed to scan failure pattern row",
-				logger.Error2("error", err),
-			)
+		if err := rows.Scan(&pattern.ErrorType, &pattern.FailureReason, &pattern.Count, &pattern.SuccessRate, &pattern.AverageAttempts); err != nil {
 			continue
 		}
-
 		patterns = append(patterns, &pattern)
 	}
 

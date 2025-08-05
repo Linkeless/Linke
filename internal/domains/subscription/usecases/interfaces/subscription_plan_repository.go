@@ -3,30 +3,20 @@ package interfaces
 import (
 	"context"
 	"linke/internal/domains/subscription/entities"
+	"linke/internal/shared/framework"
 )
 
 // SubscriptionPlanRepository defines the interface for subscription plan data access operations
+// It extends GenericRepository with SubscriptionPlan-specific methods
 type SubscriptionPlanRepository interface {
-	// Basic CRUD operations
-	Create(ctx context.Context, plan *entities.SubscriptionPlan) error
-	GetByID(ctx context.Context, id uint) (*entities.SubscriptionPlan, error)
+	framework.GenericRepository[entities.SubscriptionPlan, uint]
+	
+	// Subscription plan specific query methods
 	GetByCode(ctx context.Context, code string) (*entities.SubscriptionPlan, error)
-	Update(ctx context.Context, plan *entities.SubscriptionPlan) error
-	Delete(ctx context.Context, id uint) error
-
-	// Soft delete operations
-	SoftDelete(ctx context.Context, id uint) error
-	Restore(ctx context.Context, id uint) error
-	HardDelete(ctx context.Context, id uint) error
-
-	// List operations with pagination
-	List(ctx context.Context, limit, offset int) ([]*entities.SubscriptionPlan, int64, error)
+	
+	// Filter operations specific to subscription plans
 	ListActive(ctx context.Context, limit, offset int) ([]*entities.SubscriptionPlan, int64, error)
 	ListVisible(ctx context.Context, limit, offset int) ([]*entities.SubscriptionPlan, int64, error)
-	ListDeleted(ctx context.Context, limit, offset int) ([]*entities.SubscriptionPlan, int64, error)
-
-	// Filter operations
-	ListByStatus(ctx context.Context, status string, limit, offset int) ([]*entities.SubscriptionPlan, int64, error)
 	ListByCurrency(ctx context.Context, currency string, limit, offset int) ([]*entities.SubscriptionPlan, int64, error)
 	ListByBillingCycle(ctx context.Context, billingCycle string, limit, offset int) ([]*entities.SubscriptionPlan, int64, error)
 	ListPopular(ctx context.Context, limit, offset int) ([]*entities.SubscriptionPlan, int64, error)
@@ -41,31 +31,22 @@ type SubscriptionPlanRepository interface {
 	GetCheapest(ctx context.Context, currency string) (*entities.SubscriptionPlan, error)
 	GetMostExpensive(ctx context.Context, currency string) (*entities.SubscriptionPlan, error)
 
-	// Search operations
-	Search(ctx context.Context, query string, limit, offset int) ([]*entities.SubscriptionPlan, int64, error)
-
-	// Status management
-	UpdateStatus(ctx context.Context, id uint, status string) error
+	// Subscription plan specific status management
 	UpdateVisibility(ctx context.Context, id uint, isVisible bool) error
 	UpdateSortOrder(ctx context.Context, id uint, sortOrder int) error
 	UpdatePopularFlag(ctx context.Context, id uint, isPopular bool) error
 	UpdateRecommendedFlag(ctx context.Context, id uint, isRecommended bool) error
 
-	// Batch operations
-	BatchUpdateStatus(ctx context.Context, ids []uint, status string) (int, []uint, error)
+	// Subscription plan specific batch operations
 	BatchUpdateVisibility(ctx context.Context, ids []uint, isVisible bool) (int, []uint, error)
-	BatchDelete(ctx context.Context, ids []uint) (int, []uint, error)
 
-	// Statistics
-	CountTotal(ctx context.Context) (int64, error)
-	CountByStatus(ctx context.Context, status string) (int64, error)
+	// Subscription plan specific statistics
 	CountVisible(ctx context.Context) (int64, error)
 	CountByCurrency(ctx context.Context, currency string) (int64, error)
 	CountByBillingCycle(ctx context.Context, billingCycle string) (int64, error)
 
-	// Existence checks
+	// Subscription plan specific existence checks
 	ExistsByCode(ctx context.Context, code string) (bool, error)
-	ExistsByID(ctx context.Context, id uint) (bool, error)
 
 	// Ordering operations
 	GetOrderedPlans(ctx context.Context, orderBy string, ascending bool, limit, offset int) ([]*entities.SubscriptionPlan, int64, error)

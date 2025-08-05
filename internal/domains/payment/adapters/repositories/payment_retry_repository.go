@@ -9,102 +9,39 @@ import (
 
 	"linke/internal/domains/payment/entities"
 	"linke/internal/domains/payment/usecases/interfaces"
-	"linke/internal/shared/logger"
+	"linke/internal/shared/framework"
+	"linke/internal/shared/repository"
 )
 
 // paymentRetryRepository implements PaymentRetryRepository interface
 type paymentRetryRepository struct {
-	db *gorm.DB
+	*repository.TimeBasedRepositoryImpl[entities.PaymentRetry, uint]
 }
 
 // NewPaymentRetryRepository creates a new payment retry repository
-func NewPaymentRetryRepository(db *gorm.DB) interfaces.PaymentRetryRepository {
+func NewPaymentRetryRepository(db *gorm.DB, logger framework.Logger) interfaces.PaymentRetryRepository {
 	return &paymentRetryRepository{
-		db: db,
+		TimeBasedRepositoryImpl: repository.NewTimeBasedRepository[entities.PaymentRetry, uint](db, logger),
 	}
-}
-
-// Basic CRUD operations
-
-func (r *paymentRetryRepository) Create(ctx context.Context, retry *entities.PaymentRetry) error {
-	if err := r.db.WithContext(ctx).Create(retry).Error; err != nil {
-		logger.Error("Failed to create payment retry",
-			logger.Error2("error", err),
-			logger.Uint("payment_record_id", retry.PaymentRecordID),
-		)
-		return fmt.Errorf("failed to create payment retry: %w", err)
-	}
-
-	logger.Info("Payment retry created successfully",
-		logger.Uint("retry_id", retry.ID),
-		logger.Uint("payment_record_id", retry.PaymentRecordID),
-		logger.String("strategy", retry.RetryStrategy),
-	)
-
-	return nil
-}
-
-func (r *paymentRetryRepository) GetByID(ctx context.Context, id uint) (*entities.PaymentRetry, error) {
-	var retry entities.PaymentRetry
-	if err := r.db.WithContext(ctx).First(&retry, id).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, fmt.Errorf("payment retry not found: %d", id)
-		}
-		logger.Error("Failed to get payment retry by ID",
-			logger.Error2("error", err),
-			logger.Uint("retry_id", id),
-		)
-		return nil, fmt.Errorf("failed to get payment retry: %w", err)
-	}
-
-	return &retry, nil
 }
 
 func (r *paymentRetryRepository) GetByPaymentRecordID(ctx context.Context, paymentRecordID uint) (*entities.PaymentRetry, error) {
 	var retry entities.PaymentRetry
-	if err := r.db.WithContext(ctx).Where("payment_record_id = ?", paymentRecordID).First(&retry).Error; err != nil {
+	if err := r.GetDB().WithContext(ctx).Where("payment_record_id = ?", paymentRecordID).First(&retry).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("payment retry not found for payment record: %d", paymentRecordID)
 		}
-		logger.Error("Failed to get payment retry by payment record ID",
-			logger.Error2("error", err),
-			logger.Uint("payment_record_id", paymentRecordID),
-		)
 		return nil, fmt.Errorf("failed to get payment retry: %w", err)
 	}
 
 	return &retry, nil
-}
-
-func (r *paymentRetryRepository) Update(ctx context.Context, retry *entities.PaymentRetry) error {
-	if err := r.db.WithContext(ctx).Save(retry).Error; err != nil {
-		logger.Error("Failed to update payment retry",
-			logger.Error2("error", err),
-			logger.Uint("retry_id", retry.ID),
-		)
-		return fmt.Errorf("failed to update payment retry: %w", err)
-	}
-
-	return nil
-}
-
-func (r *paymentRetryRepository) Delete(ctx context.Context, id uint) error {
-	if err := r.db.WithContext(ctx).Delete(&entities.PaymentRetry{}, id).Error; err != nil {
-		logger.Error("Failed to delete payment retry",
-			logger.Error2("error", err),
-			logger.Uint("retry_id", id),
-		)
-		return fmt.Errorf("failed to delete payment retry: %w", err)
-	}
-
-	return nil
 }
 
 // Query operations
 
 func (r *paymentRetryRepository) GetPendingRetries(ctx context.Context, limit int) ([]*entities.PaymentRetry, error) {
 	var retries []*entities.PaymentRetry
-	query := r.db.WithContext(ctx).
+	query := r.GetDB().WithContext(ctx).
 		Where("status = ?", entities.PaymentRetryStatusPending).
 		Order("next_retry_at ASC")
 
@@ -113,10 +50,6 @@ func (r *paymentRetryRepository) GetPendingRetries(ctx context.Context, limit in
 	}
 
 	if err := query.Find(&retries).Error; err != nil {
-		logger.Error("Failed to get pending retries",
-			logger.Error2("error", err),
-			logger.Int("limit", limit),
-		)
 		return nil, fmt.Errorf("failed to get pending retries: %w", err)
 	}
 
@@ -125,7 +58,7 @@ func (r *paymentRetryRepository) GetPendingRetries(ctx context.Context, limit in
 
 func (r *paymentRetryRepository) GetRetriesDueForProcessing(ctx context.Context, beforeTime time.Time, limit int) ([]*entities.PaymentRetry, error) {
 	var retries []*entities.PaymentRetry
-	query := r.db.WithContext(ctx).
+	query := r.GetDB().WithContext(ctx).
 		Where("status = ? AND next_retry_at <= ?", entities.PaymentRetryStatusPending, beforeTime).
 		Order("next_retry_at ASC")
 
@@ -134,11 +67,6 @@ func (r *paymentRetryRepository) GetRetriesDueForProcessing(ctx context.Context,
 	}
 
 	if err := query.Find(&retries).Error; err != nil {
-		logger.Error("Failed to get retries due for processing",
-			logger.Error2("error", err),
-			logger.String("before_time", beforeTime.String()),
-			logger.Int("limit", limit),
-		)
 		return nil, fmt.Errorf("failed to get retries due for processing: %w", err)
 	}
 
@@ -147,15 +75,11 @@ func (r *paymentRetryRepository) GetRetriesDueForProcessing(ctx context.Context,
 
 func (r *paymentRetryRepository) GetActiveRetriesForGateway(ctx context.Context, gateway string) ([]*entities.PaymentRetry, error) {
 	var retries []*entities.PaymentRetry
-	if err := r.db.WithContext(ctx).
+	if err := r.GetDB().WithContext(ctx).
 		Joins("JOIN payment_records ON payment_retries.payment_record_id = payment_records.id").
 		Where("payment_records.gateway = ? AND payment_retries.status IN (?)",
 			gateway, []string{entities.PaymentRetryStatusPending, entities.PaymentRetryStatusInProgress}).
 		Find(&retries).Error; err != nil {
-		logger.Error("Failed to get active retries for gateway",
-			logger.Error2("error", err),
-			logger.String("gateway", gateway),
-		)
 		return nil, fmt.Errorf("failed to get active retries for gateway: %w", err)
 	}
 
@@ -167,20 +91,16 @@ func (r *paymentRetryRepository) GetRetriesForUser(ctx context.Context, userID u
 	var total int64
 
 	// Count total
-	countQuery := r.db.WithContext(ctx).Model(&entities.PaymentRetry{}).
+	countQuery := r.GetDB().WithContext(ctx).Model(&entities.PaymentRetry{}).
 		Joins("JOIN payment_records ON payment_retries.payment_record_id = payment_records.id").
 		Where("payment_records.user_id = ?", userID)
 
 	if err := countQuery.Count(&total).Error; err != nil {
-		logger.Error("Failed to count retries for user",
-			logger.Error2("error", err),
-			logger.Uint("user_id", userID),
-		)
 		return nil, 0, fmt.Errorf("failed to count retries for user: %w", err)
 	}
 
 	// Get records
-	query := r.db.WithContext(ctx).
+	query := r.GetDB().WithContext(ctx).
 		Joins("JOIN payment_records ON payment_retries.payment_record_id = payment_records.id").
 		Where("payment_records.user_id = ?", userID).
 		Order("payment_retries.created_at DESC")
@@ -193,10 +113,6 @@ func (r *paymentRetryRepository) GetRetriesForUser(ctx context.Context, userID u
 	}
 
 	if err := query.Find(&retries).Error; err != nil {
-		logger.Error("Failed to get retries for user",
-			logger.Error2("error", err),
-			logger.Uint("user_id", userID),
-		)
 		return nil, 0, fmt.Errorf("failed to get retries for user: %w", err)
 	}
 
@@ -228,11 +144,7 @@ func (r *paymentRetryRepository) GetRetryStatsByGateway(ctx context.Context, gat
 		WHERE p.gateway = ? AND pr.created_at BETWEEN ? AND ?
 	`
 
-	if err := r.db.WithContext(ctx).Raw(query, gateway, fromDate, toDate).Scan(&stats).Error; err != nil {
-		logger.Error("Failed to get retry stats by gateway",
-			logger.Error2("error", err),
-			logger.String("gateway", gateway),
-		)
+	if err := r.GetDB().WithContext(ctx).Raw(query, gateway, fromDate, toDate).Scan(&stats).Error; err != nil {
 		return nil, fmt.Errorf("failed to get retry stats: %w", err)
 	}
 
@@ -270,11 +182,8 @@ func (r *paymentRetryRepository) GetRetryStatsByDate(ctx context.Context, fromDa
 		ORDER BY date DESC
 	`
 
-	rows, err := r.db.WithContext(ctx).Raw(query, fromDate, toDate).Rows()
+	rows, err := r.GetDB().WithContext(ctx).Raw(query, fromDate, toDate).Rows()
 	if err != nil {
-		logger.Error("Failed to get retry stats by date",
-			logger.Error2("error", err),
-		)
 		return nil, fmt.Errorf("failed to get retry stats by date: %w", err)
 	}
 	defer rows.Close()
@@ -312,11 +221,7 @@ func (r *paymentRetryRepository) GetRetrySuccessRate(ctx context.Context, gatewa
 		WHERE p.gateway = ? AND pr.created_at >= ?
 	`
 
-	if err := r.db.WithContext(ctx).Raw(query, gateway, fromDate).Scan(&result).Error; err != nil {
-		logger.Error("Failed to get retry success rate",
-			logger.Error2("error", err),
-			logger.String("gateway", gateway),
-		)
+	if err := r.GetDB().WithContext(ctx).Raw(query, gateway, fromDate).Scan(&result).Error; err != nil {
 		return 0, fmt.Errorf("failed to get retry success rate: %w", err)
 	}
 
@@ -333,7 +238,7 @@ func (r *paymentRetryRepository) GetAllRetries(ctx context.Context, filters *int
 	var retries []*entities.PaymentRetry
 	var total int64
 
-	query := r.db.WithContext(ctx).Model(&entities.PaymentRetry{})
+	query := r.GetDB().WithContext(ctx).Model(&entities.PaymentRetry{})
 
 	// Apply filters
 	if filters != nil {
@@ -375,9 +280,6 @@ func (r *paymentRetryRepository) GetAllRetries(ctx context.Context, filters *int
 
 	// Count total
 	if err := query.Count(&total).Error; err != nil {
-		logger.Error("Failed to count all retries",
-			logger.Error2("error", err),
-		)
 		return nil, 0, fmt.Errorf("failed to count retries: %w", err)
 	}
 
@@ -391,9 +293,6 @@ func (r *paymentRetryRepository) GetAllRetries(ctx context.Context, filters *int
 	}
 
 	if err := query.Find(&retries).Error; err != nil {
-		logger.Error("Failed to get all retries",
-			logger.Error2("error", err),
-		)
 		return nil, 0, fmt.Errorf("failed to get retries: %w", err)
 	}
 
@@ -409,18 +308,9 @@ func (r *paymentRetryRepository) CancelRetry(ctx context.Context, id uint, reaso
 		"notes":        reason,
 	}
 
-	if err := r.db.WithContext(ctx).Model(&entities.PaymentRetry{}).Where("id = ?", id).Updates(updates).Error; err != nil {
-		logger.Error("Failed to cancel retry",
-			logger.Error2("error", err),
-			logger.Uint("retry_id", id),
-		)
+	if err := r.GetDB().WithContext(ctx).Model(&entities.PaymentRetry{}).Where("id = ?", id).Updates(updates).Error; err != nil {
 		return fmt.Errorf("failed to cancel retry: %w", err)
 	}
-
-	logger.Info("Payment retry cancelled",
-		logger.Uint("retry_id", id),
-		logger.String("reason", reason),
-	)
 
 	return nil
 }
@@ -437,17 +327,9 @@ func (r *paymentRetryRepository) ResetRetry(ctx context.Context, id uint) error 
 		"total_delay_time": 0,
 	}
 
-	if err := r.db.WithContext(ctx).Model(&entities.PaymentRetry{}).Where("id = ?", id).Updates(updates).Error; err != nil {
-		logger.Error("Failed to reset retry",
-			logger.Error2("error", err),
-			logger.Uint("retry_id", id),
-		)
+	if err := r.GetDB().WithContext(ctx).Model(&entities.PaymentRetry{}).Where("id = ?", id).Updates(updates).Error; err != nil {
 		return fmt.Errorf("failed to reset retry: %w", err)
 	}
-
-	logger.Info("Payment retry reset",
-		logger.Uint("retry_id", id),
-	)
 
 	return nil
 }
@@ -459,29 +341,10 @@ func (r *paymentRetryRepository) MarkRetriesAsInProgress(ctx context.Context, id
 		return nil
 	}
 
-	if err := r.db.WithContext(ctx).Model(&entities.PaymentRetry{}).
+	if err := r.GetDB().WithContext(ctx).Model(&entities.PaymentRetry{}).
 		Where("id IN (?)", ids).
 		Update("status", entities.PaymentRetryStatusInProgress).Error; err != nil {
-		logger.Error("Failed to mark retries as in progress",
-			logger.Error2("error", err),
-			logger.Int("count", len(ids)),
-		)
 		return fmt.Errorf("failed to mark retries as in progress: %w", err)
-	}
-
-	return nil
-}
-
-func (r *paymentRetryRepository) UpdateRetryStatus(ctx context.Context, id uint, status string) error {
-	if err := r.db.WithContext(ctx).Model(&entities.PaymentRetry{}).
-		Where("id = ?", id).
-		Update("status", status).Error; err != nil {
-		logger.Error("Failed to update retry status",
-			logger.Error2("error", err),
-			logger.Uint("retry_id", id),
-			logger.String("status", status),
-		)
-		return fmt.Errorf("failed to update retry status: %w", err)
 	}
 
 	return nil

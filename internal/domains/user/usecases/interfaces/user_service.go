@@ -3,17 +3,20 @@ package interfaces
 import (
 	"context"
 	"linke/internal/domains/user/entities"
+	"linke/internal/shared/framework"
 )
 
-// UserService defines the interface for user service operations
+// UserService provides user-specific operations
+// This interface can be implemented using the generic service as a base, but maintains
+// the original method signatures for backward compatibility
 type UserService interface {
-	// User CRUD operations
+	// Core CRUD operations (maintaining original signatures)
 	CreateUser(ctx context.Context, user *entities.User) error
 	GetUserByID(ctx context.Context, id uint) (*entities.User, error)
-	GetUserByEmail(ctx context.Context, email string) (*entities.User, error)
 	UpdateUser(ctx context.Context, user *entities.User) error
 
-	// Active user operations
+	// Domain-specific user operations
+	GetUserByEmail(ctx context.Context, email string) (*entities.User, error)
 	GetActiveUserByID(ctx context.Context, id uint) (*entities.User, error)
 	GetActiveUserByEmail(ctx context.Context, email string) (*entities.User, error)
 
@@ -40,6 +43,13 @@ type UserService interface {
 	// Batch operations
 	BatchDeleteUsers(ctx context.Context, ids []uint) (*BatchOperationResult, error)
 	BatchRestoreUsers(ctx context.Context, ids []uint) (*BatchOperationResult, error)
+}
+
+// UserServiceWithGeneric extends UserService with generic service operations
+// This is for implementations that want to expose the generic interface as well
+type UserServiceWithGeneric interface {
+	UserService
+	framework.GenericService[entities.User, uint]
 }
 
 // UserStats represents user statistics

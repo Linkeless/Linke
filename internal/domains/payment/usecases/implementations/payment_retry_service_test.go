@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"gorm.io/gorm"
 
 	"linke/internal/domains/payment/entities"
 	"linke/internal/domains/payment/usecases/interfaces"
@@ -107,6 +108,130 @@ func (m *MockPaymentRetryRepository) UpdateRetryStatus(ctx context.Context, id u
 	return args.Error(0)
 }
 
+// Methods from Repository interface
+func (m *MockPaymentRetryRepository) GetDB() *gorm.DB {
+	args := m.Called()
+	if args.Get(0) == nil {
+		return nil
+	}
+	return args.Get(0).(*gorm.DB)
+}
+
+func (m *MockPaymentRetryRepository) BeginTransaction() *gorm.DB {
+	args := m.Called()
+	if args.Get(0) == nil {
+		return nil
+	}
+	return args.Get(0).(*gorm.DB)
+}
+
+func (m *MockPaymentRetryRepository) CommitTransaction(tx *gorm.DB) error {
+	args := m.Called(tx)
+	return args.Error(0)
+}
+
+func (m *MockPaymentRetryRepository) RollbackTransaction(tx *gorm.DB) error {
+	args := m.Called(tx)
+	return args.Error(0)
+}
+
+// Methods from GenericRepository interface
+func (m *MockPaymentRetryRepository) SoftDelete(ctx context.Context, id uint) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockPaymentRetryRepository) Restore(ctx context.Context, id uint) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockPaymentRetryRepository) HardDelete(ctx context.Context, id uint) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockPaymentRetryRepository) List(ctx context.Context, limit, offset int) ([]*entities.PaymentRetry, int64, error) {
+	args := m.Called(ctx, limit, offset)
+	return args.Get(0).([]*entities.PaymentRetry), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockPaymentRetryRepository) ListDeleted(ctx context.Context, limit, offset int) ([]*entities.PaymentRetry, int64, error) {
+	args := m.Called(ctx, limit, offset)
+	return args.Get(0).([]*entities.PaymentRetry), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockPaymentRetryRepository) ListByStatus(ctx context.Context, status string, limit, offset int) ([]*entities.PaymentRetry, int64, error) {
+	args := m.Called(ctx, status, limit, offset)
+	return args.Get(0).([]*entities.PaymentRetry), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockPaymentRetryRepository) Search(ctx context.Context, query string, limit, offset int) ([]*entities.PaymentRetry, int64, error) {
+	args := m.Called(ctx, query, limit, offset)
+	return args.Get(0).([]*entities.PaymentRetry), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockPaymentRetryRepository) UpdateStatus(ctx context.Context, id uint, status string) error {
+	args := m.Called(ctx, id, status)
+	return args.Error(0)
+}
+
+func (m *MockPaymentRetryRepository) CountTotal(ctx context.Context) (int64, error) {
+	args := m.Called(ctx)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockPaymentRetryRepository) CountByStatus(ctx context.Context, status string) (int64, error) {
+	args := m.Called(ctx, status)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockPaymentRetryRepository) CountDeleted(ctx context.Context) (int64, error) {
+	args := m.Called(ctx)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockPaymentRetryRepository) BatchDelete(ctx context.Context, ids []uint) (int, []uint, error) {
+	args := m.Called(ctx, ids)
+	return args.Get(0).(int), args.Get(1).([]uint), args.Error(2)
+}
+
+func (m *MockPaymentRetryRepository) BatchRestore(ctx context.Context, ids []uint) (int, []uint, error) {
+	args := m.Called(ctx, ids)
+	return args.Get(0).(int), args.Get(1).([]uint), args.Error(2)
+}
+
+func (m *MockPaymentRetryRepository) BatchUpdateStatus(ctx context.Context, ids []uint, status string) (int, []uint, error) {
+	args := m.Called(ctx, ids, status)
+	return args.Get(0).(int), args.Get(1).([]uint), args.Error(2)
+}
+
+func (m *MockPaymentRetryRepository) ExistsByID(ctx context.Context, id uint) (bool, error) {
+	args := m.Called(ctx, id)
+	return args.Get(0).(bool), args.Error(1)
+}
+
+func (m *MockPaymentRetryRepository) ListWithFilters(ctx context.Context, filters map[string]interface{}, limit, offset int) ([]*entities.PaymentRetry, int64, error) {
+	args := m.Called(ctx, filters, limit, offset)
+	return args.Get(0).([]*entities.PaymentRetry), args.Get(1).(int64), args.Error(2)
+}
+
+// Methods from TimeBasedRepository interface
+func (m *MockPaymentRetryRepository) ListByDateRange(ctx context.Context, field string, start, end time.Time, limit, offset int) ([]*entities.PaymentRetry, int64, error) {
+	args := m.Called(ctx, field, start, end, limit, offset)
+	return args.Get(0).([]*entities.PaymentRetry), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockPaymentRetryRepository) ListCreatedAfter(ctx context.Context, after time.Time, limit, offset int) ([]*entities.PaymentRetry, int64, error) {
+	args := m.Called(ctx, after, limit, offset)
+	return args.Get(0).([]*entities.PaymentRetry), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockPaymentRetryRepository) ListUpdatedAfter(ctx context.Context, after time.Time, limit, offset int) ([]*entities.PaymentRetry, int64, error) {
+	args := m.Called(ctx, after, limit, offset)
+	return args.Get(0).([]*entities.PaymentRetry), args.Get(1).(int64), args.Error(2)
+}
+
 // MockPaymentRetryHistoryRepository is a mock implementation of PaymentRetryHistoryRepository
 type MockPaymentRetryHistoryRepository struct {
 	mock.Mock
@@ -160,6 +285,130 @@ func (m *MockPaymentRetryHistoryRepository) GetAttemptStatistics(ctx context.Con
 func (m *MockPaymentRetryHistoryRepository) GetFailurePatterns(ctx context.Context, gateway string, days int) ([]*interfaces.FailurePattern, error) {
 	args := m.Called(ctx, gateway, days)
 	return args.Get(0).([]*interfaces.FailurePattern), args.Error(1)
+}
+
+// Methods from Repository interface
+func (m *MockPaymentRetryHistoryRepository) GetDB() *gorm.DB {
+	args := m.Called()
+	if args.Get(0) == nil {
+		return nil
+	}
+	return args.Get(0).(*gorm.DB)
+}
+
+func (m *MockPaymentRetryHistoryRepository) BeginTransaction() *gorm.DB {
+	args := m.Called()
+	if args.Get(0) == nil {
+		return nil
+	}
+	return args.Get(0).(*gorm.DB)
+}
+
+func (m *MockPaymentRetryHistoryRepository) CommitTransaction(tx *gorm.DB) error {
+	args := m.Called(tx)
+	return args.Error(0)
+}
+
+func (m *MockPaymentRetryHistoryRepository) RollbackTransaction(tx *gorm.DB) error {
+	args := m.Called(tx)
+	return args.Error(0)
+}
+
+// Methods from GenericRepository interface
+func (m *MockPaymentRetryHistoryRepository) SoftDelete(ctx context.Context, id uint) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockPaymentRetryHistoryRepository) Restore(ctx context.Context, id uint) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockPaymentRetryHistoryRepository) HardDelete(ctx context.Context, id uint) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockPaymentRetryHistoryRepository) List(ctx context.Context, limit, offset int) ([]*entities.PaymentRetryHistory, int64, error) {
+	args := m.Called(ctx, limit, offset)
+	return args.Get(0).([]*entities.PaymentRetryHistory), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockPaymentRetryHistoryRepository) ListDeleted(ctx context.Context, limit, offset int) ([]*entities.PaymentRetryHistory, int64, error) {
+	args := m.Called(ctx, limit, offset)
+	return args.Get(0).([]*entities.PaymentRetryHistory), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockPaymentRetryHistoryRepository) ListByStatus(ctx context.Context, status string, limit, offset int) ([]*entities.PaymentRetryHistory, int64, error) {
+	args := m.Called(ctx, status, limit, offset)
+	return args.Get(0).([]*entities.PaymentRetryHistory), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockPaymentRetryHistoryRepository) Search(ctx context.Context, query string, limit, offset int) ([]*entities.PaymentRetryHistory, int64, error) {
+	args := m.Called(ctx, query, limit, offset)
+	return args.Get(0).([]*entities.PaymentRetryHistory), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockPaymentRetryHistoryRepository) UpdateStatus(ctx context.Context, id uint, status string) error {
+	args := m.Called(ctx, id, status)
+	return args.Error(0)
+}
+
+func (m *MockPaymentRetryHistoryRepository) CountTotal(ctx context.Context) (int64, error) {
+	args := m.Called(ctx)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockPaymentRetryHistoryRepository) CountByStatus(ctx context.Context, status string) (int64, error) {
+	args := m.Called(ctx, status)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockPaymentRetryHistoryRepository) CountDeleted(ctx context.Context) (int64, error) {
+	args := m.Called(ctx)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockPaymentRetryHistoryRepository) BatchDelete(ctx context.Context, ids []uint) (int, []uint, error) {
+	args := m.Called(ctx, ids)
+	return args.Get(0).(int), args.Get(1).([]uint), args.Error(2)
+}
+
+func (m *MockPaymentRetryHistoryRepository) BatchRestore(ctx context.Context, ids []uint) (int, []uint, error) {
+	args := m.Called(ctx, ids)
+	return args.Get(0).(int), args.Get(1).([]uint), args.Error(2)
+}
+
+func (m *MockPaymentRetryHistoryRepository) BatchUpdateStatus(ctx context.Context, ids []uint, status string) (int, []uint, error) {
+	args := m.Called(ctx, ids, status)
+	return args.Get(0).(int), args.Get(1).([]uint), args.Error(2)
+}
+
+func (m *MockPaymentRetryHistoryRepository) ExistsByID(ctx context.Context, id uint) (bool, error) {
+	args := m.Called(ctx, id)
+	return args.Get(0).(bool), args.Error(1)
+}
+
+func (m *MockPaymentRetryHistoryRepository) ListWithFilters(ctx context.Context, filters map[string]interface{}, limit, offset int) ([]*entities.PaymentRetryHistory, int64, error) {
+	args := m.Called(ctx, filters, limit, offset)
+	return args.Get(0).([]*entities.PaymentRetryHistory), args.Get(1).(int64), args.Error(2)
+}
+
+// Methods from TimeBasedRepository interface
+func (m *MockPaymentRetryHistoryRepository) ListByDateRange(ctx context.Context, field string, start, end time.Time, limit, offset int) ([]*entities.PaymentRetryHistory, int64, error) {
+	args := m.Called(ctx, field, start, end, limit, offset)
+	return args.Get(0).([]*entities.PaymentRetryHistory), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockPaymentRetryHistoryRepository) ListCreatedAfter(ctx context.Context, after time.Time, limit, offset int) ([]*entities.PaymentRetryHistory, int64, error) {
+	args := m.Called(ctx, after, limit, offset)
+	return args.Get(0).([]*entities.PaymentRetryHistory), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockPaymentRetryHistoryRepository) ListUpdatedAfter(ctx context.Context, after time.Time, limit, offset int) ([]*entities.PaymentRetryHistory, int64, error) {
+	args := m.Called(ctx, after, limit, offset)
+	return args.Get(0).([]*entities.PaymentRetryHistory), args.Get(1).(int64), args.Error(2)
 }
 
 // MockPaymentService is a mock implementation of PaymentService

@@ -6,25 +6,18 @@ import (
 	"time"
 )
 
-// CouponService defines the interface for coupon operations
+// CouponService defines coupon-specific operations
 type CouponService interface {
-	// Coupon CRUD operations
-	CreateCoupon(ctx context.Context, creatorID uint64, req *CreateCouponRequest) (*entities.Coupon, error)
-	GetCoupon(ctx context.Context, couponID uint64) (*entities.Coupon, error)
+	// Coupon-specific operations
 	GetCouponByCode(ctx context.Context, code string) (*entities.Coupon, error)
-	UpdateCoupon(ctx context.Context, couponID uint64, req *UpdateCouponRequest) (*entities.Coupon, error)
-	DeleteCoupon(ctx context.Context, couponID uint64) error
-
-	// Coupon listing and filtering
-	GetCoupons(ctx context.Context, req *GetCouponsRequest) ([]*entities.Coupon, int64, error)
 	GetPublicCoupons(ctx context.Context, limit int) ([]*entities.Coupon, error)
 	GetActiveCoupons(ctx context.Context) ([]*entities.Coupon, error)
 
-	// Coupon validation and usage
+	// Coupon validation and usage (domain-specific business logic)
 	ValidateCoupon(ctx context.Context, req *ValidateCouponRequest) (*ValidateCouponResponse, error)
 	UseCoupon(ctx context.Context, couponID, userID uint64, orderAmount float64, orderID *uint64) (*entities.CouponUsage, error)
 
-	// Coupon management
+	// Coupon management (extends generic status management)
 	ActivateCoupon(ctx context.Context, couponID uint64) error
 	DeactivateCoupon(ctx context.Context, couponID uint64) error
 	ExpireCoupon(ctx context.Context, couponID uint64) error
@@ -33,7 +26,12 @@ type CouponService interface {
 	GetCouponUsage(ctx context.Context, couponID uint64, limit, offset int) ([]*entities.CouponUsage, int64, error)
 	GetUserCouponUsage(ctx context.Context, userID uint64, limit, offset int) ([]*entities.CouponUsage, int64, error)
 
-	// Statistics
+	// Legacy method support for backward compatibility
+	CreateCoupon(ctx context.Context, creatorID uint64, req *CreateCouponRequest) (*entities.Coupon, error)
+	GetCoupon(ctx context.Context, couponID uint64) (*entities.Coupon, error)
+	UpdateCoupon(ctx context.Context, couponID uint64, req *UpdateCouponRequest) (*entities.Coupon, error)
+	DeleteCoupon(ctx context.Context, couponID uint64) error
+	GetCoupons(ctx context.Context, req *GetCouponsRequest) ([]*entities.Coupon, int64, error)
 	GetCouponStatistics(ctx context.Context, couponID uint64) (map[string]interface{}, error)
 	GetCouponSystemStatistics(ctx context.Context) (map[string]interface{}, error)
 }

@@ -3,29 +3,20 @@ package interfaces
 import (
 	"context"
 	"linke/internal/domains/subscription/entities"
+	"linke/internal/shared/framework"
 	"time"
 )
 
 // SubscriptionOrderRepository defines the interface for subscription order data access operations
+// It extends UserScopedRepository and TimeBasedRepository with SubscriptionOrder-specific methods
 type SubscriptionOrderRepository interface {
-	// Basic CRUD operations
-	Create(ctx context.Context, order *entities.SubscriptionOrder) error
-	GetByID(ctx context.Context, id uint) (*entities.SubscriptionOrder, error)
+	framework.UserScopedRepository[entities.SubscriptionOrder, uint]
+	framework.TimeBasedRepository[entities.SubscriptionOrder, uint]
+	
+	// Subscription order specific query methods
 	GetByOrderNumber(ctx context.Context, orderNumber string) (*entities.SubscriptionOrder, error)
-	Update(ctx context.Context, order *entities.SubscriptionOrder) error
-	Delete(ctx context.Context, id uint) error
 
-	// Soft delete operations
-	SoftDelete(ctx context.Context, id uint) error
-	Restore(ctx context.Context, id uint) error
-	HardDelete(ctx context.Context, id uint) error
-
-	// List operations with pagination
-	List(ctx context.Context, limit, offset int) ([]*entities.SubscriptionOrder, int64, error)
-	ListDeleted(ctx context.Context, limit, offset int) ([]*entities.SubscriptionOrder, int64, error)
-
-	// User-specific operations
-	ListByUser(ctx context.Context, userID uint, limit, offset int) ([]*entities.SubscriptionOrder, int64, error)
+	// User-specific operations (extending UserScopedRepository)
 	GetUserOrderHistory(ctx context.Context, userID uint, limit, offset int) ([]*entities.SubscriptionOrder, int64, error)
 	GetUserActiveOrders(ctx context.Context, userID uint, limit, offset int) ([]*entities.SubscriptionOrder, int64, error)
 
@@ -33,8 +24,7 @@ type SubscriptionOrderRepository interface {
 	ListByPlan(ctx context.Context, planID uint, limit, offset int) ([]*entities.SubscriptionOrder, int64, error)
 	GetPlanOrderStats(ctx context.Context, planID uint, since time.Time) (map[string]int64, error)
 
-	// Status filtering
-	ListByStatus(ctx context.Context, status string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error)
+	// Order type and payment specific filtering
 	ListByOrderType(ctx context.Context, orderType string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error)
 	ListByPaymentStatus(ctx context.Context, paymentStatus string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error)
 
@@ -44,8 +34,7 @@ type SubscriptionOrderRepository interface {
 	ListByTransactionID(ctx context.Context, transactionID string) ([]*entities.SubscriptionOrder, error)
 	ListByPaymentGateway(ctx context.Context, gateway string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error)
 
-	// Time-based queries
-	ListByDateRange(ctx context.Context, start, end time.Time, limit, offset int) ([]*entities.SubscriptionOrder, int64, error)
+	// Time-based queries (extending TimeBasedRepository)
 	ListRecentOrders(ctx context.Context, since time.Time, limit, offset int) ([]*entities.SubscriptionOrder, int64, error)
 	ListOrdersForBillingPeriod(ctx context.Context, start, end time.Time, limit, offset int) ([]*entities.SubscriptionOrder, int64, error)
 
@@ -61,21 +50,16 @@ type SubscriptionOrderRepository interface {
 	ListByInvoiceStatus(ctx context.Context, invoiceStatus string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error)
 	ListUninvoicedOrders(ctx context.Context, limit, offset int) ([]*entities.SubscriptionOrder, int64, error)
 
-	// Status management
-	UpdateStatus(ctx context.Context, id uint, status string) error
+	// Subscription order specific status management
 	UpdatePaymentStatus(ctx context.Context, id uint, paymentStatus string, transactionID string) error
 	UpdateInvoiceStatus(ctx context.Context, id uint, invoiceStatus string, invoiceNumber string) error
 	MarkAsPaid(ctx context.Context, id uint, transactionID string, paidAt time.Time) error
 	MarkAsRefunded(ctx context.Context, id uint, refundAmount float64, refundReason string, refundedAt time.Time) error
 
-	// Search operations
-	Search(ctx context.Context, query string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error)
+	// Subscription order specific search operations
 	SearchByUserEmail(ctx context.Context, email string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error)
 
-	// Statistics and reporting
-	CountTotal(ctx context.Context) (int64, error)
-	CountByStatus(ctx context.Context, status string) (int64, error)
-	CountByUser(ctx context.Context, userID uint) (int64, error)
+	// Subscription order specific statistics (extending base statistics)
 	CountByPlan(ctx context.Context, planID uint) (int64, error)
 	CountPaidOrders(ctx context.Context, since time.Time) (int64, error)
 	CountFailedOrders(ctx context.Context, since time.Time) (int64, error)
@@ -91,10 +75,6 @@ type SubscriptionOrderRepository interface {
 	ListByCurrency(ctx context.Context, currency string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error)
 	GetSupportedCurrencies(ctx context.Context) ([]string, error)
 
-	// Batch operations
-	BatchUpdateStatus(ctx context.Context, ids []uint, status string) (int, []uint, error)
-	BatchDelete(ctx context.Context, ids []uint) (int, []uint, error)
-
 	// Order number generation support
 	GetLastOrderNumber(ctx context.Context, prefix string) (string, error)
 	ExistsByOrderNumber(ctx context.Context, orderNumber string) (bool, error)
@@ -103,7 +83,6 @@ type SubscriptionOrderRepository interface {
 	ListBySubscription(ctx context.Context, subscriptionID uint, limit, offset int) ([]*entities.SubscriptionOrder, int64, error)
 	GetSubscriptionOrders(ctx context.Context, subscriptionID uint) ([]*entities.SubscriptionOrder, error)
 
-	// Advanced filtering
-	ListWithFilters(ctx context.Context, filters map[string]interface{}, limit, offset int) ([]*entities.SubscriptionOrder, int64, error)
+	// Subscription order specific filtering and renewal operations
 	GetOrdersForRenewal(ctx context.Context, beforeDate time.Time, limit int) ([]*entities.SubscriptionOrder, error)
 }

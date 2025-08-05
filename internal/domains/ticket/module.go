@@ -4,6 +4,7 @@ import (
 	"go.uber.org/fx"
 	"gorm.io/gorm"
 
+	"linke/internal/domains/ticket/adapters/repositories"
 	"linke/internal/domains/ticket/usecases/implementations"
 	"linke/internal/domains/ticket/usecases/interfaces"
 )
@@ -11,8 +12,13 @@ import (
 // Module Ticket 领域模块
 // 提供客户支持、工单管理、SLA 跟踪等功能
 var Module = fx.Module("ticket",
-	// 注意：目前 ticket 领域还没有 repository 实现
-	// 当添加了 repository 时，需要在这里提供
+	// 提供 Repository 实现
+	fx.Provide(
+		fx.Annotate(
+			repositories.NewTicketRepository,
+			fx.As(new(interfaces.TicketRepository)),
+		),
+	),
 
 	// 提供 Service 实现
 	fx.Provide(

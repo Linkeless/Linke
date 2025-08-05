@@ -16,7 +16,7 @@ type CouponService struct {
 	db *gorm.DB
 }
 
-func NewCouponService(db *gorm.DB) *CouponService {
+func NewCouponService(db *gorm.DB) interfaces.CouponService {
 	return &CouponService{
 		db: db,
 	}

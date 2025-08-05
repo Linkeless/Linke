@@ -1149,7 +1149,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/payment/retries/bulk-cancel": {
+        "/admin/payment/retries/bulk/cancel": {
             "post": {
                 "security": [
                     {
@@ -1212,7 +1212,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/payment/retries/bulk-reset": {
+        "/admin/payment/retries/bulk/reset": {
             "post": {
                 "security": [
                     {
@@ -1955,7 +1955,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/users/batch/delete": {
+        "/admin/users/bulk/delete": {
             "post": {
                 "security": [
                     {
@@ -2024,7 +2024,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/users/batch/restore": {
+        "/admin/users/bulk/restore": {
             "post": {
                 "security": [
                     {
@@ -6786,9 +6786,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/usage/admin/cleanup": {
+        "/usage-alerts/alert/{alert_id}/acknowledge": {
             "post": {
-                "description": "Remove old usage data and alerts (admin only)",
+                "description": "Mark a usage alert as acknowledged",
                 "consumes": [
                     "application/json"
                 ],
@@ -6796,89 +6796,27 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "usage",
-                    "admin"
+                    "alerts"
                 ],
-                "summary": "Cleanup old usage data",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "Delete data older than this date (RFC3339)",
-                        "name": "older_than",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/interfaces.CleanupResult"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/usage/admin/reset/{subscription_id}": {
-            "post": {
-                "description": "Reset usage counters for a specific subscription and usage type (admin only)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "usage",
-                    "admin"
-                ],
-                "summary": "Reset usage for a subscription",
+                "summary": "Acknowledge a usage alert",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Subscription ID",
-                        "name": "subscription_id",
+                        "description": "Alert ID",
+                        "name": "alert_id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "enum": [
-                            "traffic",
-                            "api_call",
-                            "storage",
-                            "bandwidth",
-                            "connections"
-                        ],
-                        "type": "string",
-                        "description": "Usage Type",
-                        "name": "usage_type",
-                        "in": "query",
-                        "required": true
+                        "description": "Acknowledge Request",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "integer"
+                            }
+                        }
                     }
                 ],
                 "responses": {
@@ -6909,9 +6847,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/usage/admin/sync/{subscription_id}": {
+        "/usage-alerts/alert/{alert_id}/resolve": {
             "post": {
-                "description": "Sync usage limits with subscription plan settings (admin only)",
+                "description": "Mark a usage alert as resolved",
                 "consumes": [
                     "application/json"
                 ],
@@ -6919,17 +6857,27 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "usage",
-                    "admin"
+                    "alerts"
                 ],
-                "summary": "Sync subscription limits",
+                "summary": "Resolve a usage alert",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Subscription ID",
-                        "name": "subscription_id",
+                        "description": "Alert ID",
+                        "name": "alert_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Resolve Request",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
                     }
                 ],
                 "responses": {
@@ -6960,7 +6908,67 @@ const docTemplate = `{
                 }
             }
         },
-        "/usage/alerts/bulk-resolve": {
+        "/usage-alerts/alert/{alert_id}/suppress": {
+            "post": {
+                "description": "Suppress a usage alert for a specified duration",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "alerts"
+                ],
+                "summary": "Suppress a usage alert",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Alert ID",
+                        "name": "alert_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Suppress Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage-alerts/bulk-resolve": {
             "post": {
                 "description": "Resolve multiple usage alerts at once",
                 "consumes": [
@@ -7018,65 +7026,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/usage/alerts/configs": {
-            "post": {
-                "description": "Create a new alert configuration for usage monitoring",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "alerts"
-                ],
-                "summary": "Create a new alert configuration",
-                "parameters": [
-                    {
-                        "description": "Alert Configuration Request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.CreateAlertConfigRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/entities.AlertConfigurationResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/usage/alerts/configs/{config_id}": {
+        "/usage-alerts/config/{config_id}": {
             "get": {
                 "description": "Retrieve details of a specific alert configuration",
                 "consumes": [
@@ -7255,134 +7205,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/usage/alerts/configs/{subscription_id}": {
-            "get": {
-                "description": "Retrieve all alert configurations for a specific subscription",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "alerts"
-                ],
-                "summary": "Get alert configurations for a subscription",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Subscription ID",
-                        "name": "subscription_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Usage Type Filter",
-                        "name": "usage_type",
-                        "in": "query"
-                    },
-                    {
-                        "type": "boolean",
-                        "description": "Enabled Status Filter",
-                        "name": "is_enabled",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "low",
-                            "medium",
-                            "high",
-                            "critical"
-                        ],
-                        "type": "string",
-                        "description": "Priority Filter",
-                        "name": "priority",
-                        "in": "query"
-                    },
-                    {
-                        "maximum": 1000,
-                        "type": "integer",
-                        "default": 50,
-                        "description": "Limit",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 0,
-                        "description": "Offset",
-                        "name": "offset",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "name",
-                            "threshold",
-                            "priority",
-                            "created_at"
-                        ],
-                        "type": "string",
-                        "default": "created_at",
-                        "description": "Order By",
-                        "name": "order_by",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
-                        "type": "string",
-                        "default": "desc",
-                        "description": "Order Direction",
-                        "name": "order_direction",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/interfaces.GetAlertConfigsResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/usage/alerts/test-notification": {
+        "/usage-alerts/configurations": {
             "post": {
-                "description": "Send a test notification to verify channel configuration",
+                "description": "Create a new alert configuration for usage monitoring",
                 "consumes": [
                     "application/json"
                 ],
@@ -7392,21 +7217,21 @@ const docTemplate = `{
                 "tags": [
                     "alerts"
                 ],
-                "summary": "Test a notification channel",
+                "summary": "Create a new alert configuration",
                 "parameters": [
                     {
-                        "description": "Test Notification Request",
+                        "description": "Alert Configuration Request",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/interfaces.TestNotificationRequest"
+                            "$ref": "#/definitions/interfaces.CreateAlertConfigRequest"
                         }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "allOf": [
                                 {
@@ -7416,7 +7241,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/interfaces.TestNotificationResponse"
+                                            "$ref": "#/definitions/entities.AlertConfigurationResponse"
                                         }
                                     }
                                 }
@@ -7438,189 +7263,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/usage/alerts/{alert_id}/acknowledge": {
-            "post": {
-                "description": "Mark a usage alert as acknowledged",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "alerts"
-                ],
-                "summary": "Acknowledge a usage alert",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Alert ID",
-                        "name": "alert_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Acknowledge Request",
-                        "name": "request",
-                        "in": "body",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "integer"
-                            }
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/usage/alerts/{alert_id}/resolve": {
-            "post": {
-                "description": "Mark a usage alert as resolved",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "alerts"
-                ],
-                "summary": "Resolve a usage alert",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Alert ID",
-                        "name": "alert_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Resolve Request",
-                        "name": "request",
-                        "in": "body",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/usage/alerts/{alert_id}/suppress": {
-            "post": {
-                "description": "Suppress a usage alert for a specified duration",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "alerts"
-                ],
-                "summary": "Suppress a usage alert",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Alert ID",
-                        "name": "alert_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Suppress Request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/usage/alerts/{subscription_id}": {
+        "/usage-alerts/subscription/{subscription_id}": {
             "get": {
                 "description": "Retrieve usage alerts with optional filtering",
                 "consumes": [
@@ -7783,7 +7426,132 @@ const docTemplate = `{
                 }
             }
         },
-        "/usage/alerts/{subscription_id}/history": {
+        "/usage-alerts/subscription/{subscription_id}/configurations": {
+            "get": {
+                "description": "Retrieve all alert configurations for a specific subscription",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "alerts"
+                ],
+                "summary": "Get alert configurations for a subscription",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription ID",
+                        "name": "subscription_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Usage Type Filter",
+                        "name": "usage_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Enabled Status Filter",
+                        "name": "is_enabled",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "low",
+                            "medium",
+                            "high",
+                            "critical"
+                        ],
+                        "type": "string",
+                        "description": "Priority Filter",
+                        "name": "priority",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000,
+                        "type": "integer",
+                        "default": 50,
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "name",
+                            "threshold",
+                            "priority",
+                            "created_at"
+                        ],
+                        "type": "string",
+                        "default": "created_at",
+                        "description": "Order By",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "default": "desc",
+                        "description": "Order Direction",
+                        "name": "order_direction",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.GetAlertConfigsResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage-alerts/subscription/{subscription_id}/history": {
             "get": {
                 "description": "Retrieve detailed alert history with optional filters",
                 "consumes": [
@@ -7900,7 +7668,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/usage/alerts/{subscription_id}/statistics": {
+        "/usage-alerts/subscription/{subscription_id}/statistics": {
             "get": {
                 "description": "Retrieve detailed alert statistics and trends",
                 "consumes": [
@@ -7999,6 +7767,238 @@ const docTemplate = `{
                                     }
                                 }
                             ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage-alerts/test-notification": {
+            "post": {
+                "description": "Send a test notification to verify channel configuration",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "alerts"
+                ],
+                "summary": "Test a notification channel",
+                "parameters": [
+                    {
+                        "description": "Test Notification Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.TestNotificationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.TestNotificationResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/admin/cleanup": {
+            "post": {
+                "description": "Remove old usage data and alerts (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "usage",
+                    "admin"
+                ],
+                "summary": "Cleanup old usage data",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Delete data older than this date (RFC3339)",
+                        "name": "older_than",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.CleanupResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/admin/reset/{subscription_id}": {
+            "post": {
+                "description": "Reset usage counters for a specific subscription and usage type (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "usage",
+                    "admin"
+                ],
+                "summary": "Reset usage for a subscription",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription ID",
+                        "name": "subscription_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "traffic",
+                            "api_call",
+                            "storage",
+                            "bandwidth",
+                            "connections"
+                        ],
+                        "type": "string",
+                        "description": "Usage Type",
+                        "name": "usage_type",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/usage/admin/sync/{subscription_id}": {
+            "post": {
+                "description": "Sync usage limits with subscription plan settings (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "usage",
+                    "admin"
+                ],
+                "summary": "Sync subscription limits",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription ID",
+                        "name": "subscription_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {

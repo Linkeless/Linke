@@ -4,6 +4,7 @@ import (
 	"go.uber.org/fx"
 	"gorm.io/gorm"
 
+	"linke/internal/domains/coupon/adapters/repositories"
 	"linke/internal/domains/coupon/usecases/implementations"
 	"linke/internal/domains/coupon/usecases/interfaces"
 )
@@ -11,8 +12,13 @@ import (
 // Module Coupon 领域模块
 // 提供优惠券系统、折扣计算、使用限制管理等功能
 var Module = fx.Module("coupon",
-	// 注意：目前 coupon 领域还没有 repository 实现
-	// 当添加了 repository 时，需要在这里提供
+	// 提供 Repository 实现
+	fx.Provide(
+		fx.Annotate(
+			repositories.NewCouponRepository,
+			fx.As(new(interfaces.CouponRepository)),
+		),
+	),
 
 	// 提供 Service 实现
 	fx.Provide(

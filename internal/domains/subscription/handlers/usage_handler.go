@@ -14,19 +14,16 @@ import (
 type UsageHandler struct {
 	usageTrackingService interfaces.UsageTrackingService
 	usageAlertService    interfaces.UsageAlertService
-	usageAlertHandler    *UsageAlertHandler
 }
 
 // NewUsageHandler creates a new usage handler instance
 func NewUsageHandler(
 	usageTrackingService interfaces.UsageTrackingService,
 	usageAlertService interfaces.UsageAlertService,
-	usageAlertHandler *UsageAlertHandler,
 ) *UsageHandler {
 	return &UsageHandler{
 		usageTrackingService: usageTrackingService,
 		usageAlertService:    usageAlertService,
-		usageAlertHandler:    usageAlertHandler,
 	}
 }
 
@@ -55,29 +52,8 @@ func (h *UsageHandler) RegisterRoutes(router *gin.RouterGroup) {
 		// Admin endpoints
 		usage.GET("/top", h.GetTopUsageSubscriptions)
 
-		// Alert configuration endpoints
-		alerts := usage.Group("/alerts")
-		{
-			alerts.GET("/configs/:subscription_id", h.usageAlertHandler.GetAlertConfigurations)
-			alerts.POST("/configs", h.usageAlertHandler.CreateAlertConfiguration)
-			alerts.GET("/configs/:config_id", h.usageAlertHandler.GetAlertConfiguration)
-			alerts.PUT("/configs/:config_id", h.usageAlertHandler.UpdateAlertConfiguration)
-			alerts.DELETE("/configs/:config_id", h.usageAlertHandler.DeleteAlertConfiguration)
-
-			// Alert management
-			alerts.GET("/:subscription_id", h.usageAlertHandler.GetUsageAlerts)
-			alerts.POST("/:alert_id/resolve", h.usageAlertHandler.ResolveAlert)
-			alerts.POST("/:alert_id/acknowledge", h.usageAlertHandler.AcknowledgeAlert)
-			alerts.POST("/:alert_id/suppress", h.usageAlertHandler.SuppressAlert)
-			alerts.POST("/bulk-resolve", h.usageAlertHandler.BulkResolveAlerts)
-
-			// Alert analytics
-			alerts.GET("/:subscription_id/statistics", h.usageAlertHandler.GetAlertStatistics)
-			alerts.GET("/:subscription_id/history", h.usageAlertHandler.GetAlertHistory)
-
-			// Notification testing
-			alerts.POST("/test-notification", h.usageAlertHandler.TestNotificationChannel)
-		}
+		// Alert endpoints are now handled by the dedicated UsageAlertHandler
+		// which registers routes under /usage-alerts to avoid conflicts
 
 		// Admin operations (requires admin middleware)
 		admin := usage.Group("/admin")

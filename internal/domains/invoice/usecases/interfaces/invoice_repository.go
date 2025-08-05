@@ -3,47 +3,37 @@ package interfaces
 import (
 	"context"
 	"linke/internal/domains/invoice/entities"
+	"linke/internal/shared/framework"
 	"time"
 )
 
 // InvoiceRepository defines the interface for invoice data access operations
+// It extends UserScopedRepository and TimeBasedRepository with Invoice-specific methods
 type InvoiceRepository interface {
-	// Basic CRUD operations
-	Create(ctx context.Context, invoice *entities.Invoice) error
-	GetByID(ctx context.Context, id uint) (*entities.Invoice, error)
+	framework.UserScopedRepository[entities.Invoice, uint]
+	framework.TimeBasedRepository[entities.Invoice, uint]
+	
+	// Invoice-specific query methods
 	GetByInvoiceNumber(ctx context.Context, invoiceNumber string) (*entities.Invoice, error)
-	Update(ctx context.Context, invoice *entities.Invoice) error
-	Delete(ctx context.Context, id uint) error
 
-	// User operations
-	ListByUser(ctx context.Context, userID uint, limit, offset int) ([]*entities.Invoice, int64, error)
+	// User operations (extending UserScopedRepository)
 	GetUserInvoiceHistory(ctx context.Context, userID uint, limit, offset int) ([]*entities.Invoice, int64, error)
 
-	// Status operations
-	ListByStatus(ctx context.Context, status string, limit, offset int) ([]*entities.Invoice, int64, error)
+	// Invoice-specific status operations
 	ListPending(ctx context.Context, limit, offset int) ([]*entities.Invoice, int64, error)
 	ListPaid(ctx context.Context, limit, offset int) ([]*entities.Invoice, int64, error)
 	ListOverdue(ctx context.Context, limit, offset int) ([]*entities.Invoice, int64, error)
-	UpdateStatus(ctx context.Context, id uint, status string) error
 
-	// Time-based operations
-	ListByDateRange(ctx context.Context, start, end time.Time, limit, offset int) ([]*entities.Invoice, int64, error)
+	// Invoice-specific time-based operations (extending TimeBasedRepository)
 	ListByDueDate(ctx context.Context, beforeDate time.Time, limit, offset int) ([]*entities.Invoice, int64, error)
 
 	// Currency operations
 	ListByCurrency(ctx context.Context, currency string, limit, offset int) ([]*entities.Invoice, int64, error)
 
-	// List operations
-	List(ctx context.Context, limit, offset int) ([]*entities.Invoice, int64, error)
-	CountTotal(ctx context.Context) (int64, error)
-
-	// Statistics
+	// Invoice-specific statistics
 	GetStatusStats(ctx context.Context) (map[string]int64, error)
 	GetRevenueStats(ctx context.Context, currency string, since time.Time) (float64, error)
 
-	// Search operations
-	Search(ctx context.Context, query string, limit, offset int) ([]*entities.Invoice, int64, error)
-
-	// Existence checks
+	// Invoice-specific existence checks
 	ExistsByInvoiceNumber(ctx context.Context, invoiceNumber string) (bool, error)
 }

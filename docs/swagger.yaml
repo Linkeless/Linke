@@ -4165,7 +4165,7 @@ paths:
       summary: '[Admin] Reset payment retry'
       tags:
       - Admin-Payment-Retry
-  /admin/payment/retries/bulk-cancel:
+  /admin/payment/retries/bulk/cancel:
     post:
       consumes:
       - application/json
@@ -4205,7 +4205,7 @@ paths:
       summary: '[Admin] Bulk cancel payment retries'
       tags:
       - Admin-Payment-Retry
-  /admin/payment/retries/bulk-reset:
+  /admin/payment/retries/bulk/reset:
     post:
       consumes:
       - application/json
@@ -4947,7 +4947,7 @@ paths:
       summary: '[Admin] Update user status'
       tags:
       - Admin-User-Management
-  /admin/users/batch/delete:
+  /admin/users/bulk/delete:
     post:
       consumes:
       - application/json
@@ -4991,7 +4991,7 @@ paths:
       summary: '[Admin] Batch delete users'
       tags:
       - Admin-User-Management
-  /admin/users/batch/restore:
+  /admin/users/bulk/restore:
     post:
       consumes:
       - application/json
@@ -7542,6 +7542,699 @@ paths:
       summary: Get queue status
       tags:
       - Task-System
+  /usage-alerts/alert/{alert_id}/acknowledge:
+    post:
+      consumes:
+      - application/json
+      description: Mark a usage alert as acknowledged
+      parameters:
+      - description: Alert ID
+        in: path
+        name: alert_id
+        required: true
+        type: integer
+      - description: Acknowledge Request
+        in: body
+        name: request
+        schema:
+          additionalProperties:
+            type: integer
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Acknowledge a usage alert
+      tags:
+      - alerts
+  /usage-alerts/alert/{alert_id}/resolve:
+    post:
+      consumes:
+      - application/json
+      description: Mark a usage alert as resolved
+      parameters:
+      - description: Alert ID
+        in: path
+        name: alert_id
+        required: true
+        type: integer
+      - description: Resolve Request
+        in: body
+        name: request
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Resolve a usage alert
+      tags:
+      - alerts
+  /usage-alerts/alert/{alert_id}/suppress:
+    post:
+      consumes:
+      - application/json
+      description: Suppress a usage alert for a specified duration
+      parameters:
+      - description: Alert ID
+        in: path
+        name: alert_id
+        required: true
+        type: integer
+      - description: Suppress Request
+        in: body
+        name: request
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Suppress a usage alert
+      tags:
+      - alerts
+  /usage-alerts/bulk-resolve:
+    post:
+      consumes:
+      - application/json
+      description: Resolve multiple usage alerts at once
+      parameters:
+      - description: Bulk Resolve Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/interfaces.BulkResolveAlertsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.BulkResolveAlertsResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Bulk resolve usage alerts
+      tags:
+      - alerts
+  /usage-alerts/config/{config_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete (soft delete) an alert configuration
+      parameters:
+      - description: Configuration ID
+        in: path
+        name: config_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Delete an alert configuration
+      tags:
+      - alerts
+    get:
+      consumes:
+      - application/json
+      description: Retrieve details of a specific alert configuration
+      parameters:
+      - description: Configuration ID
+        in: path
+        name: config_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.AlertConfigurationResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get a specific alert configuration
+      tags:
+      - alerts
+    put:
+      consumes:
+      - application/json
+      description: Update an existing alert configuration
+      parameters:
+      - description: Configuration ID
+        in: path
+        name: config_id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/interfaces.UpdateAlertConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.AlertConfigurationResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Update an alert configuration
+      tags:
+      - alerts
+  /usage-alerts/configurations:
+    post:
+      consumes:
+      - application/json
+      description: Create a new alert configuration for usage monitoring
+      parameters:
+      - description: Alert Configuration Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/interfaces.CreateAlertConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.AlertConfigurationResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Create a new alert configuration
+      tags:
+      - alerts
+  /usage-alerts/subscription/{subscription_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve usage alerts with optional filtering
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      - description: Alert Configuration ID Filter
+        in: query
+        name: alert_configuration_id
+        type: integer
+      - description: Usage Type Filter
+        in: query
+        name: usage_type
+        type: string
+      - description: Status Filter
+        enum:
+        - fired
+        - resolved
+        - suppressed
+        - acknowledged
+        in: query
+        name: status
+        type: string
+      - description: Severity Filter
+        enum:
+        - info
+        - warning
+        - error
+        - critical
+        in: query
+        name: severity
+        type: string
+      - description: Active Status Filter
+        in: query
+        name: is_active
+        type: boolean
+      - description: Resolved Status Filter
+        in: query
+        name: is_resolved
+        type: boolean
+      - description: Start Time (RFC3339)
+        format: date-time
+        in: query
+        name: start_time
+        type: string
+      - description: End Time (RFC3339)
+        format: date-time
+        in: query
+        name: end_time
+        type: string
+      - default: 50
+        description: Limit
+        in: query
+        maximum: 1000
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      - default: fired_at
+        description: Order By
+        enum:
+        - fired_at
+        - resolved_at
+        - severity
+        - usage_percent
+        in: query
+        name: order_by
+        type: string
+      - default: desc
+        description: Order Direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: order_direction
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.GetUsageAlertsResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get usage alerts for a subscription
+      tags:
+      - alerts
+  /usage-alerts/subscription/{subscription_id}/configurations:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all alert configurations for a specific subscription
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      - description: Usage Type Filter
+        in: query
+        name: usage_type
+        type: string
+      - description: Enabled Status Filter
+        in: query
+        name: is_enabled
+        type: boolean
+      - description: Priority Filter
+        enum:
+        - low
+        - medium
+        - high
+        - critical
+        in: query
+        name: priority
+        type: string
+      - default: 50
+        description: Limit
+        in: query
+        maximum: 1000
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      - default: created_at
+        description: Order By
+        enum:
+        - name
+        - threshold
+        - priority
+        - created_at
+        in: query
+        name: order_by
+        type: string
+      - default: desc
+        description: Order Direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: order_direction
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.GetAlertConfigsResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get alert configurations for a subscription
+      tags:
+      - alerts
+  /usage-alerts/subscription/{subscription_id}/history:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed alert history with optional filters
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      - description: Alert Configuration ID Filter
+        in: query
+        name: alert_configuration_id
+        type: integer
+      - description: Usage Type Filter
+        in: query
+        name: usage_type
+        type: string
+      - description: Start Time (RFC3339)
+        format: date-time
+        in: query
+        name: start_time
+        type: string
+      - description: End Time (RFC3339)
+        format: date-time
+        in: query
+        name: end_time
+        type: string
+      - default: true
+        description: Include resolved alerts
+        in: query
+        name: include_resolved
+        type: boolean
+      - default: false
+        description: Include notification history
+        in: query
+        name: include_notifications
+        type: boolean
+      - default: 50
+        description: Limit
+        in: query
+        maximum: 1000
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.AlertHistoryResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get alert history for a subscription
+      tags:
+      - alerts
+  /usage-alerts/subscription/{subscription_id}/statistics:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed alert statistics and trends
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: subscription_id
+        required: true
+        type: integer
+      - description: Usage Type Filter
+        in: query
+        name: usage_type
+        type: string
+      - description: Severity Filter
+        enum:
+        - info
+        - warning
+        - error
+        - critical
+        in: query
+        name: severity
+        type: string
+      - default: 30d
+        description: Time Period
+        enum:
+        - 24h
+        - 7d
+        - 30d
+        - 90d
+        - 365d
+        in: query
+        name: period
+        type: string
+      - description: Start Time (RFC3339)
+        format: date-time
+        in: query
+        name: start_time
+        type: string
+      - description: End Time (RFC3339)
+        format: date-time
+        in: query
+        name: end_time
+        type: string
+      - description: Group By
+        enum:
+        - hour
+        - day
+        - week
+        - month
+        - severity
+        - usage_type
+        in: query
+        name: group_by
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.AlertStatisticsResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get alert statistics for a subscription
+      tags:
+      - alerts
+  /usage-alerts/test-notification:
+    post:
+      consumes:
+      - application/json
+      description: Send a test notification to verify channel configuration
+      parameters:
+      - description: Test Notification Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/interfaces.TestNotificationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.TestNotificationResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Test a notification channel
+      tags:
+      - alerts
   /usage/{subscription_id}/current:
     get:
       consumes:
@@ -8172,699 +8865,6 @@ paths:
       tags:
       - usage
       - admin
-  /usage/alerts/{alert_id}/acknowledge:
-    post:
-      consumes:
-      - application/json
-      description: Mark a usage alert as acknowledged
-      parameters:
-      - description: Alert ID
-        in: path
-        name: alert_id
-        required: true
-        type: integer
-      - description: Acknowledge Request
-        in: body
-        name: request
-        schema:
-          additionalProperties:
-            type: integer
-          type: object
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.Response'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Response'
-      summary: Acknowledge a usage alert
-      tags:
-      - alerts
-  /usage/alerts/{alert_id}/resolve:
-    post:
-      consumes:
-      - application/json
-      description: Mark a usage alert as resolved
-      parameters:
-      - description: Alert ID
-        in: path
-        name: alert_id
-        required: true
-        type: integer
-      - description: Resolve Request
-        in: body
-        name: request
-        schema:
-          additionalProperties:
-            type: string
-          type: object
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.Response'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Response'
-      summary: Resolve a usage alert
-      tags:
-      - alerts
-  /usage/alerts/{alert_id}/suppress:
-    post:
-      consumes:
-      - application/json
-      description: Suppress a usage alert for a specified duration
-      parameters:
-      - description: Alert ID
-        in: path
-        name: alert_id
-        required: true
-        type: integer
-      - description: Suppress Request
-        in: body
-        name: request
-        required: true
-        schema:
-          additionalProperties: true
-          type: object
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.Response'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Response'
-      summary: Suppress a usage alert
-      tags:
-      - alerts
-  /usage/alerts/{subscription_id}:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve usage alerts with optional filtering
-      parameters:
-      - description: Subscription ID
-        in: path
-        name: subscription_id
-        required: true
-        type: integer
-      - description: Alert Configuration ID Filter
-        in: query
-        name: alert_configuration_id
-        type: integer
-      - description: Usage Type Filter
-        in: query
-        name: usage_type
-        type: string
-      - description: Status Filter
-        enum:
-        - fired
-        - resolved
-        - suppressed
-        - acknowledged
-        in: query
-        name: status
-        type: string
-      - description: Severity Filter
-        enum:
-        - info
-        - warning
-        - error
-        - critical
-        in: query
-        name: severity
-        type: string
-      - description: Active Status Filter
-        in: query
-        name: is_active
-        type: boolean
-      - description: Resolved Status Filter
-        in: query
-        name: is_resolved
-        type: boolean
-      - description: Start Time (RFC3339)
-        format: date-time
-        in: query
-        name: start_time
-        type: string
-      - description: End Time (RFC3339)
-        format: date-time
-        in: query
-        name: end_time
-        type: string
-      - default: 50
-        description: Limit
-        in: query
-        maximum: 1000
-        name: limit
-        type: integer
-      - default: 0
-        description: Offset
-        in: query
-        name: offset
-        type: integer
-      - default: fired_at
-        description: Order By
-        enum:
-        - fired_at
-        - resolved_at
-        - severity
-        - usage_percent
-        in: query
-        name: order_by
-        type: string
-      - default: desc
-        description: Order Direction
-        enum:
-        - asc
-        - desc
-        in: query
-        name: order_direction
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.GetUsageAlertsResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Response'
-      summary: Get usage alerts for a subscription
-      tags:
-      - alerts
-  /usage/alerts/{subscription_id}/history:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve detailed alert history with optional filters
-      parameters:
-      - description: Subscription ID
-        in: path
-        name: subscription_id
-        required: true
-        type: integer
-      - description: Alert Configuration ID Filter
-        in: query
-        name: alert_configuration_id
-        type: integer
-      - description: Usage Type Filter
-        in: query
-        name: usage_type
-        type: string
-      - description: Start Time (RFC3339)
-        format: date-time
-        in: query
-        name: start_time
-        type: string
-      - description: End Time (RFC3339)
-        format: date-time
-        in: query
-        name: end_time
-        type: string
-      - default: true
-        description: Include resolved alerts
-        in: query
-        name: include_resolved
-        type: boolean
-      - default: false
-        description: Include notification history
-        in: query
-        name: include_notifications
-        type: boolean
-      - default: 50
-        description: Limit
-        in: query
-        maximum: 1000
-        name: limit
-        type: integer
-      - default: 0
-        description: Offset
-        in: query
-        name: offset
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.AlertHistoryResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Response'
-      summary: Get alert history for a subscription
-      tags:
-      - alerts
-  /usage/alerts/{subscription_id}/statistics:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve detailed alert statistics and trends
-      parameters:
-      - description: Subscription ID
-        in: path
-        name: subscription_id
-        required: true
-        type: integer
-      - description: Usage Type Filter
-        in: query
-        name: usage_type
-        type: string
-      - description: Severity Filter
-        enum:
-        - info
-        - warning
-        - error
-        - critical
-        in: query
-        name: severity
-        type: string
-      - default: 30d
-        description: Time Period
-        enum:
-        - 24h
-        - 7d
-        - 30d
-        - 90d
-        - 365d
-        in: query
-        name: period
-        type: string
-      - description: Start Time (RFC3339)
-        format: date-time
-        in: query
-        name: start_time
-        type: string
-      - description: End Time (RFC3339)
-        format: date-time
-        in: query
-        name: end_time
-        type: string
-      - description: Group By
-        enum:
-        - hour
-        - day
-        - week
-        - month
-        - severity
-        - usage_type
-        in: query
-        name: group_by
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.AlertStatisticsResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Response'
-      summary: Get alert statistics for a subscription
-      tags:
-      - alerts
-  /usage/alerts/bulk-resolve:
-    post:
-      consumes:
-      - application/json
-      description: Resolve multiple usage alerts at once
-      parameters:
-      - description: Bulk Resolve Request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/interfaces.BulkResolveAlertsRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.BulkResolveAlertsResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Response'
-      summary: Bulk resolve usage alerts
-      tags:
-      - alerts
-  /usage/alerts/configs:
-    post:
-      consumes:
-      - application/json
-      description: Create a new alert configuration for usage monitoring
-      parameters:
-      - description: Alert Configuration Request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/interfaces.CreateAlertConfigRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.AlertConfigurationResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Response'
-      summary: Create a new alert configuration
-      tags:
-      - alerts
-  /usage/alerts/configs/{config_id}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete (soft delete) an alert configuration
-      parameters:
-      - description: Configuration ID
-        in: path
-        name: config_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.Response'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Response'
-      summary: Delete an alert configuration
-      tags:
-      - alerts
-    get:
-      consumes:
-      - application/json
-      description: Retrieve details of a specific alert configuration
-      parameters:
-      - description: Configuration ID
-        in: path
-        name: config_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.AlertConfigurationResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Response'
-      summary: Get a specific alert configuration
-      tags:
-      - alerts
-    put:
-      consumes:
-      - application/json
-      description: Update an existing alert configuration
-      parameters:
-      - description: Configuration ID
-        in: path
-        name: config_id
-        required: true
-        type: integer
-      - description: Update Request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/interfaces.UpdateAlertConfigRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.AlertConfigurationResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Response'
-      summary: Update an alert configuration
-      tags:
-      - alerts
-  /usage/alerts/configs/{subscription_id}:
-    get:
-      consumes:
-      - application/json
-      description: Retrieve all alert configurations for a specific subscription
-      parameters:
-      - description: Subscription ID
-        in: path
-        name: subscription_id
-        required: true
-        type: integer
-      - description: Usage Type Filter
-        in: query
-        name: usage_type
-        type: string
-      - description: Enabled Status Filter
-        in: query
-        name: is_enabled
-        type: boolean
-      - description: Priority Filter
-        enum:
-        - low
-        - medium
-        - high
-        - critical
-        in: query
-        name: priority
-        type: string
-      - default: 50
-        description: Limit
-        in: query
-        maximum: 1000
-        name: limit
-        type: integer
-      - default: 0
-        description: Offset
-        in: query
-        name: offset
-        type: integer
-      - default: created_at
-        description: Order By
-        enum:
-        - name
-        - threshold
-        - priority
-        - created_at
-        in: query
-        name: order_by
-        type: string
-      - default: desc
-        description: Order Direction
-        enum:
-        - asc
-        - desc
-        in: query
-        name: order_direction
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.GetAlertConfigsResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Response'
-      summary: Get alert configurations for a subscription
-      tags:
-      - alerts
-  /usage/alerts/test-notification:
-    post:
-      consumes:
-      - application/json
-      description: Send a test notification to verify channel configuration
-      parameters:
-      - description: Test Notification Request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/interfaces.TestNotificationRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.TestNotificationResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Response'
-      summary: Test a notification channel
-      tags:
-      - alerts
   /usage/export:
     post:
       consumes:

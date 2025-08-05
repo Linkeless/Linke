@@ -6,24 +6,16 @@ import (
 	"time"
 )
 
-// InvoiceService defines the interface for invoice operations
+// InvoiceService defines invoice-specific operations
 type InvoiceService interface {
-	// Invoice CRUD operations
-	CreateInvoice(ctx context.Context, req *CreateInvoiceRequest) (*entities.Invoice, error)
+	// Invoice-specific operations that don't fit generic patterns
 	CreateInvoiceFromOrder(ctx context.Context, orderID uint, options *CreateInvoiceRequest) (*entities.Invoice, error)
-	GetInvoice(ctx context.Context, invoiceID uint) (*entities.Invoice, error)
 	GetInvoiceByNumber(ctx context.Context, invoiceNumber string) (*entities.Invoice, error)
-	UpdateInvoice(ctx context.Context, invoiceID uint, req *UpdateInvoiceRequest) (*entities.Invoice, error)
-	DeleteInvoice(ctx context.Context, invoiceID uint) error
 
-	// Invoice listing and filtering
-	GetInvoices(ctx context.Context, req *GetInvoicesRequest) ([]*entities.Invoice, int64, error)
-	GetUserInvoices(ctx context.Context, userID uint, limit, offset int) ([]*entities.Invoice, int64, error)
-
-	// Invoice generation and sending
+	// PDF generation and sending (domain-specific)
 	GenerateInvoicePDF(ctx context.Context, invoiceID uint) ([]byte, error)
 	GenerateInvoicePDFWithOptions(ctx context.Context, invoiceID uint, options *PDFGenerationRequest) ([]byte, string, error)
-	GenerateBulkInvoicePDFs(ctx context.Context, invoiceIDs []uint, options *PDFGenerationRequest) ([]byte, error) // Returns ZIP
+	GenerateBulkInvoicePDFs(ctx context.Context, invoiceIDs []uint, options *PDFGenerationRequest) ([]byte, error)
 	SendInvoice(ctx context.Context, invoiceID uint, emailRequest *SendInvoiceRequest) error
 	SendInvoiceWithPDF(ctx context.Context, invoiceID uint, emailRequest *SendInvoiceRequest, pdfOptions *PDFGenerationRequest) error
 	ResendInvoice(ctx context.Context, invoiceID uint) error
@@ -38,12 +30,18 @@ type InvoiceService interface {
 	GetAvailableLanguages(ctx context.Context) ([]string, error)
 	ValidateTemplate(ctx context.Context, template string) (bool, error)
 
-	// Invoice status management
+	// Invoice status management (extends generic status management)
 	MarkInvoiceAsPaid(ctx context.Context, invoiceID uint, paymentDate string) error
 	MarkInvoiceAsVoid(ctx context.Context, invoiceID uint, reason string) error
 	MarkInvoiceAsOverdue(ctx context.Context, invoiceID uint) error
 
-	// Invoice statistics
+	// Legacy method support for backward compatibility
+	CreateInvoice(ctx context.Context, req *CreateInvoiceRequest) (*entities.Invoice, error)
+	GetInvoice(ctx context.Context, invoiceID uint) (*entities.Invoice, error)
+	UpdateInvoice(ctx context.Context, invoiceID uint, req *UpdateInvoiceRequest) (*entities.Invoice, error)
+	DeleteInvoice(ctx context.Context, invoiceID uint) error
+	GetInvoices(ctx context.Context, req *GetInvoicesRequest) ([]*entities.Invoice, int64, error)
+	GetUserInvoices(ctx context.Context, userID uint, limit, offset int) ([]*entities.Invoice, int64, error)
 	GetInvoiceStatistics(ctx context.Context, fromDate, toDate string) (map[string]interface{}, error)
 	GetUserInvoiceStatistics(ctx context.Context, userID uint) (map[string]interface{}, error)
 }

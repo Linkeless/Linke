@@ -9,63 +9,37 @@ import (
 
 	"linke/internal/domains/payment/entities"
 	"linke/internal/domains/payment/usecases/interfaces"
+	"linke/internal/shared/framework"
+	"linke/internal/shared/repository"
 )
 
 // paymentMethodRepository implements the PaymentMethodRepository interface
 type paymentMethodRepository struct {
-	db *gorm.DB
+	*repository.UserScopedRepositoryImpl[entities.PaymentMethod, uint]
 }
 
 // NewPaymentMethodRepository creates a new payment method repository instance
-func NewPaymentMethodRepository(db *gorm.DB) interfaces.PaymentMethodRepository {
+func NewPaymentMethodRepository(db *gorm.DB, logger framework.Logger) interfaces.PaymentMethodRepository {
 	return &paymentMethodRepository{
-		db: db,
+		UserScopedRepositoryImpl: repository.NewUserScopedRepository[entities.PaymentMethod, uint](db, logger),
 	}
 }
 
-// Create creates a new payment method for a user
+// Create creates a new payment method for a user (overrides base method for validation hash generation)
 func (r *paymentMethodRepository) Create(ctx context.Context, paymentMethod *entities.PaymentMethod) error {
 	if err := paymentMethod.GenerateValidationHash(); err != nil {
 		return fmt.Errorf("failed to generate validation hash: %w", err)
 	}
 
-	if err := r.db.WithContext(ctx).Create(paymentMethod).Error; err != nil {
-		return fmt.Errorf("failed to create payment method: %w", err)
-	}
-
-	return nil
+	// Use the base implementation for the actual creation
+	return r.UserScopedRepositoryImpl.Create(ctx, paymentMethod)
 }
 
-// GetByID retrieves a payment method by its ID
-func (r *paymentMethodRepository) GetByID(ctx context.Context, id uint) (*entities.PaymentMethod, error) {
-	var paymentMethod entities.PaymentMethod
-	if err := r.db.WithContext(ctx).First(&paymentMethod, id).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("failed to get payment method by ID: %w", err)
-	}
-
-	return &paymentMethod, nil
-}
-
-// GetByUserID retrieves all payment methods for a user
-func (r *paymentMethodRepository) GetByUserID(ctx context.Context, userID uint) ([]*entities.PaymentMethod, error) {
-	var paymentMethods []*entities.PaymentMethod
-	if err := r.db.WithContext(ctx).
-		Where("user_id = ?", userID).
-		Order("is_default DESC, created_at DESC").
-		Find(&paymentMethods).Error; err != nil {
-		return nil, fmt.Errorf("failed to get payment methods by user ID: %w", err)
-	}
-
-	return paymentMethods, nil
-}
 
 // GetActiveByUserID retrieves all active payment methods for a user
 func (r *paymentMethodRepository) GetActiveByUserID(ctx context.Context, userID uint) ([]*entities.PaymentMethod, error) {
 	var paymentMethods []*entities.PaymentMethod
-	if err := r.db.WithContext(ctx).
+	if err := r.GetDB().WithContext(ctx).
 		Where("user_id = ? AND is_active = ? AND status = ?", userID, true, entities.PaymentMethodStatusActive).
 		Order("is_default DESC, created_at DESC").
 		Find(&paymentMethods).Error; err != nil {
@@ -78,7 +52,7 @@ func (r *paymentMethodRepository) GetActiveByUserID(ctx context.Context, userID 
 // GetByUserIDAndGateway retrieves payment methods for a user by gateway
 func (r *paymentMethodRepository) GetByUserIDAndGateway(ctx context.Context, userID uint, gateway string) ([]*entities.PaymentMethod, error) {
 	var paymentMethods []*entities.PaymentMethod
-	if err := r.db.WithContext(ctx).
+	if err := r.GetDB().WithContext(ctx).
 		Where("user_id = ? AND gateway = ?", userID, gateway).
 		Order("is_default DESC, created_at DESC").
 		Find(&paymentMethods).Error; err != nil {
@@ -91,7 +65,7 @@ func (r *paymentMethodRepository) GetByUserIDAndGateway(ctx context.Context, use
 // GetDefaultByUserID retrieves the default payment method for a user
 func (r *paymentMethodRepository) GetDefaultByUserID(ctx context.Context, userID uint) (*entities.PaymentMethod, error) {
 	var paymentMethod entities.PaymentMethod
-	if err := r.db.WithContext(ctx).
+	if err := r.GetDB().WithContext(ctx).
 		Where("user_id = ? AND is_default = ? AND is_active = ? AND status = ?",
 			userID, true, true, entities.PaymentMethodStatusActive).
 		First(&paymentMethod).Error; err != nil {
@@ -107,7 +81,7 @@ func (r *paymentMethodRepository) GetDefaultByUserID(ctx context.Context, userID
 // GetDefaultByUserIDAndGateway retrieves the default payment method for a user and gateway
 func (r *paymentMethodRepository) GetDefaultByUserIDAndGateway(ctx context.Context, userID uint, gateway string) (*entities.PaymentMethod, error) {
 	var paymentMethod entities.PaymentMethod
-	if err := r.db.WithContext(ctx).
+	if err := r.GetDB().WithContext(ctx).
 		Where("user_id = ? AND gateway = ? AND is_default = ? AND is_active = ? AND status = ?",
 			userID, gateway, true, true, entities.PaymentMethodStatusActive).
 		First(&paymentMethod).Error; err != nil {
@@ -123,7 +97,7 @@ func (r *paymentMethodRepository) GetDefaultByUserIDAndGateway(ctx context.Conte
 // GetByPaymentToken retrieves a payment method by its payment token and gateway
 func (r *paymentMethodRepository) GetByPaymentToken(ctx context.Context, gateway, token string) (*entities.PaymentMethod, error) {
 	var paymentMethod entities.PaymentMethod
-	if err := r.db.WithContext(ctx).
+	if err := r.GetDB().WithContext(ctx).
 		Where("gateway = ? AND payment_token = ? AND status = ?",
 			gateway, token, entities.PaymentMethodStatusActive).
 		First(&paymentMethod).Error; err != nil {
@@ -136,30 +110,10 @@ func (r *paymentMethodRepository) GetByPaymentToken(ctx context.Context, gateway
 	return &paymentMethod, nil
 }
 
-// Update updates an existing payment method
-func (r *paymentMethodRepository) Update(ctx context.Context, paymentMethod *entities.PaymentMethod) error {
-	if err := r.db.WithContext(ctx).Save(paymentMethod).Error; err != nil {
-		return fmt.Errorf("failed to update payment method: %w", err)
-	}
-
-	return nil
-}
-
-// UpdateStatus updates the status of a payment method
-func (r *paymentMethodRepository) UpdateStatus(ctx context.Context, id uint, status string) error {
-	if err := r.db.WithContext(ctx).
-		Model(&entities.PaymentMethod{}).
-		Where("id = ?", id).
-		Update("status", status).Error; err != nil {
-		return fmt.Errorf("failed to update payment method status: %w", err)
-	}
-
-	return nil
-}
 
 // SetAsDefault sets a payment method as the default for the user and gateway
 func (r *paymentMethodRepository) SetAsDefault(ctx context.Context, userID, paymentMethodID uint) error {
-	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	return r.GetDB().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// First, get the payment method to find its gateway
 		var paymentMethod entities.PaymentMethod
 		if err := tx.First(&paymentMethod, paymentMethodID).Error; err != nil {
@@ -191,7 +145,7 @@ func (r *paymentMethodRepository) SetAsDefault(ctx context.Context, userID, paym
 
 // UnsetDefault removes default status from a payment method
 func (r *paymentMethodRepository) UnsetDefault(ctx context.Context, userID uint, gateway string) error {
-	if err := r.db.WithContext(ctx).
+	if err := r.GetDB().WithContext(ctx).
 		Model(&entities.PaymentMethod{}).
 		Where("user_id = ? AND gateway = ?", userID, gateway).
 		Update("is_default", false).Error; err != nil {
@@ -201,30 +155,13 @@ func (r *paymentMethodRepository) UnsetDefault(ctx context.Context, userID uint,
 	return nil
 }
 
-// Delete soft deletes a payment method
-func (r *paymentMethodRepository) Delete(ctx context.Context, id uint) error {
-	if err := r.db.WithContext(ctx).Delete(&entities.PaymentMethod{}, id).Error; err != nil {
-		return fmt.Errorf("failed to delete payment method: %w", err)
-	}
-
-	return nil
-}
-
-// HardDelete permanently deletes a payment method
-func (r *paymentMethodRepository) HardDelete(ctx context.Context, id uint) error {
-	if err := r.db.WithContext(ctx).Unscoped().Delete(&entities.PaymentMethod{}, id).Error; err != nil {
-		return fmt.Errorf("failed to hard delete payment method: %w", err)
-	}
-
-	return nil
-}
 
 // GetExpiredMethods retrieves payment methods that have expired
 func (r *paymentMethodRepository) GetExpiredMethods(ctx context.Context) ([]*entities.PaymentMethod, error) {
 	var paymentMethods []*entities.PaymentMethod
 	now := time.Now()
 
-	if err := r.db.WithContext(ctx).
+	if err := r.GetDB().WithContext(ctx).
 		Where("expiry_year IS NOT NULL AND expiry_month IS NOT NULL").
 		Where("(expiry_year < ? OR (expiry_year = ? AND expiry_month < ?))",
 			now.Year(), now.Year(), int(now.Month())).
@@ -241,7 +178,7 @@ func (r *paymentMethodRepository) GetMethodsNeedingValidation(ctx context.Contex
 	var paymentMethods []*entities.PaymentMethod
 	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
 
-	if err := r.db.WithContext(ctx).
+	if err := r.GetDB().WithContext(ctx).
 		Where("(last_validated_at IS NULL OR last_validated_at < ?) AND status = ?",
 			thirtyDaysAgo, entities.PaymentMethodStatusActive).
 		Find(&paymentMethods).Error; err != nil {
@@ -258,20 +195,20 @@ func (r *paymentMethodRepository) UpdateLastUsed(ctx context.Context, id uint, s
 	}
 
 	if successful {
-		if err := r.db.WithContext(ctx).Model(&entities.PaymentMethod{}).
+		if err := r.GetDB().WithContext(ctx).Model(&entities.PaymentMethod{}).
 			Where("id = ?", id).
 			Update("successful_uses", gorm.Expr("successful_uses + 1")).Error; err != nil {
 			return fmt.Errorf("failed to increment successful uses: %w", err)
 		}
 	} else {
-		if err := r.db.WithContext(ctx).Model(&entities.PaymentMethod{}).
+		if err := r.GetDB().WithContext(ctx).Model(&entities.PaymentMethod{}).
 			Where("id = ?", id).
 			Update("failed_uses", gorm.Expr("failed_uses + 1")).Error; err != nil {
 			return fmt.Errorf("failed to increment failed uses: %w", err)
 		}
 	}
 
-	if err := r.db.WithContext(ctx).Model(&entities.PaymentMethod{}).
+	if err := r.GetDB().WithContext(ctx).Model(&entities.PaymentMethod{}).
 		Where("id = ?", id).
 		Updates(updates).Error; err != nil {
 		return fmt.Errorf("failed to update last used: %w", err)
@@ -283,7 +220,7 @@ func (r *paymentMethodRepository) UpdateLastUsed(ctx context.Context, id uint, s
 // GetUserPaymentMethodCount returns the count of payment methods for a user
 func (r *paymentMethodRepository) GetUserPaymentMethodCount(ctx context.Context, userID uint) (int64, error) {
 	var count int64
-	if err := r.db.WithContext(ctx).
+	if err := r.GetDB().WithContext(ctx).
 		Model(&entities.PaymentMethod{}).
 		Where("user_id = ?", userID).
 		Count(&count).Error; err != nil {
@@ -298,7 +235,7 @@ func (r *paymentMethodRepository) GetHighFailureRateMethods(ctx context.Context,
 	var paymentMethods []*entities.PaymentMethod
 
 	// Use raw SQL to calculate failure rate
-	if err := r.db.WithContext(ctx).
+	if err := r.GetDB().WithContext(ctx).
 		Where("(successful_uses + failed_uses) > 0").
 		Where("CAST(failed_uses AS FLOAT) / CAST((successful_uses + failed_uses) AS FLOAT) >= ?", threshold).
 		Find(&paymentMethods).Error; err != nil {
@@ -311,7 +248,7 @@ func (r *paymentMethodRepository) GetHighFailureRateMethods(ctx context.Context,
 // ValidateOwnership checks if a payment method belongs to a specific user
 func (r *paymentMethodRepository) ValidateOwnership(ctx context.Context, paymentMethodID, userID uint) (bool, error) {
 	var count int64
-	if err := r.db.WithContext(ctx).
+	if err := r.GetDB().WithContext(ctx).
 		Model(&entities.PaymentMethod{}).
 		Where("id = ? AND user_id = ?", paymentMethodID, userID).
 		Count(&count).Error; err != nil {
@@ -319,4 +256,17 @@ func (r *paymentMethodRepository) ValidateOwnership(ctx context.Context, payment
 	}
 
 	return count > 0, nil
+}
+
+// GetByUserID retrieves all payment methods for a user (compatibility method)
+func (r *paymentMethodRepository) GetByUserID(ctx context.Context, userID uint) ([]*entities.PaymentMethod, error) {
+	var paymentMethods []*entities.PaymentMethod
+	if err := r.GetDB().WithContext(ctx).
+		Where("user_id = ?", userID).
+		Order("is_default DESC, created_at DESC").
+		Find(&paymentMethods).Error; err != nil {
+		return nil, fmt.Errorf("failed to get payment methods by user ID: %w", err)
+	}
+
+	return paymentMethods, nil
 }

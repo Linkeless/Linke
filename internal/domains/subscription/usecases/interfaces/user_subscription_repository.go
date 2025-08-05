@@ -3,25 +3,18 @@ package interfaces
 import (
 	"context"
 	"linke/internal/domains/subscription/entities"
+	"linke/internal/shared/framework"
 	"time"
 )
 
 // UserSubscriptionRepository defines the interface for user subscription data access operations
+// It extends UserScopedRepository and TimeBasedRepository with UserSubscription-specific methods
 type UserSubscriptionRepository interface {
-	// Basic CRUD operations
-	Create(ctx context.Context, subscription *entities.UserSubscription) error
-	GetByID(ctx context.Context, id uint) (*entities.UserSubscription, error)
+	framework.UserScopedRepository[entities.UserSubscription, uint]
+	framework.TimeBasedRepository[entities.UserSubscription, uint]
+	
+	// Subscription-specific query methods
 	GetByUUID(ctx context.Context, uuid string) (*entities.UserSubscription, error)
-	Update(ctx context.Context, subscription *entities.UserSubscription) error
-	Delete(ctx context.Context, id uint) error
-
-	// Soft delete operations
-	SoftDelete(ctx context.Context, id uint) error
-	Restore(ctx context.Context, id uint) error
-	HardDelete(ctx context.Context, id uint) error
-
-	// User-specific operations
-	ListByUser(ctx context.Context, userID uint, limit, offset int) ([]*entities.UserSubscription, int64, error)
 	GetActiveByUser(ctx context.Context, userID uint) ([]*entities.UserSubscription, error)
 	GetUserCurrentSubscription(ctx context.Context, userID uint) (*entities.UserSubscription, error)
 	GetUserActiveSubscriptions(ctx context.Context, userID uint) ([]*entities.UserSubscription, error)
@@ -32,8 +25,7 @@ type UserSubscriptionRepository interface {
 	CountByPlan(ctx context.Context, planID uint) (int64, error)
 	GetActivePlanSubscriptions(ctx context.Context, planID uint, limit, offset int) ([]*entities.UserSubscription, int64, error)
 
-	// Status filtering
-	ListByStatus(ctx context.Context, status string, limit, offset int) ([]*entities.UserSubscription, int64, error)
+	// Status filtering (extending base status operations)
 	ListActive(ctx context.Context, limit, offset int) ([]*entities.UserSubscription, int64, error)
 	ListExpired(ctx context.Context, limit, offset int) ([]*entities.UserSubscription, int64, error)
 	ListCancelled(ctx context.Context, limit, offset int) ([]*entities.UserSubscription, int64, error)
@@ -45,9 +37,7 @@ type UserSubscriptionRepository interface {
 	ListOverdueRenewals(ctx context.Context, limit int) ([]*entities.UserSubscription, error)
 	ListTrialsExpiring(ctx context.Context, beforeDate time.Time, limit int) ([]*entities.UserSubscription, error)
 
-	// Time-based queries
-	ListByDateRange(ctx context.Context, field string, start, end time.Time, limit, offset int) ([]*entities.UserSubscription, int64, error)
-	ListCreatedAfter(ctx context.Context, after time.Time, limit, offset int) ([]*entities.UserSubscription, int64, error)
+	// Additional time-based queries (extending TimeBasedRepository)
 	ListLastUsedBefore(ctx context.Context, before time.Time, limit, offset int) ([]*entities.UserSubscription, int64, error)
 
 	// Traffic management operations
@@ -90,44 +80,30 @@ type UserSubscriptionRepository interface {
 	GrantServerGroupAccess(ctx context.Context, id uint, serverGroupID uint) error
 	RevokeServerGroupAccess(ctx context.Context, id uint, serverGroupID uint) error
 
-	// Batch operations
-	BatchUpdateStatus(ctx context.Context, ids []uint, status string) (int, []uint, error)
+	// Subscription-specific batch operations (extending base batch operations)
 	BatchCancel(ctx context.Context, ids []uint, reason string) (int, []uint, error)
 	BatchResetTraffic(ctx context.Context, ids []uint, resetDate time.Time) (int, []uint, error)
-	BatchDelete(ctx context.Context, ids []uint) (int, []uint, error)
 
-	// List operations with pagination
-	List(ctx context.Context, limit, offset int) ([]*entities.UserSubscription, int64, error)
-	ListDeleted(ctx context.Context, limit, offset int) ([]*entities.UserSubscription, int64, error)
-
-	// Search operations
-	Search(ctx context.Context, query string, limit, offset int) ([]*entities.UserSubscription, int64, error)
+	// Subscription-specific search operations (extending base search)
 	SearchByUserEmail(ctx context.Context, email string, limit, offset int) ([]*entities.UserSubscription, int64, error)
 
-	// Statistics
-	CountTotal(ctx context.Context) (int64, error)
-	CountByStatus(ctx context.Context, status string) (int64, error)
+	// Subscription-specific statistics (extending base statistics)
 	CountActiveSubscriptions(ctx context.Context) (int64, error)
 	CountExpiredSubscriptions(ctx context.Context) (int64, error)
 	CountTrialSubscriptions(ctx context.Context) (int64, error)
-	CountByUser(ctx context.Context, userID uint) (int64, error)
 
 	// Revenue statistics
 	GetSubscriptionStats(ctx context.Context, since time.Time) (map[string]interface{}, error)
 	GetChurnRate(ctx context.Context, period time.Duration) (float64, error)
 	GetRetentionRate(ctx context.Context, period time.Duration) (float64, error)
 
-	// Existence checks
+	// Subscription-specific existence checks (extending base existence checks)  
 	ExistsByUUID(ctx context.Context, uuid string) (bool, error)
-	ExistsByID(ctx context.Context, id uint) (bool, error)
 	UserHasActiveSubscription(ctx context.Context, userID uint) (bool, error)
 	UserHasSubscriptionToPlan(ctx context.Context, userID, planID uint) (bool, error)
 
 	// Currency operations
 	ListByCurrency(ctx context.Context, currency string, limit, offset int) ([]*entities.UserSubscription, int64, error)
-
-	// Advanced filtering
-	ListWithFilters(ctx context.Context, filters map[string]interface{}, limit, offset int) ([]*entities.UserSubscription, int64, error)
 
 	// Lifecycle management
 	GetSubscriptionsNeedingAttention(ctx context.Context, limit int) ([]*entities.UserSubscription, error)

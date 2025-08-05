@@ -3,91 +3,59 @@ package repositories
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/domains/subscription/usecases/interfaces"
+	"linke/internal/shared/framework"
 	"linke/internal/shared/logger"
+	"linke/internal/shared/repository"
 
 	"gorm.io/gorm"
 )
 
 // subscriptionPlanRepository implements the SubscriptionPlanRepository interface
 type subscriptionPlanRepository struct {
-	db *gorm.DB
+	*repository.BaseRepositoryImpl[entities.SubscriptionPlan, uint]
 }
 
 // subscriptionOrderRepository implements the SubscriptionOrderRepository interface
 type subscriptionOrderRepository struct {
-	db *gorm.DB
+	*repository.UserScopedTimeBasedRepositoryImpl[entities.SubscriptionOrder, uint]
 }
 
 // userSubscriptionRepository implements the UserSubscriptionRepository interface
 type userSubscriptionRepository struct {
-	db *gorm.DB
+	*repository.UserScopedTimeBasedRepositoryImpl[entities.UserSubscription, uint]
 }
 
 // NewSubscriptionPlanRepository creates a new SubscriptionPlanRepository implementation
-func NewSubscriptionPlanRepository(db *gorm.DB) interfaces.SubscriptionPlanRepository {
+func NewSubscriptionPlanRepository(db *gorm.DB, frameworkLogger framework.Logger) interfaces.SubscriptionPlanRepository {
 	return &subscriptionPlanRepository{
-		db: db,
+		BaseRepositoryImpl: repository.NewBaseRepository[entities.SubscriptionPlan, uint](db, frameworkLogger),
 	}
 }
 
 // NewSubscriptionOrderRepository creates a new SubscriptionOrderRepository implementation
-func NewSubscriptionOrderRepository(db *gorm.DB) interfaces.SubscriptionOrderRepository {
+func NewSubscriptionOrderRepository(db *gorm.DB, frameworkLogger framework.Logger) interfaces.SubscriptionOrderRepository {
 	return &subscriptionOrderRepository{
-		db: db,
+		UserScopedTimeBasedRepositoryImpl: repository.NewUserScopedTimeBasedRepository[entities.SubscriptionOrder, uint](db, frameworkLogger),
 	}
 }
 
 // NewUserSubscriptionRepository creates a new UserSubscriptionRepository implementation
-func NewUserSubscriptionRepository(db *gorm.DB) interfaces.UserSubscriptionRepository {
+func NewUserSubscriptionRepository(db *gorm.DB, frameworkLogger framework.Logger) interfaces.UserSubscriptionRepository {
 	return &userSubscriptionRepository{
-		db: db,
+		UserScopedTimeBasedRepositoryImpl: repository.NewUserScopedTimeBasedRepository[entities.UserSubscription, uint](db, frameworkLogger),
 	}
 }
 
 // === SubscriptionPlanRepository Implementation ===
 
-// Create creates a new subscription plan
-func (r *subscriptionPlanRepository) Create(ctx context.Context, plan *entities.SubscriptionPlan) error {
-	if err := r.db.WithContext(ctx).Create(plan).Error; err != nil {
-		logger.Error("Failed to create subscription plan",
-			logger.String("plan_code", plan.Code),
-			logger.Error2("error", err),
-		)
-		return fmt.Errorf("failed to create subscription plan: %w", err)
-	}
-
-	logger.Debug("Subscription plan created successfully",
-		logger.Uint("plan_id", plan.ID),
-		logger.String("plan_code", plan.Code),
-	)
-	return nil
-}
-
-// GetByID retrieves a subscription plan by ID
-func (r *subscriptionPlanRepository) GetByID(ctx context.Context, id uint) (*entities.SubscriptionPlan, error) {
-	var plan entities.SubscriptionPlan
-	if err := r.db.WithContext(ctx).First(&plan, id).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, fmt.Errorf("subscription plan not found")
-		}
-		logger.Error("Failed to get subscription plan by ID",
-			logger.Uint("plan_id", id),
-			logger.Error2("error", err),
-		)
-		return nil, fmt.Errorf("failed to get subscription plan: %w", err)
-	}
-	return &plan, nil
-}
-
 // GetByCode retrieves a subscription plan by code
 func (r *subscriptionPlanRepository) GetByCode(ctx context.Context, code string) (*entities.SubscriptionPlan, error) {
 	var plan entities.SubscriptionPlan
-	if err := r.db.WithContext(ctx).Where("code = ?", code).First(&plan).Error; err != nil {
+	if err := r.GetDB().WithContext(ctx).Where("code = ?", code).First(&plan).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("subscription plan not found")
 		}
@@ -100,111 +68,6 @@ func (r *subscriptionPlanRepository) GetByCode(ctx context.Context, code string)
 	return &plan, nil
 }
 
-// Update updates a subscription plan
-func (r *subscriptionPlanRepository) Update(ctx context.Context, plan *entities.SubscriptionPlan) error {
-	if err := r.db.WithContext(ctx).Save(plan).Error; err != nil {
-		logger.Error("Failed to update subscription plan",
-			logger.Uint("plan_id", plan.ID),
-			logger.Error2("error", err),
-		)
-		return fmt.Errorf("failed to update subscription plan: %w", err)
-	}
-
-	logger.Debug("Subscription plan updated successfully",
-		logger.Uint("plan_id", plan.ID),
-		logger.String("plan_code", plan.Code),
-	)
-	return nil
-}
-
-// Delete performs soft delete on a subscription plan
-func (r *subscriptionPlanRepository) Delete(ctx context.Context, id uint) error {
-	result := r.db.WithContext(ctx).Delete(&entities.SubscriptionPlan{}, id)
-	if result.Error != nil {
-		logger.Error("Failed to delete subscription plan",
-			logger.Uint("plan_id", id),
-			logger.Error2("error", result.Error),
-		)
-		return fmt.Errorf("failed to delete subscription plan: %w", result.Error)
-	}
-
-	if result.RowsAffected == 0 {
-		return fmt.Errorf("subscription plan not found")
-	}
-
-	logger.Debug("Subscription plan deleted successfully",
-		logger.Uint("plan_id", id),
-	)
-	return nil
-}
-
-// SoftDelete performs soft delete (alias for Delete)
-func (r *subscriptionPlanRepository) SoftDelete(ctx context.Context, id uint) error {
-	return r.Delete(ctx, id)
-}
-
-// Restore restores a soft deleted subscription plan
-func (r *subscriptionPlanRepository) Restore(ctx context.Context, id uint) error {
-	result := r.db.WithContext(ctx).Unscoped().Model(&entities.SubscriptionPlan{}).Where("id = ?", id).Update("deleted_at", nil)
-	if result.Error != nil {
-		logger.Error("Failed to restore subscription plan",
-			logger.Uint("plan_id", id),
-			logger.Error2("error", result.Error),
-		)
-		return fmt.Errorf("failed to restore subscription plan: %w", result.Error)
-	}
-
-	if result.RowsAffected == 0 {
-		return fmt.Errorf("subscription plan not found")
-	}
-
-	logger.Debug("Subscription plan restored successfully",
-		logger.Uint("plan_id", id),
-	)
-	return nil
-}
-
-// HardDelete permanently deletes a subscription plan
-func (r *subscriptionPlanRepository) HardDelete(ctx context.Context, id uint) error {
-	result := r.db.WithContext(ctx).Unscoped().Delete(&entities.SubscriptionPlan{}, id)
-	if result.Error != nil {
-		logger.Error("Failed to hard delete subscription plan",
-			logger.Uint("plan_id", id),
-			logger.Error2("error", result.Error),
-		)
-		return fmt.Errorf("failed to permanently delete subscription plan: %w", result.Error)
-	}
-
-	if result.RowsAffected == 0 {
-		return fmt.Errorf("subscription plan not found")
-	}
-
-	logger.Warn("Subscription plan permanently deleted",
-		logger.Uint("plan_id", id),
-	)
-	return nil
-}
-
-// List lists all subscription plans with pagination
-func (r *subscriptionPlanRepository) List(ctx context.Context, limit, offset int) ([]*entities.SubscriptionPlan, int64, error) {
-	var plans []*entities.SubscriptionPlan
-	var total int64
-
-	// Count total plans
-	if err := r.db.WithContext(ctx).Model(&entities.SubscriptionPlan{}).Count(&total).Error; err != nil {
-		logger.Error("Failed to count subscription plans", logger.Error2("error", err))
-		return nil, 0, fmt.Errorf("failed to count subscription plans: %w", err)
-	}
-
-	// Get plans with pagination
-	if err := r.db.WithContext(ctx).Order("sort_order ASC, created_at DESC").
-		Limit(limit).Offset(offset).Find(&plans).Error; err != nil {
-		logger.Error("Failed to list subscription plans", logger.Error2("error", err))
-		return nil, 0, fmt.Errorf("failed to list subscription plans: %w", err)
-	}
-
-	return plans, total, nil
-}
 
 // ListActive lists active subscription plans
 func (r *subscriptionPlanRepository) ListActive(ctx context.Context, limit, offset int) ([]*entities.SubscriptionPlan, int64, error) {
@@ -215,14 +78,14 @@ func (r *subscriptionPlanRepository) ListActive(ctx context.Context, limit, offs
 	args := []interface{}{entities.SubscriptionPlanStatusActive}
 
 	// Count total active plans
-	if err := r.db.WithContext(ctx).Model(&entities.SubscriptionPlan{}).
+	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
 		Where(condition, args...).Count(&total).Error; err != nil {
 		logger.Error("Failed to count active subscription plans", logger.Error2("error", err))
 		return nil, 0, fmt.Errorf("failed to count active subscription plans: %w", err)
 	}
 
 	// Get active plans with pagination
-	if err := r.db.WithContext(ctx).Where(condition, args...).
+	if err := r.GetDB().WithContext(ctx).Where(condition, args...).
 		Order("sort_order ASC, created_at DESC").
 		Limit(limit).Offset(offset).Find(&plans).Error; err != nil {
 		logger.Error("Failed to list active subscription plans", logger.Error2("error", err))
@@ -241,14 +104,14 @@ func (r *subscriptionPlanRepository) ListVisible(ctx context.Context, limit, off
 	args := []interface{}{true}
 
 	// Count total visible plans
-	if err := r.db.WithContext(ctx).Model(&entities.SubscriptionPlan{}).
+	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
 		Where(condition, args...).Count(&total).Error; err != nil {
 		logger.Error("Failed to count visible subscription plans", logger.Error2("error", err))
 		return nil, 0, fmt.Errorf("failed to count visible subscription plans: %w", err)
 	}
 
 	// Get visible plans with pagination
-	if err := r.db.WithContext(ctx).Where(condition, args...).
+	if err := r.GetDB().WithContext(ctx).Where(condition, args...).
 		Order("sort_order ASC, created_at DESC").
 		Limit(limit).Offset(offset).Find(&plans).Error; err != nil {
 		logger.Error("Failed to list visible subscription plans", logger.Error2("error", err))
@@ -258,56 +121,7 @@ func (r *subscriptionPlanRepository) ListVisible(ctx context.Context, limit, off
 	return plans, total, nil
 }
 
-// ListDeleted lists soft deleted subscription plans
-func (r *subscriptionPlanRepository) ListDeleted(ctx context.Context, limit, offset int) ([]*entities.SubscriptionPlan, int64, error) {
-	var plans []*entities.SubscriptionPlan
-	var total int64
 
-	// Count total deleted plans
-	if err := r.db.WithContext(ctx).Unscoped().Model(&entities.SubscriptionPlan{}).
-		Where("deleted_at IS NOT NULL").Count(&total).Error; err != nil {
-		logger.Error("Failed to count deleted subscription plans", logger.Error2("error", err))
-		return nil, 0, fmt.Errorf("failed to count deleted subscription plans: %w", err)
-	}
-
-	// Get deleted plans with pagination
-	if err := r.db.WithContext(ctx).Unscoped().Where("deleted_at IS NOT NULL").
-		Order("deleted_at DESC").Limit(limit).Offset(offset).Find(&plans).Error; err != nil {
-		logger.Error("Failed to list deleted subscription plans", logger.Error2("error", err))
-		return nil, 0, fmt.Errorf("failed to list deleted subscription plans: %w", err)
-	}
-
-	return plans, total, nil
-}
-
-// ListByStatus lists subscription plans by status
-func (r *subscriptionPlanRepository) ListByStatus(ctx context.Context, status string, limit, offset int) ([]*entities.SubscriptionPlan, int64, error) {
-	var plans []*entities.SubscriptionPlan
-	var total int64
-
-	// Count total plans by status
-	if err := r.db.WithContext(ctx).Model(&entities.SubscriptionPlan{}).
-		Where("status = ?", status).Count(&total).Error; err != nil {
-		logger.Error("Failed to count subscription plans by status",
-			logger.String("status", status),
-			logger.Error2("error", err),
-		)
-		return nil, 0, fmt.Errorf("failed to count subscription plans by status: %w", err)
-	}
-
-	// Get plans with pagination
-	if err := r.db.WithContext(ctx).Where("status = ?", status).
-		Order("sort_order ASC, created_at DESC").
-		Limit(limit).Offset(offset).Find(&plans).Error; err != nil {
-		logger.Error("Failed to list subscription plans by status",
-			logger.String("status", status),
-			logger.Error2("error", err),
-		)
-		return nil, 0, fmt.Errorf("failed to list subscription plans by status: %w", err)
-	}
-
-	return plans, total, nil
-}
 
 // ListByCurrency lists subscription plans by currency
 func (r *subscriptionPlanRepository) ListByCurrency(ctx context.Context, currency string, limit, offset int) ([]*entities.SubscriptionPlan, int64, error) {
@@ -315,7 +129,7 @@ func (r *subscriptionPlanRepository) ListByCurrency(ctx context.Context, currenc
 	var total int64
 
 	// Count total plans by currency
-	if err := r.db.WithContext(ctx).Model(&entities.SubscriptionPlan{}).
+	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
 		Where("currency = ?", currency).Count(&total).Error; err != nil {
 		logger.Error("Failed to count subscription plans by currency",
 			logger.String("currency", currency),
@@ -325,7 +139,7 @@ func (r *subscriptionPlanRepository) ListByCurrency(ctx context.Context, currenc
 	}
 
 	// Get plans with pagination
-	if err := r.db.WithContext(ctx).Where("currency = ?", currency).
+	if err := r.GetDB().WithContext(ctx).Where("currency = ?", currency).
 		Order("sort_order ASC, price ASC").
 		Limit(limit).Offset(offset).Find(&plans).Error; err != nil {
 		logger.Error("Failed to list subscription plans by currency",
@@ -344,7 +158,7 @@ func (r *subscriptionPlanRepository) ListByBillingCycle(ctx context.Context, bil
 	var total int64
 
 	// Count total plans by billing cycle
-	if err := r.db.WithContext(ctx).Model(&entities.SubscriptionPlan{}).
+	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
 		Where("billing_cycle = ?", billingCycle).Count(&total).Error; err != nil {
 		logger.Error("Failed to count subscription plans by billing cycle",
 			logger.String("billing_cycle", billingCycle),
@@ -354,7 +168,7 @@ func (r *subscriptionPlanRepository) ListByBillingCycle(ctx context.Context, bil
 	}
 
 	// Get plans with pagination
-	if err := r.db.WithContext(ctx).Where("billing_cycle = ?", billingCycle).
+	if err := r.GetDB().WithContext(ctx).Where("billing_cycle = ?", billingCycle).
 		Order("sort_order ASC, price ASC").
 		Limit(limit).Offset(offset).Find(&plans).Error; err != nil {
 		logger.Error("Failed to list subscription plans by billing cycle",
@@ -376,14 +190,14 @@ func (r *subscriptionPlanRepository) ListPopular(ctx context.Context, limit, off
 	args := []interface{}{true, entities.SubscriptionPlanStatusActive, true}
 
 	// Count total popular plans
-	if err := r.db.WithContext(ctx).Model(&entities.SubscriptionPlan{}).
+	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
 		Where(condition, args...).Count(&total).Error; err != nil {
 		logger.Error("Failed to count popular subscription plans", logger.Error2("error", err))
 		return nil, 0, fmt.Errorf("failed to count popular subscription plans: %w", err)
 	}
 
 	// Get popular plans with pagination
-	if err := r.db.WithContext(ctx).Where(condition, args...).
+	if err := r.GetDB().WithContext(ctx).Where(condition, args...).
 		Order("sort_order ASC, price ASC").
 		Limit(limit).Offset(offset).Find(&plans).Error; err != nil {
 		logger.Error("Failed to list popular subscription plans", logger.Error2("error", err))
@@ -402,14 +216,14 @@ func (r *subscriptionPlanRepository) ListRecommended(ctx context.Context, limit,
 	args := []interface{}{true, entities.SubscriptionPlanStatusActive, true}
 
 	// Count total recommended plans
-	if err := r.db.WithContext(ctx).Model(&entities.SubscriptionPlan{}).
+	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
 		Where(condition, args...).Count(&total).Error; err != nil {
 		logger.Error("Failed to count recommended subscription plans", logger.Error2("error", err))
 		return nil, 0, fmt.Errorf("failed to count recommended subscription plans: %w", err)
 	}
 
 	// Get recommended plans with pagination
-	if err := r.db.WithContext(ctx).Where(condition, args...).
+	if err := r.GetDB().WithContext(ctx).Where(condition, args...).
 		Order("sort_order ASC, price ASC").
 		Limit(limit).Offset(offset).Find(&plans).Error; err != nil {
 		logger.Error("Failed to list recommended subscription plans", logger.Error2("error", err))
@@ -428,14 +242,14 @@ func (r *subscriptionPlanRepository) ListPublic(ctx context.Context, limit, offs
 	args := []interface{}{entities.SubscriptionPlanStatusActive, true}
 
 	// Count total public plans
-	if err := r.db.WithContext(ctx).Model(&entities.SubscriptionPlan{}).
+	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
 		Where(condition, args...).Count(&total).Error; err != nil {
 		logger.Error("Failed to count public subscription plans", logger.Error2("error", err))
 		return nil, 0, fmt.Errorf("failed to count public subscription plans: %w", err)
 	}
 
 	// Get public plans with pagination
-	if err := r.db.WithContext(ctx).Where(condition, args...).
+	if err := r.GetDB().WithContext(ctx).Where(condition, args...).
 		Order("sort_order ASC, price ASC").
 		Limit(limit).Offset(offset).Find(&plans).Error; err != nil {
 		logger.Error("Failed to list public subscription plans", logger.Error2("error", err))
@@ -454,7 +268,7 @@ func (r *subscriptionPlanRepository) ListPublicByCurrency(ctx context.Context, c
 	args := []interface{}{entities.SubscriptionPlanStatusActive, true, currency}
 
 	// Count total public plans by currency
-	if err := r.db.WithContext(ctx).Model(&entities.SubscriptionPlan{}).
+	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
 		Where(condition, args...).Count(&total).Error; err != nil {
 		logger.Error("Failed to count public subscription plans by currency",
 			logger.String("currency", currency),
@@ -464,7 +278,7 @@ func (r *subscriptionPlanRepository) ListPublicByCurrency(ctx context.Context, c
 	}
 
 	// Get public plans with pagination
-	if err := r.db.WithContext(ctx).Where(condition, args...).
+	if err := r.GetDB().WithContext(ctx).Where(condition, args...).
 		Order("sort_order ASC, price ASC").
 		Limit(limit).Offset(offset).Find(&plans).Error; err != nil {
 		logger.Error("Failed to list public subscription plans by currency",
@@ -486,7 +300,7 @@ func (r *subscriptionPlanRepository) ListByPriceRange(ctx context.Context, minPr
 	args := []interface{}{minPrice, maxPrice, currency}
 
 	// Count total plans in price range
-	if err := r.db.WithContext(ctx).Model(&entities.SubscriptionPlan{}).
+	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
 		Where(condition, args...).Count(&total).Error; err != nil {
 		logger.Error("Failed to count subscription plans by price range",
 			logger.String("min_price", fmt.Sprintf("%.2f", minPrice)),
@@ -498,7 +312,7 @@ func (r *subscriptionPlanRepository) ListByPriceRange(ctx context.Context, minPr
 	}
 
 	// Get plans with pagination
-	if err := r.db.WithContext(ctx).Where(condition, args...).
+	if err := r.GetDB().WithContext(ctx).Where(condition, args...).
 		Order("price ASC, sort_order ASC").
 		Limit(limit).Offset(offset).Find(&plans).Error; err != nil {
 		logger.Error("Failed to list subscription plans by price range",
@@ -516,7 +330,7 @@ func (r *subscriptionPlanRepository) ListByPriceRange(ctx context.Context, minPr
 // GetCheapest gets the cheapest plan for a currency
 func (r *subscriptionPlanRepository) GetCheapest(ctx context.Context, currency string) (*entities.SubscriptionPlan, error) {
 	var plan entities.SubscriptionPlan
-	if err := r.db.WithContext(ctx).Where("currency = ? AND status = ?", currency, entities.SubscriptionPlanStatusActive).
+	if err := r.GetDB().WithContext(ctx).Where("currency = ? AND status = ?", currency, entities.SubscriptionPlanStatusActive).
 		Order("price ASC").First(&plan).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("no plans found for currency %s", currency)
@@ -533,7 +347,7 @@ func (r *subscriptionPlanRepository) GetCheapest(ctx context.Context, currency s
 // GetMostExpensive gets the most expensive plan for a currency
 func (r *subscriptionPlanRepository) GetMostExpensive(ctx context.Context, currency string) (*entities.SubscriptionPlan, error) {
 	var plan entities.SubscriptionPlan
-	if err := r.db.WithContext(ctx).Where("currency = ? AND status = ?", currency, entities.SubscriptionPlanStatusActive).
+	if err := r.GetDB().WithContext(ctx).Where("currency = ? AND status = ?", currency, entities.SubscriptionPlanStatusActive).
 		Order("price DESC").First(&plan).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("no plans found for currency %s", currency)
@@ -547,65 +361,11 @@ func (r *subscriptionPlanRepository) GetMostExpensive(ctx context.Context, curre
 	return &plan, nil
 }
 
-// Search searches subscription plans by name, code, or description
-func (r *subscriptionPlanRepository) Search(ctx context.Context, query string, limit, offset int) ([]*entities.SubscriptionPlan, int64, error) {
-	var plans []*entities.SubscriptionPlan
-	var total int64
 
-	// Prepare search query
-	searchQuery := "%" + strings.ToLower(query) + "%"
-	whereClause := "LOWER(name) LIKE ? OR LOWER(code) LIKE ? OR LOWER(description) LIKE ?"
-
-	// Count total matching plans
-	if err := r.db.WithContext(ctx).Model(&entities.SubscriptionPlan{}).
-		Where(whereClause, searchQuery, searchQuery, searchQuery).Count(&total).Error; err != nil {
-		logger.Error("Failed to count search results",
-			logger.String("query", query),
-			logger.Error2("error", err),
-		)
-		return nil, 0, fmt.Errorf("failed to count search results: %w", err)
-	}
-
-	// Get matching plans with pagination
-	if err := r.db.WithContext(ctx).Where(whereClause, searchQuery, searchQuery, searchQuery).
-		Order("sort_order ASC, created_at DESC").
-		Limit(limit).Offset(offset).Find(&plans).Error; err != nil {
-		logger.Error("Failed to search subscription plans",
-			logger.String("query", query),
-			logger.Error2("error", err),
-		)
-		return nil, 0, fmt.Errorf("failed to search subscription plans: %w", err)
-	}
-
-	return plans, total, nil
-}
-
-// UpdateStatus updates a subscription plan's status
-func (r *subscriptionPlanRepository) UpdateStatus(ctx context.Context, id uint, status string) error {
-	result := r.db.WithContext(ctx).Model(&entities.SubscriptionPlan{}).Where("id = ?", id).Update("status", status)
-	if result.Error != nil {
-		logger.Error("Failed to update subscription plan status",
-			logger.Uint("plan_id", id),
-			logger.String("status", status),
-			logger.Error2("error", result.Error),
-		)
-		return fmt.Errorf("failed to update subscription plan status: %w", result.Error)
-	}
-
-	if result.RowsAffected == 0 {
-		return fmt.Errorf("subscription plan not found")
-	}
-
-	logger.Debug("Subscription plan status updated successfully",
-		logger.Uint("plan_id", id),
-		logger.String("new_status", status),
-	)
-	return nil
-}
 
 // UpdateVisibility updates a subscription plan's visibility
 func (r *subscriptionPlanRepository) UpdateVisibility(ctx context.Context, id uint, isVisible bool) error {
-	result := r.db.WithContext(ctx).Model(&entities.SubscriptionPlan{}).Where("id = ?", id).Update("is_visible", isVisible)
+	result := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).Where("id = ?", id).Update("is_visible", isVisible)
 	if result.Error != nil {
 		logger.Error("Failed to update subscription plan visibility",
 			logger.Uint("plan_id", id),
@@ -628,7 +388,7 @@ func (r *subscriptionPlanRepository) UpdateVisibility(ctx context.Context, id ui
 
 // UpdateSortOrder updates a subscription plan's sort order
 func (r *subscriptionPlanRepository) UpdateSortOrder(ctx context.Context, id uint, sortOrder int) error {
-	result := r.db.WithContext(ctx).Model(&entities.SubscriptionPlan{}).Where("id = ?", id).Update("sort_order", sortOrder)
+	result := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).Where("id = ?", id).Update("sort_order", sortOrder)
 	if result.Error != nil {
 		logger.Error("Failed to update subscription plan sort order",
 			logger.Uint("plan_id", id),
@@ -651,7 +411,7 @@ func (r *subscriptionPlanRepository) UpdateSortOrder(ctx context.Context, id uin
 
 // UpdatePopularFlag updates a subscription plan's popular flag
 func (r *subscriptionPlanRepository) UpdatePopularFlag(ctx context.Context, id uint, isPopular bool) error {
-	result := r.db.WithContext(ctx).Model(&entities.SubscriptionPlan{}).Where("id = ?", id).Update("is_popular", isPopular)
+	result := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).Where("id = ?", id).Update("is_popular", isPopular)
 	if result.Error != nil {
 		logger.Error("Failed to update subscription plan popular flag",
 			logger.Uint("plan_id", id),
@@ -674,7 +434,7 @@ func (r *subscriptionPlanRepository) UpdatePopularFlag(ctx context.Context, id u
 
 // UpdateRecommendedFlag updates a subscription plan's recommended flag
 func (r *subscriptionPlanRepository) UpdateRecommendedFlag(ctx context.Context, id uint, isRecommended bool) error {
-	result := r.db.WithContext(ctx).Model(&entities.SubscriptionPlan{}).Where("id = ?", id).Update("is_recommended", isRecommended)
+	result := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).Where("id = ?", id).Update("is_recommended", isRecommended)
 	if result.Error != nil {
 		logger.Error("Failed to update subscription plan recommended flag",
 			logger.Uint("plan_id", id),
@@ -695,27 +455,6 @@ func (r *subscriptionPlanRepository) UpdateRecommendedFlag(ctx context.Context, 
 	return nil
 }
 
-// BatchUpdateStatus updates status for multiple subscription plans
-func (r *subscriptionPlanRepository) BatchUpdateStatus(ctx context.Context, ids []uint, status string) (int, []uint, error) {
-	var updatedCount int
-	var failedIDs []uint
-
-	for _, id := range ids {
-		if err := r.UpdateStatus(ctx, id, status); err != nil {
-			failedIDs = append(failedIDs, id)
-		} else {
-			updatedCount++
-		}
-	}
-
-	logger.Debug("Batch status update completed",
-		logger.Int("updated_count", updatedCount),
-		logger.Int("failed_count", len(failedIDs)),
-		logger.String("status", status),
-	)
-
-	return updatedCount, failedIDs, nil
-}
 
 // BatchUpdateVisibility updates visibility for multiple subscription plans
 func (r *subscriptionPlanRepository) BatchUpdateVisibility(ctx context.Context, ids []uint, isVisible bool) (int, []uint, error) {
@@ -739,50 +478,13 @@ func (r *subscriptionPlanRepository) BatchUpdateVisibility(ctx context.Context, 
 	return updatedCount, failedIDs, nil
 }
 
-// BatchDelete performs batch soft delete on multiple subscription plans
-func (r *subscriptionPlanRepository) BatchDelete(ctx context.Context, ids []uint) (int, []uint, error) {
-	var deletedCount int
-	var failedIDs []uint
 
-	for _, id := range ids {
-		if err := r.Delete(ctx, id); err != nil {
-			failedIDs = append(failedIDs, id)
-		} else {
-			deletedCount++
-		}
-	}
 
-	logger.Debug("Batch delete completed",
-		logger.Int("deleted_count", deletedCount),
-		logger.Int("failed_count", len(failedIDs)),
-	)
-
-	return deletedCount, failedIDs, nil
-}
-
-// CountTotal returns the total count of subscription plans
-func (r *subscriptionPlanRepository) CountTotal(ctx context.Context) (int64, error) {
-	var count int64
-	if err := r.db.WithContext(ctx).Model(&entities.SubscriptionPlan{}).Count(&count).Error; err != nil {
-		return 0, fmt.Errorf("failed to count total subscription plans: %w", err)
-	}
-	return count, nil
-}
-
-// CountByStatus returns the count of subscription plans by status
-func (r *subscriptionPlanRepository) CountByStatus(ctx context.Context, status string) (int64, error) {
-	var count int64
-	if err := r.db.WithContext(ctx).Model(&entities.SubscriptionPlan{}).
-		Where("status = ?", status).Count(&count).Error; err != nil {
-		return 0, fmt.Errorf("failed to count subscription plans by status %s: %w", status, err)
-	}
-	return count, nil
-}
 
 // CountVisible returns the count of visible subscription plans
 func (r *subscriptionPlanRepository) CountVisible(ctx context.Context) (int64, error) {
 	var count int64
-	if err := r.db.WithContext(ctx).Model(&entities.SubscriptionPlan{}).
+	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
 		Where("is_visible = ?", true).Count(&count).Error; err != nil {
 		return 0, fmt.Errorf("failed to count visible subscription plans: %w", err)
 	}
@@ -792,7 +494,7 @@ func (r *subscriptionPlanRepository) CountVisible(ctx context.Context) (int64, e
 // CountByCurrency returns the count of subscription plans by currency
 func (r *subscriptionPlanRepository) CountByCurrency(ctx context.Context, currency string) (int64, error) {
 	var count int64
-	if err := r.db.WithContext(ctx).Model(&entities.SubscriptionPlan{}).
+	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
 		Where("currency = ?", currency).Count(&count).Error; err != nil {
 		return 0, fmt.Errorf("failed to count subscription plans for currency %s: %w", currency, err)
 	}
@@ -802,7 +504,7 @@ func (r *subscriptionPlanRepository) CountByCurrency(ctx context.Context, curren
 // CountByBillingCycle returns the count of subscription plans by billing cycle
 func (r *subscriptionPlanRepository) CountByBillingCycle(ctx context.Context, billingCycle string) (int64, error) {
 	var count int64
-	if err := r.db.WithContext(ctx).Model(&entities.SubscriptionPlan{}).
+	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
 		Where("billing_cycle = ?", billingCycle).Count(&count).Error; err != nil {
 		return 0, fmt.Errorf("failed to count subscription plans for billing cycle %s: %w", billingCycle, err)
 	}
@@ -812,20 +514,12 @@ func (r *subscriptionPlanRepository) CountByBillingCycle(ctx context.Context, bi
 // ExistsByCode checks if a subscription plan with the given code exists
 func (r *subscriptionPlanRepository) ExistsByCode(ctx context.Context, code string) (bool, error) {
 	var count int64
-	if err := r.db.WithContext(ctx).Model(&entities.SubscriptionPlan{}).Where("code = ?", code).Count(&count).Error; err != nil {
+	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).Where("code = ?", code).Count(&count).Error; err != nil {
 		return false, fmt.Errorf("failed to check subscription plan existence by code: %w", err)
 	}
 	return count > 0, nil
 }
 
-// ExistsByID checks if a subscription plan with the given ID exists
-func (r *subscriptionPlanRepository) ExistsByID(ctx context.Context, id uint) (bool, error) {
-	var count int64
-	if err := r.db.WithContext(ctx).Model(&entities.SubscriptionPlan{}).Where("id = ?", id).Count(&count).Error; err != nil {
-		return false, fmt.Errorf("failed to check subscription plan existence by ID: %w", err)
-	}
-	return count > 0, nil
-}
 
 // GetOrderedPlans gets subscription plans ordered by a specific field
 func (r *subscriptionPlanRepository) GetOrderedPlans(ctx context.Context, orderBy string, ascending bool, limit, offset int) ([]*entities.SubscriptionPlan, int64, error) {
@@ -840,13 +534,13 @@ func (r *subscriptionPlanRepository) GetOrderedPlans(ctx context.Context, orderB
 	orderClause := fmt.Sprintf("%s %s", orderBy, direction)
 
 	// Count total plans
-	if err := r.db.WithContext(ctx).Model(&entities.SubscriptionPlan{}).Count(&total).Error; err != nil {
+	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).Count(&total).Error; err != nil {
 		logger.Error("Failed to count ordered subscription plans", logger.Error2("error", err))
 		return nil, 0, fmt.Errorf("failed to count ordered subscription plans: %w", err)
 	}
 
 	// Get plans with pagination and ordering
-	if err := r.db.WithContext(ctx).Order(orderClause).
+	if err := r.GetDB().WithContext(ctx).Order(orderClause).
 		Limit(limit).Offset(offset).Find(&plans).Error; err != nil {
 		logger.Error("Failed to list ordered subscription plans",
 			logger.String("order_by", orderBy),
@@ -872,7 +566,7 @@ func (r *subscriptionPlanRepository) GetPlansSortedByPrice(ctx context.Context, 
 	orderClause := fmt.Sprintf("price %s", direction)
 
 	// Count total plans for currency
-	if err := r.db.WithContext(ctx).Model(&entities.SubscriptionPlan{}).
+	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
 		Where("currency = ?", currency).Count(&total).Error; err != nil {
 		logger.Error("Failed to count subscription plans sorted by price",
 			logger.String("currency", currency),
@@ -882,7 +576,7 @@ func (r *subscriptionPlanRepository) GetPlansSortedByPrice(ctx context.Context, 
 	}
 
 	// Get plans with pagination and ordering
-	if err := r.db.WithContext(ctx).Where("currency = ?", currency).
+	if err := r.GetDB().WithContext(ctx).Where("currency = ?", currency).
 		Order(orderClause).Limit(limit).Offset(offset).Find(&plans).Error; err != nil {
 		logger.Error("Failed to list subscription plans sorted by price",
 			logger.String("currency", currency),
@@ -897,229 +591,216 @@ func (r *subscriptionPlanRepository) GetPlansSortedByPrice(ctx context.Context, 
 
 // === SubscriptionOrderRepository Implementation ===
 
-// BatchDelete performs batch soft delete on multiple subscription orders
-func (r *subscriptionOrderRepository) BatchDelete(ctx context.Context, ids []uint) (int, []uint, error) {
-	var deletedCount int
-	var failedIDs []uint
-
-	for _, id := range ids {
-		result := r.db.WithContext(ctx).Delete(&entities.SubscriptionOrder{}, id)
-		if result.Error != nil {
-			failedIDs = append(failedIDs, id)
-		} else if result.RowsAffected > 0 {
-			deletedCount++
-		}
-	}
-
-	logger.Debug("Batch delete completed",
-		logger.Int("deleted_count", deletedCount),
-		logger.Int("failed_count", len(failedIDs)),
-	)
-
-	return deletedCount, failedIDs, nil
-}
-
-// Essential SubscriptionOrderRepository methods (simplified for interface compliance)
-func (r *subscriptionOrderRepository) Create(ctx context.Context, order *entities.SubscriptionOrder) error {
-	return r.db.WithContext(ctx).Create(order).Error
-}
-
-func (r *subscriptionOrderRepository) GetByID(ctx context.Context, id uint) (*entities.SubscriptionOrder, error) {
-	var order entities.SubscriptionOrder
-	err := r.db.WithContext(ctx).First(&order, id).Error
-	if err == gorm.ErrRecordNotFound {
-		return nil, fmt.Errorf("subscription order not found")
-	}
-	return &order, err
-}
-
+// GetByOrderNumber retrieves a subscription order by order number (domain-specific method)
 func (r *subscriptionOrderRepository) GetByOrderNumber(ctx context.Context, orderNumber string) (*entities.SubscriptionOrder, error) {
 	var order entities.SubscriptionOrder
-	err := r.db.WithContext(ctx).Where("order_number = ?", orderNumber).First(&order).Error
+	err := r.GetDB().WithContext(ctx).Where("order_number = ?", orderNumber).First(&order).Error
 	if err == gorm.ErrRecordNotFound {
 		return nil, fmt.Errorf("subscription order not found")
 	}
 	return &order, err
 }
 
-func (r *subscriptionOrderRepository) Update(ctx context.Context, order *entities.SubscriptionOrder) error {
-	return r.db.WithContext(ctx).Save(order).Error
-}
+// Domain-specific implementations for SubscriptionOrderRepository
 
-func (r *subscriptionOrderRepository) Delete(ctx context.Context, id uint) error {
-	result := r.db.WithContext(ctx).Delete(&entities.SubscriptionOrder{}, id)
-	if result.RowsAffected == 0 {
-		return fmt.Errorf("subscription order not found")
-	}
-	return result.Error
-}
-
-// Stub implementations for remaining SubscriptionOrderRepository methods
-func (r *subscriptionOrderRepository) SoftDelete(ctx context.Context, id uint) error {
-	return r.Delete(ctx, id)
-}
-func (r *subscriptionOrderRepository) Restore(ctx context.Context, id uint) error {
-	return fmt.Errorf("not implemented")
-}
-func (r *subscriptionOrderRepository) HardDelete(ctx context.Context, id uint) error {
-	return fmt.Errorf("not implemented")
-}
-func (r *subscriptionOrderRepository) List(ctx context.Context, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
-	return nil, 0, fmt.Errorf("not implemented")
-}
-func (r *subscriptionOrderRepository) ListDeleted(ctx context.Context, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
-	return nil, 0, fmt.Errorf("not implemented")
-}
-func (r *subscriptionOrderRepository) ListByUser(ctx context.Context, userID uint, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
-	return nil, 0, fmt.Errorf("not implemented")
-}
+// GetUserOrderHistory retrieves user's order history
 func (r *subscriptionOrderRepository) GetUserOrderHistory(ctx context.Context, userID uint, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
-	return nil, 0, fmt.Errorf("not implemented")
+	// This can use the base ListByUser method
+	return r.ListByUser(ctx, userID, limit, offset)
 }
+
+// GetUserActiveOrders retrieves user's active orders
 func (r *subscriptionOrderRepository) GetUserActiveOrders(ctx context.Context, userID uint, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
-	return nil, 0, fmt.Errorf("not implemented")
+	var orders []*entities.SubscriptionOrder
+	var total int64
+
+	// Count active orders for user
+	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionOrder{}).
+		Where("user_id = ? AND status = ?", userID, "active").Count(&total).Error; err != nil {
+		return nil, 0, fmt.Errorf("failed to count active orders: %w", err)
+	}
+
+	// Get active orders for user
+	if err := r.GetDB().WithContext(ctx).Where("user_id = ? AND status = ?", userID, "active").
+		Limit(limit).Offset(offset).Find(&orders).Error; err != nil {
+		return nil, 0, fmt.Errorf("failed to get active orders: %w", err)
+	}
+
+	return orders, total, nil
 }
+
+// CountByPlan returns count of orders by plan
+func (r *subscriptionOrderRepository) CountByPlan(ctx context.Context, planID uint) (int64, error) {
+	var count int64
+	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionOrder{}).
+		Where("plan_id = ?", planID).Count(&count).Error; err != nil {
+		return 0, fmt.Errorf("failed to count orders by plan: %w", err)
+	}
+	return count, nil
+}
+
+// ExistsByOrderNumber checks if order exists by order number
+func (r *subscriptionOrderRepository) ExistsByOrderNumber(ctx context.Context, orderNumber string) (bool, error) {
+	var count int64
+	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionOrder{}).
+		Where("order_number = ?", orderNumber).Count(&count).Error; err != nil {
+		return false, fmt.Errorf("failed to check order existence: %w", err)
+	}
+	return count > 0, nil
+}
+
+// Placeholder implementations for remaining domain-specific methods
 func (r *subscriptionOrderRepository) ListByPlan(ctx context.Context, planID uint, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
 	return nil, 0, fmt.Errorf("not implemented")
 }
+
 func (r *subscriptionOrderRepository) GetPlanOrderStats(ctx context.Context, planID uint, since time.Time) (map[string]int64, error) {
 	return nil, fmt.Errorf("not implemented")
 }
-func (r *subscriptionOrderRepository) ListByStatus(ctx context.Context, status string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
-	return nil, 0, fmt.Errorf("not implemented")
-}
+
 func (r *subscriptionOrderRepository) ListByOrderType(ctx context.Context, orderType string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
 	return nil, 0, fmt.Errorf("not implemented")
 }
+
 func (r *subscriptionOrderRepository) ListByPaymentStatus(ctx context.Context, paymentStatus string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
 	return nil, 0, fmt.Errorf("not implemented")
 }
+
 func (r *subscriptionOrderRepository) ListPendingPayments(ctx context.Context, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
 	return nil, 0, fmt.Errorf("not implemented")
 }
+
 func (r *subscriptionOrderRepository) ListFailedPayments(ctx context.Context, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
 	return nil, 0, fmt.Errorf("not implemented")
 }
+
 func (r *subscriptionOrderRepository) ListByTransactionID(ctx context.Context, transactionID string) ([]*entities.SubscriptionOrder, error) {
 	return nil, fmt.Errorf("not implemented")
 }
+
 func (r *subscriptionOrderRepository) ListByPaymentGateway(ctx context.Context, gateway string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
 	return nil, 0, fmt.Errorf("not implemented")
 }
-func (r *subscriptionOrderRepository) ListByDateRange(ctx context.Context, start, end time.Time, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
-	return nil, 0, fmt.Errorf("not implemented")
-}
+
 func (r *subscriptionOrderRepository) ListRecentOrders(ctx context.Context, since time.Time, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
 	return nil, 0, fmt.Errorf("not implemented")
 }
+
 func (r *subscriptionOrderRepository) ListOrdersForBillingPeriod(ctx context.Context, start, end time.Time, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
 	return nil, 0, fmt.Errorf("not implemented")
 }
+
 func (r *subscriptionOrderRepository) ListByCouponCode(ctx context.Context, couponCode string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
 	return nil, 0, fmt.Errorf("not implemented")
 }
+
 func (r *subscriptionOrderRepository) ListWithDiscounts(ctx context.Context, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
 	return nil, 0, fmt.Errorf("not implemented")
 }
+
 func (r *subscriptionOrderRepository) ListRefundedOrders(ctx context.Context, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
 	return nil, 0, fmt.Errorf("not implemented")
 }
+
 func (r *subscriptionOrderRepository) ListRefundableOrders(ctx context.Context, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
 	return nil, 0, fmt.Errorf("not implemented")
 }
+
 func (r *subscriptionOrderRepository) ListByInvoiceStatus(ctx context.Context, invoiceStatus string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
 	return nil, 0, fmt.Errorf("not implemented")
 }
+
 func (r *subscriptionOrderRepository) ListUninvoicedOrders(ctx context.Context, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
 	return nil, 0, fmt.Errorf("not implemented")
 }
-func (r *subscriptionOrderRepository) UpdateStatus(ctx context.Context, id uint, status string) error {
-	return fmt.Errorf("not implemented")
-}
+
 func (r *subscriptionOrderRepository) UpdatePaymentStatus(ctx context.Context, id uint, paymentStatus string, transactionID string) error {
 	return fmt.Errorf("not implemented")
 }
+
 func (r *subscriptionOrderRepository) UpdateInvoiceStatus(ctx context.Context, id uint, invoiceStatus string, invoiceNumber string) error {
 	return fmt.Errorf("not implemented")
 }
+
 func (r *subscriptionOrderRepository) MarkAsPaid(ctx context.Context, id uint, transactionID string, paidAt time.Time) error {
 	return fmt.Errorf("not implemented")
 }
+
 func (r *subscriptionOrderRepository) MarkAsRefunded(ctx context.Context, id uint, refundAmount float64, refundReason string, refundedAt time.Time) error {
 	return fmt.Errorf("not implemented")
 }
-func (r *subscriptionOrderRepository) Search(ctx context.Context, query string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
-	return nil, 0, fmt.Errorf("not implemented")
-}
+
 func (r *subscriptionOrderRepository) SearchByUserEmail(ctx context.Context, email string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
 	return nil, 0, fmt.Errorf("not implemented")
 }
-func (r *subscriptionOrderRepository) CountTotal(ctx context.Context) (int64, error) {
-	return 0, fmt.Errorf("not implemented")
-}
-func (r *subscriptionOrderRepository) CountByStatus(ctx context.Context, status string) (int64, error) {
-	return 0, fmt.Errorf("not implemented")
-}
-func (r *subscriptionOrderRepository) CountByUser(ctx context.Context, userID uint) (int64, error) {
-	return 0, fmt.Errorf("not implemented")
-}
-func (r *subscriptionOrderRepository) CountByPlan(ctx context.Context, planID uint) (int64, error) {
-	return 0, fmt.Errorf("not implemented")
-}
+
 func (r *subscriptionOrderRepository) CountPaidOrders(ctx context.Context, since time.Time) (int64, error) {
 	return 0, fmt.Errorf("not implemented")
 }
+
 func (r *subscriptionOrderRepository) CountFailedOrders(ctx context.Context, since time.Time) (int64, error) {
 	return 0, fmt.Errorf("not implemented")
 }
+
 func (r *subscriptionOrderRepository) GetTotalRevenue(ctx context.Context, currency string, since time.Time) (float64, error) {
 	return 0, fmt.Errorf("not implemented")
 }
+
 func (r *subscriptionOrderRepository) GetRevenueByPlan(ctx context.Context, planID uint, currency string, since time.Time) (float64, error) {
 	return 0, fmt.Errorf("not implemented")
 }
+
 func (r *subscriptionOrderRepository) GetRevenueByPeriod(ctx context.Context, currency string, start, end time.Time) (float64, error) {
 	return 0, fmt.Errorf("not implemented")
 }
+
 func (r *subscriptionOrderRepository) GetDailyRevenue(ctx context.Context, currency string, days int) (map[string]float64, error) {
 	return nil, fmt.Errorf("not implemented")
 }
+
 func (r *subscriptionOrderRepository) GetMonthlyRevenue(ctx context.Context, currency string, months int) (map[string]float64, error) {
 	return nil, fmt.Errorf("not implemented")
 }
+
 func (r *subscriptionOrderRepository) ListByCurrency(ctx context.Context, currency string, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
 	return nil, 0, fmt.Errorf("not implemented")
 }
+
 func (r *subscriptionOrderRepository) GetSupportedCurrencies(ctx context.Context) ([]string, error) {
 	return nil, fmt.Errorf("not implemented")
 }
-func (r *subscriptionOrderRepository) BatchUpdateStatus(ctx context.Context, ids []uint, status string) (int, []uint, error) {
-	return 0, nil, fmt.Errorf("not implemented")
-}
+
 func (r *subscriptionOrderRepository) GetLastOrderNumber(ctx context.Context, prefix string) (string, error) {
 	return "", fmt.Errorf("not implemented")
 }
-func (r *subscriptionOrderRepository) ExistsByOrderNumber(ctx context.Context, orderNumber string) (bool, error) {
-	return false, fmt.Errorf("not implemented")
-}
+
 func (r *subscriptionOrderRepository) ListBySubscription(ctx context.Context, subscriptionID uint, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
 	return nil, 0, fmt.Errorf("not implemented")
 }
+
 func (r *subscriptionOrderRepository) GetSubscriptionOrders(ctx context.Context, subscriptionID uint) ([]*entities.SubscriptionOrder, error) {
 	return nil, fmt.Errorf("not implemented")
 }
-func (r *subscriptionOrderRepository) ListWithFilters(ctx context.Context, filters map[string]interface{}, limit, offset int) ([]*entities.SubscriptionOrder, int64, error) {
-	return nil, 0, fmt.Errorf("not implemented")
-}
+
 func (r *subscriptionOrderRepository) GetOrdersForRenewal(ctx context.Context, beforeDate time.Time, limit int) ([]*entities.SubscriptionOrder, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
 // === UserSubscriptionRepository Implementation ===
 
-// AddTrafficUsage adds traffic usage to a user subscription
+// GetByUUID retrieves a user subscription by UUID (domain-specific method)
+func (r *userSubscriptionRepository) GetByUUID(ctx context.Context, uuid string) (*entities.UserSubscription, error) {
+	var subscription entities.UserSubscription
+	err := r.GetDB().WithContext(ctx).Where("uuid = ?", uuid).First(&subscription).Error
+	if err == gorm.ErrRecordNotFound {
+		return nil, fmt.Errorf("user subscription not found")
+	}
+	return &subscription, err
+}
+
+// AddTrafficUsage adds traffic usage to a user subscription (domain-specific method)
 func (r *userSubscriptionRepository) AddTrafficUsage(ctx context.Context, id uint, additionalBytes int64) error {
-	result := r.db.WithContext(ctx).Model(&entities.UserSubscription{}).
+	result := r.GetDB().WithContext(ctx).Model(&entities.UserSubscription{}).
 		Where("id = ?", id).
 		Update("traffic_used", gorm.Expr("traffic_used + ?", additionalBytes))
 
@@ -1141,41 +822,6 @@ func (r *userSubscriptionRepository) AddTrafficUsage(ctx context.Context, id uin
 		logger.Int64("additional_bytes", additionalBytes),
 	)
 	return nil
-}
-
-// Essential UserSubscriptionRepository methods (simplified for interface compliance)
-func (r *userSubscriptionRepository) Create(ctx context.Context, subscription *entities.UserSubscription) error {
-	return r.db.WithContext(ctx).Create(subscription).Error
-}
-
-func (r *userSubscriptionRepository) GetByID(ctx context.Context, id uint) (*entities.UserSubscription, error) {
-	var subscription entities.UserSubscription
-	err := r.db.WithContext(ctx).First(&subscription, id).Error
-	if err == gorm.ErrRecordNotFound {
-		return nil, fmt.Errorf("user subscription not found")
-	}
-	return &subscription, err
-}
-
-func (r *userSubscriptionRepository) GetByUUID(ctx context.Context, uuid string) (*entities.UserSubscription, error) {
-	var subscription entities.UserSubscription
-	err := r.db.WithContext(ctx).Where("uuid = ?", uuid).First(&subscription).Error
-	if err == gorm.ErrRecordNotFound {
-		return nil, fmt.Errorf("user subscription not found")
-	}
-	return &subscription, err
-}
-
-func (r *userSubscriptionRepository) Update(ctx context.Context, subscription *entities.UserSubscription) error {
-	return r.db.WithContext(ctx).Save(subscription).Error
-}
-
-func (r *userSubscriptionRepository) Delete(ctx context.Context, id uint) error {
-	result := r.db.WithContext(ctx).Delete(&entities.UserSubscription{}, id)
-	if result.RowsAffected == 0 {
-		return fmt.Errorf("user subscription not found")
-	}
-	return result.Error
 }
 
 // Stub implementations for remaining UserSubscriptionRepository methods
