@@ -15,7 +15,6 @@ import (
 	"linke/internal/shared/response"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 )
 
 // MarkInvoiceAsPaidRequest represents the request body for marking invoice as paid
@@ -547,7 +546,7 @@ func (h *InvoiceHandler) DownloadInvoicePDF(c *gin.Context) {
 	// Check if user has permission to access this invoice
 	invoice, err := h.invoiceService.GetInvoice(c.Request.Context(), uint(id))
 	if err != nil {
-		h.logger.Error("Failed to get invoice for download", zap.Error(err))
+		h.logger.Error("Failed to get invoice for download", logger.ErrorField(err))
 		response.NotFound(c, "Invoice not found")
 		return
 	}
@@ -579,7 +578,7 @@ func (h *InvoiceHandler) DownloadInvoicePDF(c *gin.Context) {
 
 	pdfData, _, err := h.invoiceService.GenerateInvoicePDFWithOptions(c.Request.Context(), uint(id), options)
 	if err != nil {
-		h.logger.Error("Failed to generate invoice PDF for download", zap.Error(err))
+		h.logger.Error("Failed to generate invoice PDF for download", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to generate PDF")
 		return
 	}
@@ -613,7 +612,7 @@ func (h *InvoiceHandler) DownloadInvoicePDF(c *gin.Context) {
 func (h *InvoiceHandler) BulkDownloadInvoices(c *gin.Context) {
 	var req interfaces.BulkDownloadRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Error("Failed to bind bulk download request", zap.Error(err))
+		h.logger.Error("Failed to bind bulk download request", logger.ErrorField(err))
 		response.BadRequest(c, "Invalid request data")
 		return
 	}
@@ -658,7 +657,7 @@ func (h *InvoiceHandler) BulkDownloadInvoices(c *gin.Context) {
 
 	zipData, err := h.invoiceService.GenerateBulkInvoicePDFs(c.Request.Context(), req.InvoiceIDs, req.PDFOptions)
 	if err != nil {
-		h.logger.Error("Failed to generate bulk invoice PDFs", zap.Error(err))
+		h.logger.Error("Failed to generate bulk invoice PDFs", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to generate invoice PDFs")
 		return
 	}
@@ -685,7 +684,7 @@ func (h *InvoiceHandler) BulkDownloadInvoices(c *gin.Context) {
 func (h *InvoiceHandler) GetAvailableTemplates(c *gin.Context) {
 	templates, err := h.invoiceService.GetAvailableTemplates(c.Request.Context())
 	if err != nil {
-		h.logger.Error("Failed to get available templates", zap.Error(err))
+		h.logger.Error("Failed to get available templates", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get templates")
 		return
 	}
@@ -706,7 +705,7 @@ func (h *InvoiceHandler) GetAvailableTemplates(c *gin.Context) {
 func (h *InvoiceHandler) GetAvailableLanguages(c *gin.Context) {
 	languages, err := h.invoiceService.GetAvailableLanguages(c.Request.Context())
 	if err != nil {
-		h.logger.Error("Failed to get available languages", zap.Error(err))
+		h.logger.Error("Failed to get available languages", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get languages")
 		return
 	}
@@ -743,14 +742,14 @@ func (h *InvoiceHandler) SendInvoiceWithCustomPDF(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Error("Failed to bind send invoice with custom PDF request", zap.Error(err))
+		h.logger.Error("Failed to bind send invoice with custom PDF request", logger.ErrorField(err))
 		response.BadRequest(c, "Invalid request data")
 		return
 	}
 
 	err = h.invoiceService.SendInvoiceWithPDF(c.Request.Context(), uint(id), req.EmailOptions, req.PDFOptions)
 	if err != nil {
-		h.logger.Error("Failed to send invoice with custom PDF", zap.Error(err))
+		h.logger.Error("Failed to send invoice with custom PDF", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to send invoice")
 		return
 	}
@@ -787,7 +786,7 @@ func (h *InvoiceHandler) GetInvoiceDownloadHistory(c *gin.Context) {
 
 	records, err := h.invoiceService.GetInvoiceDownloadHistory(c.Request.Context(), user.ID)
 	if err != nil {
-		h.logger.Error("Failed to get invoice download history", zap.Error(err))
+		h.logger.Error("Failed to get invoice download history", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get download history")
 		return
 	}
@@ -836,13 +835,13 @@ func (h *InvoiceHandler) logDownloadActivity(c *gin.Context, invoice *entities.I
 	userAgent := c.GetHeader("User-Agent")
 
 	h.logger.Info("Invoice PDF downloaded",
-		zap.Uint("user_id", user.ID),
-		zap.Uint("invoice_id", invoice.ID),
-		zap.String("invoice_number", invoice.InvoiceNumber),
-		zap.String("template", template),
-		zap.String("language", language),
-		zap.String("client_ip", clientIP),
-		zap.String("user_agent", userAgent))
+		logger.Uint("user_id", user.ID),
+		logger.Uint("invoice_id", invoice.ID),
+		logger.String("invoice_number", invoice.InvoiceNumber),
+		logger.String("template", template),
+		logger.String("language", language),
+		logger.String("client_ip", clientIP),
+		logger.String("user_agent", userAgent))
 
 	// TODO: Store download record in database for history tracking
 }

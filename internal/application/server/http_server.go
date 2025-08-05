@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 
 	"linke/internal/shared/cache"
 	"linke/internal/shared/config"
@@ -136,7 +137,7 @@ func NewHTTPServer(
 // Start 启动 HTTP 服务器
 func (s *HTTPServer) Start() error {
 	addr := fmt.Sprintf(":%s", s.config.Server.Port)
-	s.logger.Info("Starting HTTP server", loggerPkg.String("addr", addr))
+	s.logger.Info("Starting HTTP server", zap.String("addr", addr))
 
 	return http.ListenAndServe(addr, s.Engine)
 }
@@ -177,7 +178,7 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 	}
 
 	if err := h.taskQueue.Enqueue(c.Request.Context(), "default", task); err != nil {
-		h.logger.Error("Failed to enqueue task", loggerPkg.ErrorField(err))
+		h.logger.Error("Failed to enqueue task", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to enqueue task"})
 		return
 	}

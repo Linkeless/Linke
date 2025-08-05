@@ -233,13 +233,13 @@ func NewApplication() *fx.App {
 			// Register cross-domain event handlers
 			crossDomainHandlers := events.NewCrossDomainEventHandlers()
 			if err := crossDomainHandlers.RegisterCrossDomainHandlers(eventBus); err != nil {
-				logger.Error("Failed to register cross-domain event handlers", loggerPkg.ErrorField(err))
+				logger.Error("Failed to register cross-domain event handlers", zap.Error(err))
 			}
 
 			// Register notification handler
 			notificationHandler := events.NewNotificationHandler()
 			if err := eventBus.Subscribe(notificationHandler.EventTypes(), notificationHandler); err != nil {
-				logger.Error("Failed to register notification handler", loggerPkg.ErrorField(err))
+				logger.Error("Failed to register notification handler", zap.Error(err))
 			}
 
 			// Register event processing handlers with the task processor
@@ -269,12 +269,12 @@ func StartServices(
 
 			// 启动任务处理器
 			go func() {
-				loggerPkg.Info("Starting task processor")
+				logger.Info("Starting task processor")
 				if err := taskProcessor.Start(ctx); err != nil {
-					loggerPkg.Error("Task processor startup failed",
-						loggerPkg.ErrorField(err),
-						loggerPkg.String("component", "task_processor"),
-						loggerPkg.String("action", "start"))
+					logger.Error("Task processor startup failed",
+						zap.Error(err),
+						zap.String("component", "task_processor"),
+						zap.String("action", "start"))
 					fmt.Printf("❌ Task processor failed to start: %v\n", err)
 					os.Exit(1)
 				}
@@ -282,11 +282,11 @@ func StartServices(
 
 			// 启动 HTTP 服务器
 			go func() {
-				loggerPkg.Info("Starting HTTP server")
+				logger.Info("Starting HTTP server")
 				if err := httpServer.Start(); err != nil && err != http.ErrServerClosed {
-					loggerPkg.Fatal("HTTP server startup failed",
-						loggerPkg.ErrorField(err),
-						loggerPkg.String("component", "http_server"))
+					logger.Fatal("HTTP server startup failed",
+						zap.Error(err),
+						zap.String("component", "http_server"))
 					fmt.Printf("❌ HTTP server failed to start: %v\n", err)
 					fmt.Printf("   Common causes:\n")
 					fmt.Printf("   - Port already in use\n")
@@ -296,16 +296,16 @@ func StartServices(
 				}
 			}()
 
-			loggerPkg.Info("Application started successfully with new VSA + Clean Architecture")
+			logger.Info("Application started successfully with new VSA + Clean Architecture")
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {
-			loggerPkg.Info("Shutting down application")
+			logger.Info("Shutting down application")
 
 			// 停止任务处理器
 			taskProcessor.Stop()
 
-			loggerPkg.Info("Application shutdown complete")
+			logger.Info("Application shutdown complete")
 			return nil
 		},
 	})
@@ -316,6 +316,6 @@ func StartServices(
 
 	go func() {
 		<-quit
-		loggerPkg.Info("Received shutdown signal")
+		logger.Info("Received shutdown signal")
 	}()
 }

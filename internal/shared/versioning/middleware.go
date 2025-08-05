@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 
 	"linke/internal/shared/logger"
 	"linke/internal/shared/response"
@@ -51,10 +50,10 @@ func (vm *VersionMiddleware) VersionNegotiation(c *gin.Context) {
 		versionInfo = vm.config.GetVersionInfo(resolvedVersion)
 
 		vm.logger.Debug("Using default version due to extraction failure",
-			zap.String("path", c.Request.URL.Path),
-			zap.String("method", c.Request.Method),
-			zap.String("error", err.Error()),
-			zap.String("default_version", resolvedVersion.String()),
+			logger.String("path", c.Request.URL.Path),
+			logger.String("method", c.Request.Method),
+			logger.String("error", err.Error()),
+			logger.String("default_version", resolvedVersion.String()),
 		)
 	} else {
 		// Validate requested version
@@ -73,11 +72,11 @@ func (vm *VersionMiddleware) VersionNegotiation(c *gin.Context) {
 		resolvedVersion = requestedVersion
 
 		vm.logger.Debug("Version negotiation successful",
-			zap.String("path", c.Request.URL.Path),
-			zap.String("method", c.Request.Method),
-			zap.String("requested_version", requestedVersion.String()),
-			zap.String("resolved_version", resolvedVersion.String()),
-			zap.String("strategy", string(vm.config.Strategy)),
+			logger.String("path", c.Request.URL.Path),
+			logger.String("method", c.Request.Method),
+			logger.String("requested_version", requestedVersion.String()),
+			logger.String("resolved_version", resolvedVersion.String()),
+			logger.String("strategy", string(vm.config.Strategy)),
 		)
 	}
 
@@ -106,8 +105,8 @@ func (vm *VersionMiddleware) VersionNegotiation(c *gin.Context) {
 	// Log version negotiation metrics
 	duration := time.Since(startTime)
 	vm.logger.Debug("Version negotiation completed",
-		zap.String("resolved_version", resolvedVersion.String()),
-		zap.Duration("duration", duration),
+		logger.String("resolved_version", resolvedVersion.String()),
+		logger.Duration("duration", duration),
 	)
 
 	c.Next()
@@ -116,13 +115,13 @@ func (vm *VersionMiddleware) VersionNegotiation(c *gin.Context) {
 // handleUnsupportedVersion handles requests for unsupported versions
 func (vm *VersionMiddleware) handleUnsupportedVersion(c *gin.Context, requestedVersion Version) {
 	vm.logger.Warn("Unsupported API version requested",
-		zap.String("path", c.Request.URL.Path),
-		zap.String("method", c.Request.Method),
-		zap.String("requested_version", requestedVersion.String()),
-		zap.String("min_version", vm.config.MinVersion.String()),
-		zap.String("max_version", vm.config.MaxVersion.String()),
-		zap.String("client_ip", c.ClientIP()),
-		zap.String("user_agent", c.GetHeader("User-Agent")),
+		logger.String("path", c.Request.URL.Path),
+		logger.String("method", c.Request.Method),
+		logger.String("requested_version", requestedVersion.String()),
+		logger.String("min_version", vm.config.MinVersion.String()),
+		logger.String("max_version", vm.config.MaxVersion.String()),
+		logger.String("client_ip", c.ClientIP()),
+		logger.String("user_agent", c.GetHeader("User-Agent")),
 	)
 
 	supportedVersions := make([]string, len(vm.config.SupportedVersions))
@@ -152,12 +151,12 @@ func (vm *VersionMiddleware) handleUnsupportedVersion(c *gin.Context, requestedV
 // handleSunsetVersion handles requests for sunset versions
 func (vm *VersionMiddleware) handleSunsetVersion(c *gin.Context, requestedVersion Version, versionInfo VersionInfo) {
 	vm.logger.Warn("Sunset API version requested",
-		zap.String("path", c.Request.URL.Path),
-		zap.String("method", c.Request.Method),
-		zap.String("requested_version", requestedVersion.String()),
-		zap.Time("sunset_date", *versionInfo.SunsetDate),
-		zap.String("client_ip", c.ClientIP()),
-		zap.String("user_agent", c.GetHeader("User-Agent")),
+		logger.String("path", c.Request.URL.Path),
+		logger.String("method", c.Request.Method),
+		logger.String("requested_version", requestedVersion.String()),
+		logger.Time("sunset_date", *versionInfo.SunsetDate),
+		logger.String("client_ip", c.ClientIP()),
+		logger.String("user_agent", c.GetHeader("User-Agent")),
 	)
 
 	errorResponse := response.ErrorResponse{
@@ -220,9 +219,9 @@ func (vm *VersionMiddleware) addDeprecationHeaders(c *gin.Context, versionInfo V
 	c.Header("Link", fmt.Sprintf(`<%s>; rel="successor-version"`, latestVersion.String()))
 
 	vm.logger.Info("Deprecation headers added",
-		zap.String("deprecated_version", versionInfo.Version.String()),
-		zap.String("status", versionInfo.Status),
-		zap.String("path", c.Request.URL.Path),
+		logger.String("deprecated_version", versionInfo.Version.String()),
+		logger.String("status", versionInfo.Status),
+		logger.String("path", c.Request.URL.Path),
 	)
 }
 

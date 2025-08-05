@@ -13,7 +13,6 @@ import (
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/shared/logger"
 
-	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -709,8 +708,8 @@ func (is *InvoiceService) GenerateInvoicePDFWithOptions(ctx context.Context, inv
 		}
 		if err := is.db.WithContext(ctx).Model(invoice).Updates(updateData).Error; err != nil {
 			is.logger.Error("Failed to update invoice PDF info",
-				zap.Error(err),
-				zap.Uint("invoice_id", invoiceID))
+				logger.ErrorField(err),
+				logger.Uint("invoice_id", invoiceID))
 		}
 	}
 
@@ -787,9 +786,9 @@ func (is *InvoiceService) GenerateBulkInvoicePDFs(ctx context.Context, invoiceID
 		pdfBytes, _, err := is.pdfGenerator.GeneratePDF(ctx, invoice, &invoiceOptions)
 		if err != nil {
 			is.logger.Error("Failed to generate PDF for invoice in bulk operation",
-				zap.Error(err),
-				zap.Uint("invoice_id", invoice.ID),
-				zap.String("invoice_number", invoice.InvoiceNumber))
+				logger.ErrorField(err),
+				logger.Uint("invoice_id", invoice.ID),
+				logger.String("invoice_number", invoice.InvoiceNumber))
 			continue
 		}
 
@@ -798,22 +797,22 @@ func (is *InvoiceService) GenerateBulkInvoicePDFs(ctx context.Context, invoiceID
 		fileWriter, err := zipWriter.Create(fileName)
 		if err != nil {
 			is.logger.Error("Failed to create file in ZIP",
-				zap.Error(err),
-				zap.String("filename", fileName))
+				logger.ErrorField(err),
+				logger.String("filename", fileName))
 			continue
 		}
 
 		if _, err := fileWriter.Write(pdfBytes); err != nil {
 			is.logger.Error("Failed to write PDF to ZIP",
-				zap.Error(err),
-				zap.String("filename", fileName))
+				logger.ErrorField(err),
+				logger.String("filename", fileName))
 			continue
 		}
 	}
 
 	// Add CSV summary (always include for bulk downloads)
 	if err := is.addInvoiceCSVToZip(zipWriter, invoices); err != nil {
-		is.logger.Error("Failed to add CSV to ZIP", zap.Error(err))
+		is.logger.Error("Failed to add CSV to ZIP", logger.ErrorField(err))
 	}
 
 	if err := zipWriter.Close(); err != nil {
@@ -821,8 +820,8 @@ func (is *InvoiceService) GenerateBulkInvoicePDFs(ctx context.Context, invoiceID
 	}
 
 	is.logger.Info("Bulk PDF generation completed",
-		zap.Int("total_invoices", len(invoices)),
-		zap.Int("requested_invoices", len(invoiceIDs)))
+		logger.Int("total_invoices", len(invoices)),
+		logger.Int("requested_invoices", len(invoiceIDs)))
 
 	return zipBuffer.Bytes(), nil
 }
@@ -1081,10 +1080,10 @@ func (is *InvoiceService) SendInvoiceWithPDF(ctx context.Context, invoiceID uint
 	}
 
 	is.logger.Info("Invoice sent with custom PDF",
-		zap.Uint("invoice_id", invoiceID),
-		zap.String("invoice_number", invoice.InvoiceNumber),
-		zap.String("template", pdfOptions.Template),
-		zap.Int("pdf_size", len(pdfBytes)))
+		logger.Uint("invoice_id", invoiceID),
+		logger.String("invoice_number", invoice.InvoiceNumber),
+		logger.String("template", pdfOptions.Template),
+		logger.Int("pdf_size", len(pdfBytes)))
 
 	return nil
 }

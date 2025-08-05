@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/swaggo/files"
 	"github.com/swaggo/gin-swagger"
+	"go.uber.org/zap"
 
 	"linke/internal/shared/cache"
 	"linke/internal/shared/config"
@@ -70,14 +71,14 @@ func SetupRoutes(
 
 	// Health check endpoint
 	router.GET("/health", appHealthCheckFunc)
-	logger.Info("Registered health check route", loggerPkg.String("route", "/health"))
+	logger.Info("Registered health check route", zap.String("route", "/health"))
 
 	// API versioning routes - version info endpoints
 	router.GET("/api/version", versionMiddleware.VersionInfo())
 	router.GET("/api/health", versionMiddleware.HealthCheck())
 	logger.Info("Registered versioning routes",
-		loggerPkg.String("route1", "/api/version"),
-		loggerPkg.String("route2", "/api/health"))
+		zap.String("route1", "/api/version"),
+		zap.String("route2", "/api/health"))
 
 	// API route group - Apply versioning middleware
 	api := router.Group("/api")
@@ -87,8 +88,8 @@ func SetupRoutes(
 	apiV1 := api.Group("/v1")
 	// apiV2 := api.Group("/v2") // Reserved for future v2 endpoints
 	logger.Info("Created API route groups",
-		loggerPkg.String("base", "/api"),
-		loggerPkg.String("v1", "/api/v1"))
+		zap.String("base", "/api"),
+		zap.String("v1", "/api/v1"))
 
 	// Application routes
 	appGroup := apiV1.Group("/app")
@@ -169,7 +170,7 @@ func SetupRoutes(
 	}
 
 	// Admin cache routes (/api/v1/admin/cache) - using RegisterRoutes method
-	logger.Info("Registering cache monitoring routes", loggerPkg.String("prefix", "/api/v1/admin"))
+	logger.Info("Registering cache monitoring routes", zap.String("prefix", "/api/v1/admin"))
 	if cacheMonitoringHandler == nil {
 		logger.Error("Cache monitoring handler is nil - routes will not be registered")
 	} else {
@@ -196,7 +197,7 @@ func SetupRoutes(
 		adminPaymentGroup.GET("/retries/statistics", paymentHandler.GetRetryStatistics)
 		adminPaymentGroup.GET("/retries/health", paymentHandler.GetRetryHealthMetrics)
 	}
-	logger.Info("Registered admin payment routes", loggerPkg.String("prefix", "/api/v1/admin/payment"))
+	logger.Info("Registered admin payment routes", zap.String("prefix", "/api/v1/admin/payment"))
 
 	// Admin subscription routes (/api/v1/admin/subscriptions)
 	// TODO: Add subscription pause/resume routes when methods are implemented
@@ -294,12 +295,12 @@ func SetupRoutes(
 
 	// Swagger documentation
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	logger.Info("Registered Swagger documentation route", loggerPkg.String("route", "/swagger/*any"))
+	logger.Info("Registered Swagger documentation route", zap.String("route", "/swagger/*any"))
 
 	// Log all registered routes for debugging
 	routes := router.Routes()
 	logger.Info("HTTP route registration completed successfully",
-		loggerPkg.Int("total_routes", len(routes)))
+		zap.Int("total_routes", len(routes)))
 
 	// Log important routes for verification
 	importantRoutes := []string{
@@ -325,8 +326,8 @@ func SetupRoutes(
 					len(route.Path) >= len(important)-1 &&
 					route.Path[:len(important)-1] == important[:len(important)-1]) {
 				logger.Info("Verified important route",
-					loggerPkg.String("method", route.Method),
-					loggerPkg.String("path", route.Path))
+					zap.String("method", route.Method),
+					zap.String("path", route.Path))
 				break
 			}
 		}

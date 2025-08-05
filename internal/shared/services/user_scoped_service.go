@@ -7,8 +7,7 @@ import (
 	"time"
 
 	"linke/internal/shared/framework"
-
-	"go.uber.org/zap"
+	"linke/internal/shared/logger"
 )
 
 // UserScopedServiceImpl extends BaseServiceImpl with user-specific operations
@@ -47,7 +46,7 @@ func (s *UserScopedServiceImpl[T, ID]) ListByUser(ctx context.Context, userID ui
 
 	entities, total, err := s.userRepository.ListByUser(ctx, userID, req.Limit, req.Offset)
 	if err != nil {
-		s.logger.Error("Failed to list entities by user", zap.String("service", s.name), zap.Uint("user_id", userID), zap.Error(err))
+		s.logger.Error("Failed to list entities by user", logger.String("service", s.name), logger.Uint("user_id", userID), logger.ErrorField(err))
 		return nil, fmt.Errorf("list entities by user %d: %w", userID, err)
 	}
 
@@ -57,7 +56,7 @@ func (s *UserScopedServiceImpl[T, ID]) ListByUser(ctx context.Context, userID ui
 func (s *UserScopedServiceImpl[T, ID]) CountByUser(ctx context.Context, userID uint) (int64, error) {
 	count, err := s.userRepository.CountByUser(ctx, userID)
 	if err != nil {
-		s.logger.Error("Failed to count entities by user", zap.String("service", s.name), zap.Uint("user_id", userID), zap.Error(err))
+		s.logger.Error("Failed to count entities by user", logger.String("service", s.name), logger.Uint("user_id", userID), logger.ErrorField(err))
 		return 0, fmt.Errorf("count entities by user %d: %w", userID, err)
 	}
 	return count, nil
@@ -89,7 +88,7 @@ func (s *UserScopedServiceImpl[T, ID]) DeleteByUser(ctx context.Context, userID 
 				failedIDs = append(failedIDs, idValue)
 			}
 			errors[fmt.Sprintf("%v", id)] = err.Error()
-			s.logger.Warn("Failed to delete entity for user", zap.Uint("user_id", userID), zap.Any("id", id), zap.Error(err))
+			s.logger.Warn("Failed to delete entity for user", logger.Uint("user_id", userID), logger.Any("id", id), logger.ErrorField(err))
 		} else {
 			successCount++
 		}
@@ -102,7 +101,7 @@ func (s *UserScopedServiceImpl[T, ID]) DeleteByUser(ctx context.Context, userID 
 		Errors:       errors,
 	}
 
-	s.logger.Info("Batch delete by user completed", zap.String("service", s.name), zap.Uint("user_id", userID), zap.Int("success", successCount), zap.Int("failed", len(failedIDs)))
+	s.logger.Info("Batch delete by user completed", logger.String("service", s.name), logger.Uint("user_id", userID), logger.Int("success", successCount), logger.Int("failed", len(failedIDs)))
 	return response, nil
 }
 

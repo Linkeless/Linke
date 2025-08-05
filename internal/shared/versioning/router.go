@@ -6,7 +6,6 @@ import (
 	"sort"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 
 	"linke/internal/shared/logger"
 	"linke/internal/shared/response"
@@ -65,9 +64,9 @@ func (vr *VersionRouter) RegisterHandler(method, path string, version Version, h
 	})
 
 	vr.logger.Debug("Registered versioned handler",
-		zap.String("method", method),
-		zap.String("path", path),
-		zap.String("version", version.String()),
+		logger.String("method", method),
+		logger.String("path", path),
+		logger.String("version", version.String()),
 	)
 }
 
@@ -103,15 +102,15 @@ func (vr *VersionRouter) BuildRoutes() {
 			vr.router.OPTIONS(path, dispatchHandler)
 		default:
 			vr.logger.Warn("Unsupported HTTP method for versioned route",
-				zap.String("method", method),
-				zap.String("path", path),
+				logger.String("method", method),
+				logger.String("path", path),
 			)
 		}
 
 		vr.logger.Info("Built versioned route",
-			zap.String("method", method),
-			zap.String("path", path),
-			zap.Int("version_count", len(handlers)),
+			logger.String("method", method),
+			logger.String("path", path),
+			logger.Int("version_count", len(handlers)),
 		)
 	}
 }
@@ -135,8 +134,8 @@ func (vr *VersionRouter) createVersionDispatchHandler(handlers []VersionedHandle
 		for _, handler := range handlers {
 			if handler.Version.Compare(requestedVersion) == 0 {
 				vr.logger.Debug("Exact version match found",
-					zap.String("version", requestedVersion.String()),
-					zap.String("path", c.Request.URL.Path),
+					logger.String("version", requestedVersion.String()),
+					logger.String("path", c.Request.URL.Path),
 				)
 				handler.Handler(c)
 				return
@@ -148,9 +147,9 @@ func (vr *VersionRouter) createVersionDispatchHandler(handlers []VersionedHandle
 			compatibleHandler := vr.findCompatibleHandler(handlers, requestedVersion)
 			if compatibleHandler != nil {
 				vr.logger.Info("Using compatible version handler",
-					zap.String("requested_version", requestedVersion.String()),
-					zap.String("compatible_version", compatibleHandler.Version.String()),
-					zap.String("path", c.Request.URL.Path),
+					logger.String("requested_version", requestedVersion.String()),
+					logger.String("compatible_version", compatibleHandler.Version.String()),
+					logger.String("path", c.Request.URL.Path),
 				)
 
 				// Add header to indicate version migration
@@ -190,9 +189,9 @@ func (vr *VersionRouter) findCompatibleHandler(handlers []VersionedHandler, requ
 // handleNoCompatibleVersion handles cases where no compatible version is found
 func (vr *VersionRouter) handleNoCompatibleVersion(c *gin.Context, requestedVersion Version, handlers []VersionedHandler) {
 	vr.logger.Warn("No compatible version handler found",
-		zap.String("requested_version", requestedVersion.String()),
-		zap.String("path", c.Request.URL.Path),
-		zap.String("method", c.Request.Method),
+		logger.String("requested_version", requestedVersion.String()),
+		logger.String("path", c.Request.URL.Path),
+		logger.String("method", c.Request.Method),
 	)
 
 	availableVersions := make([]string, len(handlers))

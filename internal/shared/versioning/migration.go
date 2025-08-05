@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 
 	"linke/internal/shared/logger"
 )
@@ -58,10 +57,10 @@ func (mr *MigrationRegistry) RegisterMigration(migration VersionMigration) {
 	mr.migrations[key] = migration
 
 	mr.logger.Info("Registered version migration",
-		zap.String("from_version", migration.FromVersion.String()),
-		zap.String("to_version", migration.ToVersion.String()),
-		zap.Int("mapping_count", len(migration.Mappings)),
-		zap.Bool("has_custom_func", migration.CustomFunc != nil),
+		logger.String("from_version", migration.FromVersion.String()),
+		logger.String("to_version", migration.ToVersion.String()),
+		logger.Int("mapping_count", len(migration.Mappings)),
+		logger.Bool("has_custom_func", migration.CustomFunc != nil),
 	)
 }
 
@@ -126,9 +125,9 @@ func (mr *MigrationRegistry) migrateWithMappings(migration VersionMigration, dat
 			transformedValue, err := mr.applyTransform(mapping.Transform, value)
 			if err != nil {
 				mr.logger.Warn("Failed to apply transformation",
-					zap.String("transform", mapping.Transform),
-					zap.String("field", mapping.FromField),
-					zap.Error(err),
+					logger.String("transform", mapping.Transform),
+					logger.String("field", mapping.FromField),
+					logger.ErrorField(err),
 				)
 			} else {
 				value = transformedValue
@@ -285,9 +284,9 @@ func (rm *ResponseMigrator) MigrateResponse(c *gin.Context, data any, responseVe
 	migratedData, err := rm.registry.Migrate(responseVersion, requestedVersion, data)
 	if err != nil {
 		rm.logger.Error("Response migration failed",
-			zap.String("from_version", responseVersion.String()),
-			zap.String("to_version", requestedVersion.String()),
-			zap.Error(err),
+			logger.String("from_version", responseVersion.String()),
+			logger.String("to_version", requestedVersion.String()),
+			logger.ErrorField(err),
 		)
 		return nil, err
 	}
@@ -297,8 +296,8 @@ func (rm *ResponseMigrator) MigrateResponse(c *gin.Context, data any, responseVe
 	c.Header("X-API-Response-Migrated-To", requestedVersion.String())
 
 	rm.logger.Debug("Response migration successful",
-		zap.String("from_version", responseVersion.String()),
-		zap.String("to_version", requestedVersion.String()),
+		logger.String("from_version", responseVersion.String()),
+		logger.String("to_version", requestedVersion.String()),
 	)
 
 	return migratedData, nil

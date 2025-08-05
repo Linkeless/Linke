@@ -6,8 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"go.uber.org/zap"
-
 	"linke/internal/domains/payment/entities"
 	"linke/internal/domains/payment/usecases/interfaces"
 	"linke/internal/shared/logger"
@@ -42,7 +40,7 @@ const (
 
 // CreatePaymentMethod creates a new payment method for a user
 func (s *paymentMethodService) CreatePaymentMethod(ctx context.Context, userID uint, req *entities.CreatePaymentMethodRequest) (*entities.PaymentMethodResponse, error) {
-	s.logger.Info("Creating payment method", zap.Uint("user_id", userID), zap.String("gateway", req.Gateway), zap.String("method", req.Method))
+	s.logger.Info("Creating payment method", logger.Uint("user_id", userID), logger.String("gateway", req.Gateway), logger.String("method", req.Method))
 
 	// Check if user has reached the payment method limit
 	limitReached, err := s.IsPaymentMethodLimitReached(ctx, userID)
@@ -96,14 +94,14 @@ func (s *paymentMethodService) CreatePaymentMethod(ctx context.Context, userID u
 	// Set as default if requested
 	if req.SetAsDefault {
 		if err := s.paymentMethodRepo.SetAsDefault(ctx, userID, paymentMethod.ID); err != nil {
-			s.logger.Error("Failed to set payment method as default", zap.Error(err), zap.Uint("payment_method_id", paymentMethod.ID))
+			s.logger.Error("Failed to set payment method as default", logger.ErrorField(err), logger.Uint("payment_method_id", paymentMethod.ID))
 			// Don't fail the creation, just log the error
 		} else {
 			paymentMethod.IsDefault = true
 		}
 	}
 
-	s.logger.Info("Payment method created successfully", zap.Uint("payment_method_id", paymentMethod.ID), zap.Uint("user_id", userID))
+	s.logger.Info("Payment method created successfully", logger.Uint("payment_method_id", paymentMethod.ID), logger.Uint("user_id", userID))
 	return paymentMethod.ToResponse(), nil
 }
 
@@ -252,7 +250,7 @@ func (s *paymentMethodService) UpdatePaymentMethod(ctx context.Context, userID, 
 		return nil, fmt.Errorf("failed to update payment method: %w", err)
 	}
 
-	s.logger.Info("Payment method updated", zap.Uint("payment_method_id", paymentMethodID), zap.Uint("user_id", userID))
+	s.logger.Info("Payment method updated", logger.Uint("payment_method_id", paymentMethodID), logger.Uint("user_id", userID))
 	return paymentMethod.ToResponse(), nil
 }
 
@@ -285,7 +283,7 @@ func (s *paymentMethodService) SetDefaultPaymentMethod(ctx context.Context, user
 	}
 
 	paymentMethod.IsDefault = true
-	s.logger.Info("Payment method set as default", zap.Uint("payment_method_id", paymentMethodID), zap.Uint("user_id", userID))
+	s.logger.Info("Payment method set as default", logger.Uint("payment_method_id", paymentMethodID), logger.Uint("user_id", userID))
 	return paymentMethod.ToResponse(), nil
 }
 
@@ -304,7 +302,7 @@ func (s *paymentMethodService) DeletePaymentMethod(ctx context.Context, userID, 
 		return fmt.Errorf("failed to delete payment method: %w", err)
 	}
 
-	s.logger.Info("Payment method deleted", zap.Uint("payment_method_id", paymentMethodID), zap.Uint("user_id", userID))
+	s.logger.Info("Payment method deleted", logger.Uint("payment_method_id", paymentMethodID), logger.Uint("user_id", userID))
 	return nil
 }
 
@@ -358,7 +356,7 @@ func (s *paymentMethodService) ValidatePaymentMethod(ctx context.Context, userID
 		// Mark as invalid if validation fails
 		paymentMethod.Status = entities.PaymentMethodStatusInvalid
 		if updateErr := s.paymentMethodRepo.Update(ctx, paymentMethod); updateErr != nil {
-			s.logger.Error("Failed to update payment method status", zap.Error(updateErr))
+			s.logger.Error("Failed to update payment method status", logger.ErrorField(updateErr))
 		}
 		return nil, fmt.Errorf("payment method validation failed: %w", err)
 	}
@@ -367,10 +365,10 @@ func (s *paymentMethodService) ValidatePaymentMethod(ctx context.Context, userID
 	now := time.Now()
 	paymentMethod.LastValidatedAt = &now
 	if err := s.paymentMethodRepo.Update(ctx, paymentMethod); err != nil {
-		s.logger.Error("Failed to update validation timestamp", zap.Error(err))
+		s.logger.Error("Failed to update validation timestamp", logger.ErrorField(err))
 	}
 
-	s.logger.Info("Payment method validated", zap.Uint("payment_method_id", paymentMethodID), zap.Uint("user_id", userID))
+	s.logger.Info("Payment method validated", logger.Uint("payment_method_id", paymentMethodID), logger.Uint("user_id", userID))
 	return paymentMethod.ToResponse(), nil
 }
 
@@ -400,11 +398,11 @@ func (s *paymentMethodService) ProcessPaymentWithMethod(ctx context.Context, use
 
 	// TODO: Implement actual payment processing logic
 	// This would integrate with the existing payment service
-	s.logger.Info("Processing payment with method", zap.Uint("payment_method_id", paymentMethodID), zap.Float64("amount", amount), zap.String("currency", currency))
+	s.logger.Info("Processing payment with method", logger.Uint("payment_method_id", paymentMethodID), logger.Float64("amount", amount), logger.String("currency", currency))
 
 	// Update usage statistics
 	if err := s.paymentMethodRepo.UpdateLastUsed(ctx, paymentMethodID, true); err != nil {
-		s.logger.Error("Failed to update payment method usage", zap.Error(err))
+		s.logger.Error("Failed to update payment method usage", logger.ErrorField(err))
 	}
 
 	// Return mock payment record for now
@@ -440,7 +438,7 @@ func (s *paymentMethodService) RetryFailedPayment(ctx context.Context, userID ui
 	// 3. Try payment with methods with good success rates
 	// 4. Update payment record with new attempt
 
-	s.logger.Info("Retrying failed payment", zap.Uint("user_id", userID), zap.Uint("payment_record_id", paymentRecordID))
+	s.logger.Info("Retrying failed payment", logger.Uint("user_id", userID), logger.Uint("payment_record_id", paymentRecordID))
 	return nil, fmt.Errorf("retry failed payment not implemented yet")
 }
 
@@ -499,11 +497,11 @@ func (s *paymentMethodService) RefreshExpiredMethods(ctx context.Context) error 
 
 	for _, method := range expiredMethods {
 		if err := s.paymentMethodRepo.UpdateStatus(ctx, method.ID, entities.PaymentMethodStatusExpired); err != nil {
-			s.logger.Error("Failed to update expired method status", zap.Error(err), zap.Uint("payment_method_id", method.ID))
+			s.logger.Error("Failed to update expired method status", logger.ErrorField(err), logger.Uint("payment_method_id", method.ID))
 		}
 	}
 
-	s.logger.Info("Refreshed expired payment methods", zap.Int("count", len(expiredMethods)))
+	s.logger.Info("Refreshed expired payment methods", logger.Int("count", len(expiredMethods)))
 	return nil
 }
 
@@ -519,21 +517,21 @@ func (s *paymentMethodService) RevalidatePaymentMethods(ctx context.Context) err
 		if err := s.validatePaymentTokenWithGateway(method.Gateway, method.PaymentToken); err != nil {
 			// Mark as invalid
 			if updateErr := s.paymentMethodRepo.UpdateStatus(ctx, method.ID, entities.PaymentMethodStatusInvalid); updateErr != nil {
-				s.logger.Error("Failed to mark method as invalid", zap.Error(updateErr), zap.Uint("payment_method_id", method.ID))
+				s.logger.Error("Failed to mark method as invalid", logger.ErrorField(updateErr), logger.Uint("payment_method_id", method.ID))
 			}
 		} else {
 			// Update validation timestamp
 			now := time.Now()
 			method.LastValidatedAt = &now
 			if updateErr := s.paymentMethodRepo.Update(ctx, method); updateErr != nil {
-				s.logger.Error("Failed to update validation timestamp", zap.Error(updateErr), zap.Uint("payment_method_id", method.ID))
+				s.logger.Error("Failed to update validation timestamp", logger.ErrorField(updateErr), logger.Uint("payment_method_id", method.ID))
 			} else {
 				revalidated++
 			}
 		}
 	}
 
-	s.logger.Info("Revalidated payment methods", zap.Int("total", len(methods)), zap.Int("successful", revalidated))
+	s.logger.Info("Revalidated payment methods", logger.Int("total", len(methods)), logger.Int("successful", revalidated))
 	return nil
 }
 

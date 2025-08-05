@@ -7,8 +7,6 @@ import (
 	"time"
 
 	"linke/internal/shared/logger"
-
-	"go.uber.org/zap"
 )
 
 // DownloadLimiter manages rate limiting for invoice downloads
@@ -104,11 +102,11 @@ func (dl *DownloadLimiter) CheckDownloadPermission(ctx context.Context, userID u
 	userLimit.LastDownload = now
 
 	dl.logger.Info("Download permission granted",
-		zap.Uint("user_id", userID),
-		zap.Bool("is_bulk", isBulk),
-		zap.Int("bulk_size", bulkSize),
-		zap.Int("hourly_count", userLimit.HourlyCount),
-		zap.Int("daily_count", userLimit.DailyCount))
+		logger.Uint("user_id", userID),
+		logger.Bool("is_bulk", isBulk),
+		logger.Int("bulk_size", bulkSize),
+		logger.Int("hourly_count", userLimit.HourlyCount),
+		logger.Int("daily_count", userLimit.DailyCount))
 
 	return nil
 }
@@ -145,7 +143,7 @@ func (dl *DownloadLimiter) ResetUserLimits(userID uint) {
 	defer dl.mu.Unlock()
 
 	delete(dl.userLimits, userID)
-	dl.logger.Info("User download limits reset", zap.Uint("user_id", userID))
+	dl.logger.Info("User download limits reset", logger.Uint("user_id", userID))
 }
 
 // cleanupRoutine removes old user limit entries
@@ -171,7 +169,7 @@ func (dl *DownloadLimiter) cleanup() {
 	}
 
 	if removed > 0 {
-		dl.logger.Info("Cleaned up old download limits", zap.Int("removed", removed))
+		dl.logger.Info("Cleaned up old download limits", logger.Int("removed", removed))
 	}
 }
 
@@ -199,8 +197,8 @@ func (isv *InvoiceSecurityValidator) ValidateDownloadRequest(ctx context.Context
 	// Check for suspicious patterns
 	if len(invoiceIDs) > 100 {
 		isv.logger.Warn("Large bulk download request detected",
-			zap.Uint("user_id", userID),
-			zap.Int("invoice_count", len(invoiceIDs)))
+			logger.Uint("user_id", userID),
+			logger.Int("invoice_count", len(invoiceIDs)))
 		return fmt.Errorf("bulk download request too large")
 	}
 
@@ -224,7 +222,7 @@ func (isv *InvoiceSecurityValidator) ValidateTemplate(template string) error {
 	}
 
 	if !allowedTemplates[template] {
-		isv.logger.Warn("Invalid template requested", zap.String("template", template))
+		isv.logger.Warn("Invalid template requested", logger.String("template", template))
 		return fmt.Errorf("invalid template: %s", template)
 	}
 
@@ -245,7 +243,7 @@ func (isv *InvoiceSecurityValidator) ValidateLanguage(language string) error {
 	}
 
 	if !allowedLanguages[language] {
-		isv.logger.Warn("Invalid language requested", zap.String("language", language))
+		isv.logger.Warn("Invalid language requested", logger.String("language", language))
 		return fmt.Errorf("invalid language: %s", language)
 	}
 
@@ -265,7 +263,7 @@ func (isv *InvoiceSecurityValidator) ValidateWatermark(watermark string) error {
 	for _, pattern := range suspicious {
 		if contains(watermark, pattern) {
 			isv.logger.Warn("Suspicious watermark content detected",
-				zap.String("watermark", watermark))
+				logger.String("watermark", watermark))
 			return fmt.Errorf("invalid watermark content")
 		}
 	}
@@ -275,17 +273,11 @@ func (isv *InvoiceSecurityValidator) ValidateWatermark(watermark string) error {
 
 // LogSecurityEvent logs security-related events
 func (isv *InvoiceSecurityValidator) LogSecurityEvent(ctx context.Context, event string, userID uint, details map[string]any) {
-	fields := []zap.Field{
-		zap.String("security_event", event),
-		zap.Uint("user_id", userID),
-		zap.Time("timestamp", time.Now()),
-	}
-
-	for key, value := range details {
-		fields = append(fields, zap.Any(key, value))
-	}
-
-	isv.logger.Warn("Security event detected", fields...)
+	isv.logger.Warn("Security event detected",
+		logger.String("security_event", event),
+		logger.Uint("user_id", userID),
+		logger.Time("timestamp", time.Now()),
+		logger.Any("details", details))
 }
 
 // Helper function to check if string contains substring (case-insensitive)

@@ -130,11 +130,28 @@ func Uint(key string, val uint) zap.Field {
 	return zap.Uint(key, val)
 }
 
-func Duration(key string, val any) zap.Field {
-	if d, ok := val.(interface{ String() string }); ok {
-		return zap.String(key, d.String())
-	}
-	return zap.Any(key, val)
+func Duration(key string, val time.Duration) zap.Field {
+	return zap.Duration(key, val)
+}
+
+// Time returns a zap.Field for time values  
+func Time(key string, val time.Time) zap.Field {
+	return zap.Time(key, val)
+}
+
+// Float64 returns a zap.Field for float64 values
+func Float64(key string, val float64) zap.Field {
+	return zap.Float64(key, val)
+}
+
+// Bool returns a zap.Field for bool values
+func Bool(key string, val bool) zap.Field {
+	return zap.Bool(key, val)
+}
+
+// Strings returns a zap.Field for string slice values
+func Strings(key string, val []string) zap.Field {
+	return zap.Strings(key, val)
 }
 
 func Error2(key string, err error) zap.Field {

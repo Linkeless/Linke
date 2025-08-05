@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"linke/internal/shared/config"
-	loggerPkg "linke/internal/shared/logger"
+	"linke/internal/shared/logger"
 )
 
 // MigrationCLI handles database migration commands
@@ -31,16 +31,16 @@ func (cli *MigrationCLI) HandleMigrationCommand(runMigration bool, migrateComman
 	}
 
 	// 初始化日志
-	if err := loggerPkg.InitLogger(loggerPkg.LogConfig{
+	if err := logger.InitLogger(logger.LogConfig{
 		Level:  cfg.Log.Level,
 		Format: cfg.Log.Format,
 		Output: cfg.Log.Output,
 	}); err != nil {
 		panic("Failed to initialize logger: " + err.Error())
 	}
-	defer loggerPkg.Sync()
+	defer logger.Sync()
 
-	loggerPkg.Info("Running migration command")
+	logger.Info("Running migration command")
 
 	// 创建迁移服务
 	cli.migrationService = NewMigrationService(
@@ -52,16 +52,16 @@ func (cli *MigrationCLI) HandleMigrationCommand(runMigration bool, migrateComman
 	)
 
 	// 验证数据库连接
-	loggerPkg.Info("Validating database connection",
-		loggerPkg.String("host", cfg.Database.Host),
-		loggerPkg.String("port", cfg.Database.Port),
-		loggerPkg.String("database", cfg.Database.Name))
+	logger.Info("Validating database connection",
+		logger.String("host", cfg.Database.Host),
+		logger.String("port", cfg.Database.Port),
+		logger.String("database", cfg.Database.Name))
 	if err := cli.migrationService.ValidateConnection(); err != nil {
-		loggerPkg.Fatal("Database connection failed",
-			loggerPkg.ErrorField(err),
-			loggerPkg.String("host", cfg.Database.Host),
-			loggerPkg.String("port", cfg.Database.Port),
-			loggerPkg.String("database", cfg.Database.Name))
+		logger.Fatal("Database connection failed",
+			logger.ErrorField(err),
+			logger.String("host", cfg.Database.Host),
+			logger.String("port", cfg.Database.Port),
+			logger.String("database", cfg.Database.Name))
 		fmt.Printf("❌ Database connection failed\n")
 		fmt.Printf("   Host: %s:%s\n", cfg.Database.Host, cfg.Database.Port)
 		fmt.Printf("   Database: %s\n", cfg.Database.Name)
@@ -83,17 +83,17 @@ func (cli *MigrationCLI) HandleMigrationCommand(runMigration bool, migrateComman
 
 	// 执行迁移命令
 	if err := cli.executeMigrationCommand(command, migrateVersion, migrateSteps); err != nil {
-		loggerPkg.Fatal("Migration command failed",
-			loggerPkg.ErrorField(err),
-			loggerPkg.String("command", command),
-			loggerPkg.String("version", migrateVersion),
-			loggerPkg.String("steps", migrateSteps))
+		logger.Fatal("Migration command failed",
+			logger.ErrorField(err),
+			logger.String("command", command),
+			logger.String("version", migrateVersion),
+			logger.String("steps", migrateSteps))
 		fmt.Printf("❌ Migration command '%s' failed: %v\n", command, err)
 		fmt.Printf("   For help with migration commands, run: go run cmd/server/main.go -migrate-help\n")
 		os.Exit(1)
 	}
 
-	loggerPkg.Info("Migration command completed, exiting...", loggerPkg.String("command", command))
+	logger.Info("Migration command completed, exiting...", logger.String("command", command))
 }
 
 // ShowMigrationHelp displays migration command help
@@ -136,11 +136,11 @@ func (cli *MigrationCLI) ShowMigrationHelp() {
 func (cli *MigrationCLI) executeMigrationCommand(command, version, steps string) error {
 	switch command {
 	case "up":
-		loggerPkg.Info("Running database migrations...")
+		logger.Info("Running database migrations...")
 		return cli.migrationService.Up()
 
 	case "down":
-		loggerPkg.Info("Rolling back one migration...")
+		logger.Info("Rolling back one migration...")
 		return cli.migrationService.Down()
 
 	case "reset":
@@ -148,10 +148,10 @@ func (cli *MigrationCLI) executeMigrationCommand(command, version, steps string)
 		var confirm string
 		fmt.Scanln(&confirm)
 		if confirm == "y" || confirm == "Y" {
-			loggerPkg.Info("Resetting database...")
+			logger.Info("Resetting database...")
 			return cli.migrationService.Reset()
 		} else {
-			loggerPkg.Info("Reset cancelled")
+			logger.Info("Reset cancelled")
 			return nil
 		}
 
@@ -186,7 +186,7 @@ func (cli *MigrationCLI) executeMigrationCommand(command, version, steps string)
 		if err != nil {
 			return fmt.Errorf("invalid version number: %w", err)
 		}
-		loggerPkg.Warn("Forcing migration version", loggerPkg.Int("version", v))
+		logger.Warn("Forcing migration version", logger.Int("version", v))
 		return cli.migrationService.Force(v)
 
 	case "goto":
@@ -197,7 +197,7 @@ func (cli *MigrationCLI) executeMigrationCommand(command, version, steps string)
 		if err != nil {
 			return fmt.Errorf("invalid version number: %w", err)
 		}
-		loggerPkg.Info("Migrating to specific version", loggerPkg.Uint("version", uint(v)))
+		logger.Info("Migrating to specific version", logger.Uint("version", uint(v)))
 		return cli.migrationService.Goto(uint(v))
 
 	case "steps":
@@ -212,7 +212,7 @@ func (cli *MigrationCLI) executeMigrationCommand(command, version, steps string)
 		if s < 0 {
 			direction = "down"
 		}
-		loggerPkg.Info("Running migration steps", loggerPkg.Int("steps", s), loggerPkg.String("direction", direction))
+		logger.Info("Running migration steps", logger.Int("steps", s), logger.String("direction", direction))
 		return cli.migrationService.Steps(s)
 
 	case "fix-dirty":
@@ -229,15 +229,15 @@ func (cli *MigrationCLI) executeMigrationCommand(command, version, steps string)
 		var confirm string
 		fmt.Scanln(&confirm)
 		if confirm == "y" || confirm == "Y" {
-			loggerPkg.Warn("Fixing dirty migration state", loggerPkg.Int("version", v))
+			logger.Warn("Fixing dirty migration state", logger.Int("version", v))
 			if err := cli.migrationService.Force(v); err != nil {
 				return fmt.Errorf("failed to fix dirty migration: %w", err)
 			}
-			loggerPkg.Info("Dirty migration state fixed", loggerPkg.Int("version", v))
+			logger.Info("Dirty migration state fixed", logger.Int("version", v))
 			fmt.Println("Migration state fixed. You can now run migrations again.")
 			return nil
 		} else {
-			loggerPkg.Info("Fix dirty operation cancelled")
+			logger.Info("Fix dirty operation cancelled")
 			return nil
 		}
 

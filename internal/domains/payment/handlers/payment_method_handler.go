@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 
 	"linke/internal/domains/payment/entities"
 	"linke/internal/domains/payment/usecases/interfaces"
@@ -55,7 +54,7 @@ func (h *PaymentMethodHandler) CreatePaymentMethod(c *gin.Context) {
 
 	var req entities.CreatePaymentMethodRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Error("Invalid request body", zap.Error(err))
+		h.logger.Error("Invalid request body", logger.ErrorField(err))
 		response.BadRequest(c, "Invalid request body", err.Error())
 		return
 	}
@@ -68,7 +67,7 @@ func (h *PaymentMethodHandler) CreatePaymentMethod(c *gin.Context) {
 
 	result, err := h.paymentMethodService.CreatePaymentMethod(c.Request.Context(), userID, &req)
 	if err != nil {
-		h.logger.Error("Failed to create payment method", zap.Error(err), zap.Uint("user_id", userID))
+		h.logger.Error("Failed to create payment method", logger.ErrorField(err), logger.Uint("user_id", userID))
 
 		// Handle specific error cases
 		if isLimitReachedError(err) {
@@ -88,7 +87,7 @@ func (h *PaymentMethodHandler) CreatePaymentMethod(c *gin.Context) {
 		return
 	}
 
-	h.logger.Info("Payment method created successfully", zap.Uint("user_id", userID), zap.Uint("payment_method_id", result.ID))
+	h.logger.Info("Payment method created successfully", logger.Uint("user_id", userID), logger.Uint("payment_method_id", result.ID))
 	response.CreatedWithMessage(c, "Payment method created successfully", result)
 }
 
@@ -120,7 +119,7 @@ func (h *PaymentMethodHandler) GetPaymentMethod(c *gin.Context) {
 
 	result, err := h.paymentMethodService.GetPaymentMethod(c.Request.Context(), userID, paymentMethodID)
 	if err != nil {
-		h.logger.Error("Failed to get payment method", zap.Error(err), zap.Uint("user_id", userID), zap.Uint("payment_method_id", paymentMethodID))
+		h.logger.Error("Failed to get payment method", logger.ErrorField(err), logger.Uint("user_id", userID), logger.Uint("payment_method_id", paymentMethodID))
 
 		if isNotFoundError(err) {
 			response.NotFound(c, "Payment method not found")
@@ -186,7 +185,7 @@ func (h *PaymentMethodHandler) ListPaymentMethods(c *gin.Context) {
 	}
 
 	if err != nil {
-		h.logger.Error("Failed to list payment methods", zap.Error(err), zap.Uint("user_id", userID))
+		h.logger.Error("Failed to list payment methods", logger.ErrorField(err), logger.Uint("user_id", userID))
 		response.InternalServerError(c, "Failed to list payment methods")
 		return
 	}
@@ -224,14 +223,14 @@ func (h *PaymentMethodHandler) UpdatePaymentMethod(c *gin.Context) {
 
 	var req entities.UpdatePaymentMethodRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		h.logger.Error("Invalid request body", zap.Error(err))
+		h.logger.Error("Invalid request body", logger.ErrorField(err))
 		response.BadRequest(c, "Invalid request body", err.Error())
 		return
 	}
 
 	result, err := h.paymentMethodService.UpdatePaymentMethod(c.Request.Context(), userID, paymentMethodID, &req)
 	if err != nil {
-		h.logger.Error("Failed to update payment method", zap.Error(err), zap.Uint("user_id", userID), zap.Uint("payment_method_id", paymentMethodID))
+		h.logger.Error("Failed to update payment method", logger.ErrorField(err), logger.Uint("user_id", userID), logger.Uint("payment_method_id", paymentMethodID))
 
 		if isNotFoundError(err) {
 			response.NotFound(c, "Payment method not found")
@@ -242,7 +241,7 @@ func (h *PaymentMethodHandler) UpdatePaymentMethod(c *gin.Context) {
 		return
 	}
 
-	h.logger.Info("Payment method updated successfully", zap.Uint("user_id", userID), zap.Uint("payment_method_id", paymentMethodID))
+	h.logger.Info("Payment method updated successfully", logger.Uint("user_id", userID), logger.Uint("payment_method_id", paymentMethodID))
 	response.SuccessWithMessage(c, "Payment method updated successfully", result)
 }
 
@@ -275,7 +274,7 @@ func (h *PaymentMethodHandler) SetDefaultPaymentMethod(c *gin.Context) {
 
 	result, err := h.paymentMethodService.SetDefaultPaymentMethod(c.Request.Context(), userID, paymentMethodID)
 	if err != nil {
-		h.logger.Error("Failed to set default payment method", zap.Error(err), zap.Uint("user_id", userID), zap.Uint("payment_method_id", paymentMethodID))
+		h.logger.Error("Failed to set default payment method", logger.ErrorField(err), logger.Uint("user_id", userID), logger.Uint("payment_method_id", paymentMethodID))
 
 		if isNotFoundError(err) {
 			response.NotFound(c, "Payment method not found")
@@ -290,7 +289,7 @@ func (h *PaymentMethodHandler) SetDefaultPaymentMethod(c *gin.Context) {
 		return
 	}
 
-	h.logger.Info("Payment method set as default", zap.Uint("user_id", userID), zap.Uint("payment_method_id", paymentMethodID))
+	h.logger.Info("Payment method set as default", logger.Uint("user_id", userID), logger.Uint("payment_method_id", paymentMethodID))
 	response.SuccessWithMessage(c, "Payment method set as default successfully", result)
 }
 
@@ -321,7 +320,7 @@ func (h *PaymentMethodHandler) DeletePaymentMethod(c *gin.Context) {
 	}
 
 	if err := h.paymentMethodService.DeletePaymentMethod(c.Request.Context(), userID, paymentMethodID); err != nil {
-		h.logger.Error("Failed to delete payment method", zap.Error(err), zap.Uint("user_id", userID), zap.Uint("payment_method_id", paymentMethodID))
+		h.logger.Error("Failed to delete payment method", logger.ErrorField(err), logger.Uint("user_id", userID), logger.Uint("payment_method_id", paymentMethodID))
 
 		if isNotFoundError(err) {
 			response.NotFound(c, "Payment method not found")
@@ -332,7 +331,7 @@ func (h *PaymentMethodHandler) DeletePaymentMethod(c *gin.Context) {
 		return
 	}
 
-	h.logger.Info("Payment method deleted successfully", zap.Uint("user_id", userID), zap.Uint("payment_method_id", paymentMethodID))
+	h.logger.Info("Payment method deleted successfully", logger.Uint("user_id", userID), logger.Uint("payment_method_id", paymentMethodID))
 	response.SuccessWithMessage(c, "Payment method deleted successfully", nil)
 }
 
@@ -371,7 +370,7 @@ func (h *PaymentMethodHandler) ValidatePaymentMethod(c *gin.Context) {
 
 	result, err := h.paymentMethodService.ValidatePaymentMethod(c.Request.Context(), userID, paymentMethodID)
 	if err != nil {
-		h.logger.Error("Failed to validate payment method", zap.Error(err), zap.Uint("user_id", userID), zap.Uint("payment_method_id", paymentMethodID))
+		h.logger.Error("Failed to validate payment method", logger.ErrorField(err), logger.Uint("user_id", userID), logger.Uint("payment_method_id", paymentMethodID))
 
 		if isNotFoundError(err) {
 			response.NotFound(c, "Payment method not found")
@@ -386,7 +385,7 @@ func (h *PaymentMethodHandler) ValidatePaymentMethod(c *gin.Context) {
 		return
 	}
 
-	h.logger.Info("Payment method validated successfully", zap.Uint("user_id", userID), zap.Uint("payment_method_id", paymentMethodID))
+	h.logger.Info("Payment method validated successfully", logger.Uint("user_id", userID), logger.Uint("payment_method_id", paymentMethodID))
 	response.SuccessWithMessage(c, "Payment method validated successfully", result)
 }
 
@@ -421,7 +420,7 @@ func (h *PaymentMethodHandler) GetDefaultPaymentMethod(c *gin.Context) {
 	}
 
 	if err != nil {
-		h.logger.Error("Failed to get default payment method", zap.Error(err), zap.Uint("user_id", userID), zap.String("gateway", gateway))
+		h.logger.Error("Failed to get default payment method", logger.ErrorField(err), logger.Uint("user_id", userID), logger.String("gateway", gateway))
 
 		if isNotFoundError(err) {
 			response.NotFound(c, "No default payment method found")
@@ -463,7 +462,7 @@ func (h *PaymentMethodHandler) GetPaymentMethodUsageStats(c *gin.Context) {
 
 	result, err := h.paymentMethodService.GetPaymentMethodUsageStats(c.Request.Context(), userID, paymentMethodID)
 	if err != nil {
-		h.logger.Error("Failed to get payment method usage stats", zap.Error(err), zap.Uint("user_id", userID), zap.Uint("payment_method_id", paymentMethodID))
+		h.logger.Error("Failed to get payment method usage stats", logger.ErrorField(err), logger.Uint("user_id", userID), logger.Uint("payment_method_id", paymentMethodID))
 
 		if isNotFoundError(err) {
 			response.NotFound(c, "Payment method not found")

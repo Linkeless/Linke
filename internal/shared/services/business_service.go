@@ -7,8 +7,7 @@ import (
 	"time"
 
 	"linke/internal/shared/framework"
-
-	"go.uber.org/zap"
+	"linke/internal/shared/logger"
 )
 
 // BusinessServiceImpl extends BaseServiceImpl with business logic operations
@@ -54,9 +53,9 @@ func (s *BusinessServiceImpl[T, ID]) ValidateBusinessRules(ctx context.Context, 
 	for i, rule := range s.businessRules {
 		if err := rule(ctx, entity); err != nil {
 			s.logger.Error("Business rule validation failed", 
-				zap.String("service", s.name), 
-				zap.Int("rule_index", i), 
-				zap.Error(err))
+				logger.String("service", s.name), 
+				logger.Int("rule_index", i), 
+				logger.ErrorField(err))
 			return fmt.Errorf("business rule %d failed: %w", i, err)
 		}
 	}
@@ -93,15 +92,15 @@ func (s *BusinessServiceImpl[T, ID]) PublishCreatedEvent(ctx context.Context, en
 
 	if err := s.eventPub.PublishAsync(ctx, event); err != nil {
 		s.logger.Error("Failed to publish created event", 
-			zap.String("service", s.name), 
-			zap.String("event_type", eventType), 
-			zap.Error(err))
+			logger.String("service", s.name), 
+			logger.String("event_type", eventType), 
+			logger.ErrorField(err))
 		return fmt.Errorf("publish created event: %w", err)
 	}
 
 	s.logger.Info("Published created event", 
-		zap.String("service", s.name), 
-		zap.String("event_type", eventType))
+		logger.String("service", s.name), 
+		logger.String("event_type", eventType))
 	return nil
 }
 
@@ -120,15 +119,15 @@ func (s *BusinessServiceImpl[T, ID]) PublishUpdatedEvent(ctx context.Context, ol
 
 	if err := s.eventPub.PublishAsync(ctx, event); err != nil {
 		s.logger.Error("Failed to publish updated event", 
-			zap.String("service", s.name), 
-			zap.String("event_type", eventType), 
-			zap.Error(err))
+			logger.String("service", s.name), 
+			logger.String("event_type", eventType), 
+			logger.ErrorField(err))
 		return fmt.Errorf("publish updated event: %w", err)
 	}
 
 	s.logger.Info("Published updated event", 
-		zap.String("service", s.name), 
-		zap.String("event_type", eventType))
+		logger.String("service", s.name), 
+		logger.String("event_type", eventType))
 	return nil
 }
 
@@ -147,15 +146,15 @@ func (s *BusinessServiceImpl[T, ID]) PublishDeletedEvent(ctx context.Context, en
 
 	if err := s.eventPub.PublishAsync(ctx, event); err != nil {
 		s.logger.Error("Failed to publish deleted event", 
-			zap.String("service", s.name), 
-			zap.String("event_type", eventType), 
-			zap.Error(err))
+			logger.String("service", s.name), 
+			logger.String("event_type", eventType), 
+			logger.ErrorField(err))
 		return fmt.Errorf("publish deleted event: %w", err)
 	}
 
 	s.logger.Info("Published deleted event", 
-		zap.String("service", s.name), 
-		zap.String("event_type", eventType))
+		logger.String("service", s.name), 
+		logger.String("event_type", eventType))
 	return nil
 }
 
@@ -189,17 +188,17 @@ func (s *BusinessServiceImpl[T, ID]) ProcessWorkflow(ctx context.Context, id ID,
 	// Execute workflow
 	if err := handler(ctx, entity, params); err != nil {
 		s.logger.Error("Workflow execution failed", 
-			zap.String("service", s.name), 
-			zap.Any("id", id), 
-			zap.String("action", action), 
-			zap.Error(err))
+			logger.String("service", s.name), 
+			logger.Any("id", id), 
+			logger.String("action", action), 
+			logger.ErrorField(err))
 		return fmt.Errorf("workflow '%s' failed: %w", action, err)
 	}
 
 	s.logger.Info("Workflow executed successfully", 
-		zap.String("service", s.name), 
-		zap.Any("id", id), 
-		zap.String("action", action))
+		logger.String("service", s.name), 
+		logger.Any("id", id), 
+		logger.String("action", action))
 	return nil
 }
 
@@ -223,7 +222,7 @@ func (s *BusinessServiceImpl[T, ID]) Create(ctx context.Context, req *framework.
 	// Process workflows if enabled
 	if req.Options != nil && req.Options.ProcessWorkflows {
 		if err := s.ProcessWorkflow(ctx, s.getEntityID(entity), "create", req.Metadata); err != nil {
-			s.logger.Warn("Create workflow failed", zap.Error(err))
+			s.logger.Warn("Create workflow failed", logger.ErrorField(err))
 		}
 	}
 
@@ -250,7 +249,7 @@ func (s *BusinessServiceImpl[T, ID]) Update(ctx context.Context, id ID, req *fra
 	// Process workflows if enabled
 	if req.Options != nil && req.Options.ProcessWorkflows {
 		if err := s.ProcessWorkflow(ctx, id, "update", req.Metadata); err != nil {
-			s.logger.Warn("Update workflow failed", zap.Error(err))
+			s.logger.Warn("Update workflow failed", logger.ErrorField(err))
 		}
 	}
 

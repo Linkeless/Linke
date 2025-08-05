@@ -7,8 +7,7 @@ import (
 	"time"
 
 	"linke/internal/shared/framework"
-
-	"go.uber.org/zap"
+	"linke/internal/shared/logger"
 )
 
 // BaseServiceImpl provides a concrete implementation of GenericService
@@ -43,12 +42,12 @@ func (s *BaseServiceImpl[T, ID]) GetName() string {
 }
 
 func (s *BaseServiceImpl[T, ID]) Initialize(ctx context.Context) error {
-	s.logger.Info("Initializing service", zap.String("service", s.name))
+	s.logger.Info("Initializing service", logger.String("service", s.name))
 	return nil
 }
 
 func (s *BaseServiceImpl[T, ID]) Shutdown(ctx context.Context) error {
-	s.logger.Info("Shutting down service", zap.String("service", s.name))
+	s.logger.Info("Shutting down service", logger.String("service", s.name))
 	return nil
 }
 
@@ -61,32 +60,32 @@ func (s *BaseServiceImpl[T, ID]) Create(ctx context.Context, req *framework.Crea
 	// Validate if not skipped
 	if req.Options == nil || !req.Options.SkipValidation {
 		if err := s.ValidateCreate(ctx, req); err != nil {
-			s.logger.Error("Create validation failed", zap.Error(err))
+			s.logger.Error("Create validation failed", logger.ErrorField(err))
 			return nil, fmt.Errorf("validation failed: %w", err)
 		}
 	}
 
 	// Create entity
 	if err := s.repository.Create(ctx, req.Data); err != nil {
-		s.logger.Error("Failed to create entity", zap.String("service", s.name), zap.Error(err))
+		s.logger.Error("Failed to create entity", logger.String("service", s.name), logger.ErrorField(err))
 		return nil, fmt.Errorf("create entity: %w", err)
 	}
 
 	// Publish events if enabled
 	if req.Options != nil && req.Options.PublishEvents && s.eventPub != nil {
 		if err := s.PublishCreatedEvent(ctx, req.Data); err != nil {
-			s.logger.Warn("Failed to publish created event", zap.Error(err))
+			s.logger.Warn("Failed to publish created event", logger.ErrorField(err))
 		}
 	}
 
-	s.logger.Info("Entity created successfully", zap.String("service", s.name))
+	s.logger.Info("Entity created successfully", logger.String("service", s.name))
 	return req.Data, nil
 }
 
 func (s *BaseServiceImpl[T, ID]) GetByID(ctx context.Context, id ID) (*T, error) {
 	entity, err := s.repository.GetByID(ctx, id)
 	if err != nil {
-		s.logger.Error("Failed to get entity by ID", zap.String("service", s.name), zap.Any("id", id), zap.Error(err))
+		s.logger.Error("Failed to get entity by ID", logger.String("service", s.name), logger.Any("id", id), logger.ErrorField(err))
 		return nil, fmt.Errorf("get entity by id %v: %w", id, err)
 	}
 	return entity, nil
@@ -106,32 +105,32 @@ func (s *BaseServiceImpl[T, ID]) Update(ctx context.Context, id ID, req *framewo
 	// Validate if not skipped
 	if req.Options == nil || !req.Options.SkipValidation {
 		if err := s.ValidateUpdate(ctx, id, req); err != nil {
-			s.logger.Error("Update validation failed", zap.Any("id", id), zap.Error(err))
+			s.logger.Error("Update validation failed", logger.Any("id", id), logger.ErrorField(err))
 			return nil, fmt.Errorf("validation failed: %w", err)
 		}
 	}
 
 	// Update entity
 	if err := s.repository.Update(ctx, req.Data); err != nil {
-		s.logger.Error("Failed to update entity", zap.String("service", s.name), zap.Any("id", id), zap.Error(err))
+		s.logger.Error("Failed to update entity", logger.String("service", s.name), logger.Any("id", id), logger.ErrorField(err))
 		return nil, fmt.Errorf("update entity: %w", err)
 	}
 
 	// Publish events if enabled
 	if req.Options != nil && req.Options.PublishEvents && s.eventPub != nil {
 		if err := s.PublishUpdatedEvent(ctx, existing, req.Data); err != nil {
-			s.logger.Warn("Failed to publish updated event", zap.Error(err))
+			s.logger.Warn("Failed to publish updated event", logger.ErrorField(err))
 		}
 	}
 
-	s.logger.Info("Entity updated successfully", zap.String("service", s.name), zap.Any("id", id))
+	s.logger.Info("Entity updated successfully", logger.String("service", s.name), logger.Any("id", id))
 	return req.Data, nil
 }
 
 func (s *BaseServiceImpl[T, ID]) Delete(ctx context.Context, id ID) error {
 	// Validate delete operation
 	if err := s.ValidateDelete(ctx, id); err != nil {
-		s.logger.Error("Delete validation failed", zap.Any("id", id), zap.Error(err))
+		s.logger.Error("Delete validation failed", logger.Any("id", id), logger.ErrorField(err))
 		return fmt.Errorf("validation failed: %w", err)
 	}
 
@@ -141,23 +140,23 @@ func (s *BaseServiceImpl[T, ID]) Delete(ctx context.Context, id ID) error {
 		var err error
 		entity, err = s.repository.GetByID(ctx, id)
 		if err != nil {
-			s.logger.Warn("Failed to get entity before delete for events", zap.Any("id", id), zap.Error(err))
+			s.logger.Warn("Failed to get entity before delete for events", logger.Any("id", id), logger.ErrorField(err))
 		}
 	}
 
 	if err := s.repository.Delete(ctx, id); err != nil {
-		s.logger.Error("Failed to delete entity", zap.String("service", s.name), zap.Any("id", id), zap.Error(err))
+		s.logger.Error("Failed to delete entity", logger.String("service", s.name), logger.Any("id", id), logger.ErrorField(err))
 		return fmt.Errorf("delete entity with id %v: %w", id, err)
 	}
 
 	// Publish events
 	if entity != nil && s.eventPub != nil {
 		if err := s.PublishDeletedEvent(ctx, entity); err != nil {
-			s.logger.Warn("Failed to publish deleted event", zap.Error(err))
+			s.logger.Warn("Failed to publish deleted event", logger.ErrorField(err))
 		}
 	}
 
-	s.logger.Info("Entity deleted successfully", zap.String("service", s.name), zap.Any("id", id))
+	s.logger.Info("Entity deleted successfully", logger.String("service", s.name), logger.Any("id", id))
 	return nil
 }
 
@@ -165,42 +164,42 @@ func (s *BaseServiceImpl[T, ID]) Delete(ctx context.Context, id ID) error {
 func (s *BaseServiceImpl[T, ID]) SoftDelete(ctx context.Context, id ID) error {
 	// Validate delete operation
 	if err := s.ValidateDelete(ctx, id); err != nil {
-		s.logger.Error("Soft delete validation failed", zap.Any("id", id), zap.Error(err))
+		s.logger.Error("Soft delete validation failed", logger.Any("id", id), logger.ErrorField(err))
 		return fmt.Errorf("validation failed: %w", err)
 	}
 
 	if err := s.repository.SoftDelete(ctx, id); err != nil {
-		s.logger.Error("Failed to soft delete entity", zap.String("service", s.name), zap.Any("id", id), zap.Error(err))
+		s.logger.Error("Failed to soft delete entity", logger.String("service", s.name), logger.Any("id", id), logger.ErrorField(err))
 		return fmt.Errorf("soft delete entity with id %v: %w", id, err)
 	}
 
-	s.logger.Info("Entity soft deleted successfully", zap.String("service", s.name), zap.Any("id", id))
+	s.logger.Info("Entity soft deleted successfully", logger.String("service", s.name), logger.Any("id", id))
 	return nil
 }
 
 func (s *BaseServiceImpl[T, ID]) Restore(ctx context.Context, id ID) error {
 	if err := s.repository.Restore(ctx, id); err != nil {
-		s.logger.Error("Failed to restore entity", zap.String("service", s.name), zap.Any("id", id), zap.Error(err))
+		s.logger.Error("Failed to restore entity", logger.String("service", s.name), logger.Any("id", id), logger.ErrorField(err))
 		return fmt.Errorf("restore entity with id %v: %w", id, err)
 	}
 
-	s.logger.Info("Entity restored successfully", zap.String("service", s.name), zap.Any("id", id))
+	s.logger.Info("Entity restored successfully", logger.String("service", s.name), logger.Any("id", id))
 	return nil
 }
 
 func (s *BaseServiceImpl[T, ID]) HardDelete(ctx context.Context, id ID) error {
 	// Validate delete operation
 	if err := s.ValidateDelete(ctx, id); err != nil {
-		s.logger.Error("Hard delete validation failed", zap.Any("id", id), zap.Error(err))
+		s.logger.Error("Hard delete validation failed", logger.Any("id", id), logger.ErrorField(err))
 		return fmt.Errorf("validation failed: %w", err)
 	}
 
 	if err := s.repository.HardDelete(ctx, id); err != nil {
-		s.logger.Error("Failed to hard delete entity", zap.String("service", s.name), zap.Any("id", id), zap.Error(err))
+		s.logger.Error("Failed to hard delete entity", logger.String("service", s.name), logger.Any("id", id), logger.ErrorField(err))
 		return fmt.Errorf("hard delete entity with id %v: %w", id, err)
 	}
 
-	s.logger.Info("Entity hard deleted successfully", zap.String("service", s.name), zap.Any("id", id))
+	s.logger.Info("Entity hard deleted successfully", logger.String("service", s.name), logger.Any("id", id))
 	return nil
 }
 
@@ -220,7 +219,7 @@ func (s *BaseServiceImpl[T, ID]) List(ctx context.Context, req *framework.ListRe
 
 	entities, total, err := s.repository.List(ctx, req.Limit, req.Offset)
 	if err != nil {
-		s.logger.Error("Failed to list entities", zap.String("service", s.name), zap.Error(err))
+		s.logger.Error("Failed to list entities", logger.String("service", s.name), logger.ErrorField(err))
 		return nil, fmt.Errorf("list entities: %w", err)
 	}
 
@@ -234,7 +233,7 @@ func (s *BaseServiceImpl[T, ID]) ListDeleted(ctx context.Context, req *framework
 	
 	entities, total, err := s.repository.ListDeleted(ctx, req.Limit, req.Offset)
 	if err != nil {
-		s.logger.Error("Failed to list deleted entities", zap.String("service", s.name), zap.Error(err))
+		s.logger.Error("Failed to list deleted entities", logger.String("service", s.name), logger.ErrorField(err))
 		return nil, fmt.Errorf("list deleted entities: %w", err)
 	}
 
@@ -248,7 +247,7 @@ func (s *BaseServiceImpl[T, ID]) ListByStatus(ctx context.Context, status string
 	
 	entities, total, err := s.repository.ListByStatus(ctx, status, req.Limit, req.Offset)
 	if err != nil {
-		s.logger.Error("Failed to list entities by status", zap.String("service", s.name), zap.String("status", status), zap.Error(err))
+		s.logger.Error("Failed to list entities by status", logger.String("service", s.name), logger.String("status", status), logger.ErrorField(err))
 		return nil, fmt.Errorf("list entities by status %s: %w", status, err)
 	}
 
@@ -263,7 +262,7 @@ func (s *BaseServiceImpl[T, ID]) Search(ctx context.Context, query string, req *
 	
 	entities, total, err := s.repository.Search(ctx, query, req.Limit, req.Offset)
 	if err != nil {
-		s.logger.Error("Failed to search entities", zap.String("service", s.name), zap.String("query", query), zap.Error(err))
+		s.logger.Error("Failed to search entities", logger.String("service", s.name), logger.String("query", query), logger.ErrorField(err))
 		return nil, fmt.Errorf("search entities: %w", err)
 	}
 
@@ -273,18 +272,18 @@ func (s *BaseServiceImpl[T, ID]) Search(ctx context.Context, query string, req *
 // Status management
 func (s *BaseServiceImpl[T, ID]) UpdateStatus(ctx context.Context, id ID, status string) (*T, error) {
 	if err := s.repository.UpdateStatus(ctx, id, status); err != nil {
-		s.logger.Error("Failed to update entity status", zap.String("service", s.name), zap.Any("id", id), zap.String("status", status), zap.Error(err))
+		s.logger.Error("Failed to update entity status", logger.String("service", s.name), logger.Any("id", id), logger.String("status", status), logger.ErrorField(err))
 		return nil, fmt.Errorf("update entity status: %w", err)
 	}
 
 	// Get updated entity
 	entity, err := s.repository.GetByID(ctx, id)
 	if err != nil {
-		s.logger.Error("Failed to get updated entity", zap.Any("id", id), zap.Error(err))
+		s.logger.Error("Failed to get updated entity", logger.Any("id", id), logger.ErrorField(err))
 		return nil, fmt.Errorf("get updated entity: %w", err)
 	}
 
-	s.logger.Info("Entity status updated successfully", zap.String("service", s.name), zap.Any("id", id), zap.String("status", status))
+	s.logger.Info("Entity status updated successfully", logger.String("service", s.name), logger.Any("id", id), logger.String("status", status))
 	return entity, nil
 }
 
@@ -308,7 +307,7 @@ func (s *BaseServiceImpl[T, ID]) GetStatistics(ctx context.Context) (*framework.
 	for _, status := range commonStatuses {
 		count, err := s.repository.CountByStatus(ctx, status)
 		if err != nil {
-			s.logger.Debug("Failed to count by status", zap.String("status", status), zap.Error(err))
+			s.logger.Debug("Failed to count by status", logger.String("status", status), logger.ErrorField(err))
 			continue
 		}
 		statusCounts[status] = count
@@ -346,7 +345,7 @@ func (s *BaseServiceImpl[T, ID]) CountDeleted(ctx context.Context) (int64, error
 func (s *BaseServiceImpl[T, ID]) BatchDelete(ctx context.Context, ids []ID) (*framework.BatchOperationResponse, error) {
 	successCount, failedIDs, err := s.repository.BatchDelete(ctx, ids)
 	if err != nil {
-		s.logger.Error("Batch delete failed", zap.String("service", s.name), zap.Error(err))
+		s.logger.Error("Batch delete failed", logger.String("service", s.name), logger.ErrorField(err))
 		return nil, fmt.Errorf("batch delete: %w", err)
 	}
 
@@ -364,14 +363,14 @@ func (s *BaseServiceImpl[T, ID]) BatchDelete(ctx context.Context, ids []ID) (*fr
 		}
 	}
 
-	s.logger.Info("Batch delete completed", zap.String("service", s.name), zap.Int("success", successCount), zap.Int("failed", len(failedIDs)))
+	s.logger.Info("Batch delete completed", logger.String("service", s.name), logger.Int("success", successCount), logger.Int("failed", len(failedIDs)))
 	return response, nil
 }
 
 func (s *BaseServiceImpl[T, ID]) BatchRestore(ctx context.Context, ids []ID) (*framework.BatchOperationResponse, error) {
 	successCount, failedIDs, err := s.repository.BatchRestore(ctx, ids)
 	if err != nil {
-		s.logger.Error("Batch restore failed", zap.String("service", s.name), zap.Error(err))
+		s.logger.Error("Batch restore failed", logger.String("service", s.name), logger.ErrorField(err))
 		return nil, fmt.Errorf("batch restore: %w", err)
 	}
 
@@ -388,14 +387,14 @@ func (s *BaseServiceImpl[T, ID]) BatchRestore(ctx context.Context, ids []ID) (*f
 		}
 	}
 
-	s.logger.Info("Batch restore completed", zap.String("service", s.name), zap.Int("success", successCount), zap.Int("failed", len(failedIDs)))
+	s.logger.Info("Batch restore completed", logger.String("service", s.name), logger.Int("success", successCount), logger.Int("failed", len(failedIDs)))
 	return response, nil
 }
 
 func (s *BaseServiceImpl[T, ID]) BatchUpdateStatus(ctx context.Context, ids []ID, status string) (*framework.BatchOperationResponse, error) {
 	successCount, failedIDs, err := s.repository.BatchUpdateStatus(ctx, ids, status)
 	if err != nil {
-		s.logger.Error("Batch update status failed", zap.String("service", s.name), zap.String("status", status), zap.Error(err))
+		s.logger.Error("Batch update status failed", logger.String("service", s.name), logger.String("status", status), logger.ErrorField(err))
 		return nil, fmt.Errorf("batch update status: %w", err)
 	}
 
@@ -412,7 +411,7 @@ func (s *BaseServiceImpl[T, ID]) BatchUpdateStatus(ctx context.Context, ids []ID
 		}
 	}
 
-	s.logger.Info("Batch update status completed", zap.String("service", s.name), zap.String("status", status), zap.Int("success", successCount), zap.Int("failed", len(failedIDs)))
+	s.logger.Info("Batch update status completed", logger.String("service", s.name), logger.String("status", status), logger.Int("success", successCount), logger.Int("failed", len(failedIDs)))
 	return response, nil
 }
 
@@ -429,7 +428,7 @@ func (s *BaseServiceImpl[T, ID]) ListWithFilters(ctx context.Context, filters ma
 	
 	entities, total, err := s.repository.ListWithFilters(ctx, filters, req.Limit, req.Offset)
 	if err != nil {
-		s.logger.Error("Failed to list entities with filters", zap.String("service", s.name), zap.Any("filters", filters), zap.Error(err))
+		s.logger.Error("Failed to list entities with filters", logger.String("service", s.name), logger.Any("filters", filters), logger.ErrorField(err))
 		return nil, fmt.Errorf("list entities with filters: %w", err)
 	}
 
@@ -470,7 +469,7 @@ func (s *BaseServiceImpl[T, ID]) PublishCreatedEvent(ctx context.Context, entity
 	}
 	// Default implementation would need to be customized based on event structure
 	// This is a placeholder
-	s.logger.Debug("Published created event", zap.String("service", s.name))
+	s.logger.Debug("Published created event", logger.String("service", s.name))
 	return nil
 }
 
@@ -480,7 +479,7 @@ func (s *BaseServiceImpl[T, ID]) PublishUpdatedEvent(ctx context.Context, old *T
 	}
 	// Default implementation would need to be customized based on event structure
 	// This is a placeholder
-	s.logger.Debug("Published updated event", zap.String("service", s.name))
+	s.logger.Debug("Published updated event", logger.String("service", s.name))
 	return nil
 }
 
@@ -490,7 +489,7 @@ func (s *BaseServiceImpl[T, ID]) PublishDeletedEvent(ctx context.Context, entity
 	}
 	// Default implementation would need to be customized based on event structure
 	// This is a placeholder
-	s.logger.Debug("Published deleted event", zap.String("service", s.name))
+	s.logger.Debug("Published deleted event", logger.String("service", s.name))
 	return nil
 }
 
