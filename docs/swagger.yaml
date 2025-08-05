@@ -189,6 +189,268 @@ definitions:
         example: 1h30m
         type: string
     type: object
+  dto.ApplicationHealthResponse:
+    properties:
+      modules:
+        additionalProperties:
+          type: string
+        type: object
+      status:
+        example: healthy
+        type: string
+    type: object
+  dto.BenchmarkResult:
+    properties:
+      avg_latency_ms:
+        example: 1.2
+        type: number
+      failure_count:
+        example: 50
+        type: integer
+      operation_type:
+        example: get
+        type: string
+      success_count:
+        example: 4950
+        type: integer
+      throughput_ops:
+        example: 500
+        type: number
+      total_operations:
+        example: 5000
+        type: integer
+    type: object
+  dto.CacheBenchmarkResponse:
+    properties:
+      avg_latency_ms:
+        example: 1
+        type: number
+      duration_ms:
+        example: 10000
+        type: integer
+      max_latency_ms:
+        example: 10
+        type: number
+      min_latency_ms:
+        example: 0.1
+        type: number
+      operations_per_sec:
+        example: 1000
+        type: number
+      results:
+        additionalProperties:
+          $ref: '#/definitions/dto.BenchmarkResult'
+        type: object
+      total_operations:
+        example: 10000
+        type: integer
+    type: object
+  dto.CacheDashboardResponse:
+    properties:
+      alerts:
+        items:
+          type: string
+        type: array
+      health:
+        $ref: '#/definitions/dto.CacheHealthResponse'
+      invalidation:
+        $ref: '#/definitions/dto.CacheInvalidationResponse'
+      metrics:
+        $ref: '#/definitions/dto.CacheMetricsResponse'
+      performance:
+        $ref: '#/definitions/dto.CachePerformanceResponse'
+      warming:
+        $ref: '#/definitions/dto.CacheWarmingResponse'
+    type: object
+  dto.CacheHealthResponse:
+    properties:
+      last_checked:
+        example: 1704067200
+        type: integer
+      memory_cache:
+        example: healthy
+        type: string
+      overall:
+        example: healthy
+        type: string
+      redis_cache:
+        example: healthy
+        type: string
+    type: object
+  dto.CacheInvalidationResponse:
+    properties:
+      invalidation_rate:
+        example: 0.05
+        type: number
+      last_invalidation:
+        example: 1704067200
+        type: integer
+      pending_keys:
+        items:
+          type: string
+        type: array
+      recently_invalidated:
+        items:
+          type: string
+        type: array
+    type: object
+  dto.CacheMetricsResponse:
+    properties:
+      avg_latency_ms:
+        example: 2.5
+        type: number
+      hit_rate:
+        example: 0.85
+        type: number
+      miss_rate:
+        example: 0.15
+        type: number
+      total_hits:
+        example: 1000
+        type: integer
+      total_misses:
+        example: 150
+        type: integer
+      total_requests:
+        example: 1150
+        type: integer
+    type: object
+  dto.CachePerformanceResponse:
+    properties:
+      avg_response_time_ms:
+        example: 1.2
+        type: number
+      eviction_count:
+        example: 10
+        type: integer
+      key_count:
+        example: 500
+        type: integer
+      memory_usage_bytes:
+        example: 1048576
+        type: integer
+      throughput_qps:
+        example: 100.5
+        type: number
+    type: object
+  dto.CacheWarmingResponse:
+    properties:
+      duration_ms:
+        example: 5000
+        type: integer
+      in_progress:
+        example: false
+        type: boolean
+      last_warmed:
+        example: 1704067200
+        type: integer
+      success_rate:
+        example: 0.95
+        type: number
+      warming_keys:
+        items:
+          type: string
+        type: array
+    type: object
+  dto.DatabaseHealthResponse:
+    properties:
+      mysql:
+        example: true
+        type: boolean
+      redis:
+        example: true
+        type: boolean
+    type: object
+  dto.HealthCheckResponse:
+    properties:
+      application:
+        $ref: '#/definitions/dto.ApplicationHealthResponse'
+      database:
+        $ref: '#/definitions/dto.DatabaseHealthResponse'
+    type: object
+  dto.InvoiceStatisticsResponse:
+    properties:
+      monthly_breakdown:
+        items:
+          $ref: '#/definitions/dto.MonthlyInvoiceStats'
+        type: array
+      overdue_amount:
+        example: 500
+        type: number
+      paid_amount:
+        example: 12000
+        type: number
+      period:
+        $ref: '#/definitions/dto.InvoiceStatsPeriod'
+      status_breakdown:
+        $ref: '#/definitions/dto.InvoiceStatusBreakdown'
+      total_amount:
+        example: 15000
+        type: number
+      total_invoices:
+        example: 150
+        type: integer
+      unpaid_amount:
+        example: 3000
+        type: number
+    type: object
+  dto.InvoiceStatsPeriod:
+    properties:
+      duration_days:
+        example: 31
+        type: integer
+      from_date:
+        example: "2024-01-01"
+        type: string
+      to_date:
+        example: "2024-01-31"
+        type: string
+    type: object
+  dto.InvoiceStatusBreakdown:
+    properties:
+      cancelled:
+        example: 2
+        type: integer
+      draft:
+        example: 5
+        type: integer
+      overdue:
+        example: 3
+        type: integer
+      paid:
+        example: 120
+        type: integer
+      pending:
+        example: 20
+        type: integer
+    type: object
+  dto.MonthlyInvoiceStats:
+    properties:
+      count:
+        example: 12
+        type: integer
+      month:
+        example: 2024-01
+        type: string
+      paid_amount:
+        example: 1000
+        type: number
+      paid_count:
+        example: 10
+        type: integer
+      total_amount:
+        example: 1200
+        type: number
+    type: object
+  dto.ServerAPIHealthResponse:
+    properties:
+      service:
+        example: server-api
+        type: string
+      status:
+        example: ok
+        type: string
+    type: object
   dto.SubscriptionOrderBasicDTO:
     properties:
       amount:
@@ -232,6 +494,51 @@ definitions:
         type: string
       user_id:
         example: 1
+        type: integer
+    type: object
+  dto.TrafficStatsResponse:
+    properties:
+      last_updated:
+        example: "2024-01-15T10:30:00Z"
+        type: string
+      period:
+        example: monthly
+        type: string
+      remaining_bytes:
+        example: 9663676416
+        type: integer
+      reset_date:
+        example: "2024-02-01"
+        type: string
+      status:
+        example: active
+        type: string
+      subscription_id:
+        example: 1
+        type: integer
+      total_bytes:
+        example: 10737418240
+        type: integer
+      usage_percent:
+        example: 10
+        type: number
+      used_bytes:
+        example: 1073741824
+        type: integer
+    type: object
+  dto.UniProxyPushResponse:
+    properties:
+      message:
+        example: Traffic data processed successfully
+        type: string
+      processed:
+        example: 100
+        type: integer
+      success:
+        example: true
+        type: boolean
+      timestamp:
+        example: 1704067200
         type: integer
     type: object
   dto.UserBasicDTO:
@@ -1663,6 +1970,23 @@ definitions:
         example: 550e8400-e29b-41d4-a716-446655440000
         type: string
     type: object
+  handlers.AcknowledgeAlertRequest:
+    properties:
+      acknowledged_by:
+        example: 1
+        type: integer
+    type: object
+  handlers.BatchUserIDsRequest:
+    properties:
+      ids:
+        items:
+          type: integer
+        maxItems: 100
+        minItems: 1
+        type: array
+    required:
+    - ids
+    type: object
   handlers.BulkRetryActionRequest:
     properties:
       reason:
@@ -1695,6 +2019,19 @@ definitions:
         type: string
     required:
     - reason
+    type: object
+  handlers.ChangePasswordRequest:
+    properties:
+      new_password:
+        example: newPassword123
+        minLength: 6
+        type: string
+      old_password:
+        example: oldPassword123
+        type: string
+    required:
+    - new_password
+    - old_password
     type: object
   handlers.CreatePaymentOrderRequest:
     properties:
@@ -1735,6 +2072,58 @@ definitions:
     - payment_method
     - subject
     type: object
+  handlers.CreateTaskRequest:
+    properties:
+      payload:
+        type: object
+      type:
+        example: email
+        type: string
+    required:
+    - payload
+    - type
+    type: object
+  handlers.MarkInvoiceAsPaidRequest:
+    properties:
+      payment_date:
+        example: "2024-01-01"
+        type: string
+    required:
+    - payment_date
+    type: object
+  handlers.MarkInvoiceAsVoidRequest:
+    properties:
+      reason:
+        example: Customer request
+        type: string
+    required:
+    - reason
+    type: object
+  handlers.PatchUserRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      name:
+        example: John Doe
+        type: string
+      role:
+        enum:
+        - user
+        - admin
+        example: user
+        type: string
+      status:
+        enum:
+        - active
+        - inactive
+        - banned
+        example: active
+        type: string
+      username:
+        example: johndoe
+        type: string
+    type: object
   handlers.ResetPasswordRequest:
     properties:
       new_password:
@@ -1744,6 +2133,24 @@ definitions:
         type: string
     required:
     - new_password
+    type: object
+  handlers.ResolveAlertRequest:
+    properties:
+      reason:
+        example: Issue fixed
+        type: string
+    type: object
+  handlers.SuppressAlertRequest:
+    properties:
+      duration_minutes:
+        example: 60
+        type: integer
+      reason:
+        example: Maintenance window
+        type: string
+    required:
+    - duration_minutes
+    - reason
     type: object
   handlers.TokenExchangeRequest:
     properties:
@@ -1770,8 +2177,12 @@ definitions:
         $ref: '#/definitions/handlers.UniProxyBaseConfig'
       cipher:
         type: string
-      obfs: {}
-      obfs_settings: {}
+      obfs:
+        example: tls1.2_ticket_auth
+        type: string
+      obfs_settings:
+        example: cloudflare.com
+        type: string
       server_port:
         type: integer
     type: object
@@ -1782,6 +2193,8 @@ definitions:
         type: integer
       speed_limit:
         description: Speed limit (null for unlimited)
+        example: 100
+        type: integer
       uuid:
         description: Subscription UUID
         type: string
@@ -1792,6 +2205,29 @@ definitions:
         items:
           $ref: '#/definitions/handlers.UniProxyUserItem'
         type: array
+    type: object
+  handlers.UpdateUserRoleRequest:
+    properties:
+      role:
+        enum:
+        - user
+        - admin
+        example: user
+        type: string
+    required:
+    - role
+    type: object
+  handlers.UpdateUserStatusRequest:
+    properties:
+      status:
+        enum:
+        - active
+        - inactive
+        - banned
+        example: active
+        type: string
+    required:
+    - status
     type: object
   handlers.UserProfileUpdateRequest:
     properties:
@@ -3443,8 +3879,7 @@ paths:
             - $ref: '#/definitions/response.Response'
             - properties:
                 data:
-                  additionalProperties: true
-                  type: object
+                  $ref: '#/definitions/dto.CacheBenchmarkResponse'
               type: object
       security:
       - BearerAuth: []
@@ -3466,8 +3901,7 @@ paths:
             - $ref: '#/definitions/response.Response'
             - properties:
                 data:
-                  additionalProperties: true
-                  type: object
+                  $ref: '#/definitions/dto.CacheDashboardResponse'
               type: object
       security:
       - BearerAuth: []
@@ -3610,8 +4044,7 @@ paths:
             - $ref: '#/definitions/response.Response'
             - properties:
                 data:
-                  additionalProperties: true
-                  type: object
+                  $ref: '#/definitions/dto.CacheWarmingResponse'
               type: object
       security:
       - BearerAuth: []
@@ -4624,8 +5057,7 @@ paths:
         name: user
         required: true
         schema:
-          additionalProperties: true
-          type: object
+          $ref: '#/definitions/handlers.PatchUserRequest'
       produces:
       - application/json
       responses:
@@ -4859,9 +5291,7 @@ paths:
         name: role
         required: true
         schema:
-          additionalProperties:
-            type: string
-          type: object
+          $ref: '#/definitions/handlers.UpdateUserRoleRequest'
       produces:
       - application/json
       responses:
@@ -4911,9 +5341,7 @@ paths:
         name: status
         required: true
         schema:
-          additionalProperties:
-            type: string
-          type: object
+          $ref: '#/definitions/handlers.UpdateUserStatusRequest'
       produces:
       - application/json
       responses:
@@ -4958,11 +5386,7 @@ paths:
         name: ids
         required: true
         schema:
-          additionalProperties:
-            items:
-              type: integer
-            type: array
-          type: object
+          $ref: '#/definitions/handlers.BatchUserIDsRequest'
       produces:
       - application/json
       responses:
@@ -5002,11 +5426,7 @@ paths:
         name: ids
         required: true
         schema:
-          additionalProperties:
-            items:
-              type: integer
-            type: array
-          type: object
+          $ref: '#/definitions/handlers.BatchUserIDsRequest'
       produces:
       - application/json
       responses:
@@ -5212,10 +5632,14 @@ paths:
       - application/json
       responses:
         "200":
-          description: 健康检查结果
+          description: OK
           schema:
-            additionalProperties: true
-            type: object
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.HealthCheckResponse'
+              type: object
       summary: 系统健康检查
       tags:
       - system
@@ -5288,9 +5712,7 @@ paths:
         name: passwords
         required: true
         schema:
-          additionalProperties:
-            type: string
-          type: object
+          $ref: '#/definitions/handlers.ChangePasswordRequest'
       produces:
       - application/json
       responses:
@@ -5812,10 +6234,7 @@ paths:
         name: payment_date
         required: true
         schema:
-          properties:
-            payment_date:
-              type: string
-          type: object
+          $ref: '#/definitions/handlers.MarkInvoiceAsPaidRequest'
       produces:
       - application/json
       responses:
@@ -5860,10 +6279,7 @@ paths:
         name: reason
         required: true
         schema:
-          properties:
-            reason:
-              type: string
-          type: object
+          $ref: '#/definitions/handlers.MarkInvoiceAsVoidRequest'
       produces:
       - application/json
       responses:
@@ -6198,8 +6614,7 @@ paths:
             - $ref: '#/definitions/response.StandardResponse'
             - properties:
                 data:
-                  additionalProperties: true
-                  type: object
+                  $ref: '#/definitions/dto.InvoiceStatisticsResponse'
               type: object
         "400":
           description: Bad Request
@@ -6966,8 +7381,7 @@ paths:
             - $ref: '#/definitions/response.StandardResponse'
             - properties:
                 data:
-                  additionalProperties: true
-                  type: object
+                  $ref: '#/definitions/dto.ServerAPIHealthResponse'
               type: object
       summary: Server API Health Check
       tags:
@@ -7005,8 +7419,7 @@ paths:
             - $ref: '#/definitions/response.StandardResponse'
             - properties:
                 data:
-                  additionalProperties: true
-                  type: object
+                  $ref: '#/definitions/dto.UniProxyPushResponse'
               type: object
         "400":
           description: Bad Request
@@ -7367,8 +7780,7 @@ paths:
             - $ref: '#/definitions/response.StandardResponse'
             - properties:
                 data:
-                  additionalProperties: true
-                  type: object
+                  $ref: '#/definitions/dto.TrafficStatsResponse'
               type: object
         "400":
           description: Bad Request
@@ -7494,7 +7906,7 @@ paths:
         name: task
         required: true
         schema:
-          type: object
+          $ref: '#/definitions/handlers.CreateTaskRequest'
       produces:
       - application/json
       responses:
@@ -7557,28 +7969,26 @@ paths:
         in: body
         name: request
         schema:
-          additionalProperties:
-            type: integer
-          type: object
+          $ref: '#/definitions/handlers.AcknowledgeAlertRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.StandardResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.BadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.NotFoundResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: Acknowledge a usage alert
       tags:
       - alerts
@@ -7597,28 +8007,26 @@ paths:
         in: body
         name: request
         schema:
-          additionalProperties:
-            type: string
-          type: object
+          $ref: '#/definitions/handlers.ResolveAlertRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.StandardResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.BadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.NotFoundResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: Resolve a usage alert
       tags:
       - alerts
@@ -7638,27 +8046,26 @@ paths:
         name: request
         required: true
         schema:
-          additionalProperties: true
-          type: object
+          $ref: '#/definitions/handlers.SuppressAlertRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.StandardResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.BadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.NotFoundResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: Suppress a usage alert
       tags:
       - alerts
@@ -7681,7 +8088,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/response.Response'
+            - $ref: '#/definitions/response.StandardResponse'
             - properties:
                 data:
                   $ref: '#/definitions/interfaces.BulkResolveAlertsResponse'
@@ -7689,11 +8096,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.BadRequestResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: Bulk resolve usage alerts
       tags:
       - alerts
@@ -7714,19 +8121,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.StandardResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.BadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.NotFoundResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: Delete an alert configuration
       tags:
       - alerts
@@ -7747,7 +8154,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/response.Response'
+            - $ref: '#/definitions/response.StandardResponse'
             - properties:
                 data:
                   $ref: '#/definitions/entities.AlertConfigurationResponse'
@@ -7755,15 +8162,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.BadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.NotFoundResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: Get a specific alert configuration
       tags:
       - alerts
@@ -7790,7 +8197,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/response.Response'
+            - $ref: '#/definitions/response.StandardResponse'
             - properties:
                 data:
                   $ref: '#/definitions/entities.AlertConfigurationResponse'
@@ -7798,15 +8205,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.BadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.NotFoundResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: Update an alert configuration
       tags:
       - alerts
@@ -7829,7 +8236,7 @@ paths:
           description: Created
           schema:
             allOf:
-            - $ref: '#/definitions/response.Response'
+            - $ref: '#/definitions/response.StandardResponse'
             - properties:
                 data:
                   $ref: '#/definitions/entities.AlertConfigurationResponse'
@@ -7837,11 +8244,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.BadRequestResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: Create a new alert configuration
       tags:
       - alerts
@@ -7936,7 +8343,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/response.Response'
+            - $ref: '#/definitions/response.StandardResponse'
             - properties:
                 data:
                   $ref: '#/definitions/interfaces.GetUsageAlertsResponse'
@@ -7944,15 +8351,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.BadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.NotFoundResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: Get usage alerts for a subscription
       tags:
       - alerts
@@ -8020,7 +8427,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/response.Response'
+            - $ref: '#/definitions/response.StandardResponse'
             - properties:
                 data:
                   $ref: '#/definitions/interfaces.GetAlertConfigsResponse'
@@ -8028,15 +8435,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.BadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.NotFoundResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: Get alert configurations for a subscription
       tags:
       - alerts
@@ -8097,7 +8504,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/response.Response'
+            - $ref: '#/definitions/response.StandardResponse'
             - properties:
                 data:
                   $ref: '#/definitions/interfaces.AlertHistoryResponse'
@@ -8105,15 +8512,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.BadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.NotFoundResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: Get alert history for a subscription
       tags:
       - alerts
@@ -8180,7 +8587,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/response.Response'
+            - $ref: '#/definitions/response.StandardResponse'
             - properties:
                 data:
                   $ref: '#/definitions/interfaces.AlertStatisticsResponse'
@@ -8188,15 +8595,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.BadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.NotFoundResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: Get alert statistics for a subscription
       tags:
       - alerts
@@ -8219,7 +8626,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/response.Response'
+            - $ref: '#/definitions/response.StandardResponse'
             - properties:
                 data:
                   $ref: '#/definitions/interfaces.TestNotificationResponse'
@@ -8227,11 +8634,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.BadRequestResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: Test a notification channel
       tags:
       - alerts
@@ -8253,7 +8660,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/response.Response'
+            - $ref: '#/definitions/response.StandardResponse'
             - properties:
                 data:
                   $ref: '#/definitions/interfaces.CurrentUsageResponse'
@@ -8261,15 +8668,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.BadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.NotFoundResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: Get current usage for a subscription
       tags:
       - usage
@@ -8303,7 +8710,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/response.Response'
+            - $ref: '#/definitions/response.StandardResponse'
             - properties:
                 data:
                   $ref: '#/definitions/interfaces.CurrentUsageResponse'
@@ -8311,15 +8718,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.BadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.NotFoundResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: Get current usage for a specific usage type
       tags:
       - usage
@@ -8386,7 +8793,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/response.Response'
+            - $ref: '#/definitions/response.StandardResponse'
             - properties:
                 data:
                   $ref: '#/definitions/interfaces.UsageHistoryResponse'
@@ -8394,15 +8801,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.BadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.NotFoundResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: Get usage history for a subscription
       tags:
       - usage
@@ -8424,7 +8831,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/response.Response'
+            - $ref: '#/definitions/response.StandardResponse'
             - properties:
                 data:
                   items:
@@ -8434,15 +8841,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.BadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.NotFoundResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: Get usage predictions for a subscription
       tags:
       - usage
@@ -8475,7 +8882,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/response.Response'
+            - $ref: '#/definitions/response.StandardResponse'
             - properties:
                 data:
                   items:
@@ -8485,15 +8892,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.BadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.NotFoundResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: Get usage predictions for a specific usage type
       tags:
       - usage
@@ -8515,7 +8922,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/response.Response'
+            - $ref: '#/definitions/response.StandardResponse'
             - properties:
                 data:
                   $ref: '#/definitions/interfaces.RealTimeUsageResponse'
@@ -8523,15 +8930,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.BadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.NotFoundResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: Get real-time usage data for a subscription
       tags:
       - usage
@@ -8581,7 +8988,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/response.Response'
+            - $ref: '#/definitions/response.StandardResponse'
             - properties:
                 data:
                   $ref: '#/definitions/interfaces.UsageStatistics'
@@ -8589,15 +8996,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.BadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.NotFoundResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: Get usage statistics for a subscription
       tags:
       - usage
@@ -8658,7 +9065,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/response.Response'
+            - $ref: '#/definitions/response.StandardResponse'
             - properties:
                 data:
                   $ref: '#/definitions/entities.UsageSummary'
@@ -8666,15 +9073,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.BadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.NotFoundResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: Get usage summary for a subscription
       tags:
       - usage
@@ -8729,7 +9136,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/response.Response'
+            - $ref: '#/definitions/response.StandardResponse'
             - properties:
                 data:
                   $ref: '#/definitions/interfaces.UsageTrendsResponse'
@@ -8737,15 +9144,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.BadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.NotFoundResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: Get usage trends for a subscription
       tags:
       - usage
@@ -8768,7 +9175,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/response.Response'
+            - $ref: '#/definitions/response.StandardResponse'
             - properties:
                 data:
                   $ref: '#/definitions/interfaces.CleanupResult'
@@ -8776,11 +9183,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.BadRequestResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: Cleanup old usage data
       tags:
       - usage
@@ -8814,19 +9221,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.StandardResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.BadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.NotFoundResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: Reset usage for a subscription
       tags:
       - usage
@@ -8848,19 +9255,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.StandardResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.BadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.NotFoundResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: Sync subscription limits
       tags:
       - usage
@@ -8884,7 +9291,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/response.Response'
+            - $ref: '#/definitions/response.StandardResponse'
             - properties:
                 data:
                   $ref: '#/definitions/interfaces.ExportUsageResponse'
@@ -8892,11 +9299,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.BadRequestResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: Export usage data
       tags:
       - usage
@@ -8942,7 +9349,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/response.Response'
+            - $ref: '#/definitions/response.StandardResponse'
             - properties:
                 data:
                   $ref: '#/definitions/interfaces.TopUsageResponse'
@@ -8950,11 +9357,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.BadRequestResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.Response'
+            $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: Get top usage subscriptions
       tags:
       - usage

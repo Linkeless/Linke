@@ -414,7 +414,7 @@ func (h *CacheMonitoringHandler) GetPerformanceMetrics(c *gin.Context) {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.Response{data=map[string]any}
+// @Success 200 {object} response.Response{data=dto.CacheDashboardResponse}
 // @Router /admin/cache/monitor/dashboard [get]
 func (h *CacheMonitoringHandler) GetDashboard(c *gin.Context) {
 	if h.multiLevelMgr == nil {
@@ -460,7 +460,7 @@ func (h *CacheMonitoringHandler) GetAlerts(c *gin.Context) {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.Response{data=map[string]any}
+// @Success 200 {object} response.Response{data=dto.CacheBenchmarkResponse}
 // @Router /admin/cache/monitor/benchmark [post]
 func (h *CacheMonitoringHandler) RunBenchmark(c *gin.Context) {
 	if h.multiLevelMgr == nil {
@@ -505,7 +505,7 @@ func (h *CacheMonitoringHandler) GetWarmingStatus(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body map[string]any true "Warming request"
-// @Success 200 {object} response.Response{data=map[string]any}
+// @Success 200 {object} response.Response{data=dto.CacheWarmingResponse}
 // @Router /admin/cache/monitor/warming/trigger [post]
 func (h *CacheMonitoringHandler) TriggerWarming(c *gin.Context) {
 	if h.multiLevelMgr == nil {

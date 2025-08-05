@@ -48,10 +48,10 @@ func NewServerAPIHandler(shadowsocksService serverInterfaces.ShadowsocksServerSe
 // @Tags Server-API
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.StandardResponse{data=map[string]any}
+// @Success 200 {object} response.StandardResponse{data=dto.ServerAPIHealthResponse}
 // @Router /server/UniProxy/health [get]
 func (h *ServerAPIHandler) Health(c *gin.Context) {
-	response.Success(c, map[string]any{
+	response.Success(c, gin.H{
 		"status":  "ok",
 		"service": "server-api",
 	})
@@ -61,8 +61,8 @@ func (h *ServerAPIHandler) Health(c *gin.Context) {
 type UniProxyConfigResponse struct {
 	ServerPort   int                `json:"server_port"`
 	Cipher       string             `json:"cipher"`
-	Obfs         any                `json:"obfs"`
-	ObfsSettings any                `json:"obfs_settings"`
+	Obfs         interface{}        `json:"obfs" swaggertype:"string" example:"tls1.2_ticket_auth"`
+	ObfsSettings interface{}        `json:"obfs_settings" swaggertype:"string" example:"cloudflare.com"`
 	BaseConfig   UniProxyBaseConfig `json:"base_config"`
 }
 
@@ -186,9 +186,9 @@ func (h *ServerAPIHandler) UniProxyConfig(c *gin.Context) {
 
 // UniProxyUserItem represents a single user item for UniProxy
 type UniProxyUserItem struct {
-	ID         uint   `json:"id"`          // Subscription ID
-	UUID       string `json:"uuid"`        // Subscription UUID
-	SpeedLimit any    `json:"speed_limit"` // Speed limit (null for unlimited)
+	ID         uint        `json:"id"`          // Subscription ID
+	UUID       string      `json:"uuid"`        // Subscription UUID
+	SpeedLimit interface{} `json:"speed_limit" swaggertype:"integer" example:"100"` // Speed limit (null for unlimited)
 }
 
 // UniProxyUsersResponse represents the users response for UniProxy
@@ -498,7 +498,7 @@ type UniProxyPushRequest struct {
 // @Param node_id query int true "Node ID"
 // @Param node_type query string true "Node Type" Enums(shadowsocks)
 // @Param token query string true "Authentication Token"
-// @Success 200 {object} response.StandardResponse{data=map[string]any}
+// @Success 200 {object} response.StandardResponse{data=dto.UniProxyPushResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -550,7 +550,7 @@ func (h *ServerAPIHandler) UniProxyPush(c *gin.Context) {
 		logger.String("node_type", req.NodeType),
 	)
 
-	response.OK(c, "Node data received and processed", map[string]any{
+	response.OK(c, "Node data received and processed", gin.H{
 		"status":    "processed",
 		"node_id":   req.NodeID,
 		"node_type": req.NodeType,

@@ -10,6 +10,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// CreateTaskRequest represents the request body for creating a task
+type CreateTaskRequest struct {
+	Type    string                 `json:"type" binding:"required" example:"email"`
+	Payload map[string]interface{} `json:"payload" binding:"required" swaggertype:"object"`
+}
+
 type TaskHandler struct {
 	taskQueue *queue.TaskQueue
 }
@@ -26,17 +32,14 @@ func NewTaskHandler(taskQueue *queue.TaskQueue) *TaskHandler {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param task body object true "Task details"
+// @Param task body CreateTaskRequest true "Task details"
 // @Success 201 {object} response.StandardResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /tasks [post]
 func (h *TaskHandler) CreateTask(c *gin.Context) {
-	var req struct {
-		Type    string         `json:"type" binding:"required"`
-		Payload map[string]any `json:"payload" binding:"required"`
-	}
+	var req CreateTaskRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, err.Error())

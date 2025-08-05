@@ -18,6 +18,16 @@ import (
 	"go.uber.org/zap"
 )
 
+// MarkInvoiceAsPaidRequest represents the request body for marking invoice as paid
+type MarkInvoiceAsPaidRequest struct {
+	PaymentDate string `json:"payment_date" binding:"required" example:"2024-01-01"`
+}
+
+// MarkInvoiceAsVoidRequest represents the request body for marking invoice as void
+type MarkInvoiceAsVoidRequest struct {
+	Reason string `json:"reason" binding:"required" example:"Customer request"`
+}
+
 // InvoiceHandler handles HTTP requests for invoice operations
 type InvoiceHandler struct {
 	invoiceService interfaces.InvoiceService
@@ -324,7 +334,7 @@ func (h *InvoiceHandler) GetUserInvoices(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path uint true "Invoice ID"
-// @Param payment_date body object{payment_date=string} true "Payment date"
+// @Param payment_date body MarkInvoiceAsPaidRequest true "Payment date"
 // @Success 200 {object} response.StandardResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -339,9 +349,7 @@ func (h *InvoiceHandler) MarkInvoiceAsPaid(c *gin.Context) {
 		return
 	}
 
-	var req struct {
-		PaymentDate string `json:"payment_date" binding:"required" example:"2024-01-01"`
-	}
+	var req MarkInvoiceAsPaidRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Error("Failed to bind payment date request", logger.ErrorField(err))
 		response.BadRequest(c, "Invalid request data")
@@ -366,7 +374,7 @@ func (h *InvoiceHandler) MarkInvoiceAsPaid(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path uint true "Invoice ID"
-// @Param reason body object{reason=string} true "Void reason"
+// @Param reason body MarkInvoiceAsVoidRequest true "Void reason"
 // @Success 200 {object} response.StandardResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -381,9 +389,7 @@ func (h *InvoiceHandler) MarkInvoiceAsVoid(c *gin.Context) {
 		return
 	}
 
-	var req struct {
-		Reason string `json:"reason" binding:"required" example:"Customer request"`
-	}
+	var req MarkInvoiceAsVoidRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Error("Failed to bind void reason request", logger.ErrorField(err))
 		response.BadRequest(c, "Invalid request data")
@@ -408,7 +414,7 @@ func (h *InvoiceHandler) MarkInvoiceAsVoid(c *gin.Context) {
 // @Security BearerAuth
 // @Param from_date query string false "From date (YYYY-MM-DD)"
 // @Param to_date query string false "To date (YYYY-MM-DD)"
-// @Success 200 {object} response.StandardResponse{data=map[string]any}
+// @Success 200 {object} response.StandardResponse{data=dto.InvoiceStatisticsResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse

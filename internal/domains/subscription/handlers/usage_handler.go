@@ -74,10 +74,10 @@ func (h *UsageHandler) RegisterRoutes(router *gin.RouterGroup) {
 // @Accept json
 // @Produce json
 // @Param subscription_id path int true "Subscription ID"
-// @Success 200 {object} response.Response{data=interfaces.CurrentUsageResponse}
-// @Failure 400 {object} response.Response
-// @Failure 404 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} response.StandardResponse{data=interfaces.CurrentUsageResponse}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage/{subscription_id}/current [get]
 func (h *UsageHandler) GetCurrentUsage(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
@@ -103,10 +103,10 @@ func (h *UsageHandler) GetCurrentUsage(c *gin.Context) {
 // @Produce json
 // @Param subscription_id path int true "Subscription ID"
 // @Param usage_type path string true "Usage Type" Enums(traffic,api_call,storage,bandwidth,connections)
-// @Success 200 {object} response.Response{data=interfaces.CurrentUsageResponse}
-// @Failure 400 {object} response.Response
-// @Failure 404 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} response.StandardResponse{data=interfaces.CurrentUsageResponse}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage/{subscription_id}/current/{usage_type} [get]
 func (h *UsageHandler) GetCurrentUsageByType(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
@@ -147,10 +147,10 @@ func (h *UsageHandler) GetCurrentUsageByType(c *gin.Context) {
 // @Param offset query int false "Offset" default(0)
 // @Param include_details query bool false "Include detailed breakdown" default(false)
 // @Param source_type query string false "Source Type Filter"
-// @Success 200 {object} response.Response{data=interfaces.UsageHistoryResponse}
-// @Failure 400 {object} response.Response
-// @Failure 404 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} response.StandardResponse{data=interfaces.UsageHistoryResponse}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage/{subscription_id}/history [get]
 func (h *UsageHandler) GetUsageHistory(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
@@ -221,10 +221,10 @@ func (h *UsageHandler) GetUsageHistory(c *gin.Context) {
 // @Param include_breakdown query bool false "Include detailed breakdown" default(false)
 // @Param include_predictions query bool false "Include usage predictions" default(false)
 // @Param compare_with_previous query bool false "Compare with previous period" default(false)
-// @Success 200 {object} response.Response{data=entities.UsageSummary}
-// @Failure 400 {object} response.Response
-// @Failure 404 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} response.StandardResponse{data=entities.UsageSummary}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage/{subscription_id}/summary [get]
 func (h *UsageHandler) GetUsageSummary(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
@@ -284,10 +284,10 @@ func (h *UsageHandler) GetUsageSummary(c *gin.Context) {
 // @Param end_time query string false "End Time (RFC3339)" format(date-time)
 // @Param group_by query string false "Group By Dimensions (comma-separated)"
 // @Param include_comparison query bool false "Include period comparison" default(false)
-// @Success 200 {object} response.Response{data=interfaces.UsageStatistics}
-// @Failure 400 {object} response.Response
-// @Failure 404 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} response.StandardResponse{data=interfaces.UsageStatistics}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage/{subscription_id}/statistics [get]
 func (h *UsageHandler) GetUsageStatistics(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
@@ -338,10 +338,10 @@ func (h *UsageHandler) GetUsageStatistics(c *gin.Context) {
 // @Param granularity query string false "Data Granularity" Enums(hourly,daily,weekly) default(daily)
 // @Param include_predictions query bool false "Include usage predictions" default(false)
 // @Param include_anomalies query bool false "Include anomaly detection" default(false)
-// @Success 200 {object} response.Response{data=interfaces.UsageTrendsResponse}
-// @Failure 400 {object} response.Response
-// @Failure 404 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} response.StandardResponse{data=interfaces.UsageTrendsResponse}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage/{subscription_id}/trends [get]
 func (h *UsageHandler) GetUsageTrends(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
@@ -375,10 +375,10 @@ func (h *UsageHandler) GetUsageTrends(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param subscription_id path int true "Subscription ID"
-// @Success 200 {object} response.Response{data=[]entities.UsagePrediction}
-// @Failure 400 {object} response.Response
-// @Failure 404 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} response.StandardResponse{data=[]entities.UsagePrediction}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage/{subscription_id}/predictions [get]
 func (h *UsageHandler) GetUsagePredictions(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
@@ -404,10 +404,10 @@ func (h *UsageHandler) GetUsagePredictions(c *gin.Context) {
 // @Produce json
 // @Param subscription_id path int true "Subscription ID"
 // @Param usage_type path string true "Usage Type" Enums(traffic,api_call,storage,bandwidth,connections)
-// @Success 200 {object} response.Response{data=[]entities.UsagePrediction}
-// @Failure 400 {object} response.Response
-// @Failure 404 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} response.StandardResponse{data=[]entities.UsagePrediction}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage/{subscription_id}/predictions/{usage_type} [get]
 func (h *UsageHandler) GetUsagePredictionsByType(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
@@ -440,10 +440,10 @@ func (h *UsageHandler) GetUsagePredictionsByType(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param subscription_id path int true "Subscription ID"
-// @Success 200 {object} response.Response{data=interfaces.RealTimeUsageResponse}
-// @Failure 400 {object} response.Response
-// @Failure 404 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} response.StandardResponse{data=interfaces.RealTimeUsageResponse}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage/{subscription_id}/realtime [get]
 func (h *UsageHandler) GetRealTimeUsage(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
@@ -470,9 +470,9 @@ func (h *UsageHandler) GetRealTimeUsage(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body interfaces.ExportUsageRequest true "Export Request"
-// @Success 200 {object} response.Response{data=interfaces.ExportUsageResponse}
-// @Failure 400 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} response.StandardResponse{data=interfaces.ExportUsageResponse}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage/export [post]
 func (h *UsageHandler) ExportUsageData(c *gin.Context) {
 	var req interfaces.ExportUsageRequest
@@ -503,9 +503,9 @@ func (h *UsageHandler) ExportUsageData(c *gin.Context) {
 // @Param limit query int false "Limit" default(10) maximum(100)
 // @Param order_by query string false "Order By" Enums(total_usage,average_usage,peak_usage) default(total_usage)
 // @Param include_zero query bool false "Include zero usage subscriptions" default(false)
-// @Success 200 {object} response.Response{data=interfaces.TopUsageResponse}
-// @Failure 400 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} response.StandardResponse{data=interfaces.TopUsageResponse}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage/top [get]
 func (h *UsageHandler) GetTopUsageSubscriptions(c *gin.Context) {
 	req := &interfaces.TopUsageRequest{
@@ -553,9 +553,9 @@ func (h *UsageHandler) GetTopUsageSubscriptions(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param older_than query string true "Delete data older than this date (RFC3339)" format(date-time)
-// @Success 200 {object} response.Response{data=interfaces.CleanupResult}
-// @Failure 400 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} response.StandardResponse{data=interfaces.CleanupResult}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage/admin/cleanup [post]
 func (h *UsageHandler) CleanupOldUsageData(c *gin.Context) {
 	olderThanStr := c.Query("older_than")
@@ -587,10 +587,10 @@ func (h *UsageHandler) CleanupOldUsageData(c *gin.Context) {
 // @Produce json
 // @Param subscription_id path int true "Subscription ID"
 // @Param usage_type query string true "Usage Type" Enums(traffic,api_call,storage,bandwidth,connections)
-// @Success 200 {object} response.Response
-// @Failure 400 {object} response.Response
-// @Failure 404 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} response.StandardResponse
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage/admin/reset/{subscription_id} [post]
 func (h *UsageHandler) ResetUsageForSubscription(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
@@ -621,10 +621,10 @@ func (h *UsageHandler) ResetUsageForSubscription(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param subscription_id path int true "Subscription ID"
-// @Success 200 {object} response.Response
-// @Failure 400 {object} response.Response
-// @Failure 404 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} response.StandardResponse
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage/admin/sync/{subscription_id} [post]
 func (h *UsageHandler) SyncSubscriptionLimits(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)

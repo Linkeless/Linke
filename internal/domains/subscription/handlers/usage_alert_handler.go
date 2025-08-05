@@ -11,6 +11,22 @@ import (
 	"linke/internal/shared/response"
 )
 
+// AcknowledgeAlertRequest represents the request body for acknowledging an alert
+type AcknowledgeAlertRequest struct {
+	AcknowledgedBy uint `json:"acknowledged_by" example:"1"`
+}
+
+// SuppressAlertRequest represents the request body for suppressing an alert
+type SuppressAlertRequest struct {
+	DurationMinutes int    `json:"duration_minutes" binding:"required" example:"60"`
+	Reason          string `json:"reason" binding:"required" example:"Maintenance window"`
+}
+
+// ResolveAlertRequest represents the request body for resolving an alert
+type ResolveAlertRequest struct {
+	Reason string `json:"reason" example:"Issue fixed"`
+}
+
 // UsageAlertHandler handles usage alert API endpoints
 type UsageAlertHandler struct {
 	usageAlertService interfaces.UsageAlertService
@@ -39,10 +55,10 @@ func NewUsageAlertHandler(usageAlertService interfaces.UsageAlertService) *Usage
 // @Param offset query int false "Offset" default(0)
 // @Param order_by query string false "Order By" Enums(name,threshold,priority,created_at) default(created_at)
 // @Param order_direction query string false "Order Direction" Enums(asc,desc) default(desc)
-// @Success 200 {object} response.Response{data=interfaces.GetAlertConfigsResponse}
-// @Failure 400 {object} response.Response
-// @Failure 404 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} response.StandardResponse{data=interfaces.GetAlertConfigsResponse}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage-alerts/subscription/{subscription_id}/configurations [get]
 func (h *UsageAlertHandler) GetAlertConfigurations(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
@@ -98,9 +114,9 @@ func (h *UsageAlertHandler) GetAlertConfigurations(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body interfaces.CreateAlertConfigRequest true "Alert Configuration Request"
-// @Success 201 {object} response.Response{data=entities.AlertConfigurationResponse}
-// @Failure 400 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 201 {object} response.StandardResponse{data=entities.AlertConfigurationResponse}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage-alerts/configurations [post]
 func (h *UsageAlertHandler) CreateAlertConfiguration(c *gin.Context) {
 	var req interfaces.CreateAlertConfigRequest
@@ -126,10 +142,10 @@ func (h *UsageAlertHandler) CreateAlertConfiguration(c *gin.Context) {
 // @Produce json
 // @Param config_id path int true "Configuration ID"
 // @Param request body interfaces.UpdateAlertConfigRequest true "Update Request"
-// @Success 200 {object} response.Response{data=entities.AlertConfigurationResponse}
-// @Failure 400 {object} response.Response
-// @Failure 404 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} response.StandardResponse{data=entities.AlertConfigurationResponse}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage-alerts/config/{config_id} [put]
 func (h *UsageAlertHandler) UpdateAlertConfiguration(c *gin.Context) {
 	configID, err := strconv.ParseUint(c.Param("config_id"), 10, 32)
@@ -162,10 +178,10 @@ func (h *UsageAlertHandler) UpdateAlertConfiguration(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param config_id path int true "Configuration ID"
-// @Success 200 {object} response.Response
-// @Failure 400 {object} response.Response
-// @Failure 404 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} response.StandardResponse
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage-alerts/config/{config_id} [delete]
 func (h *UsageAlertHandler) DeleteAlertConfiguration(c *gin.Context) {
 	configID, err := strconv.ParseUint(c.Param("config_id"), 10, 32)
@@ -190,10 +206,10 @@ func (h *UsageAlertHandler) DeleteAlertConfiguration(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param config_id path int true "Configuration ID"
-// @Success 200 {object} response.Response{data=entities.AlertConfigurationResponse}
-// @Failure 400 {object} response.Response
-// @Failure 404 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} response.StandardResponse{data=entities.AlertConfigurationResponse}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage-alerts/config/{config_id} [get]
 func (h *UsageAlertHandler) GetAlertConfiguration(c *gin.Context) {
 	configID, err := strconv.ParseUint(c.Param("config_id"), 10, 32)
@@ -232,10 +248,10 @@ func (h *UsageAlertHandler) GetAlertConfiguration(c *gin.Context) {
 // @Param offset query int false "Offset" default(0)
 // @Param order_by query string false "Order By" Enums(fired_at,resolved_at,severity,usage_percent) default(fired_at)
 // @Param order_direction query string false "Order Direction" Enums(asc,desc) default(desc)
-// @Success 200 {object} response.Response{data=interfaces.GetUsageAlertsResponse}
-// @Failure 400 {object} response.Response
-// @Failure 404 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} response.StandardResponse{data=interfaces.GetUsageAlertsResponse}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage-alerts/subscription/{subscription_id} [get]
 func (h *UsageAlertHandler) GetUsageAlerts(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
@@ -317,11 +333,11 @@ func (h *UsageAlertHandler) GetUsageAlerts(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param alert_id path int true "Alert ID"
-// @Param request body map[string]string false "Resolve Request" example({"reason":"Issue fixed"})
-// @Success 200 {object} response.Response
-// @Failure 400 {object} response.Response
-// @Failure 404 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Param request body ResolveAlertRequest false "Resolve Request"
+// @Success 200 {object} response.StandardResponse
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage-alerts/alert/{alert_id}/resolve [post]
 func (h *UsageAlertHandler) ResolveAlert(c *gin.Context) {
 	alertID, err := strconv.ParseUint(c.Param("alert_id"), 10, 32)
@@ -353,11 +369,11 @@ func (h *UsageAlertHandler) ResolveAlert(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param alert_id path int true "Alert ID"
-// @Param request body map[string]int false "Acknowledge Request" example({"acknowledged_by":1})
-// @Success 200 {object} response.Response
-// @Failure 400 {object} response.Response
-// @Failure 404 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Param request body AcknowledgeAlertRequest false "Acknowledge Request"
+// @Success 200 {object} response.StandardResponse
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage-alerts/alert/{alert_id}/acknowledge [post]
 func (h *UsageAlertHandler) AcknowledgeAlert(c *gin.Context) {
 	alertID, err := strconv.ParseUint(c.Param("alert_id"), 10, 32)
@@ -366,16 +382,13 @@ func (h *UsageAlertHandler) AcknowledgeAlert(c *gin.Context) {
 		return
 	}
 
-	var req map[string]any
+	var req AcknowledgeAlertRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "Invalid request format")
 		return
 	}
 
-	acknowledgedBy := uint(0)
-	if ackBy, ok := req["acknowledged_by"].(float64); ok {
-		acknowledgedBy = uint(ackBy)
-	}
+	acknowledgedBy := req.AcknowledgedBy
 
 	err = h.usageAlertService.AcknowledgeAlert(c.Request.Context(), uint(alertID), acknowledgedBy)
 	if err != nil {
@@ -393,11 +406,11 @@ func (h *UsageAlertHandler) AcknowledgeAlert(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param alert_id path int true "Alert ID"
-// @Param request body map[string]any true "Suppress Request" example({"duration_minutes":60,"reason":"Maintenance window"})
-// @Success 200 {object} response.Response
-// @Failure 400 {object} response.Response
-// @Failure 404 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Param request body SuppressAlertRequest true "Suppress Request"
+// @Success 200 {object} response.StandardResponse
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage-alerts/alert/{alert_id}/suppress [post]
 func (h *UsageAlertHandler) SuppressAlert(c *gin.Context) {
 	alertID, err := strconv.ParseUint(c.Param("alert_id"), 10, 32)
@@ -406,21 +419,14 @@ func (h *UsageAlertHandler) SuppressAlert(c *gin.Context) {
 		return
 	}
 
-	var req map[string]any
+	var req SuppressAlertRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "Invalid request format")
 		return
 	}
 
-	durationMinutes := 60 // Default to 1 hour
-	if durMins, ok := req["duration_minutes"].(float64); ok {
-		durationMinutes = int(durMins)
-	}
-
-	reason := ""
-	if r, ok := req["reason"].(string); ok {
-		reason = r
-	}
+	durationMinutes := req.DurationMinutes
+	reason := req.Reason
 
 	duration := time.Duration(durationMinutes) * time.Minute
 	err = h.usageAlertService.SuppressAlert(c.Request.Context(), uint(alertID), duration, reason)
@@ -439,9 +445,9 @@ func (h *UsageAlertHandler) SuppressAlert(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body interfaces.BulkResolveAlertsRequest true "Bulk Resolve Request"
-// @Success 200 {object} response.Response{data=interfaces.BulkResolveAlertsResponse}
-// @Failure 400 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} response.StandardResponse{data=interfaces.BulkResolveAlertsResponse}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage-alerts/bulk-resolve [post]
 func (h *UsageAlertHandler) BulkResolveAlerts(c *gin.Context) {
 	var req interfaces.BulkResolveAlertsRequest
@@ -474,10 +480,10 @@ func (h *UsageAlertHandler) BulkResolveAlerts(c *gin.Context) {
 // @Param start_time query string false "Start Time (RFC3339)" format(date-time)
 // @Param end_time query string false "End Time (RFC3339)" format(date-time)
 // @Param group_by query string false "Group By" Enums(hour,day,week,month,severity,usage_type)
-// @Success 200 {object} response.Response{data=interfaces.AlertStatisticsResponse}
-// @Failure 400 {object} response.Response
-// @Failure 404 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} response.StandardResponse{data=interfaces.AlertStatisticsResponse}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage-alerts/subscription/{subscription_id}/statistics [get]
 func (h *UsageAlertHandler) GetAlertStatistics(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
@@ -531,10 +537,10 @@ func (h *UsageAlertHandler) GetAlertStatistics(c *gin.Context) {
 // @Param include_notifications query bool false "Include notification history" default(false)
 // @Param limit query int false "Limit" default(50) maximum(1000)
 // @Param offset query int false "Offset" default(0)
-// @Success 200 {object} response.Response{data=interfaces.AlertHistoryResponse}
-// @Failure 400 {object} response.Response
-// @Failure 404 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} response.StandardResponse{data=interfaces.AlertHistoryResponse}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage-alerts/subscription/{subscription_id}/history [get]
 func (h *UsageAlertHandler) GetAlertHistory(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
@@ -603,9 +609,9 @@ func (h *UsageAlertHandler) GetAlertHistory(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body interfaces.TestNotificationRequest true "Test Notification Request"
-// @Success 200 {object} response.Response{data=interfaces.TestNotificationResponse}
-// @Failure 400 {object} response.Response
-// @Failure 500 {object} response.Response
+// @Success 200 {object} response.StandardResponse{data=interfaces.TestNotificationResponse}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage-alerts/test-notification [post]
 func (h *UsageAlertHandler) TestNotificationChannel(c *gin.Context) {
 	var req interfaces.TestNotificationRequest

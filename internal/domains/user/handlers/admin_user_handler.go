@@ -15,6 +15,30 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// PatchUserRequest represents the request body for patching user fields
+type PatchUserRequest struct {
+	Name     *string `json:"name,omitempty" example:"John Doe"`
+	Email    *string `json:"email,omitempty" example:"user@example.com"`
+	Username *string `json:"username,omitempty" example:"johndoe"`
+	Role     *string `json:"role,omitempty" example:"user" enums:"user,admin"`
+	Status   *string `json:"status,omitempty" example:"active" enums:"active,inactive,banned"`
+}
+
+// UpdateUserRoleRequest represents the request body for updating user role
+type UpdateUserRoleRequest struct {
+	Role string `json:"role" binding:"required,oneof=user admin" example:"user"`
+}
+
+// UpdateUserStatusRequest represents the request body for updating user status
+type UpdateUserStatusRequest struct {
+	Status string `json:"status" binding:"required,oneof=active inactive banned" example:"active"`
+}
+
+// BatchUserIDsRequest represents the request body for batch operations on users
+type BatchUserIDsRequest struct {
+	IDs []uint `json:"ids" binding:"required,min=1,max=100"`
+}
+
 type AdminUserHandler struct {
 	userService userInterfaces.UserService
 	authService authInterfaces.AuthService
@@ -230,7 +254,7 @@ func (h *AdminUserHandler) UpdateUser(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "User ID"
-// @Param role body map[string]string true "Role data"
+// @Param role body UpdateUserRoleRequest true "Role data"
 // @Success 200 {object} response.StandardResponse{data=entities.UserResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -245,9 +269,7 @@ func (h *AdminUserHandler) UpdateUserRole(c *gin.Context) {
 		return
 	}
 
-	var roleData struct {
-		Role string `json:"role" binding:"required,oneof=user admin"`
-	}
+	var roleData UpdateUserRoleRequest
 
 	if err := c.ShouldBindJSON(&roleData); err != nil {
 		response.BadRequest(c, err.Error())
@@ -276,7 +298,7 @@ func (h *AdminUserHandler) UpdateUserRole(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "User ID"
-// @Param status body map[string]string true "Status data"
+// @Param status body UpdateUserStatusRequest true "Status data"
 // @Success 200 {object} response.StandardResponse{data=entities.UserResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -291,9 +313,7 @@ func (h *AdminUserHandler) UpdateUserStatus(c *gin.Context) {
 		return
 	}
 
-	var statusData struct {
-		Status string `json:"status" binding:"required,oneof=active inactive banned"`
-	}
+	var statusData UpdateUserStatusRequest
 
 	if err := c.ShouldBindJSON(&statusData); err != nil {
 		response.BadRequest(c, err.Error())
@@ -498,7 +518,7 @@ func (h *AdminUserHandler) SearchUsers(c *gin.Context) {
 		return
 	}
 
-	response.SuccessListWithExtra(c, "Search completed", users, page, limit, total, map[string]any{
+	response.SuccessListWithExtra(c, "Search completed", users, page, limit, total, gin.H{
 		"query": query,
 	})
 }
@@ -559,7 +579,7 @@ func (h *AdminUserHandler) ListUsersByProvider(c *gin.Context) {
 		return
 	}
 
-	response.SuccessListWithExtra(c, "Users retrieved successfully", users, page, limit, total, map[string]any{
+	response.SuccessListWithExtra(c, "Users retrieved successfully", users, page, limit, total, gin.H{
 		"provider": provider,
 	})
 }
@@ -594,7 +614,7 @@ func (h *AdminUserHandler) GetUserStats(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param ids body map[string][]uint true "User IDs"
+// @Param ids body BatchUserIDsRequest true "User IDs"
 // @Success 200 {object} response.StandardResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -602,9 +622,7 @@ func (h *AdminUserHandler) GetUserStats(c *gin.Context) {
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /admin/users/bulk/delete [post]
 func (h *AdminUserHandler) BatchDeleteUsers(c *gin.Context) {
-	var requestData struct {
-		IDs []uint `json:"ids" binding:"required,min=1,max=100"`
-	}
+	var requestData BatchUserIDsRequest
 
 	if err := c.ShouldBindJSON(&requestData); err != nil {
 		response.BadRequest(c, err.Error())
@@ -621,7 +639,7 @@ func (h *AdminUserHandler) BatchDeleteUsers(c *gin.Context) {
 		return
 	}
 
-	response.SuccessWithMessage(c, "Users deleted successfully", map[string]any{
+	response.SuccessWithMessage(c, "Users deleted successfully", gin.H{
 		"deleted_count": result.DeletedCount,
 		"failed_ids":    result.FailedIDs,
 	})
@@ -635,7 +653,7 @@ func (h *AdminUserHandler) BatchDeleteUsers(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "User ID"
-// @Param user body map[string]any true "Partial user data"
+// @Param user body PatchUserRequest true "Partial user data"
 // @Success 200 {object} response.StandardResponse{data=entities.UserResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -663,8 +681,8 @@ func (h *AdminUserHandler) PatchUser(c *gin.Context) {
 	}
 
 	// Parse partial update data
-	var updateData map[string]any
-	if err := c.ShouldBindJSON(&updateData); err != nil {
+	var patchReq PatchUserRequest
+	if err := c.ShouldBindJSON(&patchReq); err != nil {
 		response.BadRequest(c, err.Error())
 		return
 	}
@@ -673,64 +691,39 @@ func (h *AdminUserHandler) PatchUser(c *gin.Context) {
 	user := *currentUser
 
 	// Update only the fields present in the request
-	if name, exists := updateData["name"]; exists {
-		if nameStr, ok := name.(string); ok {
-			user.Name = nameStr
-		} else {
-			response.BadRequest(c, "Invalid name field type")
-			return
-		}
+	if patchReq.Name != nil {
+		user.Name = *patchReq.Name
 	}
 
-	if email, exists := updateData["email"]; exists {
-		if emailStr, ok := email.(string); ok {
-			user.Email = emailStr
-		} else {
-			response.BadRequest(c, "Invalid email field type")
-			return
-		}
+	if patchReq.Email != nil {
+		user.Email = *patchReq.Email
 	}
 
-	if username, exists := updateData["username"]; exists {
-		if usernameStr, ok := username.(string); ok {
-			user.Username = usernameStr
-		} else {
-			response.BadRequest(c, "Invalid username field type")
-			return
-		}
+	if patchReq.Username != nil {
+		user.Username = *patchReq.Username
 	}
 
-	if role, exists := updateData["role"]; exists {
-		if roleStr, ok := role.(string); ok {
-			if roleStr != "user" && roleStr != "admin" {
-				response.BadRequest(c, "Invalid role value, must be 'user' or 'admin'")
-				return
-			}
-			user.Role = roleStr
-		} else {
-			response.BadRequest(c, "Invalid role field type")
+	if patchReq.Role != nil {
+		if *patchReq.Role != "user" && *patchReq.Role != "admin" {
+			response.BadRequest(c, "Invalid role value, must be 'user' or 'admin'")
 			return
 		}
+		user.Role = *patchReq.Role
 	}
 
-	if status, exists := updateData["status"]; exists {
-		if statusStr, ok := status.(string); ok {
-			if statusStr != "active" && statusStr != "inactive" && statusStr != "banned" {
-				response.BadRequest(c, "Invalid status value, must be 'active', 'inactive', or 'banned'")
-				return
-			}
-			user.Status = statusStr
-		} else {
-			response.BadRequest(c, "Invalid status field type")
+	if patchReq.Status != nil {
+		if *patchReq.Status != "active" && *patchReq.Status != "inactive" && *patchReq.Status != "banned" {
+			response.BadRequest(c, "Invalid status value, must be 'active', 'inactive', or 'banned'")
 			return
 		}
+		user.Status = *patchReq.Status
 	}
 
 	// Update the user
 	if err := h.userService.UpdateUser(c.Request.Context(), &user); err != nil {
 		logger.Error("Admin failed to patch user",
 			logger.Uint("user_id", uint(id)),
-			logger.Any("update_data", updateData),
+			logger.Any("patch_request", patchReq),
 			logger.Error2("error", err),
 		)
 		response.InternalServerError(c, "Failed to update user")
@@ -747,7 +740,7 @@ func (h *AdminUserHandler) PatchUser(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param ids body map[string][]uint true "User IDs"
+// @Param ids body BatchUserIDsRequest true "User IDs"
 // @Success 200 {object} response.StandardResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -755,9 +748,7 @@ func (h *AdminUserHandler) PatchUser(c *gin.Context) {
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /admin/users/bulk/restore [post]
 func (h *AdminUserHandler) BatchRestoreUsers(c *gin.Context) {
-	var requestData struct {
-		IDs []uint `json:"ids" binding:"required,min=1,max=100"`
-	}
+	var requestData BatchUserIDsRequest
 
 	if err := c.ShouldBindJSON(&requestData); err != nil {
 		response.BadRequest(c, err.Error())
@@ -774,7 +765,7 @@ func (h *AdminUserHandler) BatchRestoreUsers(c *gin.Context) {
 		return
 	}
 
-	response.SuccessWithMessage(c, "Users restored successfully", map[string]any{
+	response.SuccessWithMessage(c, "Users restored successfully", gin.H{
 		"restored_count": result.RestoredCount,
 		"failed_ids":     result.FailedIDs,
 	})

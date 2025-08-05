@@ -205,8 +205,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
+                                            "$ref": "#/definitions/dto.CacheBenchmarkResponse"
                                         }
                                     }
                                 }
@@ -246,8 +245,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
+                                            "$ref": "#/definitions/dto.CacheDashboardResponse"
                                         }
                                     }
                                 }
@@ -503,8 +501,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
+                                            "$ref": "#/definitions/dto.CacheWarmingResponse"
                                         }
                                     }
                                 }
@@ -1980,13 +1977,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "array",
-                                "items": {
-                                    "type": "integer"
-                                }
-                            }
+                            "$ref": "#/definitions/handlers.BatchUserIDsRequest"
                         }
                     }
                 ],
@@ -2049,13 +2040,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "array",
-                                "items": {
-                                    "type": "integer"
-                                }
-                            }
+                            "$ref": "#/definitions/handlers.BatchUserIDsRequest"
                         }
                     }
                 ],
@@ -2599,8 +2584,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/handlers.PatchUserRequest"
                         }
                     }
                 ],
@@ -2886,10 +2870,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/handlers.UpdateUserRoleRequest"
                         }
                     }
                 ],
@@ -2971,10 +2952,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/handlers.UpdateUserStatusRequest"
                         }
                     }
                 ],
@@ -3039,10 +3017,21 @@ const docTemplate = `{
                 "summary": "系统健康检查",
                 "responses": {
                     "200": {
-                        "description": "健康检查结果",
+                        "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.HealthCheckResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -3073,10 +3062,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/handlers.ChangePasswordRequest"
                         }
                     }
                 ],
@@ -3961,8 +3947,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
+                                            "$ref": "#/definitions/dto.InvoiceStatisticsResponse"
                                         }
                                     }
                                 }
@@ -4443,12 +4428,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "payment_date": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/handlers.MarkInvoiceAsPaidRequest"
                         }
                     }
                 ],
@@ -4518,12 +4498,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "reason": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/handlers.MarkInvoiceAsVoidRequest"
                         }
                     }
                 ],
@@ -5863,8 +5838,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
+                                            "$ref": "#/definitions/dto.ServerAPIHealthResponse"
                                         }
                                     }
                                 }
@@ -5925,8 +5899,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
+                                            "$ref": "#/definitions/dto.UniProxyPushResponse"
                                         }
                                     }
                                 }
@@ -6651,8 +6624,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "additionalProperties": true
+                                            "$ref": "#/definitions/dto.TrafficStatsResponse"
                                         }
                                     }
                                 }
@@ -6717,7 +6689,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object"
+                            "$ref": "#/definitions/handlers.CreateTaskRequest"
                         }
                     }
                 ],
@@ -6812,10 +6784,7 @@ const docTemplate = `{
                         "name": "request",
                         "in": "body",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "integer"
-                            }
+                            "$ref": "#/definitions/handlers.AcknowledgeAlertRequest"
                         }
                     }
                 ],
@@ -6823,25 +6792,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.StandardResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.NotFoundResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -6873,10 +6842,7 @@ const docTemplate = `{
                         "name": "request",
                         "in": "body",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/handlers.ResolveAlertRequest"
                         }
                     }
                 ],
@@ -6884,25 +6850,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.StandardResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.NotFoundResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -6935,8 +6901,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/handlers.SuppressAlertRequest"
                         }
                     }
                 ],
@@ -6944,25 +6909,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.StandardResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.NotFoundResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -6998,7 +6963,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Response"
+                                    "$ref": "#/definitions/response.StandardResponse"
                                 },
                                 {
                                     "type": "object",
@@ -7014,13 +6979,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -7054,7 +7019,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Response"
+                                    "$ref": "#/definitions/response.StandardResponse"
                                 },
                                 {
                                     "type": "object",
@@ -7070,19 +7035,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.NotFoundResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -7123,7 +7088,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Response"
+                                    "$ref": "#/definitions/response.StandardResponse"
                                 },
                                 {
                                     "type": "object",
@@ -7139,19 +7104,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.NotFoundResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -7181,25 +7146,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.StandardResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.NotFoundResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -7235,7 +7200,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Response"
+                                    "$ref": "#/definitions/response.StandardResponse"
                                 },
                                 {
                                     "type": "object",
@@ -7251,13 +7216,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -7392,7 +7357,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Response"
+                                    "$ref": "#/definitions/response.StandardResponse"
                                 },
                                 {
                                     "type": "object",
@@ -7408,19 +7373,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.NotFoundResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -7517,7 +7482,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Response"
+                                    "$ref": "#/definitions/response.StandardResponse"
                                 },
                                 {
                                     "type": "object",
@@ -7533,19 +7498,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.NotFoundResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -7634,7 +7599,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Response"
+                                    "$ref": "#/definitions/response.StandardResponse"
                                 },
                                 {
                                     "type": "object",
@@ -7650,19 +7615,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.NotFoundResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -7756,7 +7721,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Response"
+                                    "$ref": "#/definitions/response.StandardResponse"
                                 },
                                 {
                                     "type": "object",
@@ -7772,19 +7737,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.NotFoundResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -7820,7 +7785,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Response"
+                                    "$ref": "#/definitions/response.StandardResponse"
                                 },
                                 {
                                     "type": "object",
@@ -7836,13 +7801,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -7878,7 +7843,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Response"
+                                    "$ref": "#/definitions/response.StandardResponse"
                                 },
                                 {
                                     "type": "object",
@@ -7894,13 +7859,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -7947,25 +7912,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.StandardResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.NotFoundResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -7998,25 +7963,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.StandardResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.NotFoundResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -8052,7 +8017,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Response"
+                                    "$ref": "#/definitions/response.StandardResponse"
                                 },
                                 {
                                     "type": "object",
@@ -8068,13 +8033,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -8142,7 +8107,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Response"
+                                    "$ref": "#/definitions/response.StandardResponse"
                                 },
                                 {
                                     "type": "object",
@@ -8158,13 +8123,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -8198,7 +8163,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Response"
+                                    "$ref": "#/definitions/response.StandardResponse"
                                 },
                                 {
                                     "type": "object",
@@ -8214,19 +8179,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.NotFoundResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -8274,7 +8239,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Response"
+                                    "$ref": "#/definitions/response.StandardResponse"
                                 },
                                 {
                                     "type": "object",
@@ -8290,19 +8255,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.NotFoundResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -8397,7 +8362,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Response"
+                                    "$ref": "#/definitions/response.StandardResponse"
                                 },
                                 {
                                     "type": "object",
@@ -8413,19 +8378,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.NotFoundResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -8459,7 +8424,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Response"
+                                    "$ref": "#/definitions/response.StandardResponse"
                                 },
                                 {
                                     "type": "object",
@@ -8478,19 +8443,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.NotFoundResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -8538,7 +8503,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Response"
+                                    "$ref": "#/definitions/response.StandardResponse"
                                 },
                                 {
                                     "type": "object",
@@ -8557,19 +8522,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.NotFoundResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -8603,7 +8568,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Response"
+                                    "$ref": "#/definitions/response.StandardResponse"
                                 },
                                 {
                                     "type": "object",
@@ -8619,19 +8584,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.NotFoundResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -8705,7 +8670,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Response"
+                                    "$ref": "#/definitions/response.StandardResponse"
                                 },
                                 {
                                     "type": "object",
@@ -8721,19 +8686,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.NotFoundResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -8821,7 +8786,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Response"
+                                    "$ref": "#/definitions/response.StandardResponse"
                                 },
                                 {
                                     "type": "object",
@@ -8837,19 +8802,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.NotFoundResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -8928,7 +8893,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/response.Response"
+                                    "$ref": "#/definitions/response.StandardResponse"
                                 },
                                 {
                                     "type": "object",
@@ -8944,19 +8909,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.NotFoundResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -9358,6 +9323,379 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.ApplicationHealthResponse": {
+            "type": "object",
+            "properties": {
+                "modules": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "string",
+                    "example": "healthy"
+                }
+            }
+        },
+        "dto.BenchmarkResult": {
+            "type": "object",
+            "properties": {
+                "avg_latency_ms": {
+                    "type": "number",
+                    "example": 1.2
+                },
+                "failure_count": {
+                    "type": "integer",
+                    "example": 50
+                },
+                "operation_type": {
+                    "type": "string",
+                    "example": "get"
+                },
+                "success_count": {
+                    "type": "integer",
+                    "example": 4950
+                },
+                "throughput_ops": {
+                    "type": "number",
+                    "example": 500
+                },
+                "total_operations": {
+                    "type": "integer",
+                    "example": 5000
+                }
+            }
+        },
+        "dto.CacheBenchmarkResponse": {
+            "type": "object",
+            "properties": {
+                "avg_latency_ms": {
+                    "type": "number",
+                    "example": 1
+                },
+                "duration_ms": {
+                    "type": "integer",
+                    "example": 10000
+                },
+                "max_latency_ms": {
+                    "type": "number",
+                    "example": 10
+                },
+                "min_latency_ms": {
+                    "type": "number",
+                    "example": 0.1
+                },
+                "operations_per_sec": {
+                    "type": "number",
+                    "example": 1000
+                },
+                "results": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/dto.BenchmarkResult"
+                    }
+                },
+                "total_operations": {
+                    "type": "integer",
+                    "example": 10000
+                }
+            }
+        },
+        "dto.CacheDashboardResponse": {
+            "type": "object",
+            "properties": {
+                "alerts": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "health": {
+                    "$ref": "#/definitions/dto.CacheHealthResponse"
+                },
+                "invalidation": {
+                    "$ref": "#/definitions/dto.CacheInvalidationResponse"
+                },
+                "metrics": {
+                    "$ref": "#/definitions/dto.CacheMetricsResponse"
+                },
+                "performance": {
+                    "$ref": "#/definitions/dto.CachePerformanceResponse"
+                },
+                "warming": {
+                    "$ref": "#/definitions/dto.CacheWarmingResponse"
+                }
+            }
+        },
+        "dto.CacheHealthResponse": {
+            "type": "object",
+            "properties": {
+                "last_checked": {
+                    "type": "integer",
+                    "example": 1704067200
+                },
+                "memory_cache": {
+                    "type": "string",
+                    "example": "healthy"
+                },
+                "overall": {
+                    "type": "string",
+                    "example": "healthy"
+                },
+                "redis_cache": {
+                    "type": "string",
+                    "example": "healthy"
+                }
+            }
+        },
+        "dto.CacheInvalidationResponse": {
+            "type": "object",
+            "properties": {
+                "invalidation_rate": {
+                    "type": "number",
+                    "example": 0.05
+                },
+                "last_invalidation": {
+                    "type": "integer",
+                    "example": 1704067200
+                },
+                "pending_keys": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "recently_invalidated": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "dto.CacheMetricsResponse": {
+            "type": "object",
+            "properties": {
+                "avg_latency_ms": {
+                    "type": "number",
+                    "example": 2.5
+                },
+                "hit_rate": {
+                    "type": "number",
+                    "example": 0.85
+                },
+                "miss_rate": {
+                    "type": "number",
+                    "example": 0.15
+                },
+                "total_hits": {
+                    "type": "integer",
+                    "example": 1000
+                },
+                "total_misses": {
+                    "type": "integer",
+                    "example": 150
+                },
+                "total_requests": {
+                    "type": "integer",
+                    "example": 1150
+                }
+            }
+        },
+        "dto.CachePerformanceResponse": {
+            "type": "object",
+            "properties": {
+                "avg_response_time_ms": {
+                    "type": "number",
+                    "example": 1.2
+                },
+                "eviction_count": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "key_count": {
+                    "type": "integer",
+                    "example": 500
+                },
+                "memory_usage_bytes": {
+                    "type": "integer",
+                    "example": 1048576
+                },
+                "throughput_qps": {
+                    "type": "number",
+                    "example": 100.5
+                }
+            }
+        },
+        "dto.CacheWarmingResponse": {
+            "type": "object",
+            "properties": {
+                "duration_ms": {
+                    "type": "integer",
+                    "example": 5000
+                },
+                "in_progress": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "last_warmed": {
+                    "type": "integer",
+                    "example": 1704067200
+                },
+                "success_rate": {
+                    "type": "number",
+                    "example": 0.95
+                },
+                "warming_keys": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "dto.DatabaseHealthResponse": {
+            "type": "object",
+            "properties": {
+                "mysql": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "redis": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "dto.HealthCheckResponse": {
+            "type": "object",
+            "properties": {
+                "application": {
+                    "$ref": "#/definitions/dto.ApplicationHealthResponse"
+                },
+                "database": {
+                    "$ref": "#/definitions/dto.DatabaseHealthResponse"
+                }
+            }
+        },
+        "dto.InvoiceStatisticsResponse": {
+            "type": "object",
+            "properties": {
+                "monthly_breakdown": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.MonthlyInvoiceStats"
+                    }
+                },
+                "overdue_amount": {
+                    "type": "number",
+                    "example": 500
+                },
+                "paid_amount": {
+                    "type": "number",
+                    "example": 12000
+                },
+                "period": {
+                    "$ref": "#/definitions/dto.InvoiceStatsPeriod"
+                },
+                "status_breakdown": {
+                    "$ref": "#/definitions/dto.InvoiceStatusBreakdown"
+                },
+                "total_amount": {
+                    "type": "number",
+                    "example": 15000
+                },
+                "total_invoices": {
+                    "type": "integer",
+                    "example": 150
+                },
+                "unpaid_amount": {
+                    "type": "number",
+                    "example": 3000
+                }
+            }
+        },
+        "dto.InvoiceStatsPeriod": {
+            "type": "object",
+            "properties": {
+                "duration_days": {
+                    "type": "integer",
+                    "example": 31
+                },
+                "from_date": {
+                    "type": "string",
+                    "example": "2024-01-01"
+                },
+                "to_date": {
+                    "type": "string",
+                    "example": "2024-01-31"
+                }
+            }
+        },
+        "dto.InvoiceStatusBreakdown": {
+            "type": "object",
+            "properties": {
+                "cancelled": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "draft": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "overdue": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "paid": {
+                    "type": "integer",
+                    "example": 120
+                },
+                "pending": {
+                    "type": "integer",
+                    "example": 20
+                }
+            }
+        },
+        "dto.MonthlyInvoiceStats": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "example": 12
+                },
+                "month": {
+                    "type": "string",
+                    "example": "2024-01"
+                },
+                "paid_amount": {
+                    "type": "number",
+                    "example": 1000
+                },
+                "paid_count": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "total_amount": {
+                    "type": "number",
+                    "example": 1200
+                }
+            }
+        },
+        "dto.ServerAPIHealthResponse": {
+            "type": "object",
+            "properties": {
+                "service": {
+                    "type": "string",
+                    "example": "server-api"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "ok"
+                }
+            }
+        },
         "dto.SubscriptionOrderBasicDTO": {
             "type": "object",
             "properties": {
@@ -9416,6 +9754,68 @@ const docTemplate = `{
                 "user_id": {
                     "type": "integer",
                     "example": 1
+                }
+            }
+        },
+        "dto.TrafficStatsResponse": {
+            "type": "object",
+            "properties": {
+                "last_updated": {
+                    "type": "string",
+                    "example": "2024-01-15T10:30:00Z"
+                },
+                "period": {
+                    "type": "string",
+                    "example": "monthly"
+                },
+                "remaining_bytes": {
+                    "type": "integer",
+                    "example": 9663676416
+                },
+                "reset_date": {
+                    "type": "string",
+                    "example": "2024-02-01"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "active"
+                },
+                "subscription_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "total_bytes": {
+                    "type": "integer",
+                    "example": 10737418240
+                },
+                "usage_percent": {
+                    "type": "number",
+                    "example": 10
+                },
+                "used_bytes": {
+                    "type": "integer",
+                    "example": 1073741824
+                }
+            }
+        },
+        "dto.UniProxyPushResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Traffic data processed successfully"
+                },
+                "processed": {
+                    "type": "integer",
+                    "example": 100
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "timestamp": {
+                    "type": "integer",
+                    "example": 1704067200
                 }
             }
         },
@@ -11316,6 +11716,31 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.AcknowledgeAlertRequest": {
+            "type": "object",
+            "properties": {
+                "acknowledged_by": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "handlers.BatchUserIDsRequest": {
+            "type": "object",
+            "required": [
+                "ids"
+            ],
+            "properties": {
+                "ids": {
+                    "type": "array",
+                    "maxItems": 100,
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
         "handlers.BulkRetryActionRequest": {
             "type": "object",
             "required": [
@@ -11361,6 +11786,24 @@ const docTemplate = `{
                     "maxLength": 255,
                     "minLength": 1,
                     "example": "No longer needed"
+                }
+            }
+        },
+        "handlers.ChangePasswordRequest": {
+            "type": "object",
+            "required": [
+                "new_password",
+                "old_password"
+            ],
+            "properties": {
+                "new_password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "example": "newPassword123"
+                },
+                "old_password": {
+                    "type": "string",
+                    "example": "oldPassword123"
                 }
             }
         },
@@ -11416,6 +11859,80 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.CreateTaskRequest": {
+            "type": "object",
+            "required": [
+                "payload",
+                "type"
+            ],
+            "properties": {
+                "payload": {
+                    "type": "object"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "email"
+                }
+            }
+        },
+        "handlers.MarkInvoiceAsPaidRequest": {
+            "type": "object",
+            "required": [
+                "payment_date"
+            ],
+            "properties": {
+                "payment_date": {
+                    "type": "string",
+                    "example": "2024-01-01"
+                }
+            }
+        },
+        "handlers.MarkInvoiceAsVoidRequest": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "reason": {
+                    "type": "string",
+                    "example": "Customer request"
+                }
+            }
+        },
+        "handlers.PatchUserRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "role": {
+                    "type": "string",
+                    "enum": [
+                        "user",
+                        "admin"
+                    ],
+                    "example": "user"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "inactive",
+                        "banned"
+                    ],
+                    "example": "active"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "johndoe"
+                }
+            }
+        },
         "handlers.ResetPasswordRequest": {
             "type": "object",
             "required": [
@@ -11427,6 +11944,32 @@ const docTemplate = `{
                     "maxLength": 255,
                     "minLength": 6,
                     "example": "newSecurePassword123"
+                }
+            }
+        },
+        "handlers.ResolveAlertRequest": {
+            "type": "object",
+            "properties": {
+                "reason": {
+                    "type": "string",
+                    "example": "Issue fixed"
+                }
+            }
+        },
+        "handlers.SuppressAlertRequest": {
+            "type": "object",
+            "required": [
+                "duration_minutes",
+                "reason"
+            ],
+            "properties": {
+                "duration_minutes": {
+                    "type": "integer",
+                    "example": 60
+                },
+                "reason": {
+                    "type": "string",
+                    "example": "Maintenance window"
                 }
             }
         },
@@ -11468,8 +12011,14 @@ const docTemplate = `{
                 "cipher": {
                     "type": "string"
                 },
-                "obfs": {},
-                "obfs_settings": {},
+                "obfs": {
+                    "type": "string",
+                    "example": "tls1.2_ticket_auth"
+                },
+                "obfs_settings": {
+                    "type": "string",
+                    "example": "cloudflare.com"
+                },
                 "server_port": {
                     "type": "integer"
                 }
@@ -11483,7 +12032,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "speed_limit": {
-                    "description": "Speed limit (null for unlimited)"
+                    "description": "Speed limit (null for unlimited)",
+                    "type": "integer",
+                    "example": 100
                 },
                 "uuid": {
                     "description": "Subscription UUID",
@@ -11499,6 +12050,39 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/handlers.UniProxyUserItem"
                     }
+                }
+            }
+        },
+        "handlers.UpdateUserRoleRequest": {
+            "type": "object",
+            "required": [
+                "role"
+            ],
+            "properties": {
+                "role": {
+                    "type": "string",
+                    "enum": [
+                        "user",
+                        "admin"
+                    ],
+                    "example": "user"
+                }
+            }
+        },
+        "handlers.UpdateUserStatusRequest": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "inactive",
+                        "banned"
+                    ],
+                    "example": "active"
                 }
             }
         },

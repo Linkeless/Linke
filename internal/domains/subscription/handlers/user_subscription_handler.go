@@ -273,7 +273,7 @@ func (h *UserSubscriptionHandler) CancelSubscription(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Subscription ID"
-// @Success 200 {object} response.StandardResponse{data=map[string]any}
+// @Success 200 {object} response.StandardResponse{data=dto.TrafficStatsResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse

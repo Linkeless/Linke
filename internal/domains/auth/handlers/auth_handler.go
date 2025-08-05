@@ -17,6 +17,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// ChangePasswordRequest represents the password change request structure
+type ChangePasswordRequest struct {
+	OldPassword string `json:"old_password" binding:"required" example:"oldPassword123"`
+	NewPassword string `json:"new_password" binding:"required,min=6" example:"newPassword123"`
+}
+
 type AuthHandler struct {
 	cfg          *config.Config
 	oauthService interfaces.OAuthService
@@ -429,7 +435,7 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param passwords body map[string]string true "Password change data"
+// @Param passwords body ChangePasswordRequest true "Password change data"
 // @Success 200 {object} response.MessageOnlyResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -447,10 +453,7 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	var req struct {
-		OldPassword string `json:"old_password" binding:"required"`
-		NewPassword string `json:"new_password" binding:"required,min=6"`
-	}
+	var req ChangePasswordRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, err.Error())

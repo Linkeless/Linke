@@ -34,7 +34,7 @@ func NewApplicationHandler(
 // @Tags system
 // @Accept json
 // @Produce json
-// @Success 200 {object} map[string]any "健康检查结果"
+// @Success 200 {object} response.StandardResponse{data=dto.HealthCheckResponse}
 // @Router /app/system/health [get]
 func (h *ApplicationHandler) HealthCheck(c *gin.Context) {
 	ctx := c.Request.Context()

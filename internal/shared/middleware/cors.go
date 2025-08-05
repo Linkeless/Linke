@@ -53,8 +53,8 @@ func CORSWithConfig(config *CORSConfig) gin.HandlerFunc {
 		allowedOrigin := "*"
 		if len(config.AllowOrigins) > 0 {
 			allowedOrigin = ""
-			for _, allowedOrigin := range config.AllowOrigins {
-				if allowedOrigin == "*" || allowedOrigin == origin {
+			for _, configOrigin := range config.AllowOrigins {
+				if configOrigin == "*" || configOrigin == origin {
 					allowedOrigin = origin
 					break
 				}
