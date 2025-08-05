@@ -646,7 +646,7 @@ func (r *accountLockoutRepository) LockAccount(ctx context.Context, email string
 func (r *accountLockoutRepository) UnlockAccount(ctx context.Context, email string, reason string) error {
 	result := r.db.WithContext(ctx).Model(&entities.AccountLockout{}).
 		Where("email = ?", email).
-		Updates(map[string]interface{}{
+		Updates(map[string]any{
 			"locked_until": nil,
 			"lock_reason":  reason,
 			"updated_at":   time.Now(),
@@ -675,7 +675,7 @@ func (r *accountLockoutRepository) UnlockAccount(ctx context.Context, email stri
 func (r *accountLockoutRepository) ResetFailureCount(ctx context.Context, email string) error {
 	result := r.db.WithContext(ctx).Model(&entities.AccountLockout{}).
 		Where("email = ?", email).
-		Updates(map[string]interface{}{
+		Updates(map[string]any{
 			"failed_count": 0,
 			"updated_at":   time.Now(),
 		})
@@ -825,7 +825,7 @@ func (r *accountLockoutRepository) GetLockoutStats(ctx context.Context, since ti
 func (r *accountLockoutRepository) CleanupExpiredLockouts(ctx context.Context) (int64, error) {
 	result := r.db.WithContext(ctx).Model(&entities.AccountLockout{}).
 		Where("locked_until IS NOT NULL AND locked_until <= ?", time.Now()).
-		Updates(map[string]interface{}{
+		Updates(map[string]any{
 			"locked_until": nil,
 			"updated_at":   time.Now(),
 		})

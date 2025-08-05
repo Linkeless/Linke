@@ -10,10 +10,10 @@ import (
 // It extends GenericRepository with SubscriptionPlan-specific methods
 type SubscriptionPlanRepository interface {
 	framework.GenericRepository[entities.SubscriptionPlan, uint]
-	
+
 	// Subscription plan specific query methods
 	GetByCode(ctx context.Context, code string) (*entities.SubscriptionPlan, error)
-	
+
 	// Filter operations specific to subscription plans
 	ListActive(ctx context.Context, limit, offset int) ([]*entities.SubscriptionPlan, int64, error)
 	ListVisible(ctx context.Context, limit, offset int) ([]*entities.SubscriptionPlan, int64, error)

@@ -87,7 +87,7 @@ func (s *TicketMessageService) CreateTicketMessage(ctx context.Context, ticketID
 
 	// Update ticket's last response time
 	now := time.Now()
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"last_response_at": &now,
 	}
 
@@ -191,7 +191,7 @@ func (s *TicketMessageService) UpdateTicketMessage(ctx context.Context, messageI
 	}
 
 	// Prepare updates
-	updates := make(map[string]interface{})
+	updates := make(map[string]any)
 
 	if req.Content != nil {
 		updates["content"] = *req.Content

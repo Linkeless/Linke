@@ -301,7 +301,7 @@ func (r *paymentRetryRepository) GetAllRetries(ctx context.Context, filters *int
 
 func (r *paymentRetryRepository) CancelRetry(ctx context.Context, id uint, reason string) error {
 	now := time.Now()
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"status":       entities.PaymentRetryStatusCancelled,
 		"cancelled_at": &now,
 		"completed_at": &now,
@@ -316,7 +316,7 @@ func (r *paymentRetryRepository) CancelRetry(ctx context.Context, id uint, reaso
 }
 
 func (r *paymentRetryRepository) ResetRetry(ctx context.Context, id uint) error {
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"attempt_number":   0,
 		"status":           entities.PaymentRetryStatusPending,
 		"next_retry_at":    time.Now().Add(time.Hour), // Reset to 1 hour from now

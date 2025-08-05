@@ -12,7 +12,7 @@ import (
 type InvoiceRepository interface {
 	framework.UserScopedRepository[entities.Invoice, uint]
 	framework.TimeBasedRepository[entities.Invoice, uint]
-	
+
 	// Invoice-specific query methods
 	GetByInvoiceNumber(ctx context.Context, invoiceNumber string) (*entities.Invoice, error)
 

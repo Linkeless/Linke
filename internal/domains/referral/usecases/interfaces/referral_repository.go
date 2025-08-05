@@ -18,7 +18,7 @@ type InviteCodeRepository interface {
 	UpdateUsageCount(ctx context.Context, id uint, usedCount int) error
 	IncrementUsageCount(ctx context.Context, id uint) error
 
-	// Status-specific queries  
+	// Status-specific queries
 	ListByCreator(ctx context.Context, creatorID uint, limit, offset int) ([]*entities.InviteCode, int64, error)
 	ListActive(ctx context.Context, limit, offset int) ([]*entities.InviteCode, int64, error)
 	ListAvailable(ctx context.Context, limit, offset int) ([]*entities.InviteCode, int64, error)
@@ -39,7 +39,7 @@ type ReferralRepository interface {
 
 	// Statistics and analytics
 	CountByReferrer(ctx context.Context, referrerID uint) (int64, error)
-	GetReferralStats(ctx context.Context, referrerID uint) (map[string]interface{}, error)
+	GetReferralStats(ctx context.Context, referrerID uint) (map[string]any, error)
 }
 
 // ReferralCampaignRepository defines the interface for referral campaign data access operations

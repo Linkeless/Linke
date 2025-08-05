@@ -68,14 +68,13 @@ func (r *subscriptionPlanRepository) GetByCode(ctx context.Context, code string)
 	return &plan, nil
 }
 
-
 // ListActive lists active subscription plans
 func (r *subscriptionPlanRepository) ListActive(ctx context.Context, limit, offset int) ([]*entities.SubscriptionPlan, int64, error) {
 	var plans []*entities.SubscriptionPlan
 	var total int64
 
 	condition := "status = ?"
-	args := []interface{}{entities.SubscriptionPlanStatusActive}
+	args := []any{entities.SubscriptionPlanStatusActive}
 
 	// Count total active plans
 	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
@@ -101,7 +100,7 @@ func (r *subscriptionPlanRepository) ListVisible(ctx context.Context, limit, off
 	var total int64
 
 	condition := "is_visible = ?"
-	args := []interface{}{true}
+	args := []any{true}
 
 	// Count total visible plans
 	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
@@ -120,8 +119,6 @@ func (r *subscriptionPlanRepository) ListVisible(ctx context.Context, limit, off
 
 	return plans, total, nil
 }
-
-
 
 // ListByCurrency lists subscription plans by currency
 func (r *subscriptionPlanRepository) ListByCurrency(ctx context.Context, currency string, limit, offset int) ([]*entities.SubscriptionPlan, int64, error) {
@@ -187,7 +184,7 @@ func (r *subscriptionPlanRepository) ListPopular(ctx context.Context, limit, off
 	var total int64
 
 	condition := "is_popular = ? AND status = ? AND is_visible = ?"
-	args := []interface{}{true, entities.SubscriptionPlanStatusActive, true}
+	args := []any{true, entities.SubscriptionPlanStatusActive, true}
 
 	// Count total popular plans
 	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
@@ -213,7 +210,7 @@ func (r *subscriptionPlanRepository) ListRecommended(ctx context.Context, limit,
 	var total int64
 
 	condition := "is_recommended = ? AND status = ? AND is_visible = ?"
-	args := []interface{}{true, entities.SubscriptionPlanStatusActive, true}
+	args := []any{true, entities.SubscriptionPlanStatusActive, true}
 
 	// Count total recommended plans
 	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
@@ -239,7 +236,7 @@ func (r *subscriptionPlanRepository) ListPublic(ctx context.Context, limit, offs
 	var total int64
 
 	condition := "status = ? AND is_visible = ?"
-	args := []interface{}{entities.SubscriptionPlanStatusActive, true}
+	args := []any{entities.SubscriptionPlanStatusActive, true}
 
 	// Count total public plans
 	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
@@ -265,7 +262,7 @@ func (r *subscriptionPlanRepository) ListPublicByCurrency(ctx context.Context, c
 	var total int64
 
 	condition := "status = ? AND is_visible = ? AND currency = ?"
-	args := []interface{}{entities.SubscriptionPlanStatusActive, true, currency}
+	args := []any{entities.SubscriptionPlanStatusActive, true, currency}
 
 	// Count total public plans by currency
 	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
@@ -297,7 +294,7 @@ func (r *subscriptionPlanRepository) ListByPriceRange(ctx context.Context, minPr
 	var total int64
 
 	condition := "price BETWEEN ? AND ? AND currency = ?"
-	args := []interface{}{minPrice, maxPrice, currency}
+	args := []any{minPrice, maxPrice, currency}
 
 	// Count total plans in price range
 	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
@@ -360,8 +357,6 @@ func (r *subscriptionPlanRepository) GetMostExpensive(ctx context.Context, curre
 	}
 	return &plan, nil
 }
-
-
 
 // UpdateVisibility updates a subscription plan's visibility
 func (r *subscriptionPlanRepository) UpdateVisibility(ctx context.Context, id uint, isVisible bool) error {
@@ -455,7 +450,6 @@ func (r *subscriptionPlanRepository) UpdateRecommendedFlag(ctx context.Context, 
 	return nil
 }
 
-
 // BatchUpdateVisibility updates visibility for multiple subscription plans
 func (r *subscriptionPlanRepository) BatchUpdateVisibility(ctx context.Context, ids []uint, isVisible bool) (int, []uint, error) {
 	var updatedCount int
@@ -477,9 +471,6 @@ func (r *subscriptionPlanRepository) BatchUpdateVisibility(ctx context.Context, 
 
 	return updatedCount, failedIDs, nil
 }
-
-
-
 
 // CountVisible returns the count of visible subscription plans
 func (r *subscriptionPlanRepository) CountVisible(ctx context.Context) (int64, error) {
@@ -519,7 +510,6 @@ func (r *subscriptionPlanRepository) ExistsByCode(ctx context.Context, code stri
 	}
 	return count > 0, nil
 }
-
 
 // GetOrderedPlans gets subscription plans ordered by a specific field
 func (r *subscriptionPlanRepository) GetOrderedPlans(ctx context.Context, orderBy string, ascending bool, limit, offset int) ([]*entities.SubscriptionPlan, int64, error) {
@@ -1011,7 +1001,7 @@ func (r *userSubscriptionRepository) CountTrialSubscriptions(ctx context.Context
 func (r *userSubscriptionRepository) CountByUser(ctx context.Context, userID uint) (int64, error) {
 	return 0, fmt.Errorf("not implemented")
 }
-func (r *userSubscriptionRepository) GetSubscriptionStats(ctx context.Context, since time.Time) (map[string]interface{}, error) {
+func (r *userSubscriptionRepository) GetSubscriptionStats(ctx context.Context, since time.Time) (map[string]any, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 func (r *userSubscriptionRepository) GetChurnRate(ctx context.Context, period time.Duration) (float64, error) {
@@ -1035,7 +1025,7 @@ func (r *userSubscriptionRepository) UserHasSubscriptionToPlan(ctx context.Conte
 func (r *userSubscriptionRepository) ListByCurrency(ctx context.Context, currency string, limit, offset int) ([]*entities.UserSubscription, int64, error) {
 	return nil, 0, fmt.Errorf("not implemented")
 }
-func (r *userSubscriptionRepository) ListWithFilters(ctx context.Context, filters map[string]interface{}, limit, offset int) ([]*entities.UserSubscription, int64, error) {
+func (r *userSubscriptionRepository) ListWithFilters(ctx context.Context, filters map[string]any, limit, offset int) ([]*entities.UserSubscription, int64, error) {
 	return nil, 0, fmt.Errorf("not implemented")
 }
 func (r *userSubscriptionRepository) GetSubscriptionsNeedingAttention(ctx context.Context, limit int) ([]*entities.UserSubscription, error) {

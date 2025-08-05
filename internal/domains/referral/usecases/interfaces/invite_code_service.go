@@ -32,8 +32,8 @@ type InviteCodeService interface {
 	GetUserInviteCodeUsage(ctx context.Context, userID uint, limit, offset int) ([]*entities.InviteCodeUsage, int64, error)
 
 	// Invite code statistics
-	GetInviteCodeStatistics(ctx context.Context, inviteCodeID uint) (map[string]interface{}, error)
-	GetUserInviteCodeStatistics(ctx context.Context, userID uint) (map[string]interface{}, error)
+	GetInviteCodeStatistics(ctx context.Context, inviteCodeID uint) (map[string]any, error)
+	GetUserInviteCodeStatistics(ctx context.Context, userID uint) (map[string]any, error)
 
 	// Utility
 	GenerateInviteCode() (string, error)

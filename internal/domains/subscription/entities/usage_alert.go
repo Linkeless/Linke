@@ -351,44 +351,44 @@ func (ua *UsageAlert) ToResponse() *UsageAlertResponse {
 
 // AlertConfigurationResponse represents the alert configuration data structure for API responses
 type AlertConfigurationResponse struct {
-	ID                   uint                  `json:"id" example:"1"`                                             // Configuration ID
-	UserSubscriptionID   uint                  `json:"user_subscription_id" example:"1"`                           // Subscription ID
-	UsageType            string                `json:"usage_type" example:"traffic"`                               // Usage type to monitor
-	ThresholdType        string                `json:"threshold_type" example:"percentage"`                        // Threshold type
-	Threshold            float64               `json:"threshold" example:"80.0"`                                   // Threshold value
-	IsEnabled            bool                  `json:"is_enabled" example:"true"`                                  // Whether enabled
-	NotificationChannels []NotificationChannel `json:"notification_channels"`                                      // Notification channels
-	CooldownMinutes      int                   `json:"cooldown_minutes" example:"60"`                              // Cooldown in minutes
-	Name                 string                `json:"name" example:"Traffic 80% Alert"`                           // Alert name
-	Description          string                `json:"description" example:"Alert when traffic usage reaches 80%"` // Description
-	Priority             string                `json:"priority" example:"medium"`                                  // Priority level
-	CreatedAt            time.Time             `json:"created_at" swaggertype:"string" format:"date-time" example:"2024-01-01T00:00:00Z"`                  // Creation time
-	UpdatedAt            time.Time             `json:"updated_at" swaggertype:"string" format:"date-time" example:"2024-01-01T00:00:00Z"`                  // Update time
+	ID                   uint                  `json:"id" example:"1"`                                                                    // Configuration ID
+	UserSubscriptionID   uint                  `json:"user_subscription_id" example:"1"`                                                  // Subscription ID
+	UsageType            string                `json:"usage_type" example:"traffic"`                                                      // Usage type to monitor
+	ThresholdType        string                `json:"threshold_type" example:"percentage"`                                               // Threshold type
+	Threshold            float64               `json:"threshold" example:"80.0"`                                                          // Threshold value
+	IsEnabled            bool                  `json:"is_enabled" example:"true"`                                                         // Whether enabled
+	NotificationChannels []NotificationChannel `json:"notification_channels"`                                                             // Notification channels
+	CooldownMinutes      int                   `json:"cooldown_minutes" example:"60"`                                                     // Cooldown in minutes
+	Name                 string                `json:"name" example:"Traffic 80% Alert"`                                                  // Alert name
+	Description          string                `json:"description" example:"Alert when traffic usage reaches 80%"`                        // Description
+	Priority             string                `json:"priority" example:"medium"`                                                         // Priority level
+	CreatedAt            time.Time             `json:"created_at" swaggertype:"string" format:"date-time" example:"2024-01-01T00:00:00Z"` // Creation time
+	UpdatedAt            time.Time             `json:"updated_at" swaggertype:"string" format:"date-time" example:"2024-01-01T00:00:00Z"` // Update time
 }
 
 // UsageAlertResponse represents the usage alert data structure for API responses
 type UsageAlertResponse struct {
-	ID                      uint                 `json:"id" example:"1"`                                                  // Alert ID
-	UserSubscriptionID      uint                 `json:"user_subscription_id" example:"1"`                                // Subscription ID
-	AlertConfigurationID    uint                 `json:"alert_configuration_id" example:"1"`                              // Configuration ID
-	UsageType               string               `json:"usage_type" example:"traffic"`                                    // Usage type
-	CurrentUsage            int64                `json:"current_usage" example:"8589934592"`                              // Current usage (bytes)
-	UsageLimit              int64                `json:"usage_limit" example:"10737418240"`                               // Usage limit (bytes)
-	ThresholdValue          float64              `json:"threshold_value" example:"80.0"`                                  // Threshold that was exceeded
-	UsagePercent            float64              `json:"usage_percent" example:"80.5"`                                    // Usage percentage
-	Status                  string               `json:"status" example:"fired"`                                          // Alert status
-	Severity                string               `json:"severity" example:"warning"`                                      // Alert severity
+	ID                      uint                 `json:"id" example:"1"`                                                                                          // Alert ID
+	UserSubscriptionID      uint                 `json:"user_subscription_id" example:"1"`                                                                        // Subscription ID
+	AlertConfigurationID    uint                 `json:"alert_configuration_id" example:"1"`                                                                      // Configuration ID
+	UsageType               string               `json:"usage_type" example:"traffic"`                                                                            // Usage type
+	CurrentUsage            int64                `json:"current_usage" example:"8589934592"`                                                                      // Current usage (bytes)
+	UsageLimit              int64                `json:"usage_limit" example:"10737418240"`                                                                       // Usage limit (bytes)
+	ThresholdValue          float64              `json:"threshold_value" example:"80.0"`                                                                          // Threshold that was exceeded
+	UsagePercent            float64              `json:"usage_percent" example:"80.5"`                                                                            // Usage percentage
+	Status                  string               `json:"status" example:"fired"`                                                                                  // Alert status
+	Severity                string               `json:"severity" example:"warning"`                                                                              // Alert severity
 	FiredAt                 time.Time            `json:"fired_at" swaggertype:"string" format:"date-time" example:"2024-01-01T12:00:00Z"`                         // When fired
 	ResolvedAt              *time.Time           `json:"resolved_at,omitempty" swaggertype:"string" format:"date-time" example:"2024-01-01T13:00:00Z"`            // When resolved
-	NotificationsSent       int                  `json:"notifications_sent" example:"3"`                                  // Notifications sent count
+	NotificationsSent       int                  `json:"notifications_sent" example:"3"`                                                                          // Notifications sent count
 	LastNotificationSent    *time.Time           `json:"last_notification_sent,omitempty" swaggertype:"string" format:"date-time" example:"2024-01-01T12:30:00Z"` // Last notification time
-	NotificationChannels    string               `json:"notification_channels"`                                           // Notification channels used
-	NotificationResults     []NotificationResult `json:"notification_results"`                                            // Notification results
-	Message                 string               `json:"message" example:"Traffic usage has reached 80% of your limit"`   // Alert message
-	Metadata                string               `json:"metadata,omitempty"`                                              // Additional metadata
-	IsActive                bool                 `json:"is_active" example:"true"`                                        // Whether alert is active
-	IsResolved              bool                 `json:"is_resolved" example:"false"`                                     // Whether alert is resolved
-	DurationSinceFirstFired string               `json:"duration_since_first_fired" example:"30m" swaggertype:"string"`   // Duration since first fired (as string)
+	NotificationChannels    string               `json:"notification_channels"`                                                                                   // Notification channels used
+	NotificationResults     []NotificationResult `json:"notification_results"`                                                                                    // Notification results
+	Message                 string               `json:"message" example:"Traffic usage has reached 80% of your limit"`                                           // Alert message
+	Metadata                string               `json:"metadata,omitempty"`                                                                                      // Additional metadata
+	IsActive                bool                 `json:"is_active" example:"true"`                                                                                // Whether alert is active
+	IsResolved              bool                 `json:"is_resolved" example:"false"`                                                                             // Whether alert is resolved
+	DurationSinceFirstFired string               `json:"duration_since_first_fired" example:"30m" swaggertype:"string"`                                           // Duration since first fired (as string)
 	CreatedAt               time.Time            `json:"created_at" swaggertype:"string" format:"date-time" example:"2024-01-01T12:00:00Z"`                       // Creation time
 	UpdatedAt               time.Time            `json:"updated_at" swaggertype:"string" format:"date-time" example:"2024-01-01T12:00:00Z"`                       // Update time
 }

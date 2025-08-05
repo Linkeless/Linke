@@ -9,6 +9,8 @@ import (
 	"linke/internal/domains/auth/handlers"
 	"linke/internal/domains/auth/usecases/implementations"
 	"linke/internal/domains/auth/usecases/interfaces"
+	referralInterfaces "linke/internal/domains/referral/usecases/interfaces"
+	userInterfaces "linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/shared/config"
 )
 
@@ -59,7 +61,16 @@ var Module = fx.Module("auth",
 			fx.As(new(interfaces.OAuthService)),
 		),
 		fx.Annotate(
-			implementations.NewAuthService,
+			func(
+				db *gorm.DB,
+				userService userInterfaces.UserService,
+				userRepository userInterfaces.UserRepository,
+				jwtService interfaces.JWTService,
+				inviteCodeService referralInterfaces.InviteCodeService,
+				loginSecurityService interfaces.LoginSecurityService,
+			) interfaces.AuthService {
+				return implementations.NewAuthService(db, userService, userRepository, jwtService, inviteCodeService, loginSecurityService)
+			},
 			fx.As(new(interfaces.AuthService)),
 		),
 	),

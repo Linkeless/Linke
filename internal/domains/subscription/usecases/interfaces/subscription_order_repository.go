@@ -12,7 +12,7 @@ import (
 type SubscriptionOrderRepository interface {
 	framework.UserScopedRepository[entities.SubscriptionOrder, uint]
 	framework.TimeBasedRepository[entities.SubscriptionOrder, uint]
-	
+
 	// Subscription order specific query methods
 	GetByOrderNumber(ctx context.Context, orderNumber string) (*entities.SubscriptionOrder, error)
 

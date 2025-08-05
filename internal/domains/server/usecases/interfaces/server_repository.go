@@ -23,7 +23,7 @@ type ShadowsocksServerRepository interface {
 	ListByGroup(ctx context.Context, groupID uint, limit, offset int) ([]*entities.ShadowsocksServer, int64, error)
 	CountByGroup(ctx context.Context, groupID uint) (int64, error)
 
-	// Status operations  
+	// Status operations
 	ListActive(ctx context.Context, limit, offset int) ([]*entities.ShadowsocksServer, int64, error)
 
 	// Location operations

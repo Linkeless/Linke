@@ -125,10 +125,10 @@ func (cps *CachedPDFService) WarmCache(ctx context.Context, invoices []*entities
 }
 
 // GetCacheStats returns cache statistics for PDF generation
-func (cps *CachedPDFService) GetCacheStats(ctx context.Context) map[string]interface{} {
+func (cps *CachedPDFService) GetCacheStats(ctx context.Context) map[string]any {
 	// This would depend on the cache implementation
 	// For now, return basic info
-	return map[string]interface{}{
+	return map[string]any{
 		"cache_ttl_hours": cps.cacheTTL.Hours(),
 		"service_type":    "cached_pdf_service",
 	}

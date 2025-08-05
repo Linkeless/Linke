@@ -168,7 +168,7 @@ func (s *ShadowsocksServerService) UpdateShadowsocksServer(ctx context.Context, 
 	}
 
 	// Update fields
-	updates := make(map[string]interface{})
+	updates := make(map[string]any)
 	updates["updated_at"] = int(time.Now().Unix())
 
 	if req.GroupID != nil {
@@ -296,7 +296,7 @@ func (s *ShadowsocksServerService) UpdateServerStatus(ctx context.Context, serve
 }
 
 // BulkUpdateServers updates multiple shadowsocks servers
-func (s *ShadowsocksServerService) BulkUpdateServers(ctx context.Context, serverIDs []uint, updates map[string]interface{}) error {
+func (s *ShadowsocksServerService) BulkUpdateServers(ctx context.Context, serverIDs []uint, updates map[string]any) error {
 	if len(serverIDs) == 0 {
 		return nil
 	}
@@ -315,7 +315,7 @@ func (s *ShadowsocksServerService) BulkUpdateServers(ctx context.Context, server
 }
 
 // CheckServerHealth checks a shadowsocks server's health
-func (s *ShadowsocksServerService) CheckServerHealth(ctx context.Context, serverID uint) (map[string]interface{}, error) {
+func (s *ShadowsocksServerService) CheckServerHealth(ctx context.Context, serverID uint) (map[string]any, error) {
 	// TODO: Implement actual health check logic
 	// For now, return a placeholder response
 	server, err := s.GetShadowsocksServer(ctx, serverID)
@@ -323,7 +323,7 @@ func (s *ShadowsocksServerService) CheckServerHealth(ctx context.Context, server
 		return nil, err
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"server_id":  serverID,
 		"status":     "unknown", // TODO: Implement actual health check
 		"host":       server.Host,
@@ -333,7 +333,7 @@ func (s *ShadowsocksServerService) CheckServerHealth(ctx context.Context, server
 }
 
 // GetServerStatistics gets a shadowsocks server's statistics
-func (s *ShadowsocksServerService) GetServerStatistics(ctx context.Context, serverID uint) (map[string]interface{}, error) {
+func (s *ShadowsocksServerService) GetServerStatistics(ctx context.Context, serverID uint) (map[string]any, error) {
 	// TODO: Implement actual statistics collection
 	// For now, return a placeholder response
 	server, err := s.GetShadowsocksServer(ctx, serverID)
@@ -341,7 +341,7 @@ func (s *ShadowsocksServerService) GetServerStatistics(ctx context.Context, serv
 		return nil, err
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"server_id":      serverID,
 		"connections":    0,    // TODO: Implement actual stats
 		"bandwidth_up":   0,    // TODO: Implement actual stats

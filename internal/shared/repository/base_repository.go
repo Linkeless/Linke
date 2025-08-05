@@ -194,7 +194,7 @@ func (r *BaseRepositoryImpl[T, ID]) Search(ctx context.Context, query string, li
 	// Use reflection to check if entity has searchable fields
 	entityType := reflect.TypeOf(new(T)).Elem()
 	var whereConditions []string
-	var whereArgs []interface{}
+	var whereArgs []any
 	
 	for i := 0; i < entityType.NumField(); i++ {
 		field := entityType.Field(i)
@@ -349,7 +349,7 @@ func (r *BaseRepositoryImpl[T, ID]) ExistsByID(ctx context.Context, id ID) (bool
 }
 
 // Advanced filtering
-func (r *BaseRepositoryImpl[T, ID]) ListWithFilters(ctx context.Context, filters map[string]interface{}, limit, offset int) ([]*T, int64, error) {
+func (r *BaseRepositoryImpl[T, ID]) ListWithFilters(ctx context.Context, filters map[string]any, limit, offset int) ([]*T, int64, error) {
 	var entities []*T
 	var total int64
 

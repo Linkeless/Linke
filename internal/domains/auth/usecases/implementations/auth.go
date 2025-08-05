@@ -2,6 +2,7 @@ package implementations
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -23,15 +24,17 @@ import (
 type AuthService struct {
 	db                   *gorm.DB
 	userService          userInterfaces.UserService
+	userRepository       userInterfaces.UserRepository
 	jwtService           interfaces.JWTService
 	inviteCodeService    referralInterfaces.InviteCodeService
 	loginSecurityService interfaces.LoginSecurityService
 }
 
-func NewAuthService(db *gorm.DB, userService userInterfaces.UserService, jwtService interfaces.JWTService, inviteCodeService referralInterfaces.InviteCodeService, loginSecurityService interfaces.LoginSecurityService) *AuthService {
+func NewAuthService(db *gorm.DB, userService userInterfaces.UserService, userRepository userInterfaces.UserRepository, jwtService interfaces.JWTService, inviteCodeService referralInterfaces.InviteCodeService, loginSecurityService interfaces.LoginSecurityService) *AuthService {
 	return &AuthService{
 		db:                   db,
 		userService:          userService,
+		userRepository:       userRepository,
 		jwtService:           jwtService,
 		inviteCodeService:    inviteCodeService,
 		loginSecurityService: loginSecurityService,
@@ -489,4 +492,96 @@ func (a *AuthService) Logout(ctx context.Context, tokenString string, userID uin
 		logger.Uint("user_id", userID))
 
 	return nil
+}
+
+// CreateOrUpdateOAuthUser creates a new user or updates an existing user from OAuth provider
+func (a *AuthService) CreateOrUpdateOAuthUser(ctx context.Context, userInfo *interfaces.OAuthUserInfo) (*userEntities.User, error) {
+	var user *userEntities.User
+	var err error
+
+	// Find user by provider-specific ID
+	switch userInfo.Provider {
+	case "google":
+		user, err = a.userRepository.GetByGoogleID(ctx, userInfo.ID)
+	case "github":
+		user, err = a.userRepository.GetByGitHubID(ctx, userInfo.ID)
+	case "telegram":
+		user, err = a.userRepository.GetByTelegramID(ctx, userInfo.ID)
+	default:
+		return nil, fmt.Errorf("unsupported OAuth provider: %s", userInfo.Provider)
+	}
+
+	// If user doesn't exist, create a new one
+	if err != nil && err == gorm.ErrRecordNotFound {
+		// Create new user entity
+		newUser := &userEntities.User{
+			Email:    userInfo.Email,
+			Name:     userInfo.Name,
+			Avatar:   userInfo.Avatar,
+			Username: userInfo.Username,
+			Provider: userInfo.Provider,
+			Status:   userEntities.UserStatusActive,
+			Role:     userEntities.UserRoleUser,
+		}
+
+		// Set provider-specific ID
+		switch userInfo.Provider {
+		case "google":
+			newUser.GoogleID = &userInfo.ID
+		case "github":
+			newUser.GitHubID = &userInfo.ID
+		case "telegram":
+			newUser.TelegramID = &userInfo.ID
+		}
+
+		// Set provider data
+		providerDataBytes, _ := json.Marshal(userInfo)
+		providerDataStr := string(providerDataBytes)
+		newUser.ProviderData = &providerDataStr
+
+		// Create the user
+		if err := a.userRepository.Create(ctx, newUser); err != nil {
+			return nil, fmt.Errorf("failed to create OAuth user: %w", err)
+		}
+
+		logger.Info("New OAuth user created",
+			logger.String("provider", userInfo.Provider),
+			logger.String("provider_id", userInfo.ID),
+			logger.Uint("user_id", newUser.ID),
+		)
+
+		return newUser, nil
+	} else if err != nil {
+		return nil, fmt.Errorf("failed to check existing OAuth user: %w", err)
+	}
+
+	// User exists - check if data has changed (only name and avatar)
+	dataChanged := false
+	if user.Name != userInfo.Name {
+		user.Name = userInfo.Name
+		dataChanged = true
+	}
+	if user.Avatar != userInfo.Avatar {
+		user.Avatar = userInfo.Avatar
+		dataChanged = true
+	}
+
+	if dataChanged {
+		// Update provider data to keep it current
+		providerDataBytes, _ := json.Marshal(userInfo)
+		providerDataStr := string(providerDataBytes)
+		user.ProviderData = &providerDataStr
+
+		if err := a.userRepository.Update(ctx, user); err != nil {
+			return nil, fmt.Errorf("failed to update OAuth user: %w", err)
+		}
+
+		logger.Info("OAuth user profile updated",
+			logger.String("provider", userInfo.Provider),
+			logger.String("provider_id", userInfo.ID),
+			logger.Uint("user_id", user.ID),
+		)
+	}
+
+	return user, nil
 }

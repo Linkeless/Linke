@@ -685,8 +685,8 @@ func (w *SubscriptionWorkflow) BatchProcessSubscriptionRenewals(ctx context.Cont
 
 // GetWorkflowStatus 获取工作流状态信息
 // 用于监控和诊断工作流健康状况
-func (w *SubscriptionWorkflow) GetWorkflowStatus(ctx context.Context) map[string]interface{} {
-	status := map[string]interface{}{
+func (w *SubscriptionWorkflow) GetWorkflowStatus(ctx context.Context) map[string]any {
+	status := map[string]any{
 		"workflow_name": "SubscriptionWorkflow",
 		"status":        "healthy",
 		"timestamp":     time.Now().Format(time.RFC3339),

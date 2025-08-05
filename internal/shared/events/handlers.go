@@ -43,7 +43,7 @@ func (h *CrossDomainEventHandlers) PaymentCompletedHandler() EventHandler {
 			// 3. Send confirmation notifications
 
 			// For now, we'll publish follow-up events to demonstrate the flow
-			if orderData, ok := paymentEvent.EventData().(map[string]interface{}); ok {
+			if orderData, ok := paymentEvent.EventData().(map[string]any); ok {
 				if orderIDFloat, exists := orderData["order_id"]; exists {
 					if orderID, ok := orderIDFloat.(float64); ok {
 						// Create order paid event
@@ -51,7 +51,7 @@ func (h *CrossDomainEventHandlers) PaymentCompletedHandler() EventHandler {
 							EventTypeOrderPaid,
 							uint(orderID),
 							paymentEvent.UserID,
-							map[string]interface{}{
+							map[string]any{
 								"payment_id": paymentEvent.PaymentID,
 								"amount":     paymentEvent.Amount,
 								"paid_at":    paymentEvent.EventTime(),
@@ -102,7 +102,7 @@ func (h *CrossDomainEventHandlers) OrderPaidHandler() EventHandler {
 			// 3. Update user access
 
 			// Simulate invoice creation
-			orderData := orderEvent.EventData().(map[string]interface{})
+			orderData := orderEvent.EventData().(map[string]any)
 			amount, _ := orderData["amount"].(float64)
 
 			// Create invoice event
@@ -112,7 +112,7 @@ func (h *CrossDomainEventHandlers) OrderPaidHandler() EventHandler {
 				orderEvent.OrderID,
 				orderEvent.UserID,
 				amount,
-				map[string]interface{}{
+				map[string]any{
 					"order_id":   orderEvent.OrderID,
 					"user_id":    orderEvent.UserID,
 					"amount":     amount,
@@ -135,7 +135,7 @@ func (h *CrossDomainEventHandlers) OrderPaidHandler() EventHandler {
 				EventTypeSubscriptionActivated,
 				0, // This would be the actual subscription ID from the service
 				orderEvent.UserID,
-				map[string]interface{}{
+				map[string]any{
 					"order_id":     orderEvent.OrderID,
 					"user_id":      orderEvent.UserID,
 					"activated_at": orderEvent.EventTime(),
@@ -187,7 +187,7 @@ func (h *CrossDomainEventHandlers) SubscriptionExpiredHandler() EventHandler {
 			userEvent := NewUserEvent(
 				EventTypeUserStatusChanged,
 				subscriptionEvent.UserID,
-				map[string]interface{}{
+				map[string]any{
 					"user_id":         subscriptionEvent.UserID,
 					"old_status":      "active",
 					"new_status":      "expired",
@@ -238,11 +238,11 @@ func (h *CrossDomainEventHandlers) UserDeletedHandler() EventHandler {
 
 			// For demonstration, create subscription cancellation events
 			// In real implementation, you'd query the subscription service for active subscriptions
-			userData := userEvent.EventData().(map[string]interface{})
+			userData := userEvent.EventData().(map[string]any)
 			if activeSubscriptions, exists := userData["active_subscriptions"]; exists {
-				if subscriptions, ok := activeSubscriptions.([]interface{}); ok {
+				if subscriptions, ok := activeSubscriptions.([]any); ok {
 					for _, sub := range subscriptions {
-						if subMap, ok := sub.(map[string]interface{}); ok {
+						if subMap, ok := sub.(map[string]any); ok {
 							if subIDFloat, exists := subMap["id"]; exists {
 								if subID, ok := subIDFloat.(float64); ok {
 									// Create subscription cancellation event
@@ -250,7 +250,7 @@ func (h *CrossDomainEventHandlers) UserDeletedHandler() EventHandler {
 										EventTypeSubscriptionCancelled,
 										uint(subID),
 										userEvent.UserID,
-										map[string]interface{}{
+										map[string]any{
 											"subscription_id": uint(subID),
 											"user_id":         userEvent.UserID,
 											"reason":          "user_deleted",
@@ -305,7 +305,7 @@ func (h *CrossDomainEventHandlers) PaymentFailedHandler() EventHandler {
 			// 3. Possibly retry payment or offer alternatives
 
 			// Extract order ID from payment data
-			if orderData, ok := paymentEvent.EventData().(map[string]interface{}); ok {
+			if orderData, ok := paymentEvent.EventData().(map[string]any); ok {
 				if orderIDFloat, exists := orderData["order_id"]; exists {
 					if orderID, ok := orderIDFloat.(float64); ok {
 						// Create order cancellation event
@@ -313,7 +313,7 @@ func (h *CrossDomainEventHandlers) PaymentFailedHandler() EventHandler {
 							EventTypeOrderCancelled,
 							uint(orderID),
 							paymentEvent.UserID,
-							map[string]interface{}{
+							map[string]any{
 								"order_id":     uint(orderID),
 								"user_id":      paymentEvent.UserID,
 								"reason":       "payment_failed",
@@ -365,7 +365,7 @@ func (h *CrossDomainEventHandlers) InvoiceOverdueHandler() EventHandler {
 			// 3. Initiate collection processes
 
 			// Extract subscription ID from invoice data
-			if invoiceData, ok := invoiceEvent.EventData().(map[string]interface{}); ok {
+			if invoiceData, ok := invoiceEvent.EventData().(map[string]any); ok {
 				if subscriptionIDFloat, exists := invoiceData["subscription_id"]; exists {
 					if subscriptionID, ok := subscriptionIDFloat.(float64); ok {
 						// Create subscription suspension event
@@ -373,7 +373,7 @@ func (h *CrossDomainEventHandlers) InvoiceOverdueHandler() EventHandler {
 							EventTypeSubscriptionSuspended,
 							uint(subscriptionID),
 							invoiceEvent.UserID,
-							map[string]interface{}{
+							map[string]any{
 								"subscription_id": uint(subscriptionID),
 								"user_id":         invoiceEvent.UserID,
 								"reason":          "invoice_overdue",

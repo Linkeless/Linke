@@ -33,7 +33,7 @@ func TestInMemoryEventBus(t *testing.T) {
 		require.NoError(t, err)
 
 		// Publish event
-		event := NewUserEvent(EventTypeUserCreated, 123, map[string]interface{}{
+		event := NewUserEvent(EventTypeUserCreated, 123, map[string]any{
 			"email": "test@example.com",
 		})
 
@@ -84,7 +84,7 @@ func TestInMemoryEventBus(t *testing.T) {
 		require.NoError(t, err)
 
 		// Publish event
-		event := NewUserEvent(EventTypeUserCreated, 123, map[string]interface{}{
+		event := NewUserEvent(EventTypeUserCreated, 123, map[string]any{
 			"email": "test@example.com",
 		})
 
@@ -126,7 +126,7 @@ func TestInMemoryEventBus(t *testing.T) {
 		require.NoError(t, err)
 
 		// Publish event asynchronously
-		event := NewUserEvent(EventTypeUserCreated, 123, map[string]interface{}{
+		event := NewUserEvent(EventTypeUserCreated, 123, map[string]any{
 			"email": "test@example.com",
 		})
 
@@ -169,7 +169,7 @@ func TestInMemoryEventBus(t *testing.T) {
 		require.NoError(t, err)
 
 		// Publish event
-		event := NewUserEvent(EventTypeUserCreated, 123, map[string]interface{}{
+		event := NewUserEvent(EventTypeUserCreated, 123, map[string]any{
 			"email": "test@example.com",
 		})
 
@@ -229,7 +229,7 @@ func TestInMemoryEventBus(t *testing.T) {
 		bus := NewInMemoryEventBus()
 		defer bus.Close()
 
-		event := NewUserEvent(EventTypeUserCreated, 123, map[string]interface{}{
+		event := NewUserEvent(EventTypeUserCreated, 123, map[string]any{
 			"email": "test@example.com",
 		})
 
@@ -262,7 +262,7 @@ func TestEnhancedEventBus(t *testing.T) {
 		require.NoError(t, err)
 
 		// Publish event
-		event := NewUserEvent(EventTypeUserCreated, 123, map[string]interface{}{
+		event := NewUserEvent(EventTypeUserCreated, 123, map[string]any{
 			"email": "test@example.com",
 		})
 
@@ -340,7 +340,7 @@ func TestEventMiddleware(t *testing.T) {
 			return nil
 		}
 
-		event := NewUserEvent(EventTypeUserCreated, 123, map[string]interface{}{
+		event := NewUserEvent(EventTypeUserCreated, 123, map[string]any{
 			"email": "test@example.com",
 		})
 
@@ -361,7 +361,7 @@ func TestEventMiddleware(t *testing.T) {
 			return nil
 		}
 
-		event := NewUserEvent(EventTypeUserCreated, 123, map[string]interface{}{
+		event := NewUserEvent(EventTypeUserCreated, 123, map[string]any{
 			"email": "test@example.com",
 		})
 
@@ -412,7 +412,7 @@ func BenchmarkEventBus(b *testing.B) {
 	err := bus.Subscribe([]string{EventTypeUserCreated}, handler)
 	require.NoError(b, err)
 
-	event := NewUserEvent(EventTypeUserCreated, 123, map[string]interface{}{
+	event := NewUserEvent(EventTypeUserCreated, 123, map[string]any{
 		"email": "test@example.com",
 	})
 
@@ -439,7 +439,7 @@ func BenchmarkEventHandling(b *testing.B) {
 		},
 	)
 
-	event := NewUserEvent(EventTypeUserCreated, 123, map[string]interface{}{
+	event := NewUserEvent(EventTypeUserCreated, 123, map[string]any{
 		"email": "test@example.com",
 	})
 

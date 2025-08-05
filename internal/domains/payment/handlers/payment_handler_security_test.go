@@ -25,7 +25,7 @@ type MockPaymentService struct {
 	mock.Mock
 }
 
-func (m *MockPaymentService) ProcessNotification(ctx context.Context, gateway string, data map[string]interface{}) error {
+func (m *MockPaymentService) ProcessNotification(ctx context.Context, gateway string, data map[string]any) error {
 	args := m.Called(ctx, gateway, data)
 	return args.Error(0)
 }

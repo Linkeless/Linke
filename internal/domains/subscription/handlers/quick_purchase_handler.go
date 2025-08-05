@@ -101,7 +101,7 @@ func (h *QuickPurchaseHandler) QuickPurchase(c *gin.Context) {
 	if paymentRecord, ok := purchaseResponse.PaymentRecord.(*paymententities.PaymentRecordResponse); ok {
 		paymentNo = paymentRecord.PaymentNo
 	}
-	
+
 	logger.Info("Quick purchase created successfully",
 		logger.Uint("user_id", user.ID),
 		logger.Uint("plan_id", req.PlanID),

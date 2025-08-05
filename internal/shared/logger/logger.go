@@ -130,7 +130,7 @@ func Uint(key string, val uint) zap.Field {
 	return zap.Uint(key, val)
 }
 
-func Duration(key string, val interface{}) zap.Field {
+func Duration(key string, val any) zap.Field {
 	if d, ok := val.(interface{ String() string }); ok {
 		return zap.String(key, d.String())
 	}
@@ -145,7 +145,7 @@ func ErrorField(err error) zap.Field {
 	return zap.Error(err)
 }
 
-func Any(key string, val interface{}) zap.Field {
+func Any(key string, val any) zap.Field {
 	return zap.Any(key, val)
 }
 
@@ -196,31 +196,31 @@ func NewAsynqLogger() *AsynqLogger {
 }
 
 // Debug logs a message at Debug level
-func (l *AsynqLogger) Debug(args ...interface{}) {
+func (l *AsynqLogger) Debug(args ...any) {
 	message := fmt.Sprint(args...)
 	Debug(message, String("component", "asynq"))
 }
 
 // Info logs a message at Info level
-func (l *AsynqLogger) Info(args ...interface{}) {
+func (l *AsynqLogger) Info(args ...any) {
 	message := fmt.Sprint(args...)
 	Info(message, String("component", "asynq"))
 }
 
 // Warn logs a message at Warning level
-func (l *AsynqLogger) Warn(args ...interface{}) {
+func (l *AsynqLogger) Warn(args ...any) {
 	message := fmt.Sprint(args...)
 	Warn(message, String("component", "asynq"))
 }
 
 // Error logs a message at Error level
-func (l *AsynqLogger) Error(args ...interface{}) {
+func (l *AsynqLogger) Error(args ...any) {
 	message := fmt.Sprint(args...)
 	Error(message, String("component", "asynq"))
 }
 
 // Fatal logs a message at Fatal level and process will exit with status set to 1
-func (l *AsynqLogger) Fatal(args ...interface{}) {
+func (l *AsynqLogger) Fatal(args ...any) {
 	message := fmt.Sprint(args...)
 	Fatal(message, String("component", "asynq"))
 }

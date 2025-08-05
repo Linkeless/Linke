@@ -563,7 +563,7 @@ func (s *paymentRetryService) NotifyRetryAttempt(ctx context.Context, retry *ent
 	}
 
 	// Create notification payload
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"retry_id":       retry.ID,
 		"payment_id":     retry.PaymentRecordID,
 		"attempt_number": attempt.AttemptNumber,
@@ -591,7 +591,7 @@ func (s *paymentRetryService) scheduleRetryTask(ctx context.Context, retry *enti
 
 	task := &queue.Task{
 		Type: "process_payment_retry",
-		Payload: map[string]interface{}{
+		Payload: map[string]any{
 			"retry_id": retry.ID,
 		},
 		MaxRetry: 1,

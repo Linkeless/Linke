@@ -32,8 +32,8 @@ type CouponService interface {
 	UpdateCoupon(ctx context.Context, couponID uint64, req *UpdateCouponRequest) (*entities.Coupon, error)
 	DeleteCoupon(ctx context.Context, couponID uint64) error
 	GetCoupons(ctx context.Context, req *GetCouponsRequest) ([]*entities.Coupon, int64, error)
-	GetCouponStatistics(ctx context.Context, couponID uint64) (map[string]interface{}, error)
-	GetCouponSystemStatistics(ctx context.Context) (map[string]interface{}, error)
+	GetCouponStatistics(ctx context.Context, couponID uint64) (map[string]any, error)
+	GetCouponSystemStatistics(ctx context.Context) (map[string]any, error)
 }
 
 // CreateCouponRequest represents the request to create a coupon

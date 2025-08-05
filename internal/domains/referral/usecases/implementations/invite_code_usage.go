@@ -135,8 +135,8 @@ func (s *InviteCodeUsageService) LoadRelatedData(ctx context.Context, usages []*
 }
 
 // GetUsageStats returns statistics about invite code usage
-func (s *InviteCodeUsageService) GetUsageStats(ctx context.Context) (map[string]interface{}, error) {
-	var stats map[string]interface{} = make(map[string]interface{})
+func (s *InviteCodeUsageService) GetUsageStats(ctx context.Context) (map[string]any, error) {
+	var stats map[string]any = make(map[string]any)
 
 	// Total usages
 	var totalUsages int64

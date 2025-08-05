@@ -205,7 +205,7 @@ func (ps *PaymentService) GetPaymentRecordByOutTradeNo(ctx context.Context, outT
 
 // UpdatePaymentStatus updates payment record status
 func (ps *PaymentService) UpdatePaymentStatus(ctx context.Context, paymentNo string, status string, transactionID string, paidAt *time.Time) error {
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"status":      status,
 		"updated_at":  time.Now(),
 		"notified_at": time.Now(),
@@ -234,7 +234,7 @@ func (ps *PaymentService) UpdatePaymentStatus(ctx context.Context, paymentNo str
 }
 
 // ProcessNotification processes payment notification from gateway
-func (ps *PaymentService) ProcessNotification(ctx context.Context, gateway string, data map[string]interface{}) error {
+func (ps *PaymentService) ProcessNotification(ctx context.Context, gateway string, data map[string]any) error {
 	// Get gateway instance
 	gatewayInstance, err := ps.GetGateway(gateway)
 	if err != nil {
@@ -312,7 +312,7 @@ func (ps *PaymentService) ProcessNotification(ctx context.Context, gateway strin
 
 	// Update notification tracking with enhanced security fields
 	now := time.Now()
-	updateFields := map[string]interface{}{
+	updateFields := map[string]any{
 		"last_notify_hash": notifyHash,
 		"notify_count":     paymentRecord.NotifyCount + 1,
 		"notified_at":      &now,
@@ -472,7 +472,7 @@ func (ps *PaymentService) GetAvailablePaymentMethods(ctx context.Context) (map[s
 }
 
 // generateNotificationHash generates a hash for notification data to detect duplicates
-func (ps *PaymentService) generateNotificationHash(data map[string]interface{}) string {
+func (ps *PaymentService) generateNotificationHash(data map[string]any) string {
 	// Import crypto/sha256 at the top of the file if not already imported
 	// Create a consistent string representation of the notification data
 	keys := make([]string, 0, len(data))

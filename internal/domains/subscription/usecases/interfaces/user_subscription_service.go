@@ -27,14 +27,14 @@ type UserSubscriptionService interface {
 	// Traffic and usage management
 	UpdateTrafficUsage(ctx context.Context, subscriptionID uint, usedBytes int64) error
 	ResetTrafficUsage(ctx context.Context, subscriptionID uint, adminUserID uint) (*entities.UserSubscription, error)
-	GetSubscriptionTrafficStats(ctx context.Context, subscriptionID uint) (map[string]interface{}, error)
+	GetSubscriptionTrafficStats(ctx context.Context, subscriptionID uint) (map[string]any, error)
 
 	// Subscription expiry management
 	CheckAndProcessExpiredSubscriptions(ctx context.Context) error
 	ExtendSubscription(ctx context.Context, subscriptionID uint, extendByDays int, reason string) error
 
 	// Statistics
-	GetSubscriptionStatistics(ctx context.Context) (map[string]interface{}, error)
+	GetSubscriptionStatistics(ctx context.Context) (map[string]any, error)
 }
 
 // CreateSubscriptionRequest represents the request to create a user subscription

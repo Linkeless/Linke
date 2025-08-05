@@ -5,7 +5,7 @@ package response
 type StandardResponse struct {
 	Code    int         `json:"code" example:"0"`                    // Response code (0 for success, non-zero for errors)
 	Message string      `json:"message" example:"success"`           // Response message
-	Data    interface{} `json:"data,omitempty" swaggertype:"object"` // Response data (optional)
+	Data    any `json:"data,omitempty" swaggertype:"object"` // Response data (optional)
 }
 
 // StandardErrorResponse represents error response structure for Swagger documentation
@@ -68,7 +68,7 @@ type StandardListResponse struct {
 // ListDataInfo represents the data structure for list responses
 // @Description List response data structure
 type ListDataInfo struct {
-	Items      interface{}        `json:"items" swaggertype:"array,object"` // List items
+	Items      any        `json:"items" swaggertype:"array,object"` // List items
 	Pagination PaginationResponse `json:"pagination"`                       // Pagination information
 }
 
@@ -90,7 +90,7 @@ type SearchResponse struct {
 // SearchResponseData represents the data structure for search responses
 // @Description Search response data structure
 type SearchResponseData struct {
-	Items      interface{}        `json:"items" swaggertype:"array,object"` // Search result items
+	Items      any        `json:"items" swaggertype:"array,object"` // Search result items
 	Pagination PaginationResponse `json:"pagination"`                       // Pagination information
 	Query      string             `json:"query" example:"search term"`      // Search query
 }
@@ -106,7 +106,7 @@ type ProviderFilterResponse struct {
 // ProviderFilterResponseData represents the data structure for provider filter responses
 // @Description Provider filter response data structure
 type ProviderFilterResponseData struct {
-	Items      interface{}        `json:"items" swaggertype:"array,object"` // Filtered items
+	Items      any        `json:"items" swaggertype:"array,object"` // Filtered items
 	Pagination PaginationResponse `json:"pagination"`                       // Pagination information
 	Provider   string             `json:"provider" example:"google"`        // OAuth provider
 }
@@ -116,7 +116,7 @@ type ProviderFilterResponseData struct {
 type PaginatedResponse struct {
 	Code    int         `json:"code" example:"0"`
 	Message string      `json:"message" example:"success"`
-	Data    interface{} `json:"data" swaggertype:"array,object"`
+	Data    any `json:"data" swaggertype:"array,object"`
 	Total   int64       `json:"total" example:"100"`
 	Limit   int         `json:"limit" example:"10"`
 	Offset  int         `json:"offset" example:"0"`
@@ -127,5 +127,5 @@ type PaginatedResponse struct {
 type Response struct {
 	Code    int         `json:"code" example:"0"`                    // Response code (0 for success, non-zero for errors)
 	Message string      `json:"message" example:"success"`           // Response message
-	Data    interface{} `json:"data,omitempty" swaggertype:"object"` // Response data (optional)
+	Data    any `json:"data,omitempty" swaggertype:"object"` // Response data (optional)
 }

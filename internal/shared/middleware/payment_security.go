@@ -96,7 +96,7 @@ func (psm *PaymentSecurityMiddleware) SignatureValidationMiddleware() gin.Handle
 		}
 
 		// Get raw request data for signature validation
-		var requestData map[string]interface{}
+		var requestData map[string]any
 
 		contentType := c.GetHeader("Content-Type")
 		if contentType == "application/json" {
@@ -115,7 +115,7 @@ func (psm *PaymentSecurityMiddleware) SignatureValidationMiddleware() gin.Handle
 				return
 			}
 
-			requestData = make(map[string]interface{})
+			requestData = make(map[string]any)
 			for key, values := range c.Request.PostForm {
 				if len(values) > 0 {
 					requestData[key] = values[0]
@@ -227,7 +227,7 @@ func (psm *PaymentSecurityMiddleware) generateRequestID(c *gin.Context, gateway 
 }
 
 // validateSignature validates the payment gateway signature
-func (psm *PaymentSecurityMiddleware) validateSignature(c *gin.Context, gateway string, data map[string]interface{}) bool {
+func (psm *PaymentSecurityMiddleware) validateSignature(c *gin.Context, gateway string, data map[string]any) bool {
 	var signKey string
 	switch gateway {
 	case "epay":
@@ -254,14 +254,14 @@ func (psm *PaymentSecurityMiddleware) validateSignature(c *gin.Context, gateway 
 }
 
 // validateEpaySignature validates Epay gateway signature (MD5-based)
-func (psm *PaymentSecurityMiddleware) validateEpaySignature(data map[string]interface{}, signKey string) bool {
+func (psm *PaymentSecurityMiddleware) validateEpaySignature(data map[string]any, signKey string) bool {
 	receivedSign, exists := data["sign"].(string)
 	if !exists || receivedSign == "" {
 		return false
 	}
 
 	// Remove sign from data for calculation
-	signData := make(map[string]interface{})
+	signData := make(map[string]any)
 	for k, v := range data {
 		if k != "sign" && k != "sign_type" {
 			signData[k] = v
@@ -274,7 +274,7 @@ func (psm *PaymentSecurityMiddleware) validateEpaySignature(data map[string]inte
 }
 
 // generateEpaySignature generates Epay signature using MD5
-func (psm *PaymentSecurityMiddleware) generateEpaySignature(data map[string]interface{}, signKey string) string {
+func (psm *PaymentSecurityMiddleware) generateEpaySignature(data map[string]any, signKey string) string {
 	// Sort keys
 	keys := make([]string, 0, len(data))
 	for k := range data {
@@ -298,14 +298,14 @@ func (psm *PaymentSecurityMiddleware) generateEpaySignature(data map[string]inte
 }
 
 // validateEpusdtSignature validates EPUSDT gateway signature (HMAC-SHA256)
-func (psm *PaymentSecurityMiddleware) validateEpusdtSignature(data map[string]interface{}, signKey string) bool {
+func (psm *PaymentSecurityMiddleware) validateEpusdtSignature(data map[string]any, signKey string) bool {
 	receivedSign, exists := data["sign"].(string)
 	if !exists || receivedSign == "" {
 		return false
 	}
 
 	// Remove sign from data for calculation
-	signData := make(map[string]interface{})
+	signData := make(map[string]any)
 	for k, v := range data {
 		if k != "sign" {
 			signData[k] = v
@@ -318,7 +318,7 @@ func (psm *PaymentSecurityMiddleware) validateEpusdtSignature(data map[string]in
 }
 
 // generateEpusdtSignature generates EPUSDT signature using HMAC-SHA256
-func (psm *PaymentSecurityMiddleware) generateEpusdtSignature(data map[string]interface{}, signKey string) string {
+func (psm *PaymentSecurityMiddleware) generateEpusdtSignature(data map[string]any, signKey string) string {
 	// Sort keys
 	keys := make([]string, 0, len(data))
 	for k := range data {

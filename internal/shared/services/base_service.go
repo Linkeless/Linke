@@ -422,7 +422,7 @@ func (s *BaseServiceImpl[T, ID]) ExistsByID(ctx context.Context, id ID) (bool, e
 }
 
 // Advanced filtering
-func (s *BaseServiceImpl[T, ID]) ListWithFilters(ctx context.Context, filters map[string]interface{}, req *framework.ListRequest) (*framework.ListResponse[T], error) {
+func (s *BaseServiceImpl[T, ID]) ListWithFilters(ctx context.Context, filters map[string]any, req *framework.ListRequest) (*framework.ListResponse[T], error) {
 	if req == nil {
 		req = &framework.ListRequest{Limit: 10, Offset: 0}
 	}

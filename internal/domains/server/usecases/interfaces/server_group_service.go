@@ -22,7 +22,7 @@ type ServerGroupService interface {
 	GetGroupServerCount(ctx context.Context, groupID uint) (int64, error)
 
 	// Group statistics
-	GetGroupStatistics(ctx context.Context, groupID uint) (map[string]interface{}, error)
+	GetGroupStatistics(ctx context.Context, groupID uint) (map[string]any, error)
 }
 
 // CreateServerGroupRequest represents the request to create a server group

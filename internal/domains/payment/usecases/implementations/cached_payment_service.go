@@ -111,7 +111,7 @@ func (cs *CachedPaymentService) UpdatePaymentStatus(ctx context.Context, payment
 }
 
 // ProcessNotification processes payment notification with idempotency caching
-func (cs *CachedPaymentService) ProcessNotification(ctx context.Context, gateway string, data map[string]interface{}) error {
+func (cs *CachedPaymentService) ProcessNotification(ctx context.Context, gateway string, data map[string]any) error {
 	// Generate idempotency key for this notification
 	idempotencyKey := cs.generateIdempotencyKey(gateway, data)
 	cacheKey := cs.cacheKeys.IdempotencyKey(gateway, idempotencyKey)
@@ -133,7 +133,7 @@ func (cs *CachedPaymentService) ProcessNotification(ctx context.Context, gateway
 
 	// Store idempotency key in cache to prevent duplicate processing
 	// Use 30 minutes TTL for idempotency keys (replay attack protection)
-	idempotencyData := map[string]interface{}{
+	idempotencyData := map[string]any{
 		"processed_at": time.Now(),
 		"gateway":      gateway,
 	}
@@ -242,7 +242,7 @@ func (cs *CachedPaymentService) invalidatePaymentCache(ctx context.Context, paym
 }
 
 // generateIdempotencyKey generates a consistent key for notification idempotency
-func (cs *CachedPaymentService) generateIdempotencyKey(gateway string, data map[string]interface{}) string {
+func (cs *CachedPaymentService) generateIdempotencyKey(gateway string, data map[string]any) string {
 	// Create a consistent string representation of key notification data
 	var keyParts []string
 

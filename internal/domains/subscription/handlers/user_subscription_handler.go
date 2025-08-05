@@ -273,7 +273,7 @@ func (h *UserSubscriptionHandler) CancelSubscription(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Subscription ID"
-// @Success 200 {object} response.StandardResponse{data=map[string]interface{}}
+// @Success 200 {object} response.StandardResponse{data=map[string]any}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -502,7 +502,7 @@ func (h *UserSubscriptionHandler) RegisterRoutes(router *gin.RouterGroup) {
 		subscriptionGroup.GET("", func(c *gin.Context) {
 			response.Error(c, http.StatusUnauthorized, 4001, "User not authenticated - please login to access subscriptions")
 		})
-		
+
 		subscriptionGroup.GET("/my", h.GetMySubscriptions)
 		subscriptionGroup.GET("/my/active", h.GetMyActiveSubscriptions)
 		subscriptionGroup.GET("/:id", h.GetSubscription)

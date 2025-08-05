@@ -251,7 +251,7 @@ func (s *usageTrackingService) GetCurrentUsage(ctx context.Context, subscription
 
 		// Get usage limit based on type
 		var usageLimit int64
-		var unit string = entities.UnitBytes
+		unit := entities.UnitBytes
 
 		switch usageType {
 		case entities.UsageTypeTraffic:
@@ -326,7 +326,7 @@ func (s *usageTrackingService) GetCurrentUsage(ctx context.Context, subscription
 
 			// Get usage limit and unit based on type
 			var usageLimit int64
-			var unit string = entities.UnitBytes
+			unit := entities.UnitBytes
 
 			switch uType {
 			case entities.UsageTypeTraffic:

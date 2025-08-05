@@ -30,7 +30,7 @@ func newAuthServiceAdapter(authService authInterfaces.AuthService) middleware.Au
 	return &authServiceAdapter{authService: authService}
 }
 
-func (a *authServiceAdapter) ValidateToken(token string) (interface{}, error) {
+func (a *authServiceAdapter) ValidateToken(token string) (any, error) {
 	user, err := a.authService.ValidateToken(token)
 	if err != nil {
 		return nil, err

@@ -129,11 +129,11 @@ type TestNotificationRequest struct {
 
 // TestNotificationResponse represents response for notification test
 type TestNotificationResponse struct {
-	Success      bool          `json:"success"`
-	Message      string        `json:"message"`
-	ResponseTime string        `json:"response_time" swaggertype:"string"`
-	Details      string        `json:"details,omitempty"`
-	Error        string        `json:"error,omitempty"`
+	Success      bool   `json:"success"`
+	Message      string `json:"message"`
+	ResponseTime string `json:"response_time" swaggertype:"string"`
+	Details      string `json:"details,omitempty"`
+	Error        string `json:"error,omitempty"`
 }
 
 // UpdateNotificationPrefsRequest represents a request to update notification preferences
@@ -212,13 +212,13 @@ type AlertDistribution struct {
 
 // TopAlertConfiguration represents a configuration that generates many alerts
 type TopAlertConfiguration struct {
-	ConfigurationID       uint          `json:"configuration_id"`
-	Name                  string        `json:"name"`
-	UsageType             string        `json:"usage_type"`
-	Threshold             float64       `json:"threshold"`
-	AlertCount            int64         `json:"alert_count"`
-	LastAlertFired        time.Time     `json:"last_alert_fired"`
-	AverageResolutionTime string `json:"average_resolution_time" swaggertype:"string"`
+	ConfigurationID       uint      `json:"configuration_id"`
+	Name                  string    `json:"name"`
+	UsageType             string    `json:"usage_type"`
+	Threshold             float64   `json:"threshold"`
+	AlertCount            int64     `json:"alert_count"`
+	LastAlertFired        time.Time `json:"last_alert_fired"`
+	AverageResolutionTime string    `json:"average_resolution_time" swaggertype:"string"`
 }
 
 // AlertHistoryRequest represents a request for alert history
@@ -254,13 +254,13 @@ type AlertHistoryEntry struct {
 
 // AlertHistorySummary represents summary of alert history
 type AlertHistorySummary struct {
-	TotalAlerts           int64         `json:"total_alerts"`
+	TotalAlerts           int64  `json:"total_alerts"`
 	AverageResolutionTime string `json:"average_resolution_time" swaggertype:"string"`
 	FastestResolution     string `json:"fastest_resolution" swaggertype:"string"`
 	SlowestResolution     string `json:"slowest_resolution" swaggertype:"string"`
-	UnresolvedCount       int64         `json:"unresolved_count"`
-	NotificationsSent     int64         `json:"notifications_sent"`
-	NotificationFailures  int64         `json:"notification_failures"`
+	UnresolvedCount       int64  `json:"unresolved_count"`
+	NotificationsSent     int64  `json:"notifications_sent"`
+	NotificationFailures  int64  `json:"notification_failures"`
 }
 
 // Constants for alert service

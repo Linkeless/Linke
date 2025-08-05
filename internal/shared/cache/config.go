@@ -19,7 +19,7 @@ type CacheLayerConfig struct {
 	EvictionPolicy  EvictionPolicy         `json:"eviction_policy"`
 	CompressionType string                 `json:"compression_type"`
 	Strategies      *CacheStrategies       `json:"strategies"`
-	DomainSpecific  map[string]interface{} `json:"domain_specific"`
+	DomainSpecific  map[string]any `json:"domain_specific"`
 }
 
 // CacheStrategies defines caching strategies for different operations

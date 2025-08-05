@@ -60,9 +60,9 @@ func (m *MockSubscriptionOrderService) GetSubscriptionOrders(ctx context.Context
 	return args.Get(0).([]*entities.SubscriptionOrder), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockSubscriptionOrderService) GetOrderStatistics(ctx context.Context, fromDate, toDate time.Time) (map[string]interface{}, error) {
+func (m *MockSubscriptionOrderService) GetOrderStatistics(ctx context.Context, fromDate, toDate time.Time) (map[string]any, error) {
 	args := m.Called(ctx, fromDate, toDate)
-	return args.Get(0).(map[string]interface{}), args.Error(1)
+	return args.Get(0).(map[string]any), args.Error(1)
 }
 
 func (m *MockSubscriptionOrderService) QuickPurchase(ctx context.Context, req *interfaces.QuickPurchaseRequest) (*interfaces.QuickPurchaseResponse, error) {

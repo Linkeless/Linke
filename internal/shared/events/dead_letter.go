@@ -436,7 +436,7 @@ func (dlh *DeadLetterHandler) scheduleRetry(ctx context.Context, dlEvent *DeadLe
 		ID:       fmt.Sprintf("dead-letter-retry-%s", dlEvent.ID),
 		Type:     TaskTypeDeadLetterRetry,
 		MaxRetry: 1, // Don't retry the retry task itself
-		Payload: map[string]interface{}{
+		Payload: map[string]any{
 			"dead_letter_id": dlEvent.ID,
 		},
 	}
@@ -554,7 +554,7 @@ const (
 // DeadLetterRetryTaskHandler handles dead letter retry tasks
 func DeadLetterRetryTaskHandler(deadLetterHandler *DeadLetterHandler) queue.TaskHandler {
 	return func(ctx context.Context, task *asynq.Task) error {
-		var payload map[string]interface{}
+		var payload map[string]any
 		if err := json.Unmarshal(task.Payload(), &payload); err != nil {
 			return fmt.Errorf("failed to unmarshal dead letter retry task payload: %w", err)
 		}

@@ -24,7 +24,7 @@ type SubscriptionOrderService interface {
 	GetSubscriptionOrders(ctx context.Context, req *GetSubscriptionOrdersRequest) ([]*entities.SubscriptionOrder, int64, error)
 
 	// Order statistics
-	GetOrderStatistics(ctx context.Context, fromDate, toDate time.Time) (map[string]interface{}, error)
+	GetOrderStatistics(ctx context.Context, fromDate, toDate time.Time) (map[string]any, error)
 
 	// Quick Purchase
 	QuickPurchase(ctx context.Context, req *QuickPurchaseRequest) (*QuickPurchaseResponse, error)
@@ -46,12 +46,12 @@ type CreateSubscriptionOrderRequest struct {
 
 // CreateSubscriptionOrderResponse represents the response after creating a subscription order
 type CreateSubscriptionOrderResponse struct {
-	Order         *entities.SubscriptionOrderResponse    `json:"order"`
-	Invoice       *invoiceEntities.InvoiceResponse       `json:"invoice"`
-	PaymentRecord interface{} `json:"payment_record" swaggertype:"object"`
-	PaymentURL    string                                 `json:"payment_url"`
-	QRCodeURL     string                                 `json:"qr_code_url,omitempty"`
-	ExpiredAt     time.Time                              `json:"expired_at"`
+	Order         *entities.SubscriptionOrderResponse `json:"order"`
+	Invoice       *invoiceEntities.InvoiceResponse    `json:"invoice"`
+	PaymentRecord any                                 `json:"payment_record" swaggertype:"object"`
+	PaymentURL    string                              `json:"payment_url"`
+	QRCodeURL     string                              `json:"qr_code_url,omitempty"`
+	ExpiredAt     time.Time                           `json:"expired_at"`
 }
 
 // GetSubscriptionOrdersRequest represents the request to get subscription orders
@@ -81,12 +81,12 @@ type QuickPurchaseRequest struct {
 
 // QuickPurchaseResponse represents the response for quick purchase
 type QuickPurchaseResponse struct {
-	PaymentRecord interface{} `json:"payment_record" swaggertype:"object"`
-	PaymentURL    string                                 `json:"payment_url"`
-	QRCodeURL     string                                 `json:"qr_code_url,omitempty"`
-	ExpiredAt     time.Time                              `json:"expired_at"`
-	PlanInfo      *entities.SubscriptionPlanResponse     `json:"plan_info"`
-	DiscountInfo  *QuickPurchaseDiscountInfo             `json:"discount_info,omitempty"`
+	PaymentRecord any                                `json:"payment_record" swaggertype:"object"`
+	PaymentURL    string                             `json:"payment_url"`
+	QRCodeURL     string                             `json:"qr_code_url,omitempty"`
+	ExpiredAt     time.Time                          `json:"expired_at"`
+	PlanInfo      *entities.SubscriptionPlanResponse `json:"plan_info"`
+	DiscountInfo  *QuickPurchaseDiscountInfo         `json:"discount_info,omitempty"`
 }
 
 // QuickPurchaseDiscountInfo represents discount information in quick purchase response

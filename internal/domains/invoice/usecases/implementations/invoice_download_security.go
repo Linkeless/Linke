@@ -114,13 +114,13 @@ func (dl *DownloadLimiter) CheckDownloadPermission(ctx context.Context, userID u
 }
 
 // GetUserLimits returns current limits for a user
-func (dl *DownloadLimiter) GetUserLimits(userID uint) map[string]interface{} {
+func (dl *DownloadLimiter) GetUserLimits(userID uint) map[string]any {
 	dl.mu.RLock()
 	defer dl.mu.RUnlock()
 
 	userLimit, exists := dl.userLimits[userID]
 	if !exists {
-		return map[string]interface{}{
+		return map[string]any{
 			"hourly_count":     0,
 			"daily_count":      0,
 			"hourly_remaining": dl.maxPerHour,
@@ -129,7 +129,7 @@ func (dl *DownloadLimiter) GetUserLimits(userID uint) map[string]interface{} {
 		}
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"hourly_count":     userLimit.HourlyCount,
 		"daily_count":      userLimit.DailyCount,
 		"hourly_remaining": dl.maxPerHour - userLimit.HourlyCount,
@@ -274,7 +274,7 @@ func (isv *InvoiceSecurityValidator) ValidateWatermark(watermark string) error {
 }
 
 // LogSecurityEvent logs security-related events
-func (isv *InvoiceSecurityValidator) LogSecurityEvent(ctx context.Context, event string, userID uint, details map[string]interface{}) {
+func (isv *InvoiceSecurityValidator) LogSecurityEvent(ctx context.Context, event string, userID uint, details map[string]any) {
 	fields := []zap.Field{
 		zap.String("security_event", event),
 		zap.Uint("user_id", userID),

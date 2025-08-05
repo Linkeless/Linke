@@ -106,7 +106,7 @@ func (s *ServerGroupService) UpdateServerGroup(ctx context.Context, id uint, req
 	}
 
 	// Prepare updates
-	updates := make(map[string]interface{})
+	updates := make(map[string]any)
 
 	if req.Name != nil {
 		// Check if another group with the same name already exists
@@ -195,8 +195,8 @@ func (s *ServerGroupService) GetGroupServerCount(ctx context.Context, groupID ui
 }
 
 // GetGroupStatistics gets statistics for a specific group
-func (s *ServerGroupService) GetGroupStatistics(ctx context.Context, groupID uint) (map[string]interface{}, error) {
-	stats := make(map[string]interface{})
+func (s *ServerGroupService) GetGroupStatistics(ctx context.Context, groupID uint) (map[string]any, error) {
+	stats := make(map[string]any)
 
 	// Get server count
 	serverCount, err := s.GetGroupServerCount(ctx, groupID)

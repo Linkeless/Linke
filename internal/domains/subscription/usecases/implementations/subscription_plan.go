@@ -218,7 +218,7 @@ func (s *SubscriptionPlanService) UpdateSubscriptionPlan(ctx context.Context, pl
 	}
 
 	// Prepare updates
-	updates := make(map[string]interface{})
+	updates := make(map[string]any)
 
 	if req.Name != nil {
 		updates["name"] = *req.Name
@@ -390,7 +390,7 @@ func (s *SubscriptionPlanService) ArchiveSubscriptionPlan(ctx context.Context, p
 	}
 
 	// Archive the plan
-	if err := s.db.WithContext(ctx).Model(plan).Updates(map[string]interface{}{
+	if err := s.db.WithContext(ctx).Model(plan).Updates(map[string]any{
 		"status":     entities.SubscriptionPlanStatusArchived,
 		"is_visible": false,
 	}).Error; err != nil {

@@ -104,7 +104,7 @@ type PaymentConfigRepository interface {
 	GetGatewayStats(ctx context.Context) (map[string]int64, error)
 
 	// Advanced filtering
-	ListWithFilters(ctx context.Context, filters map[string]interface{}, limit, offset int) ([]*entities.PaymentConfig, int64, error)
+	ListWithFilters(ctx context.Context, filters map[string]any, limit, offset int) ([]*entities.PaymentConfig, int64, error)
 
 	// Configuration backup and restore
 	ExportConfigs(ctx context.Context) ([]*entities.PaymentConfig, error)

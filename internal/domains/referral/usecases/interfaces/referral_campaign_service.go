@@ -24,8 +24,8 @@ type ReferralCampaignService interface {
 	ExpireCampaign(ctx context.Context, campaignID uint) error
 
 	// Campaign statistics
-	GetCampaignStatistics(ctx context.Context, campaignID uint) (map[string]interface{}, error)
-	GetCampaignPerformance(ctx context.Context, campaignID uint, fromDate, toDate time.Time) (map[string]interface{}, error)
+	GetCampaignStatistics(ctx context.Context, campaignID uint) (map[string]any, error)
+	GetCampaignPerformance(ctx context.Context, campaignID uint, fromDate, toDate time.Time) (map[string]any, error)
 }
 
 // CreateReferralCampaignRequest represents the request to create a referral campaign

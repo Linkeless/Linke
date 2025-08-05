@@ -184,7 +184,7 @@ func (pcs *PaymentConfigService) UpdatePaymentConfig(ctx context.Context, config
 	}
 
 	// Prepare updates
-	updates := make(map[string]interface{})
+	updates := make(map[string]any)
 
 	if req.Name != nil {
 		updates["name"] = *req.Name

@@ -139,7 +139,7 @@ type StatsResponse struct {
 	TotalCount   int64                  `json:"total_count"`
 	StatusCounts map[string]int64       `json:"status_counts,omitempty"`
 	DateCounts   map[string]int64       `json:"date_counts,omitempty"`
-	CustomStats  map[string]interface{} `json:"custom_stats,omitempty"`
+	CustomStats  map[string]any `json:"custom_stats,omitempty"`
 	Period       string                 `json:"period,omitempty"` // e.g., "daily", "monthly", "yearly"
 }
 
@@ -156,7 +156,7 @@ type MessageResponse struct {
 // StatusResponse represents a status response with optional details
 type StatusResponse struct {
 	Status  string                 `json:"status"`
-	Details map[string]interface{} `json:"details,omitempty"`
+	Details map[string]any `json:"details,omitempty"`
 }
 
 // =============================================================================

@@ -51,11 +51,11 @@ func (r *paymentRetryHistoryRepository) GetRecentAttempts(ctx context.Context, r
 	var histories []*entities.PaymentRetryHistory
 	query := r.GetDB().WithContext(ctx).Where("payment_retry_id = ?", retryID).
 		Order("created_at DESC")
-	
+
 	if limit > 0 {
 		query = query.Limit(limit)
 	}
-	
+
 	if err := query.Find(&histories).Error; err != nil {
 		return nil, fmt.Errorf("failed to get recent attempts: %w", err)
 	}
@@ -73,7 +73,7 @@ func (r *paymentRetryHistoryRepository) GetAttemptStatistics(ctx context.Context
 		TotalAttempts   int     `gorm:"column:total_attempts"`
 		SuccessfulCount int     `gorm:"column:successful_count"`
 		FailedCount     int     `gorm:"column:failed_count"`
-		TimeoutCount    int     `gorm:"column:timeout_count"`  
+		TimeoutCount    int     `gorm:"column:timeout_count"`
 		ErrorCount      int     `gorm:"column:error_count"`
 		AverageDuration float64 `gorm:"column:average_duration"`
 		TotalDuration   int     `gorm:"column:total_duration"`

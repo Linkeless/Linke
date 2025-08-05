@@ -22,7 +22,7 @@ type BusinessServiceImpl[T any, ID comparable] struct {
 type BusinessRule[T any] func(ctx context.Context, entity *T) error
 
 // WorkflowHandler defines a workflow processing function
-type WorkflowHandler[T any] func(ctx context.Context, entity *T, params map[string]interface{}) error
+type WorkflowHandler[T any] func(ctx context.Context, entity *T, params map[string]any) error
 
 // NewBusinessService creates a new BusinessServiceImpl instance
 func NewBusinessService[T any, ID comparable](
@@ -174,7 +174,7 @@ func (s *BusinessServiceImpl[T, ID]) GetAuditLog(ctx context.Context, id ID, req
 }
 
 // Workflow operations
-func (s *BusinessServiceImpl[T, ID]) ProcessWorkflow(ctx context.Context, id ID, action string, params map[string]interface{}) error {
+func (s *BusinessServiceImpl[T, ID]) ProcessWorkflow(ctx context.Context, id ID, action string, params map[string]any) error {
 	handler, exists := s.workflows[action]
 	if !exists {
 		return fmt.Errorf("workflow action '%s' not found", action)
@@ -311,7 +311,7 @@ func (s *BusinessServiceImpl[T, ID]) mergeEntityForValidation(existing *T, updat
 // DomainEventImpl implements the DomainEvent interface
 type DomainEventImpl struct {
 	Type      string
-	Data      interface{}
+	Data      any
 	Timestamp time.Time
 	Source    string
 	ID        string
@@ -322,7 +322,7 @@ func (e *DomainEventImpl) EventType() string {
 	return e.Type
 }
 
-func (e *DomainEventImpl) EventData() interface{} {
+func (e *DomainEventImpl) EventData() any {
 	return e.Data
 }
 

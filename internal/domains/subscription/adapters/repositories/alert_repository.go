@@ -189,7 +189,7 @@ func (r *alertRepository) ResolveAlert(ctx context.Context, alertID uint) error 
 	now := time.Now()
 	return r.db.WithContext(ctx).Model(&entities.UsageAlert{}).
 		Where("id = ?", alertID).
-		Updates(map[string]interface{}{
+		Updates(map[string]any{
 			"status":      entities.AlertStatusResolved,
 			"resolved_at": &now,
 			"updated_at":  now,
@@ -200,7 +200,7 @@ func (r *alertRepository) AcknowledgeAlert(ctx context.Context, alertID uint) er
 	now := time.Now()
 	return r.db.WithContext(ctx).Model(&entities.UsageAlert{}).
 		Where("id = ?", alertID).
-		Updates(map[string]interface{}{
+		Updates(map[string]any{
 			"status":     entities.AlertStatusAcknowledged,
 			"updated_at": now,
 		}).Error
@@ -210,7 +210,7 @@ func (r *alertRepository) SuppressAlert(ctx context.Context, alertID uint, durat
 	now := time.Now()
 	return r.db.WithContext(ctx).Model(&entities.UsageAlert{}).
 		Where("id = ?", alertID).
-		Updates(map[string]interface{}{
+		Updates(map[string]any{
 			"status":     entities.AlertStatusSuppressed,
 			"updated_at": now,
 			// Note: Suppression end time would need to be stored in metadata or separate field
@@ -266,7 +266,7 @@ func (r *alertRepository) ResolveAlertsForSubscription(ctx context.Context, subs
 		query = query.Where("usage_type = ?", usageType)
 	}
 
-	return query.Updates(map[string]interface{}{
+	return query.Updates(map[string]any{
 		"status":      entities.AlertStatusResolved,
 		"resolved_at": &now,
 		"updated_at":  now,

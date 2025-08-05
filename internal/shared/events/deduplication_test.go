@@ -24,7 +24,7 @@ func TestInMemoryEventDeduplicator(t *testing.T) {
 	ctx := context.Background()
 
 	// Create test event
-	event := NewBaseEvent("test.event", "test-service", map[string]interface{}{
+	event := NewBaseEvent("test.event", "test-service", map[string]any{
 		"test": "data",
 	})
 
@@ -46,7 +46,7 @@ func TestInMemoryEventDeduplicator(t *testing.T) {
 	})
 
 	t.Run("Different event should not be duplicate", func(t *testing.T) {
-		differentEvent := NewBaseEvent("test.event2", "test-service", map[string]interface{}{
+		differentEvent := NewBaseEvent("test.event2", "test-service", map[string]any{
 			"test": "data2",
 		})
 
@@ -77,12 +77,12 @@ func TestDeduplicationStrategies(t *testing.T) {
 		defer deduplicator.Close()
 
 		// Create two events with same content but different IDs
-		event1 := NewBaseEvent("test.event", "test-service", map[string]interface{}{
+		event1 := NewBaseEvent("test.event", "test-service", map[string]any{
 			"test": "data",
 		})
 		event1.ID = "id1"
 
-		event2 := NewBaseEvent("test.event", "test-service", map[string]interface{}{
+		event2 := NewBaseEvent("test.event", "test-service", map[string]any{
 			"test": "data",
 		})
 		event2.ID = "id2"
@@ -119,7 +119,7 @@ func TestDeduplicationCleanup(t *testing.T) {
 	ctx := context.Background()
 
 	// Create and process event
-	event := NewBaseEvent("test.event", "test-service", map[string]interface{}{
+	event := NewBaseEvent("test.event", "test-service", map[string]any{
 		"test": "data",
 	})
 
@@ -156,7 +156,7 @@ func TestDeduplicatingEventHandler(t *testing.T) {
 	dedupHandler := NewDeduplicatingEventHandler("test-handler", mockHandler, deduplicator)
 
 	ctx := context.Background()
-	event := NewBaseEvent("test.event", "test-service", map[string]interface{}{
+	event := NewBaseEvent("test.event", "test-service", map[string]any{
 		"test": "data",
 	})
 
@@ -173,7 +173,7 @@ func TestDeduplicatingEventHandler(t *testing.T) {
 	})
 
 	t.Run("Different event should be processed", func(t *testing.T) {
-		differentEvent := NewBaseEvent("test.event", "test-service", map[string]interface{}{
+		differentEvent := NewBaseEvent("test.event", "test-service", map[string]any{
 			"test": "different data",
 		})
 
@@ -210,7 +210,7 @@ func TestAtLeastOnceEventBus(t *testing.T) {
 	aloBus := NewAtLeastOnceEventBus(mockEventBus, deduplicator, retryPolicy)
 
 	ctx := context.Background()
-	event := NewBaseEvent("test.event", "test-service", map[string]interface{}{
+	event := NewBaseEvent("test.event", "test-service", map[string]any{
 		"test": "data",
 	})
 
@@ -225,7 +225,7 @@ func TestAtLeastOnceEventBus(t *testing.T) {
 
 	t.Run("Retry on failure", func(t *testing.T) {
 		// Create different event for this test
-		retryEvent := NewBaseEvent("test.retry", "test-service", map[string]interface{}{
+		retryEvent := NewBaseEvent("test.retry", "test-service", map[string]any{
 			"test": "retry data",
 		})
 
@@ -239,7 +239,7 @@ func TestAtLeastOnceEventBus(t *testing.T) {
 
 	t.Run("Success after retry", func(t *testing.T) {
 		// Create different event for this test
-		retrySuccessEvent := NewBaseEvent("test.retry.success", "test-service", map[string]interface{}{
+		retrySuccessEvent := NewBaseEvent("test.retry.success", "test-service", map[string]any{
 			"test": "retry success data",
 		})
 
@@ -338,7 +338,7 @@ func BenchmarkEventDeduplication(b *testing.B) {
 	ctx := context.Background()
 
 	b.Run("IsDuplicate", func(b *testing.B) {
-		event := NewBaseEvent("benchmark.event", "test-service", map[string]interface{}{
+		event := NewBaseEvent("benchmark.event", "test-service", map[string]any{
 			"test": "data",
 		})
 
@@ -351,7 +351,7 @@ func BenchmarkEventDeduplication(b *testing.B) {
 	b.Run("MarkProcessed", func(b *testing.B) {
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			event := NewBaseEvent("benchmark.event", "test-service", map[string]interface{}{
+			event := NewBaseEvent("benchmark.event", "test-service", map[string]any{
 				"test": "data",
 				"id":   i,
 			})

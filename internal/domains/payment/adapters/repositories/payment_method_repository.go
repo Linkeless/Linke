@@ -35,7 +35,6 @@ func (r *paymentMethodRepository) Create(ctx context.Context, paymentMethod *ent
 	return r.UserScopedRepositoryImpl.Create(ctx, paymentMethod)
 }
 
-
 // GetActiveByUserID retrieves all active payment methods for a user
 func (r *paymentMethodRepository) GetActiveByUserID(ctx context.Context, userID uint) ([]*entities.PaymentMethod, error) {
 	var paymentMethods []*entities.PaymentMethod
@@ -110,7 +109,6 @@ func (r *paymentMethodRepository) GetByPaymentToken(ctx context.Context, gateway
 	return &paymentMethod, nil
 }
 
-
 // SetAsDefault sets a payment method as the default for the user and gateway
 func (r *paymentMethodRepository) SetAsDefault(ctx context.Context, userID, paymentMethodID uint) error {
 	return r.GetDB().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
@@ -155,7 +153,6 @@ func (r *paymentMethodRepository) UnsetDefault(ctx context.Context, userID uint,
 	return nil
 }
 
-
 // GetExpiredMethods retrieves payment methods that have expired
 func (r *paymentMethodRepository) GetExpiredMethods(ctx context.Context) ([]*entities.PaymentMethod, error) {
 	var paymentMethods []*entities.PaymentMethod
@@ -190,7 +187,7 @@ func (r *paymentMethodRepository) GetMethodsNeedingValidation(ctx context.Contex
 
 // UpdateLastUsed updates the last used timestamp and usage statistics
 func (r *paymentMethodRepository) UpdateLastUsed(ctx context.Context, id uint, successful bool) error {
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"last_used_at": time.Now(),
 	}
 

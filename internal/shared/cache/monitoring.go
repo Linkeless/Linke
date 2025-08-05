@@ -414,12 +414,12 @@ func (h *CacheMonitoringHandler) GetPerformanceMetrics(c *gin.Context) {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.Response{data=map[string]interface{}}
+// @Success 200 {object} response.Response{data=map[string]any}
 // @Router /admin/cache/monitor/dashboard [get]
 func (h *CacheMonitoringHandler) GetDashboard(c *gin.Context) {
 	if h.multiLevelMgr == nil {
 		// Basic dashboard
-		dashboard := map[string]interface{}{
+		dashboard := map[string]any{
 			"health":  h.checkBasicHealth(c.Request.Context()),
 			"metrics": GenerateMetricsReport(h.collector),
 		}
@@ -427,7 +427,7 @@ func (h *CacheMonitoringHandler) GetDashboard(c *gin.Context) {
 		return
 	}
 
-	dashboard := map[string]interface{}{
+	dashboard := map[string]any{
 		"health":       h.checkMultiLevelHealth(c.Request.Context()),
 		"metrics":      h.multiLevelMgr.GetMultiLevelCache().GetMetrics(),
 		"performance":  h.getPerformanceSnapshot(),
@@ -460,7 +460,7 @@ func (h *CacheMonitoringHandler) GetAlerts(c *gin.Context) {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.Response{data=map[string]interface{}}
+// @Success 200 {object} response.Response{data=map[string]any}
 // @Router /admin/cache/monitor/benchmark [post]
 func (h *CacheMonitoringHandler) RunBenchmark(c *gin.Context) {
 	if h.multiLevelMgr == nil {
@@ -504,8 +504,8 @@ func (h *CacheMonitoringHandler) GetWarmingStatus(c *gin.Context) {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Param request body map[string]interface{} true "Warming request"
-// @Success 200 {object} response.Response{data=map[string]interface{}}
+// @Param request body map[string]any true "Warming request"
+// @Success 200 {object} response.Response{data=map[string]any}
 // @Router /admin/cache/monitor/warming/trigger [post]
 func (h *CacheMonitoringHandler) TriggerWarming(c *gin.Context) {
 	if h.multiLevelMgr == nil {
@@ -528,7 +528,7 @@ func (h *CacheMonitoringHandler) TriggerWarming(c *gin.Context) {
 		return
 	}
 
-	results := make(map[string]interface{})
+	results := make(map[string]any)
 	for _, prefix := range req.Prefixes {
 		err := warmer.WarmPrefix(c.Request.Context(), prefix)
 		if err != nil {
@@ -538,7 +538,7 @@ func (h *CacheMonitoringHandler) TriggerWarming(c *gin.Context) {
 		}
 	}
 
-	response.Success(c, map[string]interface{}{
+	response.Success(c, map[string]any{
 		"triggered_at": time.Now().Format(time.RFC3339),
 		"results":      results,
 	})
@@ -763,13 +763,13 @@ func (h *CacheMonitoringHandler) checkAlerts() []string {
 	return alerts
 }
 
-func (h *CacheMonitoringHandler) getPerformanceSnapshot() map[string]interface{} {
+func (h *CacheMonitoringHandler) getPerformanceSnapshot() map[string]any {
 	h.updatePerformanceMetrics()
 
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	return map[string]interface{}{
+	return map[string]any{
 		"memory_efficiency":  h.performanceMetrics.MemoryEfficiency,
 		"l1_response_time":   h.performanceMetrics.L1AvgResponseTime,
 		"l2_response_time":   h.performanceMetrics.L2AvgResponseTime,
@@ -779,18 +779,18 @@ func (h *CacheMonitoringHandler) getPerformanceSnapshot() map[string]interface{}
 	}
 }
 
-func (h *CacheMonitoringHandler) getWarmingSnapshot() map[string]interface{} {
+func (h *CacheMonitoringHandler) getWarmingSnapshot() map[string]any {
 	if h.multiLevelMgr == nil {
-		return map[string]interface{}{"status": "disabled"}
+		return map[string]any{"status": "disabled"}
 	}
 
 	warmer := h.multiLevelMgr.GetWarmer()
 	if warmer == nil {
-		return map[string]interface{}{"status": "disabled"}
+		return map[string]any{"status": "disabled"}
 	}
 
 	metrics := warmer.GetMetrics()
-	return map[string]interface{}{
+	return map[string]any{
 		"total_warmed":     metrics.TotalWarmed,
 		"success_count":    metrics.SuccessCount,
 		"error_count":      metrics.ErrorCount,
@@ -800,25 +800,25 @@ func (h *CacheMonitoringHandler) getWarmingSnapshot() map[string]interface{} {
 	}
 }
 
-func (h *CacheMonitoringHandler) getInvalidationSnapshot() map[string]interface{} {
+func (h *CacheMonitoringHandler) getInvalidationSnapshot() map[string]any {
 	if h.multiLevelMgr == nil {
-		return map[string]interface{}{"status": "disabled"}
+		return map[string]any{"status": "disabled"}
 	}
 
 	invalidator := h.multiLevelMgr.GetInvalidator()
 	if invalidator == nil {
-		return map[string]interface{}{"status": "disabled"}
+		return map[string]any{"status": "disabled"}
 	}
 
 	metrics := invalidator.GetMetrics()
-	result := make(map[string]interface{})
+	result := make(map[string]any)
 	for k, v := range metrics {
 		result[k] = v
 	}
 	return result
 }
 
-func (h *CacheMonitoringHandler) runBasicBenchmark(ctx context.Context) map[string]interface{} {
+func (h *CacheMonitoringHandler) runBasicBenchmark(ctx context.Context) map[string]any {
 	startTime := time.Now()
 
 	// Run simple benchmark
@@ -852,7 +852,7 @@ func (h *CacheMonitoringHandler) runBasicBenchmark(ctx context.Context) map[stri
 
 	totalTime := time.Since(startTime)
 
-	return map[string]interface{}{
+	return map[string]any{
 		"cache_type":          "basic",
 		"total_operations":    numOps * 2, // sets + gets
 		"total_duration_ms":   totalTime.Milliseconds(),
@@ -865,7 +865,7 @@ func (h *CacheMonitoringHandler) runBasicBenchmark(ctx context.Context) map[stri
 	}
 }
 
-func (h *CacheMonitoringHandler) runMultiLevelBenchmark(ctx context.Context) map[string]interface{} {
+func (h *CacheMonitoringHandler) runMultiLevelBenchmark(ctx context.Context) map[string]any {
 	startTime := time.Now()
 
 	// Run simple benchmark
@@ -899,7 +899,7 @@ func (h *CacheMonitoringHandler) runMultiLevelBenchmark(ctx context.Context) map
 
 	totalTime := time.Since(startTime)
 
-	return map[string]interface{}{
+	return map[string]any{
 		"cache_type":          "multi-level",
 		"total_operations":    numOps * 2, // sets + gets
 		"total_duration_ms":   totalTime.Milliseconds(),

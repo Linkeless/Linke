@@ -33,7 +33,7 @@ type FieldSchema struct {
 	Type        string       `json:"type"` // string, number, boolean, object, array
 	Required    bool         `json:"required"`
 	Deprecated  bool         `json:"deprecated"`
-	Default     interface{}  `json:"default,omitempty"`
+	Default     any  `json:"default,omitempty"`
 	Description string       `json:"description,omitempty"`
 	Constraints *Constraints `json:"constraints,omitempty"`
 }
@@ -50,7 +50,7 @@ type Constraints struct {
 
 // EventMigrator handles migration between event versions
 type EventMigrator interface {
-	Migrate(ctx context.Context, oldData map[string]interface{}) (map[string]interface{}, error)
+	Migrate(ctx context.Context, oldData map[string]any) (map[string]any, error)
 	SourceVersion() string
 	TargetVersion() string
 }
@@ -100,7 +100,7 @@ func (vm *EventVersionManager) RegisterMigrator(eventType string, migrator Event
 }
 
 // ValidateEvent validates an event against its schema
-func (vm *EventVersionManager) ValidateEvent(eventType, version string, data map[string]interface{}) error {
+func (vm *EventVersionManager) ValidateEvent(eventType, version string, data map[string]any) error {
 	schema, err := vm.GetSchema(eventType, version)
 	if err != nil {
 		return fmt.Errorf("failed to get schema: %w", err)
@@ -154,7 +154,7 @@ func (vm *EventVersionManager) GetLatestVersion(eventType string) (string, error
 }
 
 // MigrateEvent migrates an event from one version to another
-func (vm *EventVersionManager) MigrateEvent(ctx context.Context, eventType, sourceVersion, targetVersion string, data map[string]interface{}) (map[string]interface{}, error) {
+func (vm *EventVersionManager) MigrateEvent(ctx context.Context, eventType, sourceVersion, targetVersion string, data map[string]any) (map[string]any, error) {
 	// If versions are the same, no migration needed
 	if sourceVersion == targetVersion {
 		return data, nil
@@ -248,7 +248,7 @@ func (vm *EventVersionManager) findMigrationPath(eventType, sourceVersion, targe
 }
 
 // validateAgainstSchema validates data against a schema
-func (vm *EventVersionManager) validateAgainstSchema(data map[string]interface{}, schema *EventSchema) error {
+func (vm *EventVersionManager) validateAgainstSchema(data map[string]any, schema *EventSchema) error {
 	// Check required fields
 	for _, requiredField := range schema.Required {
 		if _, exists := data[requiredField]; !exists {
@@ -278,7 +278,7 @@ func (vm *EventVersionManager) validateAgainstSchema(data map[string]interface{}
 }
 
 // validateField validates a single field against its schema
-func (vm *EventVersionManager) validateField(fieldName string, value interface{}, schema FieldSchema) error {
+func (vm *EventVersionManager) validateField(fieldName string, value any, schema FieldSchema) error {
 	// Type validation
 	if err := vm.validateFieldType(value, schema.Type); err != nil {
 		return fmt.Errorf("type validation failed: %w", err)
@@ -295,7 +295,7 @@ func (vm *EventVersionManager) validateField(fieldName string, value interface{}
 }
 
 // validateFieldType validates the type of a field value
-func (vm *EventVersionManager) validateFieldType(value interface{}, expectedType string) error {
+func (vm *EventVersionManager) validateFieldType(value any, expectedType string) error {
 	switch expectedType {
 	case "string":
 		if _, ok := value.(string); !ok {
@@ -313,11 +313,11 @@ func (vm *EventVersionManager) validateFieldType(value interface{}, expectedType
 			return fmt.Errorf("expected boolean, got %T", value)
 		}
 	case "object":
-		if _, ok := value.(map[string]interface{}); !ok {
+		if _, ok := value.(map[string]any); !ok {
 			return fmt.Errorf("expected object, got %T", value)
 		}
 	case "array":
-		if _, ok := value.([]interface{}); !ok {
+		if _, ok := value.([]any); !ok {
 			return fmt.Errorf("expected array, got %T", value)
 		}
 	default:
@@ -328,7 +328,7 @@ func (vm *EventVersionManager) validateFieldType(value interface{}, expectedType
 }
 
 // validateConstraints validates field constraints
-func (vm *EventVersionManager) validateConstraints(value interface{}, constraints *Constraints) error {
+func (vm *EventVersionManager) validateConstraints(value any, constraints *Constraints) error {
 	// String constraints
 	if str, ok := value.(string); ok {
 		if constraints.MinLength != nil && len(str) < *constraints.MinLength {
@@ -400,7 +400,7 @@ func NewEventVersioningMiddleware(versionManager *EventVersionManager, targetVer
 }
 
 // Process processes events with automatic versioning
-func (m *EventVersioningMiddleware) Process(ctx context.Context, event interface{}, next func(context.Context, interface{}) error) error {
+func (m *EventVersioningMiddleware) Process(ctx context.Context, event any, next func(context.Context, any) error) error {
 	// This would integrate with the event system to automatically handle versioning
 	// For now, it's a placeholder for the concept
 	return next(ctx, event)

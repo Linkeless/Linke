@@ -230,7 +230,7 @@ func (s *TicketService) UpdateTicket(ctx context.Context, ticketID uint, req *Up
 	}
 
 	// Prepare updates
-	updates := make(map[string]interface{})
+	updates := make(map[string]any)
 
 	if req.Title != nil {
 		updates["title"] = *req.Title
@@ -302,7 +302,7 @@ func (s *TicketService) AssignTicket(ctx context.Context, ticketID uint, req *As
 
 	// Update assignment
 	now := time.Now()
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"assigned_to_id": req.AssignedToID,
 		"assigned_at":    &now,
 	}
@@ -340,7 +340,7 @@ func (s *TicketService) ResolveTicket(ctx context.Context, ticketID uint, resolv
 
 	// Update resolution
 	now := time.Now()
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"status":         entities.TicketStatusResolved,
 		"resolved_by_id": resolvedByID,
 		"resolved_at":    &now,
@@ -375,7 +375,7 @@ func (s *TicketService) CloseTicket(ctx context.Context, ticketID uint) (*entiti
 
 	// Update status to closed
 	now := time.Now()
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"status":    entities.TicketStatusClosed,
 		"closed_at": &now,
 	}
@@ -419,8 +419,8 @@ func (s *TicketService) DeleteTicket(ctx context.Context, ticketID uint) error {
 }
 
 // GetTicketStats gets ticket statistics
-func (s *TicketService) GetTicketStats(ctx context.Context) (map[string]interface{}, error) {
-	stats := make(map[string]interface{})
+func (s *TicketService) GetTicketStats(ctx context.Context) (map[string]any, error) {
+	stats := make(map[string]any)
 
 	// Count tickets by status
 	var statusStats []struct {

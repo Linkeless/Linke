@@ -105,65 +105,65 @@ func NewMultiLevelCacheMonitor(
 }
 
 // RegisterRoutes registers monitoring endpoints (DEPRECATED - functionality moved to CacheMonitoringHandler)
-func (mlcm *MultiLevelCacheMonitor) RegisterRoutes(router *gin.RouterGroup) {
+func (m *MultiLevelCacheMonitor) RegisterRoutes(router *gin.RouterGroup) {
 	// DEPRECATED: This functionality has been merged into CacheMonitoringHandler
 	// These routes are no longer registered to avoid conflicts
 	// The unified CacheMonitoringHandler now provides all cache monitoring endpoints
 }
 
 // GetHealth returns comprehensive health status (DEPRECATED - use CacheMonitoringHandler.GetMultiLevelHealth)
-func (mlcm *MultiLevelCacheMonitor) GetHealth(c *gin.Context) {
-	health := mlcm.checkHealth(c.Request.Context())
+func (m *MultiLevelCacheMonitor) GetHealth(c *gin.Context) {
+	health := m.checkHealth(c.Request.Context())
 	response.Success(c, health)
 }
 
 // GetMetrics returns detailed cache metrics (DEPRECATED - use CacheMonitoringHandler.GetMultiLevelMetrics)
-func (mlcm *MultiLevelCacheMonitor) GetMetrics(c *gin.Context) {
-	metrics := mlcm.multilevelCache.GetMetrics()
+func (m *MultiLevelCacheMonitor) GetMetrics(c *gin.Context) {
+	metrics := m.multilevelCache.GetMetrics()
 	response.Success(c, metrics)
 }
 
 // GetPerformanceMetrics returns performance analysis (DEPRECATED - use CacheMonitoringHandler.GetPerformanceMetrics)
-func (mlcm *MultiLevelCacheMonitor) GetPerformanceMetrics(c *gin.Context) {
-	mlcm.updatePerformanceMetrics()
+func (m *MultiLevelCacheMonitor) GetPerformanceMetrics(c *gin.Context) {
+	m.updatePerformanceMetrics()
 
-	mlcm.mu.RLock()
-	performance := *mlcm.performanceMetrics
-	mlcm.mu.RUnlock()
+	m.mu.RLock()
+	performance := *m.performanceMetrics
+	m.mu.RUnlock()
 
 	response.Success(c, performance)
 }
 
 // GetDashboard returns dashboard data (DEPRECATED - use CacheMonitoringHandler.GetDashboard)
-func (mlcm *MultiLevelCacheMonitor) GetDashboard(c *gin.Context) {
-	dashboard := map[string]interface{}{
-		"health":       mlcm.checkHealth(c.Request.Context()),
-		"metrics":      mlcm.multilevelCache.GetMetrics(),
-		"performance":  mlcm.getPerformanceSnapshot(),
-		"warming":      mlcm.getWarmingSnapshot(),
-		"invalidation": mlcm.getInvalidationSnapshot(),
-		"alerts":       mlcm.checkAlerts(),
+func (m *MultiLevelCacheMonitor) GetDashboard(c *gin.Context) {
+	dashboard := map[string]any{
+		"health":       m.checkHealth(c.Request.Context()),
+		"metrics":      m.multilevelCache.GetMetrics(),
+		"performance":  m.getPerformanceSnapshot(),
+		"warming":      m.getWarmingSnapshot(),
+		"invalidation": m.getInvalidationSnapshot(),
+		"alerts":       m.checkAlerts(),
 	}
 
 	response.Success(c, dashboard)
 }
 
 // GetAlerts checks and returns active alerts (DEPRECATED - use CacheMonitoringHandler.GetAlerts)
-func (mlcm *MultiLevelCacheMonitor) GetAlerts(c *gin.Context) {
-	alerts := mlcm.checkAlerts()
+func (m *MultiLevelCacheMonitor) GetAlerts(c *gin.Context) {
+	alerts := m.checkAlerts()
 	response.Success(c, alerts)
 }
 
 // RunBenchmark runs a performance benchmark (DEPRECATED - use CacheMonitoringHandler.RunBenchmark)
-func (mlcm *MultiLevelCacheMonitor) RunBenchmark(c *gin.Context) {
-	result := mlcm.runBenchmark(c.Request.Context())
+func (m *MultiLevelCacheMonitor) RunBenchmark(c *gin.Context) {
+	result := m.runBenchmark(c.Request.Context())
 	response.Success(c, result)
 }
 
 // GetWarmingStatus returns cache warming status (DEPRECATED - use CacheMonitoringHandler.GetWarmingStatus)
-func (mlcm *MultiLevelCacheMonitor) GetWarmingStatus(c *gin.Context) {
-	if mlcm.warmer != nil {
-		metrics := mlcm.warmer.GetMetrics()
+func (m *MultiLevelCacheMonitor) GetWarmingStatus(c *gin.Context) {
+	if m.warmer != nil {
+		metrics := m.warmer.GetMetrics()
 		response.Success(c, metrics)
 	} else {
 		response.Success(c, map[string]string{"status": "warming not configured"})
@@ -171,7 +171,7 @@ func (mlcm *MultiLevelCacheMonitor) GetWarmingStatus(c *gin.Context) {
 }
 
 // TriggerWarming manually triggers cache warming (DEPRECATED - use CacheMonitoringHandler.TriggerWarming)
-func (mlcm *MultiLevelCacheMonitor) TriggerWarming(c *gin.Context) {
+func (m *MultiLevelCacheMonitor) TriggerWarming(c *gin.Context) {
 	var req struct {
 		Prefixes []string `json:"prefixes"`
 	}
@@ -181,14 +181,14 @@ func (mlcm *MultiLevelCacheMonitor) TriggerWarming(c *gin.Context) {
 		return
 	}
 
-	if mlcm.warmer == nil {
+	if m.warmer == nil {
 		response.Error(c, http.StatusServiceUnavailable, 503, "Cache warming not configured")
 		return
 	}
 
-	results := make(map[string]interface{})
+	results := make(map[string]any)
 	for _, prefix := range req.Prefixes {
-		err := mlcm.warmer.WarmPrefix(c.Request.Context(), prefix)
+		err := m.warmer.WarmPrefix(c.Request.Context(), prefix)
 		if err != nil {
 			results[prefix] = map[string]string{"status": "failed", "error": err.Error()}
 		} else {
@@ -196,16 +196,16 @@ func (mlcm *MultiLevelCacheMonitor) TriggerWarming(c *gin.Context) {
 		}
 	}
 
-	response.Success(c, map[string]interface{}{
+	response.Success(c, map[string]any{
 		"triggered_at": time.Now().Format(time.RFC3339),
 		"results":      results,
 	})
 }
 
 // GetInvalidationMetrics returns cache invalidation metrics (DEPRECATED - use CacheMonitoringHandler.GetInvalidationMetrics)
-func (mlcm *MultiLevelCacheMonitor) GetInvalidationMetrics(c *gin.Context) {
-	if mlcm.invalidator != nil {
-		metrics := mlcm.invalidator.GetMetrics()
+func (m *MultiLevelCacheMonitor) GetInvalidationMetrics(c *gin.Context) {
+	if m.invalidator != nil {
+		metrics := m.invalidator.GetMetrics()
 		response.Success(c, metrics)
 	} else {
 		response.Success(c, map[string]string{"status": "invalidation not configured"})
@@ -214,7 +214,7 @@ func (mlcm *MultiLevelCacheMonitor) GetInvalidationMetrics(c *gin.Context) {
 
 // Private methods
 
-func (mlcm *MultiLevelCacheMonitor) checkHealth(ctx context.Context) *DeprecatedCacheHealthStatus {
+func (m *MultiLevelCacheMonitor) checkHealth(ctx context.Context) *DeprecatedCacheHealthStatus {
 	health := &DeprecatedCacheHealthStatus{
 		Components: make(map[string]string),
 		Issues:     make([]string, 0),
@@ -222,8 +222,8 @@ func (mlcm *MultiLevelCacheMonitor) checkHealth(ctx context.Context) *Deprecated
 	}
 
 	// Check L1 cache health
-	if mlcm.multilevelCache.config.EnableL1 && mlcm.multilevelCache.l1Cache != nil {
-		l1Metrics := mlcm.multilevelCache.l1Cache.GetMetrics()
+	if m.multilevelCache.config.EnableL1 && m.multilevelCache.l1Cache != nil {
+		l1Metrics := m.multilevelCache.l1Cache.GetMetrics()
 		if l1Metrics.entryCount > 0 {
 			health.Components["L1_cache"] = "healthy"
 		} else {
@@ -232,7 +232,7 @@ func (mlcm *MultiLevelCacheMonitor) checkHealth(ctx context.Context) *Deprecated
 
 		// Check memory usage
 		memoryUsage := float64(l1Metrics.currentSize) / float64(l1Metrics.maxSize) * 100
-		if memoryUsage > mlcm.alertThresholds.MaxMemoryUsagePercent {
+		if memoryUsage > m.alertThresholds.MaxMemoryUsagePercent {
 			health.Issues = append(health.Issues, fmt.Sprintf("L1 memory usage high: %.1f%%", memoryUsage))
 			health.Components["L1_cache"] = "warning"
 		}
@@ -241,13 +241,13 @@ func (mlcm *MultiLevelCacheMonitor) checkHealth(ctx context.Context) *Deprecated
 	}
 
 	// Check L2 cache health
-	if mlcm.multilevelCache.config.EnableL2 && mlcm.multilevelCache.l2Cache != nil {
+	if m.multilevelCache.config.EnableL2 && m.multilevelCache.l2Cache != nil {
 		// Try a test operation
 		testKey := "health_check_" + fmt.Sprintf("%d", time.Now().Unix())
-		err := mlcm.multilevelCache.l2Cache.Set(ctx, testKey, []byte("test"), 1*time.Second)
+		err := m.multilevelCache.l2Cache.Set(ctx, testKey, []byte("test"), 1*time.Second)
 		if err == nil {
 			health.Components["L2_cache"] = "healthy"
-			_ = mlcm.multilevelCache.l2Cache.Delete(ctx, testKey)
+			_ = m.multilevelCache.l2Cache.Delete(ctx, testKey)
 		} else {
 			health.Components["L2_cache"] = "unhealthy"
 			health.Issues = append(health.Issues, fmt.Sprintf("L2 cache error: %v", err))
@@ -257,17 +257,17 @@ func (mlcm *MultiLevelCacheMonitor) checkHealth(ctx context.Context) *Deprecated
 	}
 
 	// Check overall metrics
-	metrics := mlcm.multilevelCache.GetMetrics()
+	metrics := m.multilevelCache.GetMetrics()
 	health.Metrics = metrics
 
 	// Check performance
-	mlcm.updatePerformanceMetrics()
-	mlcm.mu.RLock()
-	health.Performance = mlcm.performanceMetrics
-	mlcm.mu.RUnlock()
+	m.updatePerformanceMetrics()
+	m.mu.RLock()
+	health.Performance = m.performanceMetrics
+	m.mu.RUnlock()
 
 	// Check alerts
-	alerts := mlcm.checkAlerts()
+	alerts := m.checkAlerts()
 	health.Issues = append(health.Issues, alerts...)
 
 	// Determine overall health
@@ -282,31 +282,31 @@ func (mlcm *MultiLevelCacheMonitor) checkHealth(ctx context.Context) *Deprecated
 	return health
 }
 
-func (mlcm *MultiLevelCacheMonitor) updatePerformanceMetrics() {
-	mlcm.mu.Lock()
-	defer mlcm.mu.Unlock()
+func (m *MultiLevelCacheMonitor) updatePerformanceMetrics() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 
-	metrics := mlcm.multilevelCache.GetMetrics()
+	metrics := m.multilevelCache.GetMetrics()
 
 	// Calculate efficiency metrics
 	totalOps := metrics.L1Hits + metrics.L2Hits + metrics.TotalMisses
 	if totalOps > 0 {
-		mlcm.performanceMetrics.MemoryEfficiency = float64(metrics.L1Hits+metrics.L2Hits) / float64(totalOps) * 100
+		m.performanceMetrics.MemoryEfficiency = float64(metrics.L1Hits+metrics.L2Hits) / float64(totalOps) * 100
 	}
 
 	// Update hourly trends (simplified - should use proper time windows)
 	currentHour := time.Now().Hour()
 	if totalOps > 0 {
-		mlcm.performanceMetrics.HourlyHitRates[currentHour] = metrics.OverallHitRate
-		mlcm.performanceMetrics.HourlyMissRates[currentHour] = 100 - metrics.OverallHitRate
+		m.performanceMetrics.HourlyHitRates[currentHour] = metrics.OverallHitRate
+		m.performanceMetrics.HourlyMissRates[currentHour] = 100 - metrics.OverallHitRate
 	}
 
 	// Update response times (placeholder - would need actual measurement)
-	mlcm.performanceMetrics.L1AvgResponseTime = 0.5 // 0.5ms avg for memory cache
-	mlcm.performanceMetrics.L2AvgResponseTime = 5.0 // 5ms avg for Redis cache
+	m.performanceMetrics.L1AvgResponseTime = 0.5 // 0.5ms avg for memory cache
+	m.performanceMetrics.L2AvgResponseTime = 5.0 // 5ms avg for Redis cache
 
 	// Calculate data freshness (placeholder)
-	mlcm.performanceMetrics.DataFreshness = 85.0 // 85% fresh data
+	m.performanceMetrics.DataFreshness = 85.0 // 85% fresh data
 
 	// Calculate cache consistency
 	if metrics.L1Metrics != nil && metrics.L2Metrics != nil {
@@ -315,19 +315,19 @@ func (mlcm *MultiLevelCacheMonitor) updatePerformanceMetrics() {
 		if hitRateDiff < 0 {
 			hitRateDiff = -hitRateDiff
 		}
-		mlcm.performanceMetrics.CacheConsistency = 100 - hitRateDiff
+		m.performanceMetrics.CacheConsistency = 100 - hitRateDiff
 	}
 
 	// Update promotion accuracy (placeholder)
 	if metrics.Promotions > 0 {
-		mlcm.performanceMetrics.PromotionAccuracy = 88.5 // 88.5% accuracy
+		m.performanceMetrics.PromotionAccuracy = 88.5 // 88.5% accuracy
 	}
 }
 
-func (mlcm *MultiLevelCacheMonitor) checkAlerts() []string {
+func (m *MultiLevelCacheMonitor) checkAlerts() []string {
 	alerts := make([]string, 0)
 
-	metrics := mlcm.multilevelCache.GetMetrics()
+	metrics := m.multilevelCache.GetMetrics()
 
 	// Check hit rate drop
 	if metrics.OverallHitRate < 50.0 {
@@ -335,14 +335,14 @@ func (mlcm *MultiLevelCacheMonitor) checkAlerts() []string {
 	}
 
 	// Check error rates
-	if metrics.L2Metrics != nil && metrics.L2Metrics.ErrorRate > mlcm.alertThresholds.MaxErrorRatePercent {
+	if metrics.L2Metrics != nil && metrics.L2Metrics.ErrorRate > m.alertThresholds.MaxErrorRatePercent {
 		alerts = append(alerts, fmt.Sprintf("High L2 error rate: %.1f%%", metrics.L2Metrics.ErrorRate))
 	}
 
 	// Check memory usage
 	if metrics.L1Metrics != nil {
 		memoryUsage := float64(metrics.L1Metrics.currentSize) / float64(metrics.L1Metrics.maxSize) * 100
-		if memoryUsage > mlcm.alertThresholds.MaxMemoryUsagePercent {
+		if memoryUsage > m.alertThresholds.MaxMemoryUsagePercent {
 			alerts = append(alerts, fmt.Sprintf("High L1 memory usage: %.1f%%", memoryUsage))
 		}
 	}
@@ -350,29 +350,29 @@ func (mlcm *MultiLevelCacheMonitor) checkAlerts() []string {
 	return alerts
 }
 
-func (mlcm *MultiLevelCacheMonitor) getPerformanceSnapshot() map[string]interface{} {
-	mlcm.updatePerformanceMetrics()
+func (m *MultiLevelCacheMonitor) getPerformanceSnapshot() map[string]any {
+	m.updatePerformanceMetrics()
 
-	mlcm.mu.RLock()
-	defer mlcm.mu.RUnlock()
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 
-	return map[string]interface{}{
-		"memory_efficiency":  mlcm.performanceMetrics.MemoryEfficiency,
-		"l1_response_time":   mlcm.performanceMetrics.L1AvgResponseTime,
-		"l2_response_time":   mlcm.performanceMetrics.L2AvgResponseTime,
-		"data_freshness":     mlcm.performanceMetrics.DataFreshness,
-		"cache_consistency":  mlcm.performanceMetrics.CacheConsistency,
-		"promotion_accuracy": mlcm.performanceMetrics.PromotionAccuracy,
+	return map[string]any{
+		"memory_efficiency":  m.performanceMetrics.MemoryEfficiency,
+		"l1_response_time":   m.performanceMetrics.L1AvgResponseTime,
+		"l2_response_time":   m.performanceMetrics.L2AvgResponseTime,
+		"data_freshness":     m.performanceMetrics.DataFreshness,
+		"cache_consistency":  m.performanceMetrics.CacheConsistency,
+		"promotion_accuracy": m.performanceMetrics.PromotionAccuracy,
 	}
 }
 
-func (mlcm *MultiLevelCacheMonitor) getWarmingSnapshot() map[string]interface{} {
-	if mlcm.warmer == nil {
-		return map[string]interface{}{"status": "disabled"}
+func (m *MultiLevelCacheMonitor) getWarmingSnapshot() map[string]any {
+	if m.warmer == nil {
+		return map[string]any{"status": "disabled"}
 	}
 
-	metrics := mlcm.warmer.GetMetrics()
-	return map[string]interface{}{
+	metrics := m.warmer.GetMetrics()
+	return map[string]any{
 		"total_warmed":     metrics.TotalWarmed,
 		"success_count":    metrics.SuccessCount,
 		"error_count":      metrics.ErrorCount,
@@ -382,20 +382,20 @@ func (mlcm *MultiLevelCacheMonitor) getWarmingSnapshot() map[string]interface{} 
 	}
 }
 
-func (mlcm *MultiLevelCacheMonitor) getInvalidationSnapshot() map[string]interface{} {
-	if mlcm.invalidator == nil {
-		return map[string]interface{}{"status": "disabled"}
+func (m *MultiLevelCacheMonitor) getInvalidationSnapshot() map[string]any {
+	if m.invalidator == nil {
+		return map[string]any{"status": "disabled"}
 	}
 
-	metrics := mlcm.invalidator.GetMetrics()
-	result := make(map[string]interface{})
+	metrics := m.invalidator.GetMetrics()
+	result := make(map[string]any)
 	for k, v := range metrics {
 		result[k] = v
 	}
 	return result
 }
 
-func (mlcm *MultiLevelCacheMonitor) runBenchmark(ctx context.Context) map[string]interface{} {
+func (m *MultiLevelCacheMonitor) runBenchmark(ctx context.Context) map[string]any {
 	startTime := time.Now()
 
 	// Run simple benchmark
@@ -407,7 +407,7 @@ func (mlcm *MultiLevelCacheMonitor) runBenchmark(ctx context.Context) map[string
 	for i := 0; i < numOps; i++ {
 		key := fmt.Sprintf("benchmark_set_%d", i)
 		value := []byte(fmt.Sprintf("benchmark_value_%d", i))
-		_ = mlcm.multilevelCache.Set(ctx, key, value, 1*time.Minute)
+		_ = m.multilevelCache.Set(ctx, key, value, 1*time.Minute)
 	}
 	setTime = time.Since(setStart)
 
@@ -415,19 +415,19 @@ func (mlcm *MultiLevelCacheMonitor) runBenchmark(ctx context.Context) map[string
 	getStart := time.Now()
 	for i := 0; i < numOps; i++ {
 		key := fmt.Sprintf("benchmark_set_%d", i)
-		_, _ = mlcm.multilevelCache.Get(ctx, key)
+		_, _ = m.multilevelCache.Get(ctx, key)
 	}
 	getTime = time.Since(getStart)
 
 	// Cleanup
 	for i := 0; i < numOps; i++ {
 		key := fmt.Sprintf("benchmark_set_%d", i)
-		_ = mlcm.multilevelCache.Delete(ctx, key)
+		_ = m.multilevelCache.Delete(ctx, key)
 	}
 
 	totalTime := time.Since(startTime)
 
-	return map[string]interface{}{
+	return map[string]any{
 		"total_operations":    numOps * 2, // sets + gets
 		"total_duration_ms":   totalTime.Milliseconds(),
 		"set_duration_ms":     setTime.Milliseconds(),

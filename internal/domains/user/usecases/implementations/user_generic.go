@@ -36,7 +36,7 @@ func NewUserServiceGeneric(
 
 func (s *UserServiceGeneric) GetUserByEmail(ctx context.Context, email string) (*entities.User, error) {
 	// Custom query for finding user by email
-	filters := map[string]interface{}{
+	filters := map[string]any{
 		"email": email,
 	}
 	
@@ -80,7 +80,7 @@ func (s *UserServiceGeneric) GetActiveUserByEmail(ctx context.Context, email str
 }
 
 func (s *UserServiceGeneric) ListUsersByProvider(ctx context.Context, provider string, limit, offset int) ([]*entities.User, int64, error) {
-	filters := map[string]interface{}{
+	filters := map[string]any{
 		"provider": provider,
 	}
 	

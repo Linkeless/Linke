@@ -136,7 +136,7 @@ func (s *SubscriptionExpiryService) ExpireSubscription(ctx context.Context, subs
 	// Update subscription status
 	now := time.Now()
 	oldStatus := subscription.Status
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"status":     entities.UserSubscriptionStatusExpired,
 		"updated_at": now,
 	}
@@ -198,7 +198,7 @@ func (s *SubscriptionExpiryService) CancelSubscriptionAtPeriodEnd(ctx context.Co
 	// Update subscription status
 	now := time.Now()
 	oldStatus := subscription.Status
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"status":               entities.UserSubscriptionStatusCancelled,
 		"cancelled_at":         &now,
 		"cancel_at_period_end": false,
@@ -261,7 +261,7 @@ func (s *SubscriptionExpiryService) SuspendOverdueSubscription(ctx context.Conte
 	// Update subscription status
 	now := time.Now()
 	oldStatus := subscription.Status
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"status":     entities.UserSubscriptionStatusPaused,
 		"updated_at": now,
 	}

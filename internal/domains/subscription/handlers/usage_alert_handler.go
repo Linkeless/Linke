@@ -366,7 +366,7 @@ func (h *UsageAlertHandler) AcknowledgeAlert(c *gin.Context) {
 		return
 	}
 
-	var req map[string]interface{}
+	var req map[string]any
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "Invalid request format")
 		return
@@ -393,7 +393,7 @@ func (h *UsageAlertHandler) AcknowledgeAlert(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param alert_id path int true "Alert ID"
-// @Param request body map[string]interface{} true "Suppress Request" example({"duration_minutes":60,"reason":"Maintenance window"})
+// @Param request body map[string]any true "Suppress Request" example({"duration_minutes":60,"reason":"Maintenance window"})
 // @Success 200 {object} response.Response
 // @Failure 400 {object} response.Response
 // @Failure 404 {object} response.Response
@@ -406,7 +406,7 @@ func (h *UsageAlertHandler) SuppressAlert(c *gin.Context) {
 		return
 	}
 
-	var req map[string]interface{}
+	var req map[string]any
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "Invalid request format")
 		return
@@ -636,7 +636,7 @@ func (h *UsageAlertHandler) RegisterRoutes(router *gin.RouterGroup) {
 		usageAlertGroup.GET("/config/:config_id", h.GetAlertConfiguration)
 		usageAlertGroup.PUT("/config/:config_id", h.UpdateAlertConfiguration)
 		usageAlertGroup.DELETE("/config/:config_id", h.DeleteAlertConfiguration)
-		
+
 		// Alert configuration routes - by subscription (more specific path)
 		usageAlertGroup.GET("/subscription/:subscription_id/configurations", h.GetAlertConfigurations)
 
@@ -644,12 +644,12 @@ func (h *UsageAlertHandler) RegisterRoutes(router *gin.RouterGroup) {
 		usageAlertGroup.GET("/subscription/:subscription_id", h.GetUsageAlerts)
 		usageAlertGroup.GET("/subscription/:subscription_id/statistics", h.GetAlertStatistics)
 		usageAlertGroup.GET("/subscription/:subscription_id/history", h.GetAlertHistory)
-		
+
 		// Alert management routes - by alert ID
 		usageAlertGroup.POST("/alert/:alert_id/resolve", h.ResolveAlert)
 		usageAlertGroup.POST("/alert/:alert_id/acknowledge", h.AcknowledgeAlert)
 		usageAlertGroup.POST("/alert/:alert_id/suppress", h.SuppressAlert)
-		
+
 		// Bulk operations
 		usageAlertGroup.POST("/bulk/resolve", h.BulkResolveAlerts)
 

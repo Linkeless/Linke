@@ -48,10 +48,10 @@ func NewServerAPIHandler(shadowsocksService serverInterfaces.ShadowsocksServerSe
 // @Tags Server-API
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.StandardResponse{data=map[string]interface{}}
+// @Success 200 {object} response.StandardResponse{data=map[string]any}
 // @Router /server/UniProxy/health [get]
 func (h *ServerAPIHandler) Health(c *gin.Context) {
-	response.Success(c, map[string]interface{}{
+	response.Success(c, map[string]any{
 		"status":  "ok",
 		"service": "server-api",
 	})
@@ -61,8 +61,8 @@ func (h *ServerAPIHandler) Health(c *gin.Context) {
 type UniProxyConfigResponse struct {
 	ServerPort   int                `json:"server_port"`
 	Cipher       string             `json:"cipher"`
-	Obfs         interface{}        `json:"obfs"`
-	ObfsSettings interface{}        `json:"obfs_settings"`
+	Obfs         any                `json:"obfs"`
+	ObfsSettings any                `json:"obfs_settings"`
 	BaseConfig   UniProxyBaseConfig `json:"base_config"`
 }
 
@@ -186,9 +186,9 @@ func (h *ServerAPIHandler) UniProxyConfig(c *gin.Context) {
 
 // UniProxyUserItem represents a single user item for UniProxy
 type UniProxyUserItem struct {
-	ID         uint        `json:"id"`          // Subscription ID
-	UUID       string      `json:"uuid"`        // Subscription UUID
-	SpeedLimit interface{} `json:"speed_limit"` // Speed limit (null for unlimited)
+	ID         uint   `json:"id"`          // Subscription ID
+	UUID       string `json:"uuid"`        // Subscription UUID
+	SpeedLimit any    `json:"speed_limit"` // Speed limit (null for unlimited)
 }
 
 // UniProxyUsersResponse represents the users response for UniProxy
@@ -467,7 +467,7 @@ func (h *ServerAPIHandler) hasAccessToServerGroup(subscription *subscriptionEnti
 }
 
 // getObfsValue returns null if obfs is empty, otherwise returns the obfs value
-func getObfsValue(obfs string) interface{} {
+func getObfsValue(obfs string) any {
 	if obfs == "" {
 		return nil
 	}
@@ -475,7 +475,7 @@ func getObfsValue(obfs string) interface{} {
 }
 
 // getObfsSettingsValue returns null if obfs_settings is empty, otherwise returns the obfs_settings value
-func getObfsSettingsValue(obfsSettings string) interface{} {
+func getObfsSettingsValue(obfsSettings string) any {
 	if obfsSettings == "" {
 		return nil
 	}
@@ -498,7 +498,7 @@ type UniProxyPushRequest struct {
 // @Param node_id query int true "Node ID"
 // @Param node_type query string true "Node Type" Enums(shadowsocks)
 // @Param token query string true "Authentication Token"
-// @Success 200 {object} response.StandardResponse{data=map[string]interface{}}
+// @Success 200 {object} response.StandardResponse{data=map[string]any}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -550,7 +550,7 @@ func (h *ServerAPIHandler) UniProxyPush(c *gin.Context) {
 		logger.String("node_type", req.NodeType),
 	)
 
-	response.OK(c, "Node data received and processed", map[string]interface{}{
+	response.OK(c, "Node data received and processed", map[string]any{
 		"status":    "processed",
 		"node_id":   req.NodeID,
 		"node_type": req.NodeType,

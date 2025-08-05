@@ -320,9 +320,9 @@ func (h *PaymentHandler) PaymentNotify(c *gin.Context) {
 	}
 
 	// Get notification data from context (set by security middleware)
-	var notifyData map[string]interface{}
+	var notifyData map[string]any
 	if data, exists := c.Get("payment_request_data"); exists {
-		if requestData, ok := data.(map[string]interface{}); ok {
+		if requestData, ok := data.(map[string]any); ok {
 			notifyData = requestData
 		}
 	}
@@ -365,7 +365,7 @@ func (h *PaymentHandler) PaymentNotify(c *gin.Context) {
 }
 
 // parseNotificationData parses notification data for backward compatibility
-func (h *PaymentHandler) parseNotificationData(c *gin.Context, gateway string) (map[string]interface{}, error) {
+func (h *PaymentHandler) parseNotificationData(c *gin.Context, gateway string) (map[string]any, error) {
 	// SECURITY: Validate request size to prevent DoS
 	const maxRequestSize = 1024 * 1024 // 1MB
 	if c.Request.ContentLength > maxRequestSize {
@@ -376,7 +376,7 @@ func (h *PaymentHandler) parseNotificationData(c *gin.Context, gateway string) (
 		return nil, fmt.Errorf("request too large")
 	}
 
-	var notifyData map[string]interface{}
+	var notifyData map[string]any
 
 	contentType := c.GetHeader("Content-Type")
 	if contentType == "application/json" {
@@ -396,7 +396,7 @@ func (h *PaymentHandler) parseNotificationData(c *gin.Context, gateway string) (
 			return nil, fmt.Errorf("failed to parse form: %w", err)
 		}
 
-		notifyData = make(map[string]interface{})
+		notifyData = make(map[string]any)
 		for key, values := range c.Request.PostForm {
 			if len(values) > 0 {
 				// SECURITY: Limit form field length to prevent DoS

@@ -498,7 +498,7 @@ func (h *AdminUserHandler) SearchUsers(c *gin.Context) {
 		return
 	}
 
-	response.SuccessListWithExtra(c, "Search completed", users, page, limit, total, map[string]interface{}{
+	response.SuccessListWithExtra(c, "Search completed", users, page, limit, total, map[string]any{
 		"query": query,
 	})
 }
@@ -559,7 +559,7 @@ func (h *AdminUserHandler) ListUsersByProvider(c *gin.Context) {
 		return
 	}
 
-	response.SuccessListWithExtra(c, "Users retrieved successfully", users, page, limit, total, map[string]interface{}{
+	response.SuccessListWithExtra(c, "Users retrieved successfully", users, page, limit, total, map[string]any{
 		"provider": provider,
 	})
 }
@@ -621,7 +621,7 @@ func (h *AdminUserHandler) BatchDeleteUsers(c *gin.Context) {
 		return
 	}
 
-	response.SuccessWithMessage(c, "Users deleted successfully", map[string]interface{}{
+	response.SuccessWithMessage(c, "Users deleted successfully", map[string]any{
 		"deleted_count": result.DeletedCount,
 		"failed_ids":    result.FailedIDs,
 	})
@@ -635,7 +635,7 @@ func (h *AdminUserHandler) BatchDeleteUsers(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "User ID"
-// @Param user body map[string]interface{} true "Partial user data"
+// @Param user body map[string]any true "Partial user data"
 // @Success 200 {object} response.StandardResponse{data=entities.UserResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -663,7 +663,7 @@ func (h *AdminUserHandler) PatchUser(c *gin.Context) {
 	}
 
 	// Parse partial update data
-	var updateData map[string]interface{}
+	var updateData map[string]any
 	if err := c.ShouldBindJSON(&updateData); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -774,7 +774,7 @@ func (h *AdminUserHandler) BatchRestoreUsers(c *gin.Context) {
 		return
 	}
 
-	response.SuccessWithMessage(c, "Users restored successfully", map[string]interface{}{
+	response.SuccessWithMessage(c, "Users restored successfully", map[string]any{
 		"restored_count": result.RestoredCount,
 		"failed_ids":     result.FailedIDs,
 	})

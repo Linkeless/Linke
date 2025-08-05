@@ -43,7 +43,7 @@ func TestCrossDomainEventHandlers(t *testing.T) {
 			"payment_123",
 			99.99,
 			456,
-			map[string]interface{}{
+			map[string]any{
 				"order_id": float64(789), // JSON unmarshaling converts numbers to float64
 				"method":   "credit_card",
 			},
@@ -101,7 +101,7 @@ func TestCrossDomainEventHandlers(t *testing.T) {
 			EventTypeOrderPaid,
 			789,
 			456,
-			map[string]interface{}{
+			map[string]any{
 				"payment_id": "payment_123",
 				"amount":     99.99,
 			},
@@ -165,7 +165,7 @@ func TestCrossDomainEventHandlers(t *testing.T) {
 			EventTypeSubscriptionExpired,
 			123,
 			456,
-			map[string]interface{}{
+			map[string]any{
 				"expired_at": time.Now(),
 			},
 		)
@@ -220,10 +220,10 @@ func TestCrossDomainEventHandlers(t *testing.T) {
 		userEvent := NewUserEvent(
 			EventTypeUserDeleted,
 			456,
-			map[string]interface{}{
+			map[string]any{
 				"email": "test@example.com",
-				"active_subscriptions": []interface{}{
-					map[string]interface{}{
+				"active_subscriptions": []any{
+					map[string]any{
 						"id":     float64(123),
 						"status": "active",
 					},
@@ -284,7 +284,7 @@ func TestCrossDomainEventHandlers(t *testing.T) {
 			"payment_123",
 			99.99,
 			456,
-			map[string]interface{}{
+			map[string]any{
 				"order_id": float64(789),
 				"reason":   "insufficient_funds",
 			},
@@ -357,7 +357,7 @@ func TestNotificationHandler(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				event := NewBaseEvent(tc.eventType, "test-service", map[string]interface{}{
+				event := NewBaseEvent(tc.eventType, "test-service", map[string]any{
 					"test": "data",
 				})
 
@@ -392,7 +392,7 @@ func TestEventHandlerErrorCases(t *testing.T) {
 		handler := handlers.PaymentCompletedHandler()
 
 		// Pass wrong event type
-		userEvent := NewUserEvent(EventTypeUserCreated, 123, map[string]interface{}{})
+		userEvent := NewUserEvent(EventTypeUserCreated, 123, map[string]any{})
 
 		err := handler.Handle(context.Background(), userEvent)
 		assert.Error(t, err)
@@ -404,7 +404,7 @@ func TestEventHandlerErrorCases(t *testing.T) {
 		handler := handlers.OrderPaidHandler()
 
 		// Pass wrong event type
-		userEvent := NewUserEvent(EventTypeUserCreated, 123, map[string]interface{}{})
+		userEvent := NewUserEvent(EventTypeUserCreated, 123, map[string]any{})
 
 		err := handler.Handle(context.Background(), userEvent)
 		assert.Error(t, err)
@@ -416,7 +416,7 @@ func TestEventHandlerErrorCases(t *testing.T) {
 		handler := handlers.SubscriptionExpiredHandler()
 
 		// Pass wrong event type
-		userEvent := NewUserEvent(EventTypeUserCreated, 123, map[string]interface{}{})
+		userEvent := NewUserEvent(EventTypeUserCreated, 123, map[string]any{})
 
 		err := handler.Handle(context.Background(), userEvent)
 		assert.Error(t, err)
@@ -440,7 +440,7 @@ func BenchmarkCrossDomainHandlers(b *testing.B) {
 		"payment_123",
 		99.99,
 		456,
-		map[string]interface{}{
+		map[string]any{
 			"order_id": float64(789),
 			"method":   "credit_card",
 		},
@@ -494,7 +494,7 @@ func TestHandlerChaining(t *testing.T) {
 			"payment_123",
 			99.99,
 			456,
-			map[string]interface{}{
+			map[string]any{
 				"order_id": float64(789),
 				"method":   "credit_card",
 			},

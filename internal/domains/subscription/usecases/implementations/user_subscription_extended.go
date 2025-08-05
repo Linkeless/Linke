@@ -232,7 +232,7 @@ func (s *UserSubscriptionService) GetNotificationPreferences(ctx context.Context
 
 	// Parse existing preferences from provider_data if available
 	if providerData != nil && *providerData != "" {
-		var providerDataMap map[string]interface{}
+		var providerDataMap map[string]any
 		if err := json.Unmarshal([]byte(*providerData), &providerDataMap); err == nil {
 			if notifPrefs, exists := providerDataMap["notification_preferences"]; exists {
 				if prefsData, err := json.Marshal(notifPrefs); err == nil {
@@ -285,7 +285,7 @@ func (s *UserSubscriptionService) PauseUserSubscription(ctx context.Context, sub
 	// Update subscription with pause information
 	now := time.Now()
 	oldStatus := subscription.Status
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"status":              entities.UserSubscriptionStatusPaused,
 		"paused_at":           &now,
 		"pause_reason":        req.Reason,
@@ -370,7 +370,7 @@ func (s *UserSubscriptionService) ResumeUserSubscription(ctx context.Context, su
 	// Update subscription status and resume information
 	now := time.Now()
 	oldStatus := subscription.Status
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"status":              entities.UserSubscriptionStatusActive,
 		"resumed_at":          &now,
 		"resumed_by_admin_id": &adminUserID,
@@ -516,7 +516,7 @@ func (s *UserSubscriptionService) ResetTrafficUsage(ctx context.Context, subscri
 		nextResetDate = &nextReset
 	}
 
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"traffic_used":       0,
 		"traffic_suspended":  false,
 		"traffic_reset_date": nextResetDate,

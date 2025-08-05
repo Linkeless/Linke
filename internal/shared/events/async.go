@@ -96,7 +96,7 @@ func (bus *AsyncEventBus) PublishAsync(ctx context.Context, event Event) error {
 		ID:       event.EventID(),
 		Type:     TaskTypeEventProcessing,
 		MaxRetry: bus.asyncProcessor.retryConfig.MaxRetries,
-		Payload: map[string]interface{}{
+		Payload: map[string]any{
 			"event_data":     string(eventData),
 			"event_id":       event.EventID(),
 			"event_type":     event.EventType(),
@@ -132,7 +132,7 @@ const (
 // EventProcessingTaskHandler handles event processing tasks
 func EventProcessingTaskHandler(asyncProcessor *AsyncEventProcessor) queue.TaskHandler {
 	return func(ctx context.Context, task *asynq.Task) error {
-		var payload map[string]interface{}
+		var payload map[string]any
 		if err := json.Unmarshal(task.Payload(), &payload); err != nil {
 			return fmt.Errorf("failed to unmarshal event processing task payload: %w", err)
 		}
@@ -211,7 +211,7 @@ func (p *AsyncEventProcessor) handleDeadLetter(ctx context.Context, event Event,
 	deadLetterEvent := NewBaseEvent(
 		"event.dead_letter",
 		"event-processor",
-		map[string]interface{}{
+		map[string]any{
 			"original_event_id":   event.EventID(),
 			"original_event_type": event.EventType(),
 			"failure_reason":      originalError.Error(),
@@ -304,7 +304,7 @@ func (h *EventReplayHandler) ReplayEvents(ctx context.Context, fromTimestamp tim
 			ID:       fmt.Sprintf("replay-%s", event.EventID()),
 			Type:     TaskTypeEventReprocessing,
 			MaxRetry: 1, // Don't retry replay events
-			Payload: map[string]interface{}{
+			Payload: map[string]any{
 				"event_data": string(eventData),
 				"event_id":   event.EventID(),
 				"event_type": event.EventType(),
@@ -330,7 +330,7 @@ func (h *EventReplayHandler) ReplayEvents(ctx context.Context, fromTimestamp tim
 
 // deserializeStoredEvent is a simplified version for replay
 func (h *EventReplayHandler) deserializeStoredEvent(storedEvent *StoredEvent) (Event, error) {
-	var eventData interface{}
+	var eventData any
 	if err := json.Unmarshal([]byte(storedEvent.EventData), &eventData); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal event data: %w", err)
 	}

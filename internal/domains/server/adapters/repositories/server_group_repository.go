@@ -24,7 +24,6 @@ func NewServerGroupRepository(db *gorm.DB, logger framework.Logger) interfaces.S
 	}
 }
 
-
 // ListActive retrieves active server groups with pagination
 func (r *serverGroupRepository) ListActive(ctx context.Context, limit, offset int) ([]*entities.ServerGroup, int64, error) {
 	var groups []*entities.ServerGroup
@@ -68,4 +67,3 @@ func (r *serverGroupRepository) UpdateActiveStatus(ctx context.Context, id uint,
 	// For now, just return success since there's no IsActive field
 	return nil
 }
-

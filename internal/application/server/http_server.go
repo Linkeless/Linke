@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	
+
 	"linke/internal/shared/cache"
 	"linke/internal/shared/config"
 	"linke/internal/shared/database"
@@ -15,7 +15,7 @@ import (
 	"linke/internal/shared/queue"
 	routerPkg "linke/internal/shared/router"
 	"linke/internal/shared/versioning"
-	
+
 	// Handler imports
 	authHandlers "linke/internal/domains/auth/handlers"
 	authInterfaces "linke/internal/domains/auth/usecases/interfaces"
@@ -41,7 +41,7 @@ type AppHandler struct {
 
 // TaskHandler 简单的任务处理器
 type TaskHandler struct {
-	taskQueue *queue.TaskQueue 
+	taskQueue *queue.TaskQueue
 	logger    loggerPkg.Logger
 }
 
@@ -98,7 +98,7 @@ func NewHTTPServer(
 
 	// 添加中间件
 	router.Use(gin.Recovery())
-	
+
 	// 添加 CORS 中间件
 	router.Use(middleware.CORSFromConfig(cfg))
 

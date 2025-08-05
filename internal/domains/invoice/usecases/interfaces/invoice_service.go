@@ -42,8 +42,8 @@ type InvoiceService interface {
 	DeleteInvoice(ctx context.Context, invoiceID uint) error
 	GetInvoices(ctx context.Context, req *GetInvoicesRequest) ([]*entities.Invoice, int64, error)
 	GetUserInvoices(ctx context.Context, userID uint, limit, offset int) ([]*entities.Invoice, int64, error)
-	GetInvoiceStatistics(ctx context.Context, fromDate, toDate string) (map[string]interface{}, error)
-	GetUserInvoiceStatistics(ctx context.Context, userID uint) (map[string]interface{}, error)
+	GetInvoiceStatistics(ctx context.Context, fromDate, toDate string) (map[string]any, error)
+	GetUserInvoiceStatistics(ctx context.Context, userID uint) (map[string]any, error)
 }
 
 // CreateInvoiceRequest represents the request to create an invoice

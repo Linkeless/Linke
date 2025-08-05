@@ -43,7 +43,7 @@ func (s *EventAwareUserService) CreateUser(ctx context.Context, user *entities.U
 	userEvent := events.NewUserEvent(
 		events.EventTypeUserCreated,
 		user.ID,
-		map[string]interface{}{
+		map[string]any{
 			"user_id":    user.ID,
 			"email":      user.Email,
 			"name":       user.Name,
@@ -92,28 +92,28 @@ func (s *EventAwareUserService) UpdateUser(ctx context.Context, user *entities.U
 	}
 
 	// Create event data with before/after comparison
-	eventData := map[string]interface{}{
+	eventData := map[string]any{
 		"user_id":    user.ID,
 		"updated_at": user.UpdatedAt,
-		"changes":    make(map[string]interface{}),
+		"changes":    make(map[string]any),
 	}
 
 	// Track what changed
-	changes := eventData["changes"].(map[string]interface{})
+	changes := eventData["changes"].(map[string]any)
 	if originalUser.Name != user.Name {
-		changes["name"] = map[string]interface{}{
+		changes["name"] = map[string]any{
 			"from": originalUser.Name,
 			"to":   user.Name,
 		}
 	}
 	if originalUser.Email != user.Email {
-		changes["email"] = map[string]interface{}{
+		changes["email"] = map[string]any{
 			"from": originalUser.Email,
 			"to":   user.Email,
 		}
 	}
 	if originalUser.Username != user.Username {
-		changes["username"] = map[string]interface{}{
+		changes["username"] = map[string]any{
 			"from": originalUser.Username,
 			"to":   user.Username,
 		}
@@ -163,7 +163,7 @@ func (s *EventAwareUserService) UpdateUserStatus(ctx context.Context, id uint, s
 		userEvent := events.NewUserEvent(
 			events.EventTypeUserStatusChanged,
 			id,
-			map[string]interface{}{
+			map[string]any{
 				"user_id":    id,
 				"old_status": originalUser.Status,
 				"new_status": status,
@@ -205,8 +205,8 @@ func (s *EventAwareUserService) SoftDeleteUser(ctx context.Context, id uint) err
 
 	// Get active subscriptions for cascade operations
 	// TODO: This would be replaced with actual subscription service call
-	activeSubscriptions := []interface{}{
-		map[string]interface{}{
+	activeSubscriptions := []any{
+		map[string]any{
 			"id":     1, // Placeholder subscription ID
 			"status": "active",
 		},
@@ -216,7 +216,7 @@ func (s *EventAwareUserService) SoftDeleteUser(ctx context.Context, id uint) err
 	userEvent := events.NewUserEvent(
 		events.EventTypeUserDeleted,
 		id,
-		map[string]interface{}{
+		map[string]any{
 			"user_id":              id,
 			"email":                user.Email,
 			"name":                 user.Name,
@@ -262,7 +262,7 @@ func (s *EventAwareUserService) RestoreUser(ctx context.Context, id uint) error 
 	userEvent := events.NewUserEvent(
 		events.EventTypeUserCreated,
 		id,
-		map[string]interface{}{
+		map[string]any{
 			"user_id":     id,
 			"email":       user.Email,
 			"name":        user.Name,
@@ -324,7 +324,7 @@ func (s *EventAwareUserService) HardDeleteUser(ctx context.Context, id uint) err
 		userEvent := events.NewUserEvent(
 			events.EventTypeUserDeleted,
 			id,
-			map[string]interface{}{
+			map[string]any{
 				"user_id":     id,
 				"email":       user.Email,
 				"name":        user.Name,
@@ -383,7 +383,7 @@ func (s *EventAwareUserService) UpdateUserRole(ctx context.Context, id uint, rol
 		userEvent := events.NewUserEvent(
 			events.EventTypeUserUpdated,
 			id,
-			map[string]interface{}{
+			map[string]any{
 				"user_id":     id,
 				"old_role":    originalUser.Role,
 				"new_role":    role,
@@ -446,7 +446,7 @@ func (s *EventAwareUserService) BatchDeleteUsers(ctx context.Context, ids []uint
 			userEvent := events.NewUserEvent(
 				events.EventTypeUserDeleted,
 				id,
-				map[string]interface{}{
+				map[string]any{
 					"user_id":      id,
 					"email":        user.Email,
 					"name":         user.Name,
@@ -496,7 +496,7 @@ func (s *EventAwareUserService) BatchRestoreUsers(ctx context.Context, ids []uin
 				userEvent := events.NewUserEvent(
 					events.EventTypeUserCreated,
 					id,
-					map[string]interface{}{
+					map[string]any{
 						"user_id":       id,
 						"email":         user.Email,
 						"name":          user.Name,

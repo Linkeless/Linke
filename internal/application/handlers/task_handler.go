@@ -34,8 +34,8 @@ func NewTaskHandler(taskQueue *queue.TaskQueue) *TaskHandler {
 // @Router /tasks [post]
 func (h *TaskHandler) CreateTask(c *gin.Context) {
 	var req struct {
-		Type    string                 `json:"type" binding:"required"`
-		Payload map[string]interface{} `json:"payload" binding:"required"`
+		Type    string         `json:"type" binding:"required"`
+		Payload map[string]any `json:"payload" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {

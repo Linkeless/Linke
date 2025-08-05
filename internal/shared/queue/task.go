@@ -19,7 +19,7 @@ type TaskQueue struct {
 type Task struct {
 	ID        string                 `json:"id"`
 	Type      string                 `json:"type"`
-	Payload   map[string]interface{} `json:"payload"`
+	Payload   map[string]any `json:"payload"`
 	Retry     int                    `json:"retry"`
 	MaxRetry  int                    `json:"max_retry"`
 	CreatedAt time.Time              `json:"created_at"`
@@ -102,10 +102,10 @@ func (tq *TaskQueue) Close() error {
 	return tq.client.Close()
 }
 
-func (tq *TaskQueue) GetQueueInfo(ctx context.Context, queueName string) (map[string]interface{}, error) {
+func (tq *TaskQueue) GetQueueInfo(ctx context.Context, queueName string) (map[string]any, error) {
 	// For asynq, we would need to use the inspector to get queue stats
 	// This is a simplified implementation
-	return map[string]interface{}{
+	return map[string]any{
 		"queue_name": queueName,
 		"status":     "active",
 	}, nil

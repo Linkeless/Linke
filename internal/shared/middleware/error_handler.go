@@ -211,7 +211,7 @@ func PaymentErrorHandler() gin.HandlerFunc {
 
 // Helper functions
 
-func toString(v interface{}) string {
+func toString(v any) string {
 	switch s := v.(type) {
 	case string:
 		return s

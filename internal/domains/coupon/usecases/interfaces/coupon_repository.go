@@ -80,7 +80,7 @@ type CouponUsageRepository interface {
 	GetUserTotalSavings(ctx context.Context, userID uint64, currency string) (float64, error)
 
 	// Coupon-specific operations
-	GetCouponUsageStats(ctx context.Context, couponID uint64) (map[string]interface{}, error)
+	GetCouponUsageStats(ctx context.Context, couponID uint64) (map[string]any, error)
 	GetTopUsersByCoupon(ctx context.Context, couponID uint64, limit int) ([]*entities.CouponUsage, error)
 
 	// Time-based queries
@@ -95,7 +95,7 @@ type CouponUsageRepository interface {
 	CountTotal(ctx context.Context) (int64, error)
 	CountByCoupon(ctx context.Context, couponID uint64) (int64, error)
 	CountByUser(ctx context.Context, userID uint64) (int64, error)
-	GetUsageStats(ctx context.Context, since time.Time) (map[string]interface{}, error)
+	GetUsageStats(ctx context.Context, since time.Time) (map[string]any, error)
 
 	// Advanced analytics
 	GetTopCoupons(ctx context.Context, limit int, since time.Time) ([]*entities.CouponUsage, error)

@@ -21,6 +21,9 @@ type AuthService interface {
 
 	// Token validation
 	ValidateToken(tokenString string) (*userEntities.User, error)
+
+	// OAuth authentication
+	CreateOrUpdateOAuthUser(ctx context.Context, userInfo *OAuthUserInfo) (*userEntities.User, error)
 }
 
 // RegisterRequest represents registration request data
@@ -68,7 +71,7 @@ type LoginSecurityService interface {
 	IsAccountLocked(ctx context.Context, email string) (bool, *entities.AccountLockout, error)
 	GetFailureCount(ctx context.Context, email string) (int, error)
 	UnlockAccount(ctx context.Context, email string, reason string) error
-	GetLoginAttemptStats(ctx context.Context, since time.Time) (map[string]interface{}, error)
+	GetLoginAttemptStats(ctx context.Context, since time.Time) (map[string]any, error)
 	CleanupOldAttempts(ctx context.Context, olderThan time.Duration) error
 }
 
@@ -91,4 +94,14 @@ type TokenResponse struct {
 	ExpiresIn    int       `json:"expires_in"`
 	ExpiresAt    time.Time `json:"expires_at"`
 	RefreshToken string    `json:"refresh_token,omitempty"`
+}
+
+// OAuthUserInfo represents OAuth user information from providers
+type OAuthUserInfo struct {
+	ID       string `json:"id"`
+	Email    string `json:"email"`
+	Name     string `json:"name"`
+	Avatar   string `json:"avatar"`
+	Username string `json:"username"`
+	Provider string `json:"provider"`
 }

@@ -126,7 +126,7 @@ func (r *couponRepository) ListExpired(ctx context.Context, limit, offset int) (
 
 	now := time.Now()
 	query := r.GetDB().WithContext(ctx).Model(&entities.Coupon{}).
-		Where("status = ? OR valid_until < ? OR (max_uses > 0 AND used_count >= max_uses)", 
+		Where("status = ? OR valid_until < ? OR (max_uses > 0 AND used_count >= max_uses)",
 			entities.CouponStatusExpired, now)
 
 	// Count total expired coupons
@@ -429,7 +429,7 @@ func (r *couponRepository) CountExpired(ctx context.Context) (int64, error) {
 	var count int64
 	now := time.Now()
 	if err := r.GetDB().WithContext(ctx).Model(&entities.Coupon{}).
-		Where("status = ? OR valid_until < ? OR (max_uses > 0 AND used_count >= max_uses)", 
+		Where("status = ? OR valid_until < ? OR (max_uses > 0 AND used_count >= max_uses)",
 			entities.CouponStatusExpired, now).
 		Count(&count).Error; err != nil {
 		return 0, fmt.Errorf("failed to count expired coupons: %w", err)
@@ -462,7 +462,7 @@ func (r *couponRepository) MarkExpiredCoupons(ctx context.Context) (int64, error
 		Where("status = ?", entities.CouponStatusActive).
 		Where("valid_until IS NOT NULL AND valid_until < ?", now).
 		Update("status", entities.CouponStatusExpired)
-	
+
 	if result.Error != nil {
 		return 0, fmt.Errorf("failed to mark expired coupons: %w", result.Error)
 	}

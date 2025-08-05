@@ -189,7 +189,7 @@ func (l *LoginSecurityService) updateFailureTracking(ctx context.Context, email 
 func (l *LoginSecurityService) resetFailureTracking(ctx context.Context, email string) error {
 	return l.db.WithContext(ctx).Model(&entities.AccountLockout{}).
 		Where("email = ?", email).
-		Updates(map[string]interface{}{
+		Updates(map[string]any{
 			"failed_count": 0,
 			"locked_until": nil,
 			"lock_reason":  "",
@@ -223,7 +223,7 @@ func (l *LoginSecurityService) calculateLockoutDuration(lockout *entities.Accoun
 func (l *LoginSecurityService) UnlockAccount(ctx context.Context, email string, reason string) error {
 	result := l.db.WithContext(ctx).Model(&entities.AccountLockout{}).
 		Where("email = ?", email).
-		Updates(map[string]interface{}{
+		Updates(map[string]any{
 			"locked_until": nil,
 			"lock_reason":  "",
 			"failed_count": 0,
@@ -242,7 +242,7 @@ func (l *LoginSecurityService) UnlockAccount(ctx context.Context, email string, 
 }
 
 // GetLoginAttemptStats returns statistics about login attempts
-func (l *LoginSecurityService) GetLoginAttemptStats(ctx context.Context, since time.Time) (map[string]interface{}, error) {
+func (l *LoginSecurityService) GetLoginAttemptStats(ctx context.Context, since time.Time) (map[string]any, error) {
 	var totalAttempts, successfulAttempts, failedAttempts int64
 
 	// Count total attempts
@@ -282,7 +282,7 @@ func (l *LoginSecurityService) GetLoginAttemptStats(ctx context.Context, since t
 		return nil, fmt.Errorf("failed to get top failed IPs: %w", err)
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"total_attempts":      totalAttempts,
 		"successful_attempts": successfulAttempts,
 		"failed_attempts":     failedAttempts,

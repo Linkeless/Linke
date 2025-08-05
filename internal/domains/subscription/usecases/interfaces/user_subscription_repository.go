@@ -93,7 +93,7 @@ type UserSubscriptionRepository interface {
 	CountTrialSubscriptions(ctx context.Context) (int64, error)
 
 	// Revenue statistics
-	GetSubscriptionStats(ctx context.Context, since time.Time) (map[string]interface{}, error)
+	GetSubscriptionStats(ctx context.Context, since time.Time) (map[string]any, error)
 	GetChurnRate(ctx context.Context, period time.Duration) (float64, error)
 	GetRetentionRate(ctx context.Context, period time.Duration) (float64, error)
 

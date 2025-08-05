@@ -12,7 +12,7 @@ import (
 )
 
 func EmailTaskHandler(ctx context.Context, task *asynq.Task) error {
-	var payload map[string]interface{}
+	var payload map[string]any
 	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
 		return fmt.Errorf("failed to unmarshal task payload: %w", err)
 	}
@@ -49,7 +49,7 @@ func EmailTaskHandler(ctx context.Context, task *asynq.Task) error {
 }
 
 func NotificationTaskHandler(ctx context.Context, task *asynq.Task) error {
-	var payload map[string]interface{}
+	var payload map[string]any
 	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
 		return fmt.Errorf("failed to unmarshal task payload: %w", err)
 	}
@@ -80,7 +80,7 @@ func NotificationTaskHandler(ctx context.Context, task *asynq.Task) error {
 }
 
 func DataProcessingTaskHandler(ctx context.Context, task *asynq.Task) error {
-	var payload map[string]interface{}
+	var payload map[string]any
 	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
 		return fmt.Errorf("failed to unmarshal task payload: %w", err)
 	}
@@ -108,7 +108,7 @@ func DataProcessingTaskHandler(ctx context.Context, task *asynq.Task) error {
 
 // PaymentProcessingTaskHandler handles payment processing tasks
 func PaymentProcessingTaskHandler(ctx context.Context, task *asynq.Task) error {
-	var payload map[string]interface{}
+	var payload map[string]any
 	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
 		return fmt.Errorf("failed to unmarshal payment task payload: %w", err)
 	}
@@ -141,7 +141,7 @@ func PaymentProcessingTaskHandler(ctx context.Context, task *asynq.Task) error {
 
 // SubscriptionExpiryTaskHandler handles subscription expiry notifications
 func SubscriptionExpiryTaskHandler(ctx context.Context, task *asynq.Task) error {
-	var payload map[string]interface{}
+	var payload map[string]any
 	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
 		return fmt.Errorf("failed to unmarshal subscription expiry task payload: %w", err)
 	}
@@ -174,7 +174,7 @@ func SubscriptionExpiryTaskHandler(ctx context.Context, task *asynq.Task) error 
 
 // InvoiceGenerationTaskHandler handles invoice generation
 func InvoiceGenerationTaskHandler(ctx context.Context, task *asynq.Task) error {
-	var payload map[string]interface{}
+	var payload map[string]any
 	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
 		return fmt.Errorf("failed to unmarshal invoice generation task payload: %w", err)
 	}
@@ -207,7 +207,7 @@ func InvoiceGenerationTaskHandler(ctx context.Context, task *asynq.Task) error {
 
 // ServerHealthCheckTaskHandler handles server health checks
 func ServerHealthCheckTaskHandler(ctx context.Context, task *asynq.Task) error {
-	var payload map[string]interface{}
+	var payload map[string]any
 	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
 		return fmt.Errorf("failed to unmarshal server health check task payload: %w", err)
 	}
@@ -234,7 +234,7 @@ func ServerHealthCheckTaskHandler(ctx context.Context, task *asynq.Task) error {
 
 // ReferralProcessingTaskHandler handles referral processing
 func ReferralProcessingTaskHandler(ctx context.Context, task *asynq.Task) error {
-	var payload map[string]interface{}
+	var payload map[string]any
 	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
 		return fmt.Errorf("failed to unmarshal referral processing task payload: %w", err)
 	}

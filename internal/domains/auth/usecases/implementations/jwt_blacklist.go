@@ -137,7 +137,7 @@ func (j *JWTBlacklistService) CleanupExpiredEntries(ctx context.Context) error {
 }
 
 // GetBlacklistStats returns statistics about blacklisted tokens
-func (j *JWTBlacklistService) GetBlacklistStats(ctx context.Context) (map[string]interface{}, error) {
+func (j *JWTBlacklistService) GetBlacklistStats(ctx context.Context) (map[string]any, error) {
 	var totalCount, expiredCount int64
 
 	// Count total blacklisted tokens
@@ -165,7 +165,7 @@ func (j *JWTBlacklistService) GetBlacklistStats(ctx context.Context) (map[string
 		return nil, fmt.Errorf("failed to get reason statistics: %w", err)
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"total_blacklisted":  totalCount,
 		"active_blacklisted": totalCount - expiredCount,
 		"expired_entries":    expiredCount,

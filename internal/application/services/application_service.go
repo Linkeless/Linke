@@ -64,15 +64,15 @@ func NewApplicationService(
 }
 
 // HealthCheck 系统健康检查
-func (s *ApplicationService) HealthCheck(ctx context.Context) map[string]interface{} {
-	result := make(map[string]interface{})
+func (s *ApplicationService) HealthCheck(ctx context.Context) map[string]any {
+	result := make(map[string]any)
 
 	// 数据库健康检查
 	dbHealth := s.database.HealthCheck(ctx)
 	result["database"] = dbHealth
 
 	// 添加应用层状态
-	result["application"] = map[string]interface{}{
+	result["application"] = map[string]any{
 		"status": "healthy",
 		"modules": map[string]string{
 			"user":         "active",

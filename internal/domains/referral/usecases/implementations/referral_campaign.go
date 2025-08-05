@@ -23,65 +23,65 @@ func NewReferralCampaignService(db *database.Database) *ReferralCampaignService 
 
 // CreateReferralCampaignRequest represents the request to create a referral campaign
 type CreateReferralCampaignRequest struct {
-	Name                   string                 `json:"name" binding:"required,max=100"`
-	Code                   string                 `json:"code" binding:"required,max=50"`
-	Description            string                 `json:"description,omitempty"`
-	CampaignType           string                 `json:"campaign_type" binding:"required,oneof=standard bonus seasonal influencer partner"`
-	IsPublic               bool                   `json:"is_public"`
-	RequiresApproval       bool                   `json:"requires_approval"`
-	StartDate              *time.Time             `json:"start_date,omitempty"`
-	EndDate                *time.Time             `json:"end_date,omitempty"`
-	ReferrerRewardType     string                 `json:"referrer_reward_type" binding:"required,oneof=fixed percentage tiered"`
-	ReferrerRewardAmount   float64                `json:"referrer_reward_amount" binding:"required,min=0"`
-	ReferrerRewardCurrency string                 `json:"referrer_reward_currency" binding:"required"`
-	ReferrerRewardCap      float64                `json:"referrer_reward_cap,omitempty"`
-	RefereeRewardType      string                 `json:"referee_reward_type" binding:"required,oneof=fixed percentage discount"`
-	RefereeRewardAmount    float64                `json:"referee_reward_amount" binding:"required,min=0"`
-	RefereeRewardCurrency  string                 `json:"referee_reward_currency" binding:"required"`
-	MinimumPurchaseAmount  float64                `json:"minimum_purchase_amount,omitempty"`
-	RewardTrigger          string                 `json:"reward_trigger" binding:"required,oneof=registration first_purchase subscription activation"`
-	RewardDelay            int                    `json:"reward_delay,omitempty"`
-	MaxReferrals           int                    `json:"max_referrals,omitempty"`
-	MaxRewards             int                    `json:"max_rewards,omitempty"`
-	TotalRewardBudget      float64                `json:"total_reward_budget,omitempty"`
-	TargetAudience         string                 `json:"target_audience,omitempty"`
-	EligibleUserSegments   []string               `json:"eligible_user_segments,omitempty"`
-	RestrictedCountries    []string               `json:"restricted_countries,omitempty"`
-	TrackingEnabled        bool                   `json:"tracking_enabled"`
-	ConversionGoal         string                 `json:"conversion_goal,omitempty"`
-	ConversionValue        float64                `json:"conversion_value,omitempty"`
-	Metadata               map[string]interface{} `json:"metadata,omitempty"`
+	Name                   string         `json:"name" binding:"required,max=100"`
+	Code                   string         `json:"code" binding:"required,max=50"`
+	Description            string         `json:"description,omitempty"`
+	CampaignType           string         `json:"campaign_type" binding:"required,oneof=standard bonus seasonal influencer partner"`
+	IsPublic               bool           `json:"is_public"`
+	RequiresApproval       bool           `json:"requires_approval"`
+	StartDate              *time.Time     `json:"start_date,omitempty"`
+	EndDate                *time.Time     `json:"end_date,omitempty"`
+	ReferrerRewardType     string         `json:"referrer_reward_type" binding:"required,oneof=fixed percentage tiered"`
+	ReferrerRewardAmount   float64        `json:"referrer_reward_amount" binding:"required,min=0"`
+	ReferrerRewardCurrency string         `json:"referrer_reward_currency" binding:"required"`
+	ReferrerRewardCap      float64        `json:"referrer_reward_cap,omitempty"`
+	RefereeRewardType      string         `json:"referee_reward_type" binding:"required,oneof=fixed percentage discount"`
+	RefereeRewardAmount    float64        `json:"referee_reward_amount" binding:"required,min=0"`
+	RefereeRewardCurrency  string         `json:"referee_reward_currency" binding:"required"`
+	MinimumPurchaseAmount  float64        `json:"minimum_purchase_amount,omitempty"`
+	RewardTrigger          string         `json:"reward_trigger" binding:"required,oneof=registration first_purchase subscription activation"`
+	RewardDelay            int            `json:"reward_delay,omitempty"`
+	MaxReferrals           int            `json:"max_referrals,omitempty"`
+	MaxRewards             int            `json:"max_rewards,omitempty"`
+	TotalRewardBudget      float64        `json:"total_reward_budget,omitempty"`
+	TargetAudience         string         `json:"target_audience,omitempty"`
+	EligibleUserSegments   []string       `json:"eligible_user_segments,omitempty"`
+	RestrictedCountries    []string       `json:"restricted_countries,omitempty"`
+	TrackingEnabled        bool           `json:"tracking_enabled"`
+	ConversionGoal         string         `json:"conversion_goal,omitempty"`
+	ConversionValue        float64        `json:"conversion_value,omitempty"`
+	Metadata               map[string]any `json:"metadata,omitempty"`
 }
 
 // UpdateReferralCampaignRequest represents the request to update a referral campaign
 type UpdateReferralCampaignRequest struct {
-	Name                   *string                `json:"name,omitempty"`
-	Description            *string                `json:"description,omitempty"`
-	Status                 *string                `json:"status,omitempty"`
-	IsPublic               *bool                  `json:"is_public,omitempty"`
-	RequiresApproval       *bool                  `json:"requires_approval,omitempty"`
-	StartDate              *time.Time             `json:"start_date,omitempty"`
-	EndDate                *time.Time             `json:"end_date,omitempty"`
-	ReferrerRewardType     *string                `json:"referrer_reward_type,omitempty"`
-	ReferrerRewardAmount   *float64               `json:"referrer_reward_amount,omitempty"`
-	ReferrerRewardCurrency *string                `json:"referrer_reward_currency,omitempty"`
-	ReferrerRewardCap      *float64               `json:"referrer_reward_cap,omitempty"`
-	RefereeRewardType      *string                `json:"referee_reward_type,omitempty"`
-	RefereeRewardAmount    *float64               `json:"referee_reward_amount,omitempty"`
-	RefereeRewardCurrency  *string                `json:"referee_reward_currency,omitempty"`
-	MinimumPurchaseAmount  *float64               `json:"minimum_purchase_amount,omitempty"`
-	RewardTrigger          *string                `json:"reward_trigger,omitempty"`
-	RewardDelay            *int                   `json:"reward_delay,omitempty"`
-	MaxReferrals           *int                   `json:"max_referrals,omitempty"`
-	MaxRewards             *int                   `json:"max_rewards,omitempty"`
-	TotalRewardBudget      *float64               `json:"total_reward_budget,omitempty"`
-	TargetAudience         *string                `json:"target_audience,omitempty"`
-	EligibleUserSegments   []string               `json:"eligible_user_segments,omitempty"`
-	RestrictedCountries    []string               `json:"restricted_countries,omitempty"`
-	TrackingEnabled        *bool                  `json:"tracking_enabled,omitempty"`
-	ConversionGoal         *string                `json:"conversion_goal,omitempty"`
-	ConversionValue        *float64               `json:"conversion_value,omitempty"`
-	Metadata               map[string]interface{} `json:"metadata,omitempty"`
+	Name                   *string        `json:"name,omitempty"`
+	Description            *string        `json:"description,omitempty"`
+	Status                 *string        `json:"status,omitempty"`
+	IsPublic               *bool          `json:"is_public,omitempty"`
+	RequiresApproval       *bool          `json:"requires_approval,omitempty"`
+	StartDate              *time.Time     `json:"start_date,omitempty"`
+	EndDate                *time.Time     `json:"end_date,omitempty"`
+	ReferrerRewardType     *string        `json:"referrer_reward_type,omitempty"`
+	ReferrerRewardAmount   *float64       `json:"referrer_reward_amount,omitempty"`
+	ReferrerRewardCurrency *string        `json:"referrer_reward_currency,omitempty"`
+	ReferrerRewardCap      *float64       `json:"referrer_reward_cap,omitempty"`
+	RefereeRewardType      *string        `json:"referee_reward_type,omitempty"`
+	RefereeRewardAmount    *float64       `json:"referee_reward_amount,omitempty"`
+	RefereeRewardCurrency  *string        `json:"referee_reward_currency,omitempty"`
+	MinimumPurchaseAmount  *float64       `json:"minimum_purchase_amount,omitempty"`
+	RewardTrigger          *string        `json:"reward_trigger,omitempty"`
+	RewardDelay            *int           `json:"reward_delay,omitempty"`
+	MaxReferrals           *int           `json:"max_referrals,omitempty"`
+	MaxRewards             *int           `json:"max_rewards,omitempty"`
+	TotalRewardBudget      *float64       `json:"total_reward_budget,omitempty"`
+	TargetAudience         *string        `json:"target_audience,omitempty"`
+	EligibleUserSegments   []string       `json:"eligible_user_segments,omitempty"`
+	RestrictedCountries    []string       `json:"restricted_countries,omitempty"`
+	TrackingEnabled        *bool          `json:"tracking_enabled,omitempty"`
+	ConversionGoal         *string        `json:"conversion_goal,omitempty"`
+	ConversionValue        *float64       `json:"conversion_value,omitempty"`
+	Metadata               map[string]any `json:"metadata,omitempty"`
 }
 
 // GetReferralCampaignsRequest represents the request to get referral campaigns
@@ -232,7 +232,7 @@ func (s *ReferralCampaignService) UpdateReferralCampaign(ctx context.Context, ca
 	}
 
 	// Prepare updates
-	updates := make(map[string]interface{})
+	updates := make(map[string]any)
 
 	if req.Name != nil {
 		updates["name"] = *req.Name
@@ -382,8 +382,8 @@ func (s *ReferralCampaignService) GetActiveCampaigns(ctx context.Context) ([]*en
 }
 
 // GetCampaignStats gets statistics for a campaign
-func (s *ReferralCampaignService) GetCampaignStats(ctx context.Context, campaignID uint) (map[string]interface{}, error) {
-	stats := make(map[string]interface{})
+func (s *ReferralCampaignService) GetCampaignStats(ctx context.Context, campaignID uint) (map[string]any, error) {
+	stats := make(map[string]any)
 
 	// Get basic campaign info
 	var campaign entities.ReferralCampaign

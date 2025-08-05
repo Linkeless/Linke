@@ -119,7 +119,7 @@ func TestMetricsEventHandler(t *testing.T) {
 	metricsHandler := NewMetricsEventHandler("test-handler", mockHandler, metrics)
 
 	ctx := context.Background()
-	event := NewBaseEvent("test.event", "test-service", map[string]interface{}{
+	event := NewBaseEvent("test.event", "test-service", map[string]any{
 		"test": "data",
 	})
 
@@ -180,7 +180,7 @@ func TestMetricsEventBus(t *testing.T) {
 	metricsEventBus := NewMetricsEventBus(mockEventBus, metrics)
 
 	ctx := context.Background()
-	event := NewBaseEvent("test.event", "test-service", map[string]interface{}{
+	event := NewBaseEvent("test.event", "test-service", map[string]any{
 		"test": "data",
 	})
 
@@ -261,7 +261,7 @@ func TestEventSystemHealthChecker(t *testing.T) {
 
 		// Add many dead letter events
 		for i := 0; i < 150; i++ {
-			event := NewBaseEvent("test.event", "test-service", map[string]interface{}{
+			event := NewBaseEvent("test.event", "test-service", map[string]any{
 				"id": i,
 			})
 			dlEvent := &DeadLetterEvent{

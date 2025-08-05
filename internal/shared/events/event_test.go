@@ -13,7 +13,7 @@ func TestBaseEvent(t *testing.T) {
 	t.Run("NewBaseEvent creates event with correct fields", func(t *testing.T) {
 		eventType := "test.event"
 		source := "test-service"
-		data := map[string]interface{}{
+		data := map[string]any{
 			"test_field": "test_value",
 		}
 
@@ -53,7 +53,7 @@ func TestDomainEvents(t *testing.T) {
 	t.Run("NewUserEvent creates valid user event", func(t *testing.T) {
 		userID := uint(123)
 		eventType := EventTypeUserCreated
-		data := map[string]interface{}{
+		data := map[string]any{
 			"email": "test@example.com",
 			"name":  "Test User",
 		}
@@ -71,7 +71,7 @@ func TestDomainEvents(t *testing.T) {
 		amount := 99.99
 		userID := uint(456)
 		eventType := EventTypePaymentCompleted
-		data := map[string]interface{}{
+		data := map[string]any{
 			"currency": "USD",
 			"method":   "credit_card",
 		}
@@ -90,7 +90,7 @@ func TestDomainEvents(t *testing.T) {
 		subscriptionID := uint(789)
 		userID := uint(456)
 		eventType := EventTypeSubscriptionActivated
-		data := map[string]interface{}{
+		data := map[string]any{
 			"plan_id": "premium",
 			"period":  "monthly",
 		}
@@ -108,7 +108,7 @@ func TestDomainEvents(t *testing.T) {
 		orderID := uint(999)
 		userID := uint(456)
 		eventType := EventTypeOrderCreated
-		data := map[string]interface{}{
+		data := map[string]any{
 			"total_amount": 199.99,
 			"items_count":  3,
 		}
@@ -128,7 +128,7 @@ func TestEventSerialization(t *testing.T) {
 		originalEvent := NewUserEvent(
 			EventTypeUserCreated,
 			123,
-			map[string]interface{}{
+			map[string]any{
 				"email": "test@example.com",
 				"name":  "Test User",
 			},
@@ -174,7 +174,7 @@ func TestEventHandler(t *testing.T) {
 
 		// Test handling an event
 		ctx := context.Background()
-		testEvent := NewUserEvent(EventTypeUserCreated, 123, map[string]interface{}{"test": "data"})
+		testEvent := NewUserEvent(EventTypeUserCreated, 123, map[string]any{"test": "data"})
 
 		err := handler.Handle(ctx, testEvent)
 		require.NoError(t, err)
@@ -186,7 +186,7 @@ func TestEventHandler(t *testing.T) {
 
 func TestEventEnvelope(t *testing.T) {
 	t.Run("NewEventEnvelope creates envelope with correct properties", func(t *testing.T) {
-		event := NewUserEvent(EventTypeUserCreated, 123, map[string]interface{}{"test": "data"})
+		event := NewUserEvent(EventTypeUserCreated, 123, map[string]any{"test": "data"})
 		envelope := NewEventEnvelope(event)
 
 		assert.Equal(t, event, envelope.Event)
@@ -254,7 +254,7 @@ func TestCorrelationID(t *testing.T) {
 func BenchmarkEventCreation(b *testing.B) {
 	b.Run("BaseEvent creation", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			_ = NewBaseEvent("test.event", "test-service", map[string]interface{}{
+			_ = NewBaseEvent("test.event", "test-service", map[string]any{
 				"test_field": "test_value",
 				"counter":    i,
 			})
@@ -263,7 +263,7 @@ func BenchmarkEventCreation(b *testing.B) {
 
 	b.Run("UserEvent creation", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			_ = NewUserEvent(EventTypeUserCreated, uint(i), map[string]interface{}{
+			_ = NewUserEvent(EventTypeUserCreated, uint(i), map[string]any{
 				"email": "test@example.com",
 				"name":  "Test User",
 			})
@@ -272,7 +272,7 @@ func BenchmarkEventCreation(b *testing.B) {
 }
 
 func BenchmarkEventSerialization(b *testing.B) {
-	event := NewUserEvent(EventTypeUserCreated, 123, map[string]interface{}{
+	event := NewUserEvent(EventTypeUserCreated, 123, map[string]any{
 		"email": "test@example.com",
 		"name":  "Test User",
 	})

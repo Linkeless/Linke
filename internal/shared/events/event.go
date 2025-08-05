@@ -12,7 +12,7 @@ type Event interface {
 	// EventType returns the type of the event
 	EventType() string
 	// EventData returns the event data
-	EventData() interface{}
+	EventData() any
 	// EventTime returns when the event occurred
 	EventTime() time.Time
 	// EventID returns a unique identifier for the event
@@ -30,15 +30,15 @@ type BaseEvent struct {
 	Source   string                 `json:"source"`
 	Time     time.Time              `json:"time"`
 	Version  string                 `json:"version"`
-	Data     interface{}            `json:"data"`
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
+	Data     any            `json:"data"`
+	Metadata map[string]any `json:"metadata,omitempty"`
 }
 
 func (e *BaseEvent) EventType() string {
 	return e.Type
 }
 
-func (e *BaseEvent) EventData() interface{} {
+func (e *BaseEvent) EventData() any {
 	return e.Data
 }
 
@@ -59,7 +59,7 @@ func (e *BaseEvent) EventSource() string {
 }
 
 // NewBaseEvent creates a new base event
-func NewBaseEvent(eventType, source string, data interface{}) *BaseEvent {
+func NewBaseEvent(eventType, source string, data any) *BaseEvent {
 	return &BaseEvent{
 		ID:       generateEventID(),
 		Type:     eventType,
@@ -67,20 +67,20 @@ func NewBaseEvent(eventType, source string, data interface{}) *BaseEvent {
 		Time:     time.Now(),
 		Version:  "1.0",
 		Data:     data,
-		Metadata: make(map[string]interface{}),
+		Metadata: make(map[string]any),
 	}
 }
 
 // SetMetadata sets metadata for the event
-func (e *BaseEvent) SetMetadata(key string, value interface{}) {
+func (e *BaseEvent) SetMetadata(key string, value any) {
 	if e.Metadata == nil {
-		e.Metadata = make(map[string]interface{})
+		e.Metadata = make(map[string]any)
 	}
 	e.Metadata[key] = value
 }
 
 // GetMetadata gets metadata from the event
-func (e *BaseEvent) GetMetadata(key string) (interface{}, bool) {
+func (e *BaseEvent) GetMetadata(key string) (any, bool) {
 	if e.Metadata == nil {
 		return nil, false
 	}
@@ -126,7 +126,7 @@ func NewEventHandler(eventTypes []string, handlerFunc func(ctx context.Context, 
 // EventEnvelope wraps an event with additional context information
 type EventEnvelope struct {
 	Event     Event                  `json:"-"` // Skip JSON serialization, handled by custom methods
-	Context   map[string]interface{} `json:"context,omitempty"`
+	Context   map[string]any `json:"context,omitempty"`
 	Headers   map[string]string      `json:"headers,omitempty"`
 	CreatedAt time.Time              `json:"created_at"`
 }
@@ -135,7 +135,7 @@ type EventEnvelope struct {
 type eventEnvelopeJSON struct {
 	EventType string                 `json:"event_type"`
 	EventData json.RawMessage        `json:"event_data"`
-	Context   map[string]interface{} `json:"context,omitempty"`
+	Context   map[string]any `json:"context,omitempty"`
 	Headers   map[string]string      `json:"headers,omitempty"`
 	CreatedAt time.Time              `json:"created_at"`
 }
@@ -144,7 +144,7 @@ type eventEnvelopeJSON struct {
 func NewEventEnvelope(event Event) *EventEnvelope {
 	return &EventEnvelope{
 		Event:     event,
-		Context:   make(map[string]interface{}),
+		Context:   make(map[string]any),
 		Headers:   make(map[string]string),
 		CreatedAt: time.Now(),
 	}
@@ -223,7 +223,7 @@ type UserEvent struct {
 }
 
 // NewUserEvent creates a new user event
-func NewUserEvent(eventType string, userID uint, data interface{}) *UserEvent {
+func NewUserEvent(eventType string, userID uint, data any) *UserEvent {
 	return &UserEvent{
 		BaseEvent: NewBaseEvent(eventType, "user-service", data),
 		UserID:    userID,
@@ -239,7 +239,7 @@ type PaymentEvent struct {
 }
 
 // NewPaymentEvent creates a new payment event
-func NewPaymentEvent(eventType string, paymentID string, amount float64, userID uint, data interface{}) *PaymentEvent {
+func NewPaymentEvent(eventType string, paymentID string, amount float64, userID uint, data any) *PaymentEvent {
 	return &PaymentEvent{
 		BaseEvent: NewBaseEvent(eventType, "payment-service", data),
 		PaymentID: paymentID,
@@ -256,7 +256,7 @@ type SubscriptionEvent struct {
 }
 
 // NewSubscriptionEvent creates a new subscription event
-func NewSubscriptionEvent(eventType string, subscriptionID uint, userID uint, data interface{}) *SubscriptionEvent {
+func NewSubscriptionEvent(eventType string, subscriptionID uint, userID uint, data any) *SubscriptionEvent {
 	return &SubscriptionEvent{
 		BaseEvent:      NewBaseEvent(eventType, "subscription-service", data),
 		SubscriptionID: subscriptionID,
@@ -332,7 +332,7 @@ type OrderEvent struct {
 }
 
 // NewOrderEvent creates a new order event
-func NewOrderEvent(eventType string, orderID uint, userID uint, data interface{}) *OrderEvent {
+func NewOrderEvent(eventType string, orderID uint, userID uint, data any) *OrderEvent {
 	return &OrderEvent{
 		BaseEvent: NewBaseEvent(eventType, "order-service", data),
 		OrderID:   orderID,
@@ -350,7 +350,7 @@ type InvoiceEvent struct {
 }
 
 // NewInvoiceEvent creates a new invoice event
-func NewInvoiceEvent(eventType string, invoiceID uint, orderID uint, userID uint, amount float64, data interface{}) *InvoiceEvent {
+func NewInvoiceEvent(eventType string, invoiceID uint, orderID uint, userID uint, amount float64, data any) *InvoiceEvent {
 	return &InvoiceEvent{
 		BaseEvent: NewBaseEvent(eventType, "invoice-service", data),
 		InvoiceID: invoiceID,
@@ -367,7 +367,7 @@ type ServerEvent struct {
 }
 
 // NewServerEvent creates a new server event
-func NewServerEvent(eventType string, serverID uint, data interface{}) *ServerEvent {
+func NewServerEvent(eventType string, serverID uint, data any) *ServerEvent {
 	return &ServerEvent{
 		BaseEvent: NewBaseEvent(eventType, "server-service", data),
 		ServerID:  serverID,

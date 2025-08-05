@@ -12,7 +12,7 @@ import (
 type PaymentRecordRepository interface {
 	framework.UserScopedRepository[entities.PaymentRecord, uint]
 	framework.TimeBasedRepository[entities.PaymentRecord, uint]
-	
+
 	// Payment-specific query methods
 	GetByPaymentNo(ctx context.Context, paymentNo string) (*entities.PaymentRecord, error)
 	GetByOutTradeNo(ctx context.Context, outTradeNo string) (*entities.PaymentRecord, error)

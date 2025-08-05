@@ -101,7 +101,7 @@ func (r *paymentRecordRepository) GetUserCompletedPayments(ctx context.Context, 
 	var total int64
 
 	condition := "user_id = ? AND status = ?"
-	args := []interface{}{userID, entities.PaymentRecordStatusCompleted}
+	args := []any{userID, entities.PaymentRecordStatusCompleted}
 
 	// Count total completed payments for user
 	if err := r.GetDB().WithContext(ctx).Model(&entities.PaymentRecord{}).
@@ -163,7 +163,7 @@ func (r *paymentRecordRepository) ListExpiredPayments(ctx context.Context, limit
 	var total int64
 
 	condition := "expired_at IS NOT NULL AND expired_at < ?"
-	args := []interface{}{time.Now()}
+	args := []any{time.Now()}
 
 	// Count total expired payments
 	if err := r.GetDB().WithContext(ctx).Model(&entities.PaymentRecord{}).
@@ -244,7 +244,7 @@ func (r *paymentRecordRepository) ListByGatewayAndMethod(ctx context.Context, ga
 	var total int64
 
 	condition := "gateway = ? AND payment_method = ?"
-	args := []interface{}{gateway, paymentMethod}
+	args := []any{gateway, paymentMethod}
 
 	// Count total payments by gateway and method
 	if err := r.GetDB().WithContext(ctx).Model(&entities.PaymentRecord{}).
@@ -301,7 +301,7 @@ func (r *paymentRecordRepository) ListRecentPayments(ctx context.Context, since 
 
 // MarkAsCompleted marks a payment as completed
 func (r *paymentRecordRepository) MarkAsCompleted(ctx context.Context, id uint, transactionID string, paidAt time.Time) error {
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"status":         entities.PaymentRecordStatusCompleted,
 		"transaction_id": transactionID,
 		"paid_at":        paidAt,
@@ -331,7 +331,7 @@ func (r *paymentRecordRepository) MarkAsCompleted(ctx context.Context, id uint, 
 
 // MarkAsFailed marks a payment as failed
 func (r *paymentRecordRepository) MarkAsFailed(ctx context.Context, id uint, reason string) error {
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"status":         entities.PaymentRecordStatusFailed,
 		"payment_status": reason,
 		"updated_at":     time.Now(),
@@ -509,7 +509,7 @@ func (r *paymentRecordRepository) UpdatePaymentStatus(ctx context.Context, id ui
 
 // MarkAsRefunded marks a payment as refunded
 func (r *paymentRecordRepository) MarkAsRefunded(ctx context.Context, id uint, refundAmount float64, refundReason string, refundedAt time.Time) error {
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"refund_amount": refundAmount,
 		"refund_reason": refundReason,
 		"refunded_at":   refundedAt,
@@ -527,7 +527,7 @@ func (r *paymentRecordRepository) MarkAsRefunded(ctx context.Context, id uint, r
 
 // UpdateNotification updates notification info
 func (r *paymentRecordRepository) UpdateNotification(ctx context.Context, id uint, notifiedAt time.Time, notifyHash string) error {
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"notified_at": notifiedAt,
 		"notify_hash": notifyHash,
 		"updated_at":  time.Now(),
@@ -611,7 +611,7 @@ func (r *paymentRecordRepository) ListByAmountRange(ctx context.Context, minAmou
 	var payments []*entities.PaymentRecord
 	var total int64
 	condition := "currency = ? AND amount BETWEEN ? AND ?"
-	args := []interface{}{currency, minAmount, maxAmount}
+	args := []any{currency, minAmount, maxAmount}
 	if err := r.GetDB().WithContext(ctx).Model(&entities.PaymentRecord{}).Where(condition, args...).Count(&total).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to count payments by amount range: %w", err)
 	}
@@ -1126,7 +1126,7 @@ func (r *paymentConfigRepository) GetGatewayStats(ctx context.Context) (map[stri
 	return make(map[string]int64), fmt.Errorf("GetGatewayStats method not implemented")
 }
 
-func (r *paymentConfigRepository) ListWithFilters(ctx context.Context, filters map[string]interface{}, limit, offset int) ([]*entities.PaymentConfig, int64, error) {
+func (r *paymentConfigRepository) ListWithFilters(ctx context.Context, filters map[string]any, limit, offset int) ([]*entities.PaymentConfig, int64, error) {
 	return nil, 0, fmt.Errorf("ListWithFilters method not implemented")
 }
 

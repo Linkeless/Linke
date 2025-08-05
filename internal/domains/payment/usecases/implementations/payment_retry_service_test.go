@@ -211,7 +211,7 @@ func (m *MockPaymentRetryRepository) ExistsByID(ctx context.Context, id uint) (b
 	return args.Get(0).(bool), args.Error(1)
 }
 
-func (m *MockPaymentRetryRepository) ListWithFilters(ctx context.Context, filters map[string]interface{}, limit, offset int) ([]*entities.PaymentRetry, int64, error) {
+func (m *MockPaymentRetryRepository) ListWithFilters(ctx context.Context, filters map[string]any, limit, offset int) ([]*entities.PaymentRetry, int64, error) {
 	args := m.Called(ctx, filters, limit, offset)
 	return args.Get(0).([]*entities.PaymentRetry), args.Get(1).(int64), args.Error(2)
 }
@@ -390,7 +390,7 @@ func (m *MockPaymentRetryHistoryRepository) ExistsByID(ctx context.Context, id u
 	return args.Get(0).(bool), args.Error(1)
 }
 
-func (m *MockPaymentRetryHistoryRepository) ListWithFilters(ctx context.Context, filters map[string]interface{}, limit, offset int) ([]*entities.PaymentRetryHistory, int64, error) {
+func (m *MockPaymentRetryHistoryRepository) ListWithFilters(ctx context.Context, filters map[string]any, limit, offset int) ([]*entities.PaymentRetryHistory, int64, error) {
 	args := m.Called(ctx, filters, limit, offset)
 	return args.Get(0).([]*entities.PaymentRetryHistory), args.Get(1).(int64), args.Error(2)
 }
@@ -446,7 +446,7 @@ func (m *MockPaymentService) UpdatePaymentStatus(ctx context.Context, paymentNo 
 	return args.Error(0)
 }
 
-func (m *MockPaymentService) ProcessNotification(ctx context.Context, gateway string, data map[string]interface{}) error {
+func (m *MockPaymentService) ProcessNotification(ctx context.Context, gateway string, data map[string]any) error {
 	args := m.Called(ctx, gateway, data)
 	return args.Error(0)
 }

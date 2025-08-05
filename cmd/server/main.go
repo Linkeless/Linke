@@ -64,6 +64,6 @@ func main() {
 		fmt.Printf("\n   For detailed troubleshooting, run: make security-check\n")
 		os.Exit(1)
 	}
-	
+
 	app.Run()
 }

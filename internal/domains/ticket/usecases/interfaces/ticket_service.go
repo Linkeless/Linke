@@ -31,9 +31,9 @@ type TicketService interface {
 	ReopenTicket(ctx context.Context, ticketID uint, reason string) (*entities.Ticket, error)
 
 	// Ticket statistics and reporting
-	GetTicketStatistics(ctx context.Context, fromDate, toDate string) (map[string]interface{}, error)
-	GetUserTicketStatistics(ctx context.Context, userID uint) (map[string]interface{}, error)
-	GetAgentTicketStatistics(ctx context.Context, agentID uint) (map[string]interface{}, error)
+	GetTicketStatistics(ctx context.Context, fromDate, toDate string) (map[string]any, error)
+	GetUserTicketStatistics(ctx context.Context, userID uint) (map[string]any, error)
+	GetAgentTicketStatistics(ctx context.Context, agentID uint) (map[string]any, error)
 
 	// Bulk operations
 	BulkAssignTickets(ctx context.Context, ticketIDs []uint, assignedToID uint) error

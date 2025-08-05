@@ -488,7 +488,7 @@ func (h *PaymentMethodHandler) getUserIDFromContext(c *gin.Context) uint {
 			return user.ID
 		}
 	}
-	
+
 	// Fallback: try the old key for backward compatibility
 	if userID, exists := c.Get("user_id"); exists {
 		if id, ok := userID.(uint); ok {

@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
@@ -11,7 +10,6 @@ import (
 	interfaces "linke/internal/domains/auth/usecases/interfaces"
 	userEntities "linke/internal/domains/user/entities"
 	"linke/internal/shared/config"
-	"linke/internal/shared/database"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/middleware"
 	"linke/internal/shared/response"
@@ -21,17 +19,15 @@ import (
 
 type AuthHandler struct {
 	cfg          *config.Config
-	db           *database.Database
 	oauthService interfaces.OAuthService
 	authService  interfaces.AuthService
 	jwtService   interfaces.JWTService
 	stateStore   interfaces.OAuthStateService
 }
 
-func NewAuthHandler(cfg *config.Config, db *database.Database, authService interfaces.AuthService, jwtService interfaces.JWTService) *AuthHandler {
+func NewAuthHandler(cfg *config.Config, authService interfaces.AuthService, jwtService interfaces.JWTService) *AuthHandler {
 	return &AuthHandler{
 		cfg:          cfg,
-		db:           db,
 		oauthService: authImplementations.NewOAuthService(cfg),
 		authService:  authService,
 		jwtService:   jwtService,
@@ -154,7 +150,7 @@ func (h *AuthHandler) Callback(c *gin.Context) {
 // @Success 200 {object} response.StandardResponse
 // @Router /auth/providers [get]
 func (h *AuthHandler) GetProviders(c *gin.Context) {
-	providers := []map[string]interface{}{
+	providers := []map[string]any{
 		{
 			"name":         "Google",
 			"key":          "google",
@@ -256,125 +252,18 @@ func (h *AuthHandler) handleTelegramCallback(c *gin.Context) {
 }
 
 func (h *AuthHandler) createOrUpdateUser(userInfo *interfaces.UserInfo) (*userEntities.User, error) {
-	var user userEntities.User
-	var userExists bool
-
-	// Find user by provider-specific ID
-	switch userInfo.Provider {
-	case "google":
-		result := h.db.DB.Where("google_id = ? AND status = ?", userInfo.ID, userEntities.UserStatusActive).First(&user)
-		userExists = result.Error == nil
-		if !userExists {
-			user = userEntities.User{
-				Email:    userInfo.Email,
-				Name:     userInfo.Name,
-				Avatar:   userInfo.Avatar,
-				GoogleID: &userInfo.ID,
-				Username: userInfo.Username,
-				Provider: "google",
-				Status:   userEntities.UserStatusActive,
-				Role:     userEntities.UserRoleUser,
-			}
-		}
-
-	case "github":
-		result := h.db.DB.Where("github_id = ? AND status = ?", userInfo.ID, userEntities.UserStatusActive).First(&user)
-		userExists = result.Error == nil
-		if !userExists {
-			user = userEntities.User{
-				Email:    userInfo.Email,
-				Name:     userInfo.Name,
-				Avatar:   userInfo.Avatar,
-				GitHubID: &userInfo.ID,
-				Username: userInfo.Username,
-				Provider: "github",
-				Status:   userEntities.UserStatusActive,
-				Role:     userEntities.UserRoleUser,
-			}
-		}
-
-	case "telegram":
-		result := h.db.DB.Where("telegram_id = ? AND status = ?", userInfo.ID, userEntities.UserStatusActive).First(&user)
-		userExists = result.Error == nil
-		if !userExists {
-			user = userEntities.User{
-				Email:      userInfo.Email,
-				Name:       userInfo.Name,
-				Avatar:     userInfo.Avatar,
-				TelegramID: &userInfo.ID,
-				Username:   userInfo.Username,
-				Provider:   "telegram",
-				Status:     userEntities.UserStatusActive,
-				Role:       userEntities.UserRoleUser,
-			}
-		}
-
-	default:
-		return nil, gin.Error{Err: nil, Type: gin.ErrorTypePrivate}
+	// Convert UserInfo to OAuthUserInfo (they have identical fields)
+	oauthUserInfo := &interfaces.OAuthUserInfo{
+		ID:       userInfo.ID,
+		Email:    userInfo.Email,
+		Name:     userInfo.Name,
+		Avatar:   userInfo.Avatar,
+		Username: userInfo.Username,
+		Provider: userInfo.Provider,
 	}
 
-	// Handle user creation or update
-	if !userExists {
-		// Create new user
-		providerDataBytes, _ := json.Marshal(userInfo)
-		providerDataStr := string(providerDataBytes)
-		user.ProviderData = &providerDataStr
-
-		if err := h.db.DB.Create(&user).Error; err != nil {
-			return nil, err
-		}
-
-		logger.Info("New OAuth user created",
-			logger.String("provider", userInfo.Provider),
-			logger.String("provider_id", userInfo.ID),
-			logger.Uint("user_id", user.ID),
-		)
-	} else {
-		// Check if user data has changed (only name and avatar)
-		if h.hasUserDataChanged(&user, userInfo) {
-			// Update only name and avatar fields
-			user.Name = userInfo.Name
-			user.Avatar = userInfo.Avatar
-
-			// Update provider data to keep it current
-			providerDataBytes, _ := json.Marshal(userInfo)
-			providerDataStr := string(providerDataBytes)
-			user.ProviderData = &providerDataStr
-
-			if err := h.db.DB.Save(&user).Error; err != nil {
-				return nil, err
-			}
-
-			logger.Info("OAuth user profile updated",
-				logger.String("provider", userInfo.Provider),
-				logger.String("provider_id", userInfo.ID),
-				logger.Uint("user_id", user.ID),
-				logger.String("updated_fields", "name,avatar"),
-			)
-		} else {
-			logger.Debug("OAuth user profile unchanged, skipping update",
-				logger.String("provider", userInfo.Provider),
-				logger.String("provider_id", userInfo.ID),
-				logger.Uint("user_id", user.ID),
-			)
-		}
-	}
-
-	return &user, nil
-}
-
-// hasUserDataChanged checks if user data has changed compared to OAuth provider data
-// Only compares name and avatar fields as these are the main changeable fields from OAuth providers
-func (h *AuthHandler) hasUserDataChanged(user *userEntities.User, userInfo *interfaces.UserInfo) bool {
-	// Check only name and avatar fields that can be updated from OAuth provider
-	if user.Name != userInfo.Name {
-		return true
-	}
-	if user.Avatar != userInfo.Avatar {
-		return true
-	}
-
-	return false
+	// Use the AuthService to handle OAuth user creation/update
+	return h.authService.CreateOrUpdateOAuthUser(context.Background(), oauthUserInfo)
 }
 
 // Register godoc

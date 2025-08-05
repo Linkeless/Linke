@@ -17,5 +17,5 @@ type JWTBlacklistService interface {
 
 	// Maintenance and statistics
 	CleanupExpiredEntries(ctx context.Context) error
-	GetBlacklistStats(ctx context.Context) (map[string]interface{}, error)
+	GetBlacklistStats(ctx context.Context) (map[string]any, error)
 }

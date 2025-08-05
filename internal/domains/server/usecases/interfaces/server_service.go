@@ -21,11 +21,11 @@ type ShadowsocksServerService interface {
 
 	// Server management
 	UpdateServerStatus(ctx context.Context, serverID uint, status string) error
-	BulkUpdateServers(ctx context.Context, serverIDs []uint, updates map[string]interface{}) error
+	BulkUpdateServers(ctx context.Context, serverIDs []uint, updates map[string]any) error
 
 	// Server health and monitoring
-	CheckServerHealth(ctx context.Context, serverID uint) (map[string]interface{}, error)
-	GetServerStatistics(ctx context.Context, serverID uint) (map[string]interface{}, error)
+	CheckServerHealth(ctx context.Context, serverID uint) (map[string]any, error)
+	GetServerStatistics(ctx context.Context, serverID uint) (map[string]any, error)
 }
 
 // CreateShadowsocksServerRequest represents the request to create a shadowsocks server

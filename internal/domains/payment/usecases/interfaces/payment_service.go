@@ -17,7 +17,7 @@ type PaymentService interface {
 	GetPaymentRecord(ctx context.Context, paymentNo string) (*entities.PaymentRecord, error)
 	GetPaymentRecordByOutTradeNo(ctx context.Context, outTradeNo string) (*entities.PaymentRecord, error)
 	UpdatePaymentStatus(ctx context.Context, paymentNo string, status string, transactionID string, paidAt *time.Time) error
-	ProcessNotification(ctx context.Context, gateway string, data map[string]interface{}) error
+	ProcessNotification(ctx context.Context, gateway string, data map[string]any) error
 	GetAvailablePaymentMethods(ctx context.Context) (map[string][]string, error)
 	GeneratePaymentNo() (string, error)
 
@@ -32,7 +32,7 @@ type PaymentService interface {
 type PaymentGateway interface {
 	CreatePaymentOrder(req *CreatePaymentOrderRequest) (*CreatePaymentOrderResponse, error)
 	QueryPaymentOrder(outTradeNo string) (*QueryPaymentOrderResponse, error)
-	VerifyPaymentNotify(data map[string]interface{}) (bool, *NotifyData)
+	VerifyPaymentNotify(data map[string]any) (bool, *NotifyData)
 	IsPaymentCompleted(status string) bool
 	GetSupportedPaymentMethods() []string
 	GetPaymentMethodName(method string) string

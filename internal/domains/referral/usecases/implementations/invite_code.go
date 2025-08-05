@@ -210,7 +210,7 @@ func (s *InviteCodeService) UseInviteCode(ctx context.Context, code string, user
 
 	// Create referral record if referral service is available
 	if s.referralService != nil {
-		attributionData := map[string]interface{}{
+		attributionData := map[string]any{
 			"ip_address": ipAddress,
 			"user_agent": userAgent,
 		}
@@ -342,8 +342,8 @@ func (s *InviteCodeService) DeleteInviteCode(ctx context.Context, id uint) error
 }
 
 // GetInviteCodeStats returns statistics about invite codes
-func (s *InviteCodeService) GetInviteCodeStats(ctx context.Context) (map[string]interface{}, error) {
-	var stats map[string]interface{} = make(map[string]interface{})
+func (s *InviteCodeService) GetInviteCodeStats(ctx context.Context) (map[string]any, error) {
+	var stats map[string]any = make(map[string]any)
 
 	// Total invite codes
 	var totalCodes int64

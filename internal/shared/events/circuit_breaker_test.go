@@ -110,7 +110,7 @@ func TestCircuitBreakerEventHandler(t *testing.T) {
 	cbHandler := NewCircuitBreakerEventHandler("test-cb-handler", mockHandler, config)
 	ctx := context.Background()
 
-	event := NewBaseEvent("test.event", "test-service", map[string]interface{}{
+	event := NewBaseEvent("test.event", "test-service", map[string]any{
 		"test": "data",
 	})
 
@@ -244,7 +244,7 @@ func TestCircuitBreakerWithMetrics(t *testing.T) {
 	metricsHandler := NewMetricsEventHandler("test-handler", cbHandler, metrics)
 
 	ctx := context.Background()
-	event := NewBaseEvent("test.event", "test-service", map[string]interface{}{
+	event := NewBaseEvent("test.event", "test-service", map[string]any{
 		"test": "data",
 	})
 

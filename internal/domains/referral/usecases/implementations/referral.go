@@ -28,17 +28,17 @@ func NewReferralService(db *database.Database) *ReferralService {
 
 // CreateReferralRequest represents the request to create a referral
 type CreateReferralRequest struct {
-	ReferrerID      uint                   `json:"referrer_id" binding:"required"`
-	RefereeID       uint                   `json:"referee_id" binding:"required"`
-	InviteCodeID    *uint                  `json:"invite_code_id,omitempty"`
-	ReferralSource  string                 `json:"referral_source" binding:"required"`
-	ReferralChannel string                 `json:"referral_channel,omitempty"`
-	ReferralCode    string                 `json:"referral_code,omitempty"`
-	CampaignID      *uint                  `json:"campaign_id,omitempty"`
-	AttributionData map[string]interface{} `json:"attribution_data,omitempty"`
-	ConversionValue float64                `json:"conversion_value,omitempty"`
-	ConversionType  string                 `json:"conversion_type,omitempty"`
-	ExpirationDays  int                    `json:"expiration_days,omitempty"`
+	ReferrerID      uint           `json:"referrer_id" binding:"required"`
+	RefereeID       uint           `json:"referee_id" binding:"required"`
+	InviteCodeID    *uint          `json:"invite_code_id,omitempty"`
+	ReferralSource  string         `json:"referral_source" binding:"required"`
+	ReferralChannel string         `json:"referral_channel,omitempty"`
+	ReferralCode    string         `json:"referral_code,omitempty"`
+	CampaignID      *uint          `json:"campaign_id,omitempty"`
+	AttributionData map[string]any `json:"attribution_data,omitempty"`
+	ConversionValue float64        `json:"conversion_value,omitempty"`
+	ConversionType  string         `json:"conversion_type,omitempty"`
+	ExpirationDays  int            `json:"expiration_days,omitempty"`
 }
 
 // CreateReferral creates a new referral relationship
@@ -135,7 +135,7 @@ func (s *ReferralService) CreateReferral(ctx context.Context, req *CreateReferra
 }
 
 // CreateReferralFromInviteCode creates a referral when an invite code is used
-func (s *ReferralService) CreateReferralFromInviteCode(ctx context.Context, inviteCode *entities.InviteCode, refereeID uint, attributionData map[string]interface{}) (*entities.Referral, error) {
+func (s *ReferralService) CreateReferralFromInviteCode(ctx context.Context, inviteCode *entities.InviteCode, refereeID uint, attributionData map[string]any) (*entities.Referral, error) {
 	// Use the invite code's campaign ID if available, otherwise use default campaign
 	var campaignID *uint
 	if inviteCode.ReferralCampaignID != nil {
@@ -164,7 +164,7 @@ func (s *ReferralService) CreateReferralFromInviteCode(ctx context.Context, invi
 }
 
 // TrackReferralClick tracks a click on a referral link
-func (s *ReferralService) TrackReferralClick(ctx context.Context, referralCode string, attributionData map[string]interface{}) error {
+func (s *ReferralService) TrackReferralClick(ctx context.Context, referralCode string, attributionData map[string]any) error {
 	// Find referral by code
 	var referral entities.Referral
 	if err := s.db.DB.Where("referral_code = ?", referralCode).First(&referral).Error; err != nil {
@@ -173,7 +173,7 @@ func (s *ReferralService) TrackReferralClick(ctx context.Context, referralCode s
 
 	// Update click tracking
 	now := time.Now()
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"click_count":   gorm.Expr("click_count + 1"),
 		"last_click_at": now,
 		"updated_at":    now,
@@ -206,7 +206,7 @@ func (s *ReferralService) ConfirmReferral(ctx context.Context, referralID uint) 
 	}
 
 	// Update referral status
-	if err := s.db.DB.Model(&referral).Updates(map[string]interface{}{
+	if err := s.db.DB.Model(&referral).Updates(map[string]any{
 		"status":     entities.ReferralStatusConfirmed,
 		"updated_at": time.Now(),
 	}).Error; err != nil {
@@ -243,7 +243,7 @@ func (s *ReferralService) TrackConversion(ctx context.Context, userID uint, conv
 	now := time.Now()
 
 	// Update referral with conversion data
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"converted_at":     now,
 		"conversion_value": conversionValue,
 		"conversion_type":  conversionType,
@@ -260,7 +260,7 @@ func (s *ReferralService) TrackConversion(ctx context.Context, userID uint, conv
 	}
 
 	// Create conversion event
-	eventData := map[string]interface{}{
+	eventData := map[string]any{
 		"conversion_type":  conversionType,
 		"conversion_value": conversionValue,
 	}
@@ -345,8 +345,8 @@ func (s *ReferralService) GetReferralWithRelations(ctx context.Context, referral
 }
 
 // GetReferralStats gets referral statistics for a user
-func (s *ReferralService) GetReferralStats(ctx context.Context, userID uint) (map[string]interface{}, error) {
-	stats := make(map[string]interface{})
+func (s *ReferralService) GetReferralStats(ctx context.Context, userID uint) (map[string]any, error) {
+	stats := make(map[string]any)
 
 	// Count total referrals made by user
 	var totalReferrals int64
@@ -394,7 +394,7 @@ func (s *ReferralService) generateReferralCode() string {
 }
 
 // createReferralEvent creates a referral event
-func (s *ReferralService) createReferralEvent(ctx context.Context, referralID, userID uint, eventType, description string, eventData map[string]interface{}) {
+func (s *ReferralService) createReferralEvent(ctx context.Context, referralID, userID uint, eventType, description string, eventData map[string]any) {
 	event := &entities.ReferralEvent{
 		ReferralID:       referralID,
 		UserID:           userID,

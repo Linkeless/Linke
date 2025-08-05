@@ -15,7 +15,7 @@ const (
 
 // AuthService interface for authentication operations
 type AuthService interface {
-	ValidateToken(token string) (interface{}, error)
+	ValidateToken(token string) (any, error)
 }
 
 // AuthMiddleware creates a middleware for JWT authentication
@@ -56,7 +56,7 @@ func AuthMiddleware(authService AuthService) gin.HandlerFunc {
 		// Store user in context for use in handlers
 		c.Set(AuthContextKey, user)
 		// Also store user ID for handlers that only need the ID
-		if userWithID, ok := user.(interface{ GetID() interface{} }); ok {
+		if userWithID, ok := user.(interface{ GetID() any }); ok {
 			c.Set("user_id", userWithID.GetID())
 		}
 		c.Next()
@@ -89,7 +89,7 @@ func OptionalAuthMiddleware(authService AuthService) gin.HandlerFunc {
 		// Store user in context for use in handlers
 		c.Set(AuthContextKey, user)
 		// Also store user ID for handlers that only need the ID
-		if userWithID, ok := user.(interface{ GetID() interface{} }); ok {
+		if userWithID, ok := user.(interface{ GetID() any }); ok {
 			c.Set("user_id", userWithID.GetID())
 		}
 		c.Next()

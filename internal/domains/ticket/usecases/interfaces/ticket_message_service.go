@@ -26,7 +26,7 @@ type TicketMessageService interface {
 	GetInternalMessages(ctx context.Context, ticketID uint) ([]*entities.TicketMessage, error)
 
 	// Message statistics
-	GetMessageStatistics(ctx context.Context, ticketID uint) (map[string]interface{}, error)
+	GetMessageStatistics(ctx context.Context, ticketID uint) (map[string]any, error)
 }
 
 // CreateTicketMessageRequest represents the request to create a ticket message

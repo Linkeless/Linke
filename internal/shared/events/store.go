@@ -281,13 +281,13 @@ func (s *DatabaseEventStore) Replay(ctx context.Context, fromTimestamp time.Time
 // deserializeStoredEvent converts a stored event back to an Event interface
 func (s *DatabaseEventStore) deserializeStoredEvent(storedEvent *StoredEvent) (Event, error) {
 	// Parse event data
-	var eventData interface{}
+	var eventData any
 	if err := json.Unmarshal([]byte(storedEvent.EventData), &eventData); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal event data: %w", err)
 	}
 
 	// Parse metadata
-	var metadata map[string]interface{}
+	var metadata map[string]any
 	if storedEvent.Metadata != "" {
 		if err := json.Unmarshal([]byte(storedEvent.Metadata), &metadata); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal event metadata: %w", err)
@@ -319,7 +319,7 @@ func (s *DatabaseEventStore) deserializeStoredEvent(storedEvent *StoredEvent) (E
 		}, nil
 	case "payment":
 		// For payment events, we need to extract additional fields from data
-		if dataMap, ok := eventData.(map[string]interface{}); ok {
+		if dataMap, ok := eventData.(map[string]any); ok {
 			paymentEvent := &PaymentEvent{
 				BaseEvent: baseEvent,
 				PaymentID: storedEvent.AggregateID,
@@ -343,7 +343,7 @@ func (s *DatabaseEventStore) deserializeStoredEvent(storedEvent *StoredEvent) (E
 			SubscriptionID: subscriptionID,
 		}
 		// Extract user ID from data if available
-		if dataMap, ok := eventData.(map[string]interface{}); ok {
+		if dataMap, ok := eventData.(map[string]any); ok {
 			if userID, ok := dataMap["user_id"].(float64); ok {
 				subscriptionEvent.UserID = uint(userID)
 			}
@@ -359,7 +359,7 @@ func (s *DatabaseEventStore) deserializeStoredEvent(storedEvent *StoredEvent) (E
 			OrderID:   orderID,
 		}
 		// Extract user ID from data if available
-		if dataMap, ok := eventData.(map[string]interface{}); ok {
+		if dataMap, ok := eventData.(map[string]any); ok {
 			if userID, ok := dataMap["user_id"].(float64); ok {
 				orderEvent.UserID = uint(userID)
 			}
@@ -375,7 +375,7 @@ func (s *DatabaseEventStore) deserializeStoredEvent(storedEvent *StoredEvent) (E
 			InvoiceID: invoiceID,
 		}
 		// Extract additional fields from data
-		if dataMap, ok := eventData.(map[string]interface{}); ok {
+		if dataMap, ok := eventData.(map[string]any); ok {
 			if orderID, ok := dataMap["order_id"].(float64); ok {
 				invoiceEvent.OrderID = uint(orderID)
 			}

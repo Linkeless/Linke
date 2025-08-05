@@ -182,7 +182,7 @@ func (s *UserScopedServiceImpl[T, ID]) GetUserStatistics(ctx context.Context, us
 	// For user-specific stats, we don't typically have deleted counts in user scope
 	// but this can be extended if needed
 
-	customStats := map[string]interface{}{
+	customStats := map[string]any{
 		"user_id": userID,
 	}
 

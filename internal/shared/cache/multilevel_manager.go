@@ -208,7 +208,7 @@ func (mlcm *DefaultMultiLevelCacheManager) Stop() {
 }
 
 // RegisterEventHandler registers the invalidator as an event handler
-func (mlcm *DefaultMultiLevelCacheManager) RegisterEventHandler(eventBus interface{}) error {
+func (mlcm *DefaultMultiLevelCacheManager) RegisterEventHandler(eventBus any) error {
 	// This would integrate with the actual event bus implementation
 	// For now, we'll just log that it should be registered
 	mlcm.logger.Info("Cache invalidator should be registered with event bus",

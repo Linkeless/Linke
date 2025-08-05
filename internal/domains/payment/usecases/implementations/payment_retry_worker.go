@@ -258,7 +258,7 @@ func (w *PaymentRetryWorker) ScheduleRetryWorkerTasks(taskQueue *queue.TaskQueue
 	// Schedule pending retries processing every 5 minutes
 	pendingRetriesTask := &queue.Task{
 		Type: "process_pending_retries",
-		Payload: map[string]interface{}{
+		Payload: map[string]any{
 			"batch_size": 50,
 		},
 		MaxRetry: 3,
@@ -267,14 +267,14 @@ func (w *PaymentRetryWorker) ScheduleRetryWorkerTasks(taskQueue *queue.TaskQueue
 	// Schedule health check every 15 minutes
 	healthCheckTask := &queue.Task{
 		Type:     "retry_health_check",
-		Payload:  map[string]interface{}{},
+		Payload:  map[string]any{},
 		MaxRetry: 2,
 	}
 
 	// Schedule cleanup daily at 2 AM
 	cleanupTask := &queue.Task{
 		Type: "retry_cleanup",
-		Payload: map[string]interface{}{
+		Payload: map[string]any{
 			"retention_days": 30,
 		},
 		MaxRetry: 2,

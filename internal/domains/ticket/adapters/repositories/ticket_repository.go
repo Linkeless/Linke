@@ -130,7 +130,7 @@ func (r *ticketRepository) ListByAssignee(ctx context.Context, assigneeID uint, 
 
 // UpdateAssignee updates the assignee of a ticket
 func (r *ticketRepository) UpdateAssignee(ctx context.Context, id uint, assigneeID *uint) error {
-	updates := map[string]interface{}{
+	updates := map[string]any{
 		"assigned_to_id": assigneeID,
 	}
 

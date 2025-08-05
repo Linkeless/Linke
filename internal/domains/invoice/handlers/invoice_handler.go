@@ -408,7 +408,7 @@ func (h *InvoiceHandler) MarkInvoiceAsVoid(c *gin.Context) {
 // @Security BearerAuth
 // @Param from_date query string false "From date (YYYY-MM-DD)"
 // @Param to_date query string false "To date (YYYY-MM-DD)"
-// @Success 200 {object} response.StandardResponse{data=map[string]interface{}}
+// @Success 200 {object} response.StandardResponse{data=map[string]any}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse

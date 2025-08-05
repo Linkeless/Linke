@@ -24,23 +24,23 @@ type ReferralService interface {
 	MarkReferralAsPaid(ctx context.Context, referralID uint) error
 
 	// Referral statistics
-	GetReferralStatistics(ctx context.Context, userID uint) (map[string]interface{}, error)
-	GetSystemReferralStatistics(ctx context.Context) (map[string]interface{}, error)
+	GetReferralStatistics(ctx context.Context, userID uint) (map[string]any, error)
+	GetSystemReferralStatistics(ctx context.Context) (map[string]any, error)
 }
 
 // CreateReferralRequest represents the request to create a referral
 type CreateReferralRequest struct {
-	ReferrerID      uint                   `json:"referrer_id" binding:"required"`
-	RefereeID       uint                   `json:"referee_id" binding:"required"`
-	InviteCodeID    *uint                  `json:"invite_code_id,omitempty"`
-	ReferralSource  string                 `json:"referral_source" binding:"required"`
-	ReferralChannel string                 `json:"referral_channel,omitempty"`
-	ReferralCode    string                 `json:"referral_code,omitempty"`
-	CampaignID      *uint                  `json:"campaign_id,omitempty"`
-	AttributionData map[string]interface{} `json:"attribution_data,omitempty"`
-	ConversionValue float64                `json:"conversion_value,omitempty"`
-	ConversionType  string                 `json:"conversion_type,omitempty"`
-	ExpirationDays  int                    `json:"expiration_days,omitempty"`
+	ReferrerID      uint           `json:"referrer_id" binding:"required"`
+	RefereeID       uint           `json:"referee_id" binding:"required"`
+	InviteCodeID    *uint          `json:"invite_code_id,omitempty"`
+	ReferralSource  string         `json:"referral_source" binding:"required"`
+	ReferralChannel string         `json:"referral_channel,omitempty"`
+	ReferralCode    string         `json:"referral_code,omitempty"`
+	CampaignID      *uint          `json:"campaign_id,omitempty"`
+	AttributionData map[string]any `json:"attribution_data,omitempty"`
+	ConversionValue float64        `json:"conversion_value,omitempty"`
+	ConversionType  string         `json:"conversion_type,omitempty"`
+	ExpirationDays  int            `json:"expiration_days,omitempty"`
 }
 
 // UpdateReferralRequest represents the request to update a referral

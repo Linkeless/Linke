@@ -343,7 +343,7 @@ func (is *InvoiceService) UpdateInvoice(ctx context.Context, invoiceID uint, req
 	}
 
 	// Prepare update data
-	updateData := make(map[string]interface{})
+	updateData := make(map[string]any)
 
 	if req.InvoiceType != nil {
 		updateData["invoice_type"] = *req.InvoiceType
@@ -444,7 +444,7 @@ func (is *InvoiceService) SendInvoice(ctx context.Context, invoiceID uint, email
 
 	// Update invoice status
 	now := time.Now()
-	updateData := map[string]interface{}{
+	updateData := map[string]any{
 		"status":     entities.InvoiceStatusSent,
 		"sent_at":    now,
 		"updated_at": now,
@@ -491,7 +491,7 @@ func (is *InvoiceService) MarkInvoiceAsPaid(ctx context.Context, invoiceID uint,
 	}
 
 	// Update invoice status
-	updateData := map[string]interface{}{
+	updateData := map[string]any{
 		"status":     entities.InvoiceStatusPaid,
 		"paid_at":    paidAt,
 		"updated_at": time.Now(),
@@ -524,7 +524,7 @@ func (is *InvoiceService) MarkInvoiceAsVoid(ctx context.Context, invoiceID uint,
 
 	// Update invoice status
 	now := time.Now()
-	updateData := map[string]interface{}{
+	updateData := map[string]any{
 		"status":     entities.InvoiceStatusVoided,
 		"voided_at":  now,
 		"updated_at": now,
@@ -702,7 +702,7 @@ func (is *InvoiceService) GenerateInvoicePDFWithOptions(ctx context.Context, inv
 
 	// Update invoice with PDF info if saved to disk
 	if pdfOptions.SaveToDisk && filePath != "" {
-		updateData := map[string]interface{}{
+		updateData := map[string]any{
 			"pdf_path":   filePath,
 			"pdf_size":   len(pdfBytes),
 			"updated_at": time.Now(),
@@ -916,7 +916,7 @@ func (is *InvoiceService) MarkInvoiceAsOverdue(ctx context.Context, invoiceID ui
 	}
 
 	// Update invoice status
-	updateData := map[string]interface{}{
+	updateData := map[string]any{
 		"status":     entities.InvoiceStatusOverdue,
 		"updated_at": time.Now(),
 	}
@@ -933,8 +933,8 @@ func (is *InvoiceService) MarkInvoiceAsOverdue(ctx context.Context, invoiceID ui
 }
 
 // GetInvoiceStatistics gets invoice statistics for a date range
-func (is *InvoiceService) GetInvoiceStatistics(ctx context.Context, fromDate, toDate string) (map[string]interface{}, error) {
-	stats := make(map[string]interface{})
+func (is *InvoiceService) GetInvoiceStatistics(ctx context.Context, fromDate, toDate string) (map[string]any, error) {
+	stats := make(map[string]any)
 
 	// Parse dates
 	var startDate, endDate time.Time
@@ -1002,8 +1002,8 @@ func (is *InvoiceService) GetInvoiceStatistics(ctx context.Context, fromDate, to
 }
 
 // GetUserInvoiceStatistics gets invoice statistics for a specific user
-func (is *InvoiceService) GetUserInvoiceStatistics(ctx context.Context, userID uint) (map[string]interface{}, error) {
-	stats := make(map[string]interface{})
+func (is *InvoiceService) GetUserInvoiceStatistics(ctx context.Context, userID uint) (map[string]any, error) {
+	stats := make(map[string]any)
 
 	query := is.db.WithContext(ctx).Model(&entities.Invoice{}).Where("user_id = ?", userID)
 
@@ -1070,7 +1070,7 @@ func (is *InvoiceService) SendInvoiceWithPDF(ctx context.Context, invoiceID uint
 	}
 
 	now := time.Now()
-	updateData := map[string]interface{}{
+	updateData := map[string]any{
 		"status":     entities.InvoiceStatusSent,
 		"sent_at":    now,
 		"updated_at": now,

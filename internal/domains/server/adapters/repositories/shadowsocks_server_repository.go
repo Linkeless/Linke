@@ -24,7 +24,6 @@ func NewShadowsocksServerRepository(db *gorm.DB, logger framework.Logger) interf
 	}
 }
 
-
 // ListByGroup retrieves shadowsocks servers by group ID with pagination
 func (r *shadowsocksServerRepository) ListByGroup(ctx context.Context, groupID uint, limit, offset int) ([]*entities.ShadowsocksServer, int64, error) {
 	var servers []*entities.ShadowsocksServer
@@ -86,7 +85,6 @@ func (r *shadowsocksServerRepository) ListActive(ctx context.Context, limit, off
 	return servers, total, nil
 }
 
-
 // ListByLocation retrieves shadowsocks servers by location with pagination
 func (r *shadowsocksServerRepository) ListByLocation(ctx context.Context, country, region string, limit, offset int) ([]*entities.ShadowsocksServer, int64, error) {
 	// Note: The current entity doesn't have country/region fields
@@ -126,7 +124,6 @@ func (r *shadowsocksServerRepository) ListByLocation(ctx context.Context, countr
 
 	return servers, total, nil
 }
-
 
 // GetLocationStats returns statistics about servers grouped by location
 func (r *shadowsocksServerRepository) GetLocationStats(ctx context.Context) (map[string]int64, error) {

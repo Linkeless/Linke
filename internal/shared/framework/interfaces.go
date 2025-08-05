@@ -106,12 +106,12 @@ type Repository interface {
 // BaseRepository provides common repository operations (legacy interface - deprecated)
 type BaseRepository interface {
 	Repository
-	Create(ctx context.Context, entity interface{}) error
-	GetByID(ctx context.Context, id interface{}, entity interface{}) error
-	Update(ctx context.Context, entity interface{}) error
-	Delete(ctx context.Context, id interface{}, entity interface{}) error
-	List(ctx context.Context, entities interface{}, offset, limit int) error
-	Count(ctx context.Context, entity interface{}) (int64, error)
+	Create(ctx context.Context, entity any) error
+	GetByID(ctx context.Context, id any, entity any) error
+	Update(ctx context.Context, entity any) error
+	Delete(ctx context.Context, id any, entity any) error
+	List(ctx context.Context, entities any, offset, limit int) error
+	Count(ctx context.Context, entity any) (int64, error)
 }
 
 // GenericRepository provides type-safe repository operations with full CRUD, pagination, soft delete, and batch operations
@@ -154,7 +154,7 @@ type GenericRepository[T any, ID comparable] interface {
 	ExistsByID(ctx context.Context, id ID) (bool, error)
 	
 	// Advanced filtering
-	ListWithFilters(ctx context.Context, filters map[string]interface{}, limit, offset int) ([]*T, int64, error)
+	ListWithFilters(ctx context.Context, filters map[string]any, limit, offset int) ([]*T, int64, error)
 }
 
 // UserScopedRepository extends GenericRepository with user-specific operations
@@ -246,7 +246,7 @@ type GenericService[T any, ID comparable] interface {
 	ExistsByID(ctx context.Context, id ID) (bool, error)
 	
 	// Advanced filtering
-	ListWithFilters(ctx context.Context, filters map[string]interface{}, req *ListRequest) (*ListResponse[T], error)
+	ListWithFilters(ctx context.Context, filters map[string]any, req *ListRequest) (*ListResponse[T], error)
 	
 	// Validation hooks (can be overridden by implementations)
 	ValidateCreate(ctx context.Context, req *CreateRequest[T]) error
@@ -324,7 +324,7 @@ type BusinessService[T any, ID comparable] interface {
 	GetAuditLog(ctx context.Context, id ID, req *ListRequest) (*ListResponse[AuditLogEntry], error)
 	
 	// Workflow operations
-	ProcessWorkflow(ctx context.Context, id ID, action string, params map[string]interface{}) error
+	ProcessWorkflow(ctx context.Context, id ID, action string, params map[string]any) error
 }
 
 // Standard request/response DTOs for generic services
@@ -333,14 +333,14 @@ type BusinessService[T any, ID comparable] interface {
 type CreateRequest[T any] struct {
 	Data     *T                     `json:"data" binding:"required"`
 	Options  *CreateOptions         `json:"options,omitempty"`
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
+	Metadata map[string]any `json:"metadata,omitempty"`
 }
 
 // UpdateRequest represents a generic update request  
 type UpdateRequest[T any] struct {
 	Data     *T                     `json:"data" binding:"required"`
 	Options  *UpdateOptions         `json:"options,omitempty"`
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
+	Metadata map[string]any `json:"metadata,omitempty"`
 }
 
 // ListRequest represents a generic list request
@@ -349,7 +349,7 @@ type ListRequest struct {
 	Offset  int                    `form:"offset,omitempty" binding:"omitempty,min=0" example:"0"`
 	SortBy  string                 `form:"sort_by,omitempty" example:"created_at"`
 	SortDir string                 `form:"sort_dir,omitempty" binding:"omitempty,oneof=asc desc" example:"desc"`
-	Filters map[string]interface{} `form:"filters,omitempty"`
+	Filters map[string]any `form:"filters,omitempty"`
 }
 
 // ListResponse represents a generic list response
@@ -369,7 +369,7 @@ type StatisticsResponse struct {
 	InactiveCount int64                  `json:"inactive_count"`
 	DeletedCount  int64                  `json:"deleted_count"`
 	StatusCounts  map[string]int64       `json:"status_counts"`
-	CustomStats   map[string]interface{} `json:"custom_stats,omitempty"`
+	CustomStats   map[string]any `json:"custom_stats,omitempty"`
 	GeneratedAt   time.Time              `json:"generated_at"`
 }
 
@@ -405,8 +405,8 @@ type AuditLogEntry struct {
 	EntityID    string                 `json:"entity_id"`
 	Action      string                 `json:"action"` // create, update, delete, etc.
 	UserID      *uint                  `json:"user_id,omitempty"`
-	Changes     map[string]interface{} `json:"changes,omitempty"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	Changes     map[string]any `json:"changes,omitempty"`
+	Metadata    map[string]any `json:"metadata,omitempty"`
 	CreatedAt   time.Time              `json:"created_at"`
 }
 
@@ -425,7 +425,7 @@ type EventSubscriber interface {
 // DomainEvent interface for domain events
 type DomainEvent interface {
 	EventType() string
-	EventData() interface{}
+	EventData() any
 	EventTime() time.Time
 	EventID() string
 	EventVersion() string
@@ -440,8 +440,8 @@ type EventHandler interface {
 
 // Cache interface defines caching operations
 type Cache interface {
-	Get(ctx context.Context, key string) (interface{}, error)
-	Set(ctx context.Context, key string, value interface{}, expiration time.Duration) error
+	Get(ctx context.Context, key string) (any, error)
+	Set(ctx context.Context, key string, value any, expiration time.Duration) error
 	Delete(ctx context.Context, key string) error
 	Exists(ctx context.Context, key string) (bool, error)
 	Clear(ctx context.Context) error
@@ -459,7 +459,7 @@ type Queue interface {
 type Task interface {
 	GetID() string
 	GetType() string
-	GetPayload() map[string]interface{}
+	GetPayload() map[string]any
 	GetRetryCount() int
 	GetMaxRetries() int
 	GetCreatedAt() time.Time
@@ -474,22 +474,22 @@ type QueueInfo interface {
 
 // Validator interface for data validation
 type Validator interface {
-	Validate(data interface{}) error
-	ValidateStruct(data interface{}) error
+	Validate(data any) error
+	ValidateStruct(data any) error
 }
 
 // Serializer interface for data serialization
 type Serializer interface {
-	Serialize(data interface{}) ([]byte, error)
-	Deserialize(data []byte, target interface{}) error
+	Serialize(data any) ([]byte, error)
+	Deserialize(data []byte, target any) error
 	GetContentType() string
 }
 
 // HTTPClient interface for HTTP operations
 type HTTPClient interface {
 	Get(ctx context.Context, url string, headers map[string]string) (*HTTPResponse, error)
-	Post(ctx context.Context, url string, body interface{}, headers map[string]string) (*HTTPResponse, error)
-	Put(ctx context.Context, url string, body interface{}, headers map[string]string) (*HTTPResponse, error)
+	Post(ctx context.Context, url string, body any, headers map[string]string) (*HTTPResponse, error)
+	Put(ctx context.Context, url string, body any, headers map[string]string) (*HTTPResponse, error)
 	Delete(ctx context.Context, url string, headers map[string]string) (*HTTPResponse, error)
 }
 
@@ -499,7 +499,7 @@ type HTTPResponse interface {
 	GetHeaders() map[string]string
 	GetBody() []byte
 	GetBodyAsString() string
-	GetBodyAsJSON(target interface{}) error
+	GetBodyAsJSON(target any) error
 }
 
 // Metrics interface for application metrics
@@ -549,7 +549,7 @@ type HealthStatus interface {
 	IsHealthy() bool
 	GetStatus() string
 	GetMessage() string
-	GetDetails() map[string]interface{}
+	GetDetails() map[string]any
 	GetTimestamp() time.Time
 }
 
@@ -557,8 +557,8 @@ type HealthStatus interface {
 type Security interface {
 	HashPassword(password string) (string, error)
 	VerifyPassword(password, hash string) error
-	GenerateToken(claims map[string]interface{}) (string, error)
-	ValidateToken(token string) (map[string]interface{}, error)
+	GenerateToken(claims map[string]any) (string, error)
+	ValidateToken(token string) (map[string]any, error)
 	Encrypt(data []byte) ([]byte, error)
 	Decrypt(data []byte) ([]byte, error)
 }
@@ -618,13 +618,13 @@ type Module interface {
 type Route interface {
 	GetMethod() string
 	GetPath() string
-	GetHandler() interface{}
-	GetMiddleware() []interface{}
+	GetHandler() any
+	GetMiddleware() []any
 }
 
 // Middleware interface for HTTP middleware
 type Middleware interface {
-	Process(ctx context.Context, request interface{}, next func(context.Context, interface{}) (interface{}, error)) (interface{}, error)
+	Process(ctx context.Context, request any, next func(context.Context, any) (any, error)) (any, error)
 }
 
 // Error interfaces for structured error handling
@@ -634,7 +634,7 @@ type AppError interface {
 	error
 	GetCode() string
 	GetMessage() string
-	GetDetails() map[string]interface{}
+	GetDetails() map[string]any
 	GetCause() error
 	GetTimestamp() time.Time
 }
@@ -643,7 +643,7 @@ type AppError interface {
 type ValidationError interface {
 	AppError
 	GetField() string
-	GetValue() interface{}
+	GetValue() any
 	GetTag() string
 }
 
@@ -651,7 +651,7 @@ type ValidationError interface {
 type NotFoundError interface {
 	AppError
 	GetResource() string
-	GetID() interface{}
+	GetID() any
 }
 
 // UnauthorizedError interface for unauthorized errors

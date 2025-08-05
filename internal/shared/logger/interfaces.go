@@ -60,7 +60,7 @@ func (l *ZapLogger) Sync() error {
 // ContextualLogger provides contextual logging capabilities
 type ContextualLogger interface {
 	Logger
-	WithContext(key string, value interface{}) Logger
+	WithContext(key string, value any) Logger
 	WithRequestID(requestID string) Logger
 	WithUserID(userID string) Logger
 }
@@ -77,7 +77,7 @@ func NewContextualZapLogger(logger *zap.Logger) *ContextualZapLogger {
 	}
 }
 
-func (l *ContextualZapLogger) WithContext(key string, value interface{}) Logger {
+func (l *ContextualZapLogger) WithContext(key string, value any) Logger {
 	return &ContextualZapLogger{
 		ZapLogger: NewZapLogger(l.logger.With(zap.Any(key, value))),
 	}
