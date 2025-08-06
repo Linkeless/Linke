@@ -66,7 +66,7 @@ type CreatePlanRequest struct {
 	TrafficResetCycle string `json:"traffic_reset_cycle" binding:"required,oneof=monthly never" example:"monthly"`
 
 	// Server Group Configuration (Required)
-	DefaultServerGroupIDs []uint `json:"default_server_group_ids" binding:"required,min=1" example:"[1]"`
+	DefaultServerGroupIDs []uint `json:"default_server_group_ids" binding:"required,min=1"`
 }
 
 // UpdatePlanRequest represents the request body for updating a subscription plan
@@ -90,7 +90,7 @@ type UpdatePlanRequest struct {
 	TrafficResetCycle *string `json:"traffic_reset_cycle,omitempty" binding:"omitempty,oneof=monthly never" example:"monthly"`
 
 	// Server Group Configuration
-	DefaultServerGroupIDs *[]uint `json:"default_server_group_ids,omitempty" example:"[1]"`
+	DefaultServerGroupIDs *[]uint `json:"default_server_group_ids,omitempty"`
 }
 
 // AdminUpdateUserSubscriptionRequest represents the request body for admin subscription updates
@@ -605,17 +605,11 @@ func (h *AdminSubscriptionHandler) ListUserSubscriptions(c *gin.Context) {
 		req.Limit = 100
 	}
 
-	subscriptions, total, err := h.userSubscriptionService.GetUserSubscriptions(c.Request.Context(), req)
+	subscriptionResponses, total, err := h.userSubscriptionService.GetUserSubscriptionsWithUserDataForAdmin(c.Request.Context(), req)
 	if err != nil {
 		logger.Error("Admin failed to list user subscriptions", logger.Error2("error", err))
 		response.InternalServerError(c, "Failed to list user subscriptions")
 		return
-	}
-
-	// Convert to response format
-	subscriptionResponses := make([]*entities.UserSubscriptionResponse, len(subscriptions))
-	for i, sub := range subscriptions {
-		subscriptionResponses[i] = sub.ToResponse()
 	}
 
 	page := (req.Offset / req.Limit) + 1

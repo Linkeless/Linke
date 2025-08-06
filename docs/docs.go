@@ -21989,6 +21989,14 @@ const docTemplate = `{
                     "type": "string",
                     "example": "USD"
                 },
+                "default_server_group_id": {
+                    "description": "Server Group Configuration (Single group per plan)",
+                    "type": "integer"
+                },
+                "default_server_group_name": {
+                    "description": "Default server group name",
+                    "type": "string"
+                },
                 "description": {
                     "description": "Plan description",
                     "type": "string",
@@ -23889,7 +23897,120 @@ const docTemplate = `{
             }
         },
         "handlers.CreatePlanRequest": {
-            "type": "object"
+            "type": "object",
+            "required": [
+                "billing_cycle",
+                "code",
+                "currency",
+                "default_server_group_ids",
+                "name",
+                "price",
+                "traffic_limit",
+                "traffic_reset_cycle"
+            ],
+            "properties": {
+                "billing_cycle": {
+                    "type": "string",
+                    "enum": [
+                        "monthly",
+                        "yearly",
+                        "lifetime"
+                    ],
+                    "example": "monthly"
+                },
+                "billing_interval": {
+                    "type": "integer",
+                    "maximum": 12,
+                    "minimum": 1,
+                    "example": 1
+                },
+                "cancellation_fee": {
+                    "type": "number",
+                    "example": 0
+                },
+                "code": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 1,
+                    "example": "premium-monthly"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "default_server_group_ids": {
+                    "description": "Server Group Configuration (Required)",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "Premium features with monthly billing"
+                },
+                "features": {
+                    "type": "string",
+                    "example": "{\"max_projects\": 10, \"storage_gb\": 100}"
+                },
+                "is_popular": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "is_recommended": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "is_visible": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "limits": {
+                    "type": "string",
+                    "example": "{\"api_calls_per_month\": 10000}"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "example": "Premium Plan"
+                },
+                "price": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 29.99
+                },
+                "setup_fee": {
+                    "type": "number",
+                    "example": 0
+                },
+                "sort_order": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "traffic_limit": {
+                    "description": "Traffic Configuration (Required)",
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 107374182400
+                },
+                "traffic_reset_cycle": {
+                    "type": "string",
+                    "enum": [
+                        "monthly",
+                        "never"
+                    ],
+                    "example": "monthly"
+                },
+                "trial_period_days": {
+                    "type": "integer",
+                    "maximum": 365,
+                    "minimum": 0,
+                    "example": 7
+                }
+            }
         },
         "handlers.CreateReferralRequest": {
             "type": "object",
@@ -24632,7 +24753,93 @@ const docTemplate = `{
             }
         },
         "handlers.UpdatePlanRequest": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+                "cancellation_fee": {
+                    "type": "number",
+                    "example": 25
+                },
+                "default_server_group_ids": {
+                    "description": "Server Group Configuration",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "Updated description"
+                },
+                "features": {
+                    "type": "string",
+                    "example": "{\"max_projects\": 20}"
+                },
+                "is_popular": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "is_recommended": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "is_visible": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "limits": {
+                    "type": "string",
+                    "example": "{\"api_calls_per_month\": 20000}"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "example": "Premium Plan Updated"
+                },
+                "price": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 39.99
+                },
+                "setup_fee": {
+                    "type": "number",
+                    "example": 10
+                },
+                "sort_order": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "inactive",
+                        "archived"
+                    ],
+                    "example": "active"
+                },
+                "traffic_limit": {
+                    "description": "Traffic Configuration",
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 107374182400
+                },
+                "traffic_reset_cycle": {
+                    "type": "string",
+                    "enum": [
+                        "monthly",
+                        "never"
+                    ],
+                    "example": "monthly"
+                },
+                "trial_period_days": {
+                    "type": "integer",
+                    "maximum": 365,
+                    "minimum": 0,
+                    "example": 14
+                }
+            }
         },
         "handlers.UpdateReferralRequest": {
             "type": "object",

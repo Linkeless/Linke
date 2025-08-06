@@ -48,7 +48,7 @@ type CreateSubscriptionPlanRequest struct {
 	TrafficResetCycle string `json:"traffic_reset_cycle" binding:"required,oneof=monthly never" example:"monthly"` // Traffic reset cycle
 
 	// Server Group Configuration (Required)
-	DefaultServerGroupIDs []uint `json:"default_server_group_ids" binding:"required,min=1" example:"[1]"` // Default server groups for subscriptions
+	DefaultServerGroupIDs []uint `json:"default_server_group_ids" binding:"required,min=1"` // Default server groups for subscriptions
 }
 
 // UpdateSubscriptionPlanRequest represents the request to update a subscription plan
@@ -72,7 +72,7 @@ type UpdateSubscriptionPlanRequest struct {
 	TrafficResetCycle *string `json:"traffic_reset_cycle,omitempty" binding:"omitempty,oneof=monthly never" example:"monthly"` // Traffic reset cycle
 
 	// Server Group Configuration
-	DefaultServerGroupIDs *[]uint `json:"default_server_group_ids,omitempty" example:"[1]"` // Default server groups for subscriptions
+	DefaultServerGroupIDs *[]uint `json:"default_server_group_ids,omitempty"` // Default server groups for subscriptions
 }
 
 // GetSubscriptionPlansRequest represents the request to get subscription plans

@@ -8,11 +8,20 @@ import (
 
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/domains/subscription/usecases/interfaces"
+	"linke/internal/shared/dto"
 	"linke/internal/shared/logger"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
+
+// stringValue safely extracts string value from pointer, returns empty string if nil
+func stringValue(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}
 
 type UserSubscriptionService struct {
 	db                      *gorm.DB
@@ -1105,4 +1114,110 @@ func (s *UserSubscriptionService) GetSubscriptionStatistics(ctx context.Context)
 	stats["total_count"] = total
 
 	return stats, nil
+}
+
+// GetUserSubscriptionsWithUserDataForAdmin gets user subscriptions with populated user data for admin use
+func (s *UserSubscriptionService) GetUserSubscriptionsWithUserDataForAdmin(ctx context.Context, req *interfaces.GetUserSubscriptionsRequest) ([]*entities.UserSubscriptionResponse, int64, error) {
+	// Build base query for counting
+	countQuery := s.db.WithContext(ctx).Model(&entities.UserSubscription{})
+
+	// Apply filters for count query
+	if req.UserID > 0 {
+		countQuery = countQuery.Where("user_subscriptions.user_id = ?", req.UserID)
+	}
+
+	if req.Status != "" {
+		countQuery = countQuery.Where("user_subscriptions.status = ?", req.Status)
+	}
+
+	// Get total count
+	var totalCount int64
+	if err := countQuery.Count(&totalCount).Error; err != nil {
+		logger.Error("Failed to count user subscriptions for admin", logger.Error2("error", err))
+		return nil, 0, fmt.Errorf("failed to count user subscriptions: %w", err)
+	}
+
+	// Build single JOIN query to get all data at once
+	query := s.db.WithContext(ctx).
+		Select(`
+			user_subscriptions.*,
+			users.id as user_id_ref,
+			users.email as user_email,
+			users.username as user_username,
+			users.name as user_name,
+			users.status as user_status,
+			users.created_at as user_created_at,
+			users.updated_at as user_updated_at
+		`).
+		Joins("LEFT JOIN users ON users.id = user_subscriptions.user_id AND users.deleted_at IS NULL").
+		Model(&entities.UserSubscription{})
+
+	// Apply same filters for main query
+	if req.UserID > 0 {
+		query = query.Where("user_subscriptions.user_id = ?", req.UserID)
+	}
+
+	if req.Status != "" {
+		query = query.Where("user_subscriptions.status = ?", req.Status)
+	}
+
+	// Apply pagination and ordering
+	query = query.Order("user_subscriptions.created_at DESC")
+
+	if req.Limit > 0 {
+		query = query.Limit(req.Limit)
+	}
+
+	if req.Offset > 0 {
+		query = query.Offset(req.Offset)
+	}
+
+	// Custom struct to capture all fields from JOIN
+	type SubscriptionWithUserData struct {
+		entities.UserSubscription
+		// User fields
+		UserIDRef     *uint      `gorm:"column:user_id_ref"`
+		UserEmail     *string    `gorm:"column:user_email"`
+		UserUsername  *string    `gorm:"column:user_username"`
+		UserName      *string    `gorm:"column:user_name"`
+		UserStatus    *string    `gorm:"column:user_status"`
+		UserCreatedAt *time.Time `gorm:"column:user_created_at"`
+		UserUpdatedAt *time.Time `gorm:"column:user_updated_at"`
+	}
+
+	var results []SubscriptionWithUserData
+	if err := query.Find(&results).Error; err != nil {
+		logger.Error("Failed to get user subscriptions with user data for admin", logger.Error2("error", err))
+		return nil, 0, fmt.Errorf("failed to get user subscriptions with user data: %w", err)
+	}
+
+	// Convert results to UserSubscriptionResponse with populated user data
+	responses := make([]*entities.UserSubscriptionResponse, len(results))
+	for i, result := range results {
+		// Start with basic response
+		response := result.UserSubscription.ToResponse()
+
+		// Populate User data from JOIN query results with only required fields for admin
+		if result.UserIDRef != nil && *result.UserIDRef > 0 {
+			response.User = &dto.UserBasicDTO{
+				ID:       *result.UserIDRef,
+				Email:    stringValue(result.UserEmail),
+				Username: stringValue(result.UserUsername),
+				Name:     stringValue(result.UserName),
+				Status:   stringValue(result.UserStatus),
+				// Explicitly omit role, provider, avatar fields for admin subscription lists
+				Avatar:   "",
+				Provider: "",
+				Role:     "",
+			}
+		}
+
+		responses[i] = response
+	}
+
+	logger.Info("User subscriptions with user data retrieved for admin",
+		logger.Int("count", len(responses)),
+		logger.Int64("total", totalCount))
+
+	return responses, totalCount, nil
 }

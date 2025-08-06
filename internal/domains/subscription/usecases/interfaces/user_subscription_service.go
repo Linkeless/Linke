@@ -16,6 +16,7 @@ type UserSubscriptionService interface {
 
 	// Subscription listing
 	GetUserSubscriptions(ctx context.Context, req *GetUserSubscriptionsRequest) ([]*entities.UserSubscription, int64, error)
+	GetUserSubscriptionsWithUserDataForAdmin(ctx context.Context, req *GetUserSubscriptionsRequest) ([]*entities.UserSubscriptionResponse, int64, error)
 	GetUserActiveSubscriptions(ctx context.Context, userID uint) ([]*entities.UserSubscription, error)
 
 	// Subscription management

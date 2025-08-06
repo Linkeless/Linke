@@ -104,8 +104,13 @@ func (vm *VersionMiddleware) VersionNegotiation(c *gin.Context) {
 
 	// Log version negotiation metrics
 	duration := time.Since(startTime)
-	vm.logger.Debug("Version negotiation completed",
+	vm.logger.Info("Version negotiation completed",
+		logger.String("method", c.Request.Method),
+		logger.String("path", c.Request.URL.Path),
+		logger.String("query", c.Request.URL.RawQuery),
 		logger.String("resolved_version", resolvedVersion.String()),
+		logger.String("client_ip", c.ClientIP()),
+		logger.String("user_agent", c.GetHeader("User-Agent")),
 		logger.Duration("duration", duration),
 	)
 
@@ -219,15 +224,26 @@ func (vm *VersionMiddleware) addDeprecationHeaders(c *gin.Context, versionInfo V
 	c.Header("Link", fmt.Sprintf(`<%s>; rel="successor-version"`, latestVersion.String()))
 
 	vm.logger.Info("Deprecation headers added",
+		logger.String("method", c.Request.Method),
 		logger.String("deprecated_version", versionInfo.Version.String()),
 		logger.String("status", versionInfo.Status),
 		logger.String("path", c.Request.URL.Path),
+		logger.String("query", c.Request.URL.RawQuery),
+		logger.String("user_agent", c.GetHeader("User-Agent")),
+		logger.String("client_ip", c.ClientIP()),
 	)
 }
 
 // VersionInfo returns version information endpoint handler
 func (vm *VersionMiddleware) VersionInfo() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		vm.logger.Info("API version info requested",
+			logger.String("method", c.Request.Method),
+			logger.String("path", c.Request.URL.Path),
+			logger.String("client_ip", c.ClientIP()),
+			logger.String("user_agent", c.GetHeader("User-Agent")),
+		)
+
 		versionInfo := map[string]any{
 			"current_version":    vm.config.DefaultVersion.String(),
 			"latest_version":     vm.config.GetLatestVersion().String(),
@@ -251,6 +267,13 @@ func (vm *VersionMiddleware) VersionInfo() gin.HandlerFunc {
 // HealthCheck returns a health check handler that includes version info
 func (vm *VersionMiddleware) HealthCheck() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		vm.logger.Info("Health check requested with version info",
+			logger.String("method", c.Request.Method),
+			logger.String("path", c.Request.URL.Path),
+			logger.String("client_ip", c.ClientIP()),
+			logger.String("user_agent", c.GetHeader("User-Agent")),
+		)
+
 		versionCtx, _ := GetVersionFromContext(c)
 
 		health := map[string]any{

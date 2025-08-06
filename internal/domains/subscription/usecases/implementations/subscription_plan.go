@@ -114,6 +114,19 @@ func (s *SubscriptionPlanService) GetSubscriptionPlan(ctx context.Context, planI
 		return nil, fmt.Errorf("failed to get subscription plan: %w", err)
 	}
 
+	// Fill server group name
+	if groupID, err := plan.GetDefaultServerGroupID(); err == nil && groupID > 0 {
+		var serverGroup struct {
+			Name string `gorm:"column:name"`
+		}
+		if err := s.db.Table("server_groups").
+			Select("name").
+			Where("id = ?", groupID).
+			First(&serverGroup).Error; err == nil {
+			plan.DefaultServerGroupName = serverGroup.Name
+		}
+	}
+
 	return &plan, nil
 }
 
@@ -126,6 +139,19 @@ func (s *SubscriptionPlanService) GetSubscriptionPlanByCode(ctx context.Context,
 		}
 		logger.Error("Failed to get subscription plan by code", logger.Error2("error", err), logger.String("code", code))
 		return nil, fmt.Errorf("failed to get subscription plan: %w", err)
+	}
+
+	// Fill server group name
+	if groupID, err := plan.GetDefaultServerGroupID(); err == nil && groupID > 0 {
+		var serverGroup struct {
+			Name string `gorm:"column:name"`
+		}
+		if err := s.db.Table("server_groups").
+			Select("name").
+			Where("id = ?", groupID).
+			First(&serverGroup).Error; err == nil {
+			plan.DefaultServerGroupName = serverGroup.Name
+		}
 	}
 
 	return &plan, nil
@@ -180,6 +206,21 @@ func (s *SubscriptionPlanService) GetSubscriptionPlans(ctx context.Context, req 
 		return nil, 0, fmt.Errorf("failed to get subscription plans: %w", err)
 	}
 
+	// Fill server group names for each plan
+	for _, plan := range plans {
+		if groupID, err := plan.GetDefaultServerGroupID(); err == nil && groupID > 0 {
+			var serverGroup struct {
+				Name string `gorm:"column:name"`
+			}
+			if err := s.db.Table("server_groups").
+				Select("name").
+				Where("id = ?", groupID).
+				First(&serverGroup).Error; err == nil {
+				plan.DefaultServerGroupName = serverGroup.Name
+			}
+		}
+	}
+
 	return plans, totalCount, nil
 }
 
@@ -198,6 +239,21 @@ func (s *SubscriptionPlanService) GetVisibleSubscriptionPlans(ctx context.Contex
 		return nil, fmt.Errorf("failed to get public subscription plans: %w", err)
 	}
 
+	// Fill server group names for each plan
+	for _, plan := range plans {
+		if groupID, err := plan.GetDefaultServerGroupID(); err == nil && groupID > 0 {
+			var serverGroup struct {
+				Name string `gorm:"column:name"`
+			}
+			if err := s.db.Table("server_groups").
+				Select("name").
+				Where("id = ?", groupID).
+				First(&serverGroup).Error; err == nil {
+				plan.DefaultServerGroupName = serverGroup.Name
+			}
+		}
+	}
+
 	return plans, nil
 }
 
@@ -214,6 +270,21 @@ func (s *SubscriptionPlanService) GetPopularSubscriptionPlans(ctx context.Contex
 	if err := query.Order("sort_order ASC, created_at ASC").Find(&plans).Error; err != nil {
 		logger.Error("Failed to get popular subscription plans", logger.Error2("error", err))
 		return nil, fmt.Errorf("failed to get popular subscription plans: %w", err)
+	}
+
+	// Fill server group names for each plan
+	for _, plan := range plans {
+		if groupID, err := plan.GetDefaultServerGroupID(); err == nil && groupID > 0 {
+			var serverGroup struct {
+				Name string `gorm:"column:name"`
+			}
+			if err := s.db.Table("server_groups").
+				Select("name").
+				Where("id = ?", groupID).
+				First(&serverGroup).Error; err == nil {
+				plan.DefaultServerGroupName = serverGroup.Name
+			}
+		}
 	}
 
 	return plans, nil
@@ -314,6 +385,19 @@ func (s *SubscriptionPlanService) UpdateSubscriptionPlan(ctx context.Context, pl
 		return nil, fmt.Errorf("failed to reload updated subscription plan: %w", err)
 	}
 
+	// Fill server group name
+	if groupID, err := plan.GetDefaultServerGroupID(); err == nil && groupID > 0 {
+		var serverGroup struct {
+			Name string `gorm:"column:name"`
+		}
+		if err := s.db.Table("server_groups").
+			Select("name").
+			Where("id = ?", groupID).
+			First(&serverGroup).Error; err == nil {
+			plan.DefaultServerGroupName = serverGroup.Name
+		}
+	}
+
 	logger.Info("Subscription plan updated successfully", logger.Uint("plan_id", plan.ID))
 
 	return plan, nil
@@ -380,6 +464,19 @@ func (s *SubscriptionPlanService) ToggleSubscriptionPlanStatus(ctx context.Conte
 	if err := s.db.WithContext(ctx).First(plan, planID).Error; err != nil {
 		logger.Error("Failed to reload toggled subscription plan", logger.Error2("error", err), logger.Uint("plan_id", planID))
 		return nil, fmt.Errorf("failed to reload toggled subscription plan: %w", err)
+	}
+
+	// Fill server group name
+	if groupID, err := plan.GetDefaultServerGroupID(); err == nil && groupID > 0 {
+		var serverGroup struct {
+			Name string `gorm:"column:name"`
+		}
+		if err := s.db.Table("server_groups").
+			Select("name").
+			Where("id = ?", groupID).
+			First(&serverGroup).Error; err == nil {
+			plan.DefaultServerGroupName = serverGroup.Name
+		}
 	}
 
 	logger.Info("Subscription plan status toggled successfully",

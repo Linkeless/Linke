@@ -2067,6 +2067,12 @@ definitions:
         description: Currency
         example: USD
         type: string
+      default_server_group_id:
+        description: Server Group Configuration (Single group per plan)
+        type: integer
+      default_server_group_name:
+        description: Default server group name
+        type: string
       description:
         description: Plan description
         example: Premium features
@@ -3493,6 +3499,95 @@ definitions:
     - subject
     type: object
   handlers.CreatePlanRequest:
+    properties:
+      billing_cycle:
+        enum:
+        - monthly
+        - yearly
+        - lifetime
+        example: monthly
+        type: string
+      billing_interval:
+        example: 1
+        maximum: 12
+        minimum: 1
+        type: integer
+      cancellation_fee:
+        example: 0
+        type: number
+      code:
+        example: premium-monthly
+        maxLength: 50
+        minLength: 1
+        type: string
+      currency:
+        example: USD
+        type: string
+      default_server_group_ids:
+        description: Server Group Configuration (Required)
+        items:
+          type: integer
+        minItems: 1
+        type: array
+      description:
+        example: Premium features with monthly billing
+        maxLength: 1000
+        type: string
+      features:
+        example: '{"max_projects": 10, "storage_gb": 100}'
+        type: string
+      is_popular:
+        example: false
+        type: boolean
+      is_recommended:
+        example: true
+        type: boolean
+      is_visible:
+        example: true
+        type: boolean
+      limits:
+        example: '{"api_calls_per_month": 10000}'
+        type: string
+      name:
+        example: Premium Plan
+        maxLength: 100
+        minLength: 1
+        type: string
+      price:
+        example: 29.99
+        minimum: 0
+        type: number
+      setup_fee:
+        example: 0
+        type: number
+      sort_order:
+        example: 1
+        type: integer
+      traffic_limit:
+        description: Traffic Configuration (Required)
+        example: 107374182400
+        minimum: 0
+        type: integer
+      traffic_reset_cycle:
+        enum:
+        - monthly
+        - never
+        example: monthly
+        type: string
+      trial_period_days:
+        example: 7
+        maximum: 365
+        minimum: 0
+        type: integer
+    required:
+    - billing_cycle
+    - code
+    - currency
+    - default_server_group_ids
+    - name
+    - price
+    - traffic_limit
+    - traffic_reset_cycle
     type: object
   handlers.CreateReferralRequest:
     properties:
@@ -4036,6 +4131,72 @@ definitions:
         type: number
     type: object
   handlers.UpdatePlanRequest:
+    properties:
+      cancellation_fee:
+        example: 25
+        type: number
+      default_server_group_ids:
+        description: Server Group Configuration
+        items:
+          type: integer
+        type: array
+      description:
+        example: Updated description
+        maxLength: 1000
+        type: string
+      features:
+        example: '{"max_projects": 20}'
+        type: string
+      is_popular:
+        example: true
+        type: boolean
+      is_recommended:
+        example: false
+        type: boolean
+      is_visible:
+        example: true
+        type: boolean
+      limits:
+        example: '{"api_calls_per_month": 20000}'
+        type: string
+      name:
+        example: Premium Plan Updated
+        maxLength: 100
+        minLength: 1
+        type: string
+      price:
+        example: 39.99
+        minimum: 0
+        type: number
+      setup_fee:
+        example: 10
+        type: number
+      sort_order:
+        example: 2
+        type: integer
+      status:
+        enum:
+        - active
+        - inactive
+        - archived
+        example: active
+        type: string
+      traffic_limit:
+        description: Traffic Configuration
+        example: 107374182400
+        minimum: 0
+        type: integer
+      traffic_reset_cycle:
+        enum:
+        - monthly
+        - never
+        example: monthly
+        type: string
+      trial_period_days:
+        example: 14
+        maximum: 365
+        minimum: 0
+        type: integer
     type: object
   handlers.UpdateReferralRequest:
     properties:

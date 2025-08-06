@@ -50,6 +50,9 @@ type SubscriptionPlan struct {
 	// Metadata
 	Metadata string `json:"metadata,omitempty" gorm:"type:text"` // 额外元数据(JSON)
 
+	// Runtime fields (not stored in database)
+	DefaultServerGroupName string `json:"-" gorm:"-"` // 服务器组名称（运行时填充）
+
 	// Timestamp Fields
 	CreatedAt time.Time      `json:"created_at" gorm:"not null;index"`
 	UpdatedAt time.Time      `json:"updated_at" gorm:"not null"`
@@ -137,19 +140,59 @@ func (sp *SubscriptionPlan) IsTrafficResetEnabled() bool {
 	return sp.TrafficResetCycle != TrafficResetCycleNever
 }
 
-// GetDefaultServerGroupIDs returns the default server group IDs for this plan
-func (sp *SubscriptionPlan) GetDefaultServerGroupIDs() ([]uint, error) {
+// GetDefaultServerGroupID returns the default server group ID for this plan
+func (sp *SubscriptionPlan) GetDefaultServerGroupID() (uint, error) {
 	if sp.DefaultServerGroupIDs == "" {
-		// If no server groups are configured, grant access to all groups
-		return []uint{0}, nil
+		// If no server group is configured, return 0 (no specific group)
+		return 0, nil
 	}
 
+	// First try to parse as JSON array and get the first element
 	var groupIDs []uint
-	if err := json.Unmarshal([]byte(sp.DefaultServerGroupIDs), &groupIDs); err != nil {
-		return nil, fmt.Errorf("failed to parse default server group IDs: %w", err)
+	if err := json.Unmarshal([]byte(sp.DefaultServerGroupIDs), &groupIDs); err == nil {
+		if len(groupIDs) > 0 {
+			return groupIDs[0], nil // Return first group ID
+		}
+		return 0, nil
 	}
 
-	return groupIDs, nil
+	// If JSON array parsing fails, try to parse as a single number (legacy format)
+	var singleID uint
+	if err := json.Unmarshal([]byte(sp.DefaultServerGroupIDs), &singleID); err == nil {
+		return singleID, nil
+	}
+
+	// If both fail, try to parse as plain integer string
+	if id, parseErr := parseUint(sp.DefaultServerGroupIDs); parseErr == nil {
+		return id, nil
+	}
+
+	return 0, fmt.Errorf("failed to parse default server group ID: %s", sp.DefaultServerGroupIDs)
+}
+
+// GetDefaultServerGroupIDs returns the default server group IDs for this plan (legacy method)
+// Deprecated: Use GetDefaultServerGroupID() instead
+func (sp *SubscriptionPlan) GetDefaultServerGroupIDs() ([]uint, error) {
+	id, err := sp.GetDefaultServerGroupID()
+	if err != nil {
+		return nil, err
+	}
+	if id == 0 {
+		return []uint{}, nil
+	}
+	return []uint{id}, nil
+}
+
+// parseUint is a helper function to parse string to uint
+func parseUint(s string) (uint, error) {
+	var result uint
+	for _, char := range s {
+		if char < '0' || char > '9' {
+			return 0, fmt.Errorf("invalid character: %c", char)
+		}
+		result = result*10 + uint(char-'0')
+	}
+	return result, nil
 }
 
 // SetDefaultServerGroupIDs sets the default server group IDs for this plan
@@ -190,12 +233,17 @@ type SubscriptionPlanResponse struct {
 	TrafficLimitText  string  `json:"traffic_limit_text" example:"100.0 GB"` // Human-readable traffic limit
 	TrafficResetCycle string  `json:"traffic_reset_cycle" example:"monthly"` // Traffic reset cycle
 
+	// Server Group Configuration (Single group per plan)
+	DefaultServerGroupID   uint   `json:"default_server_group_id,omitempty"`   // Default server group ID
+	DefaultServerGroupName string `json:"default_server_group_name,omitempty"` // Default server group name
+
 	CreatedAt time.Time `json:"created_at" example:"2024-01-01T00:00:00Z"` // Creation time
 	UpdatedAt time.Time `json:"updated_at" example:"2024-01-01T00:00:00Z"` // Update time
 }
 
 // ToResponse converts SubscriptionPlan to SubscriptionPlanResponse
 func (sp *SubscriptionPlan) ToResponse() *SubscriptionPlanResponse {
+
 	return &SubscriptionPlanResponse{
 		ID:              sp.ID,
 		Name:            sp.Name,
@@ -221,6 +269,10 @@ func (sp *SubscriptionPlan) ToResponse() *SubscriptionPlanResponse {
 		TrafficLimitGB:    sp.GetTrafficLimitGB(),
 		TrafficLimitText:  sp.FormatTrafficLimit(),
 		TrafficResetCycle: sp.TrafficResetCycle,
+
+		// Server Group Configuration
+		DefaultServerGroupID:   func() uint { if id, err := sp.GetDefaultServerGroupID(); err == nil { return id }; return 0 }(),
+		DefaultServerGroupName: sp.DefaultServerGroupName, // Populated by service layer
 
 		CreatedAt: sp.CreatedAt,
 		UpdatedAt: sp.UpdatedAt,
