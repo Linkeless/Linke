@@ -9232,6 +9232,91 @@
                         }
                     }
                 }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a subscription for a user directly (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Subscription"
+                ],
+                "summary": "Create user subscription",
+                "parameters": [
+                    {
+                        "description": "Subscription creation data",
+                        "name": "subscription",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AdminCreateUserSubscriptionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/entities.UserSubscriptionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/response.ConflictResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
             }
         },
         "/admin/subscriptions/users/{id}": {
@@ -22872,6 +22957,73 @@
                 }
             }
         },
+        "handlers.AdminCreateUserSubscriptionRequest": {
+            "type": "object",
+            "required": [
+                "reason",
+                "subscription_plan_id",
+                "user_id"
+            ],
+            "properties": {
+                "custom_traffic_limit": {
+                    "description": "Custom Traffic Configuration (optional, overrides plan defaults)",
+                    "type": "integer",
+                    "example": 107374182400
+                },
+                "custom_traffic_reset_cycle": {
+                    "description": "Custom reset cycle",
+                    "type": "string",
+                    "example": "monthly"
+                },
+                "disable_traffic_limit": {
+                    "description": "Disable traffic limit for this subscription",
+                    "type": "boolean",
+                    "example": false
+                },
+                "notes": {
+                    "description": "Admin notes",
+                    "type": "string",
+                    "maxLength": 1000
+                },
+                "reason": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "Admin granted subscription"
+                },
+                "send_notification": {
+                    "description": "Send notification to user",
+                    "type": "boolean",
+                    "example": true
+                },
+                "server_group_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "skip_payment": {
+                    "description": "Administrative overrides",
+                    "type": "boolean",
+                    "example": true
+                },
+                "start_date": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "subscription_plan_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "use_trial": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "user_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
         "handlers.AdminForcePasswordResetRequest": {
             "type": "object",
             "required": [
@@ -23731,111 +23883,7 @@
             }
         },
         "handlers.CreatePlanRequest": {
-            "type": "object",
-            "required": [
-                "billing_cycle",
-                "code",
-                "currency",
-                "name",
-                "price",
-                "traffic_limit",
-                "traffic_reset_cycle"
-            ],
-            "properties": {
-                "billing_cycle": {
-                    "type": "string",
-                    "enum": [
-                        "monthly",
-                        "yearly",
-                        "lifetime"
-                    ],
-                    "example": "monthly"
-                },
-                "billing_interval": {
-                    "type": "integer",
-                    "maximum": 12,
-                    "minimum": 1,
-                    "example": 1
-                },
-                "cancellation_fee": {
-                    "type": "number",
-                    "example": 0
-                },
-                "code": {
-                    "type": "string",
-                    "maxLength": 50,
-                    "minLength": 1,
-                    "example": "premium-monthly"
-                },
-                "currency": {
-                    "type": "string",
-                    "example": "USD"
-                },
-                "description": {
-                    "type": "string",
-                    "maxLength": 1000,
-                    "example": "Premium features with monthly billing"
-                },
-                "features": {
-                    "type": "string",
-                    "example": "{\"max_projects\": 10, \"storage_gb\": 100}"
-                },
-                "is_popular": {
-                    "type": "boolean",
-                    "example": false
-                },
-                "is_recommended": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "is_visible": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "limits": {
-                    "type": "string",
-                    "example": "{\"api_calls_per_month\": 10000}"
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 1,
-                    "example": "Premium Plan"
-                },
-                "price": {
-                    "type": "number",
-                    "minimum": 0,
-                    "example": 29.99
-                },
-                "setup_fee": {
-                    "type": "number",
-                    "example": 0
-                },
-                "sort_order": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "traffic_limit": {
-                    "description": "Traffic Configuration (Required)",
-                    "type": "integer",
-                    "minimum": 0,
-                    "example": 107374182400
-                },
-                "traffic_reset_cycle": {
-                    "type": "string",
-                    "enum": [
-                        "monthly",
-                        "never"
-                    ],
-                    "example": "monthly"
-                },
-                "trial_period_days": {
-                    "type": "integer",
-                    "maximum": 365,
-                    "minimum": 0,
-                    "example": 7
-                }
-            }
+            "type": "object"
         },
         "handlers.CreateReferralRequest": {
             "type": "object",
@@ -24578,86 +24626,7 @@
             }
         },
         "handlers.UpdatePlanRequest": {
-            "type": "object",
-            "properties": {
-                "cancellation_fee": {
-                    "type": "number",
-                    "example": 25
-                },
-                "description": {
-                    "type": "string",
-                    "maxLength": 1000,
-                    "example": "Updated description"
-                },
-                "features": {
-                    "type": "string",
-                    "example": "{\"max_projects\": 20}"
-                },
-                "is_popular": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "is_recommended": {
-                    "type": "boolean",
-                    "example": false
-                },
-                "is_visible": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "limits": {
-                    "type": "string",
-                    "example": "{\"api_calls_per_month\": 20000}"
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 1,
-                    "example": "Premium Plan Updated"
-                },
-                "price": {
-                    "type": "number",
-                    "minimum": 0,
-                    "example": 39.99
-                },
-                "setup_fee": {
-                    "type": "number",
-                    "example": 10
-                },
-                "sort_order": {
-                    "type": "integer",
-                    "example": 2
-                },
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "active",
-                        "inactive",
-                        "archived"
-                    ],
-                    "example": "active"
-                },
-                "traffic_limit": {
-                    "description": "Traffic Configuration",
-                    "type": "integer",
-                    "minimum": 0,
-                    "example": 107374182400
-                },
-                "traffic_reset_cycle": {
-                    "type": "string",
-                    "enum": [
-                        "monthly",
-                        "never"
-                    ],
-                    "example": "monthly"
-                },
-                "trial_period_days": {
-                    "type": "integer",
-                    "maximum": 365,
-                    "minimum": 0,
-                    "example": 14
-                }
-            }
+            "type": "object"
         },
         "handlers.UpdateReferralRequest": {
             "type": "object",

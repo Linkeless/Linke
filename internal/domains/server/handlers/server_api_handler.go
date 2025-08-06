@@ -328,15 +328,40 @@ func (h *ServerAPIHandler) getUsersForServer(ctx context.Context, server *server
 		return nil, err
 	}
 
+	logger.Info("Queried user_subscriptions table",
+		logger.Int("total_subscriptions_found", len(userSubscriptions)),
+		logger.Uint("server_group_id", server.GroupID),
+	)
+
+	// Log detailed subscription information for debugging
+	for i, subscription := range userSubscriptions {
+		if i < 5 { // Log first 5 subscriptions to avoid spam
+			logger.Info("Found subscription",
+				logger.Uint("subscription_id", subscription.ID),
+				logger.Uint("user_id", subscription.UserID),
+				logger.String("uuid", subscription.UUID),
+				logger.String("status", subscription.Status),
+				logger.String("server_group_ids", subscription.ServerGroupIDs),
+				logger.Int64("traffic_limit", subscription.TrafficLimit),
+				logger.Int64("traffic_used", subscription.TrafficUsed),
+				logger.Bool("traffic_suspended", subscription.TrafficSuspended))
+		}
+	}
+
 	// Filter subscriptions that have access to the server's group and have sufficient traffic
 	var validSubscriptions []subscriptionEntities.UserSubscription
 	var validUserIDs []uint
 	userIDSet := make(map[uint]bool) // To avoid duplicate user IDs
 
 	for _, subscription := range userSubscriptions {
+		logger.Info("Processing subscription for server group access",
+			logger.Uint("subscription_id", subscription.ID),
+			logger.Uint("server_group_id", server.GroupID),
+			logger.String("subscription_server_group_ids", subscription.ServerGroupIDs))
+
 		// Check traffic limits (additional safety check beyond traffic_suspended)
 		if subscription.TrafficLimit > 0 && subscription.TrafficUsed >= subscription.TrafficLimit {
-			logger.Debug("Subscription over traffic limit",
+			logger.Info("Subscription rejected: over traffic limit",
 				logger.Uint("subscription_id", subscription.ID),
 				logger.Int64("limit", subscription.TrafficLimit),
 				logger.Int64("used", subscription.TrafficUsed))
@@ -344,19 +369,37 @@ func (h *ServerAPIHandler) getUsersForServer(ctx context.Context, server *server
 		}
 
 		// Check if subscription has access to the server's group
-		if h.hasAccessToServerGroup(&subscription, server.GroupID) {
+		hasAccess := h.hasAccessToServerGroup(&subscription, server.GroupID)
+		logger.Info("Server group access check result",
+			logger.Uint("subscription_id", subscription.ID),
+			logger.Bool("has_access", hasAccess))
+
+		if hasAccess {
 			validSubscriptions = append(validSubscriptions, subscription)
 			// Only add user ID to slice if not already present
 			if !userIDSet[subscription.UserID] {
 				validUserIDs = append(validUserIDs, subscription.UserID)
 				userIDSet[subscription.UserID] = true
 			}
+			logger.Info("Subscription added to valid list",
+				logger.Uint("subscription_id", subscription.ID),
+				logger.Uint("user_id", subscription.UserID))
 		}
 	}
 
 	if len(validSubscriptions) == 0 {
+		logger.Info("No valid subscriptions found for server",
+			logger.Uint("server_group_id", server.GroupID),
+			logger.Int("total_subscriptions_checked", len(userSubscriptions)),
+		)
 		return &UniProxyUsersResponse{Users: users}, nil
 	}
+
+	logger.Info("Found valid subscriptions after filtering",
+		logger.Int("valid_subscriptions", len(validSubscriptions)),
+		logger.Int("valid_user_ids", len(validUserIDs)),
+		logger.Uint("server_group_id", server.GroupID),
+	)
 
 	// Get active users
 	activeUserSet := make(map[uint]bool)
@@ -368,6 +411,11 @@ func (h *ServerAPIHandler) getUsersForServer(ctx context.Context, server *server
 		logger.Error("Failed to query active users", logger.Error2("error", err))
 		return nil, err
 	}
+
+	logger.Info("Queried users table",
+		logger.Int("active_users_found", len(activeUsers)),
+		logger.Int("valid_user_ids_checked", len(validUserIDs)),
+	)
 
 	// Create a set of active user IDs for quick lookup
 	for _, user := range activeUsers {
@@ -386,6 +434,13 @@ func (h *ServerAPIHandler) getUsersForServer(ctx context.Context, server *server
 			users = append(users, userItem)
 		}
 	}
+
+	logger.Info("Final UniProxy users result",
+		logger.Int("final_users_count", len(users)),
+		logger.Int("valid_subscriptions", len(validSubscriptions)),
+		logger.Int("active_users", len(activeUsers)),
+		logger.Uint("server_group_id", server.GroupID),
+	)
 
 	return &UniProxyUsersResponse{Users: users}, nil
 }
@@ -430,8 +485,9 @@ func (h *ServerAPIHandler) hasAccessToServerGroup(subscription *subscriptionEnti
 	// SECURITY: If no server group IDs are specified, deny access by default
 	// This prevents accidental access to all groups due to misconfiguration
 	if subscription.ServerGroupIDs == "" {
-		logger.Debug("Subscription has no server group access configured",
-			logger.Uint("subscription_id", subscription.ID))
+		logger.Info("Subscription rejected: no server group access configured",
+			logger.Uint("subscription_id", subscription.ID),
+			logger.Uint("requested_group_id", groupID))
 		return false
 	}
 
@@ -459,10 +515,18 @@ func (h *ServerAPIHandler) hasAccessToServerGroup(subscription *subscriptionEnti
 	// Check if the specific group ID is in the list
 	for _, id := range groupIDs {
 		if id == groupID {
+			logger.Info("Subscription has access to server group",
+				logger.Uint("subscription_id", subscription.ID),
+				logger.Uint("group_id", groupID),
+				logger.String("server_group_ids", subscription.ServerGroupIDs))
 			return true
 		}
 	}
 
+	logger.Info("Subscription does not have access to server group",
+		logger.Uint("subscription_id", subscription.ID),
+		logger.Uint("group_id", groupID),
+		logger.String("server_group_ids", subscription.ServerGroupIDs))
 	return false
 }
 

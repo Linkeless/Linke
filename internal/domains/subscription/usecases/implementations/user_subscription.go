@@ -38,16 +38,21 @@ func (s *UserSubscriptionService) CreateUserSubscription(ctx context.Context, re
 		return nil, fmt.Errorf("subscription plan is not available for purchase")
 	}
 
-	// Check if user already has an active subscription to this plan
-	var existingSubscription entities.UserSubscription
-	if err := s.db.WithContext(ctx).
-		Where("user_id = ? AND subscription_plan_id = ? AND status IN (?)",
-			req.UserID, req.SubscriptionPlanID, []string{entities.UserSubscriptionStatusActive, entities.UserSubscriptionStatusTrial}).
-		First(&existingSubscription).Error; err == nil {
-		return nil, fmt.Errorf("user already has an active subscription to this plan")
-	} else if err != gorm.ErrRecordNotFound {
-		logger.Error("Failed to check existing subscription", logger.Error2("error", err))
-		return nil, fmt.Errorf("failed to check existing subscription: %w", err)
+	// Check if user already has an active subscription to this plan (configurable behavior)
+	// For some use cases, users may need multiple subscriptions to the same plan
+	allowMultipleSubscriptions := true // TODO: Make this configurable based on plan settings
+	
+	if !allowMultipleSubscriptions {
+		var existingSubscription entities.UserSubscription
+		if err := s.db.WithContext(ctx).
+			Where("user_id = ? AND subscription_plan_id = ? AND status IN (?)",
+				req.UserID, req.SubscriptionPlanID, []string{entities.UserSubscriptionStatusActive, entities.UserSubscriptionStatusTrial}).
+			First(&existingSubscription).Error; err == nil {
+			return nil, fmt.Errorf("user already has an active subscription to this plan")
+		} else if err != gorm.ErrRecordNotFound {
+			logger.Error("Failed to check existing subscription", logger.Error2("error", err))
+			return nil, fmt.Errorf("failed to check existing subscription: %w", err)
+		}
 	}
 
 	// Parse start date or use current time
@@ -174,11 +179,28 @@ func (s *UserSubscriptionService) CreateUserSubscription(ctx context.Context, re
 		TrafficSuspended:  false, // Start as not suspended
 	}
 
-	// Set server group IDs if provided
+	// Set server group IDs - use provided IDs or fallback to plan defaults
+	var serverGroupIDs []uint
 	if len(req.ServerGroupIDs) > 0 {
-		if err := subscription.SetServerGroupIDs(req.ServerGroupIDs); err != nil {
-			return nil, fmt.Errorf("failed to set server group IDs: %w", err)
+		serverGroupIDs = req.ServerGroupIDs
+		logger.Info("Using provided server group IDs for subscription",
+			logger.Uint("plan_id", req.SubscriptionPlanID),
+			logger.Any("provided_group_ids", serverGroupIDs))
+	} else {
+		// Use plan's default server group IDs
+		defaultGroupIDs, err := plan.GetDefaultServerGroupIDs()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get default server group IDs from plan: %w", err)
 		}
+		serverGroupIDs = defaultGroupIDs
+		logger.Info("Using plan's default server group IDs for subscription",
+			logger.Uint("plan_id", req.SubscriptionPlanID),
+			logger.String("plan_default_server_groups", plan.DefaultServerGroupIDs),
+			logger.Any("default_group_ids", serverGroupIDs))
+	}
+	
+	if err := subscription.SetServerGroupIDs(serverGroupIDs); err != nil {
+		return nil, fmt.Errorf("failed to set server group IDs: %w", err)
 	}
 
 	if err := s.db.WithContext(ctx).Create(subscription).Error; err != nil {
@@ -258,6 +280,15 @@ func (s *UserSubscriptionService) GetUserSubscriptions(ctx context.Context, req 
 		logger.Error("Failed to get user subscriptions", logger.Error2("error", err))
 		return nil, 0, fmt.Errorf("failed to get user subscriptions: %w", err)
 	}
+
+	// Debug logging to help troubleshoot the issue
+	logger.Info("GetUserSubscriptions debug info",
+		logger.Int("found_count", len(subscriptions)),
+		logger.Int64("total_count", totalCount),
+		logger.Uint("filter_user_id", req.UserID),
+		logger.String("filter_status", req.Status),
+		logger.Int("limit", req.Limit),
+		logger.Int("offset", req.Offset))
 
 	return subscriptions, totalCount, nil
 }

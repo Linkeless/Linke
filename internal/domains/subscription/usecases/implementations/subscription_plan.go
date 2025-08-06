@@ -80,6 +80,16 @@ func (s *SubscriptionPlanService) CreateSubscriptionPlan(ctx context.Context, cr
 		TrafficResetCycle: req.TrafficResetCycle,
 	}
 
+	// Set default server group IDs if provided
+	if len(req.DefaultServerGroupIDs) > 0 {
+		if err := plan.SetDefaultServerGroupIDs(req.DefaultServerGroupIDs); err != nil {
+			return nil, fmt.Errorf("failed to set default server group IDs: %w", err)
+		}
+		logger.Info("Set default server group IDs for plan",
+			logger.String("plan_code", code),
+			logger.Any("server_group_ids", req.DefaultServerGroupIDs))
+	}
+
 	if err := s.db.WithContext(ctx).Create(plan).Error; err != nil {
 		logger.Error("Failed to create subscription plan", logger.Error2("error", err))
 		return nil, fmt.Errorf("failed to create subscription plan: %w", err)
@@ -279,6 +289,17 @@ func (s *SubscriptionPlanService) UpdateSubscriptionPlan(ctx context.Context, pl
 
 	if req.TrafficResetCycle != nil {
 		updates["traffic_reset_cycle"] = *req.TrafficResetCycle
+	}
+
+	// Handle default server group IDs update
+	if req.DefaultServerGroupIDs != nil {
+		if err := plan.SetDefaultServerGroupIDs(*req.DefaultServerGroupIDs); err != nil {
+			return nil, fmt.Errorf("failed to set default server group IDs: %w", err)
+		}
+		updates["default_server_groups"] = plan.DefaultServerGroupIDs
+		logger.Info("Updated default server group IDs for plan",
+			logger.Uint("plan_id", planID),
+			logger.Any("server_group_ids", *req.DefaultServerGroupIDs))
 	}
 
 	// Update the plan

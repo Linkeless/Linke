@@ -64,6 +64,9 @@ type CreatePlanRequest struct {
 	// Traffic Configuration (Required)
 	TrafficLimit      int64  `json:"traffic_limit" binding:"required,min=0" example:"107374182400"`
 	TrafficResetCycle string `json:"traffic_reset_cycle" binding:"required,oneof=monthly never" example:"monthly"`
+
+	// Server Group Configuration (Required)
+	DefaultServerGroupIDs []uint `json:"default_server_group_ids" binding:"required,min=1" example:"[1]"`
 }
 
 // UpdatePlanRequest represents the request body for updating a subscription plan
@@ -85,6 +88,9 @@ type UpdatePlanRequest struct {
 	// Traffic Configuration
 	TrafficLimit      *int64  `json:"traffic_limit,omitempty" binding:"omitempty,min=0" example:"107374182400"`
 	TrafficResetCycle *string `json:"traffic_reset_cycle,omitempty" binding:"omitempty,oneof=monthly never" example:"monthly"`
+
+	// Server Group Configuration
+	DefaultServerGroupIDs *[]uint `json:"default_server_group_ids,omitempty" example:"[1]"`
 }
 
 // AdminUpdateUserSubscriptionRequest represents the request body for admin subscription updates
@@ -133,6 +139,26 @@ type AdminUsageResetRequest struct {
 	Reason          string  `json:"reason" binding:"required,max=255" example:"Admin reset per customer request"`
 }
 
+// AdminCreateUserSubscriptionRequest represents the request body for creating a user subscription (Admin only)
+type AdminCreateUserSubscriptionRequest struct {
+	UserID             uint   `json:"user_id" binding:"required" example:"1"`
+	SubscriptionPlanID uint   `json:"subscription_plan_id" binding:"required" example:"1"`
+	StartDate          string `json:"start_date,omitempty" example:"2024-01-01T00:00:00Z"`
+	UseTrial           *bool  `json:"use_trial,omitempty" example:"false"`
+	ServerGroupIDs     []uint `json:"server_group_ids,omitempty"`
+	Reason             string `json:"reason" binding:"required,max=255" example:"Admin granted subscription"`
+	
+	// Custom Traffic Configuration (optional, overrides plan defaults)
+	CustomTrafficLimit      *int64  `json:"custom_traffic_limit,omitempty" example:"107374182400"`  // Custom traffic limit in bytes
+	CustomTrafficResetCycle *string `json:"custom_traffic_reset_cycle,omitempty" example:"monthly"` // Custom reset cycle
+	DisableTrafficLimit     *bool   `json:"disable_traffic_limit,omitempty" example:"false"`        // Disable traffic limit for this subscription
+	
+	// Administrative overrides
+	SkipPayment         *bool   `json:"skip_payment,omitempty" example:"true"`        // Skip payment requirement
+	SendNotification    *bool   `json:"send_notification,omitempty" example:"true"`   // Send notification to user
+	Notes               *string `json:"notes,omitempty" binding:"omitempty,max=1000"` // Admin notes
+}
+
 // SUBSCRIPTION PLANS MANAGEMENT
 
 // CreateSubscriptionPlan godoc
@@ -142,7 +168,7 @@ type AdminUsageResetRequest struct {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param plan body CreatePlanRequest true "Plan creation data"
+// @Param plan body CreatePlanRequest true "Plan creation data" example({"name":"Premium Plan","code":"premium-monthly","description":"Premium features with monthly billing","price":29.99,"currency":"USD","billing_cycle":"monthly","billing_interval":1,"trial_period_days":7,"features":"{\"max_projects\": 10, \"storage_gb\": 100}","limits":"{\"api_calls_per_month\": 10000}","is_visible":true,"sort_order":1,"is_popular":false,"is_recommended":true,"setup_fee":0,"cancellation_fee":0,"traffic_limit":107374182400,"traffic_reset_cycle":"monthly","default_server_group_ids":[1]})
 // @Success 201 {object} response.StandardResponse{data=entities.SubscriptionPlanResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -177,6 +203,7 @@ func (h *AdminSubscriptionHandler) CreateSubscriptionPlan(c *gin.Context) {
 		CancellationFee: createReq.CancellationFee,
 		TrafficLimit:    createReq.TrafficLimit,
 		TrafficResetCycle: createReq.TrafficResetCycle,
+		DefaultServerGroupIDs: createReq.DefaultServerGroupIDs,
 	}
 
 	// Create the plan (use admin user ID from context if available)
@@ -341,6 +368,7 @@ func (h *AdminSubscriptionHandler) UpdateSubscriptionPlan(c *gin.Context) {
 		CancellationFee:   updateReq.CancellationFee,
 		TrafficLimit:      updateReq.TrafficLimit,
 		TrafficResetCycle: updateReq.TrafficResetCycle,
+		DefaultServerGroupIDs: updateReq.DefaultServerGroupIDs,
 	}
 
 	plan, err := h.subscriptionPlanService.UpdateSubscriptionPlan(c.Request.Context(), uint(id), serviceReq)
@@ -442,6 +470,72 @@ func (h *AdminSubscriptionHandler) ToggleSubscriptionPlanStatus(c *gin.Context) 
 }
 
 // USER SUBSCRIPTIONS MANAGEMENT
+
+// CreateUserSubscription godoc
+// @Summary Create user subscription
+// @Description Create a subscription for a user directly (Admin only)
+// @Tags Admin-Subscription
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param subscription body AdminCreateUserSubscriptionRequest true "Subscription creation data"
+// @Success 201 {object} response.StandardResponse{data=entities.UserSubscriptionResponse}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 401 {object} response.UnauthorizedResponse
+// @Failure 403 {object} response.ForbiddenResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 409 {object} response.ConflictResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
+// @Router /admin/subscriptions/users [post]
+func (h *AdminSubscriptionHandler) CreateUserSubscription(c *gin.Context) {
+	var createReq AdminCreateUserSubscriptionRequest
+	if err := c.ShouldBindJSON(&createReq); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	// Convert to service request
+	serviceReq := &interfaces.CreateSubscriptionRequest{
+		UserID:                  createReq.UserID,
+		SubscriptionPlanID:      createReq.SubscriptionPlanID,
+		StartDate:               createReq.StartDate,
+		UseTrial:                createReq.UseTrial != nil && *createReq.UseTrial,
+		ServerGroupIDs:          createReq.ServerGroupIDs,
+		CustomTrafficLimit:      createReq.CustomTrafficLimit,
+		CustomTrafficResetCycle: createReq.CustomTrafficResetCycle,
+		DisableTrafficLimit:     createReq.DisableTrafficLimit,
+	}
+
+	// Create the user subscription
+	subscription, err := h.userSubscriptionService.CreateUserSubscription(c.Request.Context(), serviceReq)
+	if err != nil {
+		logger.Error("Admin failed to create user subscription",
+			logger.Uint("user_id", createReq.UserID),
+			logger.Uint("plan_id", createReq.SubscriptionPlanID),
+			logger.String("reason", createReq.Reason),
+			logger.Error2("error", err),
+		)
+
+		if strings.Contains(err.Error(), "not found") {
+			response.NotFound(c, "User or subscription plan not found")
+		} else if strings.Contains(err.Error(), "already has") || strings.Contains(err.Error(), "duplicate") {
+			response.Conflict(c, "User already has an active subscription for this plan")
+		} else {
+			response.InternalServerError(c, "Failed to create user subscription")
+		}
+		return
+	}
+
+	logger.Info("Admin created user subscription",
+		logger.Uint("subscription_id", subscription.ID),
+		logger.Uint("user_id", createReq.UserID),
+		logger.Uint("plan_id", createReq.SubscriptionPlanID),
+		logger.String("reason", createReq.Reason),
+		logger.String("admin_action", "create_user_subscription"),
+	)
+
+	response.Created(c, subscription.ToResponse())
+}
 
 // GetUserSubscription godoc
 // @Summary Get user subscription

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/domains/subscription/usecases/interfaces"
@@ -102,6 +103,14 @@ func (s *CachedUserSubscriptionService) GetUserSubscriptionWithRelations(ctx con
 // GetUserSubscriptions gets user subscriptions with caching for list results
 func (s *CachedUserSubscriptionService) GetUserSubscriptions(ctx context.Context, req *interfaces.GetUserSubscriptionsRequest) ([]*entities.UserSubscription, int64, error) {
 	cacheKey := s.buildSubscriptionListCacheKey(req)
+	
+	// Determine cache TTL based on query type
+	cacheTTL := s.determineCacheTTL(req)
+	
+	// Skip cache for admin queries with no filters (likely admin dashboard)
+	if s.shouldSkipCache(req) {
+		return s.UserSubscriptionService.GetUserSubscriptions(ctx, req)
+	}
 
 	// Use cache decorator for list results
 	cached, err := s.cacheManager.GetCache().Get(ctx, cacheKey)
@@ -121,7 +130,7 @@ func (s *CachedUserSubscriptionService) GetUserSubscriptions(ctx context.Context
 		return nil, 0, err
 	}
 
-	// Cache the result
+	// Cache the result with appropriate TTL
 	result := struct {
 		Subscriptions []*entities.UserSubscription `json:"subscriptions"`
 		Total         int64                        `json:"total"`
@@ -131,7 +140,7 @@ func (s *CachedUserSubscriptionService) GetUserSubscriptions(ctx context.Context
 	}
 
 	if data, err := json.Marshal(result); err == nil {
-		_ = s.cacheManager.GetCache().Set(ctx, cacheKey, data, cache.MediumCacheTTL)
+		_ = s.cacheManager.GetCache().Set(ctx, cacheKey, data, cacheTTL)
 	}
 
 	return subscriptions, total, nil
@@ -567,7 +576,7 @@ func (s *CachedUserSubscriptionService) invalidateUserCaches(ctx context.Context
 		}
 	}
 
-	// Invalidate list caches for this user
+	// Invalidate list caches for this user only (admin queries don't use cache)
 	patterns := []string{
 		fmt.Sprintf("list:*user:%d*", userID),
 		fmt.Sprintf("active:user:%d*", userID),
@@ -576,7 +585,7 @@ func (s *CachedUserSubscriptionService) invalidateUserCaches(ctx context.Context
 	for _, pattern := range patterns {
 		fullPattern := cache.CachePrefixSubscription + pattern
 		if err := s.cacheManager.GetCache().DeleteByPattern(ctx, fullPattern); err != nil {
-			logger.Error("Failed to invalidate user subscription list cache",
+			logger.Error("Failed to invalidate subscription cache pattern",
 				logger.String("pattern", fullPattern),
 				logger.Error2("error", err))
 		}
@@ -602,9 +611,13 @@ func (s *CachedUserSubscriptionService) buildSubscriptionListCacheKey(req *inter
 	var keyParts []string
 	keyParts = append(keyParts, "list")
 
+	// Distinguish between admin and user queries
 	if req.UserID > 0 {
 		keyParts = append(keyParts, "user", fmt.Sprintf("%d", req.UserID))
+	} else {
+		keyParts = append(keyParts, "admin", "all")
 	}
+	
 	if req.Status != "" {
 		keyParts = append(keyParts, "status", req.Status)
 	}
@@ -613,6 +626,39 @@ func (s *CachedUserSubscriptionService) buildSubscriptionListCacheKey(req *inter
 	keyParts = append(keyParts, fmt.Sprintf("offset:%d", req.Offset))
 
 	return cache.CachePrefixSubscription + strings.Join(keyParts, ":")
+}
+
+// shouldSkipCache determines if caching should be skipped for this request
+func (s *CachedUserSubscriptionService) shouldSkipCache(req *interfaces.GetUserSubscriptionsRequest) bool {
+	// ALWAYS skip cache for admin queries - admins need real-time data
+	// Admin queries are identified by UserID == 0
+	if req.UserID == 0 {
+		return true
+	}
+	
+	// Skip cache for large user queries (likely exports or bulk operations)
+	if req.UserID > 0 && req.Limit >= 50 {
+		return true
+	}
+	
+	return false
+}
+
+// determineCacheTTL returns appropriate cache TTL based on request characteristics
+func (s *CachedUserSubscriptionService) determineCacheTTL(req *interfaces.GetUserSubscriptionsRequest) time.Duration {
+	// User-specific queries: medium TTL for balance of performance and freshness
+	// Small limit queries (like pagination) use longer cache
+	if req.UserID > 0 && req.Limit <= 20 {
+		return cache.MediumCacheTTL // 15 minutes
+	}
+	
+	// Larger user queries: shorter TTL for more recent data
+	if req.UserID > 0 {
+		return cache.ShortCacheTTL // 1 minute
+	}
+	
+	// Fallback (should rarely be used since admin queries skip cache)
+	return cache.ShortCacheTTL
 }
 
 // PauseUserSubscription pauses a user subscription with cache invalidation

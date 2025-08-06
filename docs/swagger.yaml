@@ -2799,6 +2799,57 @@ definitions:
     - title
     - user_id
     type: object
+  handlers.AdminCreateUserSubscriptionRequest:
+    properties:
+      custom_traffic_limit:
+        description: Custom Traffic Configuration (optional, overrides plan defaults)
+        example: 107374182400
+        type: integer
+      custom_traffic_reset_cycle:
+        description: Custom reset cycle
+        example: monthly
+        type: string
+      disable_traffic_limit:
+        description: Disable traffic limit for this subscription
+        example: false
+        type: boolean
+      notes:
+        description: Admin notes
+        maxLength: 1000
+        type: string
+      reason:
+        example: Admin granted subscription
+        maxLength: 255
+        type: string
+      send_notification:
+        description: Send notification to user
+        example: true
+        type: boolean
+      server_group_ids:
+        items:
+          type: integer
+        type: array
+      skip_payment:
+        description: Administrative overrides
+        example: true
+        type: boolean
+      start_date:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      subscription_plan_id:
+        example: 1
+        type: integer
+      use_trial:
+        example: false
+        type: boolean
+      user_id:
+        example: 1
+        type: integer
+    required:
+    - reason
+    - subscription_plan_id
+    - user_id
+    type: object
   handlers.AdminForcePasswordResetRequest:
     properties:
       new_password:
@@ -3442,88 +3493,6 @@ definitions:
     - subject
     type: object
   handlers.CreatePlanRequest:
-    properties:
-      billing_cycle:
-        enum:
-        - monthly
-        - yearly
-        - lifetime
-        example: monthly
-        type: string
-      billing_interval:
-        example: 1
-        maximum: 12
-        minimum: 1
-        type: integer
-      cancellation_fee:
-        example: 0
-        type: number
-      code:
-        example: premium-monthly
-        maxLength: 50
-        minLength: 1
-        type: string
-      currency:
-        example: USD
-        type: string
-      description:
-        example: Premium features with monthly billing
-        maxLength: 1000
-        type: string
-      features:
-        example: '{"max_projects": 10, "storage_gb": 100}'
-        type: string
-      is_popular:
-        example: false
-        type: boolean
-      is_recommended:
-        example: true
-        type: boolean
-      is_visible:
-        example: true
-        type: boolean
-      limits:
-        example: '{"api_calls_per_month": 10000}'
-        type: string
-      name:
-        example: Premium Plan
-        maxLength: 100
-        minLength: 1
-        type: string
-      price:
-        example: 29.99
-        minimum: 0
-        type: number
-      setup_fee:
-        example: 0
-        type: number
-      sort_order:
-        example: 1
-        type: integer
-      traffic_limit:
-        description: Traffic Configuration (Required)
-        example: 107374182400
-        minimum: 0
-        type: integer
-      traffic_reset_cycle:
-        enum:
-        - monthly
-        - never
-        example: monthly
-        type: string
-      trial_period_days:
-        example: 7
-        maximum: 365
-        minimum: 0
-        type: integer
-    required:
-    - billing_cycle
-    - code
-    - currency
-    - name
-    - price
-    - traffic_limit
-    - traffic_reset_cycle
     type: object
   handlers.CreateReferralRequest:
     properties:
@@ -4067,67 +4036,6 @@ definitions:
         type: number
     type: object
   handlers.UpdatePlanRequest:
-    properties:
-      cancellation_fee:
-        example: 25
-        type: number
-      description:
-        example: Updated description
-        maxLength: 1000
-        type: string
-      features:
-        example: '{"max_projects": 20}'
-        type: string
-      is_popular:
-        example: true
-        type: boolean
-      is_recommended:
-        example: false
-        type: boolean
-      is_visible:
-        example: true
-        type: boolean
-      limits:
-        example: '{"api_calls_per_month": 20000}'
-        type: string
-      name:
-        example: Premium Plan Updated
-        maxLength: 100
-        minLength: 1
-        type: string
-      price:
-        example: 39.99
-        minimum: 0
-        type: number
-      setup_fee:
-        example: 10
-        type: number
-      sort_order:
-        example: 2
-        type: integer
-      status:
-        enum:
-        - active
-        - inactive
-        - archived
-        example: active
-        type: string
-      traffic_limit:
-        description: Traffic Configuration
-        example: 107374182400
-        minimum: 0
-        type: integer
-      traffic_reset_cycle:
-        enum:
-        - monthly
-        - never
-        example: monthly
-        type: string
-      trial_period_days:
-        example: 14
-        maximum: 365
-        minimum: 0
-        type: integer
     type: object
   handlers.UpdateReferralRequest:
     properties:
@@ -11840,6 +11748,58 @@ paths:
       security:
       - BearerAuth: []
       summary: List all user subscriptions
+      tags:
+      - Admin-Subscription
+    post:
+      consumes:
+      - application/json
+      description: Create a subscription for a user directly (Admin only)
+      parameters:
+      - description: Subscription creation data
+        in: body
+        name: subscription
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AdminCreateUserSubscriptionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.UserSubscriptionResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.ConflictResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create user subscription
       tags:
       - Admin-Subscription
   /admin/subscriptions/users/{id}:

@@ -313,6 +313,7 @@ func SetupRoutes(
 		// User Subscriptions Management
 		usersGroup := adminSubscriptionGroup.Group("/users")
 		{
+			usersGroup.POST("", adminSubscriptionHandler.CreateUserSubscription)
 			usersGroup.GET("", adminSubscriptionHandler.ListUserSubscriptions)
 			usersGroup.GET("/:id", adminSubscriptionHandler.GetUserSubscription)
 			usersGroup.PUT("/:id", adminSubscriptionHandler.UpdateUserSubscription)
@@ -591,13 +592,14 @@ func SetupRoutes(
 		paymentMethodsGroup.GET("/:id/statistics", paymentMethodHandler.GetPaymentMethodUsageStats)
 	}
 
-	// Server routes (/api/v1/server)
+	// Server routes (/api/v1/server) - UniProxy endpoints use token parameter authentication, not Bearer
 	serverGroup := apiV1.Group("/server")
 	{
-		serverGroup.GET("/health", serverHandler.Health)
-		serverGroup.GET("/uni-proxy/config", serverHandler.UniProxyConfig)
-		serverGroup.GET("/uni-proxy/users", serverHandler.UniProxyUsers)
-		serverGroup.POST("/uni-proxy/push", serverHandler.UniProxyPush)
+		// UniProxy endpoints - use token parameter authentication
+		serverGroup.GET("/UniProxy/health", serverHandler.Health)
+		serverGroup.GET("/UniProxy/config", serverHandler.UniProxyConfig)
+		serverGroup.GET("/UniProxy/user", serverHandler.UniProxyUsers)
+		serverGroup.POST("/UniProxy/push", serverHandler.UniProxyPush)
 	}
 
 	// Swagger documentation

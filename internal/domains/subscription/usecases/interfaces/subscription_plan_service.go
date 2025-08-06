@@ -46,6 +46,9 @@ type CreateSubscriptionPlanRequest struct {
 	// Traffic Configuration (Required)
 	TrafficLimit      int64  `json:"traffic_limit" binding:"required,min=0" example:"107374182400"`                // Traffic limit in bytes (0 = unlimited)
 	TrafficResetCycle string `json:"traffic_reset_cycle" binding:"required,oneof=monthly never" example:"monthly"` // Traffic reset cycle
+
+	// Server Group Configuration (Required)
+	DefaultServerGroupIDs []uint `json:"default_server_group_ids" binding:"required,min=1" example:"[1]"` // Default server groups for subscriptions
 }
 
 // UpdateSubscriptionPlanRequest represents the request to update a subscription plan
@@ -67,6 +70,9 @@ type UpdateSubscriptionPlanRequest struct {
 	// Traffic Configuration
 	TrafficLimit      *int64  `json:"traffic_limit,omitempty" binding:"omitempty,min=0" example:"107374182400"`                // Traffic limit in bytes
 	TrafficResetCycle *string `json:"traffic_reset_cycle,omitempty" binding:"omitempty,oneof=monthly never" example:"monthly"` // Traffic reset cycle
+
+	// Server Group Configuration
+	DefaultServerGroupIDs *[]uint `json:"default_server_group_ids,omitempty" example:"[1]"` // Default server groups for subscriptions
 }
 
 // GetSubscriptionPlansRequest represents the request to get subscription plans
