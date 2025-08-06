@@ -271,7 +271,7 @@ func NewApplication() *fx.App {
 			if err := crossDomainHandlers.RegisterCrossDomainHandlers(eventBus); err != nil {
 				logger.Error("Failed to register cross-domain event handlers", zap.Error(err))
 			} else {
-				logger.Info("Cross-domain event handlers registered successfully")
+				logger.Debug("Cross-domain event handlers registered successfully")
 			}
 
 			// Register notification handler
@@ -279,7 +279,7 @@ func NewApplication() *fx.App {
 			if err := eventBus.Subscribe(notificationHandler.EventTypes(), notificationHandler); err != nil {
 				logger.Error("Failed to register notification handler", zap.Error(err))
 			} else {
-				logger.Info("Notification handler registered successfully")
+				logger.Debug("Notification handler registered successfully")
 			}
 
 			// Register event processing handlers with the task processor
@@ -313,32 +313,27 @@ func StartServices(
 			go func() {
 				logger.Info("Starting task processor")
 				if err := taskProcessor.Start(ctx); err != nil {
-					logger.Error("Task processor startup failed",
+					logger.Fatal("Task processor startup failed",
 						zap.Error(err),
 						zap.String("component", "task_processor"),
 						zap.String("action", "start"))
-					fmt.Printf("❌ Task processor failed to start: %v\n", err)
 					os.Exit(1)
 				}
 			}()
 
 			// 启动 HTTP 服务器
 			go func() {
-				logger.Info("Starting HTTP server")
+				logger.Info("Starting HTTP server", zap.String("addr", ":8080"))
 				if err := httpServer.Start(); err != nil && err != http.ErrServerClosed {
 					logger.Fatal("HTTP server startup failed",
 						zap.Error(err),
-						zap.String("component", "http_server"))
-					fmt.Printf("❌ HTTP server failed to start: %v\n", err)
-					fmt.Printf("   Common causes:\n")
-					fmt.Printf("   - Port already in use\n")
-					fmt.Printf("   - Insufficient permissions to bind to port\n")
-					fmt.Printf("   - Invalid port number\n")
+						zap.String("component", "http_server"),
+						zap.String("troubleshooting_hint", "Common causes: port already in use, insufficient permissions to bind to port, invalid port number"))
 					os.Exit(1)
 				}
 			}()
 
-			logger.Info("Application started successfully with new VSA + Clean Architecture")
+			logger.Info("Application started successfully with VSA + Clean Architecture")
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {

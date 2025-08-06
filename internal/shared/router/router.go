@@ -80,16 +80,16 @@ func SetupRoutes(
 	appHealthCheckFunc func(*gin.Context),
 	taskCreateFunc func(*gin.Context),
 ) {
-	logger.Info("Registering HTTP routes...")
+	logger.Debug("Registering HTTP routes...")
 
 	// Health check endpoint
 	router.GET("/health", appHealthCheckFunc)
-	logger.Info("Registered health check route", zap.String("route", "/health"))
+	logger.Debug("Registered health check route", zap.String("route", "/health"))
 
 	// API versioning routes - version info endpoints
 	router.GET("/api/version", versionMiddleware.VersionInfo())
 	router.GET("/api/health", versionMiddleware.HealthCheck())
-	logger.Info("Registered versioning routes",
+	logger.Debug("Registered versioning routes",
 		zap.String("route1", "/api/version"),
 		zap.String("route2", "/api/health"))
 
@@ -235,12 +235,12 @@ func SetupRoutes(
 	}
 
 	// Admin cache routes (/api/v1/admin/cache) - using RegisterRoutes method
-	logger.Info("Registering cache monitoring routes", zap.String("prefix", "/api/v1/admin"))
+	logger.Debug("Registering cache monitoring routes", zap.String("prefix", "/api/v1/admin"))
 	if cacheMonitoringHandler == nil {
 		logger.Error("Cache monitoring handler is nil - routes will not be registered")
 	} else {
 		cacheMonitoringHandler.RegisterRoutes(adminGroup)
-		logger.Info("Successfully registered cache monitoring routes")
+		logger.Debug("Successfully registered cache monitoring routes")
 	}
 
 	// Admin payment routes (/api/v1/admin/payment)
@@ -262,7 +262,7 @@ func SetupRoutes(
 		adminPaymentGroup.GET("/retries/statistics", paymentHandler.GetRetryStatistics)
 		adminPaymentGroup.GET("/retries/health", paymentHandler.GetRetryHealthMetrics)
 	}
-	logger.Info("Registered admin payment routes", zap.String("prefix", "/api/v1/admin/payment"))
+	logger.Debug("Registered admin payment routes", zap.String("prefix", "/api/v1/admin/payment"))
 
 	// Admin server routes (/api/v1/admin/servers)
 	adminServerGroup := adminGroup.Group("/servers")
@@ -279,7 +279,7 @@ func SetupRoutes(
 		adminServerGroup.GET("/group/:group_id", adminServerHandler.GetServersByGroup)
 		adminServerGroup.POST("/bulk/update", adminServerHandler.BulkUpdateServers)
 	}
-	logger.Info("Registered admin server routes", zap.String("prefix", "/api/v1/admin/servers"))
+	logger.Debug("Registered admin server routes", zap.String("prefix", "/api/v1/admin/servers"))
 
 	// Admin server group routes (/api/v1/admin/server-groups)
 	adminServerGroupGroup := adminGroup.Group("/server-groups")
@@ -294,7 +294,7 @@ func SetupRoutes(
 		adminServerGroupGroup.GET("/:id/statistics", adminServerGroupHandler.GetGroupStatistics)
 		adminServerGroupGroup.GET("/statistics", adminServerGroupHandler.GetAllGroupStatistics)
 	}
-	logger.Info("Registered admin server group routes", zap.String("prefix", "/api/v1/admin/server-groups"))
+	logger.Debug("Registered admin server group routes", zap.String("prefix", "/api/v1/admin/server-groups"))
 
 	// Admin subscription routes (/api/v1/admin/subscriptions)
 	adminSubscriptionGroup := adminGroup.Group("/subscriptions")
@@ -360,7 +360,7 @@ func SetupRoutes(
 			bulkGroup.POST("/action", adminSubscriptionHandler.BulkSubscriptionAction)
 		}
 	}
-	logger.Info("Registered admin subscription routes", zap.String("prefix", "/api/v1/admin/subscriptions"))
+	logger.Debug("Registered admin subscription routes", zap.String("prefix", "/api/v1/admin/subscriptions"))
 
 	// Admin invoice routes (/api/v1/admin/invoices)
 	adminInvoiceGroup := adminGroup.Group("/invoices")
@@ -399,7 +399,7 @@ func SetupRoutes(
 		adminInvoiceGroup.GET("/templates", adminInvoiceHandler.GetAvailableTemplates)
 		adminInvoiceGroup.GET("/languages", adminInvoiceHandler.GetAvailableLanguages)
 	}
-	logger.Info("Registered admin invoice routes", zap.String("prefix", "/api/v1/admin/invoices"))
+	logger.Debug("Registered admin invoice routes", zap.String("prefix", "/api/v1/admin/invoices"))
 
 	// Admin ticket routes (/api/v1/admin/tickets)
 	adminTicketGroup := adminGroup.Group("/tickets")
@@ -443,7 +443,7 @@ func SetupRoutes(
 			bulkGroup.POST("/close", adminTicketHandler.BulkCloseTickets)
 		}
 	}
-	logger.Info("Registered admin ticket routes", zap.String("prefix", "/api/v1/admin/tickets"))
+	logger.Debug("Registered admin ticket routes", zap.String("prefix", "/api/v1/admin/tickets"))
 
 	// Admin coupon routes (/api/v1/admin/coupons)
 	adminCouponGroup := adminGroup.Group("/coupons")
@@ -473,7 +473,7 @@ func SetupRoutes(
 			bulkCouponGroup.POST("/deactivate", adminCouponHandler.BulkDeactivateCoupons)
 		}
 	}
-	logger.Info("Registered admin coupon routes", zap.String("prefix", "/api/v1/admin/coupons"))
+	logger.Debug("Registered admin coupon routes", zap.String("prefix", "/api/v1/admin/coupons"))
 
 	// Admin referral routes (/api/v1/admin/referrals)
 	adminReferralGroup := adminGroup.Group("/referrals")
@@ -514,7 +514,7 @@ func SetupRoutes(
 			bulkReferralGroup.POST("/payout", adminReferralHandler.BulkProcessPayouts)
 		}
 	}
-	logger.Info("Registered admin referral routes", zap.String("prefix", "/api/v1/admin/referrals"))
+	logger.Debug("Registered admin referral routes", zap.String("prefix", "/api/v1/admin/referrals"))
 
 	// Subscription routes (/api/v1/subscription) - most require authentication
 	subscriptionGroup := apiV1.Group("/subscription")
@@ -529,39 +529,39 @@ func SetupRoutes(
 	}
 
 	// User subscription management routes (/api/v1/subscriptions) - using RegisterRoutes method
-	logger.Info("Registering user subscription routes")
+	logger.Debug("Registering user subscription routes")
 	if userSubscriptionHandler == nil {
 		logger.Error("User subscription handler is nil - routes will not be registered")
 	} else {
 		userSubscriptionHandler.RegisterRoutes(apiV1)
-		logger.Info("Successfully registered user subscription routes")
+		logger.Debug("Successfully registered user subscription routes")
 	}
 
 	// Usage tracking routes (/api/v1/usage) - using RegisterRoutes method
-	logger.Info("Registering usage tracking routes")
+	logger.Debug("Registering usage tracking routes")
 	if usageHandler == nil {
 		logger.Error("Usage handler is nil - routes will not be registered")
 	} else {
 		usageHandler.RegisterRoutes(apiV1)
-		logger.Info("Successfully registered usage tracking routes")
+		logger.Debug("Successfully registered usage tracking routes")
 	}
 
 	// Usage alert routes (/api/v1/usage-alerts) - using RegisterRoutes method
-	logger.Info("Registering usage alert routes")
+	logger.Debug("Registering usage alert routes")
 	if usageAlertHandler == nil {
 		logger.Error("Usage alert handler is nil - routes will not be registered")
 	} else {
 		usageAlertHandler.RegisterRoutes(apiV1)
-		logger.Info("Successfully registered usage alert routes")
+		logger.Debug("Successfully registered usage alert routes")
 	}
 
 	// Invoice routes (/api/v1/invoice) - using RegisterRoutes method
-	logger.Info("Registering invoice routes")
+	logger.Debug("Registering invoice routes")
 	if invoiceHandler == nil {
 		logger.Error("Invoice handler is nil - routes will not be registered")
 	} else {
 		invoiceHandler.RegisterRoutes(apiV1)
-		logger.Info("Successfully registered invoice routes")
+		logger.Debug("Successfully registered invoice routes")
 	}
 
 	// Payment routes (/api/v1/payment)
@@ -604,7 +604,7 @@ func SetupRoutes(
 
 	// Swagger documentation
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	logger.Info("Registered Swagger documentation route", zap.String("route", "/swagger/*any"))
+	logger.Debug("Registered Swagger documentation route", zap.String("route", "/swagger/*any"))
 
 	// Log all registered routes for debugging
 	routes := router.Routes()
@@ -693,17 +693,23 @@ func SetupRoutes(
 		"/api/v1/invoice/*/pdf",
 	}
 
+	// Collect all verified important routes for consolidated logging
+	verifiedRoutes := make([]string, 0)
 	for _, route := range routes {
 		for _, important := range importantRoutes {
 			if route.Path == important ||
 				(important[len(important)-1] == '*' &&
 					len(route.Path) >= len(important)-1 &&
 					route.Path[:len(important)-1] == important[:len(important)-1]) {
-				logger.Info("Verified important route",
-					zap.String("method", route.Method),
-					zap.String("path", route.Path))
+				verifiedRoutes = append(verifiedRoutes, route.Method+" "+route.Path)
 				break
 			}
 		}
 	}
+	
+	// Log consolidated verification result at debug level to reduce noise
+	logger.Debug("Important routes verification completed",
+		zap.Int("verified_count", len(verifiedRoutes)),
+		zap.Int("expected_count", len(importantRoutes)),
+		zap.Strings("verified_routes", verifiedRoutes))
 }

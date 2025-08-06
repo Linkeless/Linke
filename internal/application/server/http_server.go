@@ -158,7 +158,8 @@ func NewHTTPServer(
 // Start 启动 HTTP 服务器
 func (s *HTTPServer) Start() error {
 	addr := fmt.Sprintf(":%s", s.config.Server.Port)
-	s.logger.Info("Starting HTTP server", zap.String("addr", addr))
+	// 移动到debug级别，避免与bootstrap中的启动日志重复
+	s.logger.Debug("HTTP server starting", zap.String("addr", addr))
 
 	return http.ListenAndServe(addr, s.Engine)
 }

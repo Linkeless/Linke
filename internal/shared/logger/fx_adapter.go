@@ -9,6 +9,10 @@ import (
 )
 
 // FxAdapter 适配器，将 Fx 事件转换为统一的日志格式
+// 遵循 Zap 最佳实践：
+// - Info: 应用生命周期的关键事件 (Started, Stopped, 错误)
+// - Debug: 内部依赖注入过程 (Provided, Invoking等)
+// - Error: 所有失败的操作
 type FxAdapter struct {
 	logger Logger
 }
@@ -24,7 +28,8 @@ func NewFxAdapter(logger Logger) fxevent.Logger {
 func (l *FxAdapter) LogEvent(event fxevent.Event) {
 	switch e := event.(type) {
 	case *fxevent.OnStartExecuting:
-		l.logger.Info("Fx lifecycle hook executing",
+		// 只在debug级别记录生命周期钩子执行，避免启动噪音
+		l.logger.Debug("Fx lifecycle hook executing",
 			zap.String("hook", "OnStart"),
 			zap.String("function", e.FunctionName),
 			zap.String("caller", e.CallerName))
@@ -38,7 +43,8 @@ func (l *FxAdapter) LogEvent(event fxevent.Event) {
 				zap.String("runtime", e.Runtime.String()),
 				zap.Error(e.Err))
 		} else {
-			l.logger.Info("Fx lifecycle hook executed successfully",
+			// 成功的生命周期钩子在debug级别记录
+			l.logger.Debug("Fx lifecycle hook executed successfully",
 				zap.String("hook", "OnStart"),
 				zap.String("function", e.FunctionName),
 				zap.String("caller", e.CallerName),
@@ -46,7 +52,7 @@ func (l *FxAdapter) LogEvent(event fxevent.Event) {
 		}
 
 	case *fxevent.OnStopExecuting:
-		l.logger.Info("Fx lifecycle hook executing",
+		l.logger.Debug("Fx lifecycle hook executing",
 			zap.String("hook", "OnStop"),
 			zap.String("function", e.FunctionName),
 			zap.String("caller", e.CallerName))
@@ -60,7 +66,7 @@ func (l *FxAdapter) LogEvent(event fxevent.Event) {
 				zap.String("runtime", e.Runtime.String()),
 				zap.Error(e.Err))
 		} else {
-			l.logger.Info("Fx lifecycle hook executed successfully",
+			l.logger.Debug("Fx lifecycle hook executed successfully",
 				zap.String("hook", "OnStop"),
 				zap.String("function", e.FunctionName),
 				zap.String("caller", e.CallerName),
@@ -93,7 +99,8 @@ func (l *FxAdapter) LogEvent(event fxevent.Event) {
 			zap.String("module", e.ModuleName))
 
 	case *fxevent.Invoking:
-		l.logger.Info("Fx invoking function",
+		// 只在debug级别记录函数调用，避免启动时的日志噪音
+		l.logger.Debug("Fx invoking function",
 			zap.String("function", cleanConstructorName(e.FunctionName)),
 			zap.String("module", e.ModuleName))
 
@@ -131,7 +138,8 @@ func (l *FxAdapter) LogEvent(event fxevent.Event) {
 		}
 
 	case *fxevent.Started:
-		l.logger.Info("Fx application started successfully")
+		// 移动到debug级别，避免与业务应用启动日志重复
+		l.logger.Debug("Fx dependency injection framework started")
 
 	case *fxevent.LoggerInitialized:
 		l.logger.Debug("Fx custom logger initialized",

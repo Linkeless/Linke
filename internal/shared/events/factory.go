@@ -288,7 +288,7 @@ func (f *EventSystemFactory) RegisterHandlers(components *EventSystemComponents)
 		}
 	}
 
-	f.logger.Info("All event handlers registered successfully",
+	f.logger.Debug("All event handlers registered successfully",
 		logger.Int("handler_count", len(handlers)),
 	)
 
@@ -331,7 +331,7 @@ func (f *EventSystemFactory) ConfigureTaskHandlers(processor *queue.TaskProcesso
 	// Register async event processing handlers
 	if components.AsyncEventProcessor != nil {
 		RegisterEventHandlers(processor, components.AsyncEventProcessor)
-		f.logger.Info("Async event processing handlers registered")
+		f.logger.Debug("Async event processing handlers registered")
 	}
 
 	// Register dead letter handlers

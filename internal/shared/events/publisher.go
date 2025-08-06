@@ -103,7 +103,7 @@ func (bus *InMemoryEventBus) Subscribe(eventTypes []string, handler EventHandler
 		}
 		bus.handlers[eventType] = append(bus.handlers[eventType], handler)
 
-		bus.logger.Info("Event handler subscribed",
+		bus.logger.Debug("Event handler subscribed",
 			logger.String("event_type", eventType))
 	}
 
@@ -121,7 +121,7 @@ func (bus *InMemoryEventBus) Unsubscribe(eventTypes []string, handler EventHandl
 				if h.ID() == handler.ID() {
 					// Remove handler from slice
 					bus.handlers[eventType] = append(handlers[:i], handlers[i+1:]...)
-					bus.logger.Info("Event handler unsubscribed",
+					bus.logger.Debug("Event handler unsubscribed",
 						logger.String("event_type", eventType),
 						logger.String("handler_id", handler.ID()))
 					break

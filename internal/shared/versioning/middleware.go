@@ -102,15 +102,12 @@ func (vm *VersionMiddleware) VersionNegotiation(c *gin.Context) {
 		vm.addDeprecationHeaders(c, *versionInfo)
 	}
 
-	// Log version negotiation metrics
+	// Log version negotiation metrics at debug level to reduce API call noise
 	duration := time.Since(startTime)
-	vm.logger.Info("Version negotiation completed",
+	vm.logger.Debug("Version negotiation completed",
 		logger.String("method", c.Request.Method),
 		logger.String("path", c.Request.URL.Path),
-		logger.String("query", c.Request.URL.RawQuery),
 		logger.String("resolved_version", resolvedVersion.String()),
-		logger.String("client_ip", c.ClientIP()),
-		logger.String("user_agent", c.GetHeader("User-Agent")),
 		logger.Duration("duration", duration),
 	)
 
@@ -237,11 +234,10 @@ func (vm *VersionMiddleware) addDeprecationHeaders(c *gin.Context, versionInfo V
 // VersionInfo returns version information endpoint handler
 func (vm *VersionMiddleware) VersionInfo() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		vm.logger.Info("API version info requested",
-			logger.String("method", c.Request.Method),
+		// Log at debug level - version info requests are typically automated/frequent
+		vm.logger.Debug("API version info requested",
 			logger.String("path", c.Request.URL.Path),
 			logger.String("client_ip", c.ClientIP()),
-			logger.String("user_agent", c.GetHeader("User-Agent")),
 		)
 
 		versionInfo := map[string]any{
@@ -267,11 +263,9 @@ func (vm *VersionMiddleware) VersionInfo() gin.HandlerFunc {
 // HealthCheck returns a health check handler that includes version info
 func (vm *VersionMiddleware) HealthCheck() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		vm.logger.Info("Health check requested with version info",
-			logger.String("method", c.Request.Method),
+		// Log at debug level - health checks are frequent and routine
+		vm.logger.Debug("Health check requested with version info",
 			logger.String("path", c.Request.URL.Path),
-			logger.String("client_ip", c.ClientIP()),
-			logger.String("user_agent", c.GetHeader("User-Agent")),
 		)
 
 		versionCtx, _ := GetVersionFromContext(c)

@@ -1505,7 +1505,7 @@ func (h *CrossDomainEventHandlers) RegisterCrossDomainHandlers(eventBus EventBus
 		}
 	}
 
-	h.logger.Info("Cross-domain event handlers registered successfully",
+	h.logger.Debug("Cross-domain event handlers registered successfully",
 		logger.Int("handler_count", len(handlers)),
 	)
 

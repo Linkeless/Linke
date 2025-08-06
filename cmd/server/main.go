@@ -2,11 +2,11 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
 
 	"linke/internal/application/bootstrap"
 	"linke/internal/shared/database"
+	"linke/internal/shared/logger"
 
 	// Swagger 文档
 	_ "linke/docs"
@@ -23,6 +23,18 @@ import (
 // @description Type "Bearer" followed by a space and JWT token.
 
 func main() {
+	// Initialize logger early
+	logConfig := logger.LogConfig{
+		Level:  logger.GetEnvLogLevel(),
+		Format: logger.GetEnvLogFormat(),
+		Output: logger.GetEnvLogOutput(),
+	}
+	
+	if err := logger.InitLogger(logConfig); err != nil {
+		// Fall back to standard output if logger init fails
+		logger.Error("Failed to initialize logger", logger.Error2("error", err))
+	}
+	
 	// Parse command line flags
 	var (
 		runMigration    = flag.Bool("migrate", false, "Run database migrations and exit (alias for -migrate-command=up)")
@@ -40,30 +52,26 @@ func main() {
 		return
 	}
 
-	// 如果是迁移命令，直接处理后退出
+	// Handle migration commands
 	if *runMigration || *migrateCommand != "" {
 		migrationCLI := database.NewMigrationCLI()
 		migrationCLI.HandleMigrationCommand(*runMigration, *migrateCommand, *migrateVersion, *migrateSteps)
 		return
 	}
 
-	// 创建并启动应用
+	// Create and start application
 	app := bootstrap.NewApplication()
 
-	// 运行应用
+	// Check for application initialization errors
 	if err := app.Err(); err != nil {
-		fmt.Printf("❌ Application startup failed\n")
-		fmt.Printf("   Error: %v\n", err)
-		fmt.Printf("   This error occurred during dependency injection initialization.\n")
-		fmt.Printf("   Common causes:\n")
-		fmt.Printf("   - Database connection failure (check DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME)\n")
-		fmt.Printf("   - Redis connection failure (check REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, REDIS_DB)\n")
-		fmt.Printf("   - Invalid JWT_SECRET (must be 32+ characters)\n")
-		fmt.Printf("   - Missing required environment variables\n")
-		fmt.Printf("   - Configuration validation errors\n")
-		fmt.Printf("\n   For detailed troubleshooting, run: make security-check\n")
+		logger.Fatal("Application startup failed",
+			logger.Error2("error", err),
+			logger.String("troubleshooting_hint", "Common causes: database connection failure, Redis connection failure, invalid JWT_SECRET, missing environment variables, configuration validation errors"),
+			logger.String("troubleshooting_command", "make security-check"),
+		)
 		os.Exit(1)
 	}
 
+	// Run the application
 	app.Run()
 }

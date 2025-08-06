@@ -55,14 +55,14 @@ func NewTaskQueue(redisClient *redis.Client) *TaskQueue {
 }
 
 func NewTaskProcessor(redisClient *redis.Client) *TaskProcessor {
-	// Map project log level to asynq log level
-	logLevel := asynq.InfoLevel
+	// Map project log level to asynq log level, 减少asynq启动噪音
+	logLevel := asynq.WarnLevel // 默认使用warn级别减少启动日志噪音
 	projectLogLevel := logger.GetEnvLogLevel()
 	switch projectLogLevel {
 	case "debug":
 		logLevel = asynq.DebugLevel
 	case "info":
-		logLevel = asynq.InfoLevel
+		logLevel = asynq.WarnLevel // Info级别时使用warn减少启动噪音
 	case "warn":
 		logLevel = asynq.WarnLevel
 	case "error":
@@ -127,7 +127,8 @@ func (tp *TaskProcessor) RegisterHandler(taskType string, handler TaskHandler) {
 }
 
 func (tp *TaskProcessor) Start(ctx context.Context) error {
-	logger.Info("Starting asynq task processor")
+	// 移动到debug级别，避免与bootstrap中的启动日志重复
+	logger.Debug("Asynq task processor initializing")
 
 	mux := asynq.NewServeMux()
 
@@ -160,7 +161,7 @@ func (tp *TaskProcessor) Start(ctx context.Context) error {
 func (tp *TaskProcessor) Stop() {
 	logger.Info("Stopping asynq task processor")
 	tp.server.Stop()
-	logger.Info("Asynq task processor stopped")
+	logger.Debug("Asynq task processor stopped")
 }
 
 // Enhanced task queue with priority support
