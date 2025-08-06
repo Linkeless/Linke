@@ -5,6 +5,7 @@ import (
 	"gorm.io/gorm"
 
 	"linke/internal/domains/ticket/adapters/repositories"
+	"linke/internal/domains/ticket/handlers"
 	"linke/internal/domains/ticket/usecases/implementations"
 	"linke/internal/domains/ticket/usecases/interfaces"
 )
@@ -17,6 +18,10 @@ var Module = fx.Module("ticket",
 		fx.Annotate(
 			repositories.NewTicketRepository,
 			fx.As(new(interfaces.TicketRepository)),
+		),
+		fx.Annotate(
+			repositories.NewTicketMessageRepository,
+			fx.As(new(interfaces.TicketMessageRepository)),
 		),
 	),
 
@@ -32,8 +37,10 @@ var Module = fx.Module("ticket",
 		),
 	),
 
-	// 注意：目前 ticket 领域还没有 handler 实现
-	// 当添加了 handler 时，需要在这里提供
+	// 提供 Handler 实现
+	fx.Provide(
+		handlers.NewAdminTicketHandler,
+	),
 
 	// 模块初始化钩子
 	fx.Invoke(func(db *gorm.DB) {

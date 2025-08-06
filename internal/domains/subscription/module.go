@@ -132,6 +132,7 @@ var Module = fx.Module("subscription",
 		handlers.NewQuickPurchaseHandler,
 		handlers.NewUsageAlertHandler,
 		handlers.NewUsageHandler,
+		handlers.NewAdminSubscriptionHandler,
 	),
 
 	// 提供扩展服务（这些可能没有接口定义）

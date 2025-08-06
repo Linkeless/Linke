@@ -5,6 +5,7 @@ import (
 	"gorm.io/gorm"
 
 	"linke/internal/domains/coupon/adapters/repositories"
+	"linke/internal/domains/coupon/handlers"
 	"linke/internal/domains/coupon/usecases/implementations"
 	"linke/internal/domains/coupon/usecases/interfaces"
 )
@@ -28,8 +29,10 @@ var Module = fx.Module("coupon",
 		),
 	),
 
-	// 注意：目前 coupon 领域还没有 handler 实现
-	// 当添加了 handler 时，需要在这里提供
+	// 提供 Handler 实现
+	fx.Provide(
+		handlers.NewAdminCouponHandler,
+	),
 
 	// 模块初始化钩子
 	fx.Invoke(func(db *gorm.DB) {

@@ -82,9 +82,9 @@ var Module = fx.Module("shared",
 		func(eventBus events.EventBus, asyncProcessor *events.AsyncEventProcessor) *events.AsyncEventBus {
 			return events.NewAsyncEventBus(eventBus, asyncProcessor)
 		},
-		// Cross-domain event handlers
+		// Cross-domain event handlers - skip for now, will be created via dependency injection
 		func() *events.CrossDomainEventHandlers {
-			return events.NewCrossDomainEventHandlers()
+			return nil // NewCrossDomainEventHandlers requires service dependencies
 		},
 		// Notification handler
 		func() *events.NotificationHandler {

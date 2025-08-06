@@ -26,7 +26,7 @@ type TicketService interface {
 	UpdateTicketPriority(ctx context.Context, ticketID uint, priority string) (*entities.Ticket, error)
 
 	// Ticket resolution
-	ResolveTicket(ctx context.Context, ticketID uint, req *ResolveTicketRequest) (*entities.Ticket, error)
+	ResolveTicket(ctx context.Context, ticketID uint, resolvedByID uint, req *ResolveTicketRequest) (*entities.Ticket, error)
 	CloseTicket(ctx context.Context, ticketID uint, reason string) (*entities.Ticket, error)
 	ReopenTicket(ctx context.Context, ticketID uint, reason string) (*entities.Ticket, error)
 

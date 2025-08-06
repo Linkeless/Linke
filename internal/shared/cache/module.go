@@ -19,6 +19,10 @@ var Module = fx.Module("cache",
 			NewRedisCacheManagerWithMetrics,
 			fx.As(new(CacheManager)),
 		),
+		// Provide CacheStore adapter for event handlers
+		func(cache Cache) CacheStore {
+			return NewCacheStoreAdapter(cache)
+		},
 		NewAllCacheKeys,
 		// Enhanced cache monitoring handler with optional multi-level support
 		func(

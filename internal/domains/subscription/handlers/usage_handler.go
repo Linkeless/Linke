@@ -70,7 +70,7 @@ func (h *UsageHandler) RegisterRoutes(router *gin.RouterGroup) {
 // GetCurrentUsage godoc
 // @Summary Get current usage for a subscription
 // @Description Retrieve current usage statistics for all usage types of a subscription
-// @Tags usage
+// @Tags User-Subscription
 // @Accept json
 // @Produce json
 // @Param subscription_id path int true "Subscription ID"
@@ -98,7 +98,7 @@ func (h *UsageHandler) GetCurrentUsage(c *gin.Context) {
 // GetCurrentUsageByType godoc
 // @Summary Get current usage for a specific usage type
 // @Description Retrieve current usage statistics for a specific usage type of a subscription
-// @Tags usage
+// @Tags User-Subscription
 // @Accept json
 // @Produce json
 // @Param subscription_id path int true "Subscription ID"
@@ -135,7 +135,7 @@ func (h *UsageHandler) GetCurrentUsageByType(c *gin.Context) {
 // GetUsageHistory godoc
 // @Summary Get usage history for a subscription
 // @Description Retrieve historical usage data with configurable time range and granularity
-// @Tags usage
+// @Tags User-Subscription
 // @Accept json
 // @Produce json
 // @Param subscription_id path int true "Subscription ID"
@@ -210,7 +210,7 @@ func (h *UsageHandler) GetUsageHistory(c *gin.Context) {
 // GetUsageSummary godoc
 // @Summary Get usage summary for a subscription
 // @Description Retrieve aggregated usage summary for a specific period
-// @Tags usage
+// @Tags User-Subscription
 // @Accept json
 // @Produce json
 // @Param subscription_id path int true "Subscription ID"
@@ -274,7 +274,7 @@ func (h *UsageHandler) GetUsageSummary(c *gin.Context) {
 // GetUsageStatistics godoc
 // @Summary Get usage statistics for a subscription
 // @Description Retrieve detailed usage statistics with breakdown by various dimensions
-// @Tags usage
+// @Tags User-Subscription
 // @Accept json
 // @Produce json
 // @Param subscription_id path int true "Subscription ID"
@@ -329,7 +329,7 @@ func (h *UsageHandler) GetUsageStatistics(c *gin.Context) {
 // GetUsageTrends godoc
 // @Summary Get usage trends for a subscription
 // @Description Retrieve usage trends with optional anomaly detection and predictions
-// @Tags usage
+// @Tags User-Subscription
 // @Accept json
 // @Produce json
 // @Param subscription_id path int true "Subscription ID"
@@ -371,7 +371,7 @@ func (h *UsageHandler) GetUsageTrends(c *gin.Context) {
 // GetUsagePredictions godoc
 // @Summary Get usage predictions for a subscription
 // @Description Retrieve usage predictions for all usage types
-// @Tags usage
+// @Tags User-Subscription
 // @Accept json
 // @Produce json
 // @Param subscription_id path int true "Subscription ID"
@@ -399,7 +399,7 @@ func (h *UsageHandler) GetUsagePredictions(c *gin.Context) {
 // GetUsagePredictionsByType godoc
 // @Summary Get usage predictions for a specific usage type
 // @Description Retrieve usage predictions for a specific usage type
-// @Tags usage
+// @Tags User-Subscription
 // @Accept json
 // @Produce json
 // @Param subscription_id path int true "Subscription ID"
@@ -436,7 +436,7 @@ func (h *UsageHandler) GetUsagePredictionsByType(c *gin.Context) {
 // GetRealTimeUsage godoc
 // @Summary Get real-time usage data for a subscription
 // @Description Retrieve real-time usage data with current rates and predictions
-// @Tags usage
+// @Tags User-Subscription
 // @Accept json
 // @Produce json
 // @Param subscription_id path int true "Subscription ID"
@@ -466,7 +466,7 @@ func (h *UsageHandler) GetRealTimeUsage(c *gin.Context) {
 // ExportUsageData godoc
 // @Summary Export usage data
 // @Description Export usage data in various formats (CSV, JSON, XLSX)
-// @Tags usage
+// @Tags User-Subscription
 // @Accept json
 // @Produce json
 // @Param request body interfaces.ExportUsageRequest true "Export Request"
@@ -495,7 +495,7 @@ func (h *UsageHandler) ExportUsageData(c *gin.Context) {
 // GetTopUsageSubscriptions godoc
 // @Summary Get top usage subscriptions
 // @Description Retrieve subscriptions with highest usage for administration
-// @Tags usage,admin
+// @Tags usage
 // @Accept json
 // @Produce json
 // @Param usage_type query string false "Usage Type Filter"
@@ -549,7 +549,7 @@ func (h *UsageHandler) GetTopUsageSubscriptions(c *gin.Context) {
 // CleanupOldUsageData godoc
 // @Summary Cleanup old usage data
 // @Description Remove old usage data and alerts (admin only)
-// @Tags usage,admin
+// @Tags usage
 // @Accept json
 // @Produce json
 // @Param older_than query string true "Delete data older than this date (RFC3339)" format(date-time)
@@ -582,7 +582,7 @@ func (h *UsageHandler) CleanupOldUsageData(c *gin.Context) {
 // ResetUsageForSubscription godoc
 // @Summary Reset usage for a subscription
 // @Description Reset usage counters for a specific subscription and usage type (admin only)
-// @Tags usage,admin
+// @Tags usage
 // @Accept json
 // @Produce json
 // @Param subscription_id path int true "Subscription ID"
@@ -617,7 +617,7 @@ func (h *UsageHandler) ResetUsageForSubscription(c *gin.Context) {
 // SyncSubscriptionLimits godoc
 // @Summary Sync subscription limits
 // @Description Sync usage limits with subscription plan settings (admin only)
-// @Tags usage,admin
+// @Tags usage
 // @Accept json
 // @Produce json
 // @Param subscription_id path int true "Subscription ID"

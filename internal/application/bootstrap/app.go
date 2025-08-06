@@ -34,22 +34,28 @@ import (
 	"linke/internal/shared/events"
 	"linke/internal/shared/versioning"
 
+	// Service interface imports for event handlers
+	userInterfaces "linke/internal/domains/user/usecases/interfaces"
+	subscriptionInterfaces "linke/internal/domains/subscription/usecases/interfaces"
+	paymentInterfaces "linke/internal/domains/payment/usecases/interfaces"
+	invoiceInterfaces "linke/internal/domains/invoice/usecases/interfaces"
+	serverInterfaces "linke/internal/domains/server/usecases/interfaces"
+
 	// 业务领域模块
 	authDomain "linke/internal/domains/auth"
 	couponDomain "linke/internal/domains/coupon"
 	invoiceDomain "linke/internal/domains/invoice"
 	paymentDomain "linke/internal/domains/payment"
+	referralDomain "linke/internal/domains/referral"
 	serverDomain "linke/internal/domains/server"
 	subscriptionDomain "linke/internal/domains/subscription"
+	ticketDomain "linke/internal/domains/ticket"
 	userDomain "linke/internal/domains/user"
 
 	// 应用层
 	applicationLayer "linke/internal/application"
 	"linke/internal/application/server"
 
-	// Invite code service interface (temporary import)
-	referralInterfaces "linke/internal/domains/referral/usecases/interfaces"
-	"linke/internal/shared/stubs"
 )
 
 // frameworkLogger 定义 framework.Logger 接口的类型别名
@@ -114,13 +120,6 @@ func NewApplication() *fx.App {
 			),
 		),
 
-		// 提供临时的邀请码服务实现
-		fx.Provide(
-			fx.Annotate(
-				stubs.NewStubInviteCodeService,
-				fx.As(new(referralInterfaces.InviteCodeService)),
-			),
-		),
 
 		// 自定义 Fx 日志系统 - 统一日志输出格式
 		fx.WithLogger(func(logger loggerPkg.Logger) fxevent.Logger {
@@ -197,6 +196,22 @@ func NewApplication() *fx.App {
 			func(taskQueue *queue.TaskQueue, eventStore events.EventStore, eventBus events.EventBus) *events.AsyncEventProcessor {
 				return events.NewAsyncEventProcessor(taskQueue, eventStore, eventBus, events.DefaultRetryConfig())
 			},
+			// Usage monitor for real-time traffic monitoring
+			func(userSubscriptionService subscriptionInterfaces.UserSubscriptionService, eventBus events.EventBus) *events.UsageMonitor {
+				return events.NewUsageMonitor(userSubscriptionService, eventBus)
+			},
+			// EventCacheStore adapter for event handlers
+			func(cacheStore cache.CacheStore) events.EventCacheStore {
+				return events.NewCacheStoreAdapter(
+					cacheStore.Set,
+					cacheStore.Get,
+					cacheStore.Delete,
+					cacheStore.Exists,
+					cacheStore.SetJSON,
+					cacheStore.GetJSON,
+					cacheStore.DeletePattern,
+				)
+			},
 		),
 
 		// 业务领域模块
@@ -207,6 +222,8 @@ func NewApplication() *fx.App {
 		paymentDomain.Module,
 		serverDomain.Module,
 		invoiceDomain.Module,
+		ticketDomain.Module,
+		referralDomain.Module,
 
 		// 应用层模块
 		applicationLayer.Module,
@@ -225,27 +242,52 @@ func NewApplication() *fx.App {
 			eventBus events.EventBus,
 			asyncProcessor *events.AsyncEventProcessor,
 			taskProcessor *queue.TaskProcessor,
+			taskQueue *queue.TaskQueue,
+			eventCacheStore events.EventCacheStore,
+			usageMonitor *events.UsageMonitor,
 			logger loggerPkg.Logger,
+			// All domain services needed for cross-domain event handlers
+			userService userInterfaces.UserService,
+			userSubscriptionService subscriptionInterfaces.UserSubscriptionService,
+			subscriptionOrderService subscriptionInterfaces.SubscriptionOrderService,
+			paymentService paymentInterfaces.PaymentService,
+			invoiceService invoiceInterfaces.InvoiceService,
+			shadowsocksServerService serverInterfaces.ShadowsocksServerService,
 		) {
 			// Initialize global event bus
 			events.InitEventBus(eventBus)
 
-			// Register cross-domain event handlers
-			crossDomainHandlers := events.NewCrossDomainEventHandlers()
+			// Register cross-domain event handlers with all required services
+			crossDomainHandlers := events.NewCrossDomainEventHandlers(
+				userService,
+				userSubscriptionService,
+				subscriptionOrderService,
+				paymentService,
+				invoiceService,
+				shadowsocksServerService,
+				eventCacheStore,
+				taskQueue,
+			)
 			if err := crossDomainHandlers.RegisterCrossDomainHandlers(eventBus); err != nil {
 				logger.Error("Failed to register cross-domain event handlers", zap.Error(err))
+			} else {
+				logger.Info("Cross-domain event handlers registered successfully")
 			}
 
 			// Register notification handler
 			notificationHandler := events.NewNotificationHandler()
 			if err := eventBus.Subscribe(notificationHandler.EventTypes(), notificationHandler); err != nil {
 				logger.Error("Failed to register notification handler", zap.Error(err))
+			} else {
+				logger.Info("Notification handler registered successfully")
 			}
 
 			// Register event processing handlers with the task processor
 			events.RegisterEventHandlers(taskProcessor, asyncProcessor)
 
-			logger.Info("Event system initialized successfully")
+			logger.Info("Event system initialized successfully with full cross-domain integration",
+				zap.Bool("usage_monitor_enabled", usageMonitor != nil),
+			)
 		}),
 
 		// 启动服务

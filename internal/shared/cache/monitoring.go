@@ -345,7 +345,7 @@ type CacheHealthStatus struct {
 // GetMultiLevelHealth returns comprehensive multi-level cache health status
 // @Summary Get multi-level cache health
 // @Description Get comprehensive health status of multi-level cache system
-// @Tags Cache Monitoring
+// @Tags Cache
 // @Security BearerAuth
 // @Accept json
 // @Produce json
@@ -364,7 +364,7 @@ func (h *CacheMonitoringHandler) GetMultiLevelHealth(c *gin.Context) {
 // GetMultiLevelMetrics returns detailed multi-level cache metrics
 // @Summary Get multi-level cache metrics
 // @Description Get detailed metrics for multi-level cache system
-// @Tags Cache Monitoring
+// @Tags Cache
 // @Security BearerAuth
 // @Accept json
 // @Produce json
@@ -386,7 +386,7 @@ func (h *CacheMonitoringHandler) GetMultiLevelMetrics(c *gin.Context) {
 // GetPerformanceMetrics returns performance analysis
 // @Summary Get cache performance metrics
 // @Description Get detailed performance analysis of cache system
-// @Tags Cache Monitoring
+// @Tags Cache
 // @Security BearerAuth
 // @Accept json
 // @Produce json
@@ -410,7 +410,7 @@ func (h *CacheMonitoringHandler) GetPerformanceMetrics(c *gin.Context) {
 // GetDashboard returns dashboard data
 // @Summary Get cache dashboard data
 // @Description Get comprehensive dashboard data for cache monitoring
-// @Tags Cache Monitoring
+// @Tags Cache
 // @Security BearerAuth
 // @Accept json
 // @Produce json
@@ -442,7 +442,7 @@ func (h *CacheMonitoringHandler) GetDashboard(c *gin.Context) {
 // GetAlerts checks and returns active alerts
 // @Summary Get cache system alerts
 // @Description Get active alerts for cache system health and performance
-// @Tags Cache Monitoring
+// @Tags Cache
 // @Security BearerAuth
 // @Accept json
 // @Produce json
@@ -456,7 +456,7 @@ func (h *CacheMonitoringHandler) GetAlerts(c *gin.Context) {
 // RunBenchmark runs a performance benchmark
 // @Summary Run cache benchmark
 // @Description Run performance benchmark on cache system
-// @Tags Cache Monitoring
+// @Tags Cache
 // @Security BearerAuth
 // @Accept json
 // @Produce json
@@ -476,7 +476,7 @@ func (h *CacheMonitoringHandler) RunBenchmark(c *gin.Context) {
 // GetWarmingStatus returns cache warming status
 // @Summary Get cache warming status
 // @Description Get status and metrics of cache warming operations
-// @Tags Cache Monitoring
+// @Tags Cache
 // @Security BearerAuth
 // @Accept json
 // @Produce json
@@ -500,7 +500,7 @@ func (h *CacheMonitoringHandler) GetWarmingStatus(c *gin.Context) {
 // TriggerWarming manually triggers cache warming
 // @Summary Trigger cache warming
 // @Description Manually trigger cache warming for specified prefixes
-// @Tags Cache Monitoring
+// @Tags Cache
 // @Security BearerAuth
 // @Accept json
 // @Produce json
@@ -547,7 +547,7 @@ func (h *CacheMonitoringHandler) TriggerWarming(c *gin.Context) {
 // GetInvalidationMetrics returns cache invalidation metrics
 // @Summary Get cache invalidation metrics
 // @Description Get metrics for event-driven cache invalidation
-// @Tags Cache Monitoring
+// @Tags Cache
 // @Security BearerAuth
 // @Accept json
 // @Produce json

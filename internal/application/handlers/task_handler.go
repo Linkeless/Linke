@@ -28,7 +28,7 @@ func NewTaskHandler(taskQueue *queue.TaskQueue) *TaskHandler {
 
 // @Summary Create a new task
 // @Description Create and enqueue a new task
-// @Tags Task-System
+// @Tags System-Task
 // @Accept json
 // @Produce json
 // @Security BearerAuth
@@ -66,7 +66,7 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 
 // @Summary Get queue status
 // @Description Get the current status of the task queue
-// @Tags Task-System
+// @Tags System-Task
 // @Produce json
 // @Security BearerAuth
 // @Success 200 {object} response.StandardResponse

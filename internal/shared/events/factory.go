@@ -192,8 +192,8 @@ func (f *EventSystemFactory) CreateEventSystem(db *gorm.DB, taskQueue *queue.Tas
 		components.CircuitBreakerManager,
 	)
 
-	// Create cross-domain handlers
-	components.CrossDomainHandlers = NewCrossDomainEventHandlers()
+	// Create cross-domain handlers - skip for now, will be created via dependency injection
+	components.CrossDomainHandlers = nil // NewCrossDomainEventHandlers requires service dependencies
 
 	// Create notification handler
 	components.NotificationHandler = NewNotificationHandler()

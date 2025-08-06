@@ -31,7 +31,7 @@ func NewApplicationHandler(
 // HealthCheck 系统健康检查接口
 // @Summary 系统健康检查
 // @Description 检查系统各组件健康状态
-// @Tags system
+// @Tags System-Health
 // @Accept json
 // @Produce json
 // @Success 200 {object} response.StandardResponse{data=dto.HealthCheckResponse}

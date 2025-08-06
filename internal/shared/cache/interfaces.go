@@ -134,6 +134,23 @@ const (
 	CacheTagGlobal       = "tag:global"
 )
 
+// CacheStore is a unified cache interface for event handlers
+// It provides string and JSON operations while avoiding circular dependencies
+type CacheStore interface {
+	// String operations
+	Set(ctx context.Context, key string, value string, expiration time.Duration) error
+	Get(ctx context.Context, key string) (string, error)
+	Delete(ctx context.Context, key string) error
+	Exists(ctx context.Context, key string) (bool, error)
+	
+	// JSON operations for structured data
+	SetJSON(ctx context.Context, key string, value any, expiration time.Duration) error
+	GetJSON(ctx context.Context, key string, dest any) error
+	
+	// Pattern-based operations
+	DeletePattern(ctx context.Context, pattern string) error
+}
+
 const (
 	DefaultCacheTTL = 5 * time.Minute
 	ShortCacheTTL   = 1 * time.Minute

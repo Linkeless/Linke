@@ -663,7 +663,7 @@ func (h *PaymentHandler) DeletePaymentConfig(c *gin.Context) {
 // GetPaymentRetries godoc
 // @Summary [Admin] Get payment retries
 // @Description Get payment retries with filtering and pagination
-// @Tags Admin-Payment-Retry
+// @Tags Admin-Payment-Management
 // @Accept json
 // @Produce json
 // @Security BearerAuth
@@ -802,7 +802,7 @@ func (h *PaymentHandler) GetPaymentRetries(c *gin.Context) {
 // GetPaymentRetry godoc
 // @Summary [Admin] Get payment retry details
 // @Description Get detailed payment retry information with history
-// @Tags Admin-Payment-Retry
+// @Tags Admin-Payment-Management
 // @Accept json
 // @Produce json
 // @Security BearerAuth
@@ -860,7 +860,7 @@ func (h *PaymentHandler) GetPaymentRetry(c *gin.Context) {
 // CancelPaymentRetry godoc
 // @Summary [Admin] Cancel payment retry
 // @Description Cancel a payment retry sequence
-// @Tags Admin-Payment-Retry
+// @Tags Admin-Payment-Management
 // @Accept json
 // @Produce json
 // @Security BearerAuth
@@ -921,7 +921,7 @@ func (h *PaymentHandler) CancelPaymentRetry(c *gin.Context) {
 // ResetPaymentRetry godoc
 // @Summary [Admin] Reset payment retry
 // @Description Reset a payment retry sequence to start over
-// @Tags Admin-Payment-Retry
+// @Tags Admin-Payment-Management
 // @Accept json
 // @Produce json
 // @Security BearerAuth
@@ -974,7 +974,7 @@ func (h *PaymentHandler) ResetPaymentRetry(c *gin.Context) {
 // BulkCancelPaymentRetries godoc
 // @Summary [Admin] Bulk cancel payment retries
 // @Description Cancel multiple payment retry sequences
-// @Tags Admin-Payment-Retry
+// @Tags Admin-Payment-Management
 // @Accept json
 // @Produce json
 // @Security BearerAuth
@@ -1036,7 +1036,7 @@ func (h *PaymentHandler) BulkCancelPaymentRetries(c *gin.Context) {
 // BulkResetPaymentRetries godoc
 // @Summary [Admin] Bulk reset payment retries
 // @Description Reset multiple payment retry sequences
-// @Tags Admin-Payment-Retry
+// @Tags Admin-Payment-Management
 // @Accept json
 // @Produce json
 // @Security BearerAuth
@@ -1098,7 +1098,7 @@ func (h *PaymentHandler) BulkResetPaymentRetries(c *gin.Context) {
 // GetRetryStatistics godoc
 // @Summary [Admin] Get retry statistics
 // @Description Get payment retry statistics for a specific gateway
-// @Tags Admin-Payment-Retry
+// @Tags Admin-Payment-Management
 // @Accept json
 // @Produce json
 // @Security BearerAuth
@@ -1157,7 +1157,7 @@ func (h *PaymentHandler) GetRetryStatistics(c *gin.Context) {
 // GetRetryHealthMetrics godoc
 // @Summary [Admin] Get retry system health metrics
 // @Description Get overall health metrics for the retry system
-// @Tags Admin-Payment-Retry
+// @Tags Admin-Payment-Management
 // @Accept json
 // @Produce json
 // @Security BearerAuth

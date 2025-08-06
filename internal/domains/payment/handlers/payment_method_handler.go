@@ -33,7 +33,7 @@ func NewPaymentMethodHandler(
 // CreatePaymentMethod godoc
 // @Summary Create a new payment method
 // @Description Add a new payment method for the authenticated user
-// @Tags payment-methods
+// @Tags User-Payment
 // @Accept json
 // @Produce json
 // @Param request body entities.CreatePaymentMethodRequest true "Payment method creation request"
@@ -94,7 +94,7 @@ func (h *PaymentMethodHandler) CreatePaymentMethod(c *gin.Context) {
 // GetPaymentMethod godoc
 // @Summary Get a payment method by ID
 // @Description Retrieve a specific payment method for the authenticated user
-// @Tags payment-methods
+// @Tags User-Payment
 // @Produce json
 // @Param id path int true "Payment method ID"
 // @Success 200 {object} response.APIResponse{data=entities.PaymentMethodResponse}
@@ -136,7 +136,7 @@ func (h *PaymentMethodHandler) GetPaymentMethod(c *gin.Context) {
 // ListPaymentMethods godoc
 // @Summary List all payment methods
 // @Description Retrieve all payment methods for the authenticated user
-// @Tags payment-methods
+// @Tags User-Payment
 // @Produce json
 // @Param gateway query string false "Filter by payment gateway"
 // @Param active_only query bool false "Show only active payment methods"
@@ -196,7 +196,7 @@ func (h *PaymentMethodHandler) ListPaymentMethods(c *gin.Context) {
 // UpdatePaymentMethod godoc
 // @Summary Update a payment method
 // @Description Update details of an existing payment method
-// @Tags payment-methods
+// @Tags User-Payment
 // @Accept json
 // @Produce json
 // @Param id path int true "Payment method ID"
@@ -248,7 +248,7 @@ func (h *PaymentMethodHandler) UpdatePaymentMethod(c *gin.Context) {
 // SetDefaultPaymentMethod godoc
 // @Summary Set a payment method as default
 // @Description Set a payment method as the default for the user
-// @Tags payment-methods
+// @Tags User-Payment
 // @Produce json
 // @Param id path int true "Payment method ID"
 // @Success 200 {object} response.APIResponse{data=entities.PaymentMethodResponse}
@@ -296,7 +296,7 @@ func (h *PaymentMethodHandler) SetDefaultPaymentMethod(c *gin.Context) {
 // DeletePaymentMethod godoc
 // @Summary Delete a payment method
 // @Description Soft delete a payment method for the authenticated user
-// @Tags payment-methods
+// @Tags User-Payment
 // @Produce json
 // @Param id path int true "Payment method ID"
 // @Success 200 {object} response.APIResponse
@@ -338,7 +338,7 @@ func (h *PaymentMethodHandler) DeletePaymentMethod(c *gin.Context) {
 // ValidatePaymentMethod godoc
 // @Summary Validate a payment method
 // @Description Validate a payment method with the payment gateway
-// @Tags payment-methods
+// @Tags User-Payment
 // @Produce json
 // @Param id path int true "Payment method ID"
 // @Success 200 {object} response.APIResponse{data=entities.PaymentMethodResponse}
@@ -392,7 +392,7 @@ func (h *PaymentMethodHandler) ValidatePaymentMethod(c *gin.Context) {
 // GetDefaultPaymentMethod godoc
 // @Summary Get default payment method
 // @Description Retrieve the default payment method for the authenticated user
-// @Tags payment-methods
+// @Tags User-Payment
 // @Produce json
 // @Param gateway query string false "Filter by payment gateway"
 // @Success 200 {object} response.APIResponse{data=entities.PaymentMethodResponse}
@@ -437,7 +437,7 @@ func (h *PaymentMethodHandler) GetDefaultPaymentMethod(c *gin.Context) {
 // GetPaymentMethodUsageStats godoc
 // @Summary Get payment method usage statistics
 // @Description Retrieve usage statistics for a specific payment method
-// @Tags payment-methods
+// @Tags User-Payment
 // @Produce json
 // @Param id path int true "Payment method ID"
 // @Success 200 {object} response.APIResponse{data=interfaces.PaymentMethodUsageStats}

@@ -38,6 +38,7 @@ var Module = fx.Module("invoice",
 	// 提供 Handler 实现
 	fx.Provide(
 		handlers.NewInvoiceHandler,
+		handlers.NewAdminInvoiceHandler,
 	),
 
 	// 模块初始化钩子

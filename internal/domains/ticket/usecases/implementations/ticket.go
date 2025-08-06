@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"linke/internal/domains/ticket/entities"
+	"linke/internal/domains/ticket/usecases/interfaces"
 	"linke/internal/shared/logger"
 
 	"gorm.io/gorm"
@@ -22,51 +23,9 @@ func NewTicketService(db *gorm.DB) *TicketService {
 	}
 }
 
-// CreateTicketRequest represents the request to create a ticket
-type CreateTicketRequest struct {
-	Title       string `json:"title" binding:"required,min=5,max=255" example:"Unable to access my account"`
-	Description string `json:"description" binding:"required,min=10,max=5000" example:"I cannot log in to my account even with correct credentials"`
-	Category    string `json:"category" binding:"required,oneof=general technical billing account feature bug subscription payment" example:"technical"`
-	Priority    string `json:"priority" binding:"omitempty,oneof=low normal high urgent critical" example:"normal"`
-	Tags        string `json:"tags,omitempty" example:"login,authentication"`
-	Metadata    string `json:"metadata,omitempty" example:"{\"browser\": \"Chrome\", \"os\": \"Windows\"}"`
-}
-
-// UpdateTicketRequest represents the request to update a ticket
-type UpdateTicketRequest struct {
-	Title       *string `json:"title,omitempty" binding:"omitempty,min=5,max=255" example:"Updated ticket title"`
-	Description *string `json:"description,omitempty" binding:"omitempty,min=10,max=5000" example:"Updated description"`
-	Category    *string `json:"category,omitempty" binding:"omitempty,oneof=general technical billing account feature bug subscription payment" example:"billing"`
-	Priority    *string `json:"priority,omitempty" binding:"omitempty,oneof=low normal high urgent critical" example:"high"`
-	Status      *string `json:"status,omitempty" binding:"omitempty,oneof=open in_progress pending resolved closed" example:"in_progress"`
-	Tags        *string `json:"tags,omitempty" example:"urgent,billing"`
-	Metadata    *string `json:"metadata,omitempty" example:"{\"updated_by\": \"admin\"}"`
-}
-
-// AssignTicketRequest represents the request to assign a ticket
-type AssignTicketRequest struct {
-	AssignedToID uint `json:"assigned_to_id" binding:"required" example:"2"`
-}
-
-// ResolveTicketRequest represents the request to resolve a ticket
-type ResolveTicketRequest struct {
-	Resolution string `json:"resolution" binding:"required,min=10,max=5000" example:"Issue resolved by updating user permissions"`
-}
-
-// GetTicketsRequest represents the request to get tickets with filters
-type GetTicketsRequest struct {
-	UserID       uint   `form:"user_id" example:"1"`
-	AssignedToID *uint  `form:"assigned_to_id" example:"2"`
-	Status       string `form:"status" binding:"omitempty,oneof=open in_progress pending resolved closed" example:"open"`
-	Priority     string `form:"priority" binding:"omitempty,oneof=low normal high urgent critical" example:"high"`
-	Category     string `form:"category" binding:"omitempty,oneof=general technical billing account feature bug subscription payment" example:"technical"`
-	Search       string `form:"search" example:"login issue"`
-	Limit        int    `form:"limit" binding:"omitempty,min=1,max=100" example:"10"`
-	Offset       int    `form:"offset" binding:"omitempty,min=0" example:"0"`
-}
 
 // CreateTicket creates a new ticket
-func (s *TicketService) CreateTicket(ctx context.Context, userID uint, req *CreateTicketRequest) (*entities.Ticket, error) {
+func (s *TicketService) CreateTicket(ctx context.Context, userID uint, req *interfaces.CreateTicketRequest) (*entities.Ticket, error) {
 	// Generate unique ticket number
 	ticketNo := s.generateTicketNumber()
 
@@ -162,7 +121,7 @@ func (s *TicketService) GetTicketByNumber(ctx context.Context, ticketNo string) 
 }
 
 // GetTickets gets tickets with filtering and pagination
-func (s *TicketService) GetTickets(ctx context.Context, req *GetTicketsRequest) ([]*entities.Ticket, int64, error) {
+func (s *TicketService) GetTickets(ctx context.Context, req *interfaces.GetTicketsRequest) ([]*entities.Ticket, int64, error) {
 	query := s.db.WithContext(ctx).Model(&entities.Ticket{}).
 		Preload("User").
 		Preload("AssignedTo").
@@ -222,7 +181,7 @@ func (s *TicketService) GetTickets(ctx context.Context, req *GetTicketsRequest) 
 }
 
 // UpdateTicket updates a ticket
-func (s *TicketService) UpdateTicket(ctx context.Context, ticketID uint, req *UpdateTicketRequest) (*entities.Ticket, error) {
+func (s *TicketService) UpdateTicket(ctx context.Context, ticketID uint, req *interfaces.UpdateTicketRequest) (*entities.Ticket, error) {
 	// Get existing ticket
 	ticket, err := s.GetTicket(ctx, ticketID)
 	if err != nil {
@@ -287,7 +246,7 @@ func (s *TicketService) UpdateTicket(ctx context.Context, ticketID uint, req *Up
 }
 
 // AssignTicket assigns a ticket to an admin
-func (s *TicketService) AssignTicket(ctx context.Context, ticketID uint, req *AssignTicketRequest) (*entities.Ticket, error) {
+func (s *TicketService) AssignTicket(ctx context.Context, ticketID uint, req *interfaces.AssignTicketRequest) (*entities.Ticket, error) {
 	// Get existing ticket
 	ticket, err := s.GetTicket(ctx, ticketID)
 	if err != nil {
@@ -331,7 +290,7 @@ func (s *TicketService) AssignTicket(ctx context.Context, ticketID uint, req *As
 }
 
 // ResolveTicket resolves a ticket
-func (s *TicketService) ResolveTicket(ctx context.Context, ticketID uint, resolvedByID uint, req *ResolveTicketRequest) (*entities.Ticket, error) {
+func (s *TicketService) ResolveTicket(ctx context.Context, ticketID uint, resolvedByID uint, req *interfaces.ResolveTicketRequest) (*entities.Ticket, error) {
 	// Get existing ticket
 	ticket, err := s.GetTicket(ctx, ticketID)
 	if err != nil {
@@ -366,7 +325,7 @@ func (s *TicketService) ResolveTicket(ctx context.Context, ticketID uint, resolv
 }
 
 // CloseTicket closes a ticket
-func (s *TicketService) CloseTicket(ctx context.Context, ticketID uint) (*entities.Ticket, error) {
+func (s *TicketService) CloseTicket(ctx context.Context, ticketID uint, reason string) (*entities.Ticket, error) {
 	// Get existing ticket
 	ticket, err := s.GetTicket(ctx, ticketID)
 	if err != nil {
@@ -418,9 +377,126 @@ func (s *TicketService) DeleteTicket(ctx context.Context, ticketID uint) error {
 	return nil
 }
 
-// GetTicketStats gets ticket statistics
-func (s *TicketService) GetTicketStats(ctx context.Context) (map[string]any, error) {
+
+// GetUserTickets gets tickets for a specific user
+func (s *TicketService) GetUserTickets(ctx context.Context, userID uint, limit, offset int) ([]*entities.Ticket, int64, error) {
+	req := &interfaces.GetTicketsRequest{
+		UserID: userID,
+		Limit:  limit,
+		Offset: offset,
+	}
+	return s.GetTickets(ctx, req)
+}
+
+// GetAssignedTickets gets tickets assigned to a specific agent
+func (s *TicketService) GetAssignedTickets(ctx context.Context, assignedToID uint, limit, offset int) ([]*entities.Ticket, int64, error) {
+	req := &interfaces.GetTicketsRequest{
+		AssignedToID: &assignedToID,
+		Limit:        limit,
+		Offset:       offset,
+	}
+	return s.GetTickets(ctx, req)
+}
+
+// UnassignTicket removes assignment from a ticket
+func (s *TicketService) UnassignTicket(ctx context.Context, ticketID uint) (*entities.Ticket, error) {
+	// Get existing ticket
+	ticket, err := s.GetTicket(ctx, ticketID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Remove assignment
+	updates := map[string]any{
+		"assigned_to_id": nil,
+		"assigned_at":    nil,
+	}
+
+	// Update status back to open if it was in_progress
+	if ticket.Status == entities.TicketStatusInProgress {
+		updates["status"] = entities.TicketStatusOpen
+	}
+
+	if err := s.db.WithContext(ctx).Model(ticket).Updates(updates).Error; err != nil {
+		logger.Error("Failed to unassign ticket", logger.Error2("error", err), logger.Uint("ticket_id", ticketID))
+		return nil, fmt.Errorf("failed to unassign ticket: %w", err)
+	}
+
+	// Reload the ticket with relations
+	updatedTicket, err := s.GetTicket(ctx, ticketID)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Info("Ticket unassigned successfully", logger.Uint("ticket_id", ticketID))
+
+	return updatedTicket, nil
+}
+
+// UpdateTicketStatus updates a ticket's status
+func (s *TicketService) UpdateTicketStatus(ctx context.Context, ticketID uint, status string) (*entities.Ticket, error) {
+	req := &interfaces.UpdateTicketRequest{
+		Status: &status,
+	}
+	return s.UpdateTicket(ctx, ticketID, req)
+}
+
+// UpdateTicketPriority updates a ticket's priority
+func (s *TicketService) UpdateTicketPriority(ctx context.Context, ticketID uint, priority string) (*entities.Ticket, error) {
+	req := &interfaces.UpdateTicketRequest{
+		Priority: &priority,
+	}
+	return s.UpdateTicket(ctx, ticketID, req)
+}
+
+// ReopenTicket reopens a closed ticket
+func (s *TicketService) ReopenTicket(ctx context.Context, ticketID uint, reason string) (*entities.Ticket, error) {
+	// Get existing ticket
+	ticket, err := s.GetTicket(ctx, ticketID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Update status to open and clear resolved fields
+	updates := map[string]any{
+		"status":         entities.TicketStatusOpen,
+		"resolved_by_id": nil,
+		"resolved_at":    nil,
+		"resolution":     "",
+		"closed_at":      nil,
+	}
+
+	if err := s.db.WithContext(ctx).Model(ticket).Updates(updates).Error; err != nil {
+		logger.Error("Failed to reopen ticket", logger.Error2("error", err), logger.Uint("ticket_id", ticketID))
+		return nil, fmt.Errorf("failed to reopen ticket: %w", err)
+	}
+
+	// Reload the ticket with relations
+	updatedTicket, err := s.GetTicket(ctx, ticketID)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Info("Ticket reopened successfully",
+		logger.Uint("ticket_id", ticketID),
+		logger.String("reason", reason))
+
+	return updatedTicket, nil
+}
+
+// GetTicketStatistics gets ticket statistics for a date range
+func (s *TicketService) GetTicketStatistics(ctx context.Context, fromDate, toDate string) (map[string]any, error) {
 	stats := make(map[string]any)
+
+	query := s.db.WithContext(ctx).Model(&entities.Ticket{})
+
+	// Apply date filters if provided
+	if fromDate != "" {
+		query = query.Where("created_at >= ?", fromDate)
+	}
+	if toDate != "" {
+		query = query.Where("created_at <= ?", toDate)
+	}
 
 	// Count tickets by status
 	var statusStats []struct {
@@ -428,10 +504,7 @@ func (s *TicketService) GetTicketStats(ctx context.Context) (map[string]any, err
 		Count  int64
 	}
 
-	if err := s.db.WithContext(ctx).Model(&entities.Ticket{}).
-		Select("status, count(*) as count").
-		Group("status").
-		Find(&statusStats).Error; err != nil {
+	if err := query.Select("status, count(*) as count").Group("status").Find(&statusStats).Error; err != nil {
 		return nil, fmt.Errorf("failed to get status statistics: %w", err)
 	}
 
@@ -447,10 +520,7 @@ func (s *TicketService) GetTicketStats(ctx context.Context) (map[string]any, err
 		Count    int64
 	}
 
-	if err := s.db.WithContext(ctx).Model(&entities.Ticket{}).
-		Select("priority, count(*) as count").
-		Group("priority").
-		Find(&priorityStats).Error; err != nil {
+	if err := query.Select("priority, count(*) as count").Group("priority").Find(&priorityStats).Error; err != nil {
 		return nil, fmt.Errorf("failed to get priority statistics: %w", err)
 	}
 
@@ -466,10 +536,7 @@ func (s *TicketService) GetTicketStats(ctx context.Context) (map[string]any, err
 		Count    int64
 	}
 
-	if err := s.db.WithContext(ctx).Model(&entities.Ticket{}).
-		Select("category, count(*) as count").
-		Group("category").
-		Find(&categoryStats).Error; err != nil {
+	if err := query.Select("category, count(*) as count").Group("category").Find(&categoryStats).Error; err != nil {
 		return nil, fmt.Errorf("failed to get category statistics: %w", err)
 	}
 
@@ -481,21 +548,168 @@ func (s *TicketService) GetTicketStats(ctx context.Context) (map[string]any, err
 
 	// Get total count
 	var totalCount int64
-	if err := s.db.WithContext(ctx).Model(&entities.Ticket{}).Count(&totalCount).Error; err != nil {
+	if err := query.Count(&totalCount).Error; err != nil {
 		return nil, fmt.Errorf("failed to get total count: %w", err)
 	}
 	stats["total"] = totalCount
 
 	// Get unassigned count
 	var unassignedCount int64
-	if err := s.db.WithContext(ctx).Model(&entities.Ticket{}).
-		Where("assigned_to_id IS NULL").
-		Count(&unassignedCount).Error; err != nil {
+	if err := query.Where("assigned_to_id IS NULL").Count(&unassignedCount).Error; err != nil {
 		return nil, fmt.Errorf("failed to get unassigned count: %w", err)
 	}
 	stats["unassigned"] = unassignedCount
 
 	return stats, nil
+}
+
+// GetUserTicketStatistics gets ticket statistics for a specific user
+func (s *TicketService) GetUserTicketStatistics(ctx context.Context, userID uint) (map[string]any, error) {
+	stats := make(map[string]any)
+
+	// Count tickets by status for this user
+	var statusStats []struct {
+		Status string
+		Count  int64
+	}
+
+	if err := s.db.WithContext(ctx).Model(&entities.Ticket{}).
+		Where("user_id = ?", userID).
+		Select("status, count(*) as count").
+		Group("status").
+		Find(&statusStats).Error; err != nil {
+		return nil, fmt.Errorf("failed to get user status statistics: %w", err)
+	}
+
+	statusMap := make(map[string]int64)
+	for _, stat := range statusStats {
+		statusMap[stat.Status] = stat.Count
+	}
+	stats["by_status"] = statusMap
+
+	// Get total count for user
+	var totalCount int64
+	if err := s.db.WithContext(ctx).Model(&entities.Ticket{}).
+		Where("user_id = ?", userID).
+		Count(&totalCount).Error; err != nil {
+		return nil, fmt.Errorf("failed to get user total count: %w", err)
+	}
+	stats["total"] = totalCount
+
+	return stats, nil
+}
+
+// GetAgentTicketStatistics gets ticket statistics for a specific agent
+func (s *TicketService) GetAgentTicketStatistics(ctx context.Context, agentID uint) (map[string]any, error) {
+	stats := make(map[string]any)
+
+	// Count tickets by status assigned to this agent
+	var statusStats []struct {
+		Status string
+		Count  int64
+	}
+
+	if err := s.db.WithContext(ctx).Model(&entities.Ticket{}).
+		Where("assigned_to_id = ?", agentID).
+		Select("status, count(*) as count").
+		Group("status").
+		Find(&statusStats).Error; err != nil {
+		return nil, fmt.Errorf("failed to get agent status statistics: %w", err)
+	}
+
+	statusMap := make(map[string]int64)
+	for _, stat := range statusStats {
+		statusMap[stat.Status] = stat.Count
+	}
+	stats["by_status"] = statusMap
+
+	// Get total count for agent
+	var totalAssigned int64
+	if err := s.db.WithContext(ctx).Model(&entities.Ticket{}).
+		Where("assigned_to_id = ?", agentID).
+		Count(&totalAssigned).Error; err != nil {
+		return nil, fmt.Errorf("failed to get agent total count: %w", err)
+	}
+	stats["total_assigned"] = totalAssigned
+
+	// Get resolved count for agent
+	var resolvedCount int64
+	if err := s.db.WithContext(ctx).Model(&entities.Ticket{}).
+		Where("resolved_by_id = ?", agentID).
+		Count(&resolvedCount).Error; err != nil {
+		return nil, fmt.Errorf("failed to get agent resolved count: %w", err)
+	}
+	stats["total_resolved"] = resolvedCount
+
+	return stats, nil
+}
+
+// BulkAssignTickets assigns multiple tickets to an agent
+func (s *TicketService) BulkAssignTickets(ctx context.Context, ticketIDs []uint, assignedToID uint) error {
+	if len(ticketIDs) == 0 {
+		return fmt.Errorf("no ticket IDs provided")
+	}
+
+	now := time.Now()
+	updates := map[string]any{
+		"assigned_to_id": assignedToID,
+		"assigned_at":    &now,
+	}
+
+	// Update tickets that are currently open to in_progress
+	if err := s.db.WithContext(ctx).Model(&entities.Ticket{}).
+		Where("id IN ? AND status = ?", ticketIDs, entities.TicketStatusOpen).
+		Update("status", entities.TicketStatusInProgress).Error; err != nil {
+		logger.Error("Failed to update ticket status during bulk assignment", logger.Error2("error", err))
+		return fmt.Errorf("failed to update ticket status: %w", err)
+	}
+
+	// Update all tickets with assignment
+	if err := s.db.WithContext(ctx).Model(&entities.Ticket{}).
+		Where("id IN ?", ticketIDs).
+		Updates(updates).Error; err != nil {
+		logger.Error("Failed to bulk assign tickets", logger.Error2("error", err))
+		return fmt.Errorf("failed to bulk assign tickets: %w", err)
+	}
+
+	logger.Info("Bulk assigned tickets successfully",
+		logger.Any("ticket_ids", ticketIDs),
+		logger.Uint("assigned_to_id", assignedToID))
+
+	return nil
+}
+
+// BulkUpdateTicketStatus updates the status of multiple tickets
+func (s *TicketService) BulkUpdateTicketStatus(ctx context.Context, ticketIDs []uint, status string) error {
+	if len(ticketIDs) == 0 {
+		return fmt.Errorf("no ticket IDs provided")
+	}
+
+	updates := map[string]any{
+		"status": status,
+	}
+
+	// Set timing fields based on status
+	now := time.Now()
+	switch status {
+	case entities.TicketStatusResolved:
+		updates["resolved_at"] = &now
+	case entities.TicketStatusClosed:
+		updates["closed_at"] = &now
+	}
+
+	if err := s.db.WithContext(ctx).Model(&entities.Ticket{}).
+		Where("id IN ?", ticketIDs).
+		Updates(updates).Error; err != nil {
+		logger.Error("Failed to bulk update ticket status", logger.Error2("error", err))
+		return fmt.Errorf("failed to bulk update ticket status: %w", err)
+	}
+
+	logger.Info("Bulk updated ticket status successfully",
+		logger.Any("ticket_ids", ticketIDs),
+		logger.String("status", status))
+
+	return nil
 }
 
 // generateTicketNumber generates a unique ticket number

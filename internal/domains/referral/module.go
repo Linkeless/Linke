@@ -4,6 +4,8 @@ import (
 	"go.uber.org/fx"
 	"gorm.io/gorm"
 
+	"linke/internal/domains/referral/adapters/repositories"
+	"linke/internal/domains/referral/handlers"
 	"linke/internal/domains/referral/usecases/implementations"
 	"linke/internal/domains/referral/usecases/interfaces"
 )
@@ -11,8 +13,21 @@ import (
 // Module Referral 领域模块
 // 提供推荐系统、邀请码管理、奖励计算等功能
 var Module = fx.Module("referral",
-	// 注意：目前 referral 领域还没有 repository 实现
-	// 当添加了 repository 时，需要在这里提供
+	// 提供 Repository 实现
+	fx.Provide(
+		fx.Annotate(
+			repositories.NewReferralRepository,
+			fx.As(new(interfaces.ReferralRepository)),
+		),
+		fx.Annotate(
+			repositories.NewReferralCampaignRepository,
+			fx.As(new(interfaces.ReferralCampaignRepository)),
+		),
+		fx.Annotate(
+			repositories.NewInviteCodeRepository,
+			fx.As(new(interfaces.InviteCodeRepository)),
+		),
+	),
 
 	// 提供 Service 实现
 	fx.Provide(
@@ -35,8 +50,10 @@ var Module = fx.Module("referral",
 		// ),
 	),
 
-	// 注意：目前 referral 领域还没有 handler 实现
-	// 当添加了 handler 时，需要在这里提供
+	// 提供 Handler 实现
+	fx.Provide(
+		handlers.NewAdminReferralHandler,
+	),
 
 	// 模块初始化钩子
 	fx.Invoke(func(db *gorm.DB) {

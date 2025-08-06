@@ -78,6 +78,7 @@ var Module = fx.Module("auth",
 	// 提供 Handler 实现
 	fx.Provide(
 		handlers.NewAuthHandler,
+		handlers.NewAdminAuthHandler,
 	),
 
 	// 提供登录安全配置

@@ -41,6 +41,8 @@ var Module = fx.Module("server",
 	// 提供 Handler 实现
 	fx.Provide(
 		handlers.NewServerAPIHandler,
+		handlers.NewAdminServerHandler,
+		handlers.NewAdminServerGroupHandler,
 	),
 
 	// 模块初始化钩子

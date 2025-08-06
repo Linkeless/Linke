@@ -45,7 +45,7 @@ func NewServerAPIHandler(shadowsocksService serverInterfaces.ShadowsocksServerSe
 // Health check endpoint for server API
 // @Summary Server API Health Check
 // @Description Health check endpoint for server API
-// @Tags Server-API
+// @Tags User-Server
 // @Accept json
 // @Produce json
 // @Success 200 {object} response.StandardResponse{data=dto.ServerAPIHealthResponse}
@@ -75,7 +75,7 @@ type UniProxyBaseConfig struct {
 // UniProxy config endpoint
 // @Summary Get UniProxy Server Config
 // @Description Get configuration for UniProxy server based on node_id and node_type
-// @Tags Server-API
+// @Tags User-Server
 // @Accept json
 // @Produce json
 // @Param node_id query int true "Node ID"
@@ -199,7 +199,7 @@ type UniProxyUsersResponse struct {
 // UniProxy user endpoint
 // @Summary Get UniProxy Users
 // @Description Get users with active subscriptions that have access to the specified shadowsocks server. Returns all valid subscriptions, including multiple subscriptions for the same user.
-// @Tags Server-API
+// @Tags User-Server
 // @Accept json
 // @Produce json
 // @Param node_id query int true "Node ID"
@@ -492,7 +492,7 @@ type UniProxyPushRequest struct {
 // UniProxyPush handles data push from UniProxy nodes
 // @Summary UniProxy Node Data Push
 // @Description Receive and log data push from UniProxy nodes (shadowsocks, etc.)
-// @Tags Server-API
+// @Tags User-Server
 // @Accept json
 // @Produce json
 // @Param node_id query int true "Node ID"

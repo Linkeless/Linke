@@ -25,6 +25,17 @@ type Task struct {
 	CreatedAt time.Time              `json:"created_at"`
 }
 
+// NewTask creates a new task with the given type and payload
+func NewTask(taskType string, payload map[string]any) *Task {
+	return &Task{
+		ID:        fmt.Sprintf("%s-%d", taskType, time.Now().UnixNano()),
+		Type:      taskType,
+		Payload:   payload,
+		MaxRetry:  3, // Default retry count
+		CreatedAt: time.Now(),
+	}
+}
+
 type TaskHandler func(ctx context.Context, task *asynq.Task) error
 
 type TaskProcessor struct {

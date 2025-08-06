@@ -7,16 +7,15 @@ import (
 	"sync"
 	"time"
 
-	"linke/internal/shared/events"
 	"linke/internal/shared/logger"
 )
 
 // InvalidationRule defines how cache invalidation should be handled for specific events
 type InvalidationRule struct {
-	EventTypes       []string                `json:"event_types"`
-	KeyPatterns      []string                `json:"key_patterns"`
-	InvalidationType InvalidationType        `json:"invalidation_type"`
-	Condition        func(events.Event) bool `json:"-"` // Custom condition function
+	EventTypes       []string                  `json:"event_types"`
+	KeyPatterns      []string                  `json:"key_patterns"`
+	InvalidationType InvalidationType          `json:"invalidation_type"`
+	Condition        func(CacheEvent) bool `json:"-"` // Custom condition function
 }
 
 // InvalidationType defines different cache invalidation strategies
@@ -64,7 +63,7 @@ type EventDrivenInvalidator struct {
 }
 
 type invalidationJob struct {
-	event events.Event
+	event CacheEvent
 	rule  InvalidationRule
 }
 
@@ -109,7 +108,7 @@ func NewEventDrivenInvalidator(
 }
 
 // Handle processes events and triggers cache invalidation
-func (edi *EventDrivenInvalidator) Handle(ctx context.Context, event events.Event) error {
+func (edi *EventDrivenInvalidator) Handle(ctx context.Context, event CacheEvent) error {
 	if !edi.config.Enabled {
 		return nil
 	}
@@ -185,7 +184,7 @@ func (edi *EventDrivenInvalidator) GetMetrics() map[string]int64 {
 
 // Private methods
 
-func (edi *EventDrivenInvalidator) processInvalidation(ctx context.Context, event events.Event, rule InvalidationRule) {
+func (edi *EventDrivenInvalidator) processInvalidation(ctx context.Context, event CacheEvent, rule InvalidationRule) {
 	defer func() {
 		edi.updateMetrics(func() {
 			edi.metrics.InvalidationsCount++
@@ -209,7 +208,7 @@ func (edi *EventDrivenInvalidator) processInvalidation(ctx context.Context, even
 	}
 }
 
-func (edi *EventDrivenInvalidator) invalidateByPattern(ctx context.Context, event events.Event, rule InvalidationRule) {
+func (edi *EventDrivenInvalidator) invalidateByPattern(ctx context.Context, event CacheEvent, rule InvalidationRule) {
 	for _, pattern := range rule.KeyPatterns {
 		// Replace placeholders in pattern with actual values from event
 		actualPattern := edi.replacePlaceholders(pattern, event)
@@ -224,7 +223,7 @@ func (edi *EventDrivenInvalidator) invalidateByPattern(ctx context.Context, even
 	}
 }
 
-func (edi *EventDrivenInvalidator) invalidateExactKeys(ctx context.Context, event events.Event, rule InvalidationRule) {
+func (edi *EventDrivenInvalidator) invalidateExactKeys(ctx context.Context, event CacheEvent, rule InvalidationRule) {
 	for _, keyTemplate := range rule.KeyPatterns {
 		// Replace placeholders to get exact key
 		exactKey := edi.replacePlaceholders(keyTemplate, event)
@@ -239,13 +238,13 @@ func (edi *EventDrivenInvalidator) invalidateExactKeys(ctx context.Context, even
 	}
 }
 
-func (edi *EventDrivenInvalidator) invalidateCascade(ctx context.Context, event events.Event, rule InvalidationRule) {
+func (edi *EventDrivenInvalidator) invalidateCascade(ctx context.Context, event CacheEvent, rule InvalidationRule) {
 	// Cascade invalidation involves invalidating related keys
 	// For example, when a user is updated, invalidate user caches AND related subscription caches
 
 	switch event.EventType() {
-	case events.EventTypeUserUpdated, events.EventTypeUserDeleted:
-		if userEvent, ok := event.(*events.UserEvent); ok {
+	case "user.updated", "user.deleted":
+		if userEvent, ok := event.(*UserCacheEvent); ok {
 			patterns := []string{
 				edi.cacheKeys.User.UserPattern(userEvent.UserID),
 				edi.cacheKeys.Subscription.UserSubscription(userEvent.UserID),
@@ -260,8 +259,8 @@ func (edi *EventDrivenInvalidator) invalidateCascade(ctx context.Context, event 
 			}
 		}
 
-	case events.EventTypeSubscriptionUpdated, events.EventTypeSubscriptionActivated:
-		if subEvent, ok := event.(*events.SubscriptionEvent); ok {
+	case "subscription.updated", "subscription.activated":
+		if subEvent, ok := event.(*SubscriptionCacheEvent); ok {
 			patterns := []string{
 				edi.cacheKeys.Subscription.UserSubscription(subEvent.UserID),
 				edi.cacheKeys.Subscription.UserActiveSubscriptions(subEvent.UserID),
@@ -277,13 +276,13 @@ func (edi *EventDrivenInvalidator) invalidateCascade(ctx context.Context, event 
 	}
 }
 
-func (edi *EventDrivenInvalidator) invalidateByTag(ctx context.Context, event events.Event, rule InvalidationRule) {
+func (edi *EventDrivenInvalidator) invalidateByTag(ctx context.Context, event CacheEvent, rule InvalidationRule) {
 	// This would require a cache implementation that supports tagging
 	// For now, we'll use pattern-based invalidation as a fallback
 	edi.invalidateByPattern(ctx, event, rule)
 }
 
-func (edi *EventDrivenInvalidator) invalidatePartial(ctx context.Context, event events.Event, rule InvalidationRule) {
+func (edi *EventDrivenInvalidator) invalidatePartial(ctx context.Context, event CacheEvent, rule InvalidationRule) {
 	// Partial invalidation selectively invalidates specific fields or sections
 	// This is more complex and would require structured cache keys
 
@@ -291,27 +290,27 @@ func (edi *EventDrivenInvalidator) invalidatePartial(ctx context.Context, event 
 	edi.invalidateByPattern(ctx, event, rule)
 }
 
-func (edi *EventDrivenInvalidator) replacePlaceholders(pattern string, event events.Event) string {
+func (edi *EventDrivenInvalidator) replacePlaceholders(pattern string, event CacheEvent) string {
 	result := pattern
 
 	// Replace common placeholders based on event type
 	switch e := event.(type) {
-	case *events.UserEvent:
+	case *UserCacheEvent:
 		result = strings.ReplaceAll(result, "{user_id}", fmt.Sprintf("%d", e.UserID))
 
-	case *events.SubscriptionEvent:
+	case *SubscriptionCacheEvent:
 		result = strings.ReplaceAll(result, "{user_id}", fmt.Sprintf("%d", e.UserID))
 		result = strings.ReplaceAll(result, "{subscription_id}", fmt.Sprintf("%d", e.SubscriptionID))
 
-	case *events.PaymentEvent:
+	case *PaymentCacheEvent:
 		result = strings.ReplaceAll(result, "{user_id}", fmt.Sprintf("%d", e.UserID))
 		result = strings.ReplaceAll(result, "{payment_id}", e.PaymentID)
 
-	case *events.OrderEvent:
+	case *OrderCacheEvent:
 		result = strings.ReplaceAll(result, "{user_id}", fmt.Sprintf("%d", e.UserID))
 		result = strings.ReplaceAll(result, "{order_id}", fmt.Sprintf("%d", e.OrderID))
 
-	case *events.InvoiceEvent:
+	case *InvoiceCacheEvent:
 		result = strings.ReplaceAll(result, "{user_id}", fmt.Sprintf("%d", e.UserID))
 		result = strings.ReplaceAll(result, "{invoice_id}", fmt.Sprintf("%d", e.InvoiceID))
 		result = strings.ReplaceAll(result, "{order_id}", fmt.Sprintf("%d", e.OrderID))
@@ -331,7 +330,7 @@ func (edi *EventDrivenInvalidator) buildEventRulesMapping() {
 func (edi *EventDrivenInvalidator) addDefaultRules() {
 	// User-related invalidation rules
 	edi.AddRule(InvalidationRule{
-		EventTypes:       []string{events.EventTypeUserUpdated, events.EventTypeUserDeleted},
+		EventTypes:       []string{"user.updated", "user.deleted"},
 		KeyPatterns:      []string{CachePrefixUser + ":{user_id}:*"},
 		InvalidationType: InvalidationTypePattern,
 	})
@@ -339,10 +338,10 @@ func (edi *EventDrivenInvalidator) addDefaultRules() {
 	// Subscription-related invalidation rules
 	edi.AddRule(InvalidationRule{
 		EventTypes: []string{
-			events.EventTypeSubscriptionCreated,
-			events.EventTypeSubscriptionUpdated,
-			events.EventTypeSubscriptionActivated,
-			events.EventTypeSubscriptionCancelled,
+			"subscription.created",
+			"subscription.updated",
+			"subscription.activated",
+			"subscription.cancelled",
 		},
 		KeyPatterns:      []string{CachePrefixSubscription + "*{user_id}*"},
 		InvalidationType: InvalidationTypeCascade,
@@ -351,9 +350,9 @@ func (edi *EventDrivenInvalidator) addDefaultRules() {
 	// Payment-related invalidation rules
 	edi.AddRule(InvalidationRule{
 		EventTypes: []string{
-			events.EventTypePaymentCompleted,
-			events.EventTypePaymentFailed,
-			events.EventTypePaymentRefunded,
+			"payment.completed",
+			"payment.failed",
+			"payment.refunded",
 		},
 		KeyPatterns:      []string{CachePrefixPayment + "*{payment_id}*", CachePrefixPayment + "*{user_id}*"},
 		InvalidationType: InvalidationTypePattern,
@@ -362,10 +361,10 @@ func (edi *EventDrivenInvalidator) addDefaultRules() {
 	// Order-related invalidation rules
 	edi.AddRule(InvalidationRule{
 		EventTypes: []string{
-			events.EventTypeOrderCreated,
-			events.EventTypeOrderUpdated,
-			events.EventTypeOrderPaid,
-			events.EventTypeOrderCancelled,
+			"order.created",
+			"order.updated",
+			"order.paid",
+			"order.cancelled",
 		},
 		KeyPatterns:      []string{CachePrefixSubscription + "*{order_id}*", CachePrefixSubscription + "*{user_id}*"},
 		InvalidationType: InvalidationTypePattern,

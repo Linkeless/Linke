@@ -20,10 +20,13 @@ import (
 	// Handler imports
 	authHandlers "linke/internal/domains/auth/handlers"
 	authInterfaces "linke/internal/domains/auth/usecases/interfaces"
+	couponHandlers "linke/internal/domains/coupon/handlers"
 	invoiceHandlers "linke/internal/domains/invoice/handlers"
 	paymentHandlers "linke/internal/domains/payment/handlers"
+	referralHandlers "linke/internal/domains/referral/handlers"
 	serverHandlers "linke/internal/domains/server/handlers"
 	subscriptionHandlers "linke/internal/domains/subscription/handlers"
+	ticketHandlers "linke/internal/domains/ticket/handlers"
 	userHandlers "linke/internal/domains/user/handlers"
 )
 
@@ -70,6 +73,7 @@ func NewHTTPServer(
 	taskHandler *TaskHandler,
 	// 业务领域 handlers
 	authHandler *authHandlers.AuthHandler,
+	adminAuthHandler *authHandlers.AdminAuthHandler,
 	userProfileHandler *userHandlers.UserProfileHandler,
 	adminUserHandler *userHandlers.AdminUserHandler,
 	subscriptionOrderHandler *subscriptionHandlers.SubscriptionOrderHandler,
@@ -77,10 +81,19 @@ func NewHTTPServer(
 	quickPurchaseHandler *subscriptionHandlers.QuickPurchaseHandler,
 	usageHandler *subscriptionHandlers.UsageHandler,
 	usageAlertHandler *subscriptionHandlers.UsageAlertHandler,
+	adminSubscriptionHandler *subscriptionHandlers.AdminSubscriptionHandler,
 	invoiceHandler *invoiceHandlers.InvoiceHandler,
+	adminInvoiceHandler *invoiceHandlers.AdminInvoiceHandler,
+	adminTicketHandler *ticketHandlers.AdminTicketHandler,
 	paymentHandler *paymentHandlers.PaymentHandler,
 	paymentMethodHandler *paymentHandlers.PaymentMethodHandler,
 	serverHandler *serverHandlers.ServerAPIHandler,
+	// Admin server handlers
+	adminServerHandler *serverHandlers.AdminServerHandler,
+	adminServerGroupHandler *serverHandlers.AdminServerGroupHandler,
+	// Admin coupon and referral handlers
+	adminCouponHandler *couponHandlers.AdminCouponHandler,
+	adminReferralHandler *referralHandlers.AdminReferralHandler,
 	// Cache monitoring handlers
 	cacheMonitoringHandler *cache.CacheMonitoringHandler,
 	// Versioning middleware
@@ -109,6 +122,7 @@ func NewHTTPServer(
 		cfg,
 		logger,
 		authHandler,
+		adminAuthHandler,
 		userProfileHandler,
 		adminUserHandler,
 		subscriptionOrderHandler,
@@ -116,10 +130,17 @@ func NewHTTPServer(
 		quickPurchaseHandler,
 		usageHandler,
 		usageAlertHandler,
+		adminSubscriptionHandler,
 		invoiceHandler,
+		adminInvoiceHandler,
+		adminTicketHandler,
 		paymentHandler,
 		paymentMethodHandler,
 		serverHandler,
+		adminServerHandler,
+		adminServerGroupHandler,
+		adminCouponHandler,
+		adminReferralHandler,
 		cacheMonitoringHandler,
 		versionMiddleware,
 		authService,

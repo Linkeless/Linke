@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"linke/internal/domains/ticket/entities"
+	"linke/internal/domains/ticket/usecases/interfaces"
 	"linke/internal/shared/logger"
 
 	"gorm.io/gorm"
@@ -21,34 +22,9 @@ func NewTicketMessageService(db *gorm.DB) *TicketMessageService {
 	}
 }
 
-// CreateTicketMessageRequest represents the request to create a ticket message
-type CreateTicketMessageRequest struct {
-	Content     string `json:"content" binding:"required,min=1,max=5000" example:"Thank you for your response. I tried the suggested solution but the issue persists."`
-	MessageType string `json:"message_type" binding:"omitempty,oneof=user admin system" example:"user"`
-	Attachments string `json:"attachments,omitempty" example:"[{\"name\":\"screenshot.png\",\"url\":\"https://example.com/file.png\"}]"`
-	IsInternal  bool   `json:"is_internal,omitempty" example:"false"`
-	Metadata    string `json:"metadata,omitempty" example:"{\"client_ip\":\"192.168.1.1\"}"`
-}
-
-// UpdateTicketMessageRequest represents the request to update a ticket message
-type UpdateTicketMessageRequest struct {
-	Content     *string `json:"content,omitempty" binding:"omitempty,min=1,max=5000" example:"Updated message content"`
-	Attachments *string `json:"attachments,omitempty" example:"[{\"name\":\"updated.png\",\"url\":\"https://example.com/updated.png\"}]"`
-	IsInternal  *bool   `json:"is_internal,omitempty" example:"true"`
-	Metadata    *string `json:"metadata,omitempty" example:"{\"updated_by\":\"admin\"}"`
-}
-
-// GetTicketMessagesRequest represents the request to get ticket messages
-type GetTicketMessagesRequest struct {
-	TicketID        uint   `form:"ticket_id" binding:"required" example:"1"`
-	MessageType     string `form:"message_type" binding:"omitempty,oneof=user admin system" example:"user"`
-	IncludeInternal bool   `form:"include_internal" example:"false"`
-	Limit           int    `form:"limit" binding:"omitempty,min=1,max=100" example:"10"`
-	Offset          int    `form:"offset" binding:"omitempty,min=0" example:"0"`
-}
 
 // CreateTicketMessage creates a new ticket message
-func (s *TicketMessageService) CreateTicketMessage(ctx context.Context, ticketID uint, userID uint, req *CreateTicketMessageRequest) (*entities.TicketMessage, error) {
+func (s *TicketMessageService) CreateTicketMessage(ctx context.Context, ticketID uint, userID uint, req *interfaces.CreateTicketMessageRequest) (*entities.TicketMessage, error) {
 	// Verify ticket exists
 	var ticket entities.Ticket
 	if err := s.db.WithContext(ctx).First(&ticket, ticketID).Error; err != nil {
@@ -141,7 +117,7 @@ func (s *TicketMessageService) GetTicketMessage(ctx context.Context, messageID u
 }
 
 // GetTicketMessages gets messages for a ticket
-func (s *TicketMessageService) GetTicketMessages(ctx context.Context, req *GetTicketMessagesRequest) ([]*entities.TicketMessage, int64, error) {
+func (s *TicketMessageService) GetTicketMessages(ctx context.Context, req *interfaces.GetTicketMessagesRequest) ([]*entities.TicketMessage, int64, error) {
 	query := s.db.WithContext(ctx).Model(&entities.TicketMessage{}).
 		Preload("User").
 		Where("ticket_id = ?", req.TicketID)
@@ -183,7 +159,7 @@ func (s *TicketMessageService) GetTicketMessages(ctx context.Context, req *GetTi
 }
 
 // UpdateTicketMessage updates a ticket message
-func (s *TicketMessageService) UpdateTicketMessage(ctx context.Context, messageID uint, req *UpdateTicketMessageRequest) (*entities.TicketMessage, error) {
+func (s *TicketMessageService) UpdateTicketMessage(ctx context.Context, messageID uint, req *interfaces.UpdateTicketMessageRequest) (*entities.TicketMessage, error) {
 	// Get existing message
 	message, err := s.GetTicketMessage(ctx, messageID)
 	if err != nil {
@@ -305,4 +281,116 @@ func (s *TicketMessageService) GetTicketMessagesForUser(ctx context.Context, tic
 	}
 
 	return messages, totalCount, nil
+}
+
+// GetLatestTicketMessages gets the latest messages for a ticket
+func (s *TicketMessageService) GetLatestTicketMessages(ctx context.Context, ticketID uint, limit int) ([]*entities.TicketMessage, error) {
+	var messages []*entities.TicketMessage
+
+	query := s.db.WithContext(ctx).
+		Preload("User").
+		Where("ticket_id = ? AND is_internal = ?", ticketID, false).
+		Order("created_at DESC")
+
+	if limit > 0 {
+		query = query.Limit(limit)
+	}
+
+	if err := query.Find(&messages).Error; err != nil {
+		logger.Error("Failed to get latest ticket messages", logger.Error2("error", err))
+		return nil, fmt.Errorf("failed to get latest ticket messages: %w", err)
+	}
+
+	return messages, nil
+}
+
+// MarkMessageAsRead marks a message as read by a user
+func (s *TicketMessageService) MarkMessageAsRead(ctx context.Context, messageID uint, userID uint) error {
+	// For now, we'll implement a simple version
+	// In a full implementation, this would track read status per user
+	logger.Info("Message marked as read", 
+		logger.Uint("message_id", messageID), 
+		logger.Uint("user_id", userID))
+	return nil
+}
+
+// MarkTicketMessagesAsRead marks all messages in a ticket as read by a user
+func (s *TicketMessageService) MarkTicketMessagesAsRead(ctx context.Context, ticketID uint, userID uint) error {
+	// For now, we'll implement a simple version
+	// In a full implementation, this would track read status per user for all messages
+	logger.Info("All ticket messages marked as read", 
+		logger.Uint("ticket_id", ticketID), 
+		logger.Uint("user_id", userID))
+	return nil
+}
+
+// CreateInternalMessage creates an internal message
+func (s *TicketMessageService) CreateInternalMessage(ctx context.Context, ticketID uint, userID uint, content string) (*entities.TicketMessage, error) {
+	req := &interfaces.CreateTicketMessageRequest{
+		Content:     content,
+		MessageType: "admin",
+		IsInternal:  true,
+	}
+	return s.CreateTicketMessage(ctx, ticketID, userID, req)
+}
+
+// GetInternalMessages gets all internal messages for a ticket
+func (s *TicketMessageService) GetInternalMessages(ctx context.Context, ticketID uint) ([]*entities.TicketMessage, error) {
+	var messages []*entities.TicketMessage
+
+	if err := s.db.WithContext(ctx).
+		Preload("User").
+		Where("ticket_id = ? AND is_internal = ?", ticketID, true).
+		Order("created_at ASC").
+		Find(&messages).Error; err != nil {
+		logger.Error("Failed to get internal messages", logger.Error2("error", err))
+		return nil, fmt.Errorf("failed to get internal messages: %w", err)
+	}
+
+	return messages, nil
+}
+
+// GetMessageStatistics gets message statistics for a ticket
+func (s *TicketMessageService) GetMessageStatistics(ctx context.Context, ticketID uint) (map[string]any, error) {
+	stats := make(map[string]any)
+
+	// Count messages by type
+	var typeStats []struct {
+		MessageType string
+		Count       int64
+	}
+
+	if err := s.db.WithContext(ctx).Model(&entities.TicketMessage{}).
+		Where("ticket_id = ?", ticketID).
+		Select("message_type, count(*) as count").
+		Group("message_type").
+		Find(&typeStats).Error; err != nil {
+		return nil, fmt.Errorf("failed to get message type statistics: %w", err)
+	}
+
+	typeMap := make(map[string]int64)
+	for _, stat := range typeStats {
+		typeMap[stat.MessageType] = stat.Count
+	}
+	stats["by_type"] = typeMap
+
+	// Get total count
+	var totalCount int64
+	if err := s.db.WithContext(ctx).Model(&entities.TicketMessage{}).
+		Where("ticket_id = ?", ticketID).
+		Count(&totalCount).Error; err != nil {
+		return nil, fmt.Errorf("failed to get total message count: %w", err)
+	}
+	stats["total"] = totalCount
+
+	// Get internal message count
+	var internalCount int64
+	if err := s.db.WithContext(ctx).Model(&entities.TicketMessage{}).
+		Where("ticket_id = ? AND is_internal = ?", ticketID, true).
+		Count(&internalCount).Error; err != nil {
+		return nil, fmt.Errorf("failed to get internal message count: %w", err)
+	}
+	stats["internal"] = internalCount
+
+	return stats, nil
 }

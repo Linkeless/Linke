@@ -8,30 +8,22 @@ import (
 	"time"
 
 	"linke/internal/domains/referral/entities"
+	"linke/internal/domains/referral/usecases/interfaces"
 	"linke/internal/shared/logger"
 
 	"gorm.io/gorm"
 )
 
 type InviteCodeService struct {
-	db              *gorm.DB
-	referralService *ReferralService
+	db *gorm.DB
 }
 
-func NewInviteCodeService(db *gorm.DB, referralService *ReferralService) *InviteCodeService {
+func NewInviteCodeService(db *gorm.DB) *InviteCodeService {
 	return &InviteCodeService{
-		db:              db,
-		referralService: referralService,
+		db: db,
 	}
 }
 
-// CreateInviteCodeRequest represents the request to create an invite code
-type CreateInviteCodeRequest struct {
-	MaxUses              int     `json:"max_uses" binding:"min=1,max=100" example:"10"`                  // Maximum number of times the code can be used
-	Description          string  `json:"description" binding:"max=255" example:"Friend invitation code"` // Description of the invite code
-	ReferralCampaignID   *uint   `json:"referral_campaign_id,omitempty" example:"1"`                     // Associated referral campaign ID
-	ReferralRewardAmount float64 `json:"referral_reward_amount,omitempty" example:"5.00"`                // Referral reward amount
-}
 
 // GenerateInviteCode generates a random invite code
 func (s *InviteCodeService) GenerateInviteCode() (string, error) {
@@ -55,7 +47,7 @@ func (s *InviteCodeService) GenerateInviteCode() (string, error) {
 }
 
 // CreateInviteCode creates a new invite code
-func (s *InviteCodeService) CreateInviteCode(ctx context.Context, createdByID uint, req *CreateInviteCodeRequest) (*entities.InviteCode, error) {
+func (s *InviteCodeService) CreateInviteCode(ctx context.Context, createdByID uint, req *interfaces.CreateInviteCodeRequest) (*entities.InviteCode, error) {
 	// Generate unique code
 	code, err := s.GenerateInviteCode()
 	if err != nil {
@@ -154,7 +146,7 @@ func (s *InviteCodeService) ValidateInviteCode(ctx context.Context, code string)
 }
 
 // UseInviteCode marks an invite code as used by a user and creates usage record
-func (s *InviteCodeService) UseInviteCode(ctx context.Context, code string, userID uint, ipAddress, userAgent string) (*entities.InviteCode, error) {
+func (s *InviteCodeService) UseInviteCode(ctx context.Context, code string, userID uint, ipAddress, userAgent string) (*entities.InviteCodeUsage, error) {
 	// Start a transaction
 	tx := s.db.WithContext(ctx).Begin()
 	defer func() {
@@ -208,22 +200,8 @@ func (s *InviteCodeService) UseInviteCode(ctx context.Context, code string, user
 		return nil, fmt.Errorf("failed to create usage record: %w", err)
 	}
 
-	// Create referral record if referral service is available
-	if s.referralService != nil {
-		attributionData := map[string]any{
-			"ip_address": ipAddress,
-			"user_agent": userAgent,
-		}
-
-		if _, err := s.referralService.CreateReferralFromInviteCode(ctx, inviteCode, userID, attributionData); err != nil {
-			logger.Error("Failed to create referral from invite code",
-				logger.Uint("invite_code_id", inviteCode.ID),
-				logger.Uint("user_id", userID),
-				logger.Error2("error", err),
-			)
-			// Don't fail the transaction for referral creation failure
-		}
-	}
+	// TODO: Create referral record through referral service interface
+	// This should be handled at the application layer to avoid circular dependencies
 
 	// Commit transaction
 	if err := tx.Commit().Error; err != nil {
@@ -242,7 +220,7 @@ func (s *InviteCodeService) UseInviteCode(ctx context.Context, code string, user
 		logger.Int("used_count", inviteCode.UsedCount),
 	)
 
-	return inviteCode, nil
+	return usage, nil
 }
 
 // ListAllInviteCodes lists all invite codes
@@ -379,6 +357,256 @@ func (s *InviteCodeService) GetInviteCodeStats(ctx context.Context) (map[string]
 		return nil, fmt.Errorf("failed to count total usage: %w", err)
 	}
 	stats["total_usage"] = totalUsage
+
+	return stats, nil
+}
+
+// GetInviteCode gets an invite code by ID
+func (s *InviteCodeService) GetInviteCode(ctx context.Context, inviteCodeID uint) (*entities.InviteCode, error) {
+	return s.GetInviteCodeByID(ctx, inviteCodeID)
+}
+
+// UpdateInviteCode updates an invite code
+func (s *InviteCodeService) UpdateInviteCode(ctx context.Context, inviteCodeID uint, req *interfaces.UpdateInviteCodeRequest) (*entities.InviteCode, error) {
+	// Get existing invite code
+	inviteCode, err := s.GetInviteCode(ctx, inviteCodeID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Prepare updates
+	updates := make(map[string]any)
+
+	if req.MaxUses != nil {
+		updates["max_uses"] = *req.MaxUses
+	}
+
+	if req.Description != nil {
+		updates["description"] = *req.Description
+	}
+
+	if req.Status != nil {
+		updates["status"] = *req.Status
+	}
+
+	if req.ReferralRewardAmount != nil {
+		updates["referral_reward_amount"] = *req.ReferralRewardAmount
+	}
+
+	updates["updated_at"] = time.Now()
+
+	// Update the invite code
+	if err := s.db.WithContext(ctx).Model(inviteCode).Updates(updates).Error; err != nil {
+		logger.Error("Failed to update invite code", logger.Error2("error", err), logger.Uint("invite_code_id", inviteCodeID))
+		return nil, fmt.Errorf("failed to update invite code: %w", err)
+	}
+
+	// Reload the invite code
+	updatedInviteCode, err := s.GetInviteCode(ctx, inviteCodeID)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Info("Invite code updated successfully", logger.Uint("invite_code_id", inviteCodeID))
+
+	return updatedInviteCode, nil
+}
+
+// GetInviteCodes gets invite codes with filtering and pagination
+func (s *InviteCodeService) GetInviteCodes(ctx context.Context, req *interfaces.GetInviteCodesRequest) ([]*entities.InviteCode, int64, error) {
+	query := s.db.WithContext(ctx).Model(&entities.InviteCode{})
+
+	// Apply filters
+	if req.CreatedByID != 0 {
+		query = query.Where("created_by_id = ?", req.CreatedByID)
+	}
+
+	if req.Status != "" {
+		query = query.Where("status = ?", req.Status)
+	}
+
+	if req.ReferralCampaignID != nil {
+		query = query.Where("referral_campaign_id = ?", *req.ReferralCampaignID)
+	}
+
+	// Get total count
+	var totalCount int64
+	if err := query.Count(&totalCount).Error; err != nil {
+		logger.Error("Failed to count invite codes", logger.Error2("error", err))
+		return nil, 0, fmt.Errorf("failed to count invite codes: %w", err)
+	}
+
+	// Apply pagination and ordering
+	query = query.Order("created_at DESC")
+
+	if req.Limit > 0 {
+		query = query.Limit(req.Limit)
+	}
+
+	if req.Offset > 0 {
+		query = query.Offset(req.Offset)
+	}
+
+	var inviteCodes []*entities.InviteCode
+	if err := query.Find(&inviteCodes).Error; err != nil {
+		logger.Error("Failed to get invite codes", logger.Error2("error", err))
+		return nil, 0, fmt.Errorf("failed to get invite codes: %w", err)
+	}
+
+	return inviteCodes, totalCount, nil
+}
+
+// GetUserInviteCodes gets invite codes created by a specific user
+func (s *InviteCodeService) GetUserInviteCodes(ctx context.Context, userID uint, limit, offset int) ([]*entities.InviteCode, int64, error) {
+	return s.ListInviteCodesByCreator(ctx, userID, limit, offset)
+}
+
+// ActivateInviteCode activates an invite code
+func (s *InviteCodeService) ActivateInviteCode(ctx context.Context, inviteCodeID uint) error {
+	_, err := s.UpdateInviteCodeStatus(ctx, inviteCodeID, entities.InviteCodeStatusActive)
+	return err
+}
+
+// DeactivateInviteCode deactivates an invite code
+func (s *InviteCodeService) DeactivateInviteCode(ctx context.Context, inviteCodeID uint) error {
+	_, err := s.UpdateInviteCodeStatus(ctx, inviteCodeID, entities.InviteCodeStatusDisabled)
+	return err
+}
+
+// ExpireInviteCode expires an invite code
+func (s *InviteCodeService) ExpireInviteCode(ctx context.Context, inviteCodeID uint) error {
+	_, err := s.UpdateInviteCodeStatus(ctx, inviteCodeID, entities.InviteCodeStatusDisabled)
+	return err
+}
+
+// GetInviteCodeUsage gets usage records for an invite code
+func (s *InviteCodeService) GetInviteCodeUsage(ctx context.Context, inviteCodeID uint, limit, offset int) ([]*entities.InviteCodeUsage, int64, error) {
+	var usages []*entities.InviteCodeUsage
+	var total int64
+
+	query := s.db.WithContext(ctx).Model(&entities.InviteCodeUsage{}).Where("invite_code_id = ?", inviteCodeID)
+
+	// Get total count
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, fmt.Errorf("failed to count invite code usages: %w", err)
+	}
+
+	// Apply pagination and ordering
+	query = query.Order("used_at DESC")
+
+	if limit > 0 {
+		query = query.Limit(limit)
+	}
+
+	if offset > 0 {
+		query = query.Offset(offset)
+	}
+
+	if err := query.Find(&usages).Error; err != nil {
+		return nil, 0, fmt.Errorf("failed to get invite code usages: %w", err)
+	}
+
+	return usages, total, nil
+}
+
+// GetUserInviteCodeUsage gets invite code usage records for a specific user
+func (s *InviteCodeService) GetUserInviteCodeUsage(ctx context.Context, userID uint, limit, offset int) ([]*entities.InviteCodeUsage, int64, error) {
+	var usages []*entities.InviteCodeUsage
+	var total int64
+
+	query := s.db.WithContext(ctx).Model(&entities.InviteCodeUsage{}).Where("used_by_id = ?", userID)
+
+	// Get total count
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, fmt.Errorf("failed to count user invite code usages: %w", err)
+	}
+
+	// Apply pagination and ordering
+	query = query.Order("used_at DESC")
+
+	if limit > 0 {
+		query = query.Limit(limit)
+	}
+
+	if offset > 0 {
+		query = query.Offset(offset)
+	}
+
+	if err := query.Find(&usages).Error; err != nil {
+		return nil, 0, fmt.Errorf("failed to get user invite code usages: %w", err)
+	}
+
+	return usages, total, nil
+}
+
+// GetInviteCodeStatistics gets statistics for a specific invite code
+func (s *InviteCodeService) GetInviteCodeStatistics(ctx context.Context, inviteCodeID uint) (map[string]any, error) {
+	// Get invite code
+	inviteCode, err := s.GetInviteCode(ctx, inviteCodeID)
+	if err != nil {
+		return nil, err
+	}
+
+	stats := make(map[string]any)
+	stats["invite_code_id"] = inviteCode.ID
+	stats["code"] = inviteCode.Code
+	stats["max_uses"] = inviteCode.MaxUses
+	stats["used_count"] = inviteCode.UsedCount
+	stats["remaining_uses"] = inviteCode.MaxUses - inviteCode.UsedCount
+	stats["status"] = inviteCode.Status
+	stats["created_at"] = inviteCode.CreatedAt
+
+	// Get usage statistics
+	var totalUsages int64
+	if err := s.db.WithContext(ctx).Model(&entities.InviteCodeUsage{}).Where("invite_code_id = ?", inviteCodeID).Count(&totalUsages).Error; err != nil {
+		return nil, fmt.Errorf("failed to count invite code usages: %w", err)
+	}
+	stats["total_usages"] = totalUsages
+
+	// Get first and last usage dates
+	var firstUsage, lastUsage entities.InviteCodeUsage
+	if err := s.db.WithContext(ctx).Where("invite_code_id = ?", inviteCodeID).Order("used_at ASC").First(&firstUsage).Error; err == nil {
+		stats["first_used_at"] = firstUsage.UsedAt
+	}
+
+	if err := s.db.WithContext(ctx).Where("invite_code_id = ?", inviteCodeID).Order("used_at DESC").First(&lastUsage).Error; err == nil {
+		stats["last_used_at"] = lastUsage.UsedAt
+	}
+
+	return stats, nil
+}
+
+// GetUserInviteCodeStatistics gets invite code statistics for a specific user
+func (s *InviteCodeService) GetUserInviteCodeStatistics(ctx context.Context, userID uint) (map[string]any, error) {
+	stats := make(map[string]any)
+
+	// Count total invite codes created by user
+	var totalCodes int64
+	if err := s.db.WithContext(ctx).Model(&entities.InviteCode{}).Where("created_by_id = ?", userID).Count(&totalCodes).Error; err != nil {
+		return nil, fmt.Errorf("failed to count user invite codes: %w", err)
+	}
+	stats["total_codes"] = totalCodes
+
+	// Count active codes
+	var activeCodes int64
+	if err := s.db.WithContext(ctx).Model(&entities.InviteCode{}).Where("created_by_id = ? AND status = ?", userID, entities.InviteCodeStatusActive).Count(&activeCodes).Error; err != nil {
+		return nil, fmt.Errorf("failed to count active user invite codes: %w", err)
+	}
+	stats["active_codes"] = activeCodes
+
+	// Sum total usages of user's codes
+	var totalUsages int64
+	if err := s.db.WithContext(ctx).Model(&entities.InviteCode{}).Where("created_by_id = ?", userID).Select("COALESCE(SUM(used_count), 0)").Scan(&totalUsages).Error; err != nil {
+		return nil, fmt.Errorf("failed to count total user invite code usages: %w", err)
+	}
+	stats["total_usages"] = totalUsages
+
+	// Count times user has used invite codes
+	var userUsages int64
+	if err := s.db.WithContext(ctx).Model(&entities.InviteCodeUsage{}).Where("used_by_id = ?", userID).Count(&userUsages).Error; err != nil {
+		return nil, fmt.Errorf("failed to count user invite code usages: %w", err)
+	}
+	stats["used_codes"] = userUsages
 
 	return stats, nil
 }

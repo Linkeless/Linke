@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"linke/internal/domains/referral/entities"
+	"linke/internal/domains/referral/usecases/interfaces"
 	"linke/internal/shared/database"
 	"linke/internal/shared/logger"
 
@@ -26,23 +27,9 @@ func NewReferralService(db *database.Database) *ReferralService {
 	}
 }
 
-// CreateReferralRequest represents the request to create a referral
-type CreateReferralRequest struct {
-	ReferrerID      uint           `json:"referrer_id" binding:"required"`
-	RefereeID       uint           `json:"referee_id" binding:"required"`
-	InviteCodeID    *uint          `json:"invite_code_id,omitempty"`
-	ReferralSource  string         `json:"referral_source" binding:"required"`
-	ReferralChannel string         `json:"referral_channel,omitempty"`
-	ReferralCode    string         `json:"referral_code,omitempty"`
-	CampaignID      *uint          `json:"campaign_id,omitempty"`
-	AttributionData map[string]any `json:"attribution_data,omitempty"`
-	ConversionValue float64        `json:"conversion_value,omitempty"`
-	ConversionType  string         `json:"conversion_type,omitempty"`
-	ExpirationDays  int            `json:"expiration_days,omitempty"`
-}
 
 // CreateReferral creates a new referral relationship
-func (s *ReferralService) CreateReferral(ctx context.Context, req *CreateReferralRequest) (*entities.Referral, error) {
+func (s *ReferralService) CreateReferral(ctx context.Context, req *interfaces.CreateReferralRequest) (*entities.Referral, error) {
 	// Validate that referrer and referee are different
 	if req.ReferrerID == req.RefereeID {
 		return nil, fmt.Errorf("referrer and referee cannot be the same user")
@@ -147,7 +134,7 @@ func (s *ReferralService) CreateReferralFromInviteCode(ctx context.Context, invi
 		}
 	}
 
-	req := &CreateReferralRequest{
+	req := &interfaces.CreateReferralRequest{
 		ReferrerID:      inviteCode.CreatedByID,
 		RefereeID:       refereeID,
 		InviteCodeID:    &inviteCode.ID,
@@ -477,4 +464,251 @@ func (s *ReferralService) processReferralRewards(ctx context.Context, referralID
 		logger.Uint("referral_id", referralID),
 		logger.Any("conversion_value", conversionValue),
 	)
+}
+
+// GetReferral gets a referral by ID
+func (s *ReferralService) GetReferral(ctx context.Context, referralID uint) (*entities.Referral, error) {
+	return s.GetReferralByID(ctx, referralID)
+}
+
+// GetReferralByCode gets a referral by referral code
+func (s *ReferralService) GetReferralByCode(ctx context.Context, code string) (*entities.Referral, error) {
+	var referral entities.Referral
+	if err := s.db.DB.Where("referral_code = ?", code).First(&referral).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("referral not found")
+		}
+		return nil, fmt.Errorf("failed to get referral by code: %w", err)
+	}
+	return &referral, nil
+}
+
+// UpdateReferral updates a referral
+func (s *ReferralService) UpdateReferral(ctx context.Context, referralID uint, req *interfaces.UpdateReferralRequest) (*entities.Referral, error) {
+	// Get existing referral
+	referral, err := s.GetReferral(ctx, referralID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Prepare updates
+	updates := make(map[string]any)
+
+	if req.Status != nil {
+		updates["status"] = *req.Status
+	}
+
+	if req.RefereeStatus != nil {
+		updates["referee_status"] = *req.RefereeStatus
+	}
+
+	if req.RewardStatus != nil {
+		updates["reward_status"] = *req.RewardStatus
+	}
+
+	if req.RewardAmount != nil {
+		updates["reward_amount"] = *req.RewardAmount
+	}
+
+	if req.ConversionValue != nil {
+		updates["conversion_value"] = *req.ConversionValue
+	}
+
+	if req.ConversionType != nil {
+		updates["conversion_type"] = *req.ConversionType
+	}
+
+	updates["updated_at"] = time.Now()
+
+	// Update the referral
+	if err := s.db.DB.WithContext(ctx).Model(referral).Updates(updates).Error; err != nil {
+		logger.Error("Failed to update referral", logger.Error2("error", err), logger.Uint("referral_id", referralID))
+		return nil, fmt.Errorf("failed to update referral: %w", err)
+	}
+
+	// Reload the referral
+	updatedReferral, err := s.GetReferral(ctx, referralID)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Info("Referral updated successfully", logger.Uint("referral_id", referralID))
+
+	return updatedReferral, nil
+}
+
+// GetReferrals gets referrals with filtering and pagination
+func (s *ReferralService) GetReferrals(ctx context.Context, req *interfaces.GetReferralsRequest) ([]*entities.Referral, int64, error) {
+	query := s.db.DB.WithContext(ctx).Model(&entities.Referral{})
+
+	// Apply filters
+	if req.ReferrerID != 0 {
+		query = query.Where("referrer_id = ?", req.ReferrerID)
+	}
+
+	if req.RefereeID != 0 {
+		query = query.Where("referee_id = ?", req.RefereeID)
+	}
+
+	if req.Status != "" {
+		query = query.Where("status = ?", req.Status)
+	}
+
+	if req.RewardStatus != "" {
+		query = query.Where("reward_status = ?", req.RewardStatus)
+	}
+
+	if req.CampaignID != nil {
+		query = query.Where("campaign_id = ?", *req.CampaignID)
+	}
+
+	if req.DateFrom != "" {
+		query = query.Where("created_at >= ?", req.DateFrom)
+	}
+
+	if req.DateTo != "" {
+		query = query.Where("created_at <= ?", req.DateTo)
+	}
+
+	// Get total count
+	var totalCount int64
+	if err := query.Count(&totalCount).Error; err != nil {
+		logger.Error("Failed to count referrals", logger.Error2("error", err))
+		return nil, 0, fmt.Errorf("failed to count referrals: %w", err)
+	}
+
+	// Apply pagination and ordering
+	query = query.Order("created_at DESC")
+
+	if req.Limit > 0 {
+		query = query.Limit(req.Limit)
+	}
+
+	if req.Offset > 0 {
+		query = query.Offset(req.Offset)
+	}
+
+	var referrals []*entities.Referral
+	if err := query.Find(&referrals).Error; err != nil {
+		logger.Error("Failed to get referrals", logger.Error2("error", err))
+		return nil, 0, fmt.Errorf("failed to get referrals: %w", err)
+	}
+
+	return referrals, totalCount, nil
+}
+
+// GetUserReferrals gets referrals created by a specific user
+func (s *ReferralService) GetUserReferrals(ctx context.Context, userID uint, limit, offset int) ([]*entities.Referral, int64, error) {
+	return s.GetReferralsByReferrer(ctx, userID, limit, offset)
+}
+
+// GetRefereeReferrals gets referrals where user is the referee
+func (s *ReferralService) GetRefereeReferrals(ctx context.Context, userID uint, limit, offset int) ([]*entities.Referral, int64, error) {
+	return s.GetReferralsByReferee(ctx, userID, limit, offset)
+}
+
+// ProcessReferralReward processes reward for a referral
+func (s *ReferralService) ProcessReferralReward(ctx context.Context, referralID uint, rewardAmount float64) error {
+	// Get referral
+	referral, err := s.GetReferral(ctx, referralID)
+	if err != nil {
+		return err
+	}
+
+	// Update reward amount and status
+	updates := map[string]any{
+		"reward_amount": rewardAmount,
+		"reward_status": entities.RewardStatusEarned,
+		"updated_at":    time.Now(),
+	}
+
+	if err := s.db.DB.WithContext(ctx).Model(referral).Updates(updates).Error; err != nil {
+		logger.Error("Failed to process referral reward", logger.Error2("error", err), logger.Uint("referral_id", referralID))
+		return fmt.Errorf("failed to process referral reward: %w", err)
+	}
+
+	logger.Info("Referral reward processed",
+		logger.Uint("referral_id", referralID),
+		logger.Any("reward_amount", rewardAmount))
+
+	return nil
+}
+
+// MarkReferralAsPaid marks a referral reward as paid
+func (s *ReferralService) MarkReferralAsPaid(ctx context.Context, referralID uint) error {
+	updates := map[string]any{
+		"reward_status": entities.RewardStatusPaid,
+		"paid_at":       time.Now(),
+		"updated_at":    time.Now(),
+	}
+
+	if err := s.db.DB.WithContext(ctx).Model(&entities.Referral{}).Where("id = ?", referralID).Updates(updates).Error; err != nil {
+		logger.Error("Failed to mark referral as paid", logger.Error2("error", err), logger.Uint("referral_id", referralID))
+		return fmt.Errorf("failed to mark referral as paid: %w", err)
+	}
+
+	logger.Info("Referral marked as paid", logger.Uint("referral_id", referralID))
+	return nil
+}
+
+// GetReferralStatistics gets referral statistics for a user
+func (s *ReferralService) GetReferralStatistics(ctx context.Context, userID uint) (map[string]any, error) {
+	return s.GetReferralStats(ctx, userID)
+}
+
+// GetSystemReferralStatistics gets system-wide referral statistics
+func (s *ReferralService) GetSystemReferralStatistics(ctx context.Context) (map[string]any, error) {
+	stats := make(map[string]any)
+
+	// Total referrals
+	var totalReferrals int64
+	if err := s.db.DB.Model(&entities.Referral{}).Count(&totalReferrals).Error; err != nil {
+		return nil, fmt.Errorf("failed to count total referrals: %w", err)
+	}
+	stats["total_referrals"] = totalReferrals
+
+	// Total conversions
+	var totalConversions int64
+	if err := s.db.DB.Model(&entities.Referral{}).Where("converted_at IS NOT NULL").Count(&totalConversions).Error; err != nil {
+		return nil, fmt.Errorf("failed to count total conversions: %w", err)
+	}
+	stats["total_conversions"] = totalConversions
+
+	// Overall conversion rate
+	conversionRate := float64(0)
+	if totalReferrals > 0 {
+		conversionRate = float64(totalConversions) / float64(totalReferrals)
+	}
+	stats["conversion_rate"] = conversionRate
+
+	// Count by status
+	var statusStats []struct {
+		Status string
+		Count  int64
+	}
+
+	if err := s.db.DB.Model(&entities.Referral{}).
+		Select("status, count(*) as count").
+		Group("status").
+		Find(&statusStats).Error; err != nil {
+		return nil, fmt.Errorf("failed to get status statistics: %w", err)
+	}
+
+	statusMap := make(map[string]int64)
+	for _, stat := range statusStats {
+		statusMap[stat.Status] = stat.Count
+	}
+	stats["by_status"] = statusMap
+
+	// Total rewards paid
+	var totalRewardsPaid float64
+	if err := s.db.DB.Model(&entities.ReferralReward{}).
+		Where("status = ?", entities.RewardStatusPaid).
+		Select("COALESCE(SUM(reward_amount), 0)").
+		Scan(&totalRewardsPaid).Error; err != nil {
+		return nil, fmt.Errorf("failed to calculate total rewards paid: %w", err)
+	}
+	stats["total_rewards_paid"] = totalRewardsPaid
+
+	return stats, nil
 }
