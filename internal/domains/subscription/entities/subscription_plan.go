@@ -45,7 +45,7 @@ type SubscriptionPlan struct {
 	TrafficResetCycle string `json:"traffic_reset_cycle" gorm:"size:20;not null;default:'monthly';comment:Traffic reset cycle"`        // 流量重置周期
 
 	// Server Group Access Configuration
-	DefaultServerGroupIDs string `json:"default_server_group_ids" gorm:"type:text;comment:Default server groups for subscriptions (JSON)"` // 默认服务器组（JSON格式）
+	DefaultServerGroupIDs string `json:"default_server_group_ids" gorm:"column:default_server_groups;type:text;comment:Default server groups for subscriptions (JSON)"` // 默认服务器组（JSON格式）
 
 	// Metadata
 	Metadata string `json:"metadata,omitempty" gorm:"type:text"` // 额外元数据(JSON)

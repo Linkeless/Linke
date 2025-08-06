@@ -1,16 +1,16 @@
-# Common DTO Usage Examples
+# 通用 DTO 使用示例
 
-This document demonstrates how to use the newly added common DTO structures to eliminate code duplication across the project.
+本文档演示如何使用新添加的通用 DTO 结构来消除项目中的代码重复。
 
-## Request Structure Examples
+## 请求结构示例
 
-### 1. Basic List Request
+### 1. 基本列表请求
 
 ```go
-// Instead of defining separate pagination, filtering, and search structures
-// in each domain, use the unified BaseListRequest
+// 不要在每个领域中定义单独的分页、过滤和搜索结构，
+// 使用统一的 BaseListRequest
 
-// Old way (repeated in each domain):
+// 旧方式（在每个领域中重复）：
 type ListUsersRequest struct {
     Limit    int    `form:"limit,omitempty"`
     Offset   int    `form:"offset,omitempty"`
@@ -20,18 +20,18 @@ type ListUsersRequest struct {
     DateTo   string `form:"date_to,omitempty"`
 }
 
-// New way (using common DTO):
+// 新方式（使用通用 DTO）：
 type ListUsersRequest struct {
     dto.BaseListRequest
-    // Add domain-specific fields if needed
+    // 如果需要，添加领域特定字段
     Role string `form:"role,omitempty" example:"admin"`
 }
 ```
 
-### 2. Individual Filter Requests
+### 2. 个别过滤器请求
 
 ```go
-// Use individual filter components when you only need specific filters
+// 当您只需要特定过滤器时，使用个别过滤器组件
 
 type ListActiveUsersRequest struct {
     dto.PaginationRequest
@@ -44,10 +44,10 @@ type SearchUsersRequest struct {
 }
 ```
 
-### 3. Batch Operations
+### 3. 批量操作
 
 ```go
-// Bulk operations with generic types
+// 使用泛型类型的批量操作
 type BulkUpdateUsersRequest struct {
     dto.BulkUpdateRequest[UserUpdateData]
 }
@@ -57,21 +57,21 @@ type BulkDeleteUsersRequest struct {
 }
 ```
 
-## Response Structure Examples
+## 响应结构示例
 
-### 1. Paginated Responses
+### 1. 分页响应
 
 ```go
-// Old way:
+// 旧方式：
 type ListUsersResponse struct {
     Users      []UserDTO     `json:"users"`
     Pagination PaginationDTO `json:"pagination"`
 }
 
-// New way:
+// 新方式：
 type ListUsersResponse = dto.PaginatedResponse[UserDTO]
 
-// Usage in handler:
+// 在处理器中使用：
 func (h *UserHandler) ListUsers(c *gin.Context) {
     users := []UserDTO{...}
     pagination := dto.PaginationDTO{...}
@@ -81,10 +81,10 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 }
 ```
 
-### 2. API Response Wrapper
+### 2. API 响应封装器
 
 ```go
-// Unified API response format
+// 统一的 API 响应格式
 func (h *UserHandler) GetUser(c *gin.Context) {
     user, err := h.userService.GetUser(userID)
     if err != nil {
@@ -101,13 +101,13 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 }
 ```
 
-### 3. Batch Operation Results
+### 3. 批量操作结果
 
 ```go
 func (h *UserHandler) BulkDeleteUsers(c *gin.Context) {
     var req dto.BulkDeleteRequest
     if err := c.ShouldBindJSON(&req); err != nil {
-        // handle error
+        // 处理错误
         return
     }
     
@@ -123,7 +123,7 @@ func (h *UserHandler) BulkDeleteUsers(c *gin.Context) {
 }
 ```
 
-### 4. Statistics Responses
+### 4. 统计响应
 
 ```go
 func (h *UserHandler) GetUserStats(c *gin.Context) {
@@ -150,9 +150,9 @@ func (h *UserHandler) GetUserStats(c *gin.Context) {
 }
 ```
 
-## Validation Examples
+## 验证示例
 
-### 1. Time Range Validation
+### 1. 时间范围验证
 
 ```go
 func (h *Handler) ListWithTimeRange(c *gin.Context) {
@@ -162,11 +162,11 @@ func (h *Handler) ListWithTimeRange(c *gin.Context) {
     }
     
     if err := c.ShouldBindQuery(&req); err != nil {
-        // handle binding error
+        // 处理绑定错误
         return
     }
     
-    // Validate time range
+    // 验证时间范围
     if err := req.TimeRangeRequest.ValidateTimeRange(); err != nil {
         c.JSON(http.StatusBadRequest, dto.NewAPIError[interface{}](dto.ErrorDTO{
             Code:    "INVALID_TIME_RANGE",
@@ -175,44 +175,44 @@ func (h *Handler) ListWithTimeRange(c *gin.Context) {
         return
     }
     
-    // Continue with business logic...
+    // 继续业务逻辑...
 }
 ```
 
-### 2. Using Helper Methods
+### 2. 使用辅助方法
 
 ```go
 func (h *Handler) ListUsers(c *gin.Context) {
     var req dto.BaseListRequest
     if err := c.ShouldBindQuery(&req); err != nil {
-        // handle error
+        // 处理错误
         return
     }
     
-    // Use helper methods
-    limit := req.GetLimit()           // Returns 10 if not set
-    page := req.GetPage()             // Calculates page from offset/limit
-    sortOrder := req.GetSortOrder()   // Normalizes to "asc" or "desc"
+    // 使用辅助方法
+    limit := req.GetLimit()           // 如果未设置则返回 10
+    page := req.GetPage()             // 从 offset/limit 计算页码
+    sortOrder := req.GetSortOrder()   // 标准化为 "asc" 或 "desc"
     
-    // Use in service call
+    // 在服务调用中使用
     users, total, err := h.userService.ListUsers(limit, req.Offset, req.Status, sortOrder)
     // ...
 }
 ```
 
-## Migration Guide
+## 迁移指南
 
-### Converting Existing Structures
+### 转换现有结构
 
-1. **Identify repeated patterns** in your existing request/response structures
-2. **Replace with common DTOs** where applicable
-3. **Add domain-specific fields** by embedding common DTOs
-4. **Update handlers** to use new helper methods and constructors
+1. **识别重复模式** 在您现有的请求/响应结构中
+2. **用通用 DTO 替换** 适用的部分
+3. **添加领域特定字段** 通过嵌入通用 DTO
+4. **更新处理器** 使用新的辅助方法和构造函数
 
-### Example Migration
+### 迁移示例
 
 ```go
-// Before:
+// 之前：
 type ListPaymentsRequest struct {
     Limit    int    `form:"limit,omitempty"`
     Offset   int    `form:"offset,omitempty"`
@@ -222,19 +222,19 @@ type ListPaymentsRequest struct {
     DateTo   string `form:"date_to,omitempty"`
 }
 
-// After:
+// 之后：
 type ListPaymentsRequest struct {
     dto.BaseListRequest
-    // Add payment-specific fields
+    // 添加支付特定字段
     PaymentMethod string  `form:"payment_method,omitempty" example:"credit_card"`
     Amount        float64 `form:"amount,omitempty" example:"99.99"`
 }
 ```
 
-This approach provides:
-- **Type safety** through Go generics
-- **Consistency** across all API endpoints  
-- **Reduced code duplication**
-- **Better maintainability**
-- **Standardized validation**
-- **Improved documentation** through unified Swagger tags
+这种方法提供：
+- **类型安全** 通过 Go 泛型
+- **一致性** 跨所有 API 端点
+- **减少代码重复**
+- **更好的可维护性**
+- **标准化验证**
+- **改进的文档** 通过统一的 Swagger 标签

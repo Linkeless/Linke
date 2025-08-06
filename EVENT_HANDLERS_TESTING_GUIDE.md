@@ -1,56 +1,56 @@
-# Event Handlers Testing Guide
+# 事件处理器测试指南
 
-This guide provides comprehensive testing instructions for the newly implemented cross-domain event handling system.
+本指南为新实现的跨领域事件处理系统提供全面的测试说明。
 
-## Overview
+## 概述
 
-The event handling system has been completely refactored to support full cross-domain business flows through event-driven architecture. Key features include:
+事件处理系统已经完全重构，通过事件驱动架构支持完整的跨领域业务流程。关键功能包括：
 
-- **Complete Business Flow Integration**: Payment → Order Processing → Subscription Activation → Invoice Generation → Usage Monitoring
-- **Idempotency Protection**: All event handlers include duplicate processing prevention
-- **Error Recovery**: Robust error handling with partial failure tolerance  
-- **Real-time Usage Monitoring**: Automatic traffic limit checking and alerts
-- **Async Processing**: Email notifications and heavy tasks run asynchronously
+- **完整的业务流程集成**: 支付 → 订单处理 → 订阅激活 → 发票生成 → 使用量监控
+- **幂等性保护**: 所有事件处理器都包含重复处理预防机制
+- **错误恢复**: 具有部分故障容错的强健错误处理
+- **实时使用量监控**: 自动流量限制检查和警报
+- **异步处理**: 邮件通知和繁重任务异步运行
 
-## Testing Strategy
+## 测试策略
 
-### 1. Build and Dependency Verification
+### 1. 构建和依赖验证
 
-First, verify that all dependencies are correctly resolved:
+首先，验证所有依赖项是否正确解析：
 
 ```bash
-# Build the application to check for compilation errors
+# 构建应用程序检查编译错误
 make build
 
-# Check for import issues
+# 检查导入问题
 go mod tidy
 go mod verify
 ```
 
-### 2. Unit Testing Event Handlers
+### 2. 单元测试事件处理器
 
-Test individual event handlers in isolation:
+独立测试各个事件处理器：
 
 ```bash
-# Test event system components
+# 测试事件系统组件
 go test ./internal/shared/events/... -v
 
-# Test specific handlers if individual tests exist
+# 测试特定处理器（如果存在单独测试）
 go test ./internal/shared/events/ -run TestPaymentCompletedHandler -v
 go test ./internal/shared/events/ -run TestSubscriptionCreatedHandler -v
 ```
 
-### 3. Integration Testing
+### 3. 集成测试
 
-#### 3.1 Complete Payment Flow Test
+#### 3.1 完整支付流程测试
 
-Test the full payment → subscription activation flow:
+测试完整的支付 → 订阅激活流程：
 
 ```bash
-# Start the application
+# 启动应用程序
 make safe-dev
 
-# In another terminal, test the flow
+# 在另一个终端中测试流程
 curl -X POST http://localhost:8080/api/v1/payments/webhook \
   -H "Content-Type: application/json" \
   -d '{
@@ -63,17 +63,17 @@ curl -X POST http://localhost:8080/api/v1/payments/webhook \
   }'
 ```
 
-**Expected Flow:**
-1. PaymentCompletedHandler processes payment
-2. Order status updated to "paid"  
-3. Subscription created/renewed
-4. Invoice generated
-5. Welcome/confirmation emails queued
-6. User status activated
+**预期流程：**
+1. PaymentCompletedHandler 处理支付
+2. 订单状态更新为 "paid"  
+3. 创建/续费订阅
+4. 生成发票
+5. 欢迎/确认邮件加入队列
+6. 用户状态激活
 
-#### 3.2 User Registration Flow Test
+#### 3.2 用户注册流程测试
 
-Test user onboarding:
+测试用户注册流程：
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/auth/register \
@@ -87,19 +87,19 @@ curl -X POST http://localhost:8080/api/v1/auth/register \
   }'
 ```
 
-**Expected Flow:**
-1. User created in database
-2. UserRegisteredHandler triggers
-3. Welcome email queued
-4. User configuration cache initialized
-5. Account ready for subscription
+**预期流程：**
+1. 用户在数据库中创建
+2. UserRegisteredHandler 触发
+3. 欢迎邮件加入队列
+4. 用户配置缓存初始化
+5. 账户准备好进行订阅
 
-#### 3.3 Traffic Monitoring Test
+#### 3.3 流量监控测试
 
-Test usage monitoring and limit enforcement:
+测试使用量监控和限制执行：
 
 ```bash
-# Simulate traffic usage for a subscription
+# 模拟订阅的流量使用
 curl -X POST http://localhost:8080/api/v1/subscriptions/1/usage \
   -H "Content-Type: application/json" \
   -d '{
@@ -108,31 +108,31 @@ curl -X POST http://localhost:8080/api/v1/subscriptions/1/usage \
   }'
 ```
 
-**Expected Flow:**
-1. Usage updated in database
-2. Warning events triggered at 80%, 90%
-3. Limit exceeded event at 100%
-4. Account suspended when limit exceeded
-5. Alert emails sent to user
+**预期流程：**
+1. 数据库中使用量更新
+2. 在80%、90%时触发警告事件
+3. 在100%时触发限制超出事件
+4. 超出限制时账户被暂停
+5. 向用户发送警报邮件
 
-### 4. Event System Monitoring
+### 4. 事件系统监控
 
-#### 4.1 Event Bus Health Check
+#### 4.1 事件总线健康检查
 
 ```bash
-# Check event system status
+# 检查事件系统状态
 curl http://localhost:8080/health
 
-# Monitor application logs for event processing
+# 监控应用日志中的事件处理
 tail -f logs/application.log | grep -i "event"
 ```
 
-#### 4.2 Idempotency Testing
+#### 4.2 幂等性测试
 
-Test that duplicate events are handled correctly:
+测试重复事件是否被正确处理：
 
 ```bash
-# Send the same payment completion event twice
+# 发送相同的支付完成事件两次
 curl -X POST http://localhost:8080/api/v1/payments/webhook \
   -H "Content-Type: application/json" \
   -d '{
@@ -144,7 +144,7 @@ curl -X POST http://localhost:8080/api/v1/payments/webhook \
     "order_id": 2
   }'
 
-# Send again immediately - should be skipped
+# 立即再次发送 - 应该被跳过
 curl -X POST http://localhost:8080/api/v1/payments/webhook \
   -H "Content-Type: application/json" \
   -d '{
@@ -157,73 +157,73 @@ curl -X POST http://localhost:8080/api/v1/payments/webhook \
   }'
 ```
 
-**Expected Result:** Second request should log "already processed, skipping"
+**预期结果：** 第二个请求应该记录 "already processed, skipping"
 
-### 5. Database State Verification
+### 5. 数据库状态验证
 
-After running tests, verify the database state:
+运行测试后，验证数据库状态：
 
 ```sql
--- Check event processing records
+-- 检查事件处理记录
 SELECT * FROM events ORDER BY created_at DESC LIMIT 10;
 
--- Check subscription states  
+-- 检查订阅状态  
 SELECT id, user_id, status, traffic_used, traffic_limit, traffic_suspended 
 FROM user_subscriptions WHERE user_id = 1;
 
--- Check order processing
+-- 检查订单处理
 SELECT id, user_id, status, total_amount, created_at 
 FROM subscription_orders ORDER BY created_at DESC LIMIT 5;
 
--- Check invoice generation
+-- 检查发票生成
 SELECT id, user_id, status, amount, invoice_number 
 FROM invoices ORDER BY created_at DESC LIMIT 5;
 ```
 
-### 6. Async Task Verification
+### 6. 异步任务验证
 
-Check that async tasks are being processed:
+检查异步任务是否正在被处理：
 
 ```bash
-# Monitor task queue processing
+# 监控任务队列处理
 redis-cli MONITOR | grep -i "task\|queue\|email\|notification"
 
-# Check task queue status
+# 检查任务队列状态
 redis-cli
 > LLEN queue:email
 > LLEN queue:notification  
 > LLEN queue:data_processing
 ```
 
-### 7. Cache System Testing
+### 7. 缓存系统测试
 
-Verify caching behavior:
+验证缓存行为：
 
 ```bash
-# Check cache keys
+# 检查缓存键
 redis-cli KEYS "event_processed:*"
 redis-cli KEYS "user_config:*" 
 redis-cli KEYS "user_billing:*"
 
-# Verify cache TTL
+# 验证缓存TTL
 redis-cli TTL "event_processed:some_event_id"
 ```
 
-## Load Testing
+## 负载测试
 
-### Stress Test Event Processing
+### 事件处理压力测试
 
 ```bash
-# Install Apache Bench if not available
+# 安装Apache Bench（如果没有）
 brew install httpd  # macOS
-# or
+# 或
 apt-get install apache2-utils  # Ubuntu
 
-# Test payment webhook processing
+# 测试支付webhook处理
 ab -n 100 -c 10 -T application/json -p payment_data.json \
    http://localhost:8080/api/v1/payments/webhook
 
-# payment_data.json content:
+# payment_data.json 内容：
 {
   "event_type": "payment.completed",
   "payment_id": "load_test_{{#}}",
@@ -233,20 +233,20 @@ ab -n 100 -c 10 -T application/json -p payment_data.json \
 }
 ```
 
-## Error Scenarios Testing
+## 错误场景测试
 
-### 1. Service Dependency Failures
+### 1. 服务依赖故障
 
-Test behavior when services are unavailable:
+测试服务不可用时的行为：
 
 ```bash
-# Simulate database connection issues
-# Stop database temporarily and send events
+# 模拟数据库连接问题
+# 临时停止数据库并发送事件
 
-# Simulate Redis cache unavailability  
-# Stop Redis and test event processing
+# 模拟Redis缓存不可用  
+# 停止Redis并测试事件处理
 
-# Test with invalid data
+# 使用无效数据测试
 curl -X POST http://localhost:8080/api/v1/payments/webhook \
   -H "Content-Type: application/json" \
   -d '{
@@ -258,85 +258,85 @@ curl -X POST http://localhost:8080/api/v1/payments/webhook \
   }'
 ```
 
-### 2. Partial Processing Failures
+### 2. 部分处理失败
 
-Test graceful degradation:
+测试优雅降级：
 
-- Email service down → Events still process, emails queued for retry
-- Invoice service error → Payment still processed, invoice creation retried
-- Cache unavailable → Events process without caching (slower but functional)
+- 邮件服务停机 → 事件仍然处理，邮件排队重试
+- 发票服务错误 → 支付仍然处理，发票创建重试
+- 缓存不可用 → 事件处理不使用缓存（较慢但功能正常）
 
-## Performance Monitoring
+## 性能监控
 
-### Key Metrics to Track
+### 要跟踪的关键指标
 
-1. **Event Processing Latency**
-   - Average time from event publish to completion
-   - Target: < 100ms for simple events, < 500ms for complex flows
+1. **事件处理延迟**
+   - 从事件发布到完成的平均时间
+   - 目标：简单事件 < 100ms，复杂流程 < 500ms
 
-2. **Throughput**  
-   - Events processed per second
-   - Target: > 100 events/second
+2. **吞吐量**  
+   - 每秒处理的事件数
+   - 目标：> 100 事件/秒
 
-3. **Error Rates**
-   - Failed event processing percentage  
-   - Target: < 1% failure rate
+3. **错误率**
+   - 事件处理失败百分比  
+   - 目标：< 1% 失败率
 
-4. **Queue Depths**
-   - Async task queue lengths
-   - Target: Queues drain within 30 seconds under normal load
+4. **队列深度**
+   - 异步任务队列长度
+   - 目标：正常负载下队列在30秒内清空
 
-### Monitoring Commands
+### 监控命令
 
 ```bash
-# Application metrics
+# 应用程序指标
 curl http://localhost:8080/metrics
 
-# Event processing stats
+# 事件处理统计
 grep "event processed" logs/application.log | wc -l
 
-# Error tracking
+# 错误跟踪
 grep "ERROR" logs/application.log | tail -20
 ```
 
-## Troubleshooting Common Issues
+## 常见问题故障排除
 
-### Issue: Events not processing
-**Diagnosis:**
+### 问题：事件未处理
+**诊断：**
 ```bash
-# Check event bus initialization
+# 检查事件总线初始化
 grep "Event system initialized" logs/application.log
 
-# Verify handler registration
+# 验证处理器注册
 grep "event handlers registered" logs/application.log
 ```
 
-### Issue: High memory usage
-**Diagnosis:**
+### 问题：内存使用率高
+**诊断：**
 ```bash
-# Check processed events cache
+# 检查已处理事件缓存
 redis-cli DBSIZE
 redis-cli KEYS "event_processed:*" | wc -l
 ```
 
-### Issue: Duplicate processing
-**Diagnosis:**  
+### 问题：重复处理
+**诊断：**  
 ```bash
-# Check idempotency cache hits
+# 检查幂等性缓存命中
 grep "already processed, skipping" logs/application.log
 ```
 
-## Rollback Plan
+## 回滚计划
 
-If issues arise in production:
+如果生产环境出现问题：
 
-1. **Immediate Rollback:** Revert to previous handlers.go version
-2. **Partial Disable:** Comment out specific handler registrations  
-3. **Emergency Mode:** Disable event system entirely (manual processing)
+1. **立即回滚：** 恢复到之前的 handlers.go 版本
+2. **部分禁用：** 注释掉特定的处理器注册  
+3. **紧急模式：** 完全禁用事件系统（手动处理）
 
 ```go
-// Emergency disable in bootstrap/app.go
-// Comment out event handler registrations:
+// 在 bootstrap/app.go 中紧急禁用
+// 注释掉事件处理器注册：
 /*
 if err := crossDomainHandlers.RegisterCrossDomainHandlers(eventBus); err != nil {
     logger.Error("Failed to register cross-domain event handlers", zap.Error(err))
@@ -344,26 +344,26 @@ if err := crossDomainHandlers.RegisterCrossDomainHandlers(eventBus); err != nil 
 */
 ```
 
-## Success Criteria
+## 成功标准
 
-The implementation is successful if:
+实现成功的标准：
 
-- ✅ All compilation errors resolved
-- ✅ Payment → subscription flow works end-to-end  
-- ✅ User registration triggers welcome flow
-- ✅ Traffic monitoring generates alerts correctly
-- ✅ Idempotency prevents duplicate processing
-- ✅ Error handling maintains system stability  
-- ✅ Async tasks process within acceptable timeframes
-- ✅ Database state remains consistent across failures
-- ✅ Performance meets defined targets
+- ✅ 解决所有编译错误
+- ✅ 支付 → 订阅流程端到端工作  
+- ✅ 用户注册触发欢迎流程
+- ✅ 流量监控正确生成警报
+- ✅ 幂等性防止重复处理
+- ✅ 错误处理维护系统稳定性  
+- ✅ 异步任务在可接受的时间内处理
+- ✅ 数据库状态在故障中保持一致
+- ✅ 性能满足定义的目标
 
-## Next Steps
+## 下一步计划
 
-After successful testing:
+成功测试后：
 
-1. **Production Deployment:** Deploy with feature flags
-2. **Monitoring Setup:** Configure alerts for error rates
-3. **Documentation:** Update API documentation
-4. **Team Training:** Brief team on new event flows
-5. **Gradual Rollout:** Enable features incrementally
+1. **生产部署：** 使用功能标志部署
+2. **监控设置：** 配置错误率警报
+3. **文档更新：** 更新API文档
+4. **团队培训：** 向团队介绍新的事件流程
+5. **逐步推出：** 逐步启用功能

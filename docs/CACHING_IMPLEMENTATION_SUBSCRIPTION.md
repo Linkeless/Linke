@@ -136,99 +136,99 @@
 - 适当的失效防止过期数据
 - 通过适当的锁定防止竞态条件
 
-### 7. Monitoring and Observability
+### 7. 监控和可观测性
 
-#### Logging
-- Cache hits/misses are logged for monitoring
-- Cache invalidation operations are logged
-- Error conditions are properly logged with context
+#### 日志记录
+- 记录缓存命中/未命中情况以供监控
+- 记录缓存失效操作
+- 错误情况会被适当记录并包含上下文信息
 
-#### Key Patterns for Monitoring
-- Monitor cache hit rates for performance insights
-- Track invalidation patterns for optimization opportunities
-- Monitor error rates for reliability assessment
+#### 监控的关键模式
+- 监控缓存命中率以获取性能洞察
+- 跟踪失效模式以寻找优化机会
+- 监控错误率以评估可靠性
 
-## Usage Examples
+## 使用示例
 
-### Plan Service with Caching
+### 套餐服务缓存
 ```go
-// Cache-aside read
+// Cache-aside 读取
 plan, err := planService.GetSubscriptionPlan(ctx, planID)
 
-// Write-through create with invalidation
+// Write-through 创建并失效
 plan, err := planService.CreateSubscriptionPlan(ctx, creatorID, req)
 
-// Update with selective invalidation  
+// 选择性失效的更新
 plan, err := planService.UpdateSubscriptionPlan(ctx, planID, updateReq)
 ```
 
-### User Subscription Service with Caching
+### 用户订阅服务缓存
 ```go
-// Cached active subscriptions
+// 缓存的活跃订阅
 subscriptions, err := userSubService.GetUserActiveSubscriptions(ctx, userID)
 
-// Write-through create
+// Write-through 创建
 subscription, err := userSubService.CreateUserSubscription(ctx, req)
 
-// Selective invalidation for frequent operations
+// 频繁操作的选择性失效
 err := userSubService.UpdateTrafficUsage(ctx, subscriptionID, usedBytes)
 ```
 
-### Order Service with Caching
+### 订单服务缓存
 ```go
-// Cached order retrieval
+// 缓存的订单检索
 order, err := orderService.GetSubscriptionOrder(ctx, orderID)
 
-// Order creation with caching
+// 带缓存的订单创建
 response, err := orderService.CreateSubscriptionOrder(ctx, req)
 
-// Payment processing with cache invalidation
+// 支付处理时的缓存失效
 err := orderService.ProcessOrderPaymentSuccess(ctx, orderID)
 ```
 
-## Integration with Existing Infrastructure
+## 与现有基础设施的集成
 
-### Module Registration
-The cached services are registered in the subscription domain module (`module.go`) as replacements for the base services, ensuring seamless integration with the existing dependency injection system.
+### 模块注册
+缓存服务在订阅领域模块（`module.go`）中注册，作为基础服务的替代品，确保与现有的依赖注入系统无缝集成。
 
-### Cache Infrastructure Usage
-- Uses the existing Redis cache infrastructure from `/internal/shared/cache/`
-- Leverages predefined cache keys from `AllCacheKeys.Subscription`
-- Follows established TTL constants (ShortCacheTTL, MediumCacheTTL, LongCacheTTL)
+### 缓存基础设施使用
+- 使用来自 `/internal/shared/cache/` 的现有 Redis 缓存基础设施
+- 利用来自 `AllCacheKeys.Subscription` 的预定义缓存键
+- 遵循已建立的 TTL 常量（ShortCacheTTL、MediumCacheTTL、LongCacheTTL）
 
-### Backward Compatibility
-- All existing interfaces are maintained
-- No breaking changes to service contracts
-- Transparent caching that doesn't affect calling code
+### 向后兼容性
+- 保持所有现有接口
+- 不对服务契约进行破坏性更改
+- 透明缓存不影响调用代码
 
-## Performance Benefits
+## 性能优势
 
-### Expected Improvements
-- **Plan retrieval**: ~80% reduction in database load for frequently accessed plans
-- **User subscriptions**: ~60% reduction in database load for active user queries
-- **Order lookups**: ~50% reduction in database load for order status checks
-- **List operations**: Significant improvement for paginated results
+### 预期改进
+- **套餐检索**: 频繁访问的套餐数据库负载减少约80%
+- **用户订阅**: 活跃用户查询数据库负载减少约60%
+- **订单查找**: 订单状态检查数据库负载减少约50%
+- **列表操作**: 分页结果的显著改进
 
-### Scalability Benefits
-- Reduced database connection pressure
-- Better response times for high-traffic operations
-- Improved concurrent user handling capability
+### 可扩展性优势
+- 减少数据库连接压力
+- 高流量操作的更好响应时间
+- 提高并发用户处理能力
 
-## Maintenance Guidelines
+## 维护指南
 
-### Cache Key Management
-- Use consistent naming patterns for cache keys
-- Include version information when cache structure changes
-- Monitor cache key space usage and cleanup old patterns
+### 缓存键管理
+- 对缓存键使用一致的命名模式
+- 当缓存结构变化时包含版本信息
+- 监控缓存键空间使用情况并清理旧模式
 
-### TTL Tuning
-- Monitor cache hit rates and adjust TTLs as needed
-- Consider business requirements when setting cache durations
-- Balance consistency needs vs. performance gains
+### TTL 调优
+- 监控缓存命中率并根据需要调整 TTL
+- 设置缓存持续时间时考虑业务需求
+- 平衡一致性需求与性能收益
 
-### Invalidation Optimization
-- Review invalidation patterns regularly for efficiency
-- Minimize unnecessary broad invalidations
-- Consider implementing cache warming for critical data
+### 失效优化
+- 定期检查失效模式的效率
+- 最小化不必要的广泛失效
+- 考虑为关键数据实现缓存预热
 
-This caching implementation provides a robust, scalable, and maintainable solution for the subscription domain while ensuring data consistency and optimal performance.
+此缓存实现为订阅领域提供了一个强大、可扩展且可维护的解决方案，同时确保数据一致性和最佳性能。
