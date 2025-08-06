@@ -78,13 +78,9 @@ func (s *TicketService) GetTicket(ctx context.Context, ticketID uint) (*entities
 	var ticket entities.Ticket
 
 	if err := s.db.WithContext(ctx).
-		Preload("User").
-		Preload("AssignedTo").
-		Preload("ResolvedBy").
 		Preload("Messages", func(db *gorm.DB) *gorm.DB {
 			return db.Order("created_at ASC")
 		}).
-		Preload("Messages.User").
 		First(&ticket, ticketID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("ticket not found")
@@ -101,13 +97,9 @@ func (s *TicketService) GetTicketByNumber(ctx context.Context, ticketNo string) 
 	var ticket entities.Ticket
 
 	if err := s.db.WithContext(ctx).
-		Preload("User").
-		Preload("AssignedTo").
-		Preload("ResolvedBy").
 		Preload("Messages", func(db *gorm.DB) *gorm.DB {
 			return db.Order("created_at ASC")
 		}).
-		Preload("Messages.User").
 		Where("ticket_no = ?", ticketNo).
 		First(&ticket).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -122,10 +114,7 @@ func (s *TicketService) GetTicketByNumber(ctx context.Context, ticketNo string) 
 
 // GetTickets gets tickets with filtering and pagination
 func (s *TicketService) GetTickets(ctx context.Context, req *interfaces.GetTicketsRequest) ([]*entities.Ticket, int64, error) {
-	query := s.db.WithContext(ctx).Model(&entities.Ticket{}).
-		Preload("User").
-		Preload("AssignedTo").
-		Preload("ResolvedBy")
+	query := s.db.WithContext(ctx).Model(&entities.Ticket{})
 
 	// Apply filters
 	if req.UserID != 0 {
