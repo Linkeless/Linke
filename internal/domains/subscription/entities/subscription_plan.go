@@ -292,11 +292,19 @@ func (sp *SubscriptionPlan) ToPublicResponse() *SubscriptionPlanResponse {
 		BillingInterval: sp.BillingInterval,
 		TrialPeriodDays: sp.TrialPeriodDays,
 		Features:        sp.Features,
+		IsVisible:       sp.IsVisible,
+		SortOrder:       sp.SortOrder,
 		IsPopular:       sp.IsPopular,
 		IsRecommended:   sp.IsRecommended,
 		SetupFee:        sp.SetupFee,
-		SortOrder:       sp.SortOrder,
-		CreatedAt:       sp.CreatedAt,
-		UpdatedAt:       sp.UpdatedAt,
+
+		// Traffic Configuration (for public viewing)
+		TrafficLimit:      sp.TrafficLimit,
+		TrafficLimitGB:    sp.GetTrafficLimitGB(),
+		TrafficLimitText:  sp.FormatTrafficLimit(),
+		TrafficResetCycle: sp.TrafficResetCycle,
+
+		CreatedAt: sp.CreatedAt,
+		UpdatedAt: sp.UpdatedAt,
 	}
 }

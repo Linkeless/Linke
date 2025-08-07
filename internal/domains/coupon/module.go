@@ -32,6 +32,7 @@ var Module = fx.Module("coupon",
 	// 提供 Handler 实现
 	fx.Provide(
 		handlers.NewAdminCouponHandler,
+		handlers.NewUserCouponHandler,
 	),
 
 	// 模块初始化钩子

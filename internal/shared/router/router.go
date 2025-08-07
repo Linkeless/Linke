@@ -52,6 +52,7 @@ func SetupRoutes(
 	adminAuthHandler *authHandlers.AdminAuthHandler,
 	userProfileHandler *userHandlers.UserProfileHandler,
 	adminUserHandler *userHandlers.AdminUserHandler,
+	subscriptionPlanHandler *subscriptionHandlers.SubscriptionPlanHandler,
 	subscriptionOrderHandler *subscriptionHandlers.SubscriptionOrderHandler,
 	userSubscriptionHandler *subscriptionHandlers.UserSubscriptionHandler,
 	quickPurchaseHandler *subscriptionHandlers.QuickPurchaseHandler,
@@ -61,6 +62,7 @@ func SetupRoutes(
 	invoiceHandler *invoiceHandlers.InvoiceHandler,
 	adminInvoiceHandler *invoiceHandlers.AdminInvoiceHandler,
 	adminTicketHandler *ticketHandlers.AdminTicketHandler,
+	userTicketHandler *ticketHandlers.UserTicketHandler,
 	paymentHandler *paymentHandlers.PaymentHandler,
 	paymentMethodHandler *paymentHandlers.PaymentMethodHandler,
 	serverHandler *serverHandlers.ServerAPIHandler,
@@ -69,6 +71,7 @@ func SetupRoutes(
 	adminServerGroupHandler *serverHandlers.AdminServerGroupHandler,
 	// Admin coupon and referral handlers
 	adminCouponHandler *couponHandlers.AdminCouponHandler,
+	userCouponHandler *couponHandlers.UserCouponHandler,
 	adminReferralHandler *referralHandlers.AdminReferralHandler,
 	// Cache monitoring handlers
 	cacheMonitoringHandler *cache.CacheMonitoringHandler,
@@ -445,6 +448,22 @@ func SetupRoutes(
 	}
 	logger.Debug("Registered admin ticket routes", zap.String("prefix", "/api/v1/admin/tickets"))
 
+	// User ticket routes (/api/v1/tickets) - requires authentication
+	userTicketGroup := apiV1.Group("/tickets")
+	userTicketGroup.Use(middleware.AuthMiddleware(newAuthServiceAdapter(authService)))
+	{
+		// Ticket Management
+		userTicketGroup.POST("", userTicketHandler.CreateTicket)
+		userTicketGroup.GET("/my", userTicketHandler.GetMyTickets)
+		userTicketGroup.GET("/:id", userTicketHandler.GetTicket)
+		userTicketGroup.PUT("/:id/close", userTicketHandler.CloseTicket)
+
+		// Message Management
+		userTicketGroup.GET("/:id/messages", userTicketHandler.GetTicketMessages)
+		userTicketGroup.POST("/:id/messages", userTicketHandler.AddMessage)
+	}
+	logger.Debug("Registered user ticket routes", zap.String("prefix", "/api/v1/tickets"))
+
 	// Admin coupon routes (/api/v1/admin/coupons)
 	adminCouponGroup := adminGroup.Group("/coupons")
 	{
@@ -474,6 +493,15 @@ func SetupRoutes(
 		}
 	}
 	logger.Debug("Registered admin coupon routes", zap.String("prefix", "/api/v1/admin/coupons"))
+
+	// User coupon routes (/api/v1/coupons) - using RegisterRoutes method
+	logger.Debug("Registering user coupon routes")
+	if userCouponHandler == nil {
+		logger.Error("User coupon handler is nil - routes will not be registered")
+	} else {
+		userCouponHandler.RegisterRoutes(apiV1)
+		logger.Debug("Successfully registered user coupon routes")
+	}
 
 	// Admin referral routes (/api/v1/admin/referrals)
 	adminReferralGroup := adminGroup.Group("/referrals")
@@ -526,6 +554,15 @@ func SetupRoutes(
 		subscriptionGroup.POST("/orders", middleware.AuthMiddleware(newAuthServiceAdapter(authService)), subscriptionOrderHandler.CreateSubscriptionOrder)
 		subscriptionGroup.GET("/orders/my", middleware.AuthMiddleware(newAuthServiceAdapter(authService)), subscriptionOrderHandler.GetMySubscriptionOrders)
 		subscriptionGroup.GET("/orders/:id", middleware.AuthMiddleware(newAuthServiceAdapter(authService)), subscriptionOrderHandler.GetSubscriptionOrder)
+	}
+
+	// Subscription plan routes (/api/v1/subscription/plans) - using RegisterRoutes method
+	logger.Debug("Registering subscription plan routes")
+	if subscriptionPlanHandler == nil {
+		logger.Error("Subscription plan handler is nil - routes will not be registered")
+	} else {
+		subscriptionPlanHandler.RegisterRoutes(apiV1)
+		logger.Debug("Successfully registered subscription plan routes")
 	}
 
 	// User subscription management routes (/api/v1/subscriptions) - using RegisterRoutes method
@@ -664,6 +701,9 @@ func SetupRoutes(
 		"/api/v1/admin/tickets/analytics",
 		"/api/v1/admin/tickets/agents",
 		"/api/v1/admin/tickets/bulk/*",
+		"/api/v1/tickets",
+		"/api/v1/tickets/my",
+		"/api/v1/tickets/*/messages",
 		"/api/v1/admin/coupons",
 		"/api/v1/admin/coupons/*/toggle-status",
 		"/api/v1/admin/coupons/*/extend",
@@ -672,6 +712,9 @@ func SetupRoutes(
 		"/api/v1/admin/coupons/statistics",
 		"/api/v1/admin/coupons/analytics",
 		"/api/v1/admin/coupons/bulk/*",
+		"/api/v1/coupons",
+		"/api/v1/coupons/validate",
+		"/api/v1/coupons/my-usage",
 		"/api/v1/admin/referrals",
 		"/api/v1/admin/referrals/*/approve",
 		"/api/v1/admin/referrals/*/reject",

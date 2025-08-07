@@ -189,8 +189,8 @@ func (a *AuthService) Login(ctx context.Context, req *interfaces.LoginRequest) (
 		}
 	}
 
-	// Get user by email (first check without status filter for better error messages)
-	user, err := a.userService.GetUserByEmail(ctx, req.Email)
+	// Get user by email directly from repository (bypass cache to ensure we have password field)
+	user, err := a.userRepository.GetByEmail(ctx, req.Email)
 	if err != nil {
 		logger.Warn("Login attempt with non-existent email",
 			logger.String("email", req.Email),

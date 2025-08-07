@@ -700,6 +700,57 @@ definitions:
         example: 20
         type: number
     type: object
+  entities.CouponUsageResponse:
+    properties:
+      coupon:
+        allOf:
+        - $ref: '#/definitions/entities.CouponResponse'
+        description: Related data (to be populated at application layer)
+      coupon_id:
+        description: Coupon ID
+        example: 1
+        type: integer
+      created_at:
+        description: Creation time
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      currency:
+        description: Currency
+        example: USD
+        type: string
+      discount_amount:
+        description: Discount amount
+        example: 5.99
+        type: number
+      id:
+        description: Usage ID
+        example: 1
+        type: integer
+      order_amount:
+        description: Original order amount
+        example: 29.99
+        type: number
+      subscription_order:
+        allOf:
+        - $ref: '#/definitions/dto.SubscriptionOrderBasicDTO'
+        description: Order info
+      subscription_order_id:
+        description: Order ID
+        example: 1
+        type: integer
+      updated_at:
+        description: Update time
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      user:
+        allOf:
+        - $ref: '#/definitions/dto.UserBasicDTO'
+        description: User info
+      user_id:
+        description: User ID
+        example: 1
+        type: integer
+    type: object
   entities.CreatePaymentMethodRequest:
     properties:
       billing_country:
@@ -2179,6 +2230,30 @@ definitions:
         example: 2
         type: integer
     type: object
+  entities.TicketMessageUserResponse:
+    properties:
+      attachments:
+        example: '[{"name":"screenshot.png","url":"/uploads/screenshot.png"}]'
+        type: string
+      content:
+        example: Thank you for contacting support. We will review your issue.
+        type: string
+      created_at:
+        example: "2024-01-01T10:30:00Z"
+        type: string
+      id:
+        example: 1
+        type: integer
+      message_type:
+        example: admin
+        type: string
+      ticket_id:
+        example: 1
+        type: integer
+      updated_at:
+        example: "2024-01-01T10:30:00Z"
+        type: string
+    type: object
   entities.TicketResponse:
     properties:
       assigned_at:
@@ -2251,6 +2326,52 @@ definitions:
       user_id:
         example: 1
         type: integer
+    type: object
+  entities.TicketUserResponse:
+    properties:
+      category:
+        example: subscription
+        type: string
+      closed_at:
+        example: "2024-01-02T16:00:00Z"
+        type: string
+      created_at:
+        example: "2024-01-01T09:00:00Z"
+        type: string
+      description:
+        example: I am unable to access my premium subscription features
+        type: string
+      first_response_at:
+        example: "2024-01-01T10:30:00Z"
+        type: string
+      id:
+        example: 1
+        type: integer
+      last_response_at:
+        example: "2024-01-02T14:00:00Z"
+        type: string
+      messages:
+        items:
+          $ref: '#/definitions/entities.TicketMessageUserResponse'
+        type: array
+      priority:
+        example: normal
+        type: string
+      resolution:
+        example: Issue resolved by updating subscription settings
+        type: string
+      status:
+        example: open
+        type: string
+      ticket_no:
+        example: TKT-20240101-001
+        type: string
+      title:
+        example: Unable to access my subscription
+        type: string
+      updated_at:
+        example: "2024-01-02T16:00:00Z"
+        type: string
     type: object
   entities.UpdatePaymentMethodRequest:
     properties:
@@ -3400,6 +3521,12 @@ definitions:
     - new_password
     - old_password
     type: object
+  handlers.CloseTicketRequest:
+    properties:
+      reason:
+        example: Issue resolved, closing ticket
+        type: string
+    type: object
   handlers.CreateCouponRequest:
     properties:
       applicable_plans:
@@ -4338,6 +4465,50 @@ definitions:
     required:
     - status
     type: object
+  handlers.UserCreateTicketRequest:
+    properties:
+      category:
+        enum:
+        - general
+        - technical
+        - billing
+        - account
+        - feature
+        - bug
+        - subscription
+        - payment
+        example: subscription
+        type: string
+      description:
+        example: I am unable to access my premium subscription features
+        maxLength: 5000
+        minLength: 10
+        type: string
+      metadata:
+        example: '{"browser": "Chrome", "os": "Windows"}'
+        type: string
+      priority:
+        enum:
+        - low
+        - normal
+        - high
+        - urgent
+        - critical
+        example: normal
+        type: string
+      tags:
+        example: urgent,subscription
+        type: string
+      title:
+        example: Unable to access my subscription
+        maxLength: 255
+        minLength: 5
+        type: string
+    required:
+    - category
+    - description
+    - title
+    type: object
   handlers.UserProfileUpdateRequest:
     properties:
       avatar:
@@ -4346,6 +4517,44 @@ definitions:
         type: string
       username:
         type: string
+    type: object
+  handlers.UserTicketMessageRequest:
+    properties:
+      attachments:
+        example: '[{"name":"screenshot.png","url":"https://example.com/file.png"}]'
+        type: string
+      content:
+        example: Thank you for your response. I tried the suggested solution but the
+          issue persists.
+        maxLength: 5000
+        minLength: 1
+        type: string
+      metadata:
+        example: '{"client_ip":"192.168.1.1"}'
+        type: string
+    required:
+    - content
+    type: object
+  handlers.ValidateCouponRequest:
+    properties:
+      code:
+        example: SAVE20
+        type: string
+      currency:
+        example: USD
+        type: string
+      order_amount:
+        example: 29.99
+        minimum: 0
+        type: number
+      plan_id:
+        example: 1
+        type: integer
+    required:
+    - code
+    - currency
+    - order_amount
+    - plan_id
     type: object
   handlers.VoidInvoiceRequest:
     properties:
@@ -5734,6 +5943,23 @@ definitions:
         type: array
       user_subscription_id:
         type: integer
+    type: object
+  interfaces.ValidateCouponResponse:
+    properties:
+      coupon:
+        $ref: '#/definitions/entities.CouponResponse'
+      discount_amount:
+        example: 5.99
+        type: number
+      final_amount:
+        example: 24
+        type: number
+      message:
+        example: Coupon is valid
+        type: string
+      valid:
+        example: true
+        type: boolean
     type: object
   response.APIResponse:
     properties:
@@ -14268,6 +14494,325 @@ paths:
       summary: '[Admin] Get user statistics'
       tags:
       - Admin-User-Management
+  /api/v1/tickets:
+    post:
+      consumes:
+      - application/json
+      description: Create a new support ticket for the authenticated user
+      parameters:
+      - description: Ticket creation data
+        in: body
+        name: ticket
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UserCreateTicketRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.TicketUserResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create new ticket
+      tags:
+      - User-Tickets
+  /api/v1/tickets/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get detailed ticket information including messages (user can only
+        access own tickets)
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.TicketUserResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+      security:
+      - BearerAuth: []
+      summary: Get ticket details
+      tags:
+      - User-Tickets
+  /api/v1/tickets/{id}/close:
+    put:
+      consumes:
+      - application/json
+      description: Close a support ticket (user can only close own tickets)
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Closure reason
+        in: body
+        name: closure
+        schema:
+          $ref: '#/definitions/handlers.CloseTicketRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.TicketUserResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Close ticket
+      tags:
+      - User-Tickets
+  /api/v1/tickets/{id}/messages:
+    get:
+      consumes:
+      - application/json
+      description: Get messages for a ticket (user can only access messages for own
+        tickets, excluding internal notes)
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.StandardListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+      security:
+      - BearerAuth: []
+      summary: Get ticket messages
+      tags:
+      - User-Tickets
+    post:
+      consumes:
+      - application/json
+      description: Add a message to a ticket (user can only add messages to own tickets)
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Message data
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UserTicketMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.TicketMessageUserResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Add message to ticket
+      tags:
+      - User-Tickets
+  /api/v1/tickets/my:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of tickets created by the authenticated user
+      parameters:
+      - description: Filter by status
+        enum:
+        - open
+        - in_progress
+        - pending
+        - resolved
+        - closed
+        example: open
+        in: query
+        name: status
+        type: string
+      - description: Filter by priority
+        enum:
+        - low
+        - normal
+        - high
+        - urgent
+        - critical
+        example: high
+        in: query
+        name: priority
+        type: string
+      - description: Filter by category
+        enum:
+        - general
+        - technical
+        - billing
+        - account
+        - feature
+        - bug
+        - subscription
+        - payment
+        example: subscription
+        in: query
+        name: category
+        type: string
+      - description: Search in title or description
+        example: '"subscription issue"'
+        in: query
+        name: search
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.StandardListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user's tickets
+      tags:
+      - User-Tickets
   /app/system/health:
     get:
       consumes:
@@ -14572,6 +15117,143 @@ paths:
       summary: Get OAuth authorization URL
       tags:
       - auth
+  /coupons:
+    get:
+      consumes:
+      - application/json
+      description: Get list of public coupons available to all users (no authentication
+        required)
+      parameters:
+      - default: 10
+        description: Limit results
+        example: 10
+        in: query
+        maximum: 50
+        minimum: 1
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/entities.CouponResponse'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      summary: Get public coupons
+      tags:
+      - Coupon
+  /coupons/my-usage:
+    get:
+      consumes:
+      - application/json
+      description: Get current user's coupon usage records
+      parameters:
+      - default: 1
+        description: Page number
+        example: 1
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        example: 10
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.PaginatedResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/entities.CouponUsageResponse'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get my coupon usage history
+      tags:
+      - Coupon
+  /coupons/validate:
+    post:
+      consumes:
+      - application/json
+      description: Validate a coupon code for a specific user and order
+      parameters:
+      - description: Coupon validation data
+        in: body
+        name: coupon
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.ValidateCouponRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.ValidateCouponResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Validate coupon code
+      tags:
+      - Coupon
   /invoice:
     get:
       description: Get a list of invoices with optional filters
@@ -16256,6 +16938,171 @@ paths:
       summary: '[User] Get my subscription orders'
       tags:
       - User-Subscription
+  /subscription/plans:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of visible subscription plans for purchase
+      parameters:
+      - description: Filter by currency
+        example: '"USD"'
+        in: query
+        name: currency
+        type: string
+      - description: Limit results
+        example: 10
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - description: Offset results
+        example: 0
+        in: query
+        minimum: 0
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.PaginatedResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/entities.SubscriptionPlanResponse'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      summary: Get available subscription plans
+      tags:
+      - Public-Subscription-Plans
+  /subscription/plans/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get detailed information about a specific subscription plan
+      parameters:
+      - description: Plan ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.SubscriptionPlanResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      summary: Get subscription plan details
+      tags:
+      - Public-Subscription-Plans
+  /subscription/plans/code/{code}:
+    get:
+      consumes:
+      - application/json
+      description: Get detailed information about a subscription plan using its unique
+        code
+      parameters:
+      - description: Plan Code
+        example: '"premium-monthly"'
+        in: path
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.SubscriptionPlanResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      summary: Get subscription plan by code
+      tags:
+      - Public-Subscription-Plans
+  /subscription/plans/popular:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of popular/recommended subscription plans
+      parameters:
+      - description: Limit results
+        example: 5
+        in: query
+        maximum: 20
+        minimum: 1
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/entities.SubscriptionPlanResponse'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      summary: Get popular subscription plans
+      tags:
+      - Public-Subscription-Plans
   /subscription/quick-purchase:
     post:
       consumes:

@@ -89,15 +89,24 @@ type AdminAuthHandler struct {
 func NewAdminAuthHandler(
 	authService authInterfaces.AuthService,
 	jwtBlacklistService authInterfaces.JWTBlacklistService,
-	loginSecurityService authInterfaces.LoginSecurityService,
+	// loginSecurityService authInterfaces.LoginSecurityService, // 🔴 DISABLED: Optional dependency
 	userService userInterfaces.UserService,
 ) *AdminAuthHandler {
 	return &AdminAuthHandler{
 		authService:          authService,
 		jwtBlacklistService:  jwtBlacklistService,
-		loginSecurityService: loginSecurityService,
+		loginSecurityService: nil, // 🔴 DISABLED: Set to nil to disable login security
 		userService:          userService,
 	}
+}
+
+// checkLoginSecurityService checks if login security service is available
+func (h *AdminAuthHandler) checkLoginSecurityService(c *gin.Context) bool {
+	if h.loginSecurityService == nil {
+		response.BadRequest(c, "Login security service is disabled")
+		return false
+	}
+	return true
 }
 
 // JWT Token Management Endpoints
@@ -308,6 +317,11 @@ func (h *AdminAuthHandler) ListLoginAttempts(c *gin.Context) {
 		since = *filter.StartDate
 	}
 
+	// 🔴 DISABLED: Check if login security service is available
+	if !h.checkLoginSecurityService(c) {
+		return
+	}
+	
 	stats, err := h.loginSecurityService.GetLoginAttemptStats(c.Request.Context(), since)
 	if err != nil {
 		logger.Error("Admin failed to get login attempts",
@@ -352,6 +366,12 @@ func (h *AdminAuthHandler) GetFailedLoginAnalysis(c *gin.Context) {
 	}
 
 	since := time.Now().AddDate(0, 0, -days)
+	
+	// 🔴 DISABLED: Check if login security service is available
+	if !h.checkLoginSecurityService(c) {
+		return
+	}
+	
 	stats, err := h.loginSecurityService.GetLoginAttemptStats(c.Request.Context(), since)
 	if err != nil {
 		logger.Error("Admin failed to get failed login analysis",
@@ -397,6 +417,11 @@ func (h *AdminAuthHandler) UnlockAccount(c *gin.Context) {
 	var req AdminAccountUnlockRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, err.Error())
+		return
+	}
+
+	// 🔴 DISABLED: Check if login security service is available
+	if !h.checkLoginSecurityService(c) {
 		return
 	}
 
@@ -523,6 +548,11 @@ func (h *AdminAuthHandler) GetAccountSecurityStatus(c *gin.Context) {
 		return
 	}
 
+	// 🔴 DISABLED: Check if login security service is available
+	if !h.checkLoginSecurityService(c) {
+		return
+	}
+
 	// Check if account is locked
 	isLocked, lockout, err := h.loginSecurityService.IsAccountLocked(c.Request.Context(), user.Email)
 	if err != nil {
@@ -535,7 +565,8 @@ func (h *AdminAuthHandler) GetAccountSecurityStatus(c *gin.Context) {
 		return
 	}
 
-	// Get failure count
+	// Get failure count  
+	// Note: Already checked loginSecurityService availability above
 	failureCount, err := h.loginSecurityService.GetFailureCount(c.Request.Context(), user.Email)
 	if err != nil {
 		logger.Error("Admin failed to get failure count",

@@ -127,6 +127,7 @@ var Module = fx.Module("subscription",
 
 	// 提供 Handler 实现
 	fx.Provide(
+		handlers.NewSubscriptionPlanHandler,
 		handlers.NewSubscriptionOrderHandler,
 		handlers.NewUserSubscriptionHandler,
 		handlers.NewQuickPurchaseHandler,

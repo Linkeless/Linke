@@ -3,7 +3,6 @@ package auth
 import (
 	"go.uber.org/fx"
 	"gorm.io/gorm"
-	"time"
 
 	"linke/internal/domains/auth/adapters/repositories"
 	"linke/internal/domains/auth/handlers"
@@ -44,10 +43,11 @@ var Module = fx.Module("auth",
 			},
 			fx.As(new(interfaces.JWTBlacklistService)),
 		),
-		fx.Annotate(
-			implementations.NewLoginSecurityService,
-			fx.As(new(interfaces.LoginSecurityService)),
-		),
+		// 🔴 DISABLED: Login security service temporarily disabled
+		// fx.Annotate(
+		// 	implementations.NewLoginSecurityService,
+		// 	fx.As(new(interfaces.LoginSecurityService)),
+		// ),
 	),
 
 	// 提供核心服务实现
@@ -67,9 +67,10 @@ var Module = fx.Module("auth",
 				userRepository userInterfaces.UserRepository,
 				jwtService interfaces.JWTService,
 				inviteCodeService referralInterfaces.InviteCodeService,
-				loginSecurityService interfaces.LoginSecurityService,
+				// loginSecurityService interfaces.LoginSecurityService, // 🔴 DISABLED: Removed dependency
 			) interfaces.AuthService {
-				return implementations.NewAuthService(db, userService, userRepository, jwtService, inviteCodeService, loginSecurityService)
+				// Pass nil for loginSecurityService to disable login security
+				return implementations.NewAuthService(db, userService, userRepository, jwtService, inviteCodeService, nil)
 			},
 			fx.As(new(interfaces.AuthService)),
 		),
@@ -81,17 +82,18 @@ var Module = fx.Module("auth",
 		handlers.NewAdminAuthHandler,
 	),
 
-	// 提供登录安全配置
-	fx.Provide(
-		func() *implementations.LoginSecurityConfig {
-			return &implementations.LoginSecurityConfig{
-				MaxFailures:        5,
-				LockoutDuration:    1 * time.Hour,
-				FailureWindow:      24 * time.Hour,
-				ProgressiveLockout: true,
-			}
-		},
-	),
+	// 🔴 DISABLED: Login security configuration not needed when service is disabled
+	// fx.Provide(
+	// 	func() *implementations.LoginSecurityConfig {
+	// 		return &implementations.LoginSecurityConfig{
+	// 			// Production values (for future reference):
+	// 			MaxFailures:        5,               // 5 failed attempts trigger lockout
+	// 			LockoutDuration:    15 * time.Minute, // 15 minutes lockout duration
+	// 			FailureWindow:      1 * time.Hour,    // 1 hour failure counting window
+	// 			ProgressiveLockout: true,            // Enable progressive lockout
+	// 		}
+	// 	},
+	// ),
 
 	// 模块初始化钩子
 	fx.Invoke(func(db *gorm.DB, cfg *config.Config) {

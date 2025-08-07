@@ -13130,6 +13130,504 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/tickets": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new support ticket for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Tickets"
+                ],
+                "summary": "Create new ticket",
+                "parameters": [
+                    {
+                        "description": "Ticket creation data",
+                        "name": "ticket",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UserCreateTicketRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/entities.TicketUserResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/my": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get paginated list of tickets created by the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Tickets"
+                ],
+                "summary": "Get user's tickets",
+                "parameters": [
+                    {
+                        "enum": [
+                            "open",
+                            "in_progress",
+                            "pending",
+                            "resolved",
+                            "closed"
+                        ],
+                        "type": "string",
+                        "example": "open",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "low",
+                            "normal",
+                            "high",
+                            "urgent",
+                            "critical"
+                        ],
+                        "type": "string",
+                        "example": "high",
+                        "description": "Filter by priority",
+                        "name": "priority",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "general",
+                            "technical",
+                            "billing",
+                            "account",
+                            "feature",
+                            "bug",
+                            "subscription",
+                            "payment"
+                        ],
+                        "type": "string",
+                        "example": "subscription",
+                        "description": "Filter by category",
+                        "name": "category",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "\"subscription issue\"",
+                        "description": "Search in title or description",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardListResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get detailed ticket information including messages (user can only access own tickets)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Tickets"
+                ],
+                "summary": "Get ticket details",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Ticket ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/entities.TicketUserResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/{id}/close": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Close a support ticket (user can only close own tickets)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Tickets"
+                ],
+                "summary": "Close ticket",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Ticket ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Closure reason",
+                        "name": "closure",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CloseTicketRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/entities.TicketUserResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/tickets/{id}/messages": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get messages for a ticket (user can only access messages for own tickets, excluding internal notes)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Tickets"
+                ],
+                "summary": "Get ticket messages",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Ticket ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Add a message to a ticket (user can only add messages to own tickets)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Tickets"
+                ],
+                "summary": "Add message to ticket",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Ticket ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Message data",
+                        "name": "message",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UserTicketMessageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/entities.TicketMessageUserResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/app/system/health": {
             "get": {
                 "description": "检查系统各组件健康状态",
@@ -13593,6 +14091,225 @@ const docTemplate = `{
                         "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/coupons": {
+            "get": {
+                "description": "Get list of public coupons available to all users (no authentication required)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Coupon"
+                ],
+                "summary": "Get public coupons",
+                "parameters": [
+                    {
+                        "maximum": 50,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 10,
+                        "example": 10,
+                        "description": "Limit results",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/entities.CouponResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/coupons/my-usage": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get current user's coupon usage records",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Coupon"
+                ],
+                "summary": "Get my coupon usage history",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 1,
+                        "example": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 10,
+                        "example": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.PaginatedResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/entities.CouponUsageResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/coupons/validate": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Validate a coupon code for a specific user and order",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Coupon"
+                ],
+                "summary": "Validate coupon code",
+                "parameters": [
+                    {
+                        "description": "Coupon validation data",
+                        "name": "coupon",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ValidateCouponRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.ValidateCouponResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
                         }
                     },
                     "500": {
@@ -16312,6 +17029,268 @@ const docTemplate = `{
                         "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/subscription/plans": {
+            "get": {
+                "description": "Get a list of visible subscription plans for purchase",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public-Subscription-Plans"
+                ],
+                "summary": "Get available subscription plans",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "\"USD\"",
+                        "description": "Filter by currency",
+                        "name": "currency",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "example": 10,
+                        "description": "Limit results",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "example": 0,
+                        "description": "Offset results",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.PaginatedResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/entities.SubscriptionPlanResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/subscription/plans/code/{code}": {
+            "get": {
+                "description": "Get detailed information about a subscription plan using its unique code",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public-Subscription-Plans"
+                ],
+                "summary": "Get subscription plan by code",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "\"premium-monthly\"",
+                        "description": "Plan Code",
+                        "name": "code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/entities.SubscriptionPlanResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/subscription/plans/popular": {
+            "get": {
+                "description": "Get a list of popular/recommended subscription plans",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public-Subscription-Plans"
+                ],
+                "summary": "Get popular subscription plans",
+                "parameters": [
+                    {
+                        "maximum": 20,
+                        "minimum": 1,
+                        "type": "integer",
+                        "example": 5,
+                        "description": "Limit results",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/entities.SubscriptionPlanResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/subscription/plans/{id}": {
+            "get": {
+                "description": "Get detailed information about a specific subscription plan",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public-Subscription-Plans"
+                ],
+                "summary": "Get subscription plan details",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Plan ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/entities.SubscriptionPlanResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "404": {
@@ -20148,6 +21127,80 @@ const docTemplate = `{
                 }
             }
         },
+        "entities.CouponUsageResponse": {
+            "type": "object",
+            "properties": {
+                "coupon": {
+                    "description": "Related data (to be populated at application layer)",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entities.CouponResponse"
+                        }
+                    ]
+                },
+                "coupon_id": {
+                    "description": "Coupon ID",
+                    "type": "integer",
+                    "example": 1
+                },
+                "created_at": {
+                    "description": "Creation time",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "currency": {
+                    "description": "Currency",
+                    "type": "string",
+                    "example": "USD"
+                },
+                "discount_amount": {
+                    "description": "Discount amount",
+                    "type": "number",
+                    "example": 5.99
+                },
+                "id": {
+                    "description": "Usage ID",
+                    "type": "integer",
+                    "example": 1
+                },
+                "order_amount": {
+                    "description": "Original order amount",
+                    "type": "number",
+                    "example": 29.99
+                },
+                "subscription_order": {
+                    "description": "Order info",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.SubscriptionOrderBasicDTO"
+                        }
+                    ]
+                },
+                "subscription_order_id": {
+                    "description": "Order ID",
+                    "type": "integer",
+                    "example": 1
+                },
+                "updated_at": {
+                    "description": "Update time",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "user": {
+                    "description": "User info",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.UserBasicDTO"
+                        }
+                    ]
+                },
+                "user_id": {
+                    "description": "User ID",
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
         "entities.CreatePaymentMethodRequest": {
             "type": "object",
             "required": [
@@ -22135,6 +23188,39 @@ const docTemplate = `{
                 }
             }
         },
+        "entities.TicketMessageUserResponse": {
+            "type": "object",
+            "properties": {
+                "attachments": {
+                    "type": "string",
+                    "example": "[{\"name\":\"screenshot.png\",\"url\":\"/uploads/screenshot.png\"}]"
+                },
+                "content": {
+                    "type": "string",
+                    "example": "Thank you for contacting support. We will review your issue."
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-01T10:30:00Z"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "message_type": {
+                    "type": "string",
+                    "example": "admin"
+                },
+                "ticket_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-01-01T10:30:00Z"
+                }
+            }
+        },
         "entities.TicketResponse": {
             "type": "object",
             "properties": {
@@ -22232,6 +23318,69 @@ const docTemplate = `{
                 "user_id": {
                     "type": "integer",
                     "example": 1
+                }
+            }
+        },
+        "entities.TicketUserResponse": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "example": "subscription"
+                },
+                "closed_at": {
+                    "type": "string",
+                    "example": "2024-01-02T16:00:00Z"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-01T09:00:00Z"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "I am unable to access my premium subscription features"
+                },
+                "first_response_at": {
+                    "type": "string",
+                    "example": "2024-01-01T10:30:00Z"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "last_response_at": {
+                    "type": "string",
+                    "example": "2024-01-02T14:00:00Z"
+                },
+                "messages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.TicketMessageUserResponse"
+                    }
+                },
+                "priority": {
+                    "type": "string",
+                    "example": "normal"
+                },
+                "resolution": {
+                    "type": "string",
+                    "example": "Issue resolved by updating subscription settings"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "open"
+                },
+                "ticket_no": {
+                    "type": "string",
+                    "example": "TKT-20240101-001"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Unable to access my subscription"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-01-02T16:00:00Z"
                 }
             }
         },
@@ -23768,6 +24917,15 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.CloseTicketRequest": {
+            "type": "object",
+            "properties": {
+                "reason": {
+                    "type": "string",
+                    "example": "Issue resolved, closing ticket"
+                }
+            }
+        },
         "handlers.CreateCouponRequest": {
             "type": "object",
             "required": [
@@ -25028,6 +26186,61 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.UserCreateTicketRequest": {
+            "type": "object",
+            "required": [
+                "category",
+                "description",
+                "title"
+            ],
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "enum": [
+                        "general",
+                        "technical",
+                        "billing",
+                        "account",
+                        "feature",
+                        "bug",
+                        "subscription",
+                        "payment"
+                    ],
+                    "example": "subscription"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 5000,
+                    "minLength": 10,
+                    "example": "I am unable to access my premium subscription features"
+                },
+                "metadata": {
+                    "type": "string",
+                    "example": "{\"browser\": \"Chrome\", \"os\": \"Windows\"}"
+                },
+                "priority": {
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "normal",
+                        "high",
+                        "urgent",
+                        "critical"
+                    ],
+                    "example": "normal"
+                },
+                "tags": {
+                    "type": "string",
+                    "example": "urgent,subscription"
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 5,
+                    "example": "Unable to access my subscription"
+                }
+            }
+        },
         "handlers.UserProfileUpdateRequest": {
             "type": "object",
             "properties": {
@@ -25039,6 +26252,56 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
+                }
+            }
+        },
+        "handlers.UserTicketMessageRequest": {
+            "type": "object",
+            "required": [
+                "content"
+            ],
+            "properties": {
+                "attachments": {
+                    "type": "string",
+                    "example": "[{\"name\":\"screenshot.png\",\"url\":\"https://example.com/file.png\"}]"
+                },
+                "content": {
+                    "type": "string",
+                    "maxLength": 5000,
+                    "minLength": 1,
+                    "example": "Thank you for your response. I tried the suggested solution but the issue persists."
+                },
+                "metadata": {
+                    "type": "string",
+                    "example": "{\"client_ip\":\"192.168.1.1\"}"
+                }
+            }
+        },
+        "handlers.ValidateCouponRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "currency",
+                "order_amount",
+                "plan_id"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "SAVE20"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "order_amount": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 29.99
+                },
+                "plan_id": {
+                    "type": "integer",
+                    "example": 1
                 }
             }
         },
@@ -27050,6 +28313,30 @@ const docTemplate = `{
                 },
                 "user_subscription_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "interfaces.ValidateCouponResponse": {
+            "type": "object",
+            "properties": {
+                "coupon": {
+                    "$ref": "#/definitions/entities.CouponResponse"
+                },
+                "discount_amount": {
+                    "type": "number",
+                    "example": 5.99
+                },
+                "final_amount": {
+                    "type": "number",
+                    "example": 24
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Coupon is valid"
+                },
+                "valid": {
+                    "type": "boolean",
+                    "example": true
                 }
             }
         },

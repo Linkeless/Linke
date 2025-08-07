@@ -40,6 +40,7 @@ var Module = fx.Module("ticket",
 	// 提供 Handler 实现
 	fx.Provide(
 		handlers.NewAdminTicketHandler,
+		handlers.NewUserTicketHandler,
 	),
 
 	// 模块初始化钩子
