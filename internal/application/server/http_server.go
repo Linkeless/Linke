@@ -18,16 +18,16 @@ import (
 	"linke/internal/shared/versioning"
 
 	// Handler imports
-	authHandlers "linke/internal/domains/auth/handlers"
+	authHandlers "linke/internal/domains/auth/adapters/handlers"
 	authInterfaces "linke/internal/domains/auth/usecases/interfaces"
-	couponHandlers "linke/internal/domains/coupon/handlers"
-	invoiceHandlers "linke/internal/domains/invoice/handlers"
-	paymentHandlers "linke/internal/domains/payment/handlers"
-	referralHandlers "linke/internal/domains/referral/handlers"
-	serverHandlers "linke/internal/domains/server/handlers"
-	subscriptionHandlers "linke/internal/domains/subscription/handlers"
-	ticketHandlers "linke/internal/domains/ticket/handlers"
-	userHandlers "linke/internal/domains/user/handlers"
+	couponHandlers "linke/internal/domains/coupon/adapters/handlers"
+	invoiceHandlers "linke/internal/domains/invoice/adapters/handlers"
+	paymentHandlers "linke/internal/domains/payment/adapters/handlers"
+	referralHandlers "linke/internal/domains/referral/adapters/handlers"
+	serverHandlers "linke/internal/domains/server/adapters/handlers"
+	subscriptionHandlers "linke/internal/domains/subscription/adapters/handlers"
+	ticketHandlers "linke/internal/domains/ticket/adapters/handlers"
+	userHandlers "linke/internal/domains/user/adapters/handlers"
 )
 
 // HTTPServer HTTP 服务器结构

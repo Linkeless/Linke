@@ -13,16 +13,16 @@ import (
 	"linke/internal/shared/versioning"
 
 	// Handler imports
-	authHandlers "linke/internal/domains/auth/handlers"
+	authHandlers "linke/internal/domains/auth/adapters/handlers"
 	authInterfaces "linke/internal/domains/auth/usecases/interfaces"
-	couponHandlers "linke/internal/domains/coupon/handlers"
-	invoiceHandlers "linke/internal/domains/invoice/handlers"
-	paymentHandlers "linke/internal/domains/payment/handlers"
-	referralHandlers "linke/internal/domains/referral/handlers"
-	serverHandlers "linke/internal/domains/server/handlers"
-	subscriptionHandlers "linke/internal/domains/subscription/handlers"
-	ticketHandlers "linke/internal/domains/ticket/handlers"
-	userHandlers "linke/internal/domains/user/handlers"
+	couponHandlers "linke/internal/domains/coupon/adapters/handlers"
+	invoiceHandlers "linke/internal/domains/invoice/adapters/handlers"
+	paymentHandlers "linke/internal/domains/payment/adapters/handlers"
+	referralHandlers "linke/internal/domains/referral/adapters/handlers"
+	serverHandlers "linke/internal/domains/server/adapters/handlers"
+	subscriptionHandlers "linke/internal/domains/subscription/adapters/handlers"
+	ticketHandlers "linke/internal/domains/ticket/adapters/handlers"
+	userHandlers "linke/internal/domains/user/adapters/handlers"
 )
 
 // authServiceAdapter adapts the domain AuthService to middleware AuthService interface
@@ -132,22 +132,23 @@ func SetupRoutes(
 		authGroup.POST("/refresh", authHandler.RefreshToken)
 		authGroup.POST("/change-password", middleware.AuthMiddleware(newAuthServiceAdapter(authService)), authHandler.ChangePassword)
 
-		// OAuth provider routes
+		// OAuth provider routes - static routes first
 		authGroup.GET("/providers", authHandler.GetProviders)
-
-		// OAuth authentication start routes - using dynamic parameters to match handler expectations
-		authGroup.GET("/:provider", authHandler.Login)
-
-		// OAuth callback routes - using dynamic parameters to match handler expectations
-		authGroup.GET("/:provider/callback", authHandler.Callback)
-
+		authGroup.GET("/telegram/widget", authHandler.GetTelegramWidget)
+		
 		// Generic callback route (compatibility)
 		authGroup.GET("/callback", authHandler.Callback)
 
 		// Additional OAuth endpoints
 		authGroup.POST("/url", authHandler.GetAuthURL)
 		authGroup.POST("/token", authHandler.ExchangeToken)
-		authGroup.GET("/telegram/widget", authHandler.GetTelegramWidget)
+		
+		// OAuth dynamic routes - must be after static routes to avoid conflicts
+		// OAuth authentication start routes - using dynamic parameters to match handler expectations
+		authGroup.GET("/:provider", authHandler.Login)
+		
+		// OAuth callback routes - using dynamic parameters to match handler expectations
+		authGroup.GET("/:provider/callback", authHandler.Callback)
 	}
 
 	// User routes (/api/v1/user) - requires authentication
@@ -291,6 +292,10 @@ func SetupRoutes(
 	{
 		adminServerGroup.POST("", adminServerHandler.CreateServer)
 		adminServerGroup.GET("", adminServerHandler.ListServers)
+		// Static routes first
+		adminServerGroup.GET("/group/:group_id", adminServerHandler.GetServersByGroup)
+		adminServerGroup.POST("/bulk/update", adminServerHandler.BulkUpdateServers)
+		// Dynamic :id routes after static routes
 		adminServerGroup.GET("/:id", adminServerHandler.GetServer)
 		adminServerGroup.PUT("/:id", adminServerHandler.UpdateServer)
 		adminServerGroup.PATCH("/:id", adminServerHandler.PatchServer)
@@ -298,8 +303,6 @@ func SetupRoutes(
 		adminServerGroup.PUT("/:id/status", adminServerHandler.UpdateServerStatus)
 		adminServerGroup.GET("/:id/statistics", adminServerHandler.GetServerStatistics)
 		adminServerGroup.GET("/:id/health", adminServerHandler.CheckServerHealth)
-		adminServerGroup.GET("/group/:group_id", adminServerHandler.GetServersByGroup)
-		adminServerGroup.POST("/bulk/update", adminServerHandler.BulkUpdateServers)
 	}
 	logger.Debug("Registered admin server routes", zap.String("prefix", "/api/v1/admin/servers"))
 
@@ -308,13 +311,15 @@ func SetupRoutes(
 	{
 		adminServerGroupGroup.POST("", adminServerGroupHandler.CreateGroup)
 		adminServerGroupGroup.GET("", adminServerGroupHandler.ListGroups)
+		// Static route first
+		adminServerGroupGroup.GET("/statistics", adminServerGroupHandler.GetAllGroupStatistics)
+		// Dynamic :id routes after static routes
 		adminServerGroupGroup.GET("/:id", adminServerGroupHandler.GetGroup)
 		adminServerGroupGroup.PUT("/:id", adminServerGroupHandler.UpdateGroup)
 		adminServerGroupGroup.PATCH("/:id", adminServerGroupHandler.PatchGroup)
 		adminServerGroupGroup.DELETE("/:id", adminServerGroupHandler.DeleteGroup)
 		adminServerGroupGroup.GET("/:id/servers", adminServerGroupHandler.GetGroupServers)
 		adminServerGroupGroup.GET("/:id/statistics", adminServerGroupHandler.GetGroupStatistics)
-		adminServerGroupGroup.GET("/statistics", adminServerGroupHandler.GetAllGroupStatistics)
 	}
 	logger.Debug("Registered admin server group routes", zap.String("prefix", "/api/v1/admin/server-groups"))
 

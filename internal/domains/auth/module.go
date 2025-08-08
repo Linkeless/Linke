@@ -5,12 +5,14 @@ import (
 	"gorm.io/gorm"
 
 	"linke/internal/domains/auth/adapters/repositories"
-	"linke/internal/domains/auth/handlers"
+	"linke/internal/domains/auth/adapters/handlers"
 	"linke/internal/domains/auth/usecases/implementations"
 	"linke/internal/domains/auth/usecases/interfaces"
 	referralInterfaces "linke/internal/domains/referral/usecases/interfaces"
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
+	"linke/internal/shared/cache"
 	"linke/internal/shared/config"
+	"linke/internal/shared/framework"
 )
 
 // Module Auth 领域模块
@@ -34,15 +36,22 @@ var Module = fx.Module("auth",
 
 	// 提供基础服务实现
 	fx.Provide(
-		// Provide JWTBlacklistService as concrete type first
+		// Provide JWTBlacklistService as concrete type first (for caching wrapper)
 		implementations.NewJWTBlacklistService,
-		// Provide interface wrapper
+		
+		// Provide cached JWTBlacklistService as interface
 		fx.Annotate(
-			func(service *implementations.JWTBlacklistService) interfaces.JWTBlacklistService {
-				return service
+			func(
+				baseService *implementations.JWTBlacklistService,
+				cacheManager cache.CacheManager,
+				cacheKeys *cache.AllCacheKeys,
+				logger framework.Logger,
+			) interfaces.JWTBlacklistService {
+				return implementations.NewCachedJWTBlacklistService(baseService, cacheManager, cacheKeys, logger)
 			},
 			fx.As(new(interfaces.JWTBlacklistService)),
 		),
+		
 		// 🔴 DISABLED: Login security service temporarily disabled
 		// fx.Annotate(
 		// 	implementations.NewLoginSecurityService,
@@ -52,8 +61,19 @@ var Module = fx.Module("auth",
 
 	// 提供核心服务实现
 	fx.Provide(
+		// Provide JWTService as concrete type first (for caching wrapper)
+		implementations.NewJWTService,
+		
+		// Provide cached JWTService as interface
 		fx.Annotate(
-			implementations.NewJWTService,
+			func(
+				baseService *implementations.JWTService,
+				cacheManager cache.CacheManager,
+				cacheKeys *cache.AllCacheKeys,
+				logger framework.Logger,
+			) interfaces.JWTService {
+				return implementations.NewCachedJWTService(baseService, cacheManager, cacheKeys, logger)
+			},
 			fx.As(new(interfaces.JWTService)),
 		),
 		fx.Annotate(

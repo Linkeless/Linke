@@ -5,7 +5,7 @@ import (
 	"gorm.io/gorm"
 
 	"linke/internal/domains/coupon/adapters/repositories"
-	"linke/internal/domains/coupon/handlers"
+	"linke/internal/domains/coupon/adapters/handlers"
 	"linke/internal/domains/coupon/usecases/implementations"
 	"linke/internal/domains/coupon/usecases/interfaces"
 )

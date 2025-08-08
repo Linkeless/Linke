@@ -9,7 +9,7 @@ import (
 	invoiceInterfaces "linke/internal/domains/invoice/usecases/interfaces"
 	paymentInterfaces "linke/internal/domains/payment/usecases/interfaces"
 	"linke/internal/domains/subscription/adapters/repositories"
-	"linke/internal/domains/subscription/handlers"
+	"linke/internal/domains/subscription/adapters/handlers"
 	"linke/internal/domains/subscription/usecases/implementations"
 	"linke/internal/domains/subscription/usecases/interfaces"
 	"linke/internal/shared/cache"

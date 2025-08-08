@@ -3,7 +3,6 @@ package interfaces
 import (
 	"context"
 	"linke/internal/domains/auth/entities"
-	referralEntities "linke/internal/domains/referral/entities"
 	userEntities "linke/internal/domains/user/entities"
 	"time"
 )
@@ -45,14 +44,7 @@ type AuthResponse struct {
 	Token *TokenResponse             `json:"token"`
 }
 
-// Service dependencies (interfaces that AuthService depends on)
-type UserService interface {
-	CreateUser(ctx context.Context, user *userEntities.User) error
-	GetUserByEmail(ctx context.Context, email string) (*userEntities.User, error)
-	GetUserByID(ctx context.Context, id uint) (*userEntities.User, error)
-	UpdateUser(ctx context.Context, user *userEntities.User) error
-}
-
+// JWTService defines JWT token management operations (auth domain owned)
 type JWTService interface {
 	GenerateToken(user *userEntities.User) (*TokenResponse, error)
 	ValidateToken(tokenString string) (*Claims, error)
@@ -61,11 +53,7 @@ type JWTService interface {
 	RevokeAllUserTokens(userID uint, reason string) error
 }
 
-type InviteCodeService interface {
-	ValidateInviteCode(ctx context.Context, code string) (*referralEntities.InviteCode, error)
-	UseInviteCode(ctx context.Context, code string, userID uint, ipAddress, userAgent string) (*referralEntities.InviteCodeUsage, error)
-}
-
+// LoginSecurityService defines login security operations (auth domain owned)
 type LoginSecurityService interface {
 	RecordLoginAttempt(ctx context.Context, email, ip, userAgent, reason string, success bool, userID *uint) error
 	IsAccountLocked(ctx context.Context, email string) (bool, *entities.AccountLockout, error)
@@ -74,6 +62,10 @@ type LoginSecurityService interface {
 	GetLoginAttemptStats(ctx context.Context, since time.Time) (map[string]any, error)
 	CleanupOldAttempts(ctx context.Context, olderThan time.Duration) error
 }
+
+// Note: UserService and InviteCodeService are imported from their respective domains
+// - UserService from domains/user/usecases/interfaces
+// - InviteCodeService from domains/referral/usecases/interfaces
 
 // Claims represents JWT token claims
 type Claims struct {

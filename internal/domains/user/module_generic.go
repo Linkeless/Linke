@@ -5,7 +5,7 @@ import (
 
 	"linke/internal/domains/user/adapters/repositories"
 	"linke/internal/domains/user/entities"
-	"linke/internal/domains/user/handlers"
+	"linke/internal/domains/user/adapters/handlers"
 	"linke/internal/domains/user/usecases/implementations"
 	"linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/shared/framework"

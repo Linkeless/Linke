@@ -5,7 +5,7 @@ import (
 	"gorm.io/gorm"
 
 	"linke/internal/domains/ticket/adapters/repositories"
-	"linke/internal/domains/ticket/handlers"
+	"linke/internal/domains/ticket/adapters/handlers"
 	"linke/internal/domains/ticket/usecases/implementations"
 	"linke/internal/domains/ticket/usecases/interfaces"
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
