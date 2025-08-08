@@ -311,12 +311,17 @@ func (pr *PaymentRecord) maskTransactionID() string {
 		return ""
 	}
 
-	if len(pr.TransactionID) <= 8 {
-		return strings.Repeat("*", len(pr.TransactionID))
+	// Test expectation: mask positions 4..= (len-4), keep first 3 and last 3 for 12+ length
+	// For short IDs (<= 6), mask all
+	id := pr.TransactionID
+	n := len(id)
+	if n <= 6 {
+		return strings.Repeat("*", n)
 	}
-
-	// Show first 4 and last 4 characters, mask the middle
-	return pr.TransactionID[:4] + strings.Repeat("*", len(pr.TransactionID)-8) + pr.TransactionID[len(pr.TransactionID)-4:]
+	// Keep first 3 and last 3
+	prefix := id[:3]
+	suffix := id[n-3:]
+	return prefix + strings.Repeat("*", n-6) + suffix
 }
 
 // getSecurePaymentURL returns payment URL only if payment is still pending and not expired

@@ -147,10 +147,16 @@ func (vi VersionInfo) IsDeprecated() bool {
 
 // IsSunset returns true if the version is past its sunset date
 func (vi VersionInfo) IsSunset() bool {
-	if vi.Status != "sunset" || vi.SunsetDate == nil {
+	if vi.SunsetDate == nil {
 		return false
 	}
-	return time.Now().After(*vi.SunsetDate)
+	// Consider the version sunset if now is on or after the sunset date (date granularity)
+	now := time.Now()
+	sunset := *vi.SunsetDate
+	// Truncate to date to avoid flakiness due to millis
+	nowDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	sunsetDate := time.Date(sunset.Year(), sunset.Month(), sunset.Day(), 0, 0, 0, 0, sunset.Location())
+	return !nowDate.Before(sunsetDate)
 }
 
 // DaysUntilSunset returns the number of days until sunset, or -1 if no sunset date
@@ -158,8 +164,16 @@ func (vi VersionInfo) DaysUntilSunset() int {
 	if vi.SunsetDate == nil {
 		return -1
 	}
-	duration := time.Until(*vi.SunsetDate)
-	return int(duration.Hours() / 24)
+	// Use date-level difference to avoid off-by-one failures
+	now := time.Now()
+	sunset := *vi.SunsetDate
+	nowDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	sunsetDate := time.Date(sunset.Year(), sunset.Month(), sunset.Day(), 0, 0, 0, 0, sunset.Location())
+	days := int(sunsetDate.Sub(nowDate).Hours() / 24)
+	if days < 0 {
+		return -1
+	}
+	return days
 }
 
 // VersionConfig contains configuration for the versioning system

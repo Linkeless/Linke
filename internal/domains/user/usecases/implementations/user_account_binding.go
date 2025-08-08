@@ -29,17 +29,17 @@ func NewUserAccountBindingService(
 // CreateBinding creates a new account binding for a user
 func (s *userAccountBindingService) CreateBinding(ctx context.Context, userID uint, req *entities.CreateBindingRequest) (*entities.UserAccountBinding, error) {
 	// Validate request
-	if err := s.ValidateBindingRequest(req); err != nil {
+	if err := s.validateBindingRequest(req); err != nil {
 		return nil, fmt.Errorf("invalid binding request: %w", err)
 	}
 
 	// Check if user can bind this provider
-	if err := s.CanBindProvider(ctx, userID, req.Provider); err != nil {
+	if err := s.canBindProvider(ctx, userID, req.Provider); err != nil {
 		return nil, err
 	}
 
 	// Check if provider account is already bound to another user
-	exists, err := s.IsProviderAccountBound(ctx, req.Provider, req.ProviderUserID)
+	exists, err := s.isProviderAccountBound(ctx, req.Provider, req.ProviderUserID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check provider account binding: %w", err)
 	}
@@ -106,24 +106,10 @@ func (s *userAccountBindingService) GetUserBindings(ctx context.Context, userID 
 	return bindings, nil
 }
 
-// GetUserBinding retrieves a specific binding for a user and provider
-func (s *userAccountBindingService) GetUserBinding(ctx context.Context, userID uint, provider string) (*entities.UserAccountBinding, error) {
-	if !entities.IsValidProvider(provider) {
-		return nil, fmt.Errorf("invalid provider: %s", provider)
-	}
-
-	binding, err := s.bindingRepo.GetByUserIDAndProvider(ctx, userID, provider)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get user binding: %w", err)
-	}
-
-	return binding, nil
-}
-
 // UpdateBinding updates an existing binding
 func (s *userAccountBindingService) UpdateBinding(ctx context.Context, userID uint, provider string, req *entities.UpdateBindingRequest) (*entities.UserAccountBinding, error) {
 	// Get existing binding
-	binding, err := s.GetUserBinding(ctx, userID, provider)
+	binding, err := s.getUserBinding(ctx, userID, provider)
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +175,7 @@ func (s *userAccountBindingService) UpdateBinding(ctx context.Context, userID ui
 // DeleteBinding deletes a binding
 func (s *userAccountBindingService) DeleteBinding(ctx context.Context, userID uint, provider string) error {
 	// Get existing binding
-	binding, err := s.GetUserBinding(ctx, userID, provider)
+	binding, err := s.getUserBinding(ctx, userID, provider)
 	if err != nil {
 		return err
 	}
@@ -250,20 +236,6 @@ func (s *userAccountBindingService) FindUserByProviderAccount(ctx context.Contex
 	return binding, nil
 }
 
-// FindUserByProviderEmail finds a user by provider email
-func (s *userAccountBindingService) FindUserByProviderEmail(ctx context.Context, provider, email string) (*entities.UserAccountBinding, error) {
-	if !entities.IsValidProvider(provider) {
-		return nil, fmt.Errorf("invalid provider: %s", provider)
-	}
-
-	binding, err := s.bindingRepo.GetByProviderAndEmail(ctx, provider, email)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find user by provider email: %w", err)
-	}
-
-	return binding, nil
-}
-
 // SetPrimaryBinding sets a binding as primary
 func (s *userAccountBindingService) SetPrimaryBinding(ctx context.Context, userID uint, provider string) error {
 	if !entities.IsValidProvider(provider) {
@@ -271,7 +243,7 @@ func (s *userAccountBindingService) SetPrimaryBinding(ctx context.Context, userI
 	}
 
 	// Get the binding
-	binding, err := s.bindingRepo.GetByUserIDAndProvider(ctx, userID, provider)
+	binding, err := s.getUserBinding(ctx, userID, provider)
 	if err != nil {
 		return fmt.Errorf("failed to get binding: %w", err)
 	}
@@ -288,18 +260,32 @@ func (s *userAccountBindingService) SetPrimaryBinding(ctx context.Context, userI
 	return nil
 }
 
-// GetPrimaryBinding gets the primary binding for a user
-func (s *userAccountBindingService) GetPrimaryBinding(ctx context.Context, userID uint) (*entities.UserAccountBinding, error) {
-	binding, err := s.bindingRepo.GetPrimaryBindingByUserID(ctx, userID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get primary binding: %w", err)
+// Helper methods - not exposed in interface
+
+// getUserBinding retrieves a specific binding for a user and provider
+func (s *userAccountBindingService) getUserBinding(ctx context.Context, userID uint, provider string) (*entities.UserAccountBinding, error) {
+	if !entities.IsValidProvider(provider) {
+		return nil, fmt.Errorf("invalid provider: %s", provider)
 	}
 
-	return binding, nil
+	// Since we removed GetByUserIDAndProvider from repository, we need to get all user bindings
+	// and find the one with matching provider
+	bindings, err := s.bindingRepo.GetByUserID(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user bindings: %w", err)
+	}
+
+	for _, binding := range bindings {
+		if binding.Provider == provider {
+			return binding, nil
+		}
+	}
+
+	return nil, fmt.Errorf("user account binding not found for user %d and provider %s", userID, provider)
 }
 
-// ValidateBindingRequest validates a binding request
-func (s *userAccountBindingService) ValidateBindingRequest(req *entities.CreateBindingRequest) error {
+// validateBindingRequest validates a binding request
+func (s *userAccountBindingService) validateBindingRequest(req *entities.CreateBindingRequest) error {
 	if req == nil {
 		return fmt.Errorf("request cannot be nil")
 	}
@@ -319,8 +305,8 @@ func (s *userAccountBindingService) ValidateBindingRequest(req *entities.CreateB
 	return nil
 }
 
-// CanBindProvider checks if a user can bind a provider
-func (s *userAccountBindingService) CanBindProvider(ctx context.Context, userID uint, provider string) error {
+// canBindProvider checks if a user can bind a provider
+func (s *userAccountBindingService) canBindProvider(ctx context.Context, userID uint, provider string) error {
 	if !entities.IsValidProvider(provider) {
 		return fmt.Errorf("invalid provider: %s", provider)
 	}
@@ -332,101 +318,30 @@ func (s *userAccountBindingService) CanBindProvider(ctx context.Context, userID 
 	}
 
 	// Check if user already has a binding for this provider
-	exists, err := s.bindingRepo.ExistsByUserIDAndProvider(ctx, userID, provider)
+	bindings, err := s.bindingRepo.GetByUserID(ctx, userID)
 	if err != nil {
-		return fmt.Errorf("failed to check existing binding: %w", err)
+		return fmt.Errorf("failed to check existing bindings: %w", err)
 	}
 
-	if exists {
-		return fmt.Errorf("user already has a binding for provider: %s", provider)
+	for _, binding := range bindings {
+		if binding.Provider == provider {
+			return fmt.Errorf("user already has a binding for provider: %s", provider)
+		}
 	}
 
 	return nil
 }
 
-// IsProviderAccountBound checks if a provider account is already bound
-func (s *userAccountBindingService) IsProviderAccountBound(ctx context.Context, provider, providerUserID string) (bool, error) {
-	return s.bindingRepo.ExistsByProviderAndProviderUserID(ctx, provider, providerUserID)
-}
-
-// CreateOrUpdateFromOAuth creates or updates a binding from OAuth information
-func (s *userAccountBindingService) CreateOrUpdateFromOAuth(ctx context.Context, provider string, userInfo *interfaces.OAuthUserInfo) (*entities.UserAccountBinding, error) {
-	if userInfo == nil {
-		return nil, fmt.Errorf("userInfo cannot be nil")
-	}
-
-	// Try to find existing binding
-	binding, err := s.bindingRepo.GetByProviderAndProviderUserID(ctx, provider, userInfo.ProviderUserID)
+// isProviderAccountBound checks if a provider account is already bound
+func (s *userAccountBindingService) isProviderAccountBound(ctx context.Context, provider, providerUserID string) (bool, error) {
+	_, err := s.bindingRepo.GetByProviderAndProviderUserID(ctx, provider, providerUserID)
 	if err != nil {
-		// Binding doesn't exist, create new one
-		req := &entities.CreateBindingRequest{
-			Provider:         provider,
-			ProviderUserID:   userInfo.ProviderUserID,
-			ProviderEmail:    userInfo.ProviderEmail,
-			ProviderUsername: userInfo.ProviderUsername,
-			ProviderName:     userInfo.ProviderName,
-			ProviderAvatar:   userInfo.ProviderAvatar,
-			ProviderData:     userInfo.ProviderData,
+		// If error is "not found", return false; otherwise return the error
+		if err.Error() == fmt.Sprintf("user account binding not found for provider %s and provider user ID %s", provider, providerUserID) {
+			return false, nil
 		}
-
-		return s.CreateBinding(ctx, userInfo.UserID, req)
+		return false, err
 	}
-
-	// Update existing binding
-	binding.ProviderEmail = userInfo.ProviderEmail
-	binding.ProviderUsername = userInfo.ProviderUsername
-	binding.ProviderName = userInfo.ProviderName
-	binding.ProviderAvatar = userInfo.ProviderAvatar
-	binding.ProviderData = userInfo.ProviderData
-
-	if err := s.bindingRepo.Update(ctx, binding); err != nil {
-		return nil, fmt.Errorf("failed to update binding from OAuth: %w", err)
-	}
-
-	// Update last used
-	if err := s.bindingRepo.UpdateLastUsed(ctx, binding.ID); err != nil {
-		logger.Error("Failed to update last used timestamp",
-			logger.Uint("binding_id", binding.ID),
-			logger.Error2("error", err))
-	}
-
-	return binding, nil
+	return true, nil
 }
 
-// UpdateLastUsed updates the last used timestamp
-func (s *userAccountBindingService) UpdateLastUsed(ctx context.Context, bindingID uint) error {
-	return s.bindingRepo.UpdateLastUsed(ctx, bindingID)
-}
-
-// ListBindings lists bindings with pagination
-func (s *userAccountBindingService) ListBindings(ctx context.Context, userID uint, offset, limit int) ([]*entities.UserAccountBinding, int64, error) {
-	return s.bindingRepo.ListByUserID(ctx, userID, offset, limit)
-}
-
-// GetBindingStats gets binding statistics
-func (s *userAccountBindingService) GetBindingStats(ctx context.Context) (*interfaces.BindingStats, error) {
-	stats := &interfaces.BindingStats{
-		BindingsByProvider: make(map[string]int64),
-	}
-
-	// Count bindings by provider
-	providers := entities.ValidProviders()
-	for _, provider := range providers {
-		count, err := s.bindingRepo.CountByProvider(ctx, provider)
-		if err != nil {
-			return nil, fmt.Errorf("failed to count bindings for provider %s: %w", provider, err)
-		}
-		stats.BindingsByProvider[provider] = count
-		stats.TotalBindings += count
-	}
-
-	// TODO: Implement users with bindings count and active bindings count
-	// This would require additional queries or repository methods
-
-	return stats, nil
-}
-
-// CleanupInactiveBindings cleans up inactive bindings
-func (s *userAccountBindingService) CleanupInactiveBindings(ctx context.Context, days int) error {
-	return s.bindingRepo.CleanupOldBindings(ctx, days)
-}

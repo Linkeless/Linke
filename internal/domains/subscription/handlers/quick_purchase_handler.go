@@ -36,7 +36,7 @@ func NewQuickPurchaseHandler(subscriptionOrderService interfaces.SubscriptionOrd
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /subscription/quick-purchase [post]
+// @Router /purchase [post]
 func (h *QuickPurchaseHandler) QuickPurchase(c *gin.Context) {
 	// Get current user from context
 	userValue, exists := c.Get(middleware.AuthContextKey)

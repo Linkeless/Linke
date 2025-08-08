@@ -7,7 +7,9 @@ import (
 	"time"
 
 	couponInterfaces "linke/internal/domains/coupon/usecases/interfaces"
+	invoiceEntities "linke/internal/domains/invoice/entities"
 	invoiceInterfaces "linke/internal/domains/invoice/usecases/interfaces"
+	paymentEntities "linke/internal/domains/payment/entities"
 	paymentInterfaces "linke/internal/domains/payment/usecases/interfaces"
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/domains/subscription/usecases/interfaces"
@@ -36,6 +38,44 @@ func NewSubscriptionOrderService(db *gorm.DB, subscriptionPlanService interfaces
 		couponService:           couponService,
 		invoiceService:          invoiceService,
 	}
+}
+
+// GetSubscriptionOrderSummary aggregates order + latest payment + latest invoice
+func (sos *SubscriptionOrderService) GetSubscriptionOrderSummary(ctx context.Context, orderID uint) (map[string]any, error) {
+	// Load order
+	var order entities.SubscriptionOrder
+	if err := sos.db.WithContext(ctx).First(&order, orderID).Error; err != nil {
+		return nil, fmt.Errorf("subscription order not found")
+	}
+
+	// Latest payment by paid_at then created_at
+	var payment paymentEntities.PaymentRecord
+	_ = sos.db.WithContext(ctx).
+		Where("subscription_order_id = ?", orderID).
+		Order("paid_at DESC, created_at DESC").
+		Limit(1).
+		Find(&payment).Error
+
+	// Latest invoice by issued_at then created_at
+	var invoice invoiceEntities.Invoice
+	_ = sos.db.WithContext(ctx).
+		Where("subscription_order_id = ?", orderID).
+		Order("issued_at DESC, created_at DESC").
+		Limit(1).
+		Find(&invoice).Error
+
+	result := map[string]any{
+		"order":   order.ToResponse(),
+		"payment": nil,
+		"invoice": nil,
+	}
+	if payment.ID != 0 {
+		result["payment"] = payment.ToSecureResponse()
+	}
+	if invoice.ID != 0 {
+		result["invoice"] = invoice.ToResponse()
+	}
+	return result, nil
 }
 
 // CreateSubscriptionOrder creates a new subscription order with payment

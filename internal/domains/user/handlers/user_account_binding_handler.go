@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"strconv"
-
 	"linke/internal/domains/user/entities"
 	"linke/internal/domains/user/usecases/interfaces"
 	userEntities "linke/internal/domains/user/entities"
@@ -174,12 +172,25 @@ func (h *UserAccountBindingHandler) GetBinding(c *gin.Context) {
 		return
 	}
 
-	binding, err := h.bindingService.GetUserBinding(c.Request.Context(), u.ID, provider)
+	bindings, err := h.bindingService.GetUserBindings(c.Request.Context(), u.ID)
 	if err != nil {
-		logger.Error("Failed to get user binding",
+		logger.Error("Failed to get user bindings",
 			logger.Uint("user_id", u.ID),
 			logger.String("provider", provider),
 			logger.Error2("error", err))
+		response.NotFound(c, "Account binding not found")
+		return
+	}
+
+	var binding *entities.UserAccountBinding
+	for _, b := range bindings {
+		if b.Provider == provider {
+			binding = b
+			break
+		}
+	}
+
+	if binding == nil {
 		response.NotFound(c, "Account binding not found")
 		return
 	}
@@ -365,6 +376,7 @@ func (h *UserAccountBindingHandler) SetPrimaryBinding(c *gin.Context) {
 	response.SuccessWithMessage(c, "Primary binding set successfully", nil)
 }
 
+/*
 // GetBindingStats godoc
 // @Summary Get binding statistics
 // @Description Get statistics about account bindings (admin only)
@@ -405,7 +417,9 @@ func (h *UserAccountBindingHandler) GetBindingStats(c *gin.Context) {
 
 	response.Success(c, stats)
 }
+*/
 
+/*
 // CleanupInactiveBindings godoc
 // @Summary Cleanup inactive bindings
 // @Description Remove inactive bindings older than specified days (admin only)
@@ -465,3 +479,4 @@ func (h *UserAccountBindingHandler) CleanupInactiveBindings(c *gin.Context) {
 		"days_threshold": days,
 	})
 }
+*/

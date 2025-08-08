@@ -23,19 +23,64 @@ func NewSubscriptionOrderHandler(subscriptionOrderService interfaces.Subscriptio
 	}
 }
 
-// CreateSubscriptionOrder godoc
-// @Summary [User] Create subscription order
-// @Description Create a new subscription order with payment
+// GetSubscriptionOrderSummary godoc
+// @Summary [User] Get order summary (order + latest payment + latest invoice)
+// @Description Aggregate order with latest payment and invoice
 // @Tags User-Subscription
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param order body interfaces.CreateSubscriptionOrderRequest true "Subscription order data"
-// @Success 201 {object} response.StandardResponse
+// @Param id path int true "Subscription order ID"
+// @Success 200 {object} response.StandardResponse{data=map[string]any}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
+// @Failure 403 {object} response.ForbiddenResponse
+// @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /subscription/orders [post]
+// @Router /orders/{id}/summary [get]
+func (h *SubscriptionOrderHandler) GetSubscriptionOrderSummary(c *gin.Context) {
+	// auth
+	userValue, exists := c.Get(middleware.AuthContextKey)
+	if !exists {
+		response.Unauthorized(c, "Authentication required")
+		return
+	}
+	user, ok := userValue.(*userEntities.User)
+	if !ok {
+		response.Unauthorized(c, "Invalid user context")
+		return
+	}
+
+	// parse id
+	orderIDStr := c.Param("id")
+	orderID64, err := strconv.ParseUint(orderIDStr, 10, 32)
+	if err != nil {
+		response.BadRequest(c, "Invalid order ID")
+		return
+	}
+	orderID := uint(orderID64)
+
+	// enforce ownership in service aggregation result by reusing GetSubscriptionOrder first
+	order, err := h.subscriptionOrderService.GetSubscriptionOrder(c.Request.Context(), orderID)
+	if err != nil {
+		response.NotFound(c, "Subscription order not found")
+		return
+	}
+	if !user.IsAdmin() && order.UserID != user.ID {
+		response.Forbidden(c, "You can only access your own orders")
+		return
+	}
+
+	summary, err := h.subscriptionOrderService.GetSubscriptionOrderSummary(c.Request.Context(), orderID)
+	if err != nil {
+		logger.Error("Failed to get order summary", logger.Error2("error", err), logger.Uint("order_id", orderID))
+		response.InternalServerError(c, "Failed to get order summary", err.Error())
+		return
+	}
+	response.OK(c, "Order summary retrieved successfully", summary)
+}
+
+// Deprecated (user): Use POST /api/v1/purchase instead. Handler remains for internal/admin flows if needed.
 func (h *SubscriptionOrderHandler) CreateSubscriptionOrder(c *gin.Context) {
 	// Get current user from context
 	userValue, exists := c.Get(middleware.AuthContextKey)
@@ -75,8 +120,8 @@ func (h *SubscriptionOrderHandler) CreateSubscriptionOrder(c *gin.Context) {
 }
 
 // GetSubscriptionOrder godoc
-// @Summary [User] Get subscription order
-// @Description Get subscription order details
+// @Summary [User] Get order
+// @Description Get order details
 // @Tags User-Subscription
 // @Accept json
 // @Produce json
@@ -88,7 +133,7 @@ func (h *SubscriptionOrderHandler) CreateSubscriptionOrder(c *gin.Context) {
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /subscription/orders/{id} [get]
+// @Router /orders/{id} [get]
 func (h *SubscriptionOrderHandler) GetSubscriptionOrder(c *gin.Context) {
 	// Get current user from context
 	userValue, exists := c.Get(middleware.AuthContextKey)
@@ -133,8 +178,8 @@ func (h *SubscriptionOrderHandler) GetSubscriptionOrder(c *gin.Context) {
 }
 
 // GetMySubscriptionOrders godoc
-// @Summary [User] Get my subscription orders
-// @Description Get current user's subscription orders
+// @Summary [User] Get my orders
+// @Description Get current user's orders
 // @Tags User-Subscription
 // @Accept json
 // @Produce json
@@ -144,7 +189,7 @@ func (h *SubscriptionOrderHandler) GetSubscriptionOrder(c *gin.Context) {
 // @Success 200 {object} response.PaginatedResponse{data=[]entities.SubscriptionOrderResponse}
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /subscription/orders/my [get]
+// @Router /orders [get]
 func (h *SubscriptionOrderHandler) GetMySubscriptionOrders(c *gin.Context) {
 	// Get current user from context
 	userValue, exists := c.Get(middleware.AuthContextKey)

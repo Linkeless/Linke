@@ -24,68 +24,68 @@ type BatchNotificationRequest struct {
 
 // NotificationRecipient represents a single recipient in a batch
 type NotificationRecipient struct {
-	UserID           uint                    `json:"user_id" validate:"required"`
-	Email            string                  `json:"email,omitempty"`
-	Phone            string                  `json:"phone,omitempty"`
-	TelegramChatID   int64                   `json:"telegram_chat_id,omitempty"`
-	TelegramUsername string                  `json:"telegram_username,omitempty"`
-	Channels         []NotificationChannel   `json:"channels" validate:"required"`
-	Variables        map[string]string       `json:"variables,omitempty"`
-	Preferences      *UserPreferences        `json:"preferences,omitempty"`
+	UserID           uint                  `json:"user_id" validate:"required"`
+	Email            string                `json:"email,omitempty"`
+	Phone            string                `json:"phone,omitempty"`
+	TelegramChatID   int64                 `json:"telegram_chat_id,omitempty"`
+	TelegramUsername string                `json:"telegram_username,omitempty"`
+	Channels         []NotificationChannel `json:"channels" validate:"required"`
+	Variables        map[string]string     `json:"variables,omitempty"`
+	Preferences      *UserPreferences      `json:"preferences,omitempty"`
 }
 
 // UserPreferences represents user notification preferences
 type UserPreferences struct {
-	Enabled      bool                              `json:"enabled"`
-	Channels     map[NotificationChannel]bool      `json:"channels"`
-	QuietHours   *QuietHoursConfig                `json:"quiet_hours,omitempty"`
-	Frequency    string                           `json:"frequency"` // immediate, hourly, daily
-	MinPriority  NotificationPriority             `json:"min_priority"`
-	Language     string                           `json:"language"`
-	Timezone     string                           `json:"timezone"`
+	Enabled     bool                         `json:"enabled"`
+	Channels    map[NotificationChannel]bool `json:"channels"`
+	QuietHours  *QuietHoursConfig            `json:"quiet_hours,omitempty"`
+	Frequency   string                       `json:"frequency"` // immediate, hourly, daily
+	MinPriority NotificationPriority         `json:"min_priority"`
+	Language    string                       `json:"language"`
+	Timezone    string                       `json:"timezone"`
 }
 
 // QuietHoursConfig represents quiet hours settings
 type QuietHoursConfig struct {
-	Enabled   bool `json:"enabled"`
-	StartHour int  `json:"start_hour" validate:"min=0,max=23"`
-	EndHour   int  `json:"end_hour" validate:"min=0,max=23"`
+	Enabled   bool   `json:"enabled"`
+	StartHour int    `json:"start_hour" validate:"min=0,max=23"`
+	EndHour   int    `json:"end_hour" validate:"min=0,max=23"`
 	Timezone  string `json:"timezone"`
 }
 
 // RateLimitConfig represents rate limiting configuration
 type RateLimitConfig struct {
-	MaxPerSecond int `json:"max_per_second" validate:"min=1"`
-	MaxPerMinute int `json:"max_per_minute" validate:"min=1"`
-	BatchSize    int `json:"batch_size" validate:"min=1,max=1000"`
+	MaxPerSecond   int `json:"max_per_second" validate:"min=1"`
+	MaxPerMinute   int `json:"max_per_minute" validate:"min=1"`
+	BatchSize      int `json:"batch_size" validate:"min=1,max=1000"`
 	MaxConcurrency int `json:"max_concurrency" validate:"min=1,max=100"`
 }
 
 // BatchNotificationResult represents the result of a batch operation
 type BatchNotificationResult struct {
-	BatchID           string              `json:"batch_id"`
-	TotalRecipients   int                 `json:"total_recipients"`
-	TotalBatches      int                 `json:"total_batches"`
-	SuccessfulBatches int                 `json:"successful_batches"`
-	FailedBatches     int                 `json:"failed_batches"`
-	TotalSent         int                 `json:"total_sent"`
-	TotalFailed       int                 `json:"total_failed"`
-	StartTime         time.Time           `json:"start_time"`
-	EndTime           time.Time           `json:"end_time"`
-	Duration          time.Duration       `json:"duration" swaggertype:"string"`
-	Errors            []error             `json:"errors,omitempty"`
-	BatchResults      []*BatchResult      `json:"batch_results,omitempty"`
+	BatchID           string         `json:"batch_id"`
+	TotalRecipients   int            `json:"total_recipients"`
+	TotalBatches      int            `json:"total_batches"`
+	SuccessfulBatches int            `json:"successful_batches"`
+	FailedBatches     int            `json:"failed_batches"`
+	TotalSent         int            `json:"total_sent"`
+	TotalFailed       int            `json:"total_failed"`
+	StartTime         time.Time      `json:"start_time"`
+	EndTime           time.Time      `json:"end_time"`
+	Duration          time.Duration  `json:"duration" swaggertype:"string"`
+	Errors            []error        `json:"errors,omitempty"`
+	BatchResults      []*BatchResult `json:"batch_results,omitempty"`
 }
 
 // BatchResult represents the result of processing a single batch
 type BatchResult struct {
-	BatchIndex     int                      `json:"batch_index"`
-	Recipients     []NotificationRecipient  `json:"recipients"`
-	Sent           int                      `json:"sent"`
-	Failed         int                      `json:"failed"`
-	ProcessingTime time.Duration            `json:"processing_time" swaggertype:"string"`
-	Results        []*NotificationResult    `json:"results,omitempty"`
-	Error          string                   `json:"error,omitempty"`
+	BatchIndex     int                     `json:"batch_index"`
+	Recipients     []NotificationRecipient `json:"recipients"`
+	Sent           int                     `json:"sent"`
+	Failed         int                     `json:"failed"`
+	ProcessingTime time.Duration           `json:"processing_time" swaggertype:"string"`
+	Results        []*NotificationResult   `json:"results,omitempty"`
+	Error          string                  `json:"error,omitempty"`
 }
 
 // BatchNotificationService provides batch notification processing
@@ -134,7 +134,7 @@ func (s *BatchNotificationService) SendBatch(ctx context.Context, req *BatchNoti
 		logger.String("batch_id", req.BatchID),
 		logger.Int("total_recipients", len(req.Recipients)),
 		logger.String("template", req.Template),
-		logger.String("priority", string(req.Priority)))
+		logger.String("priority", req.Priority.String()))
 
 	// Create result tracking
 	result := &BatchNotificationResult{
@@ -161,7 +161,7 @@ func (s *BatchNotificationService) SendBatch(ctx context.Context, req *BatchNoti
 // createBatches splits recipients into smaller batches
 func (s *BatchNotificationService) createBatches(recipients []NotificationRecipient, batchSize int) [][]NotificationRecipient {
 	var batches [][]NotificationRecipient
-	
+
 	for i := 0; i < len(recipients); i += batchSize {
 		end := i + batchSize
 		if end > len(recipients) {
@@ -169,7 +169,7 @@ func (s *BatchNotificationService) createBatches(recipients []NotificationRecipi
 		}
 		batches = append(batches, recipients[i:end])
 	}
-	
+
 	return batches
 }
 
@@ -183,33 +183,33 @@ func (s *BatchNotificationService) processBatchesConcurrently(
 ) (*BatchNotificationResult, error) {
 	// Channel for rate limiting
 	rateLimiter := make(chan struct{}, rateLimit.MaxConcurrency)
-	
+
 	// Channel for collecting results
 	resultChan := make(chan *BatchResult, len(batches))
 	errorChan := make(chan error, len(batches))
-	
+
 	var wg sync.WaitGroup
-	
+
 	// Process each batch
 	for batchIndex, batch := range batches {
 		wg.Add(1)
-		
+
 		go func(idx int, recipients []NotificationRecipient) {
 			defer wg.Done()
-			
+
 			// Acquire rate limit token
 			rateLimiter <- struct{}{}
 			defer func() { <-rateLimiter }()
-			
+
 			// Process the batch
 			batchResult, err := s.processBatch(ctx, recipients, req, idx)
 			if err != nil {
 				errorChan <- err
 				return
 			}
-			
+
 			resultChan <- batchResult
-			
+
 			// Apply inter-batch delay for rate limiting
 			if rateLimit.MaxPerSecond > 0 {
 				delay := time.Duration(len(recipients)*1000/rateLimit.MaxPerSecond) * time.Millisecond
@@ -217,14 +217,14 @@ func (s *BatchNotificationService) processBatchesConcurrently(
 			}
 		}(batchIndex, batch)
 	}
-	
+
 	// Close channels when all goroutines are done
 	go func() {
 		wg.Wait()
 		close(resultChan)
 		close(errorChan)
 	}()
-	
+
 	// Collect results
 	for {
 		select {
@@ -249,15 +249,15 @@ func (s *BatchNotificationService) processBatchesConcurrently(
 				result.FailedBatches++
 			}
 		}
-		
+
 		if resultChan == nil && errorChan == nil {
 			break
 		}
 	}
-	
+
 	result.EndTime = time.Now()
 	result.Duration = result.EndTime.Sub(result.StartTime)
-	
+
 	s.logger.Info("Batch notification processing completed",
 		logger.String("batch_id", req.BatchID),
 		logger.Int("successful_batches", result.SuccessfulBatches),
@@ -265,7 +265,7 @@ func (s *BatchNotificationService) processBatchesConcurrently(
 		logger.Int("total_sent", result.TotalSent),
 		logger.Int("total_failed", result.TotalFailed),
 		logger.String("duration", result.Duration.String()))
-	
+
 	return result, nil
 }
 
@@ -277,13 +277,13 @@ func (s *BatchNotificationService) processBatch(
 	batchIndex int,
 ) (*BatchResult, error) {
 	startTime := time.Now()
-	
+
 	batchResult := &BatchResult{
 		BatchIndex: batchIndex,
 		Recipients: recipients,
 		Results:    make([]*NotificationResult, 0, len(recipients)),
 	}
-	
+
 	// Process each recipient in the batch
 	for _, recipient := range recipients {
 		// Skip if user preferences don't allow this notification
@@ -293,7 +293,7 @@ func (s *BatchNotificationService) processBatch(
 				logger.String("batch_id", req.BatchID))
 			continue
 		}
-		
+
 		// Merge global and recipient-specific variables
 		variables := make(map[string]string)
 		for k, v := range req.GlobalVars {
@@ -302,7 +302,7 @@ func (s *BatchNotificationService) processBatch(
 		for k, v := range recipient.Variables {
 			variables[k] = v
 		}
-		
+
 		// Create individual notification request
 		notificationReq := &NotificationRequest{
 			UserID:           recipient.UserID,
@@ -318,7 +318,7 @@ func (s *BatchNotificationService) processBatch(
 			EventType:        "batch_notification",
 			EventID:          fmt.Sprintf("%s_%d_%d", req.BatchID, batchIndex, recipient.UserID),
 		}
-		
+
 		// Send notification
 		results, err := s.baseService.Send(ctx, notificationReq)
 		if err != nil {
@@ -329,7 +329,7 @@ func (s *BatchNotificationService) processBatch(
 				logger.ErrorField(err))
 			continue
 		}
-		
+
 		// Count successful notifications
 		for _, result := range results {
 			batchResult.Results = append(batchResult.Results, result)
@@ -340,16 +340,16 @@ func (s *BatchNotificationService) processBatch(
 			}
 		}
 	}
-	
+
 	batchResult.ProcessingTime = time.Since(startTime)
-	
+
 	s.logger.Debug("Batch processed",
 		logger.Int("batch_index", batchIndex),
 		logger.String("batch_id", req.BatchID),
 		logger.Int("sent", batchResult.Sent),
 		logger.Int("failed", batchResult.Failed),
 		logger.String("processing_time", batchResult.ProcessingTime.String()))
-	
+
 	return batchResult, nil
 }
 
@@ -358,24 +358,24 @@ func (s *BatchNotificationService) shouldSendToRecipient(recipient NotificationR
 	if recipient.Preferences == nil {
 		return true // No preferences set, allow all
 	}
-	
+
 	prefs := recipient.Preferences
-	
+
 	// Check if notifications are globally enabled
 	if !prefs.Enabled {
 		return false
 	}
-	
+
 	// Check minimum priority
 	if !s.isPriorityAllowed(priority, prefs.MinPriority) {
 		return false
 	}
-	
+
 	// Check quiet hours
 	if s.isInQuietHours(prefs.QuietHours) {
 		return priority == PriorityUrgent // Only urgent notifications during quiet hours
 	}
-	
+
 	// Check if any of the recipient's channels are enabled
 	hasEnabledChannel := false
 	for _, channel := range recipient.Channels {
@@ -384,7 +384,7 @@ func (s *BatchNotificationService) shouldSendToRecipient(recipient NotificationR
 			break
 		}
 	}
-	
+
 	return hasEnabledChannel
 }
 
@@ -396,14 +396,14 @@ func (s *BatchNotificationService) isPriorityAllowed(notifPriority, minPriority 
 		PriorityHigh:   3,
 		PriorityUrgent: 4,
 	}
-	
+
 	notifLevel, exists1 := priorityLevels[notifPriority]
 	minLevel, exists2 := priorityLevels[minPriority]
-	
+
 	if !exists1 || !exists2 {
 		return true // Default to allow if priority not found
 	}
-	
+
 	return notifLevel >= minLevel
 }
 
@@ -412,14 +412,14 @@ func (s *BatchNotificationService) isInQuietHours(quietHours *QuietHoursConfig) 
 	if quietHours == nil || !quietHours.Enabled {
 		return false
 	}
-	
+
 	// TODO: Implement proper timezone handling
 	now := time.Now()
 	currentHour := now.Hour()
-	
+
 	start := quietHours.StartHour
 	end := quietHours.EndHour
-	
+
 	if start <= end {
 		return currentHour >= start && currentHour < end
 	} else {
@@ -435,7 +435,7 @@ func (s *BatchNotificationService) scheduleForLater(ctx context.Context, req *Ba
 	s.logger.Warn("Scheduled batch notifications not yet implemented, processing immediately",
 		logger.String("batch_id", req.BatchID),
 		logger.String("schedule_time", req.ScheduleTime.String()))
-	
+
 	// Process immediately instead of scheduling
 	req.ScheduleTime = nil
 	return s.SendBatch(ctx, req)

@@ -28,6 +28,9 @@ type SubscriptionOrderService interface {
 
 	// Quick Purchase
 	QuickPurchase(ctx context.Context, req *QuickPurchaseRequest) (*QuickPurchaseResponse, error)
+
+	// Aggregation: Order + latest payment + latest invoice (business-layer aggregation only)
+	GetSubscriptionOrderSummary(ctx context.Context, orderID uint) (map[string]any, error)
 }
 
 // CreateSubscriptionOrderRequest represents the request to create a subscription order

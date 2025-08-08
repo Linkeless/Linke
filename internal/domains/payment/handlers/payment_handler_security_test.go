@@ -634,6 +634,7 @@ func createTestPaymentRecord() *entities.PaymentRecord {
 		Amount:        99.99,
 		Currency:      "CNY",
 		Status:        entities.PaymentRecordStatusPending,
+		PaymentURL:    "https://payment.example.com/pay/123",
 		CreatedAt:     now,
 		UpdatedAt:     now,
 	}

@@ -231,12 +231,12 @@ func SetupRoutes(
 			oauthGroup.GET("/incidents", adminAuthHandler.ListOAuthSecurityEvents)
 		}
 
-		// Account Binding Management
-		bindingGroup := adminAuthGroup.Group("/bindings")
-		{
-			bindingGroup.GET("/stats", userAccountBindingHandler.GetBindingStats)
-			bindingGroup.POST("/cleanup", userAccountBindingHandler.CleanupInactiveBindings)
-		}
+		// Account Binding Management - temporarily disabled due to interface simplification
+		// bindingGroup := adminAuthGroup.Group("/bindings")
+		// {
+		// 	bindingGroup.GET("/stats", userAccountBindingHandler.GetBindingStats)
+		// 	bindingGroup.POST("/cleanup", userAccountBindingHandler.CleanupInactiveBindings)
+		// }
 
 		// Security Analytics and Reporting
 		analyticsGroup := adminAuthGroup.Group("/analytics")
@@ -565,16 +565,16 @@ func SetupRoutes(
 	}
 	logger.Debug("Registered admin referral routes", zap.String("prefix", "/api/v1/admin/referrals"))
 
-	// Subscription routes (/api/v1/subscription) - most require authentication
-	subscriptionGroup := apiV1.Group("/subscription")
-	{
-		// Quick purchase - requires authentication
-		subscriptionGroup.POST("/quick-purchase", middleware.AuthMiddleware(newAuthServiceAdapter(authService)), quickPurchaseHandler.QuickPurchase)
+	// Purchase route (destructive refactor): unify user purchase to a single endpoint
+	apiV1.POST("/purchase", middleware.AuthMiddleware(newAuthServiceAdapter(authService)), quickPurchaseHandler.QuickPurchase)
 
-		// Order related - requires authentication
-		subscriptionGroup.POST("/orders", middleware.AuthMiddleware(newAuthServiceAdapter(authService)), subscriptionOrderHandler.CreateSubscriptionOrder)
-		subscriptionGroup.GET("/orders/my", middleware.AuthMiddleware(newAuthServiceAdapter(authService)), subscriptionOrderHandler.GetMySubscriptionOrders)
-		subscriptionGroup.GET("/orders/:id", middleware.AuthMiddleware(newAuthServiceAdapter(authService)), subscriptionOrderHandler.GetSubscriptionOrder)
+	// Orders routes (read-only for user)
+	ordersGroup := apiV1.Group("/orders")
+	ordersGroup.Use(middleware.AuthMiddleware(newAuthServiceAdapter(authService)))
+	{
+		ordersGroup.GET("", subscriptionOrderHandler.GetMySubscriptionOrders)
+		ordersGroup.GET("/:id", subscriptionOrderHandler.GetSubscriptionOrder)
+		ordersGroup.GET("/:id/summary", subscriptionOrderHandler.GetSubscriptionOrderSummary)
 	}
 
 	// Subscription plan routes (/api/v1/subscription/plans) - using RegisterRoutes method
@@ -617,7 +617,7 @@ func SetupRoutes(
 		logger.Debug("Successfully registered usage alert routes with auth middleware")
 	}
 
-	// Invoice routes (/api/v1/invoice) - enforce authentication for all invoice endpoints
+	// Invoice routes (/api/v1/invoices) - enforce authentication for all invoice endpoints
 	logger.Debug("Registering invoice routes")
 	if invoiceHandler == nil {
 		logger.Error("Invoice handler is nil - routes will not be registered")
@@ -625,7 +625,7 @@ func SetupRoutes(
 		authedV1ForInvoice := apiV1.Group("")
 		authedV1ForInvoice.Use(middleware.AuthMiddleware(newAuthServiceAdapter(authService)))
 		invoiceHandler.RegisterRoutes(authedV1ForInvoice)
-		logger.Debug("Successfully registered invoice routes with auth middleware")
+		logger.Debug("Successfully registered invoice routes with auth middleware (plural resource)")
 	}
 
 	// Payment routes (/api/v1/payment)
@@ -756,11 +756,14 @@ func SetupRoutes(
 		"/api/v1/payment-methods/*/validate",
 		"/api/v1/payment/orders",
 		"/api/v1/subscriptions/my",
-		"/api/v1/subscription/orders",
+		"/api/v1/purchase",
+		"/api/v1/orders",
+		"/api/v1/orders/*/summary",
 		"/api/v1/usage/current/*",
 		"/api/v1/usage-alerts",
 		"/api/v1/auth/providers",
-		"/api/v1/invoice/*/pdf",
+		"/api/v1/invoices",
+		"/api/v1/invoices/*/download",
 	}
 
 	// Collect all verified important routes for consolidated logging

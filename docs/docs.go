@@ -1153,124 +1153,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/bindings/cleanup": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Remove inactive bindings older than specified days (admin only)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user-bindings"
-                ],
-                "summary": "Cleanup inactive bindings",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Days of inactivity threshold (default: 90)",
-                        "name": "days",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.MessageOnlyResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ForbiddenResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/bindings/stats": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get statistics about account bindings (admin only)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user-bindings"
-                ],
-                "summary": "Get binding statistics",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.StandardResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/interfaces.BindingStats"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ForbiddenResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/admin/cache/flush": {
             "delete": {
                 "security": [
@@ -14117,632 +13999,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/invoice": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get a list of invoices with optional filters",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Invoice"
-                ],
-                "summary": "[Admin] Get invoices with filters",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Invoice status",
-                        "name": "status",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Invoice type",
-                        "name": "invoice_type",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Date from (YYYY-MM-DD)",
-                        "name": "date_from",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Date to (YYYY-MM-DD)",
-                        "name": "date_to",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 10,
-                        "description": "Limit",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 0,
-                        "description": "Offset",
-                        "name": "offset",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.PaginatedResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/entities.InvoiceResponse"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Create a new invoice for a subscription order",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Invoice"
-                ],
-                "summary": "[Admin] Create a new invoice",
-                "parameters": [
-                    {
-                        "description": "Invoice data",
-                        "name": "invoice",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.CreateInvoiceRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.StandardResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/entities.InvoiceResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/invoice/bulk-download": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Download multiple invoices as a ZIP file with optional CSV summary",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/zip"
-                ],
-                "tags": [
-                    "Invoice"
-                ],
-                "summary": "[User/Admin] Download multiple invoices as ZIP",
-                "parameters": [
-                    {
-                        "description": "Bulk download request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.BulkDownloadRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "file"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ForbiddenResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/invoice/download-history": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get download history for the current user's invoices",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Invoice"
-                ],
-                "summary": "[User] Get invoice download history",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "default": 10,
-                        "description": "Limit",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 0,
-                        "description": "Offset",
-                        "name": "offset",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.PaginatedResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/interfaces.InvoiceDownloadRecord"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/invoice/languages": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get list of available languages for invoice generation",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Invoice"
-                ],
-                "summary": "[User/Admin] Get available languages",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.StandardResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/invoice/number/{number}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get a specific invoice by its invoice number",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Invoice"
-                ],
-                "summary": "[User/Admin] Get invoice by number",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Invoice Number",
-                        "name": "number",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.StandardResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/entities.InvoiceResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.NotFoundResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/invoice/statistics": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get invoice statistics for a date range",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Invoice"
-                ],
-                "summary": "[Admin] Get invoice statistics",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "From date (YYYY-MM-DD)",
-                        "name": "from_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "To date (YYYY-MM-DD)",
-                        "name": "to_date",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.StandardResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/dto.InvoiceStatisticsResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/invoice/templates": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get list of available PDF templates for invoice generation",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Invoice"
-                ],
-                "summary": "[User/Admin] Get available PDF templates",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.StandardResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/invoice/user": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get a list of invoices for the authenticated user",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Invoice"
-                ],
-                "summary": "[User] Get current user's invoices",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "default": 10,
-                        "description": "Limit",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 0,
-                        "description": "Offset",
-                        "name": "offset",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.PaginatedResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/entities.InvoiceResponse"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/invoice/{id}": {
+        "/invoices/{id}": {
             "get": {
                 "security": [
                     {
@@ -14810,145 +14067,9 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Update an existing invoice",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Invoice"
-                ],
-                "summary": "[Admin] Update an invoice",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Invoice ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Invoice update data",
-                        "name": "invoice",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.UpdateInvoiceRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.StandardResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/entities.InvoiceResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.NotFoundResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Delete an invoice by ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Invoice"
-                ],
-                "summary": "[Admin] Delete an invoice",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Invoice ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.StandardResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.NotFoundResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
             }
         },
-        "/invoice/{id}/download": {
+        "/invoices/{id}/download": {
             "get": {
                 "security": [
                     {
@@ -15008,344 +14129,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "type": "file"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.NotFoundResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/invoice/{id}/mark-paid": {
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Mark an invoice as paid with payment date",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Invoice"
-                ],
-                "summary": "[Admin] Mark invoice as paid",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Invoice ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Payment date",
-                        "name": "payment_date",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.MarkInvoiceAsPaidRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.StandardResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.NotFoundResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/invoice/{id}/mark-void": {
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Mark an invoice as void with reason",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Invoice"
-                ],
-                "summary": "[Admin] Mark invoice as void",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Invoice ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Void reason",
-                        "name": "reason",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.MarkInvoiceAsVoidRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.StandardResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.NotFoundResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/invoice/{id}/pdf": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Generate a PDF for the specified invoice",
-                "produces": [
-                    "application/pdf"
-                ],
-                "tags": [
-                    "Invoice"
-                ],
-                "summary": "[User/Admin] Generate invoice PDF",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Invoice ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "file"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.NotFoundResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/invoice/{id}/send": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Send an invoice to the specified email address",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Invoice"
-                ],
-                "summary": "[Admin] Send invoice via email",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Invoice ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Email details",
-                        "name": "email_request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.SendInvoiceRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.StandardResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.NotFoundResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/invoice/{id}/send-custom": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Send an invoice via email with custom PDF template and options",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Invoice"
-                ],
-                "summary": "[Admin] Send invoice with custom PDF options",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Invoice ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Email options",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.SendInvoiceRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.StandardResponse"
                         }
                     },
                     "400": {
@@ -15516,6 +14299,239 @@ const docTemplate = `{
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/orders": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get current user's orders",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Get my orders",
+                "parameters": [
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "example": 10,
+                        "description": "Limit results",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "example": 0,
+                        "description": "Offset results",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.PaginatedResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/entities.SubscriptionOrderResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/orders/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get order details",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Get order",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/entities.SubscriptionOrderResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/orders/{id}/summary": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Aggregate order with latest payment and invoice",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Get order summary (order + latest payment + latest invoice)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
                         }
                     },
                     "404": {
@@ -16536,6 +15552,81 @@ const docTemplate = `{
                 }
             }
         },
+        "/purchase": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a payment directly for subscription without creating order/invoice first. Order and invoice are created asynchronously after payment success.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Quick purchase subscription",
+                "parameters": [
+                    {
+                        "description": "Quick purchase data",
+                        "name": "purchase",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.QuickPurchaseRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.QuickPurchaseResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/server/UniProxy/config": {
             "get": {
                 "description": "Get configuration for UniProxy server based on node_id and node_type",
@@ -16785,216 +15876,6 @@ const docTemplate = `{
                         "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/response.StandardResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/subscription/orders": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Create a new subscription order with payment",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User-Subscription"
-                ],
-                "summary": "[User] Create subscription order",
-                "parameters": [
-                    {
-                        "description": "Subscription order data",
-                        "name": "order",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.CreateSubscriptionOrderRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/response.StandardResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/subscription/orders/my": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get current user's subscription orders",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User-Subscription"
-                ],
-                "summary": "[User] Get my subscription orders",
-                "parameters": [
-                    {
-                        "maximum": 100,
-                        "minimum": 1,
-                        "type": "integer",
-                        "example": 10,
-                        "description": "Limit results",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "example": 0,
-                        "description": "Offset results",
-                        "name": "offset",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.PaginatedResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/entities.SubscriptionOrderResponse"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/subscription/orders/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get subscription order details",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User-Subscription"
-                ],
-                "summary": "[User] Get subscription order",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Subscription order ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.StandardResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/entities.SubscriptionOrderResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ForbiddenResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.NotFoundResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
                     }
                 }
@@ -17251,81 +16132,6 @@ const docTemplate = `{
                         "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/response.NotFoundResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/subscription/quick-purchase": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Create a payment directly for subscription without creating order/invoice first. Order and invoice are created asynchronously after payment success.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User-Subscription"
-                ],
-                "summary": "[User] Quick purchase subscription",
-                "parameters": [
-                    {
-                        "description": "Quick purchase data",
-                        "name": "purchase",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.QuickPurchaseRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.StandardResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/interfaces.QuickPurchaseResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ForbiddenResponse"
                         }
                     },
                     "500": {
@@ -21595,110 +20401,6 @@ const docTemplate = `{
                 },
                 "database": {
                     "$ref": "#/definitions/dto.DatabaseHealthResponse"
-                }
-            }
-        },
-        "dto.InvoiceStatisticsResponse": {
-            "type": "object",
-            "properties": {
-                "monthly_breakdown": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.MonthlyInvoiceStats"
-                    }
-                },
-                "overdue_amount": {
-                    "type": "number",
-                    "example": 500
-                },
-                "paid_amount": {
-                    "type": "number",
-                    "example": 12000
-                },
-                "period": {
-                    "$ref": "#/definitions/dto.InvoiceStatsPeriod"
-                },
-                "status_breakdown": {
-                    "$ref": "#/definitions/dto.InvoiceStatusBreakdown"
-                },
-                "total_amount": {
-                    "type": "number",
-                    "example": 15000
-                },
-                "total_invoices": {
-                    "type": "integer",
-                    "example": 150
-                },
-                "unpaid_amount": {
-                    "type": "number",
-                    "example": 3000
-                }
-            }
-        },
-        "dto.InvoiceStatsPeriod": {
-            "type": "object",
-            "properties": {
-                "duration_days": {
-                    "type": "integer",
-                    "example": 31
-                },
-                "from_date": {
-                    "type": "string",
-                    "example": "2024-01-01"
-                },
-                "to_date": {
-                    "type": "string",
-                    "example": "2024-01-31"
-                }
-            }
-        },
-        "dto.InvoiceStatusBreakdown": {
-            "type": "object",
-            "properties": {
-                "cancelled": {
-                    "type": "integer",
-                    "example": 2
-                },
-                "draft": {
-                    "type": "integer",
-                    "example": 5
-                },
-                "overdue": {
-                    "type": "integer",
-                    "example": 3
-                },
-                "paid": {
-                    "type": "integer",
-                    "example": 120
-                },
-                "pending": {
-                    "type": "integer",
-                    "example": 20
-                }
-            }
-        },
-        "dto.MonthlyInvoiceStats": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer",
-                    "example": 12
-                },
-                "month": {
-                    "type": "string",
-                    "example": "2024-01"
-                },
-                "paid_amount": {
-                    "type": "number",
-                    "example": 1000
-                },
-                "paid_count": {
-                    "type": "integer",
-                    "example": 10
-                },
-                "total_amount": {
-                    "type": "number",
-                    "example": 1200
                 }
             }
         },
@@ -26486,30 +25188,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.MarkInvoiceAsPaidRequest": {
-            "type": "object",
-            "required": [
-                "payment_date"
-            ],
-            "properties": {
-                "payment_date": {
-                    "type": "string",
-                    "example": "2024-01-01"
-                }
-            }
-        },
-        "handlers.MarkInvoiceAsVoidRequest": {
-            "type": "object",
-            "required": [
-                "reason"
-            ],
-            "properties": {
-                "reason": {
-                    "type": "string",
-                    "example": "Customer request"
-                }
-            }
-        },
         "handlers.MarkPaidRequest": {
             "type": "object",
             "properties": {
@@ -27664,53 +26342,6 @@ const docTemplate = `{
                 }
             }
         },
-        "interfaces.BindingStats": {
-            "type": "object",
-            "properties": {
-                "active_bindings": {
-                    "type": "integer"
-                },
-                "bindings_by_provider": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "integer",
-                        "format": "int64"
-                    }
-                },
-                "total_bindings": {
-                    "type": "integer"
-                },
-                "users_with_bindings": {
-                    "type": "integer"
-                }
-            }
-        },
-        "interfaces.BulkDownloadRequest": {
-            "type": "object",
-            "required": [
-                "invoice_ids"
-            ],
-            "properties": {
-                "format": {
-                    "description": "zip, individual",
-                    "type": "string",
-                    "example": "zip"
-                },
-                "include_csv": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "invoice_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "pdf_options": {
-                    "$ref": "#/definitions/interfaces.PDFGenerationRequest"
-                }
-            }
-        },
         "interfaces.BulkResolveAlertsRequest": {
             "type": "object",
             "required": [
@@ -27779,63 +26410,6 @@ const docTemplate = `{
                 }
             }
         },
-        "interfaces.CompanyInfo": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string",
-                    "example": "123 Business Ave"
-                },
-                "bank_account": {
-                    "type": "string",
-                    "example": "1234567890"
-                },
-                "city": {
-                    "type": "string",
-                    "example": "New York"
-                },
-                "country": {
-                    "type": "string",
-                    "example": "US"
-                },
-                "email": {
-                    "type": "string",
-                    "example": "contact@acme.com"
-                },
-                "logo": {
-                    "type": "string",
-                    "example": "./assets/logo.png"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Acme Corp"
-                },
-                "phone": {
-                    "type": "string",
-                    "example": "+1-555-123-4567"
-                },
-                "routing_number": {
-                    "type": "string",
-                    "example": "123456789"
-                },
-                "state": {
-                    "type": "string",
-                    "example": "NY"
-                },
-                "tax_id": {
-                    "type": "string",
-                    "example": "12-3456789"
-                },
-                "website": {
-                    "type": "string",
-                    "example": "https://acme.com"
-                },
-                "zip": {
-                    "type": "string",
-                    "example": "10001"
-                }
-            }
-        },
         "interfaces.CreateAlertConfigRequest": {
             "type": "object",
             "required": [
@@ -27892,104 +26466,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user_subscription_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "interfaces.CreateInvoiceRequest": {
-            "type": "object",
-            "required": [
-                "amount",
-                "billing_email",
-                "billing_name",
-                "subscription_order_id",
-                "user_id"
-            ],
-            "properties": {
-                "amount": {
-                    "description": "Financial Details",
-                    "type": "number",
-                    "minimum": 0
-                },
-                "auto_send": {
-                    "type": "boolean",
-                    "example": false
-                },
-                "billing_address": {
-                    "type": "string"
-                },
-                "billing_city": {
-                    "type": "string"
-                },
-                "billing_country": {
-                    "type": "string"
-                },
-                "billing_email": {
-                    "type": "string"
-                },
-                "billing_name": {
-                    "description": "Billing Information",
-                    "type": "string"
-                },
-                "billing_state": {
-                    "type": "string"
-                },
-                "billing_zip": {
-                    "type": "string"
-                },
-                "company_address": {
-                    "type": "string"
-                },
-                "company_name": {
-                    "description": "Company Information",
-                    "type": "string"
-                },
-                "company_tax_id": {
-                    "type": "string"
-                },
-                "currency": {
-                    "type": "string",
-                    "example": "USD"
-                },
-                "description": {
-                    "description": "Additional Information",
-                    "type": "string"
-                },
-                "due_date": {
-                    "type": "string",
-                    "example": "2024-01-31"
-                },
-                "invoice_type": {
-                    "type": "string",
-                    "example": "standard"
-                },
-                "language": {
-                    "type": "string",
-                    "example": "en"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "subscription_order_id": {
-                    "type": "integer"
-                },
-                "tax_number": {
-                    "type": "string",
-                    "example": "GB123456789"
-                },
-                "tax_rate": {
-                    "type": "number",
-                    "example": 0.2
-                },
-                "tax_type": {
-                    "type": "string",
-                    "example": "VAT"
-                },
-                "template": {
-                    "type": "string",
-                    "example": "default"
-                },
-                "user_id": {
                     "type": "integer"
                 }
             }
@@ -28122,65 +26598,6 @@ const docTemplate = `{
                         "limited"
                     ],
                     "example": "standard"
-                }
-            }
-        },
-        "interfaces.CreateSubscriptionOrderRequest": {
-            "type": "object",
-            "required": [
-                "order_type",
-                "payment_gateway",
-                "payment_method",
-                "subscription_plan_id",
-                "user_id"
-            ],
-            "properties": {
-                "coupon_code": {
-                    "type": "string",
-                    "example": "SAVE20"
-                },
-                "metadata": {
-                    "type": "string"
-                },
-                "order_type": {
-                    "type": "string",
-                    "enum": [
-                        "new",
-                        "renewal",
-                        "upgrade",
-                        "downgrade"
-                    ],
-                    "example": "new"
-                },
-                "payment_gateway": {
-                    "type": "string",
-                    "example": "epay"
-                },
-                "payment_method": {
-                    "type": "string",
-                    "example": "alipay"
-                },
-                "payment_method_id": {
-                    "description": "Optional: Use saved payment method",
-                    "type": "integer",
-                    "example": 1
-                },
-                "return_url": {
-                    "type": "string",
-                    "example": "https://example.com/payment/return"
-                },
-                "subscription_plan_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "use_default_payment": {
-                    "description": "Use user's default payment method",
-                    "type": "boolean",
-                    "example": false
-                },
-                "user_id": {
-                    "type": "integer",
-                    "example": 1
                 }
             }
         },
@@ -28403,43 +26820,6 @@ const docTemplate = `{
                 }
             }
         },
-        "interfaces.InvoiceDownloadRecord": {
-            "type": "object",
-            "properties": {
-                "downloaded_at": {
-                    "type": "string",
-                    "example": "2024-01-01T00:00:00Z"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "invoice_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "ip_address": {
-                    "type": "string",
-                    "example": "192.168.1.1"
-                },
-                "language": {
-                    "type": "string",
-                    "example": "en"
-                },
-                "template": {
-                    "type": "string",
-                    "example": "professional"
-                },
-                "user_agent": {
-                    "type": "string",
-                    "example": "Mozilla/5.0..."
-                },
-                "user_id": {
-                    "type": "integer",
-                    "example": 1
-                }
-            }
-        },
         "interfaces.LoginRequest": {
             "type": "object",
             "required": [
@@ -28452,40 +26832,6 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string"
-                }
-            }
-        },
-        "interfaces.PDFGenerationRequest": {
-            "type": "object",
-            "properties": {
-                "company_info": {
-                    "$ref": "#/definitions/interfaces.CompanyInfo"
-                },
-                "custom_fields": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                },
-                "include_qr": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "language": {
-                    "type": "string",
-                    "example": "en"
-                },
-                "save_to_disk": {
-                    "type": "boolean",
-                    "example": false
-                },
-                "template": {
-                    "type": "string",
-                    "example": "professional"
-                },
-                "watermark": {
-                    "type": "string",
-                    "example": "DRAFT"
                 }
             }
         },
@@ -28852,34 +27198,6 @@ const docTemplate = `{
                 }
             }
         },
-        "interfaces.SendInvoiceRequest": {
-            "type": "object",
-            "required": [
-                "to_email"
-            ],
-            "properties": {
-                "cc_emails": {
-                    "type": "string",
-                    "example": "manager@example.com"
-                },
-                "message": {
-                    "type": "string",
-                    "example": "Please find your invoice attached"
-                },
-                "send_copy": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "subject": {
-                    "type": "string",
-                    "example": "Your Invoice"
-                },
-                "to_email": {
-                    "type": "string",
-                    "example": "customer@example.com"
-                }
-            }
-        },
         "interfaces.TestNotificationRequest": {
             "type": "object",
             "required": [
@@ -29087,75 +27405,6 @@ const docTemplate = `{
                         "percentage",
                         "absolute"
                     ]
-                }
-            }
-        },
-        "interfaces.UpdateInvoiceRequest": {
-            "type": "object",
-            "properties": {
-                "amount": {
-                    "type": "number",
-                    "example": 100
-                },
-                "billing_address": {
-                    "type": "string"
-                },
-                "billing_city": {
-                    "type": "string"
-                },
-                "billing_country": {
-                    "type": "string"
-                },
-                "billing_email": {
-                    "type": "string"
-                },
-                "billing_name": {
-                    "description": "Billing Information",
-                    "type": "string"
-                },
-                "billing_state": {
-                    "type": "string"
-                },
-                "billing_zip": {
-                    "type": "string"
-                },
-                "company_address": {
-                    "type": "string"
-                },
-                "company_name": {
-                    "description": "Company Information",
-                    "type": "string"
-                },
-                "company_tax_id": {
-                    "type": "string"
-                },
-                "description": {
-                    "description": "Additional Information",
-                    "type": "string"
-                },
-                "due_date": {
-                    "type": "string"
-                },
-                "invoice_type": {
-                    "type": "string",
-                    "example": "credit"
-                },
-                "language": {
-                    "type": "string"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "tax_rate": {
-                    "type": "number",
-                    "example": 0.1
-                },
-                "tax_type": {
-                    "type": "string",
-                    "example": "GST"
-                },
-                "template": {
-                    "type": "string"
                 }
             }
         },

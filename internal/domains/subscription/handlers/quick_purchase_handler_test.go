@@ -70,6 +70,12 @@ func (m *MockSubscriptionOrderService) QuickPurchase(ctx context.Context, req *i
 	return args.Get(0).(*interfaces.QuickPurchaseResponse), args.Error(1)
 }
 
+// Added to satisfy updated SubscriptionOrderService interface
+func (m *MockSubscriptionOrderService) GetSubscriptionOrderSummary(ctx context.Context, orderID uint) (map[string]any, error) {
+	args := m.Called(ctx, orderID)
+	return args.Get(0).(map[string]any), args.Error(1)
+}
+
 func TestQuickPurchaseHandler_QuickPurchase(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
@@ -109,7 +115,7 @@ func TestQuickPurchaseHandler_QuickPurchase(t *testing.T) {
 		// Setup Gin context
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
-		c.Request = httptest.NewRequest("POST", "/subscription/quick-purchase", bytes.NewBuffer(jsonBody))
+		c.Request = httptest.NewRequest("POST", "/purchase", bytes.NewBuffer(jsonBody))
 		c.Request.Header.Set("Content-Type", "application/json")
 		c.Set(middleware.AuthContextKey, user)
 
@@ -138,7 +144,7 @@ func TestQuickPurchaseHandler_QuickPurchase(t *testing.T) {
 		// Setup Gin context without user
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
-		c.Request = httptest.NewRequest("POST", "/subscription/quick-purchase", bytes.NewBuffer(jsonBody))
+		c.Request = httptest.NewRequest("POST", "/purchase", bytes.NewBuffer(jsonBody))
 		c.Request.Header.Set("Content-Type", "application/json")
 
 		// Execute
@@ -164,7 +170,7 @@ func TestQuickPurchaseHandler_QuickPurchase(t *testing.T) {
 		// Setup Gin context
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
-		c.Request = httptest.NewRequest("POST", "/subscription/quick-purchase", bytes.NewBuffer(invalidJSON))
+		c.Request = httptest.NewRequest("POST", "/purchase", bytes.NewBuffer(invalidJSON))
 		c.Request.Header.Set("Content-Type", "application/json")
 		c.Set(middleware.AuthContextKey, user)
 

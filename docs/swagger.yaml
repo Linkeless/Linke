@@ -368,80 +368,6 @@ definitions:
       database:
         $ref: '#/definitions/dto.DatabaseHealthResponse'
     type: object
-  dto.InvoiceStatisticsResponse:
-    properties:
-      monthly_breakdown:
-        items:
-          $ref: '#/definitions/dto.MonthlyInvoiceStats'
-        type: array
-      overdue_amount:
-        example: 500
-        type: number
-      paid_amount:
-        example: 12000
-        type: number
-      period:
-        $ref: '#/definitions/dto.InvoiceStatsPeriod'
-      status_breakdown:
-        $ref: '#/definitions/dto.InvoiceStatusBreakdown'
-      total_amount:
-        example: 15000
-        type: number
-      total_invoices:
-        example: 150
-        type: integer
-      unpaid_amount:
-        example: 3000
-        type: number
-    type: object
-  dto.InvoiceStatsPeriod:
-    properties:
-      duration_days:
-        example: 31
-        type: integer
-      from_date:
-        example: "2024-01-01"
-        type: string
-      to_date:
-        example: "2024-01-31"
-        type: string
-    type: object
-  dto.InvoiceStatusBreakdown:
-    properties:
-      cancelled:
-        example: 2
-        type: integer
-      draft:
-        example: 5
-        type: integer
-      overdue:
-        example: 3
-        type: integer
-      paid:
-        example: 120
-        type: integer
-      pending:
-        example: 20
-        type: integer
-    type: object
-  dto.MonthlyInvoiceStats:
-    properties:
-      count:
-        example: 12
-        type: integer
-      month:
-        example: 2024-01
-        type: string
-      paid_amount:
-        example: 1000
-        type: number
-      paid_count:
-        example: 10
-        type: integer
-      total_amount:
-        example: 1200
-        type: number
-    type: object
   dto.ServerAPIHealthResponse:
     properties:
       service:
@@ -4014,22 +3940,6 @@ definitions:
     - extend_by_days
     - reason
     type: object
-  handlers.MarkInvoiceAsPaidRequest:
-    properties:
-      payment_date:
-        example: "2024-01-01"
-        type: string
-    required:
-    - payment_date
-    type: object
-  handlers.MarkInvoiceAsVoidRequest:
-    properties:
-      reason:
-        example: Customer request
-        type: string
-    required:
-    - reason
-    type: object
   handlers.MarkPaidRequest:
     properties:
       notes:
@@ -4860,38 +4770,6 @@ definitions:
     required:
     - provider
     type: object
-  interfaces.BindingStats:
-    properties:
-      active_bindings:
-        type: integer
-      bindings_by_provider:
-        additionalProperties:
-          format: int64
-          type: integer
-        type: object
-      total_bindings:
-        type: integer
-      users_with_bindings:
-        type: integer
-    type: object
-  interfaces.BulkDownloadRequest:
-    properties:
-      format:
-        description: zip, individual
-        example: zip
-        type: string
-      include_csv:
-        example: true
-        type: boolean
-      invoice_ids:
-        items:
-          type: integer
-        type: array
-      pdf_options:
-        $ref: '#/definitions/interfaces.PDFGenerationRequest'
-    required:
-    - invoice_ids
-    type: object
   interfaces.BulkResolveAlertsRequest:
     properties:
       alert_ids:
@@ -4937,48 +4815,6 @@ definitions:
         description: in bytes
         type: integer
     type: object
-  interfaces.CompanyInfo:
-    properties:
-      address:
-        example: 123 Business Ave
-        type: string
-      bank_account:
-        example: "1234567890"
-        type: string
-      city:
-        example: New York
-        type: string
-      country:
-        example: US
-        type: string
-      email:
-        example: contact@acme.com
-        type: string
-      logo:
-        example: ./assets/logo.png
-        type: string
-      name:
-        example: Acme Corp
-        type: string
-      phone:
-        example: +1-555-123-4567
-        type: string
-      routing_number:
-        example: "123456789"
-        type: string
-      state:
-        example: NY
-        type: string
-      tax_id:
-        example: 12-3456789
-        type: string
-      website:
-        example: https://acme.com
-        type: string
-      zip:
-        example: "10001"
-        type: string
-    type: object
   interfaces.CreateAlertConfigRequest:
     properties:
       cooldown_minutes:
@@ -5022,77 +4858,6 @@ definitions:
     - threshold_type
     - usage_type
     - user_subscription_id
-    type: object
-  interfaces.CreateInvoiceRequest:
-    properties:
-      amount:
-        description: Financial Details
-        minimum: 0
-        type: number
-      auto_send:
-        example: false
-        type: boolean
-      billing_address:
-        type: string
-      billing_city:
-        type: string
-      billing_country:
-        type: string
-      billing_email:
-        type: string
-      billing_name:
-        description: Billing Information
-        type: string
-      billing_state:
-        type: string
-      billing_zip:
-        type: string
-      company_address:
-        type: string
-      company_name:
-        description: Company Information
-        type: string
-      company_tax_id:
-        type: string
-      currency:
-        example: USD
-        type: string
-      description:
-        description: Additional Information
-        type: string
-      due_date:
-        example: "2024-01-31"
-        type: string
-      invoice_type:
-        example: standard
-        type: string
-      language:
-        example: en
-        type: string
-      notes:
-        type: string
-      subscription_order_id:
-        type: integer
-      tax_number:
-        example: GB123456789
-        type: string
-      tax_rate:
-        example: 0.2
-        type: number
-      tax_type:
-        example: VAT
-        type: string
-      template:
-        example: default
-        type: string
-      user_id:
-        type: integer
-    required:
-    - amount
-    - billing_email
-    - billing_name
-    - subscription_order_id
-    - user_id
     type: object
   interfaces.CreatePaymentConfigRequest:
     properties:
@@ -5191,51 +4956,6 @@ definitions:
     - name
     - referrer_reward_amount
     - type
-    type: object
-  interfaces.CreateSubscriptionOrderRequest:
-    properties:
-      coupon_code:
-        example: SAVE20
-        type: string
-      metadata:
-        type: string
-      order_type:
-        enum:
-        - new
-        - renewal
-        - upgrade
-        - downgrade
-        example: new
-        type: string
-      payment_gateway:
-        example: epay
-        type: string
-      payment_method:
-        example: alipay
-        type: string
-      payment_method_id:
-        description: 'Optional: Use saved payment method'
-        example: 1
-        type: integer
-      return_url:
-        example: https://example.com/payment/return
-        type: string
-      subscription_plan_id:
-        example: 1
-        type: integer
-      use_default_payment:
-        description: Use user's default payment method
-        example: false
-        type: boolean
-      user_id:
-        example: 1
-        type: integer
-    required:
-    - order_type
-    - payment_gateway
-    - payment_method
-    - subscription_plan_id
-    - user_id
     type: object
   interfaces.CurrentUsageDetails:
     properties:
@@ -5384,33 +5104,6 @@ definitions:
           $ref: '#/definitions/entities.UsageAlertResponse'
         type: array
     type: object
-  interfaces.InvoiceDownloadRecord:
-    properties:
-      downloaded_at:
-        example: "2024-01-01T00:00:00Z"
-        type: string
-      id:
-        example: 1
-        type: integer
-      invoice_id:
-        example: 1
-        type: integer
-      ip_address:
-        example: 192.168.1.1
-        type: string
-      language:
-        example: en
-        type: string
-      template:
-        example: professional
-        type: string
-      user_agent:
-        example: Mozilla/5.0...
-        type: string
-      user_id:
-        example: 1
-        type: integer
-    type: object
   interfaces.LoginRequest:
     properties:
       email:
@@ -5420,30 +5113,6 @@ definitions:
     required:
     - email
     - password
-    type: object
-  interfaces.PDFGenerationRequest:
-    properties:
-      company_info:
-        $ref: '#/definitions/interfaces.CompanyInfo'
-      custom_fields:
-        additionalProperties:
-          type: string
-        type: object
-      include_qr:
-        example: true
-        type: boolean
-      language:
-        example: en
-        type: string
-      save_to_disk:
-        example: false
-        type: boolean
-      template:
-        example: professional
-        type: string
-      watermark:
-        example: DRAFT
-        type: string
     type: object
   interfaces.PaginationInfo:
     properties:
@@ -5692,26 +5361,6 @@ definitions:
       retry:
         $ref: '#/definitions/entities.PaymentRetry'
     type: object
-  interfaces.SendInvoiceRequest:
-    properties:
-      cc_emails:
-        example: manager@example.com
-        type: string
-      message:
-        example: Please find your invoice attached
-        type: string
-      send_copy:
-        example: true
-        type: boolean
-      subject:
-        example: Your Invoice
-        type: string
-      to_email:
-        example: customer@example.com
-        type: string
-    required:
-    - to_email
-    type: object
   interfaces.TestNotificationRequest:
     properties:
       channel:
@@ -5853,54 +5502,6 @@ definitions:
         type: string
     required:
     - id
-    type: object
-  interfaces.UpdateInvoiceRequest:
-    properties:
-      amount:
-        example: 100
-        type: number
-      billing_address:
-        type: string
-      billing_city:
-        type: string
-      billing_country:
-        type: string
-      billing_email:
-        type: string
-      billing_name:
-        description: Billing Information
-        type: string
-      billing_state:
-        type: string
-      billing_zip:
-        type: string
-      company_address:
-        type: string
-      company_name:
-        description: Company Information
-        type: string
-      company_tax_id:
-        type: string
-      description:
-        description: Additional Information
-        type: string
-      due_date:
-        type: string
-      invoice_type:
-        example: credit
-        type: string
-      language:
-        type: string
-      notes:
-        type: string
-      tax_rate:
-        example: 0.1
-        type: number
-      tax_type:
-        example: GST
-        type: string
-      template:
-        type: string
     type: object
   interfaces.UpdatePaymentConfigRequest:
     properties:
@@ -7367,78 +6968,6 @@ paths:
       summary: List login attempts
       tags:
       - Admin-Auth-Management
-  /admin/bindings/cleanup:
-    post:
-      consumes:
-      - application/json
-      description: Remove inactive bindings older than specified days (admin only)
-      parameters:
-      - description: 'Days of inactivity threshold (default: 90)'
-        in: query
-        name: days
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.MessageOnlyResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Cleanup inactive bindings
-      tags:
-      - user-bindings
-  /admin/bindings/stats:
-    get:
-      consumes:
-      - application/json
-      description: Get statistics about account bindings (admin only)
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.BindingStats'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Get binding statistics
-      tags:
-      - user-bindings
   /admin/cache/flush:
     delete:
       consumes:
@@ -15553,148 +15082,7 @@ paths:
       summary: Validate coupon code
       tags:
       - Coupon
-  /invoice:
-    get:
-      description: Get a list of invoices with optional filters
-      parameters:
-      - description: User ID
-        in: query
-        name: user_id
-        type: integer
-      - description: Invoice status
-        in: query
-        name: status
-        type: string
-      - description: Invoice type
-        in: query
-        name: invoice_type
-        type: string
-      - description: Date from (YYYY-MM-DD)
-        in: query
-        name: date_from
-        type: string
-      - description: Date to (YYYY-MM-DD)
-        in: query
-        name: date_to
-        type: string
-      - default: 10
-        description: Limit
-        in: query
-        name: limit
-        type: integer
-      - default: 0
-        description: Offset
-        in: query
-        name: offset
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.PaginatedResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/entities.InvoiceResponse'
-                  type: array
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[Admin] Get invoices with filters'
-      tags:
-      - Invoice
-    post:
-      consumes:
-      - application/json
-      description: Create a new invoice for a subscription order
-      parameters:
-      - description: Invoice data
-        in: body
-        name: invoice
-        required: true
-        schema:
-          $ref: '#/definitions/interfaces.CreateInvoiceRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.InvoiceResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[Admin] Create a new invoice'
-      tags:
-      - Invoice
-  /invoice/{id}:
-    delete:
-      description: Delete an invoice by ID
-      parameters:
-      - description: Invoice ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.StandardResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.NotFoundResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[Admin] Delete an invoice'
-      tags:
-      - Invoice
+  /invoices/{id}:
     get:
       description: Get a specific invoice by its ID
       parameters:
@@ -15736,56 +15124,7 @@ paths:
       summary: '[User/Admin] Get invoice by ID'
       tags:
       - Invoice
-    put:
-      consumes:
-      - application/json
-      description: Update an existing invoice
-      parameters:
-      - description: Invoice ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Invoice update data
-        in: body
-        name: invoice
-        required: true
-        schema:
-          $ref: '#/definitions/interfaces.UpdateInvoiceRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.InvoiceResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.NotFoundResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[Admin] Update an invoice'
-      tags:
-      - Invoice
-  /invoice/{id}/download:
+  /invoices/{id}/download:
     get:
       consumes:
       - application/json
@@ -15842,496 +15181,6 @@ paths:
       security:
       - BearerAuth: []
       summary: '[User/Admin] Download invoice as PDF with options'
-      tags:
-      - Invoice
-  /invoice/{id}/mark-paid:
-    put:
-      consumes:
-      - application/json
-      description: Mark an invoice as paid with payment date
-      parameters:
-      - description: Invoice ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Payment date
-        in: body
-        name: payment_date
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.MarkInvoiceAsPaidRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.StandardResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.NotFoundResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[Admin] Mark invoice as paid'
-      tags:
-      - Invoice
-  /invoice/{id}/mark-void:
-    put:
-      consumes:
-      - application/json
-      description: Mark an invoice as void with reason
-      parameters:
-      - description: Invoice ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Void reason
-        in: body
-        name: reason
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.MarkInvoiceAsVoidRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.StandardResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.NotFoundResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[Admin] Mark invoice as void'
-      tags:
-      - Invoice
-  /invoice/{id}/pdf:
-    get:
-      description: Generate a PDF for the specified invoice
-      parameters:
-      - description: Invoice ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/pdf
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: file
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.NotFoundResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[User/Admin] Generate invoice PDF'
-      tags:
-      - Invoice
-  /invoice/{id}/send:
-    post:
-      consumes:
-      - application/json
-      description: Send an invoice to the specified email address
-      parameters:
-      - description: Invoice ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Email details
-        in: body
-        name: email_request
-        required: true
-        schema:
-          $ref: '#/definitions/interfaces.SendInvoiceRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.StandardResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.NotFoundResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[Admin] Send invoice via email'
-      tags:
-      - Invoice
-  /invoice/{id}/send-custom:
-    post:
-      consumes:
-      - application/json
-      description: Send an invoice via email with custom PDF template and options
-      parameters:
-      - description: Invoice ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Email options
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/interfaces.SendInvoiceRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.StandardResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.NotFoundResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[Admin] Send invoice with custom PDF options'
-      tags:
-      - Invoice
-  /invoice/bulk-download:
-    post:
-      consumes:
-      - application/json
-      description: Download multiple invoices as a ZIP file with optional CSV summary
-      parameters:
-      - description: Bulk download request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/interfaces.BulkDownloadRequest'
-      produces:
-      - application/zip
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: file
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[User/Admin] Download multiple invoices as ZIP'
-      tags:
-      - Invoice
-  /invoice/download-history:
-    get:
-      description: Get download history for the current user's invoices
-      parameters:
-      - default: 10
-        description: Limit
-        in: query
-        name: limit
-        type: integer
-      - default: 0
-        description: Offset
-        in: query
-        name: offset
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.PaginatedResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/interfaces.InvoiceDownloadRecord'
-                  type: array
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[User] Get invoice download history'
-      tags:
-      - Invoice
-  /invoice/languages:
-    get:
-      description: Get list of available languages for invoice generation
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  items:
-                    type: string
-                  type: array
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[User/Admin] Get available languages'
-      tags:
-      - Invoice
-  /invoice/number/{number}:
-    get:
-      description: Get a specific invoice by its invoice number
-      parameters:
-      - description: Invoice Number
-        in: path
-        name: number
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.InvoiceResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.NotFoundResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[User/Admin] Get invoice by number'
-      tags:
-      - Invoice
-  /invoice/statistics:
-    get:
-      description: Get invoice statistics for a date range
-      parameters:
-      - description: From date (YYYY-MM-DD)
-        in: query
-        name: from_date
-        type: string
-      - description: To date (YYYY-MM-DD)
-        in: query
-        name: to_date
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.InvoiceStatisticsResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[Admin] Get invoice statistics'
-      tags:
-      - Invoice
-  /invoice/templates:
-    get:
-      description: Get list of available PDF templates for invoice generation
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  items:
-                    type: string
-                  type: array
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[User/Admin] Get available PDF templates'
-      tags:
-      - Invoice
-  /invoice/user:
-    get:
-      description: Get a list of invoices for the authenticated user
-      parameters:
-      - default: 10
-        description: Limit
-        in: query
-        name: limit
-        type: integer
-      - default: 0
-        description: Offset
-        in: query
-        name: offset
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.PaginatedResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/entities.InvoiceResponse'
-                  type: array
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[User] Get current user''s invoices'
       tags:
       - Invoice
   /notifications/{request_id}/status:
@@ -16440,6 +15289,149 @@ paths:
       tags:
       - notifications
       - tracking
+  /orders:
+    get:
+      consumes:
+      - application/json
+      description: Get current user's orders
+      parameters:
+      - description: Limit results
+        example: 10
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - description: Offset results
+        example: 0
+        in: query
+        minimum: 0
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.PaginatedResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/entities.SubscriptionOrderResponse'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User] Get my orders'
+      tags:
+      - User-Subscription
+  /orders/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get order details
+      parameters:
+      - description: Subscription order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.SubscriptionOrderResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User] Get order'
+      tags:
+      - User-Subscription
+  /orders/{id}/summary:
+    get:
+      consumes:
+      - application/json
+      description: Aggregate order with latest payment and invoice
+      parameters:
+      - description: Subscription order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User] Get order summary (order + latest payment + latest invoice)'
+      tags:
+      - User-Subscription
   /payment-methods:
     get:
       description: Retrieve all payment methods for the authenticated user
@@ -17050,6 +16042,52 @@ paths:
       summary: '[User] Get my payment orders'
       tags:
       - User-Payment
+  /purchase:
+    post:
+      consumes:
+      - application/json
+      description: Create a payment directly for subscription without creating order/invoice
+        first. Order and invoice are created asynchronously after payment success.
+      parameters:
+      - description: Quick purchase data
+        in: body
+        name: purchase
+        required: true
+        schema:
+          $ref: '#/definitions/interfaces.QuickPurchaseRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.QuickPurchaseResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User] Quick purchase subscription'
+      tags:
+      - User-Subscription
   /server/UniProxy/config:
     get:
       consumes:
@@ -17213,136 +16251,6 @@ paths:
       summary: Get UniProxy Users
       tags:
       - User-Server
-  /subscription/orders:
-    post:
-      consumes:
-      - application/json
-      description: Create a new subscription order with payment
-      parameters:
-      - description: Subscription order data
-        in: body
-        name: order
-        required: true
-        schema:
-          $ref: '#/definitions/interfaces.CreateSubscriptionOrderRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/response.StandardResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[User] Create subscription order'
-      tags:
-      - User-Subscription
-  /subscription/orders/{id}:
-    get:
-      consumes:
-      - application/json
-      description: Get subscription order details
-      parameters:
-      - description: Subscription order ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.SubscriptionOrderResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.NotFoundResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[User] Get subscription order'
-      tags:
-      - User-Subscription
-  /subscription/orders/my:
-    get:
-      consumes:
-      - application/json
-      description: Get current user's subscription orders
-      parameters:
-      - description: Limit results
-        example: 10
-        in: query
-        maximum: 100
-        minimum: 1
-        name: limit
-        type: integer
-      - description: Offset results
-        example: 0
-        in: query
-        minimum: 0
-        name: offset
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.PaginatedResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/entities.SubscriptionOrderResponse'
-                  type: array
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[User] Get my subscription orders'
-      tags:
-      - User-Subscription
   /subscription/plans:
     get:
       consumes:
@@ -17508,52 +16416,6 @@ paths:
       summary: Get popular subscription plans
       tags:
       - Public-Subscription-Plans
-  /subscription/quick-purchase:
-    post:
-      consumes:
-      - application/json
-      description: Create a payment directly for subscription without creating order/invoice
-        first. Order and invoice are created asynchronously after payment success.
-      parameters:
-      - description: Quick purchase data
-        in: body
-        name: purchase
-        required: true
-        schema:
-          $ref: '#/definitions/interfaces.QuickPurchaseRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.QuickPurchaseResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[User] Quick purchase subscription'
-      tags:
-      - User-Subscription
   /subscriptions/{id}:
     get:
       consumes:

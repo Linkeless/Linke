@@ -307,6 +307,113 @@ type UserScopedTimeBasedService[T any, ID comparable] interface {
 	GetUserStatisticsByDateRange(ctx context.Context, userID uint, start, end time.Time) (*StatisticsResponse, error)
 }
 
+// Domain-specific service extensions
+
+// LookupService provides common lookup operations for entities with multiple unique fields
+type LookupService[T any, ID comparable] interface {
+	GenericService[T, ID]
+	
+	// Lookup operations - to be implemented by domain services based on their unique fields
+	GetByField(ctx context.Context, field string, value any) (*T, error)
+	ExistsByField(ctx context.Context, field string, value any) (bool, error)
+	GetByUniqueFields(ctx context.Context, fields map[string]any) (*T, error)
+}
+
+// OrderManagementService provides order/transaction-specific operations
+type OrderManagementService[T any, ID comparable] interface {
+	GenericService[T, ID]
+	
+	// Order-specific operations
+	GetByOrderNumber(ctx context.Context, orderNumber string) (*T, error)
+	UpdateOrderStatus(ctx context.Context, id ID, status string, reason string) (*T, error)
+	ProcessOrder(ctx context.Context, id ID, processData map[string]any) (*T, error)
+	CancelOrder(ctx context.Context, id ID, reason string) (*T, error)
+	GetOrdersByStatus(ctx context.Context, status string, req *ListRequest) (*ListResponse[T], error)
+	
+	// Statistics for orders
+	GetOrderStatisticsByPeriod(ctx context.Context, start, end time.Time) (*OrderStatistics, error)
+}
+
+// NotificationAwareService adds notification capabilities to generic services
+type NotificationAwareService[T any, ID comparable] interface {
+	GenericService[T, ID]
+	
+	// Notification operations
+	SendNotification(ctx context.Context, id ID, notificationType string, data map[string]any) error
+	GetNotificationHistory(ctx context.Context, id ID, req *ListRequest) (*ListResponse[NotificationRecord], error)
+}
+
+// Extended DTOs for specialized services
+
+// OrderStatistics represents statistics for order-based entities
+type OrderStatistics struct {
+	StatisticsResponse
+	CompletedOrders   int64                  `json:"completed_orders"`
+	PendingOrders     int64                  `json:"pending_orders"`
+	CancelledOrders   int64                  `json:"cancelled_orders"`
+	TotalRevenue      float64                `json:"total_revenue"`
+	AverageOrderValue float64                `json:"average_order_value"`
+	OrdersByPeriod    map[string]int64       `json:"orders_by_period"`
+	RevenueByPeriod   map[string]float64     `json:"revenue_by_period"`
+}
+
+// NotificationRecord represents a notification record
+type NotificationRecord struct {
+	ID               uint                   `json:"id"`
+	EntityType       string                 `json:"entity_type"`
+	EntityID         string                 `json:"entity_id"`
+	NotificationType string                 `json:"notification_type"`
+	Status           string                 `json:"status"` // sent, pending, failed
+	Recipients       []string               `json:"recipients"`
+	Content          map[string]any `json:"content"`
+	SentAt           *time.Time             `json:"sent_at,omitempty"`
+	FailureReason    string                 `json:"failure_reason,omitempty"`
+	CreatedAt        time.Time              `json:"created_at"`
+}
+
+// SearchableService extends GenericService with advanced search capabilities
+type SearchableService[T any, ID comparable] interface {
+	GenericService[T, ID]
+	
+	// Advanced search operations
+	FullTextSearch(ctx context.Context, query string, fields []string, req *ListRequest) (*ListResponse[T], error)
+	SearchByTags(ctx context.Context, tags []string, req *ListRequest) (*ListResponse[T], error)
+	SearchWithHighlight(ctx context.Context, query string, highlightFields []string, req *ListRequest) (*SearchResponse[T], error)
+	GetSearchSuggestions(ctx context.Context, query string, limit int) ([]string, error)
+}
+
+// SearchResponse extends ListResponse with search-specific features
+type SearchResponse[T any] struct {
+	ListResponse[T]
+	Highlights    map[string][]string `json:"highlights,omitempty"` // field -> highlighted snippets
+	Suggestions   []string            `json:"suggestions,omitempty"`
+	SearchTime    int64               `json:"search_time_ms"`
+	TotalMatches  int64               `json:"total_matches"`
+}
+
+// CacheableService defines operations for services that need caching
+type CacheableService[T any, ID comparable] interface {
+	GenericService[T, ID]
+	
+	// Cache management operations
+	InvalidateCache(ctx context.Context, keys ...string) error
+	WarmCache(ctx context.Context, ids []ID) error
+	GetCacheStats(ctx context.Context) (*CacheStats, error)
+	RefreshCache(ctx context.Context, id ID) (*T, error)
+}
+
+// CacheStats represents caching statistics
+type CacheStats struct {
+	HitRate        float64           `json:"hit_rate"`
+	TotalRequests  int64             `json:"total_requests"`
+	CacheHits      int64             `json:"cache_hits"`
+	CacheMisses    int64             `json:"cache_misses"`
+	CacheSize      int64             `json:"cache_size"`
+	EvictionCount  int64             `json:"eviction_count"`
+	KeysByPattern  map[string]int64  `json:"keys_by_pattern"`
+	LastUpdated    time.Time         `json:"last_updated"`
+}
+
 // BusinessService extends GenericService with business logic operations
 type BusinessService[T any, ID comparable] interface {
 	GenericService[T, ID]

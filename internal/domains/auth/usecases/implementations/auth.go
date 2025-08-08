@@ -510,18 +510,15 @@ func (a *AuthService) CreateOrUpdateOAuthUser(ctx context.Context, userInfo *int
 			return nil, fmt.Errorf("failed to get user from binding: %w", err)
 		}
 
-		// Update the binding with latest information
-		bindingUserInfo := &userInterfaces.OAuthUserInfo{
-			UserID:           user.ID,
-			Provider:         userInfo.Provider,
-			ProviderUserID:   userInfo.ID,
+		// Update the binding with latest information using UpdateBinding
+		updateReq := &userEntities.UpdateBindingRequest{
 			ProviderEmail:    &userInfo.Email,
 			ProviderUsername: &userInfo.Username,
 			ProviderName:     &userInfo.Name,
 			ProviderAvatar:   &userInfo.Avatar,
 		}
 
-		_, err = a.userBindingService.CreateOrUpdateFromOAuth(ctx, userInfo.Provider, bindingUserInfo)
+		_, err = a.userBindingService.UpdateBinding(ctx, user.ID, userInfo.Provider, updateReq)
 		if err != nil {
 			logger.Error("Failed to update binding from OAuth",
 				logger.String("provider", userInfo.Provider),
@@ -554,8 +551,7 @@ func (a *AuthService) CreateOrUpdateOAuthUser(ctx context.Context, userInfo *int
 	// If user exists in legacy system, migrate them to the new binding system
 	if err == nil && user != nil {
 		// Create a binding for this legacy user
-		bindingUserInfo := &userInterfaces.OAuthUserInfo{
-			UserID:           user.ID,
+		createReq := &userEntities.CreateBindingRequest{
 			Provider:         userInfo.Provider,
 			ProviderUserID:   userInfo.ID,
 			ProviderEmail:    &userInfo.Email,
@@ -564,7 +560,7 @@ func (a *AuthService) CreateOrUpdateOAuthUser(ctx context.Context, userInfo *int
 			ProviderAvatar:   &userInfo.Avatar,
 		}
 
-		_, err = a.userBindingService.CreateOrUpdateFromOAuth(ctx, userInfo.Provider, bindingUserInfo)
+		_, err = a.userBindingService.CreateBinding(ctx, user.ID, createReq)
 		if err != nil {
 			logger.Error("Failed to migrate legacy user to binding system",
 				logger.String("provider", userInfo.Provider),
@@ -635,8 +631,7 @@ func (a *AuthService) CreateOrUpdateOAuthUser(ctx context.Context, userInfo *int
 		}
 
 		// Create a binding for the new user
-		bindingUserInfo := &userInterfaces.OAuthUserInfo{
-			UserID:           newUser.ID,
+		createReq := &userEntities.CreateBindingRequest{
 			Provider:         userInfo.Provider,
 			ProviderUserID:   userInfo.ID,
 			ProviderEmail:    &userInfo.Email,
@@ -645,7 +640,7 @@ func (a *AuthService) CreateOrUpdateOAuthUser(ctx context.Context, userInfo *int
 			ProviderAvatar:   &userInfo.Avatar,
 		}
 
-		_, err = a.userBindingService.CreateOrUpdateFromOAuth(ctx, userInfo.Provider, bindingUserInfo)
+		_, err = a.userBindingService.CreateBinding(ctx, newUser.ID, createReq)
 		if err != nil {
 			logger.Error("Failed to create binding for new OAuth user",
 				logger.String("provider", userInfo.Provider),

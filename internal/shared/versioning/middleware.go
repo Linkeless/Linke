@@ -97,8 +97,8 @@ func (vm *VersionMiddleware) VersionNegotiation(c *gin.Context) {
 	// Add version headers to response
 	vm.addVersionHeaders(c, versionCtx)
 
-	// Add deprecation headers if needed
-	if vm.config.EnableDeprecationHeaders && versionInfo != nil && versionInfo.IsDeprecated() {
+	// Add deprecation headers if needed for deprecated but not sunset versions
+	if vm.config.EnableDeprecationHeaders && versionInfo != nil && versionInfo.IsDeprecated() && !versionInfo.IsSunset() {
 		vm.addDeprecationHeaders(c, *versionInfo)
 	}
 

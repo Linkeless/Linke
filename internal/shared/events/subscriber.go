@@ -18,9 +18,11 @@ type SubscriberManager struct {
 
 // EventSubscriber represents a single event subscriber
 type EventSubscriber struct {
-	ID             string
-	EventTypes     []string
-	Handler        EventHandler
+	ID         string
+	EventTypes []string
+	Handler    EventHandler
+	// BusHandler is the actual handler subscribed to the event bus (wrapper calling HandleEvent)
+	BusHandler     EventHandler
 	Config         SubscriberConfig
 	IsActive       bool
 	CreatedAt      time.Time
@@ -302,8 +304,19 @@ func (bus *EnhancedEventBus) SubscribeWithConfig(id string, eventTypes []string,
 		return err
 	}
 
-	// Subscribe to event bus
-	return bus.InMemoryEventBus.Subscribe(eventTypes, handler)
+	// Wrap the subscriber to track stats and retries
+	subscriber, err := bus.subscriberManager.GetSubscriber(id)
+	if err != nil {
+		return err
+	}
+
+	wrapped := NewEventHandler(eventTypes, func(ctx context.Context, event Event) error {
+		return subscriber.HandleEvent(ctx, event)
+	})
+	subscriber.BusHandler = wrapped
+
+	// Subscribe wrapped handler to event bus
+	return bus.InMemoryEventBus.Subscribe(eventTypes, wrapped)
 }
 
 // UnsubscribeByID unsubscribes a subscriber by ID
@@ -314,7 +327,11 @@ func (bus *EnhancedEventBus) UnsubscribeByID(id string) error {
 	}
 
 	// Unsubscribe from event bus
-	if err := bus.InMemoryEventBus.Unsubscribe(subscriber.EventTypes, subscriber.Handler); err != nil {
+	handler := subscriber.BusHandler
+	if handler == nil {
+		handler = subscriber.Handler
+	}
+	if err := bus.InMemoryEventBus.Unsubscribe(subscriber.EventTypes, handler); err != nil {
 		return err
 	}
 

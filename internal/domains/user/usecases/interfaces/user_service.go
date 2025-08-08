@@ -73,3 +73,14 @@ type BatchOperationResult struct {
 	RestoredCount int    `json:"restored_count,omitempty"`
 	FailedIDs     []uint `json:"failed_ids,omitempty"`
 }
+
+// AdvancedUserSearchRequest represents advanced search parameters for users
+type AdvancedUserSearchRequest struct {
+	Query         string `form:"query" json:"query"`
+	Status        string `form:"status" json:"status"`
+	Provider      string `form:"provider" json:"provider"`
+	Role          string `form:"role" json:"role"`
+	EmailVerified *bool  `form:"email_verified" json:"email_verified"`
+	Limit         int    `form:"limit" json:"limit" binding:"omitempty,min=1,max=100"`
+	Offset        int    `form:"offset" json:"offset" binding:"omitempty,min=0"`
+}

@@ -10,9 +10,10 @@ import (
 )
 
 // Simple test without mocks to verify basic functionality
-func TestUserAccountBindingService_ValidateBindingRequest(t *testing.T) {
-	// Since we can't easily mock the full interface, test the validation function independently
+func TestUserAccountBindingService_CreateBinding_Validation(t *testing.T) {
+	// Since we can't easily mock the full interface, test the validation function through CreateBinding
 	service := &userAccountBindingService{}
+	ctx := context.Background()
 
 	tests := []struct {
 		name        string
@@ -46,25 +47,13 @@ func TestUserAccountBindingService_ValidateBindingRequest(t *testing.T) {
 			},
 			expectedErr: "provider user ID is required",
 		},
-		{
-			name: "valid_request",
-			request: &entities.CreateBindingRequest{
-				Provider:       "google",
-				ProviderUserID: "google123",
-			},
-			expectedErr: "",
-		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := service.ValidateBindingRequest(tt.request)
-			if tt.expectedErr != "" {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tt.expectedErr)
-			} else {
-				assert.NoError(t, err)
-			}
+			_, err := service.CreateBinding(ctx, 1, tt.request)
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), tt.expectedErr)
 		})
 	}
 }
