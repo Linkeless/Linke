@@ -22,22 +22,24 @@ import (
 )
 
 type AuthService struct {
-	db                   *gorm.DB
-	userService          userInterfaces.UserService
-	userRepository       userInterfaces.UserRepository
-	jwtService           interfaces.JWTService
-	inviteCodeService    referralInterfaces.InviteCodeService
-	loginSecurityService interfaces.LoginSecurityService
+	db                      *gorm.DB
+	userService             userInterfaces.UserService
+	userRepository          userInterfaces.UserRepository
+	userBindingService      userInterfaces.UserAccountBindingService
+	jwtService              interfaces.JWTService
+	inviteCodeService       referralInterfaces.InviteCodeService
+	loginSecurityService    interfaces.LoginSecurityService
 }
 
-func NewAuthService(db *gorm.DB, userService userInterfaces.UserService, userRepository userInterfaces.UserRepository, jwtService interfaces.JWTService, inviteCodeService referralInterfaces.InviteCodeService, loginSecurityService interfaces.LoginSecurityService) *AuthService {
+func NewAuthService(db *gorm.DB, userService userInterfaces.UserService, userRepository userInterfaces.UserRepository, userBindingService userInterfaces.UserAccountBindingService, jwtService interfaces.JWTService, inviteCodeService referralInterfaces.InviteCodeService, loginSecurityService interfaces.LoginSecurityService) *AuthService {
 	return &AuthService{
-		db:                   db,
-		userService:          userService,
-		userRepository:       userRepository,
-		jwtService:           jwtService,
-		inviteCodeService:    inviteCodeService,
-		loginSecurityService: loginSecurityService,
+		db:                      db,
+		userService:             userService,
+		userRepository:          userRepository,
+		userBindingService:      userBindingService,
+		jwtService:              jwtService,
+		inviteCodeService:       inviteCodeService,
+		loginSecurityService:    loginSecurityService,
 	}
 }
 
@@ -494,12 +496,50 @@ func (a *AuthService) Logout(ctx context.Context, tokenString string, userID uin
 	return nil
 }
 
-// CreateOrUpdateOAuthUser creates a new user or updates an existing user from OAuth provider
+// CreateOrUpdateOAuthUser creates a new user or finds existing user through account bindings
 func (a *AuthService) CreateOrUpdateOAuthUser(ctx context.Context, userInfo *interfaces.OAuthUserInfo) (*userEntities.User, error) {
 	var user *userEntities.User
 	var err error
 
-	// Find user by provider-specific ID
+	// First, try to find user through the new account binding system
+	binding, err := a.userBindingService.FindUserByProviderAccount(ctx, userInfo.Provider, userInfo.ID)
+	if err == nil {
+		// User found through binding, get the user
+		user, err = a.userRepository.GetByID(ctx, binding.UserID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get user from binding: %w", err)
+		}
+
+		// Update the binding with latest information
+		bindingUserInfo := &userInterfaces.OAuthUserInfo{
+			UserID:           user.ID,
+			Provider:         userInfo.Provider,
+			ProviderUserID:   userInfo.ID,
+			ProviderEmail:    &userInfo.Email,
+			ProviderUsername: &userInfo.Username,
+			ProviderName:     &userInfo.Name,
+			ProviderAvatar:   &userInfo.Avatar,
+		}
+
+		_, err = a.userBindingService.CreateOrUpdateFromOAuth(ctx, userInfo.Provider, bindingUserInfo)
+		if err != nil {
+			logger.Error("Failed to update binding from OAuth",
+				logger.String("provider", userInfo.Provider),
+				logger.String("provider_id", userInfo.ID),
+				logger.Error2("error", err))
+			// Don't fail the login, just log the error
+		}
+
+		logger.Info("User logged in via account binding",
+			logger.String("provider", userInfo.Provider),
+			logger.String("provider_id", userInfo.ID),
+			logger.Uint("user_id", user.ID))
+
+		return user, nil
+	}
+
+	// Fall back to legacy method for existing users (for backwards compatibility)
+	// Find user by provider-specific ID in the users table
 	switch userInfo.Provider {
 	case "google":
 		user, err = a.userRepository.GetByGoogleID(ctx, userInfo.ID)
@@ -511,7 +551,57 @@ func (a *AuthService) CreateOrUpdateOAuthUser(ctx context.Context, userInfo *int
 		return nil, fmt.Errorf("unsupported OAuth provider: %s", userInfo.Provider)
 	}
 
-	// If user doesn't exist, create a new one
+	// If user exists in legacy system, migrate them to the new binding system
+	if err == nil && user != nil {
+		// Create a binding for this legacy user
+		bindingUserInfo := &userInterfaces.OAuthUserInfo{
+			UserID:           user.ID,
+			Provider:         userInfo.Provider,
+			ProviderUserID:   userInfo.ID,
+			ProviderEmail:    &userInfo.Email,
+			ProviderUsername: &userInfo.Username,
+			ProviderName:     &userInfo.Name,
+			ProviderAvatar:   &userInfo.Avatar,
+		}
+
+		_, err = a.userBindingService.CreateOrUpdateFromOAuth(ctx, userInfo.Provider, bindingUserInfo)
+		if err != nil {
+			logger.Error("Failed to migrate legacy user to binding system",
+				logger.String("provider", userInfo.Provider),
+				logger.String("provider_id", userInfo.ID),
+				logger.Uint("user_id", user.ID),
+				logger.Error2("error", err))
+			// Continue without failing
+		} else {
+			logger.Info("Legacy user migrated to binding system",
+				logger.String("provider", userInfo.Provider),
+				logger.String("provider_id", userInfo.ID),
+				logger.Uint("user_id", user.ID))
+		}
+
+		// Update user profile if data has changed
+		dataChanged := false
+		if user.Name != userInfo.Name {
+			user.Name = userInfo.Name
+			dataChanged = true
+		}
+		if user.Avatar != userInfo.Avatar {
+			user.Avatar = userInfo.Avatar
+			dataChanged = true
+		}
+
+		if dataChanged {
+			if err := a.userRepository.Update(ctx, user); err != nil {
+				logger.Error("Failed to update user profile",
+					logger.Uint("user_id", user.ID),
+					logger.Error2("error", err))
+			}
+		}
+
+		return user, nil
+	}
+
+	// User doesn't exist, create a new one
 	if err != nil && err == gorm.ErrRecordNotFound {
 		// Create new user entity
 		newUser := &userEntities.User{
@@ -524,7 +614,7 @@ func (a *AuthService) CreateOrUpdateOAuthUser(ctx context.Context, userInfo *int
 			Role:     userEntities.UserRoleUser,
 		}
 
-		// Set provider-specific ID
+		// Set provider-specific ID for backwards compatibility
 		switch userInfo.Provider {
 		case "google":
 			newUser.GoogleID = &userInfo.ID
@@ -544,44 +634,34 @@ func (a *AuthService) CreateOrUpdateOAuthUser(ctx context.Context, userInfo *int
 			return nil, fmt.Errorf("failed to create OAuth user: %w", err)
 		}
 
-		logger.Info("New OAuth user created",
-			logger.String("provider", userInfo.Provider),
-			logger.String("provider_id", userInfo.ID),
-			logger.Uint("user_id", newUser.ID),
-		)
-
-		return newUser, nil
-	} else if err != nil {
-		return nil, fmt.Errorf("failed to check existing OAuth user: %w", err)
-	}
-
-	// User exists - check if data has changed (only name and avatar)
-	dataChanged := false
-	if user.Name != userInfo.Name {
-		user.Name = userInfo.Name
-		dataChanged = true
-	}
-	if user.Avatar != userInfo.Avatar {
-		user.Avatar = userInfo.Avatar
-		dataChanged = true
-	}
-
-	if dataChanged {
-		// Update provider data to keep it current
-		providerDataBytes, _ := json.Marshal(userInfo)
-		providerDataStr := string(providerDataBytes)
-		user.ProviderData = &providerDataStr
-
-		if err := a.userRepository.Update(ctx, user); err != nil {
-			return nil, fmt.Errorf("failed to update OAuth user: %w", err)
+		// Create a binding for the new user
+		bindingUserInfo := &userInterfaces.OAuthUserInfo{
+			UserID:           newUser.ID,
+			Provider:         userInfo.Provider,
+			ProviderUserID:   userInfo.ID,
+			ProviderEmail:    &userInfo.Email,
+			ProviderUsername: &userInfo.Username,
+			ProviderName:     &userInfo.Name,
+			ProviderAvatar:   &userInfo.Avatar,
 		}
 
-		logger.Info("OAuth user profile updated",
+		_, err = a.userBindingService.CreateOrUpdateFromOAuth(ctx, userInfo.Provider, bindingUserInfo)
+		if err != nil {
+			logger.Error("Failed to create binding for new OAuth user",
+				logger.String("provider", userInfo.Provider),
+				logger.String("provider_id", userInfo.ID),
+				logger.Uint("user_id", newUser.ID),
+				logger.Error2("error", err))
+			// Continue without failing the user creation
+		}
+
+		logger.Info("New OAuth user created with binding",
 			logger.String("provider", userInfo.Provider),
 			logger.String("provider_id", userInfo.ID),
-			logger.Uint("user_id", user.ID),
-		)
+			logger.Uint("user_id", newUser.ID))
+
+		return newUser, nil
 	}
 
-	return user, nil
+	return nil, fmt.Errorf("failed to check existing OAuth user: %w", err)
 }

@@ -14,13 +14,17 @@ import (
 )
 
 // Module User 领域模块
-// 提供用户生命周期管理、用户信息维护、用户状态管理等功能
+// 提供用户生命周期管理、用户信息维护、用户状态管理、第三方账号绑定等功能
 var Module = fx.Module("user",
 	// 提供 Repository 实现
 	fx.Provide(
 		fx.Annotate(
 			repositories.NewUserRepository,
 			fx.As(new(interfaces.UserRepository)),
+		),
+		fx.Annotate(
+			repositories.NewUserAccountBindingRepository,
+			fx.As(new(interfaces.UserAccountBindingRepository)),
 		),
 	),
 
@@ -39,19 +43,26 @@ var Module = fx.Module("user",
 			},
 			fx.As(new(interfaces.UserService)),
 		),
+
+		// 提供用户账号绑定服务
+		fx.Annotate(
+			implementations.NewUserAccountBindingService,
+			fx.As(new(interfaces.UserAccountBindingService)),
+		),
 	),
 
 	// 提供 Handler 实现
 	fx.Provide(
 		handlers.NewUserProfileHandler,
 		handlers.NewAdminUserHandler,
+		handlers.NewUserAccountBindingHandler,
 	),
 
 	// 模块初始化钩子
 	fx.Invoke(func(db *gorm.DB, logger framework.Logger, cacheManager cache.CacheManager) {
 		// 确保用户表存在并且结构正确
 		// 这里可以添加用户领域特定的初始化逻辑
-		logger.Info("User domain module initialized with caching support")
+		logger.Info("User domain module initialized with caching support and account binding")
 	}),
 )
 

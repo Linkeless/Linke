@@ -7,23 +7,28 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"linke/internal/domains/subscription/usecases/interfaces"
+	userEntities "linke/internal/domains/user/entities"
+	"linke/internal/shared/middleware"
 	"linke/internal/shared/response"
 )
 
 // UsageHandler handles usage tracking and monitoring API endpoints
 type UsageHandler struct {
-	usageTrackingService interfaces.UsageTrackingService
-	usageAlertService    interfaces.UsageAlertService
+	usageTrackingService    interfaces.UsageTrackingService
+	usageAlertService       interfaces.UsageAlertService
+	userSubscriptionService interfaces.UserSubscriptionService
 }
 
 // NewUsageHandler creates a new usage handler instance
 func NewUsageHandler(
 	usageTrackingService interfaces.UsageTrackingService,
 	usageAlertService interfaces.UsageAlertService,
+	userSubscriptionService interfaces.UserSubscriptionService,
 ) *UsageHandler {
 	return &UsageHandler{
-		usageTrackingService: usageTrackingService,
-		usageAlertService:    usageAlertService,
+		usageTrackingService:    usageTrackingService,
+		usageAlertService:       usageAlertService,
+		userSubscriptionService: userSubscriptionService,
 	}
 }
 
@@ -63,6 +68,42 @@ func (h *UsageHandler) RegisterRoutes(router *gin.RouterGroup) {
 			admin.POST("/sync/:subscription_id", h.SyncSubscriptionLimits)
 		}
 	}
+
+}
+
+// Helper methods
+
+// ensureOwnership validates the current authenticated user owns the subscription, unless admin
+func (h *UsageHandler) ensureOwnership(c *gin.Context, subscriptionID uint) bool {
+	// Require authenticated user
+	userValue, exists := c.Get(middleware.AuthContextKey)
+	if !exists {
+		response.Unauthorized(c, "Authentication required")
+		return false
+	}
+
+	user, ok := userValue.(*userEntities.User)
+	if !ok {
+		response.Unauthorized(c, "Invalid user context")
+		return false
+	}
+
+	// Admin bypass
+	if user.IsAdmin() {
+		return true
+	}
+
+	// Load subscription and verify ownership
+	sub, err := h.userSubscriptionService.GetUserSubscription(c.Request.Context(), subscriptionID)
+	if err != nil {
+		response.NotFound(c, "Subscription not found")
+		return false
+	}
+	if sub.UserID != user.ID {
+		response.Forbidden(c, "You can only access your own subscription usage")
+		return false
+	}
+	return true
 }
 
 // Current Usage Endpoints
@@ -83,6 +124,10 @@ func (h *UsageHandler) GetCurrentUsage(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
 	if err != nil {
 		response.BadRequest(c, "Invalid subscription ID")
+		return
+	}
+
+	if !h.ensureOwnership(c, uint(subscriptionID)) {
 		return
 	}
 
@@ -112,6 +157,10 @@ func (h *UsageHandler) GetCurrentUsageByType(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
 	if err != nil {
 		response.BadRequest(c, "Invalid subscription ID")
+		return
+	}
+
+	if !h.ensureOwnership(c, uint(subscriptionID)) {
 		return
 	}
 
@@ -156,6 +205,10 @@ func (h *UsageHandler) GetUsageHistory(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
 	if err != nil {
 		response.BadRequest(c, "Invalid subscription ID")
+		return
+	}
+
+	if !h.ensureOwnership(c, uint(subscriptionID)) {
 		return
 	}
 
@@ -233,6 +286,10 @@ func (h *UsageHandler) GetUsageSummary(c *gin.Context) {
 		return
 	}
 
+	if !h.ensureOwnership(c, uint(subscriptionID)) {
+		return
+	}
+
 	req := &interfaces.UsageSummaryRequest{
 		UserSubscriptionID:  uint(subscriptionID),
 		Period:              c.DefaultQuery("period", interfaces.PeriodMonthly),
@@ -296,6 +353,10 @@ func (h *UsageHandler) GetUsageStatistics(c *gin.Context) {
 		return
 	}
 
+	if !h.ensureOwnership(c, uint(subscriptionID)) {
+		return
+	}
+
 	req := &interfaces.UsageStatsRequest{
 		UserSubscriptionID: uint(subscriptionID),
 		UsageType:          c.Query("usage_type"),
@@ -350,6 +411,10 @@ func (h *UsageHandler) GetUsageTrends(c *gin.Context) {
 		return
 	}
 
+	if !h.ensureOwnership(c, uint(subscriptionID)) {
+		return
+	}
+
 	req := &interfaces.UsageTrendsRequest{
 		UserSubscriptionID: uint(subscriptionID),
 		UsageType:          c.Query("usage_type"),
@@ -387,6 +452,10 @@ func (h *UsageHandler) GetUsagePredictions(c *gin.Context) {
 		return
 	}
 
+	if !h.ensureOwnership(c, uint(subscriptionID)) {
+		return
+	}
+
 	predictions, err := h.usageTrackingService.GetUsagePredictions(c.Request.Context(), uint(subscriptionID), "")
 	if err != nil {
 		response.InternalServerError(c, "Failed to get usage predictions", err.Error())
@@ -413,6 +482,10 @@ func (h *UsageHandler) GetUsagePredictionsByType(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
 	if err != nil {
 		response.BadRequest(c, "Invalid subscription ID")
+		return
+	}
+
+	if !h.ensureOwnership(c, uint(subscriptionID)) {
 		return
 	}
 
@@ -449,6 +522,10 @@ func (h *UsageHandler) GetRealTimeUsage(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
 	if err != nil {
 		response.BadRequest(c, "Invalid subscription ID")
+		return
+	}
+
+	if !h.ensureOwnership(c, uint(subscriptionID)) {
 		return
 	}
 

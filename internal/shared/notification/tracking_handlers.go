@@ -41,7 +41,7 @@ func NewNotificationTrackingHandlers(
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /api/v1/notifications/{request_id}/status [get]
+// @Router /notifications/{request_id}/status [get]
 func (h *NotificationTrackingHandlers) GetNotificationStatus(c *gin.Context) {
 	requestID := c.Param("request_id")
 	if requestID == "" {
@@ -74,7 +74,7 @@ func (h *NotificationTrackingHandlers) GetNotificationStatus(c *gin.Context) {
 // @Success 200 {object} UserNotificationHistoryResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /api/v1/users/{user_id}/notifications/history [get]
+// @Router /users/{user_id}/notifications/history [get]
 func (h *NotificationTrackingHandlers) GetUserNotificationHistory(c *gin.Context) {
 	userID, ok := handlers.ParseIDParam(c, "user_id")
 	if !ok {
@@ -126,7 +126,7 @@ func (h *NotificationTrackingHandlers) GetUserNotificationHistory(c *gin.Context
 // @Success 200 {object} NotificationAnalytics
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /api/v1/notifications/analytics [get]
+// @Router /notifications/analytics [get]
 func (h *NotificationTrackingHandlers) GetNotificationAnalytics(c *gin.Context) {
 	// Parse time range
 	timeRange, err := h.parseTimeRange(c)
@@ -163,7 +163,7 @@ func (h *NotificationTrackingHandlers) GetNotificationAnalytics(c *gin.Context) 
 // @Produce json
 // @Success 200 {object} NotificationStatusSummary
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /api/v1/notifications/status/summary [get]
+// @Router /notifications/status/summary [get]
 func (h *NotificationTrackingHandlers) GetNotificationStatusSummary(c *gin.Context) {
 	// In a real implementation, you would get the current user from JWT token
 	// For now, we'll return a placeholder summary

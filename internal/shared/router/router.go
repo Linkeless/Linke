@@ -2,8 +2,8 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/swaggo/files"
-	"github.com/swaggo/gin-swagger"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 
 	"linke/internal/shared/cache"
@@ -52,6 +52,7 @@ func SetupRoutes(
 	adminAuthHandler *authHandlers.AdminAuthHandler,
 	userProfileHandler *userHandlers.UserProfileHandler,
 	adminUserHandler *userHandlers.AdminUserHandler,
+	userAccountBindingHandler *userHandlers.UserAccountBindingHandler,
 	subscriptionPlanHandler *subscriptionHandlers.SubscriptionPlanHandler,
 	subscriptionOrderHandler *subscriptionHandlers.SubscriptionOrderHandler,
 	userSubscriptionHandler *subscriptionHandlers.UserSubscriptionHandler,
@@ -156,6 +157,17 @@ func SetupRoutes(
 		userGroup.GET("/profile", userProfileHandler.GetProfile)
 		userGroup.PUT("/profile", userProfileHandler.UpdateProfile)
 		// Password change functionality is handled by /api/v1/auth/change-password
+
+		// Account binding routes
+		bindingGroup := userGroup.Group("/bindings")
+		{
+			bindingGroup.GET("", userAccountBindingHandler.GetBindings)
+			bindingGroup.GET("/:provider", userAccountBindingHandler.GetBinding)
+			bindingGroup.POST("/:provider", userAccountBindingHandler.CreateBinding)
+			bindingGroup.PUT("/:provider", userAccountBindingHandler.UpdateBinding)
+			bindingGroup.DELETE("/:provider", userAccountBindingHandler.DeleteBinding)
+			bindingGroup.PUT("/:provider/primary", userAccountBindingHandler.SetPrimaryBinding)
+		}
 	}
 
 	// Admin route group (/api/v1/admin) - requires authentication and admin privileges
@@ -217,6 +229,13 @@ func SetupRoutes(
 		{
 			oauthGroup.GET("/providers", adminAuthHandler.GetOAuthProviderStats)
 			oauthGroup.GET("/incidents", adminAuthHandler.ListOAuthSecurityEvents)
+		}
+
+		// Account Binding Management
+		bindingGroup := adminAuthGroup.Group("/bindings")
+		{
+			bindingGroup.GET("/stats", userAccountBindingHandler.GetBindingStats)
+			bindingGroup.POST("/cleanup", userAccountBindingHandler.CleanupInactiveBindings)
 		}
 
 		// Security Analytics and Reporting
@@ -576,31 +595,37 @@ func SetupRoutes(
 		logger.Debug("Successfully registered user subscription routes")
 	}
 
-	// Usage tracking routes (/api/v1/usage) - using RegisterRoutes method
+	// Usage tracking routes (/api/v1/usage) - enforce authentication for all usage endpoints
 	logger.Debug("Registering usage tracking routes")
 	if usageHandler == nil {
 		logger.Error("Usage handler is nil - routes will not be registered")
 	} else {
-		usageHandler.RegisterRoutes(apiV1)
-		logger.Debug("Successfully registered usage tracking routes")
+		authedV1ForUsage := apiV1.Group("")
+		authedV1ForUsage.Use(middleware.AuthMiddleware(newAuthServiceAdapter(authService)))
+		usageHandler.RegisterRoutes(authedV1ForUsage)
+		logger.Debug("Successfully registered usage tracking routes with auth middleware")
 	}
 
-	// Usage alert routes (/api/v1/usage-alerts) - using RegisterRoutes method
+	// Usage alert routes (/api/v1/usage-alerts) - enforce authentication for all alert endpoints
 	logger.Debug("Registering usage alert routes")
 	if usageAlertHandler == nil {
 		logger.Error("Usage alert handler is nil - routes will not be registered")
 	} else {
-		usageAlertHandler.RegisterRoutes(apiV1)
-		logger.Debug("Successfully registered usage alert routes")
+		authedV1ForAlerts := apiV1.Group("")
+		authedV1ForAlerts.Use(middleware.AuthMiddleware(newAuthServiceAdapter(authService)))
+		usageAlertHandler.RegisterRoutes(authedV1ForAlerts)
+		logger.Debug("Successfully registered usage alert routes with auth middleware")
 	}
 
-	// Invoice routes (/api/v1/invoice) - using RegisterRoutes method
+	// Invoice routes (/api/v1/invoice) - enforce authentication for all invoice endpoints
 	logger.Debug("Registering invoice routes")
 	if invoiceHandler == nil {
 		logger.Error("Invoice handler is nil - routes will not be registered")
 	} else {
-		invoiceHandler.RegisterRoutes(apiV1)
-		logger.Debug("Successfully registered invoice routes")
+		authedV1ForInvoice := apiV1.Group("")
+		authedV1ForInvoice.Use(middleware.AuthMiddleware(newAuthServiceAdapter(authService)))
+		invoiceHandler.RegisterRoutes(authedV1ForInvoice)
+		logger.Debug("Successfully registered invoice routes with auth middleware")
 	}
 
 	// Payment routes (/api/v1/payment)
@@ -751,7 +776,7 @@ func SetupRoutes(
 			}
 		}
 	}
-	
+
 	// Log consolidated verification result at debug level to reduce noise
 	logger.Debug("Important routes verification completed",
 		zap.Int("verified_count", len(verifiedRoutes)),

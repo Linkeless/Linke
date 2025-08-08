@@ -8,6 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"linke/internal/domains/subscription/usecases/interfaces"
+	userEntities "linke/internal/domains/user/entities"
+	"linke/internal/shared/middleware"
 	"linke/internal/shared/response"
 )
 
@@ -29,14 +31,43 @@ type ResolveAlertRequest struct {
 
 // UsageAlertHandler handles usage alert API endpoints
 type UsageAlertHandler struct {
-	usageAlertService interfaces.UsageAlertService
+	usageAlertService       interfaces.UsageAlertService
+	userSubscriptionService interfaces.UserSubscriptionService
 }
 
 // NewUsageAlertHandler creates a new usage alert handler instance
-func NewUsageAlertHandler(usageAlertService interfaces.UsageAlertService) *UsageAlertHandler {
+func NewUsageAlertHandler(usageAlertService interfaces.UsageAlertService, userSubscriptionService interfaces.UserSubscriptionService) *UsageAlertHandler {
 	return &UsageAlertHandler{
-		usageAlertService: usageAlertService,
+		usageAlertService:       usageAlertService,
+		userSubscriptionService: userSubscriptionService,
 	}
+}
+
+// Helper: ensure the current user can access a subscription's alerts
+func (h *UsageAlertHandler) ensureOwnership(c *gin.Context, subscriptionID uint) bool {
+	userValue, exists := c.Get(middleware.AuthContextKey)
+	if !exists {
+		response.Unauthorized(c, "Authentication required")
+		return false
+	}
+	user, ok := userValue.(*userEntities.User)
+	if !ok {
+		response.Unauthorized(c, "Invalid user context")
+		return false
+	}
+	if user.IsAdmin() {
+		return true
+	}
+	sub, err := h.userSubscriptionService.GetUserSubscription(c.Request.Context(), subscriptionID)
+	if err != nil {
+		response.NotFound(c, "Subscription not found")
+		return false
+	}
+	if sub.UserID != user.ID {
+		response.Forbidden(c, "You can only access your own subscription alerts")
+		return false
+	}
+	return true
 }
 
 // Alert Configuration Management
@@ -64,6 +95,10 @@ func (h *UsageAlertHandler) GetAlertConfigurations(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
 	if err != nil {
 		response.BadRequest(c, "Invalid subscription ID")
+		return
+	}
+
+	if !h.ensureOwnership(c, uint(subscriptionID)) {
 		return
 	}
 
@@ -257,6 +292,10 @@ func (h *UsageAlertHandler) GetUsageAlerts(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
 	if err != nil {
 		response.BadRequest(c, "Invalid subscription ID")
+		return
+	}
+
+	if !h.ensureOwnership(c, uint(subscriptionID)) {
 		return
 	}
 
@@ -492,6 +531,10 @@ func (h *UsageAlertHandler) GetAlertStatistics(c *gin.Context) {
 		return
 	}
 
+	if !h.ensureOwnership(c, uint(subscriptionID)) {
+		return
+	}
+
 	req := &interfaces.AlertStatsRequest{
 		UserSubscriptionID: uint(subscriptionID),
 		UsageType:          c.Query("usage_type"),
@@ -546,6 +589,10 @@ func (h *UsageAlertHandler) GetAlertHistory(c *gin.Context) {
 	subscriptionID, err := strconv.ParseUint(c.Param("subscription_id"), 10, 32)
 	if err != nil {
 		response.BadRequest(c, "Invalid subscription ID")
+		return
+	}
+
+	if !h.ensureOwnership(c, uint(subscriptionID)) {
 		return
 	}
 

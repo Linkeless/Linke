@@ -65,12 +65,13 @@ var Module = fx.Module("auth",
 				db *gorm.DB,
 				userService userInterfaces.UserService,
 				userRepository userInterfaces.UserRepository,
+				userBindingService userInterfaces.UserAccountBindingService,
 				jwtService interfaces.JWTService,
 				inviteCodeService referralInterfaces.InviteCodeService,
 				// loginSecurityService interfaces.LoginSecurityService, // 🔴 DISABLED: Removed dependency
 			) interfaces.AuthService {
 				// Pass nil for loginSecurityService to disable login security
-				return implementations.NewAuthService(db, userService, userRepository, jwtService, inviteCodeService, nil)
+				return implementations.NewAuthService(db, userService, userRepository, userBindingService, jwtService, inviteCodeService, nil)
 			},
 			fx.As(new(interfaces.AuthService)),
 		),

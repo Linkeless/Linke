@@ -626,6 +626,15 @@ definitions:
         example: 1
         type: integer
     type: object
+  entities.BindingListResponse:
+    properties:
+      bindings:
+        items:
+          $ref: '#/definitions/entities.UserAccountBindingResponse'
+        type: array
+      total:
+        type: integer
+    type: object
   entities.CouponResponse:
     properties:
       applicable_plans:
@@ -750,6 +759,45 @@ definitions:
         description: User ID
         example: 1
         type: integer
+    type: object
+  entities.CreateBindingRequest:
+    properties:
+      is_primary:
+        example: false
+        type: boolean
+      provider:
+        enum:
+        - google
+        - github
+        - telegram
+        example: google
+        type: string
+      provider_avatar:
+        example: https://example.com/avatar.jpg
+        maxLength: 500
+        type: string
+      provider_data:
+        example: '{"extra": "data"}'
+        type: string
+      provider_email:
+        example: user@example.com
+        maxLength: 255
+        type: string
+      provider_name:
+        example: User Name
+        maxLength: 255
+        type: string
+      provider_user_id:
+        example: "123456789"
+        maxLength: 100
+        type: string
+      provider_username:
+        example: username
+        maxLength: 100
+        type: string
+    required:
+    - provider
+    - provider_user_id
     type: object
   entities.CreatePaymentMethodRequest:
     properties:
@@ -2373,6 +2421,31 @@ definitions:
         example: "2024-01-02T16:00:00Z"
         type: string
     type: object
+  entities.UpdateBindingRequest:
+    properties:
+      is_primary:
+        example: false
+        type: boolean
+      provider_avatar:
+        example: https://example.com/avatar.jpg
+        maxLength: 500
+        type: string
+      provider_data:
+        example: '{"extra": "data"}'
+        type: string
+      provider_email:
+        example: user@example.com
+        maxLength: 255
+        type: string
+      provider_name:
+        example: User Name
+        maxLength: 255
+        type: string
+      provider_username:
+        example: username
+        maxLength: 100
+        type: string
+    type: object
   entities.UpdatePaymentMethodRequest:
     properties:
       billing_country:
@@ -2560,6 +2633,40 @@ definitions:
       unit:
         type: string
       usage_type:
+        type: string
+    type: object
+  entities.UserAccountBindingResponse:
+    properties:
+      bound_at:
+        type: string
+      created_at:
+        description: Timestamp Fields
+        type: string
+      deleted_at:
+        type: string
+      id:
+        description: Primary Key
+        type: integer
+      is_primary:
+        description: Binding Status
+        type: boolean
+      last_used_at:
+        type: string
+      provider:
+        description: Provider Information
+        type: string
+      provider_avatar:
+        type: string
+      provider_email:
+        description: Provider User Data (only show non-sensitive data)
+        type: string
+      provider_name:
+        type: string
+      provider_user_id:
+        type: string
+      provider_username:
+        type: string
+      updated_at:
         type: string
     type: object
   entities.UserResponse:
@@ -4752,6 +4859,20 @@ definitions:
         type: string
     required:
     - provider
+    type: object
+  interfaces.BindingStats:
+    properties:
+      active_bindings:
+        type: integer
+      bindings_by_provider:
+        additionalProperties:
+          format: int64
+          type: integer
+        type: object
+      total_bindings:
+        type: integer
+      users_with_bindings:
+        type: integer
     type: object
   interfaces.BulkDownloadRequest:
     properties:
@@ -7246,6 +7367,78 @@ paths:
       summary: List login attempts
       tags:
       - Admin-Auth-Management
+  /admin/bindings/cleanup:
+    post:
+      consumes:
+      - application/json
+      description: Remove inactive bindings older than specified days (admin only)
+      parameters:
+      - description: 'Days of inactivity threshold (default: 90)'
+        in: query
+        name: days
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MessageOnlyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Cleanup inactive bindings
+      tags:
+      - user-bindings
+  /admin/bindings/stats:
+    get:
+      consumes:
+      - application/json
+      description: Get statistics about account bindings (admin only)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/interfaces.BindingStats'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get binding statistics
+      tags:
+      - user-bindings
   /admin/cache/flush:
     delete:
       consumes:
@@ -14919,152 +15112,6 @@ paths:
       summary: '[Admin] Get user statistics'
       tags:
       - Admin-User-Management
-  /api/v1/notifications/{request_id}/status:
-    get:
-      consumes:
-      - application/json
-      description: Get detailed status information for a specific notification
-      parameters:
-      - description: Notification Request ID
-        in: path
-        name: request_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/notification.NotificationTrackingInfo'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.NotFoundResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      summary: Get notification status
-      tags:
-      - notifications
-      - tracking
-  /api/v1/notifications/analytics:
-    get:
-      consumes:
-      - application/json
-      description: Get analytics and statistics for notifications within a time range
-      parameters:
-      - default: '"24h ago"'
-        description: Start date (RFC3339 format)
-        in: query
-        name: start_date
-        type: string
-      - default: '"now"'
-        description: End date (RFC3339 format)
-        in: query
-        name: end_date
-        type: string
-      - description: Comma-separated user IDs to filter by
-        in: query
-        name: user_ids
-        type: string
-      - description: Comma-separated event types to filter by
-        in: query
-        name: event_types
-        type: string
-      - description: Comma-separated channels to filter by
-        in: query
-        name: channels
-        type: string
-      - description: Comma-separated statuses to filter by
-        in: query
-        name: statuses
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/notification.NotificationAnalytics'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      summary: Get notification analytics
-      tags:
-      - notifications
-      - tracking
-      - analytics
-  /api/v1/notifications/status/summary:
-    get:
-      consumes:
-      - application/json
-      description: Get a summary of notification statuses for the current user
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/notification.NotificationStatusSummary'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      summary: Get notification status summary
-      tags:
-      - notifications
-      - tracking
-  /api/v1/users/{user_id}/notifications/history:
-    get:
-      consumes:
-      - application/json
-      description: Get notification history for a specific user
-      parameters:
-      - description: User ID
-        in: path
-        name: user_id
-        required: true
-        type: integer
-      - default: 20
-        description: Number of notifications to return
-        in: query
-        name: limit
-        type: integer
-      - description: Filter by event type
-        in: query
-        name: event_type
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/notification.UserNotificationHistoryResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      summary: Get user notification history
-      tags:
-      - notifications
-      - tracking
-      - users
   /app/system/health:
     get:
       consumes:
@@ -16287,6 +16334,112 @@ paths:
       summary: '[User] Get current user''s invoices'
       tags:
       - Invoice
+  /notifications/{request_id}/status:
+    get:
+      consumes:
+      - application/json
+      description: Get detailed status information for a specific notification
+      parameters:
+      - description: Notification Request ID
+        in: path
+        name: request_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/notification.NotificationTrackingInfo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      summary: Get notification status
+      tags:
+      - notifications
+      - tracking
+  /notifications/analytics:
+    get:
+      consumes:
+      - application/json
+      description: Get analytics and statistics for notifications within a time range
+      parameters:
+      - default: '"24h ago"'
+        description: Start date (RFC3339 format)
+        in: query
+        name: start_date
+        type: string
+      - default: '"now"'
+        description: End date (RFC3339 format)
+        in: query
+        name: end_date
+        type: string
+      - description: Comma-separated user IDs to filter by
+        in: query
+        name: user_ids
+        type: string
+      - description: Comma-separated event types to filter by
+        in: query
+        name: event_types
+        type: string
+      - description: Comma-separated channels to filter by
+        in: query
+        name: channels
+        type: string
+      - description: Comma-separated statuses to filter by
+        in: query
+        name: statuses
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/notification.NotificationAnalytics'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      summary: Get notification analytics
+      tags:
+      - notifications
+      - tracking
+      - analytics
+  /notifications/status/summary:
+    get:
+      consumes:
+      - application/json
+      description: Get a summary of notification statuses for the current user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/notification.NotificationStatusSummary'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      summary: Get notification status summary
+      tags:
+      - notifications
+      - tracking
   /payment-methods:
     get:
       description: Retrieve all payment methods for the authenticated user
@@ -19425,6 +19578,256 @@ paths:
       summary: Get top usage subscriptions
       tags:
       - usage
+  /user/bindings:
+    get:
+      consumes:
+      - application/json
+      description: Get all third-party account bindings for the current user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.BindingListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user's account bindings
+      tags:
+      - user-bindings
+  /user/bindings/{provider}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a third-party account binding from the current user
+      parameters:
+      - description: Provider name (google, github, telegram)
+        in: path
+        name: provider
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MessageOnlyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Unbind a third-party account
+      tags:
+      - user-bindings
+    get:
+      consumes:
+      - application/json
+      description: Get a specific third-party account binding for the current user
+      parameters:
+      - description: Provider name (google, github, telegram)
+        in: path
+        name: provider
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.UserAccountBindingResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get a specific account binding
+      tags:
+      - user-bindings
+    post:
+      consumes:
+      - application/json
+      description: Bind a third-party account (Google, GitHub, Telegram) to the current
+        user
+      parameters:
+      - description: Provider name (google, github, telegram)
+        in: path
+        name: provider
+        required: true
+        type: string
+      - description: Binding data
+        in: body
+        name: binding
+        required: true
+        schema:
+          $ref: '#/definitions/entities.CreateBindingRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.UserAccountBindingResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.ConflictResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Bind a third-party account
+      tags:
+      - user-bindings
+    put:
+      consumes:
+      - application/json
+      description: Update a third-party account binding for the current user
+      parameters:
+      - description: Provider name (google, github, telegram)
+        in: path
+        name: provider
+        required: true
+        type: string
+      - description: Updated binding data
+        in: body
+        name: binding
+        required: true
+        schema:
+          $ref: '#/definitions/entities.UpdateBindingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.UserAccountBindingResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update an account binding
+      tags:
+      - user-bindings
+  /user/bindings/{provider}/primary:
+    put:
+      consumes:
+      - application/json
+      description: Set a third-party account binding as the primary one
+      parameters:
+      - description: Provider name (google, github, telegram)
+        in: path
+        name: provider
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MessageOnlyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Set primary account binding
+      tags:
+      - user-bindings
   /user/profile:
     get:
       consumes:
@@ -19495,6 +19898,46 @@ paths:
       summary: '[User] Update own profile'
       tags:
       - User-Profile
+  /users/{user_id}/notifications/history:
+    get:
+      consumes:
+      - application/json
+      description: Get notification history for a specific user
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      - default: 20
+        description: Number of notifications to return
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by event type
+        in: query
+        name: event_type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/notification.UserNotificationHistoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      summary: Get user notification history
+      tags:
+      - notifications
+      - tracking
+      - users
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token.

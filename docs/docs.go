@@ -1153,6 +1153,124 @@ const docTemplate = `{
                 }
             }
         },
+        "/admin/bindings/cleanup": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Remove inactive bindings older than specified days (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user-bindings"
+                ],
+                "summary": "Cleanup inactive bindings",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Days of inactivity threshold (default: 90)",
+                        "name": "days",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.MessageOnlyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/bindings/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get statistics about account bindings (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user-bindings"
+                ],
+                "summary": "Get binding statistics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.BindingStats"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/admin/cache/flush": {
             "delete": {
                 "security": [
@@ -13306,223 +13424,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/notifications/analytics": {
-            "get": {
-                "description": "Get analytics and statistics for notifications within a time range",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "notifications",
-                    "tracking",
-                    "analytics"
-                ],
-                "summary": "Get notification analytics",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "default": "\"24h ago\"",
-                        "description": "Start date (RFC3339 format)",
-                        "name": "start_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "default": "\"now\"",
-                        "description": "End date (RFC3339 format)",
-                        "name": "end_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Comma-separated user IDs to filter by",
-                        "name": "user_ids",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Comma-separated event types to filter by",
-                        "name": "event_types",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Comma-separated channels to filter by",
-                        "name": "channels",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Comma-separated statuses to filter by",
-                        "name": "statuses",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/notification.NotificationAnalytics"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/notifications/status/summary": {
-            "get": {
-                "description": "Get a summary of notification statuses for the current user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "notifications",
-                    "tracking"
-                ],
-                "summary": "Get notification status summary",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/notification.NotificationStatusSummary"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/notifications/{request_id}/status": {
-            "get": {
-                "description": "Get detailed status information for a specific notification",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "notifications",
-                    "tracking"
-                ],
-                "summary": "Get notification status",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Notification Request ID",
-                        "name": "request_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/notification.NotificationTrackingInfo"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.NotFoundResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/users/{user_id}/notifications/history": {
-            "get": {
-                "description": "Get notification history for a specific user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "notifications",
-                    "tracking",
-                    "users"
-                ],
-                "summary": "Get user notification history",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 20,
-                        "description": "Number of notifications to return",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by event type",
-                        "name": "event_type",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/notification.UserNotificationHistoryResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/app/system/health": {
             "get": {
                 "description": "检查系统各组件健康状态",
@@ -15457,6 +15358,164 @@ const docTemplate = `{
                         "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/notifications/analytics": {
+            "get": {
+                "description": "Get analytics and statistics for notifications within a time range",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notifications",
+                    "tracking",
+                    "analytics"
+                ],
+                "summary": "Get notification analytics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "\"24h ago\"",
+                        "description": "Start date (RFC3339 format)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"now\"",
+                        "description": "End date (RFC3339 format)",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated user IDs to filter by",
+                        "name": "user_ids",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated event types to filter by",
+                        "name": "event_types",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated channels to filter by",
+                        "name": "channels",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated statuses to filter by",
+                        "name": "statuses",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/notification.NotificationAnalytics"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/notifications/status/summary": {
+            "get": {
+                "description": "Get a summary of notification statuses for the current user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notifications",
+                    "tracking"
+                ],
+                "summary": "Get notification status summary",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/notification.NotificationStatusSummary"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/notifications/{request_id}/status": {
+            "get": {
+                "description": "Get detailed status information for a specific notification",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notifications",
+                    "tracking"
+                ],
+                "summary": "Get notification status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Notification Request ID",
+                        "name": "request_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/notification.NotificationTrackingInfo"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "404": {
@@ -20423,6 +20482,411 @@ const docTemplate = `{
                 }
             }
         },
+        "/user/bindings": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all third-party account bindings for the current user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user-bindings"
+                ],
+                "summary": "Get user's account bindings",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/entities.BindingListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/bindings/{provider}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a specific third-party account binding for the current user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user-bindings"
+                ],
+                "summary": "Get a specific account binding",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Provider name (google, github, telegram)",
+                        "name": "provider",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/entities.UserAccountBindingResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a third-party account binding for the current user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user-bindings"
+                ],
+                "summary": "Update an account binding",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Provider name (google, github, telegram)",
+                        "name": "provider",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated binding data",
+                        "name": "binding",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entities.UpdateBindingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/entities.UserAccountBindingResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Bind a third-party account (Google, GitHub, Telegram) to the current user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user-bindings"
+                ],
+                "summary": "Bind a third-party account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Provider name (google, github, telegram)",
+                        "name": "provider",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Binding data",
+                        "name": "binding",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entities.CreateBindingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/entities.UserAccountBindingResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/response.ConflictResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Remove a third-party account binding from the current user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user-bindings"
+                ],
+                "summary": "Unbind a third-party account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Provider name (google, github, telegram)",
+                        "name": "provider",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.MessageOnlyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/bindings/{provider}/primary": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Set a third-party account binding as the primary one",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user-bindings"
+                ],
+                "summary": "Set primary account binding",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Provider name (google, github, telegram)",
+                        "name": "provider",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.MessageOnlyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/user/profile": {
             "get": {
                 "security": [
@@ -20531,6 +20995,65 @@ const docTemplate = `{
                         "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{user_id}/notifications/history": {
+            "get": {
+                "description": "Get notification history for a specific user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notifications",
+                    "tracking",
+                    "users"
+                ],
+                "summary": "Get user notification history",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Number of notifications to return",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by event type",
+                        "name": "event_type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/notification.UserNotificationHistoryResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "500": {
@@ -21426,6 +21949,20 @@ const docTemplate = `{
                 }
             }
         },
+        "entities.BindingListResponse": {
+            "type": "object",
+            "properties": {
+                "bindings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.UserAccountBindingResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "entities.CouponResponse": {
             "type": "object",
             "properties": {
@@ -21591,6 +22128,57 @@ const docTemplate = `{
                     "description": "User ID",
                     "type": "integer",
                     "example": 1
+                }
+            }
+        },
+        "entities.CreateBindingRequest": {
+            "type": "object",
+            "required": [
+                "provider",
+                "provider_user_id"
+            ],
+            "properties": {
+                "is_primary": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "provider": {
+                    "type": "string",
+                    "enum": [
+                        "google",
+                        "github",
+                        "telegram"
+                    ],
+                    "example": "google"
+                },
+                "provider_avatar": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "example": "https://example.com/avatar.jpg"
+                },
+                "provider_data": {
+                    "type": "string",
+                    "example": "{\"extra\": \"data\"}"
+                },
+                "provider_email": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "user@example.com"
+                },
+                "provider_name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "User Name"
+                },
+                "provider_user_id": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "123456789"
+                },
+                "provider_username": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "username"
                 }
             }
         },
@@ -23777,6 +24365,39 @@ const docTemplate = `{
                 }
             }
         },
+        "entities.UpdateBindingRequest": {
+            "type": "object",
+            "properties": {
+                "is_primary": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "provider_avatar": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "example": "https://example.com/avatar.jpg"
+                },
+                "provider_data": {
+                    "type": "string",
+                    "example": "{\"extra\": \"data\"}"
+                },
+                "provider_email": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "user@example.com"
+                },
+                "provider_name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "User Name"
+                },
+                "provider_username": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "username"
+                }
+            }
+        },
         "entities.UpdatePaymentMethodRequest": {
             "type": "object",
             "properties": {
@@ -24030,6 +24651,55 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "usage_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "entities.UserAccountBindingResponse": {
+            "type": "object",
+            "properties": {
+                "bound_at": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "Timestamp Fields",
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "description": "Primary Key",
+                    "type": "integer"
+                },
+                "is_primary": {
+                    "description": "Binding Status",
+                    "type": "boolean"
+                },
+                "last_used_at": {
+                    "type": "string"
+                },
+                "provider": {
+                    "description": "Provider Information",
+                    "type": "string"
+                },
+                "provider_avatar": {
+                    "type": "string"
+                },
+                "provider_email": {
+                    "description": "Provider User Data (only show non-sensitive data)",
+                    "type": "string"
+                },
+                "provider_name": {
+                    "type": "string"
+                },
+                "provider_user_id": {
+                    "type": "string"
+                },
+                "provider_username": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -26991,6 +27661,27 @@ const docTemplate = `{
                 },
                 "state": {
                     "type": "string"
+                }
+            }
+        },
+        "interfaces.BindingStats": {
+            "type": "object",
+            "properties": {
+                "active_bindings": {
+                    "type": "integer"
+                },
+                "bindings_by_provider": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "total_bindings": {
+                    "type": "integer"
+                },
+                "users_with_bindings": {
+                    "type": "integer"
                 }
             }
         },

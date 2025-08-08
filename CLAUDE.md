@@ -3,7 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## 项目概述
-Linke 是基于 Go 语言构建的现代化服务管理平台，采用 VSA (垂直切片架构) + 清洁架构模式。核心特性包括事件驱动架构、多层缓存系统、API版本管理、支付重试机制等。
+Linke 是基于 Go 语言构建的现代化服务管理平台，采用 VSA (垂直切片架构) + 清洁架构模式。核心特性包括事件驱动架构、多层缓存系统、API版本管理、支付重试机制、Telegram Bot 集成等。
 
 **核心业务领域:**
 - 用户管理 (`domains/user`) - 包含多级缓存的用户服务
@@ -12,10 +12,14 @@ Linke 是基于 Go 语言构建的现代化服务管理平台，采用 VSA (垂�
 - 支付处理 (`domains/payment`) - 多网关支付、智能重试、防重放攻击
 - 发票管理 (`domains/invoice`) - PDF生成、缓存下载、安全验证
 - 服务器管理 (`domains/server`) - 服务器群组、shadowsocks配置
+- 工单系统 (`domains/ticket`) - 完整的客户支持工单系统，支持多消息、附件、内部注释
+- Telegram Bot (`shared/telegram`) - 增强型 Telegram Bot，支持丰富的菜单系统和工单通知
 
 **业务流程:**
 ```
 用户注册/认证 → 选择订阅套餐 → 创建订单 → 生成发票 → 支付处理 → 激活服务 → 使用量追踪
+                                                                      ↓
+                                                               工单支持 ← Telegram Bot
 ```
 
 ## 核心命令
@@ -34,16 +38,26 @@ Linke 是基于 Go 语言构建的现代化服务管理平台，采用 VSA (垂�
 
 **数据库迁移 (集成式):**
 - `make migrate-up` - 运行所有待执行迁移
+- `make migrate-down` - 回滚一个迁移
 - `make migrate-status` - 检查当前迁移状态
+- `make migrate-list` - 列出所有已应用的迁移
 - `make migrate-create NAME=name` - 创建新迁移文件
 - `make migrate-fix-dirty VERSION=N` - 修复脏迁移状态
+- `make migrate-goto VERSION=N` - 迁移到指定版本
 - `make migrate-steps STEPS=2` - 向前运行2步迁移
 - `make migrate-steps STEPS=-1` - 回滚1步迁移
+- `make migrate-reset` - 重置数据库（删除所有表并重新运行迁移）
 
 **开发工具:**
 - `make swagger` - 手动生成 API 文档 (自动访问 `/swagger/index.html`)
 - `make security-check` - 运行安全配置验证
 - `go run tools/generate-jwt-key/main.go` - 生成安全的 JWT 密钥
+
+**Swagger 文档配置:**
+- BasePath 设置为 `/api/v1` (在 `cmd/server/main.go` 中配置)
+- **重要**: Handler 中的 `@Router` 注释应使用相对路径，不要包含 `/api/v1` 前缀
+- 示例: `@Router /user/bindings [get]` 而不是 `@Router /api/v1/user/bindings [get]`
+- 最终生成路径: `basePath` + `@Router路径` = `/api/v1/user/bindings`
 
 ## 架构结构
 
@@ -63,7 +77,8 @@ internal/
 │   ├── payment/        # 支付网关、重试机制、幂等性
 │   ├── invoice/        # PDF生成、下载安全、缓存策略
 │   ├── server/         # 服务器群组、shadowsocks配置
-│   └── [其他]/          # coupon, ticket, referral
+│   ├── ticket/         # 工单系统、客户支持
+│   └── [其他]/          # coupon, referral
 └── shared/             # 共享基础设施
     ├── cache/          # 多级缓存系统 (内存+Redis)
     ├── events/         # 事件驱动架构、发布订阅
@@ -75,6 +90,7 @@ internal/
     ├── entities/       # 基础实体类型
     ├── middleware/     # HTTP中间件
     ├── queue/          # 任务队列系统
+    ├── telegram/       # Telegram Bot 集成
     └── stubs/          # 临时存根实现
 ```
 
@@ -102,9 +118,13 @@ domains/[领域]/
 - `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `REDIS_DB`
 
 **OAuth2 提供商:**
-- Google: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
-- GitHub: `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`
-- Telegram: `TELEGRAM_BOT_TOKEN`
+- Google: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URL`
+- GitHub: `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GITHUB_REDIRECT_URL`
+- Telegram: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_REDIRECT_URL`
+
+**Telegram Bot 配置:**
+- `TELEGRAM_BOT_TOKEN` - Bot Token (从 @BotFather 获取)
+- `TELEGRAM_ADMIN_CHAT_IDS` - 管理员 Chat ID 列表（逗号分隔）
 
 **安全要求:**
 - 应用程序拒绝使用弱 JWT 配置启动
@@ -122,9 +142,10 @@ domains/[领域]/
 **事件驱动架构 (`shared/events`):**
 - **事件总线**: 内存总线、Redis分布式总线、度量装饰器
 - **事件存储**: 基于GORM的持久化事件存储，支持回放和查询
-- **重要事件类型**: `subscription.created`, `payment.completed`, `invoice.generated`
+- **重要事件类型**: `subscription.created`, `payment.completed`, `invoice.generated`, `ticket.created`, `ticket.replied`, `ticket.resolved`
 - **可靠性**: 至少一次投递保证、去重处理、熔断器模式
 - **监控**: 完整的事件发布/订阅指标收集
+- **Telegram 集成**: 工单事件自动触发 Telegram 通知
 
 **多级缓存系统 (`shared/cache`):**
 - **内存缓存**: 高性能本地缓存，适用于热点数据
@@ -187,9 +208,19 @@ domains/[领域]/
 - `/swagger/index.html` - API文档 (开发环境)
 - `/api/v1/auth/*` - 身份认证相关
 - `/api/v1/users/*` - 用户管理
+- `/api/v1/user/bindings/*` - 第三方账号绑定 (Google, GitHub, Telegram)
 - `/api/v1/subscriptions/*` - 订阅服务
 - `/api/v1/payments/*` - 支付处理
+- `/api/v1/tickets/*` - 工单管理
 - `/api/v1/admin/*` - 管理员功能
+
+**Telegram Bot 命令:**
+- `/start` - 开始使用 Bot
+- `/menu` - 显示主菜单
+- `/subscription` - 查看订阅信息
+- `/tickets` - 管理工单
+- `/admin` - 管理面板（仅管理员）
+- `/help` - 使用帮助
 
 **常见问题解决:**
 - **脏迁移**: `make migrate-fix-dirty VERSION=X`
@@ -198,6 +229,8 @@ domains/[领域]/
 - **支付重试失败**: 查看重试配置和失败分类规则
 - **事件处理异常**: 检查事件总线配置和订阅者注册
 - **Fx 依赖注入错误**: 检查模块间的接口依赖和循环引用
+- **Telegram Bot 启动失败**: 检查 `TELEGRAM_BOT_TOKEN` 是否正确
+- **工单通知失败**: 检查用户是否已绑定 Telegram ID
 
 ## 重要开发注意事项
 
@@ -207,9 +240,35 @@ domains/[领域]/
 3. **依赖注入**: 在领域的 `module.go` 中注册 Fx 提供者
 4. **路由注册**: 在 `shared/router/router.go` 中添加 HTTP 路由
 5. **缓存考虑**: 对于频繁访问的数据，创建缓存装饰器
+6. **事件集成**: 考虑是否需要发布领域事件
+7. **Telegram 通知**: 对于重要操作考虑添加 Telegram 通知
 
 **修改现有代码时:**
 - 遵循现有的 VSA + Clean Architecture 模式
 - 保持 `main.go` 的简洁性，避免在其中添加业务逻辑
 - 使用事件驱动模式处理跨领域交互
 - 优先使用现有的共享基础设施组件
+- Telegram Bot 相关修改集中在 `shared/telegram` 目录
+- 工单系统修改需同步更新 Telegram 通知逻辑
+
+## Telegram Bot 开发指南
+
+**Bot 架构:**
+- `shared/telegram/bot_enhanced.go` - 主要 Bot 实现，包含菜单系统和命令处理
+- `shared/telegram/ticket_event_handler.go` - 工单事件处理和通知
+- `shared/telegram/ticket_notification.go` - 通知数据结构定义
+- `shared/telegram/module.go` - Fx 依赖注入配置
+
+**核心功能:**
+- **菜单系统**: 使用内联键盘实现多级菜单导航
+- **工单集成**: 支持创建、查看、回复工单，支持多消息缓冲
+- **用户绑定**: 通过 Telegram ID 与系统用户关联
+- **管理面板**: 管理员专属功能，包括批量操作和系统监控
+- **通知系统**: 自动发送工单状态更新通知
+
+**开发注意事项:**
+- 所有用户操作前需验证 Telegram ID 绑定状态
+- 使用 `ticketReplyBuffer` 管理多消息回复
+- 管理员权限通过 `isUserAdmin` 方法验证
+- 使用 MarkdownV2 格式时注意特殊字符转义
+- API 限流：避免频繁调用 setMyName 等配置 API
