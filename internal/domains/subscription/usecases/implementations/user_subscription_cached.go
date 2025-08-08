@@ -103,10 +103,10 @@ func (s *CachedUserSubscriptionService) GetUserSubscriptionWithRelations(ctx con
 // GetUserSubscriptions gets user subscriptions with caching for list results
 func (s *CachedUserSubscriptionService) GetUserSubscriptions(ctx context.Context, req *interfaces.GetUserSubscriptionsRequest) ([]*entities.UserSubscription, int64, error) {
 	cacheKey := s.buildSubscriptionListCacheKey(req)
-	
+
 	// Determine cache TTL based on query type
 	cacheTTL := s.determineCacheTTL(req)
-	
+
 	// Skip cache for admin queries with no filters (likely admin dashboard)
 	if s.shouldSkipCache(req) {
 		return s.UserSubscriptionService.GetUserSubscriptions(ctx, req)
@@ -342,19 +342,24 @@ func (s *CachedUserSubscriptionService) UpdateTrafficUsage(ctx context.Context, 
 
 // Traffic and renewal methods with cache invalidation
 
-func (s *CachedUserSubscriptionService) ResetSubscriptionTraffic(ctx context.Context, subscriptionID uint) error {
-	subscription, err := s.GetUserSubscription(ctx, subscriptionID)
+// ResetTrafficUsage resets traffic usage with cache invalidation
+func (s *CachedUserSubscriptionService) ResetTrafficUsage(ctx context.Context, subscriptionID uint, adminUserID uint) (*entities.UserSubscription, error) {
+	subscription, err := s.UserSubscriptionService.ResetTrafficUsage(ctx, subscriptionID, adminUserID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	err = s.UserSubscriptionService.ResetSubscriptionTraffic(ctx, subscriptionID)
-	if err != nil {
-		return err
-	}
-
+	// Invalidate related caches
 	s.invalidateSubscriptionCaches(ctx, subscriptionID, subscription.UserID)
-	return nil
+
+	// Cache the updated subscription
+	if err := s.subscriptionCache.Set(ctx, subscription); err != nil {
+		logger.Error("Failed to cache reset subscription",
+			logger.Uint("subscription_id", subscription.ID),
+			logger.Error2("error", err))
+	}
+
+	return subscription, nil
 }
 
 func (s *CachedUserSubscriptionService) ResetTrafficForSubscriptions(ctx context.Context, req *ResetTrafficRequest) (int, error) {
@@ -617,7 +622,7 @@ func (s *CachedUserSubscriptionService) buildSubscriptionListCacheKey(req *inter
 	} else {
 		keyParts = append(keyParts, "admin", "all")
 	}
-	
+
 	if req.Status != "" {
 		keyParts = append(keyParts, "status", req.Status)
 	}
@@ -635,12 +640,12 @@ func (s *CachedUserSubscriptionService) shouldSkipCache(req *interfaces.GetUserS
 	if req.UserID == 0 {
 		return true
 	}
-	
+
 	// Skip cache for large user queries (likely exports or bulk operations)
 	if req.UserID > 0 && req.Limit >= 50 {
 		return true
 	}
-	
+
 	return false
 }
 
@@ -651,12 +656,12 @@ func (s *CachedUserSubscriptionService) determineCacheTTL(req *interfaces.GetUse
 	if req.UserID > 0 && req.Limit <= 20 {
 		return cache.MediumCacheTTL // 15 minutes
 	}
-	
+
 	// Larger user queries: shorter TTL for more recent data
 	if req.UserID > 0 {
 		return cache.ShortCacheTTL // 1 minute
 	}
-	
+
 	// Fallback (should rarely be used since admin queries skip cache)
 	return cache.ShortCacheTTL
 }
@@ -695,6 +700,82 @@ func (s *CachedUserSubscriptionService) ResumeUserSubscription(ctx context.Conte
 		logger.Uint("subscription_id", subscriptionID),
 		logger.Uint("user_id", subscription.UserID),
 		logger.Uint("admin_user_id", adminUserID))
+
+	return subscription, nil
+}
+
+// UpgradeUserSubscription upgrades subscription with cache invalidation
+func (s *CachedUserSubscriptionService) UpgradeUserSubscription(ctx context.Context, req *interfaces.UpgradeSubscriptionRequest) (*entities.UserSubscription, error) {
+	subscription, err := s.UserSubscriptionService.UpgradeUserSubscription(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	// Invalidate related caches
+	s.invalidateSubscriptionCaches(ctx, subscription.ID, subscription.UserID)
+
+	// Cache the updated subscription
+	if err := s.subscriptionCache.Set(ctx, subscription); err != nil {
+		logger.Error("Failed to cache upgraded subscription",
+			logger.Uint("subscription_id", subscription.ID),
+			logger.Error2("error", err))
+	}
+
+	logger.Info("Subscription upgraded and cache invalidated",
+		logger.Uint("subscription_id", subscription.ID),
+		logger.Uint("user_id", subscription.UserID),
+		logger.Uint("new_plan_id", req.NewSubscriptionPlanID))
+
+	return subscription, nil
+}
+
+// DowngradeUserSubscription downgrades subscription with cache invalidation
+func (s *CachedUserSubscriptionService) DowngradeUserSubscription(ctx context.Context, req *interfaces.DowngradeSubscriptionRequest) (*entities.UserSubscription, error) {
+	subscription, err := s.UserSubscriptionService.DowngradeUserSubscription(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	// Invalidate related caches
+	s.invalidateSubscriptionCaches(ctx, subscription.ID, subscription.UserID)
+
+	// Cache the updated subscription
+	if err := s.subscriptionCache.Set(ctx, subscription); err != nil {
+		logger.Error("Failed to cache downgraded subscription",
+			logger.Uint("subscription_id", subscription.ID),
+			logger.Error2("error", err))
+	}
+
+	logger.Info("Subscription downgraded and cache invalidated",
+		logger.Uint("subscription_id", subscription.ID),
+		logger.Uint("user_id", subscription.UserID),
+		logger.Uint("new_plan_id", req.NewSubscriptionPlanID))
+
+	return subscription, nil
+}
+
+// ProcessSubscriptionChange processes subscription change with cache invalidation
+func (s *CachedUserSubscriptionService) ProcessSubscriptionChange(ctx context.Context, subscriptionID uint, newPlanID uint, changeType string) (*entities.UserSubscription, error) {
+	subscription, err := s.UserSubscriptionService.ProcessSubscriptionChange(ctx, subscriptionID, newPlanID, changeType)
+	if err != nil {
+		return nil, err
+	}
+
+	// Invalidate related caches
+	s.invalidateSubscriptionCaches(ctx, subscriptionID, subscription.UserID)
+
+	// Cache the updated subscription
+	if err := s.subscriptionCache.Set(ctx, subscription); err != nil {
+		logger.Error("Failed to cache changed subscription",
+			logger.Uint("subscription_id", subscription.ID),
+			logger.Error2("error", err))
+	}
+
+	logger.Info("Subscription change processed and cache invalidated",
+		logger.Uint("subscription_id", subscriptionID),
+		logger.Uint("user_id", subscription.UserID),
+		logger.String("change_type", changeType),
+		logger.Uint("new_plan_id", newPlanID))
 
 	return subscription, nil
 }

@@ -3,11 +3,13 @@ package implementations
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/domains/subscription/usecases/interfaces"
 	subscriptionInterfaces "linke/internal/domains/subscription/usecases/interfaces"
+	"linke/internal/shared/notification"
 )
 
 // usageAlertService implements the UsageAlertService interface
@@ -15,6 +17,7 @@ type usageAlertService struct {
 	alertRepo       interfaces.AlertRepository
 	usageRepo       interfaces.UsageRepository
 	subscriptionSvc subscriptionInterfaces.UserSubscriptionService
+	notificationSvc notification.NotificationService
 }
 
 // NewUsageAlertService creates a new usage alert service instance
@@ -22,11 +25,13 @@ func NewUsageAlertService(
 	alertRepo interfaces.AlertRepository,
 	usageRepo interfaces.UsageRepository,
 	subscriptionSvc subscriptionInterfaces.UserSubscriptionService,
+	notificationSvc notification.NotificationService,
 ) interfaces.UsageAlertService {
 	return &usageAlertService{
 		alertRepo:       alertRepo,
 		usageRepo:       usageRepo,
 		subscriptionSvc: subscriptionSvc,
+		notificationSvc: notificationSvc,
 	}
 }
 
@@ -591,6 +596,16 @@ func (s *usageAlertService) SendNotification(ctx context.Context, alert *entitie
 				result.Message = "In-app notification created"
 			}
 
+		case entities.NotificationChannelTelegram:
+			err := s.sendTelegramNotification(ctx, alert, channel)
+			result.Success = err == nil
+			if err != nil {
+				result.Error = err.Error()
+				result.Message = "Failed to send telegram notification"
+			} else {
+				result.Message = "Telegram notification sent successfully"
+			}
+
 		default:
 			result.Success = false
 			result.Error = "Unsupported channel type"
@@ -1008,6 +1023,69 @@ func (s *usageAlertService) sendInAppNotification(ctx context.Context, alert *en
 	// TODO: Implement in-app notification
 	// This would create a notification record in the database
 	return nil
+}
+
+func (s *usageAlertService) sendTelegramNotification(ctx context.Context, alert *entities.UsageAlert, channel entities.NotificationChannel) error {
+	// Parse chat ID from channel target
+	chatIDStr := channel.Target
+	chatID, err := strconv.ParseInt(chatIDStr, 10, 64)
+	if err != nil {
+		return fmt.Errorf("invalid telegram chat ID: %s", chatIDStr)
+	}
+
+	// Create notification request using appropriate template
+	template := "telegram_subscription_expired"
+	if alert.Severity == entities.AlertSeverityCritical {
+		template = "telegram_invoice_overdue" // Use urgent template for critical alerts
+	}
+
+	variables := map[string]string{
+		"user_name":     fmt.Sprintf("User %d", alert.UserSubscriptionID), // TODO: Get actual user name
+		"usage_type":    alert.UsageType,
+		"current_usage": s.formatBytes(alert.CurrentUsage),
+		"usage_limit":   s.formatBytes(alert.UsageLimit),
+		"usage_percent": fmt.Sprintf("%.1f%%", alert.UsagePercent),
+		"severity":      alert.Severity,
+		"message":       alert.Message,
+		"alert_id":      fmt.Sprintf("ALT-%d", alert.ID),
+	}
+
+	req := &notification.NotificationRequest{
+		UserID:         alert.UserSubscriptionID,
+		TelegramChatID: chatID,
+		Channels:       []notification.NotificationChannel{notification.ChannelTelegram},
+		Subject:        "Usage Alert",
+		Template:       template,
+		Variables:      variables,
+	}
+
+	results, err := s.notificationSvc.Send(ctx, req)
+	if err != nil {
+		return fmt.Errorf("failed to send telegram notification: %w", err)
+	}
+
+	// Check if notification was successful
+	for _, result := range results {
+		if result.Channel == notification.ChannelTelegram && !result.Success {
+			return fmt.Errorf("telegram notification failed: %s", result.Error)
+		}
+	}
+
+	return nil
+}
+
+// Helper method to format bytes in human readable format
+func (s *usageAlertService) formatBytes(bytes int64) string {
+	const unit = 1024
+	if bytes < unit {
+		return fmt.Sprintf("%d B", bytes)
+	}
+	div, exp := int64(unit), 0
+	for n := bytes / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
 }
 
 // Helper method to create basic alerts summary from a list of alerts

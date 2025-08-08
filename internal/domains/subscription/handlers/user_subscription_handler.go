@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	authInterfaces "linke/internal/domains/auth/usecases/interfaces"
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/domains/subscription/usecases/interfaces"
 	userEntities "linke/internal/domains/user/entities"
@@ -16,11 +17,13 @@ import (
 
 type UserSubscriptionHandler struct {
 	userSubscriptionService interfaces.UserSubscriptionService
+	authService             authInterfaces.AuthService
 }
 
-func NewUserSubscriptionHandler(userSubscriptionService interfaces.UserSubscriptionService) *UserSubscriptionHandler {
+func NewUserSubscriptionHandler(userSubscriptionService interfaces.UserSubscriptionService, authService authInterfaces.AuthService) *UserSubscriptionHandler {
 	return &UserSubscriptionHandler{
 		userSubscriptionService: userSubscriptionService,
+		authService:             authService,
 	}
 }
 
@@ -493,8 +496,24 @@ func (h *UserSubscriptionHandler) ResumeUserSubscription(c *gin.Context) {
 	response.OK(c, "Subscription resumed successfully", subscription.ToResponse())
 }
 
+// authServiceAdapter adapts the domain AuthService to middleware AuthService interface
+type authServiceAdapter struct {
+	authService authInterfaces.AuthService
+}
+
+func (a *authServiceAdapter) ValidateToken(token string) (any, error) {
+	user, err := a.authService.ValidateToken(token)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
 // RegisterRoutes registers all user subscription routes
 func (h *UserSubscriptionHandler) RegisterRoutes(router *gin.RouterGroup) {
+	// Create auth service adapter
+	authAdapter := &authServiceAdapter{authService: h.authService}
+
 	// User subscription routes - accessible to authenticated users
 	subscriptionGroup := router.Group("/subscriptions")
 	{
@@ -503,11 +522,12 @@ func (h *UserSubscriptionHandler) RegisterRoutes(router *gin.RouterGroup) {
 			response.Error(c, http.StatusUnauthorized, 4001, "User not authenticated - please login to access subscriptions")
 		})
 
-		subscriptionGroup.GET("/my", h.GetMySubscriptions)
-		subscriptionGroup.GET("/my/active", h.GetMyActiveSubscriptions)
-		subscriptionGroup.GET("/:id", h.GetSubscription)
-		subscriptionGroup.POST("/:id/cancel", h.CancelSubscription)
-		subscriptionGroup.GET("/:id/traffic-stats", h.GetSubscriptionTrafficStats)
+		// Protected routes requiring authentication
+		subscriptionGroup.GET("/my", middleware.AuthMiddleware(authAdapter), h.GetMySubscriptions)
+		subscriptionGroup.GET("/my/active", middleware.AuthMiddleware(authAdapter), h.GetMyActiveSubscriptions)
+		subscriptionGroup.GET("/:id", middleware.AuthMiddleware(authAdapter), h.GetSubscription)
+		subscriptionGroup.POST("/:id/cancel", middleware.AuthMiddleware(authAdapter), h.CancelSubscription)
+		subscriptionGroup.GET("/:id/traffic-stats", middleware.AuthMiddleware(authAdapter), h.GetSubscriptionTrafficStats)
 	}
 
 	// Admin subscription management routes

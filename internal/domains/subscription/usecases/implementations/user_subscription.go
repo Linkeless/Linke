@@ -50,7 +50,7 @@ func (s *UserSubscriptionService) CreateUserSubscription(ctx context.Context, re
 	// Check if user already has an active subscription to this plan (configurable behavior)
 	// For some use cases, users may need multiple subscriptions to the same plan
 	allowMultipleSubscriptions := true // TODO: Make this configurable based on plan settings
-	
+
 	if !allowMultipleSubscriptions {
 		var existingSubscription entities.UserSubscription
 		if err := s.db.WithContext(ctx).
@@ -207,7 +207,7 @@ func (s *UserSubscriptionService) CreateUserSubscription(ctx context.Context, re
 			logger.String("plan_default_server_groups", plan.DefaultServerGroupIDs),
 			logger.Any("default_group_ids", serverGroupIDs))
 	}
-	
+
 	if err := subscription.SetServerGroupIDs(serverGroupIDs); err != nil {
 		return nil, fmt.Errorf("failed to set server group IDs: %w", err)
 	}
@@ -686,16 +686,31 @@ type ResetTrafficRequest struct {
 	ResetAll        bool   `json:"reset_all,omitempty"`        // Reset all eligible subscriptions
 }
 
-// ResetSubscriptionTraffic resets traffic usage for a specific subscription
-func (s *UserSubscriptionService) ResetSubscriptionTraffic(ctx context.Context, subscriptionID uint) error {
-	subscription, err := s.GetUserSubscription(ctx, subscriptionID)
-	if err != nil {
-		return err
+// ResetTrafficUsage resets traffic usage for a specific subscription
+// This is the canonical implementation that matches the interface signature
+func (s *UserSubscriptionService) ResetTrafficUsage(ctx context.Context, subscriptionID uint, adminUserID uint) (*entities.UserSubscription, error) {
+	// Start transaction for data consistency
+	tx := s.db.WithContext(ctx).Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Get subscription with lock
+	var subscription entities.UserSubscription
+	if err := tx.Set("gorm:query_option", "FOR UPDATE").First(&subscription, subscriptionID).Error; err != nil {
+		tx.Rollback()
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("subscription not found")
+		}
+		return nil, fmt.Errorf("failed to get subscription: %w", err)
 	}
 
 	// Only reset if subscription has traffic limits and reset cycle is enabled
 	if subscription.TrafficLimit == 0 || subscription.TrafficResetCycle == entities.TrafficResetCycleNever {
-		return fmt.Errorf("traffic reset is not enabled for this subscription")
+		tx.Rollback()
+		return nil, fmt.Errorf("traffic reset is not enabled for this subscription")
 	}
 
 	// Calculate next reset date
@@ -716,6 +731,9 @@ func (s *UserSubscriptionService) ResetSubscriptionTraffic(ctx context.Context, 
 		}
 	}
 
+	// Store old usage for logging
+	oldTrafficUsed := subscription.TrafficUsed
+
 	// Reset traffic usage
 	updates := map[string]any{
 		"traffic_used":      0,
@@ -727,18 +745,32 @@ func (s *UserSubscriptionService) ResetSubscriptionTraffic(ctx context.Context, 
 		updates["traffic_reset_date"] = nextResetDate
 	}
 
-	if err := s.db.WithContext(ctx).Model(subscription).Updates(updates).Error; err != nil {
+	if err := tx.Model(&subscription).Updates(updates).Error; err != nil {
+		tx.Rollback()
 		logger.Error("Failed to reset subscription traffic",
 			logger.Uint("subscription_id", subscriptionID),
+			logger.Uint("admin_user_id", adminUserID),
 			logger.Error2("error", err))
-		return fmt.Errorf("failed to reset subscription traffic: %w", err)
+		return nil, fmt.Errorf("failed to reset subscription traffic: %w", err)
 	}
+
+	// Commit transaction
+	if err := tx.Commit().Error; err != nil {
+		return nil, fmt.Errorf("failed to commit traffic reset: %w", err)
+	}
+
+	// Update subscription with new values for return
+	subscription.TrafficUsed = 0
+	subscription.TrafficSuspended = false
+	subscription.TrafficResetDate = nextResetDate
 
 	logger.Info("Subscription traffic reset successfully",
 		logger.Uint("subscription_id", subscriptionID),
-		logger.Uint("user_id", subscription.UserID))
+		logger.Uint("user_id", subscription.UserID),
+		logger.Uint("admin_user_id", adminUserID),
+		logger.Int64("previous_usage", oldTrafficUsed))
 
-	return nil
+	return &subscription, nil
 }
 
 // ResetTrafficForSubscriptions resets traffic for multiple subscriptions based on criteria
@@ -757,7 +789,7 @@ func (s *UserSubscriptionService) ResetTrafficForSubscriptions(ctx context.Conte
 		}
 
 		for _, subscription := range subscriptions {
-			if err := s.ResetSubscriptionTraffic(ctx, subscription.ID); err != nil {
+			if _, err := s.ResetTrafficUsage(ctx, subscription.ID, 0); err != nil { // System admin ID = 0
 				logger.Error("Failed to reset traffic for subscription",
 					logger.Uint("subscription_id", subscription.ID),
 					logger.Error2("error", err))
@@ -777,7 +809,7 @@ func (s *UserSubscriptionService) ResetTrafficForSubscriptions(ctx context.Conte
 		}
 
 		for _, subscription := range subscriptions {
-			if err := s.ResetSubscriptionTraffic(ctx, subscription.ID); err != nil {
+			if _, err := s.ResetTrafficUsage(ctx, subscription.ID, 0); err != nil { // System admin ID = 0
 				logger.Error("Failed to reset traffic for user subscription",
 					logger.Uint("subscription_id", subscription.ID),
 					logger.Error2("error", err))
@@ -788,7 +820,7 @@ func (s *UserSubscriptionService) ResetTrafficForSubscriptions(ctx context.Conte
 	} else if len(req.SubscriptionIDs) > 0 {
 		// Reset specific subscriptions
 		for _, subscriptionID := range req.SubscriptionIDs {
-			if err := s.ResetSubscriptionTraffic(ctx, subscriptionID); err != nil {
+			if _, err := s.ResetTrafficUsage(ctx, subscriptionID, 0); err != nil { // System admin ID = 0
 				logger.Error("Failed to reset traffic for specific subscription",
 					logger.Uint("subscription_id", subscriptionID),
 					logger.Error2("error", err))
@@ -1220,4 +1252,134 @@ func (s *UserSubscriptionService) GetUserSubscriptionsWithUserDataForAdmin(ctx c
 		logger.Int64("total", totalCount))
 
 	return responses, totalCount, nil
+}
+
+// UpgradeUserSubscription upgrades a user subscription to a higher plan
+// This is a convenience method that delegates to ProcessSubscriptionChange
+func (s *UserSubscriptionService) UpgradeUserSubscription(ctx context.Context, req *interfaces.UpgradeSubscriptionRequest) (*entities.UserSubscription, error) {
+	logger.Info("Processing subscription upgrade",
+		logger.Uint("subscription_id", req.SubscriptionID),
+		logger.Uint("new_plan_id", req.NewSubscriptionPlanID),
+		logger.String("reason", req.Reason))
+	return s.ProcessSubscriptionChange(ctx, req.SubscriptionID, req.NewSubscriptionPlanID, "upgrade")
+}
+
+// DowngradeUserSubscription downgrades a user subscription to a lower plan
+// This is a convenience method that delegates to ProcessSubscriptionChange
+func (s *UserSubscriptionService) DowngradeUserSubscription(ctx context.Context, req *interfaces.DowngradeSubscriptionRequest) (*entities.UserSubscription, error) {
+	logger.Info("Processing subscription downgrade",
+		logger.Uint("subscription_id", req.SubscriptionID),
+		logger.Uint("new_plan_id", req.NewSubscriptionPlanID),
+		logger.String("reason", req.Reason))
+	return s.ProcessSubscriptionChange(ctx, req.SubscriptionID, req.NewSubscriptionPlanID, "downgrade")
+}
+
+// ProcessSubscriptionChange handles the core logic for subscription plan changes (upgrade/downgrade)
+func (s *UserSubscriptionService) ProcessSubscriptionChange(ctx context.Context, subscriptionID uint, newPlanID uint, changeType string) (*entities.UserSubscription, error) {
+	// Start transaction
+	tx := s.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return nil, fmt.Errorf("failed to start transaction: %w", tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Get current subscription
+	var currentSubscription entities.UserSubscription
+	if err := tx.Where("id = ?", subscriptionID).First(&currentSubscription).Error; err != nil {
+		tx.Rollback()
+		return nil, fmt.Errorf("subscription not found: %w", err)
+	}
+
+	// Validate current subscription is active
+	if currentSubscription.Status != entities.UserSubscriptionStatusActive {
+		tx.Rollback()
+		return nil, fmt.Errorf("subscription is not active, current status: %s", currentSubscription.Status)
+	}
+
+	// Get current and new plans
+	currentPlan, err := s.subscriptionPlanService.GetSubscriptionPlan(ctx, currentSubscription.SubscriptionPlanID)
+	if err != nil {
+		tx.Rollback()
+		return nil, fmt.Errorf("failed to get current plan: %w", err)
+	}
+
+	newPlan, err := s.subscriptionPlanService.GetSubscriptionPlan(ctx, newPlanID)
+	if err != nil {
+		tx.Rollback()
+		return nil, fmt.Errorf("failed to get new plan: %w", err)
+	}
+
+	// Validate new plan is available
+	if !newPlan.IsAvailableForPurchase() {
+		tx.Rollback()
+		return nil, fmt.Errorf("new subscription plan is not available for purchase")
+	}
+
+	// Validate change direction matches plan pricing
+	if changeType == "upgrade" && newPlan.Price <= currentPlan.Price {
+		tx.Rollback()
+		return nil, fmt.Errorf("upgrade requires new plan price (%.2f) to be higher than current plan price (%.2f)", newPlan.Price, currentPlan.Price)
+	}
+	if changeType == "downgrade" && newPlan.Price >= currentPlan.Price {
+		tx.Rollback()
+		return nil, fmt.Errorf("downgrade requires new plan price (%.2f) to be lower than current plan price (%.2f)", newPlan.Price, currentPlan.Price)
+	}
+
+	// Calculate new traffic limits based on new plan
+	newTrafficLimit := newPlan.TrafficLimit
+	newTrafficResetCycle := newPlan.TrafficResetCycle
+
+	// For upgrades, reset traffic usage if the new plan has more traffic
+	// For downgrades, keep current usage but apply new limits
+	var newUsedTrafficBytes int64 = currentSubscription.TrafficUsed
+	if changeType == "upgrade" && newPlan.TrafficLimit > currentPlan.TrafficLimit {
+		// Reset traffic usage on upgrade to higher traffic plan
+		newUsedTrafficBytes = 0
+		logger.Info("Resetting traffic usage due to upgrade to higher traffic plan",
+			logger.Uint("subscription_id", subscriptionID),
+			logger.Int64("old_limit", currentPlan.TrafficLimit),
+			logger.Int64("new_limit", newPlan.TrafficLimit))
+	}
+
+	// Update subscription fields
+	updateData := map[string]interface{}{
+		"subscription_plan_id": newPlanID,
+		"traffic_limit":        newTrafficLimit,
+		"traffic_reset_cycle":  newTrafficResetCycle,
+		"traffic_used":         newUsedTrafficBytes,
+		"updated_at":           time.Now(),
+	}
+
+	// For upgrades, changes are immediate
+	// For downgrades, could be deferred to period end (simplified implementation applies immediately)
+	if err := tx.Model(&currentSubscription).Updates(updateData).Error; err != nil {
+		tx.Rollback()
+		return nil, fmt.Errorf("failed to update subscription: %w", err)
+	}
+
+	// Commit transaction
+	if err := tx.Commit().Error; err != nil {
+		return nil, fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	// Fetch updated subscription
+	var updatedSubscription entities.UserSubscription
+	if err := s.db.WithContext(ctx).Where("id = ?", subscriptionID).First(&updatedSubscription).Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch updated subscription: %w", err)
+	}
+
+	logger.Info("Subscription plan changed successfully",
+		logger.Uint("subscription_id", subscriptionID),
+		logger.String("change_type", changeType),
+		logger.Uint("old_plan_id", currentPlan.ID),
+		logger.Uint("new_plan_id", newPlan.ID),
+		logger.Float64("old_price", currentPlan.Price),
+		logger.Float64("new_price", newPlan.Price),
+		logger.Int64("new_traffic_limit", newTrafficLimit))
+
+	return &updatedSubscription, nil
 }

@@ -204,6 +204,27 @@ func (s *CachedUserService) GetUserByEmail(ctx context.Context, email string) (*
 	return user, nil
 }
 
+// GetUserByTelegramID retrieves a user by their Telegram ID with caching
+func (s *CachedUserService) GetUserByTelegramID(ctx context.Context, telegramID string) (*entities.User, error) {
+	cacheKey := cache.CachePrefixUser + "telegram:" + telegramID
+
+	// Try cache first
+	if user, err := s.getUserFromCache(ctx, cacheKey); err == nil && user != nil {
+		return user, nil
+	}
+
+	// Cache miss, fetch from database
+	user, err := s.baseService.GetUserByTelegramID(ctx, telegramID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Cache the result
+	s.setUserInCache(ctx, cacheKey, user, cache.MediumCacheTTL)
+
+	return user, nil
+}
+
 // GetActiveUserByID retrieves an active user by ID with cache-aside pattern
 func (s *CachedUserService) GetActiveUserByID(ctx context.Context, id uint) (*entities.User, error) {
 	// For active users, we can still use the regular cache but verify active status
@@ -232,6 +253,55 @@ func (s *CachedUserService) GetActiveUserByEmail(ctx context.Context, email stri
 	}
 
 	return user, nil
+}
+
+// GetUsersByIDs retrieves multiple users by IDs with caching optimization
+func (s *CachedUserService) GetUsersByIDs(ctx context.Context, ids []uint) ([]*entities.User, error) {
+	if len(ids) == 0 {
+		return []*entities.User{}, nil
+	}
+
+	var cachedUsers []*entities.User
+	var missedIDs []uint
+	
+	// Try to get users from cache first
+	for _, id := range ids {
+		cacheKey := s.cacheKeys.User.UserByID(id)
+		if cachedUser, err := s.getUserFromCache(ctx, cacheKey); err == nil && cachedUser != nil {
+			cachedUsers = append(cachedUsers, cachedUser)
+		} else {
+			missedIDs = append(missedIDs, id)
+		}
+	}
+
+	// Fetch missed users from database in batch
+	var missedUsers []*entities.User
+	if len(missedIDs) > 0 {
+		users, err := s.baseService.GetUsersByIDs(ctx, missedIDs)
+		if err != nil {
+			return nil, err
+		}
+		missedUsers = users
+		
+		// Cache the fetched users
+		for _, user := range missedUsers {
+			cacheKey := s.cacheKeys.User.UserByID(user.ID)
+			s.setUserInCache(ctx, cacheKey, user, cache.MediumCacheTTL)
+		}
+	}
+
+	// Combine cached and fetched users
+	allUsers := make([]*entities.User, 0, len(cachedUsers)+len(missedUsers))
+	allUsers = append(allUsers, cachedUsers...)
+	allUsers = append(allUsers, missedUsers...)
+
+	s.logger.Debug("Retrieved users by IDs with cache optimization",
+		logger.Int("total_requested", len(ids)),
+		logger.Int("cache_hits", len(cachedUsers)),
+		logger.Int("cache_misses", len(missedIDs)),
+		logger.Int("total_found", len(allUsers)))
+
+	return allUsers, nil
 }
 
 // UpdateUser updates a user with write-through caching
@@ -404,12 +474,18 @@ func (s *CachedUserService) UpdateUserRole(ctx context.Context, id uint, role st
 
 // BatchDeleteUsers performs batch soft delete with cache invalidation
 func (s *CachedUserService) BatchDeleteUsers(ctx context.Context, ids []uint) (*interfaces.BatchOperationResult, error) {
-	// Get user data before deletion for cache invalidation
+	// Get user data before deletion for cache invalidation using batch query
 	var usersToInvalidate []*entities.User
-	for _, id := range ids {
-		if user, err := s.baseService.GetUserByID(ctx, id); err == nil && user != nil {
-			usersToInvalidate = append(usersToInvalidate, user)
-		}
+	
+	// Use batch query instead of N individual queries
+	users, err := s.baseService.GetUsersByIDs(ctx, ids)
+	if err != nil {
+		s.logger.Error("Failed to batch fetch users for deletion", 
+			logger.Error2("error", err),
+			logger.Int("ids_count", len(ids)))
+		// Continue with deletion even if we can't fetch users for cache invalidation
+	} else {
+		usersToInvalidate = users
 	}
 
 	// Perform batch delete
@@ -423,7 +499,7 @@ func (s *CachedUserService) BatchDeleteUsers(ctx context.Context, ids []uint) (*
 		s.invalidateUserCache(ctx, user)
 	}
 
-	// Also invalidate by pattern for any users we couldn't fetch
+	// Also invalidate by pattern for any users we couldn't fetch or all IDs as fallback
 	for _, id := range ids {
 		pattern := s.cacheKeys.User.UserPattern(id)
 		s.cacheManager.GetCache().DeleteByPattern(ctx, pattern)

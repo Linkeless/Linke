@@ -47,7 +47,7 @@ func (h *SubscriptionPlanHandler) GetSubscriptionPlans(c *gin.Context) {
 	// Force visible to true for public endpoint
 	visible := true
 	req.Visible = &visible
-	// Force active status for public endpoint  
+	// Force active status for public endpoint
 	req.Status = "active"
 
 	// Set defaults

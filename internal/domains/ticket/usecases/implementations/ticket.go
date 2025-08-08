@@ -70,6 +70,18 @@ func (s *TicketService) CreateTicket(ctx context.Context, userID uint, req *inte
 		logger.Uint("user_id", userID),
 		logger.String("category", ticket.Category))
 
+	// Attempt auto-assignment for new tickets (non-blocking)
+	go func() {
+		// Use background context for async operation
+		bgCtx := context.Background()
+		if _, err := s.AutoAssignTicket(bgCtx, ticket.ID); err != nil {
+			logger.Warn("Auto-assignment failed for new ticket",
+				logger.Uint("ticket_id", ticket.ID),
+				logger.String("ticket_no", ticket.TicketNo),
+				logger.Error2("error", err))
+		}
+	}()
+
 	return ticket, nil
 }
 
@@ -715,4 +727,199 @@ func (s *TicketService) generateTicketNumber() string {
 	}
 
 	return fmt.Sprintf("TK-%s-%s", dateStr, string(b))
+}
+
+// AutoAssignTicket automatically assigns a ticket to the best available agent
+func (s *TicketService) AutoAssignTicket(ctx context.Context, ticketID uint) (*entities.Ticket, error) {
+	// Get the ticket
+	var ticket entities.Ticket
+	if err := s.db.WithContext(ctx).First(&ticket, ticketID).Error; err != nil {
+		return nil, fmt.Errorf("ticket not found: %w", err)
+	}
+
+	// Check if ticket is already assigned
+	if ticket.AssignedToID != nil {
+		logger.Info("Ticket already assigned, skipping auto-assignment",
+			logger.Uint("ticket_id", ticketID),
+			logger.Uint("assigned_to", *ticket.AssignedToID))
+		return &ticket, nil
+	}
+
+	// Find the best agent for this ticket
+	bestAgentID, err := s.FindBestAgentForTicket(ctx, &ticket)
+	if err != nil {
+		logger.Error("Failed to find best agent for auto-assignment",
+			logger.Uint("ticket_id", ticketID),
+			logger.Error2("error", err))
+		return &ticket, nil // Return original ticket without assignment
+	}
+
+	if bestAgentID == 0 {
+		logger.Warn("No available agent found for auto-assignment", logger.Uint("ticket_id", ticketID))
+		return &ticket, nil
+	}
+
+	// Assign the ticket to the best agent
+	now := time.Now()
+	updates := map[string]any{
+		"assigned_to_id": bestAgentID,
+		"assigned_at":    &now,
+		"status":         entities.TicketStatusInProgress,
+		"updated_at":     now,
+	}
+
+	if err := s.db.WithContext(ctx).Model(&ticket).Updates(updates).Error; err != nil {
+		logger.Error("Failed to auto-assign ticket",
+			logger.Uint("ticket_id", ticketID),
+			logger.Uint("agent_id", bestAgentID),
+			logger.Error2("error", err))
+		return nil, fmt.Errorf("failed to auto-assign ticket: %w", err)
+	}
+
+	// Update the ticket object with new values
+	ticket.AssignedToID = &bestAgentID
+	ticket.AssignedAt = &now
+	ticket.Status = entities.TicketStatusInProgress
+	ticket.UpdatedAt = now
+
+	logger.Info("Ticket auto-assigned successfully",
+		logger.Uint("ticket_id", ticketID),
+		logger.Uint("agent_id", bestAgentID),
+		logger.String("category", ticket.Category),
+		logger.String("priority", ticket.Priority))
+
+	return &ticket, nil
+}
+
+// GetAgentWorkload returns the current workload (number of assigned tickets) for an agent
+func (s *TicketService) GetAgentWorkload(ctx context.Context, agentID uint) (int, error) {
+	var count int64
+	if err := s.db.WithContext(ctx).Model(&entities.Ticket{}).
+		Where("assigned_to_id = ? AND status IN ?", agentID, 
+			[]string{entities.TicketStatusOpen, entities.TicketStatusInProgress, entities.TicketStatusPending}).
+		Count(&count).Error; err != nil {
+		return 0, fmt.Errorf("failed to get agent workload: %w", err)
+	}
+	return int(count), nil
+}
+
+// GetAvailableAgents returns a list of agents available for assignment in a specific category
+func (s *TicketService) GetAvailableAgents(ctx context.Context, category string) ([]*interfaces.AgentInfo, error) {
+	// Query for admin users (agents) - simplified approach
+	// In a real implementation, you might have a separate agents table or role system
+	var agents []struct {
+		ID    uint   `json:"id"`
+		Name  string `json:"name"`
+		Email string `json:"email"`
+	}
+
+	// Get all admin users as potential agents
+	if err := s.db.WithContext(ctx).
+		Table("users").
+		Select("id, name, email").
+		Where("role = ? AND status = ?", "admin", "active").
+		Find(&agents).Error; err != nil {
+		return nil, fmt.Errorf("failed to get available agents: %w", err)
+	}
+
+	var agentInfos []*interfaces.AgentInfo
+	for _, agent := range agents {
+		// Get current workload for this agent
+		workload, err := s.GetAgentWorkload(ctx, agent.ID)
+		if err != nil {
+			logger.Warn("Failed to get workload for agent",
+				logger.Uint("agent_id", agent.ID),
+				logger.Error2("error", err))
+			workload = 0
+		}
+
+		// Create agent info with defaults (in real implementation, these would come from agent profile)
+		agentInfo := &interfaces.AgentInfo{
+			UserID:            agent.ID,
+			Name:              agent.Name,
+			Email:             agent.Email,
+			Specialties:       []string{"general", category}, // Simplified: assume all agents can handle any category
+			CurrentLoad:       workload,
+			MaxLoad:           10, // Default max load
+			IsOnline:          true, // Simplified: assume all agents are online
+			LastActiveAt:      time.Now().Format(time.RFC3339),
+			AvgResponseTime:   30, // Default 30 minutes
+			SatisfactionScore: 8.5, // Default score
+		}
+
+		// Only include agents who are not at max capacity
+		if agentInfo.CurrentLoad < agentInfo.MaxLoad {
+			agentInfos = append(agentInfos, agentInfo)
+		}
+	}
+
+	return agentInfos, nil
+}
+
+// FindBestAgentForTicket finds the best agent to assign a ticket to based on workload and specialties
+func (s *TicketService) FindBestAgentForTicket(ctx context.Context, ticket *entities.Ticket) (uint, error) {
+	// Get available agents for this ticket category
+	availableAgents, err := s.GetAvailableAgents(ctx, ticket.Category)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get available agents: %w", err)
+	}
+
+	if len(availableAgents) == 0 {
+		return 0, fmt.Errorf("no available agents found")
+	}
+
+	// Simple assignment algorithm: choose agent with lowest current workload
+	// In a more sophisticated implementation, you could consider:
+	// - Agent specialties matching ticket category
+	// - Agent response time history
+	// - Customer satisfaction scores
+	// - Agent availability/online status
+	// - Priority-based assignment for urgent tickets
+
+	var bestAgent *interfaces.AgentInfo
+	lowestWorkload := int(^uint(0) >> 1) // Max int
+
+	for _, agent := range availableAgents {
+		// Calculate assignment score (lower is better)
+		score := agent.CurrentLoad
+		
+		// Bonus for category specialization
+		hasSpecialty := false
+		for _, specialty := range agent.Specialties {
+			if specialty == ticket.Category {
+				hasSpecialty = true
+				break
+			}
+		}
+		
+		if hasSpecialty {
+			score -= 1 // Reduce score (better) if agent specializes in this category
+		}
+
+		// For urgent tickets, prefer agents with better response times
+		if ticket.Priority == entities.TicketPriorityUrgent || ticket.Priority == entities.TicketPriorityCritical {
+			if agent.AvgResponseTime < 30 { // Less than 30 minutes
+				score -= 1
+			}
+		}
+
+		if score < lowestWorkload {
+			lowestWorkload = score
+			bestAgent = agent
+		}
+	}
+
+	if bestAgent == nil {
+		return 0, fmt.Errorf("could not determine best agent")
+	}
+
+	logger.Info("Selected best agent for ticket assignment",
+		logger.Uint("ticket_id", ticket.ID),
+		logger.Uint("agent_id", bestAgent.UserID),
+		logger.String("agent_name", bestAgent.Name),
+		logger.Int("agent_workload", bestAgent.CurrentLoad),
+		logger.String("ticket_category", ticket.Category),
+		logger.String("ticket_priority", ticket.Priority))
+
+	return bestAgent.UserID, nil
 }

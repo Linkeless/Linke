@@ -297,12 +297,13 @@ const (
 
 // Notification channel types
 const (
-	NotificationChannelEmail   = "email"
-	NotificationChannelWebhook = "webhook"
-	NotificationChannelInApp   = "in_app"
-	NotificationChannelSMS     = "sms"
-	NotificationChannelSlack   = "slack"
-	NotificationChannelDiscord = "discord"
+	NotificationChannelEmail    = "email"
+	NotificationChannelWebhook  = "webhook"
+	NotificationChannelInApp    = "in_app"
+	NotificationChannelSMS      = "sms"
+	NotificationChannelSlack    = "slack"
+	NotificationChannelDiscord  = "discord"
+	NotificationChannelTelegram = "telegram"
 )
 
 // Default values

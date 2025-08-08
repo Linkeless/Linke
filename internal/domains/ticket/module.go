@@ -8,6 +8,8 @@ import (
 	"linke/internal/domains/ticket/handlers"
 	"linke/internal/domains/ticket/usecases/implementations"
 	"linke/internal/domains/ticket/usecases/interfaces"
+	userInterfaces "linke/internal/domains/user/usecases/interfaces"
+	"linke/internal/shared/events"
 )
 
 // Module Ticket 领域模块
@@ -27,10 +29,31 @@ var Module = fx.Module("ticket",
 
 	// 提供 Service 实现
 	fx.Provide(
+		// Base ticket service (not exposed directly)
+		implementations.NewTicketService,
+		
+		// Event-aware ticket service wrapper (exposed as the main service)
 		fx.Annotate(
-			implementations.NewTicketService,
+			func(
+				baseService *implementations.TicketService,
+				userService userInterfaces.UserService,
+				eventBus events.EventBus,
+			) interfaces.TicketService {
+				// Check if event bus is available
+				if eventBus == nil {
+					// Fall back to base service if no event bus
+					return baseService
+				}
+				// Wrap with event-aware service
+				return implementations.NewEventAwareTicketService(
+					baseService,
+					userService,
+					eventBus,
+				)
+			},
 			fx.As(new(interfaces.TicketService)),
 		),
+		
 		fx.Annotate(
 			implementations.NewTicketMessageService,
 			fx.As(new(interfaces.TicketMessageService)),

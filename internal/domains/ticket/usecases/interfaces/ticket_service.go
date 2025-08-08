@@ -21,9 +21,15 @@ type TicketService interface {
 
 	// Ticket assignment and status management
 	AssignTicket(ctx context.Context, ticketID uint, req *AssignTicketRequest) (*entities.Ticket, error)
+	AutoAssignTicket(ctx context.Context, ticketID uint) (*entities.Ticket, error)
 	UnassignTicket(ctx context.Context, ticketID uint) (*entities.Ticket, error)
 	UpdateTicketStatus(ctx context.Context, ticketID uint, status string) (*entities.Ticket, error)
 	UpdateTicketPriority(ctx context.Context, ticketID uint, priority string) (*entities.Ticket, error)
+	
+	// Agent workload management
+	GetAgentWorkload(ctx context.Context, agentID uint) (int, error)
+	GetAvailableAgents(ctx context.Context, category string) ([]*AgentInfo, error)
+	FindBestAgentForTicket(ctx context.Context, ticket *entities.Ticket) (uint, error)
 
 	// Ticket resolution
 	ResolveTicket(ctx context.Context, ticketID uint, resolvedByID uint, req *ResolveTicketRequest) (*entities.Ticket, error)
@@ -81,4 +87,18 @@ type GetTicketsRequest struct {
 	Search       string `form:"search" example:"login issue"`
 	Limit        int    `form:"limit" binding:"omitempty,min=1,max=100" example:"10"`
 	Offset       int    `form:"offset" binding:"omitempty,min=0" example:"0"`
+}
+
+// AgentInfo represents information about an agent for ticket assignment
+type AgentInfo struct {
+	UserID         uint     `json:"user_id"`
+	Name           string   `json:"name"`
+	Email          string   `json:"email"`
+	Specialties    []string `json:"specialties"` // Categories this agent specializes in
+	CurrentLoad    int      `json:"current_load"` // Number of currently assigned tickets
+	MaxLoad        int      `json:"max_load"`     // Maximum tickets this agent can handle
+	IsOnline       bool     `json:"is_online"`
+	LastActiveAt   string   `json:"last_active_at,omitempty"`
+	AvgResponseTime int     `json:"avg_response_time"` // In minutes
+	SatisfactionScore float64 `json:"satisfaction_score"` // 0-10 scale
 }

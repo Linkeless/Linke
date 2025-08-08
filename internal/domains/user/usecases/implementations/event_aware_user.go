@@ -299,12 +299,20 @@ func (s *EventAwareUserService) GetUserByEmail(ctx context.Context, email string
 	return s.userService.GetUserByEmail(ctx, email)
 }
 
+func (s *EventAwareUserService) GetUserByTelegramID(ctx context.Context, telegramID string) (*entities.User, error) {
+	return s.userService.GetUserByTelegramID(ctx, telegramID)
+}
+
 func (s *EventAwareUserService) GetActiveUserByID(ctx context.Context, id uint) (*entities.User, error) {
 	return s.userService.GetActiveUserByID(ctx, id)
 }
 
 func (s *EventAwareUserService) GetActiveUserByEmail(ctx context.Context, email string) (*entities.User, error) {
 	return s.userService.GetActiveUserByEmail(ctx, email)
+}
+
+func (s *EventAwareUserService) GetUsersByIDs(ctx context.Context, ids []uint) ([]*entities.User, error) {
+	return s.userService.GetUsersByIDs(ctx, ids)
 }
 
 func (s *EventAwareUserService) HardDeleteUser(ctx context.Context, id uint) error {

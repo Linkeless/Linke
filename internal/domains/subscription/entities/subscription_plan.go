@@ -206,6 +206,53 @@ func (sp *SubscriptionPlan) SetDefaultServerGroupIDs(groupIDs []uint) error {
 	return nil
 }
 
+// PlanLimits represents the limits configuration for a subscription plan
+type PlanLimits struct {
+	MaxActiveSubscriptions *int `json:"max_active_subscriptions,omitempty"` // Maximum active subscriptions per user (nil = unlimited)
+	APICallsPerMonth       *int `json:"api_calls_per_month,omitempty"`      // API calls limit per month
+}
+
+// GetLimits parses and returns the limits configuration for this plan
+func (sp *SubscriptionPlan) GetLimits() (*PlanLimits, error) {
+	if sp.Limits == "" {
+		return &PlanLimits{}, nil
+	}
+
+	var limits PlanLimits
+	if err := json.Unmarshal([]byte(sp.Limits), &limits); err != nil {
+		return nil, fmt.Errorf("failed to parse plan limits: %w", err)
+	}
+
+	return &limits, nil
+}
+
+// AllowsMultipleActiveSubscriptions checks if this plan allows multiple active subscriptions per user
+func (sp *SubscriptionPlan) AllowsMultipleActiveSubscriptions() bool {
+	limits, err := sp.GetLimits()
+	if err != nil {
+		// If we can't parse limits, default to allowing multiple subscriptions for backward compatibility
+		return true
+	}
+
+	// If max_active_subscriptions is not set or is greater than 1, allow multiple
+	return limits.MaxActiveSubscriptions == nil || *limits.MaxActiveSubscriptions != 1
+}
+
+// GetMaxActiveSubscriptions returns the maximum number of active subscriptions allowed per user
+func (sp *SubscriptionPlan) GetMaxActiveSubscriptions() int {
+	limits, err := sp.GetLimits()
+	if err != nil {
+		// Default to unlimited if we can't parse limits
+		return 0 // 0 means unlimited
+	}
+
+	if limits.MaxActiveSubscriptions == nil {
+		return 0 // unlimited
+	}
+
+	return *limits.MaxActiveSubscriptions
+}
+
 // SubscriptionPlanResponse represents the subscription plan data structure for API responses
 type SubscriptionPlanResponse struct {
 	ID              uint    `json:"id" example:"1"`                         // Plan ID
@@ -271,7 +318,12 @@ func (sp *SubscriptionPlan) ToResponse() *SubscriptionPlanResponse {
 		TrafficResetCycle: sp.TrafficResetCycle,
 
 		// Server Group Configuration
-		DefaultServerGroupID:   func() uint { if id, err := sp.GetDefaultServerGroupID(); err == nil { return id }; return 0 }(),
+		DefaultServerGroupID: func() uint {
+			if id, err := sp.GetDefaultServerGroupID(); err == nil {
+				return id
+			}
+			return 0
+		}(),
 		DefaultServerGroupName: sp.DefaultServerGroupName, // Populated by service layer
 
 		CreatedAt: sp.CreatedAt,

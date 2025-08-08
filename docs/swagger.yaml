@@ -1080,10 +1080,10 @@ definitions:
         description: additional settings for the channel
         type: object
       target:
-        description: email address, webhook URL, etc.
+        description: email address, webhook URL, telegram chat ID, etc.
         type: string
       type:
-        description: email, webhook, in_app, sms
+        description: email, webhook, in_app, sms, telegram
         type: string
     type: object
   entities.NotificationResult:
@@ -5160,6 +5160,30 @@ definitions:
       user_subscription_id:
         type: integer
     type: object
+  interfaces.DowngradeSubscriptionRequest:
+    properties:
+      apply_at_period_end:
+        description: Whether to apply change at current period end
+        example: true
+        type: boolean
+      effective_date:
+        description: When to apply the change, empty means end of current period
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      new_subscription_plan_id:
+        example: 1
+        type: integer
+      reason:
+        example: User requested downgrade
+        maxLength: 255
+        type: string
+      subscription_id:
+        example: 1
+        type: integer
+    required:
+    - new_subscription_plan_id
+    - subscription_id
+    type: object
   interfaces.ExportUsageRequest:
     properties:
       end_time:
@@ -5808,6 +5832,30 @@ definitions:
         example: '{"updated_by":"admin"}'
         type: string
     type: object
+  interfaces.UpgradeSubscriptionRequest:
+    properties:
+      effective_date:
+        description: When to apply the change, empty means immediate
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      new_subscription_plan_id:
+        example: 2
+        type: integer
+      pro_rate_charges:
+        description: Whether to calculate pro-rated charges
+        example: true
+        type: boolean
+      reason:
+        example: User requested upgrade
+        maxLength: 255
+        type: string
+      subscription_id:
+        example: 1
+        type: integer
+    required:
+    - new_subscription_plan_id
+    - subscription_id
+    type: object
   interfaces.UsageAnomaly:
     properties:
       actual_usage:
@@ -5960,6 +6008,275 @@ definitions:
       valid:
         example: true
         type: boolean
+    type: object
+  notification.ChannelAnalytics:
+    properties:
+      average_delivery_time:
+        type: string
+      channel:
+        $ref: '#/definitions/notification.NotificationChannel'
+      failed:
+        type: integer
+      success_rate:
+        type: number
+      successful:
+        type: integer
+      top_failure_reasons:
+        items:
+          $ref: '#/definitions/notification.FailureReason'
+        type: array
+      total_sent:
+        type: integer
+    type: object
+  notification.DeliveryAttempt:
+    properties:
+      attempt_number:
+        type: integer
+      channel:
+        $ref: '#/definitions/notification.NotificationChannel'
+      completed_at:
+        type: string
+      duration:
+        type: string
+      error:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      provider_response:
+        $ref: '#/definitions/notification.ProviderResponse'
+      started_at:
+        type: string
+      status:
+        $ref: '#/definitions/notification.NotificationStatus'
+    type: object
+  notification.EventTypeAnalytics:
+    properties:
+      average_delivery_time:
+        type: string
+      event_type:
+        type: string
+      preferred_channels:
+        items:
+          $ref: '#/definitions/notification.NotificationChannel'
+        type: array
+      success_rate:
+        type: number
+      total_notifications:
+        type: integer
+    type: object
+  notification.FailureReason:
+    properties:
+      count:
+        type: integer
+      reason:
+        type: string
+    type: object
+  notification.HourlyStats:
+    properties:
+      count:
+        type: integer
+      hour:
+        type: integer
+      success_rate:
+        type: number
+    type: object
+  notification.NotificationAnalytics:
+    properties:
+      average_delivery_time:
+        type: string
+      channel_stats:
+        additionalProperties:
+          $ref: '#/definitions/notification.ChannelAnalytics'
+        type: object
+      event_type_stats:
+        additionalProperties:
+          $ref: '#/definitions/notification.EventTypeAnalytics'
+        type: object
+      generated_at:
+        type: string
+      hourly_distribution:
+        items:
+          $ref: '#/definitions/notification.HourlyStats'
+        type: array
+      success_rate:
+        type: number
+      time_range:
+        $ref: '#/definitions/notification.TimeRange'
+      top_failure_reasons:
+        items:
+          $ref: '#/definitions/notification.FailureReason'
+        type: array
+      total_notifications:
+        type: integer
+    type: object
+  notification.NotificationChannel:
+    enum:
+    - email
+    - sms
+    - push
+    - slack
+    - telegram
+    type: string
+    x-enum-varnames:
+    - ChannelEmail
+    - ChannelSMS
+    - ChannelPush
+    - ChannelSlack
+    - ChannelTelegram
+  notification.NotificationPriority:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    type: integer
+    x-enum-varnames:
+    - PriorityLow
+    - PriorityNormal
+    - PriorityHigh
+    - PriorityUrgent
+  notification.NotificationStatus:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    type: integer
+    x-enum-varnames:
+    - StatusPending
+    - StatusSending
+    - StatusSent
+    - StatusDelivered
+    - StatusFailed
+    - StatusRetrying
+    - StatusExpired
+    - StatusCancelled
+  notification.NotificationStatusSummary:
+    properties:
+      failed_notifications:
+        type: integer
+      last_updated:
+        type: string
+      pending_notifications:
+        type: integer
+      recent_activity:
+        items:
+          $ref: '#/definitions/notification.RecentNotificationActivity'
+        type: array
+      retrying_notifications:
+        type: integer
+      sent_notifications:
+        type: integer
+      total_notifications:
+        type: integer
+    type: object
+  notification.NotificationTrackingInfo:
+    properties:
+      channel_attempts:
+        additionalProperties:
+          items:
+            $ref: '#/definitions/notification.DeliveryAttempt'
+          type: array
+        type: object
+      created_at:
+        type: string
+      event_id:
+        type: string
+      event_type:
+        type: string
+      expires_at:
+        type: string
+      failed_channels:
+        items:
+          $ref: '#/definitions/notification.NotificationChannel'
+        type: array
+      metadata:
+        additionalProperties: true
+        type: object
+      overall_status:
+        $ref: '#/definitions/notification.NotificationStatus'
+      priority:
+        $ref: '#/definitions/notification.NotificationPriority'
+      request_id:
+        type: string
+      retrying_channels:
+        items:
+          $ref: '#/definitions/notification.NotificationChannel'
+        type: array
+      successful_channels:
+        items:
+          $ref: '#/definitions/notification.NotificationChannel'
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+      total_attempts:
+        type: integer
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  notification.ProviderResponse:
+    properties:
+      delivery_info:
+        additionalProperties: true
+        type: object
+      headers:
+        additionalProperties:
+          type: string
+        type: object
+      message_id:
+        type: string
+      provider_id:
+        type: string
+      response_body:
+        type: string
+      status_code:
+        type: integer
+    type: object
+  notification.RecentNotificationActivity:
+    properties:
+      channel:
+        $ref: '#/definitions/notification.NotificationChannel'
+      description:
+        type: string
+      event_type:
+        type: string
+      request_id:
+        type: string
+      status:
+        $ref: '#/definitions/notification.NotificationStatus'
+      timestamp:
+        type: string
+    type: object
+  notification.TimeRange:
+    properties:
+      end:
+        type: string
+      start:
+        type: string
+    type: object
+  notification.UserNotificationHistoryResponse:
+    properties:
+      event_type:
+        type: string
+      limit:
+        type: integer
+      notifications:
+        items:
+          $ref: '#/definitions/notification.NotificationTrackingInfo'
+        type: array
+      retrieved_at:
+        type: string
+      user_id:
+        type: integer
     type: object
   response.APIResponse:
     properties:
@@ -12340,6 +12657,60 @@ paths:
       summary: Cancel user subscription
       tags:
       - Admin-Subscription
+  /admin/subscriptions/users/{id}/downgrade:
+    post:
+      consumes:
+      - application/json
+      description: Downgrade a user's subscription to a lower plan (Admin only)
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Downgrade request
+        in: body
+        name: downgrade
+        required: true
+        schema:
+          $ref: '#/definitions/interfaces.DowngradeSubscriptionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.UserSubscriptionResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Downgrade user subscription
+      tags:
+      - Admin-Subscription-Management
   /admin/subscriptions/users/{id}/extend:
     post:
       consumes:
@@ -12556,6 +12927,60 @@ paths:
       summary: Resume user subscription
       tags:
       - Admin-Subscription
+  /admin/subscriptions/users/{id}/upgrade:
+    post:
+      consumes:
+      - application/json
+      description: Upgrade a user's subscription to a higher plan (Admin only)
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Upgrade request
+        in: body
+        name: upgrade
+        required: true
+        schema:
+          $ref: '#/definitions/interfaces.UpgradeSubscriptionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.UserSubscriptionResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Upgrade user subscription
+      tags:
+      - Admin-Subscription-Management
   /admin/tickets:
     get:
       consumes:
@@ -14494,6 +14919,112 @@ paths:
       summary: '[Admin] Get user statistics'
       tags:
       - Admin-User-Management
+  /api/v1/notifications/{request_id}/status:
+    get:
+      consumes:
+      - application/json
+      description: Get detailed status information for a specific notification
+      parameters:
+      - description: Notification Request ID
+        in: path
+        name: request_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/notification.NotificationTrackingInfo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      summary: Get notification status
+      tags:
+      - notifications
+      - tracking
+  /api/v1/notifications/analytics:
+    get:
+      consumes:
+      - application/json
+      description: Get analytics and statistics for notifications within a time range
+      parameters:
+      - default: '"24h ago"'
+        description: Start date (RFC3339 format)
+        in: query
+        name: start_date
+        type: string
+      - default: '"now"'
+        description: End date (RFC3339 format)
+        in: query
+        name: end_date
+        type: string
+      - description: Comma-separated user IDs to filter by
+        in: query
+        name: user_ids
+        type: string
+      - description: Comma-separated event types to filter by
+        in: query
+        name: event_types
+        type: string
+      - description: Comma-separated channels to filter by
+        in: query
+        name: channels
+        type: string
+      - description: Comma-separated statuses to filter by
+        in: query
+        name: statuses
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/notification.NotificationAnalytics'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      summary: Get notification analytics
+      tags:
+      - notifications
+      - tracking
+      - analytics
+  /api/v1/notifications/status/summary:
+    get:
+      consumes:
+      - application/json
+      description: Get a summary of notification statuses for the current user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/notification.NotificationStatusSummary'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      summary: Get notification status summary
+      tags:
+      - notifications
+      - tracking
   /api/v1/tickets:
     post:
       consumes:
@@ -14813,6 +15344,46 @@ paths:
       summary: Get user's tickets
       tags:
       - User-Tickets
+  /api/v1/users/{user_id}/notifications/history:
+    get:
+      consumes:
+      - application/json
+      description: Get notification history for a specific user
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      - default: 20
+        description: Number of notifications to return
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by event type
+        in: query
+        name: event_type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/notification.UserNotificationHistoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      summary: Get user notification history
+      tags:
+      - notifications
+      - tracking
+      - users
   /app/system/health:
     get:
       consumes:

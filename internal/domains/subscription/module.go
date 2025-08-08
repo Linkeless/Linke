@@ -4,6 +4,7 @@ import (
 	"go.uber.org/fx"
 	"gorm.io/gorm"
 
+	authInterfaces "linke/internal/domains/auth/usecases/interfaces"
 	couponInterfaces "linke/internal/domains/coupon/usecases/interfaces"
 	invoiceInterfaces "linke/internal/domains/invoice/usecases/interfaces"
 	paymentInterfaces "linke/internal/domains/payment/usecases/interfaces"
@@ -12,6 +13,7 @@ import (
 	"linke/internal/domains/subscription/usecases/implementations"
 	"linke/internal/domains/subscription/usecases/interfaces"
 	"linke/internal/shared/cache"
+	"linke/internal/shared/notification"
 )
 
 // NewSubscriptionPlanServiceWithCache creates a subscription plan service with cache support
@@ -67,6 +69,29 @@ func NewSubscriptionOrderServiceWithInvoice(
 	)
 }
 
+// NewUsageAlertServiceWithNotification creates a usage alert service with notification support
+func NewUsageAlertServiceWithNotification(
+	alertRepo interfaces.AlertRepository,
+	usageRepo interfaces.UsageRepository,
+	subscriptionSvc interfaces.UserSubscriptionService,
+	notificationSvc notification.NotificationService,
+) interfaces.UsageAlertService {
+	return implementations.NewUsageAlertService(
+		alertRepo,
+		usageRepo,
+		subscriptionSvc,
+		notificationSvc,
+	)
+}
+
+// NewUserSubscriptionHandlerWithAuth creates a user subscription handler with auth service
+func NewUserSubscriptionHandlerWithAuth(
+	userSubscriptionService interfaces.UserSubscriptionService,
+	authService authInterfaces.AuthService,
+) *handlers.UserSubscriptionHandler {
+	return handlers.NewUserSubscriptionHandler(userSubscriptionService, authService)
+}
+
 // Module Subscription 领域模块
 // 提供订阅计划管理、用户订阅生命周期、计费周期管理等功能
 var Module = fx.Module("subscription",
@@ -107,7 +132,7 @@ var Module = fx.Module("subscription",
 		),
 		// Usage tracking services
 		fx.Annotate(
-			implementations.NewUsageAlertService,
+			NewUsageAlertServiceWithNotification,
 			fx.As(new(interfaces.UsageAlertService)),
 		),
 		fx.Annotate(
@@ -129,7 +154,7 @@ var Module = fx.Module("subscription",
 	fx.Provide(
 		handlers.NewSubscriptionPlanHandler,
 		handlers.NewSubscriptionOrderHandler,
-		handlers.NewUserSubscriptionHandler,
+		NewUserSubscriptionHandlerWithAuth,
 		handlers.NewQuickPurchaseHandler,
 		handlers.NewUsageAlertHandler,
 		handlers.NewUsageHandler,

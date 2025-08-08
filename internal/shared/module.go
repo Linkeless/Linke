@@ -88,7 +88,8 @@ var Module = fx.Module("shared",
 		},
 		// Notification handler
 		func() *events.NotificationHandler {
-			return events.NewNotificationHandler()
+			mockNotificationService := &events.MockNotificationService{}
+			return events.NewNotificationHandler(mockNotificationService)
 		},
 	),
 

@@ -32,6 +32,8 @@ import (
 	// 共享模块
 	"linke/internal/shared/cache"
 	"linke/internal/shared/events"
+	"linke/internal/shared/notification"
+	"linke/internal/shared/telegram"
 	"linke/internal/shared/versioning"
 
 	// Service interface imports for event handlers
@@ -178,6 +180,9 @@ func NewApplication() *fx.App {
 		// 缓存系统
 		cache.Module,
 
+		// 通知系统
+		notification.Module,
+
 		// 版本控制系统
 		versioning.Module,
 
@@ -225,6 +230,9 @@ func NewApplication() *fx.App {
 		ticketDomain.Module,
 		referralDomain.Module,
 
+		// Telegram bot模块（可选）
+		telegram.Module,
+
 		// 应用层模块
 		applicationLayer.Module,
 
@@ -246,6 +254,7 @@ func NewApplication() *fx.App {
 			eventCacheStore events.EventCacheStore,
 			usageMonitor *events.UsageMonitor,
 			logger loggerPkg.Logger,
+			notificationService notification.NotificationService,
 			// All domain services needed for cross-domain event handlers
 			userService userInterfaces.UserService,
 			userSubscriptionService subscriptionInterfaces.UserSubscriptionService,
@@ -274,12 +283,12 @@ func NewApplication() *fx.App {
 				logger.Debug("Cross-domain event handlers registered successfully")
 			}
 
-			// Register notification handler
-			notificationHandler := events.NewNotificationHandler()
+			// Register notification handler with real notification service
+			notificationHandler := events.NewNotificationHandler(events.NewNotificationServiceAdapter(notificationService))
 			if err := eventBus.Subscribe(notificationHandler.EventTypes(), notificationHandler); err != nil {
 				logger.Error("Failed to register notification handler", zap.Error(err))
 			} else {
-				logger.Debug("Notification handler registered successfully")
+				logger.Info("Notification handler registered successfully with real notification service")
 			}
 
 			// Register event processing handlers with the task processor

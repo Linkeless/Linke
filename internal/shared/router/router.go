@@ -322,6 +322,8 @@ func SetupRoutes(
 			usersGroup.PUT("/:id", adminSubscriptionHandler.UpdateUserSubscription)
 			usersGroup.POST("/:id/pause", adminSubscriptionHandler.PauseUserSubscription)
 			usersGroup.POST("/:id/resume", adminSubscriptionHandler.ResumeUserSubscription)
+			usersGroup.POST("/:id/upgrade", adminSubscriptionHandler.UpgradeSubscription)
+			usersGroup.POST("/:id/downgrade", adminSubscriptionHandler.DowngradeSubscription)
 			usersGroup.POST("/:id/extend", adminSubscriptionHandler.ExtendUserSubscription)
 			usersGroup.POST("/:id/cancel", adminSubscriptionHandler.CancelUserSubscription)
 			usersGroup.POST("/:id/reset-traffic", adminSubscriptionHandler.ResetTrafficUsage)

@@ -11,6 +11,7 @@ import (
 	invoiceInterfaces "linke/internal/domains/invoice/usecases/interfaces"
 	paymentInterfaces "linke/internal/domains/payment/usecases/interfaces"
 	subscriptionInterfaces "linke/internal/domains/subscription/usecases/interfaces"
+	"linke/internal/domains/subscription/entities"
 	"linke/internal/shared/database"
 	"linke/internal/shared/logger"
 )
@@ -339,12 +340,55 @@ func (w *SubscriptionWorkflow) ProcessPaymentCallback(ctx context.Context, payme
 		workflowLogger.Info("Subscription renewed successfully")
 
 	case "upgrade", "downgrade":
-		// 升级/降级处理 (简化实现)
+		// 升级/降级处理
 		workflowLogger.Info("Processing subscription change", zap.String("change_type", order.OrderType))
+		
+		if order.UserID == 0 {
+			tx.Rollback()
+			workflowLogger.Error("Missing user ID for subscription change")
+			return fmt.Errorf("missing user ID for subscription change")
+		}
+		
+		if order.SubscriptionPlanID == 0 {
+			tx.Rollback()
+			workflowLogger.Error("Missing subscription plan ID for subscription change")
+			return fmt.Errorf("missing subscription plan ID for subscription change")
+		}
 
-		// 这里可以实现更复杂的升级/降级逻辑
-		// 目前先记录日志，实际业务逻辑需要根据具体需求实现
-		workflowLogger.Warn("Subscription upgrade/downgrade not fully implemented")
+		// Find active subscription for this user (assuming one active subscription per user)
+		var activeSubscription *entities.UserSubscription
+		userSubscriptions, err := w.userSubscriptionSvc.GetUserActiveSubscriptions(ctx, order.UserID)
+		if err != nil {
+			tx.Rollback()
+			workflowLogger.Error("Failed to get user active subscriptions", zap.Error(err))
+			return fmt.Errorf("failed to get user active subscriptions: %w", err)
+		}
+		
+		if len(userSubscriptions) == 0 {
+			tx.Rollback()
+			workflowLogger.Error("No active subscription found for user")
+			return fmt.Errorf("no active subscription found for user")
+		}
+		
+		// Use the first active subscription (could be enhanced to match specific criteria)
+		activeSubscription = userSubscriptions[0]
+		
+		// Process the subscription change
+		_, err = w.userSubscriptionSvc.ProcessSubscriptionChange(ctx, activeSubscription.ID, order.SubscriptionPlanID, order.OrderType)
+		if err != nil {
+			tx.Rollback()
+			workflowLogger.Error("Failed to process subscription change", 
+				zap.String("change_type", order.OrderType),
+				zap.Uint("subscription_id", activeSubscription.ID),
+				zap.Uint("new_plan_id", order.SubscriptionPlanID),
+				zap.Error(err))
+			return fmt.Errorf("failed to process subscription %s: %w", order.OrderType, err)
+		}
+		
+		workflowLogger.Info("Subscription change completed successfully",
+			zap.String("change_type", order.OrderType),
+			zap.Uint("subscription_id", activeSubscription.ID),
+			zap.Uint("new_plan_id", order.SubscriptionPlanID))
 
 	default:
 		tx.Rollback()

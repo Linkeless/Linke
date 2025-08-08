@@ -102,7 +102,7 @@ type AdminUpdateUserSubscriptionRequest struct {
 	AutoRenew          *bool      `json:"auto_renew,omitempty" example:"true"`
 	Notes              *string    `json:"notes,omitempty" binding:"omitempty,max=1000" example:"Admin notes"`
 	ServerGroupIDs     *[]uint    `json:"server_group_ids,omitempty"`
-	
+
 	// Traffic configuration overrides
 	TrafficLimit     *int64 `json:"traffic_limit,omitempty" binding:"omitempty,min=0" example:"107374182400"`
 	ResetTraffic     *bool  `json:"reset_traffic,omitempty" example:"false"`
@@ -111,9 +111,9 @@ type AdminUpdateUserSubscriptionRequest struct {
 
 // ExtendSubscriptionRequest represents the request body for extending subscriptions
 type ExtendSubscriptionRequest struct {
-	ExtendByDays int    `json:"extend_by_days" binding:"required,min=1,max=3650" example:"30"`
-	Reason       string `json:"reason" binding:"required,max=255" example:"Customer loyalty bonus"`
-	SendNotification *bool `json:"send_notification,omitempty" example:"true"`
+	ExtendByDays     int    `json:"extend_by_days" binding:"required,min=1,max=3650" example:"30"`
+	Reason           string `json:"reason" binding:"required,max=255" example:"Customer loyalty bonus"`
+	SendNotification *bool  `json:"send_notification,omitempty" example:"true"`
 }
 
 // BulkSubscriptionActionRequest represents bulk operations on subscriptions
@@ -126,17 +126,17 @@ type BulkSubscriptionActionRequest struct {
 
 // RefundOrderRequest represents the request body for refunding orders
 type RefundOrderRequest struct {
-	RefundAmount      *float64 `json:"refund_amount,omitempty" binding:"omitempty,min=0" example:"29.99"`
-	RefundReason      string   `json:"refund_reason" binding:"required,max=255" example:"Customer requested refund"`
-	NotifyCustomer    *bool    `json:"notify_customer,omitempty" example:"true"`
-	CancelSubscription *bool   `json:"cancel_subscription,omitempty" example:"false"`
+	RefundAmount       *float64 `json:"refund_amount,omitempty" binding:"omitempty,min=0" example:"29.99"`
+	RefundReason       string   `json:"refund_reason" binding:"required,max=255" example:"Customer requested refund"`
+	NotifyCustomer     *bool    `json:"notify_customer,omitempty" example:"true"`
+	CancelSubscription *bool    `json:"cancel_subscription,omitempty" example:"false"`
 }
 
 // AdminUsageResetRequest represents the request to reset usage for a subscription
 type AdminUsageResetRequest struct {
-	UsageType       *string `json:"usage_type,omitempty" example:"traffic"`
+	UsageType        *string `json:"usage_type,omitempty" example:"traffic"`
 	SendNotification *bool   `json:"send_notification,omitempty" example:"true"`
-	Reason          string  `json:"reason" binding:"required,max=255" example:"Admin reset per customer request"`
+	Reason           string  `json:"reason" binding:"required,max=255" example:"Admin reset per customer request"`
 }
 
 // AdminCreateUserSubscriptionRequest represents the request body for creating a user subscription (Admin only)
@@ -147,16 +147,16 @@ type AdminCreateUserSubscriptionRequest struct {
 	UseTrial           *bool  `json:"use_trial,omitempty" example:"false"`
 	ServerGroupIDs     []uint `json:"server_group_ids,omitempty"`
 	Reason             string `json:"reason" binding:"required,max=255" example:"Admin granted subscription"`
-	
+
 	// Custom Traffic Configuration (optional, overrides plan defaults)
 	CustomTrafficLimit      *int64  `json:"custom_traffic_limit,omitempty" example:"107374182400"`  // Custom traffic limit in bytes
 	CustomTrafficResetCycle *string `json:"custom_traffic_reset_cycle,omitempty" example:"monthly"` // Custom reset cycle
 	DisableTrafficLimit     *bool   `json:"disable_traffic_limit,omitempty" example:"false"`        // Disable traffic limit for this subscription
-	
+
 	// Administrative overrides
-	SkipPayment         *bool   `json:"skip_payment,omitempty" example:"true"`        // Skip payment requirement
-	SendNotification    *bool   `json:"send_notification,omitempty" example:"true"`   // Send notification to user
-	Notes               *string `json:"notes,omitempty" binding:"omitempty,max=1000"` // Admin notes
+	SkipPayment      *bool   `json:"skip_payment,omitempty" example:"true"`        // Skip payment requirement
+	SendNotification *bool   `json:"send_notification,omitempty" example:"true"`   // Send notification to user
+	Notes            *string `json:"notes,omitempty" binding:"omitempty,max=1000"` // Admin notes
 }
 
 // SUBSCRIPTION PLANS MANAGEMENT
@@ -185,24 +185,24 @@ func (h *AdminSubscriptionHandler) CreateSubscriptionPlan(c *gin.Context) {
 
 	// Convert to service request
 	serviceReq := &interfaces.CreateSubscriptionPlanRequest{
-		Name:            createReq.Name,
-		Code:            createReq.Code,
-		Description:     createReq.Description,
-		Price:           createReq.Price,
-		Currency:        createReq.Currency,
-		BillingCycle:    createReq.BillingCycle,
-		BillingInterval: createReq.BillingInterval,
-		TrialPeriodDays: createReq.TrialPeriodDays,
-		Features:        createReq.Features,
-		Limits:          createReq.Limits,
-		IsVisible:       createReq.IsVisible,
-		SortOrder:       createReq.SortOrder,
-		IsPopular:       createReq.IsPopular,
-		IsRecommended:   createReq.IsRecommended,
-		SetupFee:        createReq.SetupFee,
-		CancellationFee: createReq.CancellationFee,
-		TrafficLimit:    createReq.TrafficLimit,
-		TrafficResetCycle: createReq.TrafficResetCycle,
+		Name:                  createReq.Name,
+		Code:                  createReq.Code,
+		Description:           createReq.Description,
+		Price:                 createReq.Price,
+		Currency:              createReq.Currency,
+		BillingCycle:          createReq.BillingCycle,
+		BillingInterval:       createReq.BillingInterval,
+		TrialPeriodDays:       createReq.TrialPeriodDays,
+		Features:              createReq.Features,
+		Limits:                createReq.Limits,
+		IsVisible:             createReq.IsVisible,
+		SortOrder:             createReq.SortOrder,
+		IsPopular:             createReq.IsPopular,
+		IsRecommended:         createReq.IsRecommended,
+		SetupFee:              createReq.SetupFee,
+		CancellationFee:       createReq.CancellationFee,
+		TrafficLimit:          createReq.TrafficLimit,
+		TrafficResetCycle:     createReq.TrafficResetCycle,
 		DefaultServerGroupIDs: createReq.DefaultServerGroupIDs,
 	}
 
@@ -290,7 +290,7 @@ func (h *AdminSubscriptionHandler) GetSubscriptionPlan(c *gin.Context) {
 func (h *AdminSubscriptionHandler) ListSubscriptionPlans(c *gin.Context) {
 	// Parse query parameters
 	req := &interfaces.GetSubscriptionPlansRequest{}
-	
+
 	if err := c.ShouldBindQuery(req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -353,21 +353,21 @@ func (h *AdminSubscriptionHandler) UpdateSubscriptionPlan(c *gin.Context) {
 
 	// Convert to service request
 	serviceReq := &interfaces.UpdateSubscriptionPlanRequest{
-		Name:              updateReq.Name,
-		Description:       updateReq.Description,
-		Price:             updateReq.Price,
-		TrialPeriodDays:   updateReq.TrialPeriodDays,
-		Features:          updateReq.Features,
-		Limits:            updateReq.Limits,
-		Status:            updateReq.Status,
-		IsVisible:         updateReq.IsVisible,
-		SortOrder:         updateReq.SortOrder,
-		IsPopular:         updateReq.IsPopular,
-		IsRecommended:     updateReq.IsRecommended,
-		SetupFee:          updateReq.SetupFee,
-		CancellationFee:   updateReq.CancellationFee,
-		TrafficLimit:      updateReq.TrafficLimit,
-		TrafficResetCycle: updateReq.TrafficResetCycle,
+		Name:                  updateReq.Name,
+		Description:           updateReq.Description,
+		Price:                 updateReq.Price,
+		TrialPeriodDays:       updateReq.TrialPeriodDays,
+		Features:              updateReq.Features,
+		Limits:                updateReq.Limits,
+		Status:                updateReq.Status,
+		IsVisible:             updateReq.IsVisible,
+		SortOrder:             updateReq.SortOrder,
+		IsPopular:             updateReq.IsPopular,
+		IsRecommended:         updateReq.IsRecommended,
+		SetupFee:              updateReq.SetupFee,
+		CancellationFee:       updateReq.CancellationFee,
+		TrafficLimit:          updateReq.TrafficLimit,
+		TrafficResetCycle:     updateReq.TrafficResetCycle,
 		DefaultServerGroupIDs: updateReq.DefaultServerGroupIDs,
 	}
 
@@ -591,7 +591,7 @@ func (h *AdminSubscriptionHandler) GetUserSubscription(c *gin.Context) {
 func (h *AdminSubscriptionHandler) ListUserSubscriptions(c *gin.Context) {
 	// Parse query parameters
 	req := &interfaces.GetUserSubscriptionsRequest{}
-	
+
 	if err := c.ShouldBindQuery(req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -865,7 +865,6 @@ func (h *AdminSubscriptionHandler) ExtendUserSubscription(c *gin.Context) {
 	response.Success(c, subscription.ToResponse())
 }
 
-
 // CancelUserSubscription godoc
 // @Summary Cancel user subscription
 // @Description Cancel a user subscription (Admin only)
@@ -978,6 +977,134 @@ func (h *AdminSubscriptionHandler) ResetTrafficUsage(c *gin.Context) {
 	response.Success(c, subscription.ToResponse())
 }
 
+// UpgradeSubscription godoc
+// @Summary Upgrade user subscription
+// @Description Upgrade a user's subscription to a higher plan (Admin only)
+// @Tags Admin-Subscription-Management
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Subscription ID"
+// @Param upgrade body interfaces.UpgradeSubscriptionRequest true "Upgrade request"
+// @Success 200 {object} response.StandardResponse{data=entities.UserSubscriptionResponse}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 401 {object} response.UnauthorizedResponse
+// @Failure 403 {object} response.ForbiddenResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
+// @Router /admin/subscriptions/users/{id}/upgrade [post]
+func (h *AdminSubscriptionHandler) UpgradeSubscription(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		response.BadRequest(c, "Invalid subscription ID")
+		return
+	}
+
+	var req interfaces.UpgradeSubscriptionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	// Set the subscription ID from the URL parameter
+	req.SubscriptionID = uint(id)
+
+	subscription, err := h.userSubscriptionService.UpgradeUserSubscription(c.Request.Context(), &req)
+	if err != nil {
+		logger.Error("Admin failed to upgrade subscription",
+			logger.Uint("subscription_id", uint(id)),
+			logger.Uint("new_plan_id", req.NewSubscriptionPlanID),
+			logger.Error2("error", err),
+		)
+
+		if strings.Contains(err.Error(), "not found") {
+			response.NotFound(c, "Subscription not found")
+		} else if strings.Contains(err.Error(), "not active") {
+			response.BadRequest(c, "Subscription is not active")
+		} else if strings.Contains(err.Error(), "not available") {
+			response.BadRequest(c, "New plan is not available")
+		} else if strings.Contains(err.Error(), "price") {
+			response.BadRequest(c, err.Error())
+		} else {
+			response.InternalServerError(c, "Failed to upgrade subscription")
+		}
+		return
+	}
+
+	logger.Info("Admin upgraded subscription",
+		logger.Uint("subscription_id", uint(id)),
+		logger.Uint("new_plan_id", req.NewSubscriptionPlanID),
+		logger.String("admin_action", "upgrade_subscription"),
+	)
+
+	response.Success(c, subscription.ToResponse())
+}
+
+// DowngradeSubscription godoc
+// @Summary Downgrade user subscription
+// @Description Downgrade a user's subscription to a lower plan (Admin only)
+// @Tags Admin-Subscription-Management
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Subscription ID"
+// @Param downgrade body interfaces.DowngradeSubscriptionRequest true "Downgrade request"
+// @Success 200 {object} response.StandardResponse{data=entities.UserSubscriptionResponse}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 401 {object} response.UnauthorizedResponse
+// @Failure 403 {object} response.ForbiddenResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
+// @Router /admin/subscriptions/users/{id}/downgrade [post]
+func (h *AdminSubscriptionHandler) DowngradeSubscription(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		response.BadRequest(c, "Invalid subscription ID")
+		return
+	}
+
+	var req interfaces.DowngradeSubscriptionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	// Set the subscription ID from the URL parameter
+	req.SubscriptionID = uint(id)
+
+	subscription, err := h.userSubscriptionService.DowngradeUserSubscription(c.Request.Context(), &req)
+	if err != nil {
+		logger.Error("Admin failed to downgrade subscription",
+			logger.Uint("subscription_id", uint(id)),
+			logger.Uint("new_plan_id", req.NewSubscriptionPlanID),
+			logger.Error2("error", err),
+		)
+
+		if strings.Contains(err.Error(), "not found") {
+			response.NotFound(c, "Subscription not found")
+		} else if strings.Contains(err.Error(), "not active") {
+			response.BadRequest(c, "Subscription is not active")
+		} else if strings.Contains(err.Error(), "not available") {
+			response.BadRequest(c, "New plan is not available")
+		} else if strings.Contains(err.Error(), "price") {
+			response.BadRequest(c, err.Error())
+		} else {
+			response.InternalServerError(c, "Failed to downgrade subscription")
+		}
+		return
+	}
+
+	logger.Info("Admin downgraded subscription",
+		logger.Uint("subscription_id", uint(id)),
+		logger.Uint("new_plan_id", req.NewSubscriptionPlanID),
+		logger.String("admin_action", "downgrade_subscription"),
+	)
+
+	response.Success(c, subscription.ToResponse())
+}
+
 // GetSubscriptionStatistics godoc
 // @Summary Get subscription statistics
 // @Description Get overall subscription statistics (Admin only)
@@ -1060,7 +1187,7 @@ func (h *AdminSubscriptionHandler) GetSubscriptionOrder(c *gin.Context) {
 func (h *AdminSubscriptionHandler) ListSubscriptionOrders(c *gin.Context) {
 	// Parse query parameters
 	req := &interfaces.GetSubscriptionOrdersRequest{}
-	
+
 	if err := c.ShouldBindQuery(req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -1319,7 +1446,7 @@ func (h *AdminSubscriptionHandler) BulkSubscriptionAction(c *gin.Context) {
 
 	for _, subID := range bulkReq.SubscriptionIDs {
 		var err error
-		
+
 		switch bulkReq.Action {
 		case "pause":
 			reason := "Bulk admin pause"
@@ -1330,20 +1457,20 @@ func (h *AdminSubscriptionHandler) BulkSubscriptionAction(c *gin.Context) {
 				Reason: reason,
 			}
 			_, err = h.userSubscriptionService.PauseUserSubscription(c.Request.Context(), subID, pauseReq, 0)
-		
+
 		case "resume":
 			resumeReq := &interfaces.ResumeSubscriptionRequest{
 				AdjustBillingDate: true,
 			}
 			_, err = h.userSubscriptionService.ResumeUserSubscription(c.Request.Context(), subID, resumeReq, 0)
-		
+
 		case "cancel":
 			reason := "Bulk admin cancellation"
 			if bulkReq.Reason != nil {
 				reason = *bulkReq.Reason
 			}
 			err = h.userSubscriptionService.CancelUserSubscription(c.Request.Context(), subID, reason, false)
-		
+
 		case "extend":
 			if bulkReq.ExtendByDays == nil {
 				err = fmt.Errorf("extend_by_days is required for extend action")
@@ -1354,10 +1481,10 @@ func (h *AdminSubscriptionHandler) BulkSubscriptionAction(c *gin.Context) {
 				}
 				err = h.userSubscriptionService.ExtendSubscription(c.Request.Context(), subID, *bulkReq.ExtendByDays, reason)
 			}
-		
+
 		case "reset_traffic":
 			_, err = h.userSubscriptionService.ResetTrafficUsage(c.Request.Context(), subID, 0)
-		
+
 		default:
 			err = fmt.Errorf("unknown action: %s", bulkReq.Action)
 		}
@@ -1461,7 +1588,7 @@ func (h *AdminSubscriptionHandler) GetAlertStatistics(c *gin.Context) {
 	req := &interfaces.AlertStatsRequest{
 		Period: c.DefaultQuery("period", "7d"),
 	}
-	
+
 	if err := c.ShouldBindQuery(req); err != nil {
 		response.BadRequest(c, err.Error())
 		return

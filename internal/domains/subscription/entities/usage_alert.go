@@ -58,10 +58,11 @@ const (
 
 // Notification channel constants
 const (
-	NotificationChannelEmail   = "email"
-	NotificationChannelWebhook = "webhook"
-	NotificationChannelInApp   = "in_app"
-	NotificationChannelSMS     = "sms"
+	NotificationChannelEmail    = "email"
+	NotificationChannelWebhook  = "webhook"
+	NotificationChannelInApp    = "in_app"
+	NotificationChannelSMS      = "sms"
+	NotificationChannelTelegram = "telegram"
 )
 
 // UsageAlert represents a fired usage alert
@@ -125,8 +126,8 @@ const (
 
 // NotificationChannel represents a notification channel configuration
 type NotificationChannel struct {
-	Type     string            `json:"type"`     // email, webhook, in_app, sms
-	Target   string            `json:"target"`   // email address, webhook URL, etc.
+	Type     string            `json:"type"`     // email, webhook, in_app, sms, telegram
+	Target   string            `json:"target"`   // email address, webhook URL, telegram chat ID, etc.
 	Settings map[string]string `json:"settings"` // additional settings for the channel
 	Enabled  bool              `json:"enabled"`
 }

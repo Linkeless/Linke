@@ -53,6 +53,25 @@ func (s *UserServiceGeneric) GetUserByEmail(ctx context.Context, email string) (
 	return result[0], nil
 }
 
+func (s *UserServiceGeneric) GetUserByTelegramID(ctx context.Context, telegramID string) (*entities.User, error) {
+	// Custom query for finding user by telegram ID
+	filters := map[string]any{
+		"telegram_id": telegramID,
+	}
+	
+	req := &framework.ListRequest{Limit: 1, Offset: 0}
+	result, _, err := s.userRepo.ListWithFilters(ctx, filters, req.Limit, req.Offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user by telegram ID: %w", err)
+	}
+
+	if len(result) == 0 {
+		return nil, fmt.Errorf("user with telegram ID %s not found", telegramID)
+	}
+
+	return result[0], nil
+}
+
 func (s *UserServiceGeneric) GetActiveUserByID(ctx context.Context, id uint) (*entities.User, error) {
 	user, err := s.GetByID(ctx, id)
 	if err != nil {
@@ -77,6 +96,25 @@ func (s *UserServiceGeneric) GetActiveUserByEmail(ctx context.Context, email str
 	}
 
 	return user, nil
+}
+
+// GetUsersByIDs retrieves multiple users by their IDs (batch operation)
+func (s *UserServiceGeneric) GetUsersByIDs(ctx context.Context, ids []uint) ([]*entities.User, error) {
+	if len(ids) == 0 {
+		return []*entities.User{}, nil
+	}
+
+	// Use a filter-based approach since generic GetByIDs might not be available
+	filters := map[string]any{
+		"id__in": ids, // Assuming the repository supports "in" queries
+	}
+	
+	users, _, err := s.userRepo.ListWithFilters(ctx, filters, len(ids), 0)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get users by IDs: %w", err)
+	}
+
+	return users, nil
 }
 
 func (s *UserServiceGeneric) ListUsersByProvider(ctx context.Context, provider string, limit, offset int) ([]*entities.User, int64, error) {

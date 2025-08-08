@@ -16,6 +16,35 @@ import (
 	serverInterfaces "linke/internal/domains/server/usecases/interfaces"
 )
 
+// NotificationService defines the interface for notification services
+type NotificationService interface {
+	Send(ctx context.Context, req *NotificationRequest) ([]*NotificationResult, error)
+}
+
+// NotificationRequest represents a notification request
+type NotificationRequest struct {
+	UserID    uint              `json:"user_id"`
+	Email     string            `json:"email,omitempty"`
+	Phone     string            `json:"phone,omitempty"`
+	Channels  []string          `json:"channels"`
+	Subject   string            `json:"subject"`
+	Body      string            `json:"body"`
+	Template  string            `json:"template,omitempty"`
+	Variables map[string]string `json:"variables,omitempty"`
+	Priority  string            `json:"priority"`
+	EventType string            `json:"event_type"`
+	EventID   string            `json:"event_id"`
+}
+
+// NotificationResult represents the result of a notification
+type NotificationResult struct {
+	Channel   string `json:"channel"`
+	Success   bool   `json:"success"`
+	Error     string `json:"error,omitempty"`
+	MessageID string `json:"message_id,omitempty"`
+	SentAt    string `json:"sent_at,omitempty"`
+}
+
 // CrossDomainEventHandlers contains handlers for cross-domain event communication
 // This structure manages all cross-domain business flows through event-driven architecture
 type CrossDomainEventHandlers struct {
@@ -1514,15 +1543,17 @@ func (h *CrossDomainEventHandlers) RegisterCrossDomainHandlers(eventBus EventBus
 
 // NotificationHandler handles events that require user notifications
 type NotificationHandler struct {
-	logger logger.Logger
-	id     string
+	logger              logger.Logger
+	id                  string
+	notificationService NotificationService
 }
 
 // NewNotificationHandler creates a new notification handler
-func NewNotificationHandler() *NotificationHandler {
+func NewNotificationHandler(notificationService NotificationService) *NotificationHandler {
 	return &NotificationHandler{
-		logger: logger.GetGlobalLogger(),
-		id:     generateEventID(), // Generate unique ID for handler
+		logger:              logger.GetGlobalLogger(),
+		id:                  generateEventID(), // Generate unique ID for handler
+		notificationService: notificationService,
 	}
 }
 
@@ -1533,33 +1564,33 @@ func (h *NotificationHandler) Handle(ctx context.Context, event Event) error {
 		logger.String("event_id", event.EventID()),
 	)
 
-	// TODO: Integrate with actual notification service
-	// This is where you would:
-	// 1. Determine notification recipients
-	// 2. Choose notification channels (email, SMS, push)
-	// 3. Format notification content
-	// 4. Send notifications
-
-	switch event.EventType() {
-	case EventTypePaymentCompleted:
-		// Send payment confirmation
-		h.logger.Info("Would send payment confirmation notification")
-	case EventTypeSubscriptionExpired:
-		// Send expiry notification
-		h.logger.Info("Would send subscription expiry notification")
-	case EventTypeInvoiceOverdue:
-		// Send overdue notice
-		h.logger.Info("Would send invoice overdue notification")
-	case EventTypeOrderPaid:
-		// Send order confirmation
-		h.logger.Info("Would send order confirmation notification")
-	default:
-		h.logger.Debug("No notification required for event type",
+	// Check if notification service is available
+	if h.notificationService == nil {
+		h.logger.Warn("Notification service not available, skipping notification",
 			logger.String("event_type", event.EventType()),
-		)
+			logger.String("event_id", event.EventID()))
+		return nil
 	}
 
-	return nil
+	// Process different event types
+	switch event.EventType() {
+	case EventTypePaymentCompleted:
+		return h.handlePaymentCompleted(ctx, event)
+	case EventTypeSubscriptionExpired:
+		return h.handleSubscriptionExpired(ctx, event)
+	case EventTypeInvoiceOverdue:
+		return h.handleInvoiceOverdue(ctx, event)
+	case EventTypeOrderPaid:
+		return h.handleOrderPaid(ctx, event)
+	case EventTypeUserCreated:
+		return h.handleUserCreated(ctx, event)
+	case EventTypeSubscriptionActivated:
+		return h.handleSubscriptionActivated(ctx, event)
+	default:
+		h.logger.Debug("No notification handler for event type",
+			logger.String("event_type", event.EventType()))
+		return nil
+	}
 }
 
 // EventTypes returns the event types this handler processes
@@ -1577,4 +1608,247 @@ func (h *NotificationHandler) EventTypes() []string {
 // ID returns the unique identifier for this handler
 func (h *NotificationHandler) ID() string {
 	return h.id
+}
+
+// handlePaymentCompleted processes payment completed events
+func (h *NotificationHandler) handlePaymentCompleted(ctx context.Context, event Event) error {
+	h.logger.Info("Handling payment completed event", logger.String("event_id", event.EventID()))
+
+	// Extract user and payment information from event data
+	eventData, ok := event.EventData().(map[string]interface{})
+	if !ok {
+		h.logger.Warn("Invalid event data format", logger.String("event_id", event.EventID()))
+		return nil
+	}
+	userID, _ := eventData["user_id"].(float64) // JSON numbers come as float64
+	amount, _ := eventData["amount"].(float64)
+	currency, _ := eventData["currency"].(string)
+	orderID, _ := eventData["order_id"].(string)
+	userEmail, _ := eventData["user_email"].(string)
+
+	if userID == 0 || userEmail == "" {
+		h.logger.Warn("Missing required user information for payment notification",
+			logger.String("event_id", event.EventID()))
+		return nil
+	}
+
+	// Create notification request
+	req := &NotificationRequest{
+		UserID:    uint(userID),
+		Email:     userEmail,
+		Channels:  []string{"email"},
+		Subject:   "Payment Confirmation",
+		Template:  "payment_completed",
+		Variables: map[string]string{
+			"user_name": userEmail, // Use email as fallback for name
+			"amount":    fmt.Sprintf("%.2f", amount),
+			"currency":  currency,
+			"order_id":  orderID,
+		},
+		Priority:  "normal",
+		EventType: event.EventType(),
+		EventID:   event.EventID(),
+	}
+
+	// Send notification
+	results, err := h.notificationService.Send(ctx, req)
+	if err != nil {
+		h.logger.Error("Failed to send payment completed notification",
+			logger.String("event_id", event.EventID()),
+			logger.Error2("error", err))
+		return err
+	}
+
+	// Log results
+	for _, result := range results {
+		if result.Success {
+			h.logger.Info("Payment notification sent successfully",
+				logger.String("channel", result.Channel),
+				logger.String("message_id", result.MessageID))
+		} else {
+			h.logger.Error("Failed to send payment notification",
+				logger.String("channel", result.Channel),
+				logger.String("error", result.Error))
+		}
+	}
+
+	return nil
+}
+
+// handleSubscriptionExpired processes subscription expired events
+func (h *NotificationHandler) handleSubscriptionExpired(ctx context.Context, event Event) error {
+	h.logger.Info("Handling subscription expired event", logger.String("event_id", event.EventID()))
+
+	eventData, ok := event.EventData().(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	userID, _ := eventData["user_id"].(float64)
+	userEmail, _ := eventData["user_email"].(string)
+	subscriptionID, _ := eventData["subscription_id"].(float64)
+
+	if userID == 0 || userEmail == "" {
+		return nil
+	}
+
+	req := &NotificationRequest{
+		UserID:    uint(userID),
+		Email:     userEmail,
+		Channels:  []string{"email"},
+		Subject:   "Subscription Expired",
+		Template:  "subscription_expired",
+		Variables: map[string]string{
+			"user_name":       userEmail,
+			"subscription_id": fmt.Sprintf("%.0f", subscriptionID),
+		},
+		Priority:  "high",
+		EventType: event.EventType(),
+		EventID:   event.EventID(),
+	}
+
+	_, err := h.notificationService.Send(ctx, req)
+	return err
+}
+
+// handleInvoiceOverdue processes invoice overdue events
+func (h *NotificationHandler) handleInvoiceOverdue(ctx context.Context, event Event) error {
+	h.logger.Info("Handling invoice overdue event", logger.String("event_id", event.EventID()))
+
+	eventData, ok := event.EventData().(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	userID, _ := eventData["user_id"].(float64)
+	userEmail, _ := eventData["user_email"].(string)
+	invoiceID, _ := eventData["invoice_id"].(string)
+
+	if userID == 0 || userEmail == "" {
+		return nil
+	}
+
+	req := &NotificationRequest{
+		UserID:    uint(userID),
+		Email:     userEmail,
+		Channels:  []string{"email"},
+		Subject:   "Invoice Overdue Notice",
+		Template:  "invoice_overdue",
+		Variables: map[string]string{
+			"user_name":  userEmail,
+			"invoice_id": invoiceID,
+		},
+		Priority:  "high",
+		EventType: event.EventType(),
+		EventID:   event.EventID(),
+	}
+
+	_, err := h.notificationService.Send(ctx, req)
+	return err
+}
+
+// handleOrderPaid processes order paid events
+func (h *NotificationHandler) handleOrderPaid(ctx context.Context, event Event) error {
+	h.logger.Info("Handling order paid event", logger.String("event_id", event.EventID()))
+
+	eventData, ok := event.EventData().(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	userID, _ := eventData["user_id"].(float64)
+	userEmail, _ := eventData["user_email"].(string)
+	orderID, _ := eventData["order_id"].(string)
+
+	if userID == 0 || userEmail == "" {
+		return nil
+	}
+
+	req := &NotificationRequest{
+		UserID:    uint(userID),
+		Email:     userEmail,
+		Channels:  []string{"email"},
+		Subject:   "Order Confirmation",
+		Template:  "order_paid",
+		Variables: map[string]string{
+			"user_name": userEmail,
+			"order_id":  orderID,
+		},
+		Priority:  "normal",
+		EventType: event.EventType(),
+		EventID:   event.EventID(),
+	}
+
+	_, err := h.notificationService.Send(ctx, req)
+	return err
+}
+
+// handleUserCreated processes user created events
+func (h *NotificationHandler) handleUserCreated(ctx context.Context, event Event) error {
+	h.logger.Info("Handling user created event", logger.String("event_id", event.EventID()))
+
+	eventData, ok := event.EventData().(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	userID, _ := eventData["user_id"].(float64)
+	userEmail, _ := eventData["user_email"].(string)
+	userName, _ := eventData["user_name"].(string)
+
+	if userID == 0 || userEmail == "" {
+		return nil
+	}
+
+	if userName == "" {
+		userName = userEmail
+	}
+
+	req := &NotificationRequest{
+		UserID:    uint(userID),
+		Email:     userEmail,
+		Channels:  []string{"email"},
+		Subject:   "Welcome to Linke!",
+		Template:  "user_created",
+		Variables: map[string]string{
+			"user_name": userName,
+		},
+		Priority:  "normal",
+		EventType: event.EventType(),
+		EventID:   event.EventID(),
+	}
+
+	_, err := h.notificationService.Send(ctx, req)
+	return err
+}
+
+// handleSubscriptionActivated processes subscription activated events
+func (h *NotificationHandler) handleSubscriptionActivated(ctx context.Context, event Event) error {
+	h.logger.Info("Handling subscription activated event", logger.String("event_id", event.EventID()))
+
+	eventData, ok := event.EventData().(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	userID, _ := eventData["user_id"].(float64)
+	userEmail, _ := eventData["user_email"].(string)
+	planName, _ := eventData["plan_name"].(string)
+
+	if userID == 0 || userEmail == "" {
+		return nil
+	}
+
+	req := &NotificationRequest{
+		UserID:    uint(userID),
+		Email:     userEmail,
+		Channels:  []string{"email"},
+		Subject:   "Subscription Activated",
+		Template:  "subscription_activated",
+		Variables: map[string]string{
+			"user_name": userEmail,
+			"plan_name": planName,
+		},
+		Priority:  "normal",
+		EventType: event.EventType(),
+		EventID:   event.EventID(),
+	}
+
+	_, err := h.notificationService.Send(ctx, req)
+	return err
 }

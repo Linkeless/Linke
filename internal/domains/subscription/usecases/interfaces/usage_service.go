@@ -290,27 +290,27 @@ type RealTimeUsageResponse struct {
 
 // RealTimeUsageData represents real-time usage data for a specific type
 type RealTimeUsageData struct {
-	UsageType         string        `json:"usage_type"`
-	CurrentUsage      int64         `json:"current_usage"`
-	UsageLimit        int64         `json:"usage_limit"`
-	UsagePercent      float64       `json:"usage_percent"`
-	RemainingUsage    int64         `json:"remaining_usage"`
-	RecentUsage       int64         `json:"recent_usage"`        // Usage in last hour
-	UsageRate         float64       `json:"usage_rate"`          // Usage per hour
-	EstimatedTimeLeft string        `json:"estimated_time_left" swaggertype:"string"` // Time until limit reached (as string)
-	LastUpdated       time.Time     `json:"last_updated"`
-	TrendDirection    string        `json:"trend_direction"`
-	IsNearLimit       bool          `json:"is_near_limit"`
-	IsExceeded        bool          `json:"is_exceeded"`
+	UsageType         string    `json:"usage_type"`
+	CurrentUsage      int64     `json:"current_usage"`
+	UsageLimit        int64     `json:"usage_limit"`
+	UsagePercent      float64   `json:"usage_percent"`
+	RemainingUsage    int64     `json:"remaining_usage"`
+	RecentUsage       int64     `json:"recent_usage"`                             // Usage in last hour
+	UsageRate         float64   `json:"usage_rate"`                               // Usage per hour
+	EstimatedTimeLeft string    `json:"estimated_time_left" swaggertype:"string"` // Time until limit reached (as string)
+	LastUpdated       time.Time `json:"last_updated"`
+	TrendDirection    string    `json:"trend_direction"`
+	IsNearLimit       bool      `json:"is_near_limit"`
+	IsExceeded        bool      `json:"is_exceeded"`
 }
 
 // CleanupResult represents the result of cleanup operations
 type CleanupResult struct {
-	RecordsDeleted int64         `json:"records_deleted"`
-	AlertsDeleted  int64         `json:"alerts_deleted"`
-	SpaceFreed     int64         `json:"space_freed"` // in bytes
-	OperationTime  string        `json:"operation_time" swaggertype:"string"`
-	CompletedAt    time.Time     `json:"completed_at"`
+	RecordsDeleted int64     `json:"records_deleted"`
+	AlertsDeleted  int64     `json:"alerts_deleted"`
+	SpaceFreed     int64     `json:"space_freed"` // in bytes
+	OperationTime  string    `json:"operation_time" swaggertype:"string"`
+	CompletedAt    time.Time `json:"completed_at"`
 }
 
 // PaginationInfo represents pagination information

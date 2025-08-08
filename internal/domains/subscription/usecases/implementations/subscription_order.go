@@ -1482,18 +1482,43 @@ func (sos *SubscriptionOrderService) checkDuplicateOrders(ctx context.Context, u
 		return fmt.Errorf("too many recent order attempts, please wait a few minutes before trying again")
 	}
 
-	// SECURITY: For new subscriptions, check if user already has active subscription
+	// BUSINESS LOGIC: For new subscriptions, check plan-specific subscription limits
 	if orderType == entities.OrderTypeNew {
-		var activeCount int64
-		if err := sos.db.WithContext(ctx).Model(&entities.UserSubscription{}).
-			Where("user_id = ? AND subscription_plan_id = ? AND status IN (?)",
-				userID, planID, []string{entities.UserSubscriptionStatusActive, entities.UserSubscriptionStatusTrial}).
-			Count(&activeCount).Error; err != nil {
-			return fmt.Errorf("failed to check active subscriptions: %w", err)
+		// Get subscription plan to check its limits configuration
+		plan, err := sos.subscriptionPlanService.GetSubscriptionPlan(ctx, planID)
+		if err != nil {
+			return fmt.Errorf("failed to get subscription plan: %w", err)
 		}
 
-		if activeCount > 0 {
-			return fmt.Errorf("you already have an active subscription for this plan")
+		// Check if the plan allows multiple active subscriptions
+		if !plan.AllowsMultipleActiveSubscriptions() {
+			var activeCount int64
+			if err := sos.db.WithContext(ctx).Model(&entities.UserSubscription{}).
+				Where("user_id = ? AND subscription_plan_id = ? AND status IN (?)",
+					userID, planID, []string{entities.UserSubscriptionStatusActive, entities.UserSubscriptionStatusTrial}).
+				Count(&activeCount).Error; err != nil {
+				return fmt.Errorf("failed to check active subscriptions: %w", err)
+			}
+
+			if activeCount > 0 {
+				return fmt.Errorf("you already have an active subscription for this plan")
+			}
+		} else {
+			// If plan allows multiple subscriptions, check if user has reached the maximum limit
+			maxActiveSubscriptions := plan.GetMaxActiveSubscriptions()
+			if maxActiveSubscriptions > 0 { // 0 means unlimited
+				var activeCount int64
+				if err := sos.db.WithContext(ctx).Model(&entities.UserSubscription{}).
+					Where("user_id = ? AND subscription_plan_id = ? AND status IN (?)",
+						userID, planID, []string{entities.UserSubscriptionStatusActive, entities.UserSubscriptionStatusTrial}).
+					Count(&activeCount).Error; err != nil {
+					return fmt.Errorf("failed to check active subscriptions: %w", err)
+				}
+
+				if activeCount >= int64(maxActiveSubscriptions) {
+					return fmt.Errorf("you have reached the maximum number of active subscriptions (%d) for this plan", maxActiveSubscriptions)
+				}
+			}
 		}
 	}
 

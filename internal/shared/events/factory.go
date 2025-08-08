@@ -1,6 +1,7 @@
 package events
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -10,6 +11,30 @@ import (
 
 	"gorm.io/gorm"
 )
+
+// MockNotificationService provides a simple mock implementation for development
+type MockNotificationService struct{}
+
+// Send implements the NotificationService interface with basic logging
+func (m *MockNotificationService) Send(ctx context.Context, req *NotificationRequest) ([]*NotificationResult, error) {
+	logger.Debug("Mock notification sent",
+		logger.Uint("user_id", req.UserID),
+		logger.String("subject", req.Subject),
+		logger.Any("channels", req.Channels))
+	
+	// Return mock success results for all channels
+	results := make([]*NotificationResult, len(req.Channels))
+	for i, channel := range req.Channels {
+		results[i] = &NotificationResult{
+			Channel:   channel,
+			Success:   true,
+			MessageID: fmt.Sprintf("mock-%d-%s", req.UserID, channel),
+			SentAt:    time.Now().Format(time.RFC3339),
+		}
+	}
+	
+	return results, nil
+}
 
 // EventSystemConfig contains configuration for the entire event system
 type EventSystemConfig struct {
@@ -195,8 +220,10 @@ func (f *EventSystemFactory) CreateEventSystem(db *gorm.DB, taskQueue *queue.Tas
 	// Create cross-domain handlers - skip for now, will be created via dependency injection
 	components.CrossDomainHandlers = nil // NewCrossDomainEventHandlers requires service dependencies
 
-	// Create notification handler
-	components.NotificationHandler = NewNotificationHandler()
+	// Create notification handler with mock service for development
+	// Note: In production, this should be injected via dependency injection
+	mockNotificationService := &MockNotificationService{}
+	components.NotificationHandler = NewNotificationHandler(mockNotificationService)
 
 	f.logger.Info("Event system created successfully",
 		logger.Any("components", map[string]bool{

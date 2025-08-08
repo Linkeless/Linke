@@ -23,6 +23,7 @@ type Config struct {
 	Payment    PaymentSecurityConfig
 	Cache      CacheConfig
 	Versioning VersioningConfig
+	Telegram   TelegramConfig
 }
 
 type ServerConfig struct {
@@ -130,6 +131,17 @@ type VersioningConfig struct {
 
 	// SunsetV1Date is the sunset date for version 1 (ISO 8601 format)
 	SunsetV1Date string `json:"sunset_v1_date"`
+}
+
+type TelegramConfig struct {
+	// AdminChatIDs is a comma-separated list of Telegram chat IDs for admin notifications
+	AdminChatIDs string `json:"admin_chat_ids"`
+	
+	// SupportGroupID is the Telegram group ID for support tickets
+	SupportGroupID string `json:"support_group_id"`
+	
+	// EnableTicketNotifications enables ticket notifications via Telegram
+	EnableTicketNotifications bool `json:"enable_ticket_notifications"`
 }
 
 func LoadConfig() *Config {
@@ -247,6 +259,11 @@ func LoadConfig() *Config {
 			EnableDeprecationHeaders: getEnvBool("API_ENABLE_DEPRECATION_HEADERS", true),
 			EnableAutoMigration:      getEnvBool("API_ENABLE_AUTO_MIGRATION", false),
 			SunsetV1Date:             getEnv("API_SUNSET_V1_DATE", "2025-12-31T23:59:59Z"),
+		},
+		Telegram: TelegramConfig{
+			AdminChatIDs:              getEnv("TELEGRAM_ADMIN_CHAT_IDS", ""),
+			SupportGroupID:            getEnv("TELEGRAM_SUPPORT_GROUP_ID", ""),
+			EnableTicketNotifications: getEnvBool("TELEGRAM_ENABLE_TICKET_NOTIFICATIONS", true),
 		},
 	}
 }

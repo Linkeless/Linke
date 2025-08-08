@@ -17,8 +17,12 @@ type UserService interface {
 
 	// Domain-specific user operations
 	GetUserByEmail(ctx context.Context, email string) (*entities.User, error)
+	GetUserByTelegramID(ctx context.Context, telegramID string) (*entities.User, error)
 	GetActiveUserByID(ctx context.Context, id uint) (*entities.User, error)
 	GetActiveUserByEmail(ctx context.Context, email string) (*entities.User, error)
+	
+	// Batch operations for performance
+	GetUsersByIDs(ctx context.Context, ids []uint) ([]*entities.User, error)
 
 	// Soft delete operations
 	SoftDeleteUser(ctx context.Context, id uint) error

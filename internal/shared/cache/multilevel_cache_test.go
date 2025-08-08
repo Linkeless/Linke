@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/zap"
-	"linke/internal/shared/events"
 	"linke/internal/shared/logger"
 )
 
@@ -485,8 +484,14 @@ func TestEventDrivenInvalidation(t *testing.T) {
 
 		invalidator := NewEventDrivenInvalidator(mockCache, cacheKeys, config, logger)
 
-		// Create a user event using the real events package
-		userEvent := events.NewUserEvent(events.EventTypeUserUpdated, 123, nil)
+		// Create a user event using cache package's own event interface
+		userEvent := &UserCacheEvent{
+			ID:     "test_event_123",
+			Type:   "user.updated",
+			UserID: 123,
+			Time:   time.Now(),
+			Data:   map[string]any{"updated_field": "value"},
+		}
 
 		ctx := context.Background()
 

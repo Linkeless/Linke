@@ -9562,6 +9562,94 @@
                 }
             }
         },
+        "/admin/subscriptions/users/{id}/downgrade": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Downgrade a user's subscription to a lower plan (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Subscription-Management"
+                ],
+                "summary": "Downgrade user subscription",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Downgrade request",
+                        "name": "downgrade",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.DowngradeSubscriptionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/entities.UserSubscriptionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/admin/subscriptions/users/{id}/extend": {
             "post": {
                 "security": [
@@ -9859,6 +9947,94 @@
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/interfaces.ResumeSubscriptionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/entities.UserSubscriptionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/subscriptions/users/{id}/upgrade": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Upgrade a user's subscription to a higher plan (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Subscription-Management"
+                ],
+                "summary": "Upgrade user subscription",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Upgrade request",
+                        "name": "upgrade",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/interfaces.UpgradeSubscriptionRequest"
                         }
                     }
                 ],
@@ -13124,6 +13300,164 @@
                 }
             }
         },
+        "/api/v1/notifications/analytics": {
+            "get": {
+                "description": "Get analytics and statistics for notifications within a time range",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notifications",
+                    "tracking",
+                    "analytics"
+                ],
+                "summary": "Get notification analytics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "\"24h ago\"",
+                        "description": "Start date (RFC3339 format)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"now\"",
+                        "description": "End date (RFC3339 format)",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated user IDs to filter by",
+                        "name": "user_ids",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated event types to filter by",
+                        "name": "event_types",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated channels to filter by",
+                        "name": "channels",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated statuses to filter by",
+                        "name": "statuses",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/notification.NotificationAnalytics"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notifications/status/summary": {
+            "get": {
+                "description": "Get a summary of notification statuses for the current user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notifications",
+                    "tracking"
+                ],
+                "summary": "Get notification status summary",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/notification.NotificationStatusSummary"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notifications/{request_id}/status": {
+            "get": {
+                "description": "Get detailed status information for a specific notification",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notifications",
+                    "tracking"
+                ],
+                "summary": "Get notification status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Notification Request ID",
+                        "name": "request_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/notification.NotificationTrackingInfo"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/tickets": {
             "post": {
                 "security": [
@@ -13611,6 +13945,65 @@
                         "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/{user_id}/notifications/history": {
+            "get": {
+                "description": "Get notification history for a specific user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notifications",
+                    "tracking",
+                    "users"
+                ],
+                "summary": "Get user notification history",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Number of notifications to return",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by event type",
+                        "name": "event_type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/notification.UserNotificationHistoryResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "500": {
@@ -21633,11 +22026,11 @@
                     }
                 },
                 "target": {
-                    "description": "email address, webhook URL, etc.",
+                    "description": "email address, webhook URL, telegram chat ID, etc.",
                     "type": "string"
                 },
                 "type": {
-                    "description": "email, webhook, in_app, sms",
+                    "description": "email, webhook, in_app, sms, telegram",
                     "type": "string"
                 }
             }
@@ -27161,6 +27554,38 @@
                 }
             }
         },
+        "interfaces.DowngradeSubscriptionRequest": {
+            "type": "object",
+            "required": [
+                "new_subscription_plan_id",
+                "subscription_id"
+            ],
+            "properties": {
+                "apply_at_period_end": {
+                    "description": "Whether to apply change at current period end",
+                    "type": "boolean",
+                    "example": true
+                },
+                "effective_date": {
+                    "description": "When to apply the change, empty means end of current period",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "new_subscription_plan_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "reason": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "User requested downgrade"
+                },
+                "subscription_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
         "interfaces.ExportUsageRequest": {
             "type": "object",
             "properties": {
@@ -28107,6 +28532,38 @@
                 }
             }
         },
+        "interfaces.UpgradeSubscriptionRequest": {
+            "type": "object",
+            "required": [
+                "new_subscription_plan_id",
+                "subscription_id"
+            ],
+            "properties": {
+                "effective_date": {
+                    "description": "When to apply the change, empty means immediate",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "new_subscription_plan_id": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "pro_rate_charges": {
+                    "description": "Whether to calculate pro-rated charges",
+                    "type": "boolean",
+                    "example": true
+                },
+                "reason": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "User requested upgrade"
+                },
+                "subscription_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
         "interfaces.UsageAnomaly": {
             "type": "object",
             "properties": {
@@ -28331,6 +28788,400 @@
                 "valid": {
                     "type": "boolean",
                     "example": true
+                }
+            }
+        },
+        "notification.ChannelAnalytics": {
+            "type": "object",
+            "properties": {
+                "average_delivery_time": {
+                    "type": "string"
+                },
+                "channel": {
+                    "$ref": "#/definitions/notification.NotificationChannel"
+                },
+                "failed": {
+                    "type": "integer"
+                },
+                "success_rate": {
+                    "type": "number"
+                },
+                "successful": {
+                    "type": "integer"
+                },
+                "top_failure_reasons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/notification.FailureReason"
+                    }
+                },
+                "total_sent": {
+                    "type": "integer"
+                }
+            }
+        },
+        "notification.DeliveryAttempt": {
+            "type": "object",
+            "properties": {
+                "attempt_number": {
+                    "type": "integer"
+                },
+                "channel": {
+                    "$ref": "#/definitions/notification.NotificationChannel"
+                },
+                "completed_at": {
+                    "type": "string"
+                },
+                "duration": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "provider_response": {
+                    "$ref": "#/definitions/notification.ProviderResponse"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/notification.NotificationStatus"
+                }
+            }
+        },
+        "notification.EventTypeAnalytics": {
+            "type": "object",
+            "properties": {
+                "average_delivery_time": {
+                    "type": "string"
+                },
+                "event_type": {
+                    "type": "string"
+                },
+                "preferred_channels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/notification.NotificationChannel"
+                    }
+                },
+                "success_rate": {
+                    "type": "number"
+                },
+                "total_notifications": {
+                    "type": "integer"
+                }
+            }
+        },
+        "notification.FailureReason": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "notification.HourlyStats": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "hour": {
+                    "type": "integer"
+                },
+                "success_rate": {
+                    "type": "number"
+                }
+            }
+        },
+        "notification.NotificationAnalytics": {
+            "type": "object",
+            "properties": {
+                "average_delivery_time": {
+                    "type": "string"
+                },
+                "channel_stats": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/notification.ChannelAnalytics"
+                    }
+                },
+                "event_type_stats": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/notification.EventTypeAnalytics"
+                    }
+                },
+                "generated_at": {
+                    "type": "string"
+                },
+                "hourly_distribution": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/notification.HourlyStats"
+                    }
+                },
+                "success_rate": {
+                    "type": "number"
+                },
+                "time_range": {
+                    "$ref": "#/definitions/notification.TimeRange"
+                },
+                "top_failure_reasons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/notification.FailureReason"
+                    }
+                },
+                "total_notifications": {
+                    "type": "integer"
+                }
+            }
+        },
+        "notification.NotificationChannel": {
+            "type": "string",
+            "enum": [
+                "email",
+                "sms",
+                "push",
+                "slack",
+                "telegram"
+            ],
+            "x-enum-varnames": [
+                "ChannelEmail",
+                "ChannelSMS",
+                "ChannelPush",
+                "ChannelSlack",
+                "ChannelTelegram"
+            ]
+        },
+        "notification.NotificationPriority": {
+            "type": "integer",
+            "enum": [
+                0,
+                1,
+                2,
+                3
+            ],
+            "x-enum-varnames": [
+                "PriorityLow",
+                "PriorityNormal",
+                "PriorityHigh",
+                "PriorityUrgent"
+            ]
+        },
+        "notification.NotificationStatus": {
+            "type": "integer",
+            "enum": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+            ],
+            "x-enum-varnames": [
+                "StatusPending",
+                "StatusSending",
+                "StatusSent",
+                "StatusDelivered",
+                "StatusFailed",
+                "StatusRetrying",
+                "StatusExpired",
+                "StatusCancelled"
+            ]
+        },
+        "notification.NotificationStatusSummary": {
+            "type": "object",
+            "properties": {
+                "failed_notifications": {
+                    "type": "integer"
+                },
+                "last_updated": {
+                    "type": "string"
+                },
+                "pending_notifications": {
+                    "type": "integer"
+                },
+                "recent_activity": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/notification.RecentNotificationActivity"
+                    }
+                },
+                "retrying_notifications": {
+                    "type": "integer"
+                },
+                "sent_notifications": {
+                    "type": "integer"
+                },
+                "total_notifications": {
+                    "type": "integer"
+                }
+            }
+        },
+        "notification.NotificationTrackingInfo": {
+            "type": "object",
+            "properties": {
+                "channel_attempts": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/notification.DeliveryAttempt"
+                        }
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "event_id": {
+                    "type": "string"
+                },
+                "event_type": {
+                    "type": "string"
+                },
+                "expires_at": {
+                    "type": "string"
+                },
+                "failed_channels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/notification.NotificationChannel"
+                    }
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "overall_status": {
+                    "$ref": "#/definitions/notification.NotificationStatus"
+                },
+                "priority": {
+                    "$ref": "#/definitions/notification.NotificationPriority"
+                },
+                "request_id": {
+                    "type": "string"
+                },
+                "retrying_channels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/notification.NotificationChannel"
+                    }
+                },
+                "successful_channels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/notification.NotificationChannel"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "total_attempts": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "notification.ProviderResponse": {
+            "type": "object",
+            "properties": {
+                "delivery_info": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "headers": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "message_id": {
+                    "type": "string"
+                },
+                "provider_id": {
+                    "type": "string"
+                },
+                "response_body": {
+                    "type": "string"
+                },
+                "status_code": {
+                    "type": "integer"
+                }
+            }
+        },
+        "notification.RecentNotificationActivity": {
+            "type": "object",
+            "properties": {
+                "channel": {
+                    "$ref": "#/definitions/notification.NotificationChannel"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "event_type": {
+                    "type": "string"
+                },
+                "request_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/notification.NotificationStatus"
+                },
+                "timestamp": {
+                    "type": "string"
+                }
+            }
+        },
+        "notification.TimeRange": {
+            "type": "object",
+            "properties": {
+                "end": {
+                    "type": "string"
+                },
+                "start": {
+                    "type": "string"
+                }
+            }
+        },
+        "notification.UserNotificationHistoryResponse": {
+            "type": "object",
+            "properties": {
+                "event_type": {
+                    "type": "string"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "notifications": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/notification.NotificationTrackingInfo"
+                    }
+                },
+                "retrieved_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
                 }
             }
         },

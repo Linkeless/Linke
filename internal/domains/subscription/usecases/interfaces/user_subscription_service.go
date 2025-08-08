@@ -25,8 +25,15 @@ type UserSubscriptionService interface {
 	PauseUserSubscription(ctx context.Context, subscriptionID uint, req *PauseSubscriptionRequest, adminUserID uint) (*entities.UserSubscription, error)
 	ResumeUserSubscription(ctx context.Context, subscriptionID uint, req *ResumeSubscriptionRequest, adminUserID uint) (*entities.UserSubscription, error)
 
+	// Subscription upgrade/downgrade - Unified method for better maintainability
+	ProcessSubscriptionChange(ctx context.Context, subscriptionID uint, newPlanID uint, changeType string) (*entities.UserSubscription, error)
+	// Convenience methods that delegate to ProcessSubscriptionChange
+	UpgradeUserSubscription(ctx context.Context, req *UpgradeSubscriptionRequest) (*entities.UserSubscription, error)
+	DowngradeUserSubscription(ctx context.Context, req *DowngradeSubscriptionRequest) (*entities.UserSubscription, error)
+
 	// Traffic and usage management
 	UpdateTrafficUsage(ctx context.Context, subscriptionID uint, usedBytes int64) error
+	// ResetTrafficUsage resets traffic usage for a subscription - unified signature
 	ResetTrafficUsage(ctx context.Context, subscriptionID uint, adminUserID uint) (*entities.UserSubscription, error)
 	GetSubscriptionTrafficStats(ctx context.Context, subscriptionID uint) (map[string]any, error)
 
@@ -80,4 +87,22 @@ type PauseSubscriptionRequest struct {
 // ResumeSubscriptionRequest represents the request to resume a user subscription
 type ResumeSubscriptionRequest struct {
 	AdjustBillingDate bool `json:"adjust_billing_date,omitempty" example:"true"` // Whether to adjust billing dates based on pause duration
+}
+
+// UpgradeSubscriptionRequest represents the request to upgrade a user subscription
+type UpgradeSubscriptionRequest struct {
+	SubscriptionID        uint   `json:"subscription_id" binding:"required" example:"1"`
+	NewSubscriptionPlanID uint   `json:"new_subscription_plan_id" binding:"required" example:"2"`
+	EffectiveDate         string `json:"effective_date,omitempty" example:"2024-01-01T00:00:00Z"` // When to apply the change, empty means immediate
+	ProRateCharges        bool   `json:"pro_rate_charges,omitempty" example:"true"`               // Whether to calculate pro-rated charges
+	Reason                string `json:"reason,omitempty" binding:"max=255" example:"User requested upgrade"`
+}
+
+// DowngradeSubscriptionRequest represents the request to downgrade a user subscription
+type DowngradeSubscriptionRequest struct {
+	SubscriptionID        uint   `json:"subscription_id" binding:"required" example:"1"`
+	NewSubscriptionPlanID uint   `json:"new_subscription_plan_id" binding:"required" example:"1"`
+	EffectiveDate         string `json:"effective_date,omitempty" example:"2024-01-01T00:00:00Z"` // When to apply the change, empty means end of current period
+	ApplyAtPeriodEnd      bool   `json:"apply_at_period_end,omitempty" example:"true"`            // Whether to apply change at current period end
+	Reason                string `json:"reason,omitempty" binding:"max=255" example:"User requested downgrade"`
 }

@@ -12,7 +12,7 @@ import (
 type UserSubscriptionRepository interface {
 	framework.UserScopedRepository[entities.UserSubscription, uint]
 	framework.TimeBasedRepository[entities.UserSubscription, uint]
-	
+
 	// Subscription-specific query methods
 	GetByUUID(ctx context.Context, uuid string) (*entities.UserSubscription, error)
 	GetActiveByUser(ctx context.Context, userID uint) ([]*entities.UserSubscription, error)
@@ -97,7 +97,7 @@ type UserSubscriptionRepository interface {
 	GetChurnRate(ctx context.Context, period time.Duration) (float64, error)
 	GetRetentionRate(ctx context.Context, period time.Duration) (float64, error)
 
-	// Subscription-specific existence checks (extending base existence checks)  
+	// Subscription-specific existence checks (extending base existence checks)
 	ExistsByUUID(ctx context.Context, uuid string) (bool, error)
 	UserHasActiveSubscription(ctx context.Context, userID uint) (bool, error)
 	UserHasSubscriptionToPlan(ctx context.Context, userID, planID uint) (bool, error)
