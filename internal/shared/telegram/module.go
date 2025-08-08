@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"linke/internal/domains/subscription/usecases/interfaces"
+	ticketInterfaces "linke/internal/domains/ticket/usecases/interfaces"
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/shared/config"
 	"linke/internal/shared/events"
@@ -14,11 +15,23 @@ import (
 
 // Module provides the Telegram bot functionality
 var Module = fx.Module("telegram",
-	fx.Provide(NewBotEnhanced),
+	fx.Provide(NewBotEnhancedForFx),
 	fx.Provide(NewTicketEventHandler),
 	fx.Invoke(RegisterBot),
 	fx.Invoke(RegisterTicketEventHandler),
 )
+
+// NewBotEnhancedForFx creates a new BotEnhanced with fx dependency injection
+func NewBotEnhancedForFx(params BotParams) (*BotEnhanced, error) {
+	return NewBotEnhanced(
+		params.Config,
+		params.UserService,
+		params.SubscriptionService,
+		params.SubscriptionPlanService,
+		params.TicketService,
+		params.TicketMessageService,
+	)
+}
 
 // BotParams contains the dependencies for the Telegram bot
 type BotParams struct {
@@ -27,6 +40,8 @@ type BotParams struct {
 	UserService            userInterfaces.UserService
 	SubscriptionService    interfaces.UserSubscriptionService
 	SubscriptionPlanService interfaces.SubscriptionPlanService
+	TicketService          ticketInterfaces.TicketService          `optional:"true"`
+	TicketMessageService   ticketInterfaces.TicketMessageService   `optional:"true"`
 }
 
 // BotResult is the result of creating a bot

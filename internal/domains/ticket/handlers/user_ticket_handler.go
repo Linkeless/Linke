@@ -64,7 +64,7 @@ func NewUserTicketHandler(
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /api/v1/tickets [post]
+// @Router /tickets [post]
 func (h *UserTicketHandler) CreateTicket(c *gin.Context) {
 	// Get current user from context
 	user, ok := handlers.GetCurrentUser(c)
@@ -128,7 +128,7 @@ func (h *UserTicketHandler) CreateTicket(c *gin.Context) {
 // @Success 200 {object} response.StandardListResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /api/v1/tickets/my [get]
+// @Router /tickets/my [get]
 func (h *UserTicketHandler) GetMyTickets(c *gin.Context) {
 	// Get current user from context
 	user, ok := handlers.GetCurrentUser(c)
@@ -188,7 +188,7 @@ func (h *UserTicketHandler) GetMyTickets(c *gin.Context) {
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 404 {object} response.NotFoundResponse
-// @Router /api/v1/tickets/{id} [get]
+// @Router /tickets/{id} [get]
 func (h *UserTicketHandler) GetTicket(c *gin.Context) {
 	// Get current user from context
 	user, ok := handlers.GetCurrentUser(c)
@@ -242,7 +242,7 @@ func (h *UserTicketHandler) GetTicket(c *gin.Context) {
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /api/v1/tickets/{id}/close [put]
+// @Router /tickets/{id}/close [put]
 func (h *UserTicketHandler) CloseTicket(c *gin.Context) {
 	// Get current user from context
 	user, ok := handlers.GetCurrentUser(c)
@@ -332,7 +332,7 @@ func (h *UserTicketHandler) CloseTicket(c *gin.Context) {
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 404 {object} response.NotFoundResponse
-// @Router /api/v1/tickets/{id}/messages [get]
+// @Router /tickets/{id}/messages [get]
 func (h *UserTicketHandler) GetTicketMessages(c *gin.Context) {
 	// Get current user from context
 	user, ok := handlers.GetCurrentUser(c)
@@ -419,7 +419,7 @@ func (h *UserTicketHandler) GetTicketMessages(c *gin.Context) {
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /api/v1/tickets/{id}/messages [post]
+// @Router /tickets/{id}/messages [post]
 func (h *UserTicketHandler) AddMessage(c *gin.Context) {
 	// Get current user from context
 	user, ok := handlers.GetCurrentUser(c)

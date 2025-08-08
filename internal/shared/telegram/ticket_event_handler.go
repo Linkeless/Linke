@@ -189,8 +189,24 @@ func (h *TicketEventHandler) parseEventToNotification(event events.Event) (*Tick
 	}
 	
 	// Fill notification fields from event data
-	if ticketID, ok := eventData["ticket_id"].(float64); ok {
-		notification.TicketID = uint(ticketID)
+	// Handle ticket_id with multiple possible types (uint, int, float64)
+	if ticketIDVal, ok := eventData["ticket_id"]; ok {
+		switch v := ticketIDVal.(type) {
+		case uint:
+			notification.TicketID = v
+		case int:
+			notification.TicketID = uint(v)
+		case float64:
+			notification.TicketID = uint(v)
+		case int64:
+			notification.TicketID = uint(v)
+		case uint64:
+			notification.TicketID = uint(v)
+		default:
+			logger.Warn("Unexpected ticket_id type",
+				logger.String("type", fmt.Sprintf("%T", v)),
+				logger.Any("value", v))
+		}
 	}
 	
 	if ticketNo, ok := eventData["ticket_no"].(string); ok {
@@ -221,24 +237,60 @@ func (h *TicketEventHandler) parseEventToNotification(event events.Event) (*Tick
 		notification.OldStatus = oldStatus
 	}
 	
-	if userID, ok := eventData["user_id"].(float64); ok {
-		notification.UserID = uint(userID)
+	// Handle user_id with multiple possible types
+	if userIDVal, ok := eventData["user_id"]; ok {
+		switch v := userIDVal.(type) {
+		case uint:
+			notification.UserID = v
+		case int:
+			notification.UserID = uint(v)
+		case float64:
+			notification.UserID = uint(v)
+		case int64:
+			notification.UserID = uint(v)
+		case uint64:
+			notification.UserID = uint(v)
+		}
 	}
 	
 	if userName, ok := eventData["user_name"].(string); ok {
 		notification.UserName = userName
 	}
 	
-	if assignedToID, ok := eventData["assigned_to_id"].(float64); ok {
-		notification.AssignedToID = uint(assignedToID)
+	// Handle assigned_to_id with multiple possible types
+	if assignedToIDVal, ok := eventData["assigned_to_id"]; ok {
+		switch v := assignedToIDVal.(type) {
+		case uint:
+			notification.AssignedToID = v
+		case int:
+			notification.AssignedToID = uint(v)
+		case float64:
+			notification.AssignedToID = uint(v)
+		case int64:
+			notification.AssignedToID = uint(v)
+		case uint64:
+			notification.AssignedToID = uint(v)
+		}
 	}
 	
 	if assignedToName, ok := eventData["assigned_to_name"].(string); ok {
 		notification.AssignedToName = assignedToName
 	}
 	
-	if repliedByID, ok := eventData["replied_by_id"].(float64); ok {
-		notification.RepliedByID = uint(repliedByID)
+	// Handle replied_by_id with multiple possible types
+	if repliedByIDVal, ok := eventData["replied_by_id"]; ok {
+		switch v := repliedByIDVal.(type) {
+		case uint:
+			notification.RepliedByID = v
+		case int:
+			notification.RepliedByID = uint(v)
+		case float64:
+			notification.RepliedByID = uint(v)
+		case int64:
+			notification.RepliedByID = uint(v)
+		case uint64:
+			notification.RepliedByID = uint(v)
+		}
 	}
 	
 	if repliedByName, ok := eventData["replied_by_name"].(string); ok {

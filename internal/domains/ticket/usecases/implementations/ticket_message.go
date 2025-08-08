@@ -3,6 +3,7 @@ package implementations
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"linke/internal/domains/ticket/entities"
@@ -46,9 +47,17 @@ func (s *TicketMessageService) CreateTicketMessage(ctx context.Context, ticketID
 		UserID:      userID,
 		Content:     req.Content,
 		MessageType: messageType,
-		Attachments: &req.Attachments,
 		IsInternal:  req.IsInternal,
-		Metadata:    &req.Metadata,
+	}
+	
+	// Only set Attachments if not empty
+	if strings.TrimSpace(req.Attachments) != "" {
+		message.Attachments = &req.Attachments
+	}
+	
+	// Only set Metadata if not empty
+	if strings.TrimSpace(req.Metadata) != "" {
+		message.Metadata = &req.Metadata
 	}
 
 	// Start transaction
@@ -103,7 +112,6 @@ func (s *TicketMessageService) GetTicketMessage(ctx context.Context, messageID u
 	var message entities.TicketMessage
 
 	if err := s.db.WithContext(ctx).
-		Preload("User").
 		Preload("Ticket").
 		First(&message, messageID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -119,7 +127,6 @@ func (s *TicketMessageService) GetTicketMessage(ctx context.Context, messageID u
 // GetTicketMessages gets messages for a ticket
 func (s *TicketMessageService) GetTicketMessages(ctx context.Context, req *interfaces.GetTicketMessagesRequest) ([]*entities.TicketMessage, int64, error) {
 	query := s.db.WithContext(ctx).Model(&entities.TicketMessage{}).
-		Preload("User").
 		Where("ticket_id = ?", req.TicketID)
 
 	// Apply filters
@@ -229,7 +236,6 @@ func (s *TicketMessageService) GetTicketMessagesForUser(ctx context.Context, tic
 	// Verify that the user owns the ticket or is an admin
 	var ticket entities.Ticket
 	if err := s.db.WithContext(ctx).
-		Preload("User").
 		First(&ticket, ticketID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, 0, fmt.Errorf("ticket not found")
@@ -251,7 +257,6 @@ func (s *TicketMessageService) GetTicketMessagesForUser(ctx context.Context, tic
 
 	// Build query
 	query := s.db.WithContext(ctx).Model(&entities.TicketMessage{}).
-		Preload("User").
 		Where("ticket_id = ?", ticketID)
 
 	// TODO: Filter out internal messages for non-admin users
@@ -288,7 +293,6 @@ func (s *TicketMessageService) GetLatestTicketMessages(ctx context.Context, tick
 	var messages []*entities.TicketMessage
 
 	query := s.db.WithContext(ctx).
-		Preload("User").
 		Where("ticket_id = ? AND is_internal = ?", ticketID, false).
 		Order("created_at DESC")
 
@@ -339,7 +343,6 @@ func (s *TicketMessageService) GetInternalMessages(ctx context.Context, ticketID
 	var messages []*entities.TicketMessage
 
 	if err := s.db.WithContext(ctx).
-		Preload("User").
 		Where("ticket_id = ? AND is_internal = ?", ticketID, true).
 		Order("created_at ASC").
 		Find(&messages).Error; err != nil {

@@ -15025,325 +15025,6 @@ paths:
       tags:
       - notifications
       - tracking
-  /api/v1/tickets:
-    post:
-      consumes:
-      - application/json
-      description: Create a new support ticket for the authenticated user
-      parameters:
-      - description: Ticket creation data
-        in: body
-        name: ticket
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UserCreateTicketRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.TicketUserResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Create new ticket
-      tags:
-      - User-Tickets
-  /api/v1/tickets/{id}:
-    get:
-      consumes:
-      - application/json
-      description: Get detailed ticket information including messages (user can only
-        access own tickets)
-      parameters:
-      - description: Ticket ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.TicketUserResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.NotFoundResponse'
-      security:
-      - BearerAuth: []
-      summary: Get ticket details
-      tags:
-      - User-Tickets
-  /api/v1/tickets/{id}/close:
-    put:
-      consumes:
-      - application/json
-      description: Close a support ticket (user can only close own tickets)
-      parameters:
-      - description: Ticket ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Closure reason
-        in: body
-        name: closure
-        schema:
-          $ref: '#/definitions/handlers.CloseTicketRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.TicketUserResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.NotFoundResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Close ticket
-      tags:
-      - User-Tickets
-  /api/v1/tickets/{id}/messages:
-    get:
-      consumes:
-      - application/json
-      description: Get messages for a ticket (user can only access messages for own
-        tickets, excluding internal notes)
-      parameters:
-      - description: Ticket ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - default: 1
-        description: Page number
-        in: query
-        name: page
-        type: integer
-      - default: 20
-        description: Items per page
-        in: query
-        name: limit
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.StandardListResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.NotFoundResponse'
-      security:
-      - BearerAuth: []
-      summary: Get ticket messages
-      tags:
-      - User-Tickets
-    post:
-      consumes:
-      - application/json
-      description: Add a message to a ticket (user can only add messages to own tickets)
-      parameters:
-      - description: Ticket ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Message data
-        in: body
-        name: message
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.UserTicketMessageRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.TicketMessageUserResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.NotFoundResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Add message to ticket
-      tags:
-      - User-Tickets
-  /api/v1/tickets/my:
-    get:
-      consumes:
-      - application/json
-      description: Get paginated list of tickets created by the authenticated user
-      parameters:
-      - description: Filter by status
-        enum:
-        - open
-        - in_progress
-        - pending
-        - resolved
-        - closed
-        example: open
-        in: query
-        name: status
-        type: string
-      - description: Filter by priority
-        enum:
-        - low
-        - normal
-        - high
-        - urgent
-        - critical
-        example: high
-        in: query
-        name: priority
-        type: string
-      - description: Filter by category
-        enum:
-        - general
-        - technical
-        - billing
-        - account
-        - feature
-        - bug
-        - subscription
-        - payment
-        example: subscription
-        in: query
-        name: category
-        type: string
-      - description: Search in title or description
-        example: '"subscription issue"'
-        in: query
-        name: search
-        type: string
-      - default: 1
-        description: Page number
-        in: query
-        name: page
-        type: integer
-      - default: 20
-        description: Items per page
-        in: query
-        name: limit
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.StandardListResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Get user's tickets
-      tags:
-      - User-Tickets
   /api/v1/users/{user_id}/notifications/history:
     get:
       consumes:
@@ -18017,6 +17698,325 @@ paths:
       summary: Get queue status
       tags:
       - System-Task
+  /tickets:
+    post:
+      consumes:
+      - application/json
+      description: Create a new support ticket for the authenticated user
+      parameters:
+      - description: Ticket creation data
+        in: body
+        name: ticket
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UserCreateTicketRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.TicketUserResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create new ticket
+      tags:
+      - User-Tickets
+  /tickets/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get detailed ticket information including messages (user can only
+        access own tickets)
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.TicketUserResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+      security:
+      - BearerAuth: []
+      summary: Get ticket details
+      tags:
+      - User-Tickets
+  /tickets/{id}/close:
+    put:
+      consumes:
+      - application/json
+      description: Close a support ticket (user can only close own tickets)
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Closure reason
+        in: body
+        name: closure
+        schema:
+          $ref: '#/definitions/handlers.CloseTicketRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.TicketUserResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Close ticket
+      tags:
+      - User-Tickets
+  /tickets/{id}/messages:
+    get:
+      consumes:
+      - application/json
+      description: Get messages for a ticket (user can only access messages for own
+        tickets, excluding internal notes)
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.StandardListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+      security:
+      - BearerAuth: []
+      summary: Get ticket messages
+      tags:
+      - User-Tickets
+    post:
+      consumes:
+      - application/json
+      description: Add a message to a ticket (user can only add messages to own tickets)
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Message data
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UserTicketMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entities.TicketMessageUserResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Add message to ticket
+      tags:
+      - User-Tickets
+  /tickets/my:
+    get:
+      consumes:
+      - application/json
+      description: Get paginated list of tickets created by the authenticated user
+      parameters:
+      - description: Filter by status
+        enum:
+        - open
+        - in_progress
+        - pending
+        - resolved
+        - closed
+        example: open
+        in: query
+        name: status
+        type: string
+      - description: Filter by priority
+        enum:
+        - low
+        - normal
+        - high
+        - urgent
+        - critical
+        example: high
+        in: query
+        name: priority
+        type: string
+      - description: Filter by category
+        enum:
+        - general
+        - technical
+        - billing
+        - account
+        - feature
+        - bug
+        - subscription
+        - payment
+        example: subscription
+        in: query
+        name: category
+        type: string
+      - description: Search in title or description
+        example: '"subscription issue"'
+        in: query
+        name: search
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.StandardListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user's tickets
+      tags:
+      - User-Tickets
   /usage-alerts/alert/{alert_id}/acknowledge:
     post:
       consumes:

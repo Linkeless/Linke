@@ -54,8 +54,30 @@ var Module = fx.Module("ticket",
 			fx.As(new(interfaces.TicketService)),
 		),
 		
+		// Base ticket message service (not exposed directly)
+		implementations.NewTicketMessageService,
+		
+		// Event-aware ticket message service wrapper (exposed as the main service)
 		fx.Annotate(
-			implementations.NewTicketMessageService,
+			func(
+				baseMessageService *implementations.TicketMessageService,
+				ticketService interfaces.TicketService,
+				userService userInterfaces.UserService,
+				eventBus events.EventBus,
+			) interfaces.TicketMessageService {
+				// Check if event bus is available
+				if eventBus == nil {
+					// Fall back to base service if no event bus
+					return baseMessageService
+				}
+				// Wrap with event-aware service
+				return implementations.NewEventAwareTicketMessageService(
+					baseMessageService,
+					ticketService,
+					userService,
+					eventBus,
+				)
+			},
 			fx.As(new(interfaces.TicketMessageService)),
 		),
 	),
