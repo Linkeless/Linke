@@ -95,8 +95,11 @@ func (s *ShadowsocksServerService) GetShadowsocksServers(ctx context.Context, re
 	if req.GroupID != nil {
 		query = query.Where("group_id = ?", *req.GroupID)
 	}
-	if req.Show != nil {
-		query = query.Where("show = ?", *req.Show)
+    if req.Show != nil {
+        query = query.Where("`show` = ?", *req.Show)
+	}
+	if req.Name != "" {
+		query = query.Where("name LIKE ?", "%"+req.Name+"%")
 	}
 
 	// Count total
@@ -123,8 +126,8 @@ func (s *ShadowsocksServerService) GetShadowsocksServers(ctx context.Context, re
 // GetActiveShadowsocksServers retrieves all active shadowsocks servers
 func (s *ShadowsocksServerService) GetActiveShadowsocksServers(ctx context.Context) ([]*entities.ShadowsocksServer, error) {
 	var servers []*entities.ShadowsocksServer
-	if err := s.db.DB.WithContext(ctx).
-		Where("show = ?", 1).
+    if err := s.db.DB.WithContext(ctx).
+        Where("`show` = ?", 1).
 		Order("sort ASC, created_at DESC").
 		Find(&servers).Error; err != nil {
 		return nil, fmt.Errorf("failed to get active shadowsocks servers: %w", err)
@@ -135,8 +138,8 @@ func (s *ShadowsocksServerService) GetActiveShadowsocksServers(ctx context.Conte
 // GetShadowsocksServersByGroupID retrieves shadowsocks servers by group ID
 func (s *ShadowsocksServerService) GetShadowsocksServersByGroupID(ctx context.Context, groupID uint) ([]*entities.ShadowsocksServer, error) {
 	var servers []*entities.ShadowsocksServer
-	if err := s.db.DB.WithContext(ctx).
-		Where("group_id = ? AND show = ?", groupID, 1).
+    if err := s.db.DB.WithContext(ctx).
+        Where("group_id = ? AND `show` = ?", groupID, 1).
 		Order("sort ASC, created_at DESC").
 		Preload("ServerGroup"). // Load the server group relationship
 		Find(&servers).Error; err != nil {
@@ -265,7 +268,7 @@ func (s *ShadowsocksServerService) GetServersByGroup(ctx context.Context, groupI
 
 // GetVisibleServers retrieves visible shadowsocks servers with optional group filter
 func (s *ShadowsocksServerService) GetVisibleServers(ctx context.Context, groupID *uint) ([]*entities.ShadowsocksServer, error) {
-	query := s.db.DB.WithContext(ctx).Where("show = ?", 1)
+    query := s.db.DB.WithContext(ctx).Where("`show` = ?", 1)
 
 	if groupID != nil {
 		query = query.Where("group_id = ?", *groupID)

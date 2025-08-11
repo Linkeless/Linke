@@ -6,6 +6,7 @@ import (
 	"time"
 
 	authInterfaces "linke/internal/domains/auth/usecases/interfaces"
+	userConstants "linke/internal/domains/user/constants"
 	userEntities "linke/internal/domains/user/entities"
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/shared/logger"
@@ -1234,14 +1235,14 @@ func calculateSecurityScore(user *userEntities.User, isLocked bool, failureCount
 
 	// Deduct points for inactive/banned accounts
 	switch user.Status {
-	case userEntities.UserStatusInactive:
+	case userConstants.UserStatusInactive:
 		score -= 20
-	case userEntities.UserStatusBanned:
+	case userConstants.UserStatusBanned:
 		score -= 80
 	}
 
 	// Bonus for OAuth accounts (typically more secure)
-	if user.Provider != userEntities.ProviderLocal {
+	if user.Provider != userConstants.ProviderLocal {
 		score += 10
 	}
 

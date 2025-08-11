@@ -13,6 +13,7 @@ import (
 	subscriptionConstants "linke/internal/domains/subscription/constants"
 	subscriptionEntities "linke/internal/domains/subscription/entities"
 	subscriptionInterfaces "linke/internal/domains/subscription/usecases/interfaces"
+	userConstants "linke/internal/domains/user/constants"
 	userEntities "linke/internal/domains/user/entities"
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/shared/config"
@@ -408,7 +409,7 @@ func (h *ServerAPIHandler) getUsersForServer(ctx context.Context, server *server
 	var activeUsers []userEntities.User
 	if err := h.db.DB.WithContext(ctx).
 		Select("id").
-		Where("id IN ? AND status = ? AND deleted_at IS NULL", validUserIDs, userEntities.UserStatusActive).
+		Where("id IN ? AND status = ? AND deleted_at IS NULL", validUserIDs, userConstants.UserStatusActive).
 		Find(&activeUsers).Error; err != nil {
 		logger.Error("Failed to query active users", logger.Error2("error", err))
 		return nil, err

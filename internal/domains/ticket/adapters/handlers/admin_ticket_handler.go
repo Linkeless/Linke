@@ -5,18 +5,17 @@ import (
 	"strings"
 	"time"
 
-	ticketInterfaces "linke/internal/domains/ticket/usecases/interfaces"
-	userInterfaces "linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/domains/ticket/constants"
 	"linke/internal/domains/ticket/dto"
 	"linke/internal/domains/ticket/entities"
+	ticketInterfaces "linke/internal/domains/ticket/usecases/interfaces"
+	userInterfaces "linke/internal/domains/user/usecases/interfaces"
+	sharedDTO "linke/internal/shared/dto"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/response"
-	sharedDTO "linke/internal/shared/dto"
 
 	"github.com/gin-gonic/gin"
 )
-
 
 // AdminTicketHandler provides comprehensive admin ticket management functionality
 type AdminTicketHandler struct {
@@ -80,7 +79,7 @@ func (h *AdminTicketHandler) CreateTicket(c *gin.Context) {
 			response.NotFound(c, "Assigned user not found")
 			return
 		}
-		
+
 		// Verify assigned user is admin
 		if assignedUser.Role != "admin" {
 			response.BadRequest(c, "Assigned user must be an admin")
@@ -218,7 +217,7 @@ func (h *AdminTicketHandler) ListTickets(c *gin.Context) {
 	responses := make([]*entities.TicketResponse, len(tickets))
 	for i, ticket := range tickets {
 		responses[i] = ticket.ToResponse()
-		
+
 		// Populate user data if available
 		if user, err := h.userService.GetUserByID(c.Request.Context(), ticket.UserID); err == nil {
 			responses[i].User = &sharedDTO.UserBasicDTO{
@@ -302,7 +301,7 @@ func (h *AdminTicketHandler) GetTicket(c *gin.Context) {
 
 	// Convert to response format and populate user data
 	ticketResponse := ticket.ToResponse()
-	
+
 	// Populate user data
 	if user, err := h.userService.GetUserByID(c.Request.Context(), ticket.UserID); err == nil {
 		ticketResponse.User = &sharedDTO.UserBasicDTO{
@@ -414,7 +413,7 @@ func (h *AdminTicketHandler) UpdateTicket(c *gin.Context) {
 		logger.Error("Admin failed to update ticket",
 			logger.Uint("ticket_id", uint(id)),
 			logger.Error2("error", err))
-		
+
 		if strings.Contains(err.Error(), "not found") {
 			response.NotFound(c, "Ticket not found")
 		} else {
@@ -500,7 +499,7 @@ func (h *AdminTicketHandler) AssignTicket(c *gin.Context) {
 			logger.Uint("ticket_id", uint(id)),
 			logger.Uint("assigned_to_id", req.AssignedToID),
 			logger.Error2("error", err))
-		
+
 		if strings.Contains(err.Error(), "not found") {
 			response.NotFound(c, "Ticket not found")
 		} else {
@@ -725,7 +724,7 @@ func (h *AdminTicketHandler) CloseTicket(c *gin.Context) {
 		logger.Error("Admin failed to close ticket",
 			logger.Uint("ticket_id", uint(id)),
 			logger.Error2("error", err))
-		
+
 		if strings.Contains(err.Error(), "not found") {
 			response.NotFound(c, "Ticket not found")
 		} else {
@@ -783,7 +782,7 @@ func (h *AdminTicketHandler) ReopenTicket(c *gin.Context) {
 		logger.Error("Admin failed to reopen ticket",
 			logger.Uint("ticket_id", uint(id)),
 			logger.Error2("error", err))
-		
+
 		if strings.Contains(err.Error(), "not found") {
 			response.NotFound(c, "Ticket not found")
 		} else {
@@ -881,7 +880,7 @@ func (h *AdminTicketHandler) GetTicketMessages(c *gin.Context) {
 	responses := make([]*entities.TicketMessageResponse, len(messages))
 	for i, message := range messages {
 		responses[i] = message.ToResponse()
-		
+
 		// Populate user data
 		if user, err := h.userService.GetUserByID(c.Request.Context(), message.UserID); err == nil {
 			responses[i].User = &sharedDTO.UserBasicDTO{
@@ -1048,7 +1047,7 @@ func (h *AdminTicketHandler) GetMessage(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
 // @Param msg_id path uint true "Message ID"
-// @Param message body interfaces.UpdateTicketMessageRequest true "Message update data"
+// @Param message body dto.UpdateTicketMessageRequest true "Message update data"
 // @Success 200 {object} response.StandardResponse{data=entities.TicketMessageResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -1075,7 +1074,7 @@ func (h *AdminTicketHandler) UpdateMessage(c *gin.Context) {
 		logger.Error("Admin failed to update message",
 			logger.Uint("message_id", uint(msgID)),
 			logger.Error2("error", err))
-		
+
 		if strings.Contains(err.Error(), "not found") {
 			response.NotFound(c, "Message not found")
 		} else {
@@ -1134,7 +1133,7 @@ func (h *AdminTicketHandler) DeleteMessage(c *gin.Context) {
 		logger.Error("Admin failed to delete message",
 			logger.Uint("message_id", uint(msgID)),
 			logger.Error2("error", err))
-		
+
 		if strings.Contains(err.Error(), "not found") {
 			response.NotFound(c, "Message not found")
 		} else {
@@ -1288,7 +1287,7 @@ func (h *AdminTicketHandler) SearchTickets(c *gin.Context) {
 	responses := make([]*entities.TicketResponse, len(tickets))
 	for i, ticket := range tickets {
 		responses[i] = ticket.ToResponse()
-		
+
 		// Populate user data
 		if user, err := h.userService.GetUserByID(c.Request.Context(), ticket.UserID); err == nil {
 			responses[i].User = &sharedDTO.UserBasicDTO{
@@ -1406,9 +1405,9 @@ func (h *AdminTicketHandler) GetAnalytics(c *gin.Context) {
 			"group_by":   req.GroupBy,
 		},
 		"filters": gin.H{
-			"agent_id":  req.AgentID,
-			"category":  req.Category,
-			"priority":  req.Priority,
+			"agent_id": req.AgentID,
+			"category": req.Category,
+			"priority": req.Priority,
 		},
 	}
 
@@ -1670,7 +1669,7 @@ func (h *AdminTicketHandler) DeleteTicket(c *gin.Context) {
 		logger.Error("Admin failed to delete ticket",
 			logger.Uint("ticket_id", uint(id)),
 			logger.Error2("error", err))
-		
+
 		if strings.Contains(err.Error(), "not found") {
 			response.NotFound(c, "Ticket not found")
 		} else {

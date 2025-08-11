@@ -3,6 +3,8 @@ package entities
 import (
 	"time"
 
+	"linke/internal/domains/user/constants"
+
 	"gorm.io/gorm"
 )
 
@@ -57,27 +59,6 @@ type UserProfile struct {
 	TotalSpent         float64 `json:"total_spent,omitempty"`
 }
 
-// User status constants
-const (
-	UserStatusActive   = "active"
-	UserStatusInactive = "inactive"
-	UserStatusBanned   = "banned"
-)
-
-// User role constants
-const (
-	UserRoleUser  = "user"
-	UserRoleAdmin = "admin"
-)
-
-// Provider constants
-const (
-	ProviderLocal    = "local"
-	ProviderGoogle   = "google"
-	ProviderGitHub   = "github"
-	ProviderTelegram = "telegram"
-)
-
 // IsDeleted checks if the user is soft deleted
 func (u *User) IsDeleted() bool {
 	return u.DeletedAt.Valid
@@ -85,7 +66,7 @@ func (u *User) IsDeleted() bool {
 
 // IsActive checks if the user is active
 func (u *User) IsActive() bool {
-	return u.Status == UserStatusActive && !u.IsDeleted()
+	return u.Status == constants.UserStatusActive && !u.IsDeleted()
 }
 
 // GetID returns the user's ID (required for middleware interface)
@@ -95,31 +76,31 @@ func (u *User) GetID() uint {
 
 // IsAdmin checks if the user is an admin
 func (u *User) IsAdmin() bool {
-	return u.Role == UserRoleAdmin && u.IsActive()
+	return u.Role == constants.UserRoleAdmin && u.IsActive()
 }
 
 // IsLocalAccount checks if this is a local (email/password) account
 func (u *User) IsLocalAccount() bool {
-	return u.Provider == ProviderLocal
+	return u.Provider == constants.ProviderLocal
 }
 
 // IsOAuthAccount checks if this is an OAuth account
 func (u *User) IsOAuthAccount() bool {
-	return u.Provider != ProviderLocal
+	return u.Provider != constants.ProviderLocal
 }
 
 // GetProviderID returns the provider-specific ID based on the provider
 func (u *User) GetProviderID() string {
 	switch u.Provider {
-	case ProviderGoogle:
+	case constants.ProviderGoogle:
 		if u.GoogleID != nil {
 			return *u.GoogleID
 		}
-	case ProviderGitHub:
+	case constants.ProviderGitHub:
 		if u.GitHubID != nil {
 			return *u.GitHubID
 		}
-	case ProviderTelegram:
+	case constants.ProviderTelegram:
 		if u.TelegramID != nil {
 			return *u.TelegramID
 		}

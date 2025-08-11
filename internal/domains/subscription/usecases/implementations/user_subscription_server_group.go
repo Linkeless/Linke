@@ -214,7 +214,7 @@ func (s *UserSubscriptionService) GetUserAccessibleServers(ctx context.Context, 
 	var accessibleServers []*serverEntities.ShadowsocksServer
 	if err := s.db.WithContext(ctx).
 		Preload("ServerGroup").
-		Where("group_id IN (?) AND show = ?", allGroupIDs, 1). // show=1 means visible
+		Where("group_id IN (?) AND `show` = ?", allGroupIDs, 1). // show=1 means visible
 		Order("group_id, sort").
 		Find(&accessibleServers).Error; err != nil {
 		return nil, fmt.Errorf("failed to get accessible servers: %w", err)
@@ -249,7 +249,7 @@ func (s *UserSubscriptionService) GetUserServersBySubscription(ctx context.Conte
 	var servers []*serverEntities.ShadowsocksServer
 	if err := s.db.WithContext(ctx).
 		Preload("ServerGroup").
-		Where("group_id IN (?) AND show = ?", groupIDs, 1). // show=1 means visible
+		Where("group_id IN (?) AND `show` = ?", groupIDs, 1). // show=1 means visible
 		Order("group_id, sort").
 		Find(&servers).Error; err != nil {
 		return nil, fmt.Errorf("failed to get subscription servers: %w", err)
@@ -332,7 +332,7 @@ func (s *UserSubscriptionService) GetServerGroupUsageStats(ctx context.Context, 
 		var serverCount int64
 		if err := s.db.WithContext(ctx).
 			Model(&serverEntities.ShadowsocksServer{}).
-			Where("group_id = ? AND show = ?", groupID, 1).
+			Where("group_id = ? AND `show` = ?", groupID, 1).
 			Count(&serverCount).Error; err != nil {
 			logger.Error("Failed to count servers in group", logger.Uint("group_id", groupID), logger.Error2("error", err))
 			continue

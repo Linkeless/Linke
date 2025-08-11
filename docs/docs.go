@@ -1866,7 +1866,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.CreateCouponRequest"
+                            "$ref": "#/definitions/dto.CreateCouponRequest"
                         }
                     }
                 ],
@@ -1882,7 +1882,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.CouponResponse"
+                                            "$ref": "#/definitions/dto.CouponResponse"
                                         }
                                     }
                                 }
@@ -2008,7 +2008,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.BulkCreateCouponRequest"
+                            "$ref": "#/definitions/dto.BulkCreateCouponRequest"
                         }
                     }
                 ],
@@ -2071,7 +2071,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.BulkUpdateRequest"
+                            "$ref": "#/definitions/handlers.BulkUpdateRequestDoc"
                         }
                     }
                 ],
@@ -2134,7 +2134,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.BulkUpdateRequest"
+                            "$ref": "#/definitions/handlers.BulkUpdateRequestDoc"
                         }
                     }
                 ],
@@ -2410,7 +2410,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.CouponResponse"
+                                            "$ref": "#/definitions/dto.CouponResponse"
                                         }
                                     }
                                 }
@@ -2474,7 +2474,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.UpdateCouponRequest"
+                            "$ref": "#/definitions/dto.UpdateCouponRequest"
                         }
                     }
                 ],
@@ -2490,7 +2490,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.CouponResponse"
+                                            "$ref": "#/definitions/dto.CouponResponse"
                                         }
                                     }
                                 }
@@ -2621,7 +2621,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.ExtendExpiryRequest"
+                            "$ref": "#/definitions/dto.ExtendExpiryRequest"
                         }
                     }
                 ],
@@ -2637,7 +2637,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.CouponResponse"
+                                            "$ref": "#/definitions/dto.CouponResponse"
                                         }
                                     }
                                 }
@@ -2703,7 +2703,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.ToggleStatusRequest"
+                            "$ref": "#/definitions/dto.ToggleStatusRequest"
                         }
                     }
                 ],
@@ -2719,7 +2719,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.CouponResponse"
+                                            "$ref": "#/definitions/dto.CouponResponse"
                                         }
                                     }
                                 }
@@ -2984,7 +2984,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.InvoiceResponse"
+                                            "$ref": "#/definitions/dto.InvoiceResponse"
                                         }
                                     }
                                 }
@@ -3759,7 +3759,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.InvoiceResponse"
+                                            "$ref": "#/definitions/dto.InvoiceResponse"
                                         }
                                     }
                                 }
@@ -3839,7 +3839,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.InvoiceResponse"
+                                            "$ref": "#/definitions/dto.InvoiceResponse"
                                         }
                                     }
                                 }
@@ -3986,7 +3986,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.InvoiceResponse"
+                                            "$ref": "#/definitions/dto.InvoiceResponse"
                                         }
                                     }
                                 }
@@ -4220,7 +4220,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.InvoiceResponse"
+                                            "$ref": "#/definitions/dto.InvoiceResponse"
                                         }
                                     }
                                 }
@@ -4333,7 +4333,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/entities.PaymentConfigResponse"
+                                                "$ref": "#/definitions/dto.PaymentConfigResponse"
                                             }
                                         }
                                     }
@@ -4391,7 +4391,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/interfaces.CreatePaymentConfigRequest"
+                            "$ref": "#/definitions/dto.CreatePaymentConfigRequest"
                         }
                     }
                 ],
@@ -4407,7 +4407,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.PaymentConfigResponse"
+                                            "$ref": "#/definitions/dto.PaymentConfigResponse"
                                         }
                                     }
                                 }
@@ -4473,7 +4473,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/interfaces.UpdatePaymentConfigRequest"
+                            "$ref": "#/definitions/dto.UpdatePaymentConfigRequest"
                         }
                     }
                 ],
@@ -4489,7 +4489,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.PaymentConfigResponse"
+                                            "$ref": "#/definitions/dto.PaymentConfigResponse"
                                         }
                                     }
                                 }
@@ -4750,7 +4750,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/interfaces.AdminRetryResponse"
+                                            "$ref": "#/definitions/dto.AdminRetryResponse"
                                         }
                                     }
                                 }
@@ -4940,7 +4940,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/interfaces.RetryHealthMetrics"
+                                            "$ref": "#/definitions/dto.RetryHealthMetrics"
                                         }
                                     }
                                 }
@@ -5017,7 +5017,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/interfaces.RetryStatistics"
+                                            "$ref": "#/definitions/dto.RetryStatistics"
                                         }
                                     }
                                 }
@@ -5090,7 +5090,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/interfaces.RetryWithHistory"
+                                            "$ref": "#/definitions/dto.RetryWithHistory"
                                         }
                                     }
                                 }
@@ -5400,7 +5400,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.CreateReferralRequest"
+                            "$ref": "#/definitions/dto.CreateReferralRequest"
                         }
                     }
                 ],
@@ -5416,7 +5416,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.ReferralResponse"
+                                            "$ref": "#/definitions/dto.ReferralResponse"
                                         }
                                     }
                                 }
@@ -5542,7 +5542,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.BulkReferralRequest"
+                            "$ref": "#/definitions/dto.BulkReferralRequest"
                         }
                     }
                 ],
@@ -5605,7 +5605,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.BulkReferralRequest"
+                            "$ref": "#/definitions/dto.BulkReferralRequest"
                         }
                     }
                 ],
@@ -5739,7 +5739,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/interfaces.CreateReferralCampaignRequest"
+                            "$ref": "#/definitions/dto.CreateReferralCampaignRequest"
                         }
                     }
                 ],
@@ -5755,7 +5755,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.ReferralCampaignResponse"
+                                            "$ref": "#/definitions/dto.ReferralCampaignResponse"
                                         }
                                     }
                                 }
@@ -6089,7 +6089,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.ReferralResponse"
+                                            "$ref": "#/definitions/dto.ReferralResponse"
                                         }
                                     }
                                 }
@@ -6153,7 +6153,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.UpdateReferralRequest"
+                            "$ref": "#/definitions/dto.UpdateReferralRequest"
                         }
                     }
                 ],
@@ -6169,7 +6169,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.ReferralResponse"
+                                            "$ref": "#/definitions/dto.ReferralResponse"
                                         }
                                     }
                                 }
@@ -6241,7 +6241,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.ApproveReferralRequest"
+                            "$ref": "#/definitions/dto.ApproveReferralRequest"
                         }
                     }
                 ],
@@ -6257,7 +6257,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.ReferralResponse"
+                                            "$ref": "#/definitions/dto.ReferralResponse"
                                         }
                                     }
                                 }
@@ -6323,7 +6323,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.PayoutReferralRequest"
+                            "$ref": "#/definitions/dto.PayoutReferralRequest"
                         }
                     }
                 ],
@@ -6339,7 +6339,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.ReferralResponse"
+                                            "$ref": "#/definitions/dto.ReferralResponse"
                                         }
                                     }
                                 }
@@ -6405,7 +6405,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.RejectReferralRequest"
+                            "$ref": "#/definitions/dto.RejectReferralRequest"
                         }
                     }
                 ],
@@ -6421,7 +6421,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.ReferralResponse"
+                                            "$ref": "#/definitions/dto.ReferralResponse"
                                         }
                                     }
                                 }
@@ -6540,7 +6540,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.CreateServerGroupRequest"
+                            "$ref": "#/definitions/dto.CreateServerGroupRequest"
                         }
                     }
                 ],
@@ -6745,7 +6745,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.UpdateServerGroupRequest"
+                            "$ref": "#/definitions/dto.UpdateServerGroupRequest"
                         }
                     }
                 ],
@@ -6896,7 +6896,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.PatchServerGroupRequest"
+                            "$ref": "#/definitions/dto.PatchServerGroupRequest"
                         }
                     }
                 ],
@@ -7130,6 +7130,12 @@ const docTemplate = `{
                         "description": "Filter by visibility (0 or 1)",
                         "name": "show",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by server name (substring match)",
+                        "name": "name",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -7183,7 +7189,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.CreateShadowsocksServerRequest"
+                            "$ref": "#/definitions/dto.CreateShadowsocksServerRequest"
                         }
                     }
                 ],
@@ -7472,7 +7478,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.UpdateShadowsocksServerRequest"
+                            "$ref": "#/definitions/dto.UpdateShadowsocksServerRequest"
                         }
                     }
                 ],
@@ -7617,7 +7623,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.PatchShadowsocksServerRequest"
+                            "$ref": "#/definitions/dto.PatchShadowsocksServerRequest"
                         }
                     }
                 ],
@@ -10423,7 +10429,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.AdminCreateTicketRequest"
+                            "$ref": "#/definitions/dto.AdminCreateTicketRequest"
                         }
                     }
                 ],
@@ -10689,7 +10695,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.BulkTicketActionRequest"
+                            "$ref": "#/definitions/dto.BulkTicketActionRequest"
                         }
                     }
                 ],
@@ -10752,7 +10758,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.BulkTicketActionRequest"
+                            "$ref": "#/definitions/dto.BulkTicketActionRequest"
                         }
                     }
                 ],
@@ -10815,7 +10821,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.BulkTicketActionRequest"
+                            "$ref": "#/definitions/dto.BulkTicketActionRequest"
                         }
                     }
                 ],
@@ -11159,7 +11165,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.AdminUpdateTicketRequest"
+                            "$ref": "#/definitions/dto.AdminUpdateTicketRequest"
                         }
                     }
                 ],
@@ -11312,7 +11318,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.AssignTicketRequest"
+                            "$ref": "#/definitions/dto.AssignTicketRequest"
                         }
                     }
                 ],
@@ -11479,7 +11485,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.EscalateTicketRequest"
+                            "$ref": "#/definitions/dto.EscalateTicketRequest"
                         }
                     }
                 ],
@@ -11647,7 +11653,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.AdminTicketMessageRequest"
+                            "$ref": "#/definitions/dto.AdminTicketMessageRequest"
                         }
                     }
                 ],
@@ -11820,7 +11826,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/interfaces.UpdateTicketMessageRequest"
+                            "$ref": "#/definitions/dto.UpdateTicketMessageRequest"
                         }
                     }
                 ],
@@ -11980,7 +11986,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.AdminTicketMessageRequest"
+                            "$ref": "#/definitions/dto.AdminTicketMessageRequest"
                         }
                     }
                 ],
@@ -12146,6 +12152,45 @@ const docTemplate = `{
                         "default": 10,
                         "description": "Items per page",
                         "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by email/username/name (substring match)",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "active",
+                            "inactive",
+                            "banned"
+                        ],
+                        "type": "string",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "user",
+                            "admin"
+                        ],
+                        "type": "string",
+                        "description": "Filter by role",
+                        "name": "role",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "local",
+                            "google",
+                            "github",
+                            "telegram"
+                        ],
+                        "type": "string",
+                        "description": "Filter by provider",
+                        "name": "provider",
                         "in": "query"
                     }
                 ],
@@ -13819,7 +13864,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/entities.CouponResponse"
+                                                "$ref": "#/definitions/dto.CouponResponse"
                                             }
                                         }
                                     }
@@ -13895,7 +13940,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/entities.CouponUsageResponse"
+                                                "$ref": "#/definitions/dto.CouponUsageResponse"
                                             }
                                         }
                                     }
@@ -13949,7 +13994,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.ValidateCouponRequest"
+                            "$ref": "#/definitions/dto.ValidateCouponRequest"
                         }
                     }
                 ],
@@ -13965,7 +14010,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/interfaces.ValidateCouponResponse"
+                                            "$ref": "#/definitions/dto.ValidateCouponResponse"
                                         }
                                     }
                                 }
@@ -14035,7 +14080,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.InvoiceResponse"
+                                            "$ref": "#/definitions/dto.InvoiceResponse"
                                         }
                                     }
                                 }
@@ -14590,7 +14635,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.PaymentMethodListResponse"
+                                            "$ref": "#/definitions/dto.PaymentMethodListResponse"
                                         }
                                     }
                                 }
@@ -14635,7 +14680,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/entities.CreatePaymentMethodRequest"
+                            "$ref": "#/definitions/dto.CreatePaymentMethodRequest"
                         }
                     }
                 ],
@@ -14651,7 +14696,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.PaymentMethodResponse"
+                                            "$ref": "#/definitions/dto.PaymentMethodResponse"
                                         }
                                     }
                                 }
@@ -14726,7 +14771,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.PaymentMethodResponse"
+                                            "$ref": "#/definitions/dto.PaymentMethodResponse"
                                         }
                                     }
                                 }
@@ -14790,7 +14835,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.PaymentMethodResponse"
+                                            "$ref": "#/definitions/dto.PaymentMethodResponse"
                                         }
                                     }
                                 }
@@ -14854,7 +14899,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/entities.UpdatePaymentMethodRequest"
+                            "$ref": "#/definitions/dto.UpdatePaymentMethodRequest"
                         }
                     }
                 ],
@@ -14870,7 +14915,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.PaymentMethodResponse"
+                                            "$ref": "#/definitions/dto.PaymentMethodResponse"
                                         }
                                     }
                                 }
@@ -14996,7 +15041,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.PaymentMethodResponse"
+                                            "$ref": "#/definitions/dto.PaymentMethodResponse"
                                         }
                                     }
                                 }
@@ -15072,7 +15117,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/interfaces.PaymentMethodUsageStats"
+                                            "$ref": "#/definitions/dto.PaymentMethodUsageStats"
                                         }
                                     }
                                 }
@@ -15142,7 +15187,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.PaymentMethodResponse"
+                                            "$ref": "#/definitions/dto.PaymentMethodResponse"
                                         }
                                     }
                                 }
@@ -15218,7 +15263,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/entities.PaymentConfigResponse"
+                                                "$ref": "#/definitions/dto.PaymentConfigResponse"
                                             }
                                         }
                                     }
@@ -15355,7 +15400,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.CreatePaymentOrderRequest"
+                            "$ref": "#/definitions/dto.CreatePaymentOrderRequest"
                         }
                     }
                 ],
@@ -15371,7 +15416,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.PaymentRecordResponse"
+                                            "$ref": "#/definitions/dto.PaymentRecordResponse"
                                         }
                                     }
                                 }
@@ -15450,7 +15495,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/entities.PaymentRecordResponse"
+                                                "$ref": "#/definitions/dto.PaymentRecordResponse"
                                             }
                                         }
                                     }
@@ -15512,7 +15557,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entities.PaymentRecordResponse"
+                                            "$ref": "#/definitions/dto.PaymentRecordResponse"
                                         }
                                     }
                                 }
@@ -16650,7 +16695,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.UserCreateTicketRequest"
+                            "$ref": "#/definitions/dto.UserCreateTicketRequest"
                         }
                     }
                 ],
@@ -16906,7 +16951,7 @@ const docTemplate = `{
                         "name": "closure",
                         "in": "body",
                         "schema": {
-                            "$ref": "#/definitions/handlers.CloseTicketRequest"
+                            "$ref": "#/definitions/dto.CloseTicketRequest"
                         }
                     }
                 ],
@@ -17067,7 +17112,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.UserTicketMessageRequest"
+                            "$ref": "#/definitions/dto.UserTicketMessageRequest"
                         }
                     }
                 ],
@@ -20148,6 +20193,223 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.AdminCreateTicketRequest": {
+            "type": "object",
+            "required": [
+                "category",
+                "description",
+                "title",
+                "user_id"
+            ],
+            "properties": {
+                "assigned_to_id": {
+                    "type": "integer",
+                    "example": 456
+                },
+                "category": {
+                    "type": "string",
+                    "enum": [
+                        "general",
+                        "technical",
+                        "billing",
+                        "account",
+                        "feature",
+                        "bug",
+                        "subscription",
+                        "payment"
+                    ],
+                    "example": "technical"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 5000,
+                    "minLength": 10,
+                    "example": "Customer reports unable to log in to their account"
+                },
+                "metadata": {
+                    "type": "string",
+                    "example": "{\"source\": \"admin_created\"}"
+                },
+                "priority": {
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "normal",
+                        "high",
+                        "urgent",
+                        "critical"
+                    ],
+                    "example": "normal"
+                },
+                "tags": {
+                    "type": "string",
+                    "example": "urgent,login"
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 5,
+                    "example": "Unable to access account"
+                },
+                "user_id": {
+                    "type": "integer",
+                    "example": 123
+                }
+            }
+        },
+        "dto.AdminRetryResponse": {
+            "type": "object",
+            "properties": {
+                "page": {
+                    "type": "integer"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "retries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PaymentRetryResponse"
+                    }
+                },
+                "statistics": {
+                    "$ref": "#/definitions/dto.AdminRetryStatistics"
+                },
+                "total_count": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.AdminRetryStatistics": {
+            "type": "object",
+            "properties": {
+                "average_attempts": {
+                    "type": "number"
+                },
+                "average_delay_time": {
+                    "type": "number"
+                },
+                "cancelled_retries": {
+                    "type": "integer"
+                },
+                "completed_retries": {
+                    "type": "integer"
+                },
+                "failed_retries": {
+                    "type": "integer"
+                },
+                "in_progress_retries": {
+                    "type": "integer"
+                },
+                "overall_success_rate": {
+                    "type": "number"
+                },
+                "pending_retries": {
+                    "type": "integer"
+                },
+                "total_retries": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.AdminTicketMessageRequest": {
+            "type": "object",
+            "required": [
+                "content"
+            ],
+            "properties": {
+                "attachments": {
+                    "type": "string",
+                    "example": "[{\"name\":\"response.pdf\",\"url\":\"https://example.com/file.pdf\"}]"
+                },
+                "content": {
+                    "type": "string",
+                    "maxLength": 5000,
+                    "minLength": 1,
+                    "example": "Thank you for contacting support. We are reviewing your issue."
+                },
+                "is_internal": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "message_type": {
+                    "type": "string",
+                    "enum": [
+                        "admin",
+                        "system"
+                    ],
+                    "example": "admin"
+                },
+                "metadata": {
+                    "type": "string",
+                    "example": "{\"agent_id\":\"456\"}"
+                }
+            }
+        },
+        "dto.AdminUpdateTicketRequest": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "enum": [
+                        "general",
+                        "technical",
+                        "billing",
+                        "account",
+                        "feature",
+                        "bug",
+                        "subscription",
+                        "payment"
+                    ],
+                    "example": "billing"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 5000,
+                    "minLength": 10,
+                    "example": "Updated description"
+                },
+                "metadata": {
+                    "type": "string",
+                    "example": "{\"updated_by\": \"admin\"}"
+                },
+                "priority": {
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "normal",
+                        "high",
+                        "urgent",
+                        "critical"
+                    ],
+                    "example": "high"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "open",
+                        "in_progress",
+                        "pending",
+                        "resolved",
+                        "closed"
+                    ],
+                    "example": "in_progress"
+                },
+                "tags": {
+                    "type": "string",
+                    "example": "urgent,billing"
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 5,
+                    "example": "Updated ticket title"
+                }
+            }
+        },
         "dto.ApplicationHealthResponse": {
             "type": "object",
             "properties": {
@@ -20160,6 +20422,36 @@ const docTemplate = `{
                 "status": {
                     "type": "string",
                     "example": "healthy"
+                }
+            }
+        },
+        "dto.ApproveReferralRequest": {
+            "type": "object",
+            "properties": {
+                "note": {
+                    "type": "string",
+                    "example": "Approved by admin"
+                },
+                "reward_amount": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 10
+                }
+            }
+        },
+        "dto.AssignTicketRequest": {
+            "type": "object",
+            "required": [
+                "assigned_to_id"
+            ],
+            "properties": {
+                "assigned_to_id": {
+                    "type": "integer",
+                    "example": 456
+                },
+                "note": {
+                    "type": "string",
+                    "example": "Assigned to senior support agent"
                 }
             }
         },
@@ -20189,6 +20481,179 @@ const docTemplate = `{
                 "total_operations": {
                     "type": "integer",
                     "example": 5000
+                }
+            }
+        },
+        "dto.BulkCreateCouponRequest": {
+            "type": "object",
+            "required": [
+                "code_prefix",
+                "count",
+                "name",
+                "type",
+                "value"
+            ],
+            "properties": {
+                "applicable_plans": {
+                    "type": "string",
+                    "example": "[1,2,3]"
+                },
+                "code_prefix": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 2,
+                    "example": "BULK"
+                },
+                "count": {
+                    "type": "integer",
+                    "maximum": 1000,
+                    "minimum": 1,
+                    "example": 100
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "Bulk generated discount coupons"
+                },
+                "is_public": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "max_uses": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 1
+                },
+                "max_uses_per_user": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 1
+                },
+                "min_order_amount": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 10
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "example": "Bulk Generated Coupons"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "percentage",
+                        "fixed_amount"
+                    ],
+                    "example": "percentage"
+                },
+                "valid_from": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "valid_until": {
+                    "type": "string",
+                    "example": "2024-12-31T23:59:59Z"
+                },
+                "value": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 20
+                }
+            }
+        },
+        "dto.BulkReferralRequest": {
+            "type": "object",
+            "required": [
+                "action",
+                "ids"
+            ],
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": [
+                        "approve",
+                        "reject",
+                        "payout"
+                    ]
+                },
+                "amount": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "ids": {
+                    "type": "array",
+                    "maxItems": 100,
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "note": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.BulkTicketActionRequest": {
+            "type": "object",
+            "required": [
+                "action",
+                "ticket_ids"
+            ],
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": [
+                        "assign",
+                        "close",
+                        "reopen",
+                        "update_priority",
+                        "update_status"
+                    ],
+                    "example": "assign"
+                },
+                "assigned_to_id": {
+                    "type": "integer",
+                    "example": 456
+                },
+                "priority": {
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "normal",
+                        "high",
+                        "urgent",
+                        "critical"
+                    ],
+                    "example": "high"
+                },
+                "reason": {
+                    "type": "string",
+                    "example": "Bulk closing resolved tickets"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "open",
+                        "in_progress",
+                        "pending",
+                        "resolved",
+                        "closed"
+                    ],
+                    "example": "closed"
+                },
+                "ticket_ids": {
+                    "type": "array",
+                    "maxItems": 100,
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         },
@@ -20380,292 +20845,16 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.DatabaseHealthResponse": {
+        "dto.CloseTicketRequest": {
             "type": "object",
             "properties": {
-                "mysql": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "redis": {
-                    "type": "boolean",
-                    "example": true
+                "reason": {
+                    "type": "string",
+                    "example": "Issue resolved, closing ticket"
                 }
             }
         },
-        "dto.HealthCheckResponse": {
-            "type": "object",
-            "properties": {
-                "application": {
-                    "$ref": "#/definitions/dto.ApplicationHealthResponse"
-                },
-                "database": {
-                    "$ref": "#/definitions/dto.DatabaseHealthResponse"
-                }
-            }
-        },
-        "dto.ServerAPIHealthResponse": {
-            "type": "object",
-            "properties": {
-                "service": {
-                    "type": "string",
-                    "example": "server-api"
-                },
-                "status": {
-                    "type": "string",
-                    "example": "ok"
-                }
-            }
-        },
-        "dto.SubscriptionOrderBasicDTO": {
-            "type": "object",
-            "properties": {
-                "amount": {
-                    "type": "number",
-                    "example": 29.99
-                },
-                "created_at": {
-                    "type": "string",
-                    "example": "2024-01-01T00:00:00Z"
-                },
-                "currency": {
-                    "type": "string",
-                    "example": "USD"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "order_number": {
-                    "type": "string",
-                    "example": "ORD-2024-001"
-                },
-                "order_type": {
-                    "type": "string",
-                    "example": "new"
-                },
-                "paid_at": {
-                    "type": "string",
-                    "example": "2024-01-01T10:30:00Z"
-                },
-                "payment_gateway": {
-                    "type": "string",
-                    "example": "stripe"
-                },
-                "payment_method": {
-                    "type": "string",
-                    "example": "credit_card"
-                },
-                "status": {
-                    "type": "string",
-                    "example": "paid"
-                },
-                "subscription_plan_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "total_amount": {
-                    "type": "number",
-                    "example": 29.99
-                },
-                "updated_at": {
-                    "type": "string",
-                    "example": "2024-01-01T00:00:00Z"
-                },
-                "user_id": {
-                    "type": "integer",
-                    "example": 1
-                }
-            }
-        },
-        "dto.TrafficStatsResponse": {
-            "type": "object",
-            "properties": {
-                "last_updated": {
-                    "type": "string",
-                    "example": "2024-01-15T10:30:00Z"
-                },
-                "period": {
-                    "type": "string",
-                    "example": "monthly"
-                },
-                "remaining_bytes": {
-                    "type": "integer",
-                    "example": 9663676416
-                },
-                "reset_date": {
-                    "type": "string",
-                    "example": "2024-02-01"
-                },
-                "status": {
-                    "type": "string",
-                    "example": "active"
-                },
-                "subscription_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "total_bytes": {
-                    "type": "integer",
-                    "example": 10737418240
-                },
-                "usage_percent": {
-                    "type": "number",
-                    "example": 10
-                },
-                "used_bytes": {
-                    "type": "integer",
-                    "example": 1073741824
-                }
-            }
-        },
-        "dto.UniProxyPushResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string",
-                    "example": "Traffic data processed successfully"
-                },
-                "processed": {
-                    "type": "integer",
-                    "example": 100
-                },
-                "success": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "timestamp": {
-                    "type": "integer",
-                    "example": 1704067200
-                }
-            }
-        },
-        "dto.UserBasicDTO": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "type": "string",
-                    "example": "https://example.com/avatar.jpg"
-                },
-                "email": {
-                    "type": "string",
-                    "example": "user@example.com"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "name": {
-                    "type": "string",
-                    "example": "John Doe"
-                },
-                "provider": {
-                    "type": "string",
-                    "example": "google"
-                },
-                "role": {
-                    "type": "string",
-                    "example": "user"
-                },
-                "status": {
-                    "type": "string",
-                    "example": "active"
-                },
-                "username": {
-                    "type": "string",
-                    "example": "johndoe"
-                }
-            }
-        },
-        "entities.AlertConfigurationResponse": {
-            "type": "object",
-            "properties": {
-                "cooldown_minutes": {
-                    "description": "Cooldown in minutes",
-                    "type": "integer",
-                    "example": 60
-                },
-                "created_at": {
-                    "description": "Creation time",
-                    "type": "string",
-                    "format": "date-time",
-                    "example": "2024-01-01T00:00:00Z"
-                },
-                "description": {
-                    "description": "Description",
-                    "type": "string",
-                    "example": "Alert when traffic usage reaches 80%"
-                },
-                "id": {
-                    "description": "Configuration ID",
-                    "type": "integer",
-                    "example": 1
-                },
-                "is_enabled": {
-                    "description": "Whether enabled",
-                    "type": "boolean",
-                    "example": true
-                },
-                "name": {
-                    "description": "Alert name",
-                    "type": "string",
-                    "example": "Traffic 80% Alert"
-                },
-                "notification_channels": {
-                    "description": "Notification channels",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entities.NotificationChannel"
-                    }
-                },
-                "priority": {
-                    "description": "Priority level",
-                    "type": "string",
-                    "example": "medium"
-                },
-                "threshold": {
-                    "description": "Threshold value",
-                    "type": "number",
-                    "example": 80
-                },
-                "threshold_type": {
-                    "description": "Threshold type",
-                    "type": "string",
-                    "example": "percentage"
-                },
-                "updated_at": {
-                    "description": "Update time",
-                    "type": "string",
-                    "format": "date-time",
-                    "example": "2024-01-01T00:00:00Z"
-                },
-                "usage_type": {
-                    "description": "Usage type to monitor",
-                    "type": "string",
-                    "example": "traffic"
-                },
-                "user_subscription_id": {
-                    "description": "Subscription ID",
-                    "type": "integer",
-                    "example": 1
-                }
-            }
-        },
-        "entities.BindingListResponse": {
-            "type": "object",
-            "properties": {
-                "bindings": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entities.UserAccountBindingResponse"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "entities.CouponResponse": {
+        "dto.CouponResponse": {
             "type": "object",
             "properties": {
                 "applicable_plans": {
@@ -20759,14 +20948,14 @@ const docTemplate = `{
                 }
             }
         },
-        "entities.CouponUsageResponse": {
+        "dto.CouponUsageResponse": {
             "type": "object",
             "properties": {
                 "coupon": {
                     "description": "Related data (to be populated at application layer)",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/entities.CouponResponse"
+                            "$ref": "#/definitions/dto.CouponResponse"
                         }
                     ]
                 },
@@ -20833,58 +21022,139 @@ const docTemplate = `{
                 }
             }
         },
-        "entities.CreateBindingRequest": {
+        "dto.CreateCouponRequest": {
             "type": "object",
             "required": [
-                "provider",
-                "provider_user_id"
+                "code",
+                "name",
+                "type",
+                "value"
             ],
             "properties": {
-                "is_primary": {
-                    "type": "boolean",
-                    "example": false
+                "applicable_plans": {
+                    "type": "string",
+                    "example": "[1,2,3]"
                 },
-                "provider": {
+                "code": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 3,
+                    "example": "SAVE20"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "Save 20% on any subscription plan"
+                },
+                "is_public": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "max_uses": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 100
+                },
+                "max_uses_per_user": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 1
+                },
+                "min_order_amount": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 10
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "example": "20% Off All Plans"
+                },
+                "type": {
                     "type": "string",
                     "enum": [
-                        "google",
-                        "github",
-                        "telegram"
+                        "percentage",
+                        "fixed_amount"
                     ],
-                    "example": "google"
+                    "example": "percentage"
                 },
-                "provider_avatar": {
+                "valid_from": {
                     "type": "string",
-                    "maxLength": 500,
-                    "example": "https://example.com/avatar.jpg"
+                    "example": "2024-01-01T00:00:00Z"
                 },
-                "provider_data": {
+                "valid_until": {
                     "type": "string",
-                    "example": "{\"extra\": \"data\"}"
+                    "example": "2024-12-31T23:59:59Z"
                 },
-                "provider_email": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "user@example.com"
-                },
-                "provider_name": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "User Name"
-                },
-                "provider_user_id": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "example": "123456789"
-                },
-                "provider_username": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "example": "username"
+                "value": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 20
                 }
             }
         },
-        "entities.CreatePaymentMethodRequest": {
+        "dto.CreatePaymentConfigRequest": {
+            "type": "object",
+            "required": [
+                "config",
+                "gateway",
+                "name"
+            ],
+            "properties": {
+                "config": {
+                    "type": "string",
+                    "example": "{\"api_url\":\"...\"}"
+                },
+                "fixed_fee": {
+                    "type": "number",
+                    "example": 0
+                },
+                "gateway": {
+                    "type": "string",
+                    "example": "epay"
+                },
+                "is_enabled": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "max_amount": {
+                    "type": "number",
+                    "example": 99999.99
+                },
+                "methods": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.Method"
+                    }
+                },
+                "min_amount": {
+                    "type": "number",
+                    "example": 0.01
+                },
+                "name": {
+                    "type": "string",
+                    "example": "EPay Gateway"
+                },
+                "percentage_fee": {
+                    "type": "number",
+                    "example": 0.6
+                },
+                "sort_order": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "supported_currencies": {
+                    "type": "string",
+                    "example": "CNY"
+                }
+            }
+        },
+        "dto.CreatePaymentMethodRequest": {
             "type": "object",
             "required": [
                 "display_name",
@@ -20956,82 +21226,534 @@ const docTemplate = `{
                 }
             }
         },
-        "entities.CreateUserRequest": {
+        "dto.CreatePaymentOrderRequest": {
             "type": "object",
             "required": [
-                "email"
+                "amount",
+                "currency",
+                "gateway",
+                "payment_method",
+                "subject"
             ],
             "properties": {
-                "email": {
+                "amount": {
+                    "type": "number",
+                    "example": 29.99
+                },
+                "body": {
                     "type": "string",
-                    "maxLength": 255,
-                    "example": "user@example.com"
+                    "example": "Monthly premium subscription payment"
+                },
+                "client_ip": {
+                    "description": "Client IP",
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "CNY"
+                },
+                "expired_minutes": {
+                    "type": "integer",
+                    "example": 30
+                },
+                "gateway": {
+                    "type": "string",
+                    "example": "epay"
+                },
+                "invoice_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "metadata": {
+                    "description": "Additional metadata",
+                    "type": "string"
+                },
+                "notify_url": {
+                    "description": "Async notification URL",
+                    "type": "string"
+                },
+                "payment_method": {
+                    "type": "string",
+                    "example": "alipay"
+                },
+                "return_url": {
+                    "type": "string",
+                    "example": "https://example.com/payment/return"
+                },
+                "subject": {
+                    "type": "string",
+                    "example": "Premium Subscription"
+                },
+                "subscription_order_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.CreateReferralCampaignRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "referrer_reward_amount",
+                "type"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "Refer friends and earn rewards"
+                },
+                "end_date": {
+                    "type": "string",
+                    "example": "2024-08-31T23:59:59Z"
+                },
+                "is_public": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "max_referrals": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "max_rewards": {
+                    "type": "integer",
+                    "example": 1000
+                },
+                "min_referrals": {
+                    "type": "integer",
+                    "example": 1
                 },
                 "name": {
                     "type": "string",
                     "maxLength": 255,
-                    "example": "John Doe"
+                    "example": "Summer Referral Campaign"
                 },
-                "password": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 6,
-                    "example": "password123"
+                "referee_reward_amount": {
+                    "type": "number",
+                    "example": 5
                 },
-                "role": {
+                "referrer_reward_amount": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 10
+                },
+                "reward_currency": {
                     "type": "string",
-                    "enum": [
-                        "user",
-                        "admin"
-                    ],
-                    "example": "user"
+                    "example": "USD"
+                },
+                "start_date": {
+                    "type": "string",
+                    "example": "2024-06-01T00:00:00Z"
                 },
                 "status": {
                     "type": "string",
-                    "enum": [
-                        "active",
-                        "inactive",
-                        "banned"
-                    ],
                     "example": "active"
                 },
-                "username": {
+                "terms": {
                     "type": "string",
-                    "maxLength": 100,
-                    "example": "johndoe"
+                    "maxLength": 5000,
+                    "example": "Terms and conditions"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "standard",
+                        "bonus",
+                        "limited"
+                    ],
+                    "example": "standard"
                 }
             }
         },
-        "entities.InviteCodeResponse": {
+        "dto.CreateReferralRequest": {
+            "type": "object",
+            "required": [
+                "referee_id",
+                "referral_source",
+                "referrer_id"
+            ],
+            "properties": {
+                "attribution_data": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "campaign_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "conversion_type": {
+                    "type": "string",
+                    "example": "subscription"
+                },
+                "conversion_value": {
+                    "type": "number",
+                    "example": 29.99
+                },
+                "expiration_days": {
+                    "type": "integer",
+                    "example": 30
+                },
+                "invite_code_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "referee_id": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "referral_channel": {
+                    "type": "string",
+                    "example": "organic"
+                },
+                "referral_code": {
+                    "type": "string",
+                    "example": "REF123"
+                },
+                "referral_source": {
+                    "type": "string",
+                    "example": "invite_code"
+                },
+                "referrer_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "dto.CreateServerGroupRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "Asia Pacific"
+                }
+            }
+        },
+        "dto.CreateShadowsocksServerRequest": {
+            "type": "object",
+            "required": [
+                "cipher",
+                "group_id",
+                "host",
+                "name",
+                "port",
+                "rate",
+                "server_port"
+            ],
+            "properties": {
+                "cipher": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "aes-256-gcm"
+                },
+                "excludes": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "example": "192.168.0.0/16"
+                },
+                "group_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "host": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "us01.example.com"
+                },
+                "ips": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "0.0.0.0/0"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "US-01"
+                },
+                "obfs": {
+                    "type": "string",
+                    "maxLength": 11,
+                    "example": "tls"
+                },
+                "obfs_settings": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "obfs=tls"
+                },
+                "parent_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "port": {
+                    "type": "integer",
+                    "maximum": 65535,
+                    "minimum": 1,
+                    "example": 443
+                },
+                "rate": {
+                    "type": "number",
+                    "minimum": 0.1,
+                    "example": 1
+                },
+                "route_id": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "route-1"
+                },
+                "server_port": {
+                    "type": "integer",
+                    "maximum": 65535,
+                    "minimum": 1,
+                    "example": 8388
+                },
+                "show": {
+                    "type": "integer",
+                    "maximum": 1,
+                    "minimum": 0,
+                    "example": 1
+                },
+                "sort": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "tags": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "premium,fast"
+                }
+            }
+        },
+        "dto.DatabaseHealthResponse": {
+            "type": "object",
+            "properties": {
+                "mysql": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "redis": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "dto.EscalateTicketRequest": {
+            "type": "object",
+            "required": [
+                "escalated_to_id",
+                "escalation_reason"
+            ],
+            "properties": {
+                "escalated_to_id": {
+                    "type": "integer",
+                    "example": 789
+                },
+                "escalation_reason": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "minLength": 10,
+                    "example": "Customer demands supervisor escalation"
+                },
+                "priority": {
+                    "type": "string",
+                    "enum": [
+                        "high",
+                        "urgent",
+                        "critical"
+                    ],
+                    "example": "urgent"
+                }
+            }
+        },
+        "dto.ExtendExpiryRequest": {
+            "type": "object",
+            "required": [
+                "extend_type"
+            ],
+            "properties": {
+                "extend_days": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 30
+                },
+                "extend_type": {
+                    "type": "string",
+                    "enum": [
+                        "days",
+                        "specific"
+                    ],
+                    "example": "days"
+                },
+                "new_expiry": {
+                    "type": "string",
+                    "example": "2024-12-31T23:59:59Z"
+                }
+            }
+        },
+        "dto.FailureAnalysis": {
+            "type": "object",
+            "properties": {
+                "average_recovery_time": {
+                    "type": "number"
+                },
+                "business_failures": {
+                    "type": "integer"
+                },
+                "failure_patterns": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.FailurePattern"
+                    }
+                },
+                "gateway": {
+                    "type": "string"
+                },
+                "gateway_failures": {
+                    "type": "integer"
+                },
+                "network_failures": {
+                    "type": "integer"
+                },
+                "permanent_failures": {
+                    "type": "integer"
+                },
+                "recommended_actions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "recovery_rate": {
+                    "type": "number"
+                },
+                "temporary_failures": {
+                    "type": "integer"
+                },
+                "top_failure_reasons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.FailureReason"
+                    }
+                },
+                "total_failures": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.FailurePattern": {
+            "type": "object",
+            "properties": {
+                "average_attempts": {
+                    "type": "number"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "error_type": {
+                    "description": "Additional fields for compatibility",
+                    "type": "string"
+                },
+                "failure_reason": {
+                    "type": "string"
+                },
+                "occurrences": {
+                    "type": "integer"
+                },
+                "pattern": {
+                    "type": "string"
+                },
+                "percentage": {
+                    "type": "number"
+                },
+                "success_rate": {
+                    "type": "number"
+                }
+            }
+        },
+        "dto.FailureReason": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "percentage": {
+                    "type": "number"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "retry_success_rate": {
+                    "type": "number"
+                }
+            }
+        },
+        "dto.GatewayHealthMetric": {
+            "type": "object",
+            "properties": {
+                "active_retries": {
+                    "type": "integer"
+                },
+                "average_attempts": {
+                    "type": "number"
+                },
+                "gateway": {
+                    "type": "string"
+                },
+                "health_status": {
+                    "description": "healthy, degraded, critical",
+                    "type": "string"
+                },
+                "processing_rate": {
+                    "type": "number"
+                },
+                "queue_depth": {
+                    "type": "integer"
+                },
+                "success_rate": {
+                    "type": "number"
+                }
+            }
+        },
+        "dto.HealthCheckResponse": {
+            "type": "object",
+            "properties": {
+                "application": {
+                    "$ref": "#/definitions/dto.ApplicationHealthResponse"
+                },
+                "database": {
+                    "$ref": "#/definitions/dto.DatabaseHealthResponse"
+                }
+            }
+        },
+        "dto.InviteCodeResponse": {
             "type": "object",
             "properties": {
                 "code": {
-                    "description": "Invite code string",
                     "type": "string",
                     "example": "a1b2c3d4e5f6789012345678901234567890abcd"
                 },
                 "created_at": {
-                    "description": "Creation time",
                     "type": "string",
                     "example": "2024-01-01T00:00:00Z"
                 },
                 "created_by_id": {
-                    "description": "Creator user ID",
                     "type": "integer",
                     "example": 1
                 },
                 "description": {
-                    "description": "Description",
                     "type": "string",
                     "example": "Friend invitation code"
                 },
                 "id": {
-                    "description": "Invite code ID",
                     "type": "integer",
                     "example": 1
                 },
                 "max_uses": {
-                    "description": "Maximum number of uses",
                     "type": "integer",
                     "example": 10
                 },
@@ -21041,17 +21763,14 @@ const docTemplate = `{
                     "example": 1
                 },
                 "referral_reward_amount": {
-                    "description": "Referral reward amount",
                     "type": "number",
                     "example": 5
                 },
                 "referral_reward_currency": {
-                    "description": "Referral reward currency",
                     "type": "string",
                     "example": "USD"
                 },
                 "status": {
-                    "description": "Invite code status",
                     "type": "string",
                     "enum": [
                         "active",
@@ -21061,18 +21780,16 @@ const docTemplate = `{
                     "example": "active"
                 },
                 "updated_at": {
-                    "description": "Last update time",
                     "type": "string",
                     "example": "2024-01-01T00:00:00Z"
                 },
                 "used_count": {
-                    "description": "Current usage count",
                     "type": "integer",
                     "example": 0
                 }
             }
         },
-        "entities.InvoiceResponse": {
+        "dto.InvoiceResponse": {
             "type": "object",
             "properties": {
                 "amount": {
@@ -21259,104 +21976,85 @@ const docTemplate = `{
                 }
             }
         },
-        "entities.Method": {
+        "dto.PatchServerGroupRequest": {
             "type": "object",
             "properties": {
-                "code": {
-                    "description": "Method code (alipay, wechat, usdt, etc.)",
-                    "type": "string"
+                "name": {
+                    "type": "string",
+                    "example": "Europe"
+                }
+            }
+        },
+        "dto.PatchShadowsocksServerRequest": {
+            "type": "object",
+            "properties": {
+                "cipher": {
+                    "type": "string",
+                    "example": "aes-256-gcm"
                 },
-                "description": {
-                    "description": "Description",
-                    "type": "string"
+                "excludes": {
+                    "type": "string",
+                    "example": "192.168.0.0/16"
                 },
-                "environment": {
-                    "description": "production, sandbox, test",
-                    "type": "string"
+                "group_id": {
+                    "type": "integer",
+                    "example": 1
                 },
-                "fee_max": {
-                    "description": "Maximum fee",
-                    "type": "number"
+                "host": {
+                    "type": "string",
+                    "example": "us01.example.com"
                 },
-                "fee_min": {
-                    "description": "Minimum fee",
-                    "type": "number"
-                },
-                "fee_type": {
-                    "description": "none, fixed, percentage",
-                    "type": "string"
-                },
-                "fee_value": {
-                    "description": "Fee value",
-                    "type": "number"
-                },
-                "icon": {
-                    "description": "Icon URL",
-                    "type": "string"
-                },
-                "is_enabled": {
-                    "description": "Whether enabled",
-                    "type": "boolean"
+                "ips": {
+                    "type": "string",
+                    "example": "0.0.0.0/0"
                 },
                 "name": {
-                    "description": "Display name",
-                    "type": "string"
-                },
-                "sort_order": {
-                    "description": "Sort order",
-                    "type": "integer"
-                }
-            }
-        },
-        "entities.NotificationChannel": {
-            "type": "object",
-            "properties": {
-                "enabled": {
-                    "type": "boolean"
-                },
-                "settings": {
-                    "description": "additional settings for the channel",
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                },
-                "target": {
-                    "description": "email address, webhook URL, telegram chat ID, etc.",
-                    "type": "string"
-                },
-                "type": {
-                    "description": "email, webhook, in_app, sms, telegram",
-                    "type": "string"
-                }
-            }
-        },
-        "entities.NotificationResult": {
-            "type": "object",
-            "properties": {
-                "channel": {
-                    "type": "string"
-                },
-                "error": {
-                    "type": "string"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "sent_at": {
                     "type": "string",
-                    "format": "date-time",
-                    "example": "2024-01-01T12:00:00Z"
+                    "example": "US-01"
                 },
-                "success": {
-                    "type": "boolean"
+                "obfs": {
+                    "type": "string",
+                    "example": "tls"
                 },
-                "target": {
-                    "type": "string"
+                "obfs_settings": {
+                    "type": "string",
+                    "example": "obfs=tls"
+                },
+                "parent_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "port": {
+                    "type": "integer",
+                    "example": 443
+                },
+                "rate": {
+                    "type": "number",
+                    "example": 1
+                },
+                "route_id": {
+                    "type": "string",
+                    "example": "route-1"
+                },
+                "server_port": {
+                    "type": "integer",
+                    "example": 8388
+                },
+                "show": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "sort": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "tags": {
+                    "type": "string",
+                    "example": "premium,fast"
                 }
             }
         },
-        "entities.PaymentConfigResponse": {
+        "dto.PaymentConfigResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -21428,16 +22126,16 @@ const docTemplate = `{
                 }
             }
         },
-        "entities.PaymentMethodListResponse": {
+        "dto.PaymentMethodListResponse": {
             "type": "object",
             "properties": {
                 "default_method": {
-                    "$ref": "#/definitions/entities.PaymentMethodResponse"
+                    "$ref": "#/definitions/dto.PaymentMethodResponse"
                 },
                 "payment_methods": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entities.PaymentMethodResponse"
+                        "$ref": "#/definitions/dto.PaymentMethodResponse"
                     }
                 },
                 "total": {
@@ -21446,7 +22144,7 @@ const docTemplate = `{
                 }
             }
         },
-        "entities.PaymentMethodResponse": {
+        "dto.PaymentMethodResponse": {
             "type": "object",
             "properties": {
                 "billing_country": {
@@ -21572,7 +22270,62 @@ const docTemplate = `{
                 }
             }
         },
-        "entities.PaymentRecordResponse": {
+        "dto.PaymentMethodStats": {
+            "type": "object",
+            "properties": {
+                "average_attempts": {
+                    "type": "number"
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "success_rate": {
+                    "type": "number"
+                },
+                "successful_retries": {
+                    "type": "integer"
+                },
+                "total_retries": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.PaymentMethodUsageStats": {
+            "type": "object",
+            "properties": {
+                "average_amount": {
+                    "type": "number"
+                },
+                "failed_uses": {
+                    "type": "integer"
+                },
+                "failure_rate": {
+                    "type": "number"
+                },
+                "last_used": {
+                    "type": "string"
+                },
+                "payment_method_id": {
+                    "type": "integer"
+                },
+                "recent_uses_30_days": {
+                    "type": "integer"
+                },
+                "success_rate": {
+                    "type": "number"
+                },
+                "successful_uses": {
+                    "type": "integer"
+                },
+                "total_amount": {
+                    "type": "number"
+                },
+                "total_uses": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.PaymentRecordResponse": {
             "type": "object",
             "properties": {
                 "amount": {
@@ -21730,178 +22483,151 @@ const docTemplate = `{
                 }
             }
         },
-        "entities.PaymentRetry": {
+        "dto.PaymentRetryHistoryResponse": {
             "type": "object",
             "properties": {
                 "attempt_number": {
-                    "description": "Retry Information",
-                    "type": "integer"
-                },
-                "backoff_factor": {
-                    "description": "Backoff multiplier",
-                    "type": "number"
-                },
-                "cancelled_at": {
-                    "description": "When retry sequence was cancelled",
-                    "type": "string"
-                },
-                "completed_at": {
-                    "description": "When retry sequence completed",
-                    "type": "string"
-                },
-                "created_at": {
-                    "description": "Timestamp Fields",
-                    "type": "string"
-                },
-                "failure_type": {
-                    "description": "temporary, permanent, network, gateway, business",
-                    "type": "string"
-                },
-                "gateway_config": {
-                    "description": "Gateway-specific Configuration",
-                    "type": "string"
-                },
-                "id": {
-                    "description": "Primary Key",
-                    "type": "integer"
-                },
-                "initial_delay": {
-                    "description": "Retry Configuration",
-                    "type": "integer"
-                },
-                "last_attempt_at": {
-                    "description": "Last attempt time",
-                    "type": "string"
-                },
-                "last_error_message": {
-                    "description": "Last error message",
-                    "type": "string"
-                },
-                "last_failure_code": {
-                    "description": "Last error/failure code",
-                    "type": "string"
-                },
-                "max_attempts": {
-                    "description": "Maximum retry attempts",
-                    "type": "integer"
-                },
-                "max_delay": {
-                    "description": "Maximum delay in seconds (24 hours)",
-                    "type": "integer"
-                },
-                "metadata": {
-                    "description": "Metadata",
-                    "type": "string"
-                },
-                "next_retry_at": {
-                    "description": "Next retry time",
-                    "type": "string"
-                },
-                "notes": {
-                    "description": "Admin notes",
-                    "type": "string"
-                },
-                "payment_record_id": {
-                    "description": "Foreign Keys",
-                    "type": "integer"
-                },
-                "retry_strategy": {
-                    "description": "Strategy type: exponential, linear, custom",
-                    "type": "string"
-                },
-                "status": {
-                    "description": "Status and State",
-                    "type": "string"
-                },
-                "successful_at": {
-                    "description": "When payment finally succeeded",
-                    "type": "string"
-                },
-                "total_delay_time": {
-                    "description": "Tracking Information",
-                    "type": "integer"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "entities.PaymentRetryHistory": {
-            "type": "object",
-            "properties": {
-                "attempt_number": {
-                    "description": "Attempt Information",
                     "type": "integer"
                 },
                 "attempted_at": {
-                    "description": "When this attempt was made",
-                    "type": "string"
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-01T12:00:00Z"
                 },
                 "created_at": {
-                    "description": "Timestamp Fields",
-                    "type": "string"
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-01T12:00:00Z"
                 },
                 "delay_from_previous": {
-                    "description": "Delay from previous attempt (seconds)",
                     "type": "integer"
                 },
                 "duration": {
-                    "description": "Duration of attempt in milliseconds",
                     "type": "integer"
                 },
                 "error_type": {
-                    "description": "Type of error encountered",
                     "type": "string"
                 },
                 "failure_reason": {
-                    "description": "Detailed failure reason",
                     "type": "string"
                 },
                 "id": {
-                    "description": "Primary Key",
                     "type": "integer"
                 },
-                "metadata": {
-                    "description": "Metadata",
+                "next_retry_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-01T13:00:00Z"
+                },
+                "response_code": {
                     "type": "string"
                 },
+                "response_message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.PaymentRetryResponse": {
+            "type": "object",
+            "properties": {
+                "attempt_number": {
+                    "type": "integer"
+                },
+                "cancelled_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-01T12:30:00Z"
+                },
+                "completed_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-01T13:00:00Z"
+                },
+                "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-01T10:00:00Z"
+                },
+                "failure_type": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "last_attempt_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-01T11:00:00Z"
+                },
+                "last_failure_code": {
+                    "type": "string"
+                },
+                "max_attempts": {
+                    "type": "integer"
+                },
                 "next_retry_at": {
-                    "description": "Next Retry Information",
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-01T12:00:00Z"
+                },
+                "notes": {
                     "type": "string"
                 },
                 "payment_record_id": {
                     "type": "integer"
                 },
-                "payment_retry_id": {
-                    "description": "Foreign Keys",
-                    "type": "integer"
-                },
-                "request_data": {
-                    "description": "Technical Details",
-                    "type": "string"
-                },
-                "response_code": {
-                    "description": "Gateway response code",
-                    "type": "string"
-                },
-                "response_data": {
-                    "description": "Response from gateway (sanitized)",
-                    "type": "string"
-                },
-                "response_message": {
-                    "description": "Gateway response message",
+                "retry_strategy": {
                     "type": "string"
                 },
                 "status": {
-                    "description": "Result Information",
                     "type": "string"
                 },
+                "successful_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-01T12:15:00Z"
+                },
+                "total_delay_time": {
+                    "type": "integer"
+                },
                 "updated_at": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-01T10:00:00Z"
                 }
             }
         },
-        "entities.ReferralCampaignResponse": {
+        "dto.PayoutReferralRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "payment_info",
+                "payment_method"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 10
+                },
+                "note": {
+                    "type": "string",
+                    "example": "Monthly referral payout"
+                },
+                "payment_info": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "payment_method": {
+                    "type": "string",
+                    "example": "paypal"
+                }
+            }
+        },
+        "dto.ReferralCampaignResponse": {
             "type": "object",
             "properties": {
                 "campaign_type": {
@@ -21979,7 +22705,7 @@ const docTemplate = `{
                 "referrals": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entities.ReferralResponse"
+                        "$ref": "#/definitions/dto.ReferralResponse"
                     }
                 },
                 "referrer_reward_amount": {
@@ -22040,7 +22766,7 @@ const docTemplate = `{
                 }
             }
         },
-        "entities.ReferralEventResponse": {
+        "dto.ReferralEventResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -22087,7 +22813,7 @@ const docTemplate = `{
                     "description": "Optional related data",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/entities.ReferralResponse"
+                            "$ref": "#/definitions/dto.ReferralResponse"
                         }
                     ]
                 },
@@ -22136,11 +22862,11 @@ const docTemplate = `{
                 }
             }
         },
-        "entities.ReferralResponse": {
+        "dto.ReferralResponse": {
             "type": "object",
             "properties": {
                 "campaign": {
-                    "$ref": "#/definitions/entities.ReferralCampaignResponse"
+                    "$ref": "#/definitions/dto.ReferralCampaignResponse"
                 },
                 "campaign_id": {
                     "type": "integer",
@@ -22179,7 +22905,7 @@ const docTemplate = `{
                     "example": 1
                 },
                 "invite_code": {
-                    "$ref": "#/definitions/entities.InviteCodeResponse"
+                    "$ref": "#/definitions/dto.InviteCodeResponse"
                 },
                 "invite_code_id": {
                     "type": "integer",
@@ -22215,13 +22941,13 @@ const docTemplate = `{
                 "referral_events": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entities.ReferralEventResponse"
+                        "$ref": "#/definitions/dto.ReferralEventResponse"
                     }
                 },
                 "referral_rewards": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entities.ReferralRewardResponse"
+                        "$ref": "#/definitions/dto.ReferralRewardResponse"
                     }
                 },
                 "referral_source": {
@@ -22229,7 +22955,7 @@ const docTemplate = `{
                     "example": "invite_code"
                 },
                 "referrer": {
-                    "description": "Optional related data (to be populated at application layer)",
+                    "description": "Optional related data",
                     "allOf": [
                         {
                             "$ref": "#/definitions/dto.UserBasicDTO"
@@ -22266,7 +22992,7 @@ const docTemplate = `{
                 }
             }
         },
-        "entities.ReferralRewardResponse": {
+        "dto.ReferralRewardResponse": {
             "type": "object",
             "properties": {
                 "approved_at": {
@@ -22281,7 +23007,7 @@ const docTemplate = `{
                     "example": 1
                 },
                 "campaign": {
-                    "$ref": "#/definitions/entities.ReferralCampaignResponse"
+                    "$ref": "#/definitions/dto.ReferralCampaignResponse"
                 },
                 "campaign_id": {
                     "type": "integer",
@@ -22340,10 +23066,10 @@ const docTemplate = `{
                     "example": 0.5
                 },
                 "referral": {
-                    "description": "Optional related data (to be populated at application layer)",
+                    "description": "Optional related data",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/entities.ReferralResponse"
+                            "$ref": "#/definitions/dto.ReferralResponse"
                         }
                     ]
                 },
@@ -22400,6 +23126,1062 @@ const docTemplate = `{
                 "user_id": {
                     "type": "integer",
                     "example": 2
+                }
+            }
+        },
+        "dto.RejectReferralRequest": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "note": {
+                    "type": "string",
+                    "example": "Rejected due to policy violation"
+                },
+                "reason": {
+                    "type": "string",
+                    "example": "Invalid referral"
+                }
+            }
+        },
+        "dto.RetryHealthMetrics": {
+            "type": "object",
+            "properties": {
+                "alerts_triggered": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "average_retry_delay": {
+                    "type": "number"
+                },
+                "gateway_health": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.GatewayHealthMetric"
+                    }
+                },
+                "overdue_retries": {
+                    "type": "integer"
+                },
+                "success_rate_24h": {
+                    "type": "number"
+                },
+                "success_rate_7d": {
+                    "type": "number"
+                },
+                "system_recommendations": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "total_active_retries": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.RetryStatistics": {
+            "type": "object",
+            "properties": {
+                "average_attempts": {
+                    "type": "number"
+                },
+                "average_delay_time": {
+                    "type": "number"
+                },
+                "average_retry_delay": {
+                    "type": "number"
+                },
+                "cancelled_retries": {
+                    "type": "integer"
+                },
+                "date_range": {
+                    "type": "string"
+                },
+                "failed_retries": {
+                    "type": "integer"
+                },
+                "failure_analysis": {
+                    "$ref": "#/definitions/dto.FailureAnalysis"
+                },
+                "from_date": {
+                    "type": "string"
+                },
+                "gateway": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "payment_method_stats": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PaymentMethodStats"
+                    }
+                },
+                "success_rate": {
+                    "type": "number"
+                },
+                "successful_retries": {
+                    "type": "integer"
+                },
+                "to_date": {
+                    "type": "string"
+                },
+                "total_retries": {
+                    "type": "integer"
+                },
+                "trend_data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.RetryTrendData"
+                    }
+                }
+            }
+        },
+        "dto.RetryTrendData": {
+            "type": "object",
+            "properties": {
+                "date": {
+                    "type": "string"
+                },
+                "failure_rate": {
+                    "type": "number"
+                },
+                "success_rate": {
+                    "type": "number"
+                },
+                "total_retries": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.RetryWithHistory": {
+            "type": "object",
+            "properties": {
+                "history": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PaymentRetryHistoryResponse"
+                    }
+                },
+                "retry": {
+                    "$ref": "#/definitions/dto.PaymentRetryResponse"
+                }
+            }
+        },
+        "dto.ServerAPIHealthResponse": {
+            "type": "object",
+            "properties": {
+                "service": {
+                    "type": "string",
+                    "example": "server-api"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "ok"
+                }
+            }
+        },
+        "dto.SubscriptionOrderBasicDTO": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "example": 29.99
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "order_number": {
+                    "type": "string",
+                    "example": "ORD-2024-001"
+                },
+                "order_type": {
+                    "type": "string",
+                    "example": "new"
+                },
+                "paid_at": {
+                    "type": "string",
+                    "example": "2024-01-01T10:30:00Z"
+                },
+                "payment_gateway": {
+                    "type": "string",
+                    "example": "stripe"
+                },
+                "payment_method": {
+                    "type": "string",
+                    "example": "credit_card"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "paid"
+                },
+                "subscription_plan_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "total_amount": {
+                    "type": "number",
+                    "example": 29.99
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "user_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "dto.ToggleStatusRequest": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "inactive"
+                    ],
+                    "example": "active"
+                }
+            }
+        },
+        "dto.TrafficStatsResponse": {
+            "type": "object",
+            "properties": {
+                "last_updated": {
+                    "type": "string",
+                    "example": "2024-01-15T10:30:00Z"
+                },
+                "period": {
+                    "type": "string",
+                    "example": "monthly"
+                },
+                "remaining_bytes": {
+                    "type": "integer",
+                    "example": 9663676416
+                },
+                "reset_date": {
+                    "type": "string",
+                    "example": "2024-02-01"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "active"
+                },
+                "subscription_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "total_bytes": {
+                    "type": "integer",
+                    "example": 10737418240
+                },
+                "usage_percent": {
+                    "type": "number",
+                    "example": 10
+                },
+                "used_bytes": {
+                    "type": "integer",
+                    "example": 1073741824
+                }
+            }
+        },
+        "dto.UniProxyPushResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Traffic data processed successfully"
+                },
+                "processed": {
+                    "type": "integer",
+                    "example": 100
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "timestamp": {
+                    "type": "integer",
+                    "example": 1704067200
+                }
+            }
+        },
+        "dto.UpdateCouponRequest": {
+            "type": "object",
+            "properties": {
+                "applicable_plans": {
+                    "type": "string",
+                    "example": "[1,2,4]"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "example": "Updated description"
+                },
+                "is_public": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "max_uses": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 200
+                },
+                "max_uses_per_user": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 2
+                },
+                "min_order_amount": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 15
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "example": "Updated Coupon Name"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "inactive",
+                        "expired"
+                    ],
+                    "example": "active"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "percentage",
+                        "fixed_amount"
+                    ],
+                    "example": "percentage"
+                },
+                "valid_from": {
+                    "type": "string",
+                    "example": "2024-02-01T00:00:00Z"
+                },
+                "valid_until": {
+                    "type": "string",
+                    "example": "2024-11-30T23:59:59Z"
+                },
+                "value": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 25
+                }
+            }
+        },
+        "dto.UpdatePaymentConfigRequest": {
+            "type": "object",
+            "properties": {
+                "config": {
+                    "type": "string",
+                    "example": "{\"api_url\":\"...\"}"
+                },
+                "fixed_fee": {
+                    "type": "number",
+                    "example": 0
+                },
+                "is_enabled": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "max_amount": {
+                    "type": "number",
+                    "example": 99999.99
+                },
+                "methods": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.Method"
+                    }
+                },
+                "min_amount": {
+                    "type": "number",
+                    "example": 0.01
+                },
+                "name": {
+                    "type": "string",
+                    "example": "EPay Gateway"
+                },
+                "percentage_fee": {
+                    "type": "number",
+                    "example": 0.6
+                },
+                "sort_order": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "supported_currencies": {
+                    "type": "string",
+                    "example": "CNY"
+                }
+            }
+        },
+        "dto.UpdatePaymentMethodRequest": {
+            "type": "object",
+            "properties": {
+                "billing_country": {
+                    "type": "string",
+                    "example": "CN"
+                },
+                "billing_postcode": {
+                    "type": "string",
+                    "example": "100000"
+                },
+                "display_name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "Updated Payment Method"
+                },
+                "expiry_month": {
+                    "type": "integer",
+                    "example": 12
+                },
+                "expiry_year": {
+                    "type": "integer",
+                    "example": 2026
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "dto.UpdateReferralRequest": {
+            "type": "object",
+            "properties": {
+                "conversion_type": {
+                    "type": "string"
+                },
+                "conversion_value": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "referee_status": {
+                    "type": "string",
+                    "enum": [
+                        "registered",
+                        "activated",
+                        "subscribed",
+                        "churned"
+                    ]
+                },
+                "reward_amount": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "reward_status": {
+                    "type": "string",
+                    "enum": [
+                        "pending",
+                        "earned",
+                        "paid",
+                        "cancelled"
+                    ]
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "pending",
+                        "confirmed",
+                        "rewarded",
+                        "cancelled"
+                    ]
+                }
+            }
+        },
+        "dto.UpdateServerGroupRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "Europe"
+                }
+            }
+        },
+        "dto.UpdateShadowsocksServerRequest": {
+            "type": "object",
+            "properties": {
+                "cipher": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "aes-256-gcm"
+                },
+                "excludes": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "example": "192.168.0.0/16"
+                },
+                "group_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "host": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "us01.example.com"
+                },
+                "ips": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "0.0.0.0/0"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "US-01"
+                },
+                "obfs": {
+                    "type": "string",
+                    "maxLength": 11,
+                    "example": "tls"
+                },
+                "obfs_settings": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "obfs=tls"
+                },
+                "parent_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "port": {
+                    "type": "integer",
+                    "maximum": 65535,
+                    "minimum": 1,
+                    "example": 443
+                },
+                "rate": {
+                    "type": "number",
+                    "minimum": 0.1,
+                    "example": 1
+                },
+                "route_id": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "route-1"
+                },
+                "server_port": {
+                    "type": "integer",
+                    "maximum": 65535,
+                    "minimum": 1,
+                    "example": 8388
+                },
+                "show": {
+                    "type": "integer",
+                    "maximum": 1,
+                    "minimum": 0,
+                    "example": 1
+                },
+                "sort": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "tags": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "premium,fast"
+                }
+            }
+        },
+        "dto.UpdateTicketMessageRequest": {
+            "type": "object",
+            "properties": {
+                "attachments": {
+                    "type": "string",
+                    "example": "[{\"name\":\"updated.png\",\"url\":\"https://example.com/updated.png\"}]"
+                },
+                "content": {
+                    "type": "string",
+                    "maxLength": 5000,
+                    "minLength": 1,
+                    "example": "Updated message content"
+                },
+                "is_internal": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "metadata": {
+                    "type": "string",
+                    "example": "{\"updated_by\":\"admin\"}"
+                }
+            }
+        },
+        "dto.UserBasicDTO": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string",
+                    "example": "https://example.com/avatar.jpg"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "provider": {
+                    "type": "string",
+                    "example": "google"
+                },
+                "role": {
+                    "type": "string",
+                    "example": "user"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "active"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "johndoe"
+                }
+            }
+        },
+        "dto.UserCreateTicketRequest": {
+            "type": "object",
+            "required": [
+                "category",
+                "description",
+                "title"
+            ],
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "enum": [
+                        "general",
+                        "technical",
+                        "billing",
+                        "account",
+                        "feature",
+                        "bug",
+                        "subscription",
+                        "payment"
+                    ],
+                    "example": "subscription"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 5000,
+                    "minLength": 10,
+                    "example": "I am unable to access my premium subscription features"
+                },
+                "metadata": {
+                    "type": "string",
+                    "example": "{\"browser\": \"Chrome\", \"os\": \"Windows\"}"
+                },
+                "priority": {
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "normal",
+                        "high",
+                        "urgent",
+                        "critical"
+                    ],
+                    "example": "normal"
+                },
+                "tags": {
+                    "type": "string",
+                    "example": "urgent,subscription"
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 5,
+                    "example": "Unable to access my subscription"
+                }
+            }
+        },
+        "dto.UserTicketMessageRequest": {
+            "type": "object",
+            "required": [
+                "content"
+            ],
+            "properties": {
+                "attachments": {
+                    "type": "string",
+                    "example": "[{\"name\":\"screenshot.png\",\"url\":\"https://example.com/file.png\"}]"
+                },
+                "content": {
+                    "type": "string",
+                    "maxLength": 5000,
+                    "minLength": 1,
+                    "example": "Thank you for your response. I tried the suggested solution but the issue persists."
+                },
+                "metadata": {
+                    "type": "string",
+                    "example": "{\"client_ip\":\"192.168.1.1\"}"
+                }
+            }
+        },
+        "dto.ValidateCouponRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "currency",
+                "order_amount",
+                "plan_id",
+                "user_id"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "SAVE20"
+                },
+                "currency": {
+                    "type": "string",
+                    "example": "USD"
+                },
+                "order_amount": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 29.99
+                },
+                "plan_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "user_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "dto.ValidateCouponResponse": {
+            "type": "object",
+            "properties": {
+                "coupon": {
+                    "$ref": "#/definitions/dto.CouponResponse"
+                },
+                "discount_amount": {
+                    "type": "number",
+                    "example": 5.99
+                },
+                "final_amount": {
+                    "type": "number",
+                    "example": 24
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Coupon is valid"
+                },
+                "valid": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "entities.AlertConfigurationResponse": {
+            "type": "object",
+            "properties": {
+                "cooldown_minutes": {
+                    "description": "Cooldown in minutes",
+                    "type": "integer",
+                    "example": 60
+                },
+                "created_at": {
+                    "description": "Creation time",
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "description": {
+                    "description": "Description",
+                    "type": "string",
+                    "example": "Alert when traffic usage reaches 80%"
+                },
+                "id": {
+                    "description": "Configuration ID",
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_enabled": {
+                    "description": "Whether enabled",
+                    "type": "boolean",
+                    "example": true
+                },
+                "name": {
+                    "description": "Alert name",
+                    "type": "string",
+                    "example": "Traffic 80% Alert"
+                },
+                "notification_channels": {
+                    "description": "Notification channels",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.NotificationChannel"
+                    }
+                },
+                "priority": {
+                    "description": "Priority level",
+                    "type": "string",
+                    "example": "medium"
+                },
+                "threshold": {
+                    "description": "Threshold value",
+                    "type": "number",
+                    "example": 80
+                },
+                "threshold_type": {
+                    "description": "Threshold type",
+                    "type": "string",
+                    "example": "percentage"
+                },
+                "updated_at": {
+                    "description": "Update time",
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "usage_type": {
+                    "description": "Usage type to monitor",
+                    "type": "string",
+                    "example": "traffic"
+                },
+                "user_subscription_id": {
+                    "description": "Subscription ID",
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "entities.BindingListResponse": {
+            "type": "object",
+            "properties": {
+                "bindings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.UserAccountBindingResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entities.CreateBindingRequest": {
+            "type": "object",
+            "required": [
+                "provider",
+                "provider_user_id"
+            ],
+            "properties": {
+                "is_primary": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "provider": {
+                    "type": "string",
+                    "enum": [
+                        "google",
+                        "github",
+                        "telegram"
+                    ],
+                    "example": "google"
+                },
+                "provider_avatar": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "example": "https://example.com/avatar.jpg"
+                },
+                "provider_data": {
+                    "type": "string",
+                    "example": "{\"extra\": \"data\"}"
+                },
+                "provider_email": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "user@example.com"
+                },
+                "provider_name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "User Name"
+                },
+                "provider_user_id": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "123456789"
+                },
+                "provider_username": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "username"
+                }
+            }
+        },
+        "entities.CreateUserRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "user@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "John Doe"
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 6,
+                    "example": "password123"
+                },
+                "role": {
+                    "type": "string",
+                    "enum": [
+                        "user",
+                        "admin"
+                    ],
+                    "example": "user"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "inactive",
+                        "banned"
+                    ],
+                    "example": "active"
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "johndoe"
+                }
+            }
+        },
+        "entities.Method": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "Method code (alipay, wechat, usdt, etc.)",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "Description",
+                    "type": "string"
+                },
+                "environment": {
+                    "description": "constants.EnvironmentProduction, constants.EnvironmentSandbox, constants.EnvironmentTest",
+                    "type": "string"
+                },
+                "fee_max": {
+                    "description": "Maximum fee",
+                    "type": "number"
+                },
+                "fee_min": {
+                    "description": "Minimum fee",
+                    "type": "number"
+                },
+                "fee_type": {
+                    "description": "constants.FeeTypeNone, constants.FeeTypeFixed, constants.FeeTypePercentage",
+                    "type": "string"
+                },
+                "fee_value": {
+                    "description": "Fee value",
+                    "type": "number"
+                },
+                "icon": {
+                    "description": "Icon URL",
+                    "type": "string"
+                },
+                "is_enabled": {
+                    "description": "Whether enabled",
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "Display name",
+                    "type": "string"
+                },
+                "sort_order": {
+                    "description": "Sort order",
+                    "type": "integer"
+                }
+            }
+        },
+        "entities.NotificationChannel": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "settings": {
+                    "description": "additional settings for the channel",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "target": {
+                    "description": "email address, webhook URL, telegram chat ID, etc.",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "email, webhook, in_app, sms, telegram",
+                    "type": "string"
+                }
+            }
+        },
+        "entities.NotificationResult": {
+            "type": "object",
+            "properties": {
+                "channel": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "sent_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-01T12:00:00Z"
+                },
+                "success": {
+                    "type": "boolean"
+                },
+                "target": {
+                    "type": "string"
                 }
             }
         },
@@ -23100,36 +24882,6 @@ const docTemplate = `{
                 }
             }
         },
-        "entities.UpdatePaymentMethodRequest": {
-            "type": "object",
-            "properties": {
-                "billing_country": {
-                    "type": "string",
-                    "example": "CN"
-                },
-                "billing_postcode": {
-                    "type": "string",
-                    "example": "100000"
-                },
-                "display_name": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "example": "Updated Payment Method"
-                },
-                "expiry_month": {
-                    "type": "integer",
-                    "example": 12
-                },
-                "expiry_year": {
-                    "type": "integer",
-                    "example": 2026
-                },
-                "is_active": {
-                    "type": "boolean",
-                    "example": true
-                }
-            }
-        },
         "entities.UsageAlertResponse": {
             "type": "object",
             "properties": {
@@ -23821,70 +25573,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.AdminCreateTicketRequest": {
-            "type": "object",
-            "required": [
-                "category",
-                "description",
-                "title",
-                "user_id"
-            ],
-            "properties": {
-                "assigned_to_id": {
-                    "type": "integer",
-                    "example": 456
-                },
-                "category": {
-                    "type": "string",
-                    "enum": [
-                        "general",
-                        "technical",
-                        "billing",
-                        "account",
-                        "feature",
-                        "bug",
-                        "subscription",
-                        "payment"
-                    ],
-                    "example": "technical"
-                },
-                "description": {
-                    "type": "string",
-                    "maxLength": 5000,
-                    "minLength": 10,
-                    "example": "Customer reports unable to log in to their account"
-                },
-                "metadata": {
-                    "type": "string",
-                    "example": "{\"source\": \"admin_created\"}"
-                },
-                "priority": {
-                    "type": "string",
-                    "enum": [
-                        "low",
-                        "normal",
-                        "high",
-                        "urgent",
-                        "critical"
-                    ],
-                    "example": "normal"
-                },
-                "tags": {
-                    "type": "string",
-                    "example": "urgent,login"
-                },
-                "title": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 5,
-                    "example": "Unable to access account"
-                },
-                "user_id": {
-                    "type": "integer",
-                    "example": 123
-                }
-            }
-        },
         "handlers.AdminCreateUserSubscriptionRequest": {
             "type": "object",
             "required": [
@@ -23987,40 +25675,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.AdminTicketMessageRequest": {
-            "type": "object",
-            "required": [
-                "content"
-            ],
-            "properties": {
-                "attachments": {
-                    "type": "string",
-                    "example": "[{\"name\":\"response.pdf\",\"url\":\"https://example.com/file.pdf\"}]"
-                },
-                "content": {
-                    "type": "string",
-                    "maxLength": 5000,
-                    "minLength": 1,
-                    "example": "Thank you for contacting support. We are reviewing your issue."
-                },
-                "is_internal": {
-                    "type": "boolean",
-                    "example": false
-                },
-                "message_type": {
-                    "type": "string",
-                    "enum": [
-                        "admin",
-                        "system"
-                    ],
-                    "example": "admin"
-                },
-                "metadata": {
-                    "type": "string",
-                    "example": "{\"agent_id\":\"456\"}"
-                }
-            }
-        },
         "handlers.AdminUpdateInvoiceRequest": {
             "type": "object",
             "properties": {
@@ -24106,67 +25760,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.AdminUpdateTicketRequest": {
-            "type": "object",
-            "properties": {
-                "category": {
-                    "type": "string",
-                    "enum": [
-                        "general",
-                        "technical",
-                        "billing",
-                        "account",
-                        "feature",
-                        "bug",
-                        "subscription",
-                        "payment"
-                    ],
-                    "example": "billing"
-                },
-                "description": {
-                    "type": "string",
-                    "maxLength": 5000,
-                    "minLength": 10,
-                    "example": "Updated description"
-                },
-                "metadata": {
-                    "type": "string",
-                    "example": "{\"updated_by\": \"admin\"}"
-                },
-                "priority": {
-                    "type": "string",
-                    "enum": [
-                        "low",
-                        "normal",
-                        "high",
-                        "urgent",
-                        "critical"
-                    ],
-                    "example": "high"
-                },
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "open",
-                        "in_progress",
-                        "pending",
-                        "resolved",
-                        "closed"
-                    ],
-                    "example": "in_progress"
-                },
-                "tags": {
-                    "type": "string",
-                    "example": "urgent,billing"
-                },
-                "title": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 5,
-                    "example": "Updated ticket title"
-                }
-            }
-        },
         "handlers.AdminUpdateUserSubscriptionRequest": {
             "type": "object",
             "properties": {
@@ -24246,36 +25839,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.ApproveReferralRequest": {
-            "type": "object",
-            "properties": {
-                "note": {
-                    "type": "string",
-                    "example": "Approved by admin"
-                },
-                "reward_amount": {
-                    "type": "number",
-                    "minimum": 0,
-                    "example": 10
-                }
-            }
-        },
-        "handlers.AssignTicketRequest": {
-            "type": "object",
-            "required": [
-                "assigned_to_id"
-            ],
-            "properties": {
-                "assigned_to_id": {
-                    "type": "integer",
-                    "example": 456
-                },
-                "note": {
-                    "type": "string",
-                    "example": "Assigned to senior support agent"
-                }
-            }
-        },
         "handlers.BatchUserIDsRequest": {
             "type": "object",
             "required": [
@@ -24289,89 +25852,6 @@ const docTemplate = `{
                     "items": {
                         "type": "integer"
                     }
-                }
-            }
-        },
-        "handlers.BulkCreateCouponRequest": {
-            "type": "object",
-            "required": [
-                "code_prefix",
-                "count",
-                "name",
-                "type",
-                "value"
-            ],
-            "properties": {
-                "applicable_plans": {
-                    "type": "string",
-                    "example": "[1,2,3]"
-                },
-                "code_prefix": {
-                    "type": "string",
-                    "maxLength": 20,
-                    "minLength": 2,
-                    "example": "BULK"
-                },
-                "count": {
-                    "type": "integer",
-                    "maximum": 1000,
-                    "minimum": 1,
-                    "example": 100
-                },
-                "currency": {
-                    "type": "string",
-                    "example": "USD"
-                },
-                "description": {
-                    "type": "string",
-                    "maxLength": 1000,
-                    "example": "Bulk generated discount coupons"
-                },
-                "is_public": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "max_uses": {
-                    "type": "integer",
-                    "minimum": 0,
-                    "example": 1
-                },
-                "max_uses_per_user": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "example": 1
-                },
-                "min_order_amount": {
-                    "type": "number",
-                    "minimum": 0,
-                    "example": 10
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 1,
-                    "example": "Bulk Generated Coupons"
-                },
-                "type": {
-                    "type": "string",
-                    "enum": [
-                        "percentage",
-                        "fixed_amount"
-                    ],
-                    "example": "percentage"
-                },
-                "valid_from": {
-                    "type": "string",
-                    "example": "2024-01-01T00:00:00Z"
-                },
-                "valid_until": {
-                    "type": "string",
-                    "example": "2024-12-31T23:59:59Z"
-                },
-                "value": {
-                    "type": "number",
-                    "minimum": 0,
-                    "example": 20
                 }
             }
         },
@@ -24409,38 +25889,6 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 255,
                     "example": "Bulk admin action"
-                }
-            }
-        },
-        "handlers.BulkReferralRequest": {
-            "type": "object",
-            "required": [
-                "action",
-                "ids"
-            ],
-            "properties": {
-                "action": {
-                    "type": "string",
-                    "enum": [
-                        "approve",
-                        "reject",
-                        "payout"
-                    ]
-                },
-                "amount": {
-                    "type": "number",
-                    "minimum": 0
-                },
-                "ids": {
-                    "type": "array",
-                    "maxItems": 100,
-                    "minItems": 1,
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "note": {
-                    "type": "string"
                 }
             }
         },
@@ -24531,74 +25979,11 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.BulkTicketActionRequest": {
+        "handlers.BulkUpdateRequestDoc": {
             "type": "object",
-            "required": [
-                "action",
-                "ticket_ids"
-            ],
-            "properties": {
-                "action": {
-                    "type": "string",
-                    "enum": [
-                        "assign",
-                        "close",
-                        "reopen",
-                        "update_priority",
-                        "update_status"
-                    ],
-                    "example": "assign"
-                },
-                "assigned_to_id": {
-                    "type": "integer",
-                    "example": 456
-                },
-                "priority": {
-                    "type": "string",
-                    "enum": [
-                        "low",
-                        "normal",
-                        "high",
-                        "urgent",
-                        "critical"
-                    ],
-                    "example": "high"
-                },
-                "reason": {
-                    "type": "string",
-                    "example": "Bulk closing resolved tickets"
-                },
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "open",
-                        "in_progress",
-                        "pending",
-                        "resolved",
-                        "closed"
-                    ],
-                    "example": "closed"
-                },
-                "ticket_ids": {
-                    "type": "array",
-                    "maxItems": 100,
-                    "minItems": 1,
-                    "items": {
-                        "type": "integer"
-                    }
-                }
-            }
-        },
-        "handlers.BulkUpdateRequest": {
-            "type": "object",
-            "required": [
-                "ids"
-            ],
             "properties": {
                 "ids": {
                     "type": "array",
-                    "maxItems": 100,
-                    "minItems": 1,
                     "items": {
                         "type": "integer"
                     }
@@ -24679,143 +26064,6 @@ const docTemplate = `{
                 "old_password": {
                     "type": "string",
                     "example": "oldPassword123"
-                }
-            }
-        },
-        "handlers.CloseTicketRequest": {
-            "type": "object",
-            "properties": {
-                "reason": {
-                    "type": "string",
-                    "example": "Issue resolved, closing ticket"
-                }
-            }
-        },
-        "handlers.CreateCouponRequest": {
-            "type": "object",
-            "required": [
-                "code",
-                "name",
-                "type",
-                "value"
-            ],
-            "properties": {
-                "applicable_plans": {
-                    "type": "string",
-                    "example": "[1,2,3]"
-                },
-                "code": {
-                    "type": "string",
-                    "maxLength": 50,
-                    "minLength": 3,
-                    "example": "SAVE20"
-                },
-                "currency": {
-                    "type": "string",
-                    "example": "USD"
-                },
-                "description": {
-                    "type": "string",
-                    "maxLength": 1000,
-                    "example": "Save 20% on any subscription plan"
-                },
-                "is_public": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "max_uses": {
-                    "type": "integer",
-                    "minimum": 0,
-                    "example": 100
-                },
-                "max_uses_per_user": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "example": 1
-                },
-                "min_order_amount": {
-                    "type": "number",
-                    "minimum": 0,
-                    "example": 10
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 1,
-                    "example": "20% Off All Plans"
-                },
-                "type": {
-                    "type": "string",
-                    "enum": [
-                        "percentage",
-                        "fixed_amount"
-                    ],
-                    "example": "percentage"
-                },
-                "valid_from": {
-                    "type": "string",
-                    "example": "2024-01-01T00:00:00Z"
-                },
-                "valid_until": {
-                    "type": "string",
-                    "example": "2024-12-31T23:59:59Z"
-                },
-                "value": {
-                    "type": "number",
-                    "minimum": 0,
-                    "example": 20
-                }
-            }
-        },
-        "handlers.CreatePaymentOrderRequest": {
-            "type": "object",
-            "required": [
-                "amount",
-                "currency",
-                "gateway",
-                "payment_method",
-                "subject"
-            ],
-            "properties": {
-                "amount": {
-                    "type": "number",
-                    "example": 29.99
-                },
-                "body": {
-                    "type": "string",
-                    "example": "Monthly premium subscription payment"
-                },
-                "currency": {
-                    "type": "string",
-                    "example": "CNY"
-                },
-                "expired_minutes": {
-                    "type": "integer",
-                    "example": 30
-                },
-                "gateway": {
-                    "type": "string",
-                    "example": "epay"
-                },
-                "invoice_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "payment_method": {
-                    "type": "string",
-                    "example": "alipay"
-                },
-                "return_url": {
-                    "type": "string",
-                    "example": "https://example.com/payment/return"
-                },
-                "subject": {
-                    "type": "string",
-                    "example": "Premium Subscription"
-                },
-                "subscription_order_id": {
-                    "type": "integer",
-                    "example": 1
                 }
             }
         },
@@ -24935,166 +26183,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.CreateReferralRequest": {
-            "type": "object",
-            "required": [
-                "referee_id",
-                "referral_source",
-                "referrer_id"
-            ],
-            "properties": {
-                "attribution_data": {
-                    "type": "object",
-                    "additionalProperties": {}
-                },
-                "campaign_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "conversion_type": {
-                    "type": "string",
-                    "example": "subscription"
-                },
-                "conversion_value": {
-                    "type": "number",
-                    "example": 29.99
-                },
-                "expiration_days": {
-                    "type": "integer",
-                    "example": 30
-                },
-                "invite_code_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "referee_id": {
-                    "type": "integer",
-                    "example": 2
-                },
-                "referral_channel": {
-                    "type": "string",
-                    "example": "organic"
-                },
-                "referral_code": {
-                    "type": "string",
-                    "example": "REF123"
-                },
-                "referral_source": {
-                    "type": "string",
-                    "example": "invite_code"
-                },
-                "referrer_id": {
-                    "type": "integer",
-                    "example": 1
-                }
-            }
-        },
-        "handlers.CreateServerGroupRequest": {
-            "type": "object",
-            "required": [
-                "name"
-            ],
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "Asia Pacific"
-                }
-            }
-        },
-        "handlers.CreateShadowsocksServerRequest": {
-            "type": "object",
-            "required": [
-                "cipher",
-                "group_id",
-                "host",
-                "name",
-                "port",
-                "rate",
-                "server_port"
-            ],
-            "properties": {
-                "cipher": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "aes-256-gcm"
-                },
-                "excludes": {
-                    "type": "string",
-                    "example": "192.168.0.0/16"
-                },
-                "group_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "host": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "us01.example.com"
-                },
-                "ips": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "0.0.0.0/0"
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "US-01"
-                },
-                "obfs": {
-                    "type": "string",
-                    "maxLength": 11,
-                    "example": "tls"
-                },
-                "obfs_settings": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "obfs=tls"
-                },
-                "parent_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "port": {
-                    "type": "integer",
-                    "maximum": 65535,
-                    "minimum": 1,
-                    "example": 443
-                },
-                "rate": {
-                    "type": "number",
-                    "minimum": 0.1,
-                    "example": 1
-                },
-                "route_id": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "route-1"
-                },
-                "server_port": {
-                    "type": "integer",
-                    "maximum": 65535,
-                    "minimum": 1,
-                    "example": 8388
-                },
-                "show": {
-                    "type": "integer",
-                    "maximum": 1,
-                    "minimum": 0,
-                    "example": 1
-                },
-                "sort": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "tags": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "premium,fast"
-                }
-            }
-        },
         "handlers.CreateTaskRequest": {
             "type": "object",
             "required": [
@@ -25108,59 +26196,6 @@ const docTemplate = `{
                 "type": {
                     "type": "string",
                     "example": "email"
-                }
-            }
-        },
-        "handlers.EscalateTicketRequest": {
-            "type": "object",
-            "required": [
-                "escalated_to_id",
-                "escalation_reason"
-            ],
-            "properties": {
-                "escalated_to_id": {
-                    "type": "integer",
-                    "example": 789
-                },
-                "escalation_reason": {
-                    "type": "string",
-                    "maxLength": 1000,
-                    "minLength": 10,
-                    "example": "Customer demands supervisor escalation"
-                },
-                "priority": {
-                    "type": "string",
-                    "enum": [
-                        "high",
-                        "urgent",
-                        "critical"
-                    ],
-                    "example": "urgent"
-                }
-            }
-        },
-        "handlers.ExtendExpiryRequest": {
-            "type": "object",
-            "required": [
-                "extend_type"
-            ],
-            "properties": {
-                "extend_days": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "example": 30
-                },
-                "extend_type": {
-                    "type": "string",
-                    "enum": [
-                        "days",
-                        "specific"
-                    ],
-                    "example": "days"
-                },
-                "new_expiry": {
-                    "type": "string",
-                    "example": "2024-12-31T23:59:59Z"
                 }
             }
         },
@@ -25214,84 +26249,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.PatchServerGroupRequest": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "example": "Europe"
-                }
-            }
-        },
-        "handlers.PatchShadowsocksServerRequest": {
-            "type": "object",
-            "properties": {
-                "cipher": {
-                    "type": "string",
-                    "example": "aes-256-gcm"
-                },
-                "excludes": {
-                    "type": "string",
-                    "example": "192.168.0.0/16"
-                },
-                "group_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "host": {
-                    "type": "string",
-                    "example": "us01.example.com"
-                },
-                "ips": {
-                    "type": "string",
-                    "example": "0.0.0.0/0"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "US-01"
-                },
-                "obfs": {
-                    "type": "string",
-                    "example": "tls"
-                },
-                "obfs_settings": {
-                    "type": "string",
-                    "example": "obfs=tls"
-                },
-                "parent_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "port": {
-                    "type": "integer",
-                    "example": 443
-                },
-                "rate": {
-                    "type": "number",
-                    "example": 1
-                },
-                "route_id": {
-                    "type": "string",
-                    "example": "route-1"
-                },
-                "server_port": {
-                    "type": "integer",
-                    "example": 8388
-                },
-                "show": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "sort": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "tags": {
-                    "type": "string",
-                    "example": "premium,fast"
-                }
-            }
-        },
         "handlers.PatchUserRequest": {
             "type": "object",
             "properties": {
@@ -25326,33 +26283,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.PayoutReferralRequest": {
-            "type": "object",
-            "required": [
-                "amount",
-                "payment_info",
-                "payment_method"
-            ],
-            "properties": {
-                "amount": {
-                    "type": "number",
-                    "minimum": 0,
-                    "example": 10
-                },
-                "note": {
-                    "type": "string",
-                    "example": "Monthly referral payout"
-                },
-                "payment_info": {
-                    "type": "string",
-                    "example": "user@example.com"
-                },
-                "payment_method": {
-                    "type": "string",
-                    "example": "paypal"
-                }
-            }
-        },
         "handlers.RegeneratePDFRequest": {
             "type": "object",
             "properties": {
@@ -25373,22 +26303,6 @@ const docTemplate = `{
                 "watermark": {
                     "type": "string",
                     "example": "PAID"
-                }
-            }
-        },
-        "handlers.RejectReferralRequest": {
-            "type": "object",
-            "required": [
-                "reason"
-            ],
-            "properties": {
-                "note": {
-                    "type": "string",
-                    "example": "Rejected due to policy violation"
-                },
-                "reason": {
-                    "type": "string",
-                    "example": "Invalid referral"
                 }
             }
         },
@@ -25486,22 +26400,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.ToggleStatusRequest": {
-            "type": "object",
-            "required": [
-                "status"
-            ],
-            "properties": {
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "active",
-                        "inactive"
-                    ],
-                    "example": "active"
-                }
-            }
-        },
         "handlers.TokenExchangeRequest": {
             "type": "object",
             "required": [
@@ -25579,75 +26477,6 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/handlers.UniProxyUserItem"
                     }
-                }
-            }
-        },
-        "handlers.UpdateCouponRequest": {
-            "type": "object",
-            "properties": {
-                "applicable_plans": {
-                    "type": "string",
-                    "example": "[1,2,4]"
-                },
-                "description": {
-                    "type": "string",
-                    "maxLength": 1000,
-                    "example": "Updated description"
-                },
-                "is_public": {
-                    "type": "boolean",
-                    "example": false
-                },
-                "max_uses": {
-                    "type": "integer",
-                    "minimum": 0,
-                    "example": 200
-                },
-                "max_uses_per_user": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "example": 2
-                },
-                "min_order_amount": {
-                    "type": "number",
-                    "minimum": 0,
-                    "example": 15
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 1,
-                    "example": "Updated Coupon Name"
-                },
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "active",
-                        "inactive",
-                        "expired"
-                    ],
-                    "example": "active"
-                },
-                "type": {
-                    "type": "string",
-                    "enum": [
-                        "percentage",
-                        "fixed_amount"
-                    ],
-                    "example": "percentage"
-                },
-                "valid_from": {
-                    "type": "string",
-                    "example": "2024-02-01T00:00:00Z"
-                },
-                "valid_until": {
-                    "type": "string",
-                    "example": "2024-11-30T23:59:59Z"
-                },
-                "value": {
-                    "type": "number",
-                    "minimum": 0,
-                    "example": 25
                 }
             }
         },
@@ -25740,59 +26569,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.UpdateReferralRequest": {
-            "type": "object",
-            "properties": {
-                "conversion_type": {
-                    "type": "string"
-                },
-                "conversion_value": {
-                    "type": "number",
-                    "minimum": 0
-                },
-                "referee_status": {
-                    "type": "string",
-                    "enum": [
-                        "registered",
-                        "activated",
-                        "subscribed",
-                        "churned"
-                    ]
-                },
-                "reward_amount": {
-                    "type": "number",
-                    "minimum": 0
-                },
-                "reward_status": {
-                    "type": "string",
-                    "enum": [
-                        "pending",
-                        "earned",
-                        "paid",
-                        "cancelled"
-                    ]
-                },
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "pending",
-                        "confirmed",
-                        "rewarded",
-                        "cancelled"
-                    ]
-                }
-            }
-        },
-        "handlers.UpdateServerGroupRequest": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "Europe"
-                }
-            }
-        },
         "handlers.UpdateServerStatusRequest": {
             "type": "object",
             "required": [
@@ -25807,90 +26583,6 @@ const docTemplate = `{
                         "maintenance"
                     ],
                     "example": "active"
-                }
-            }
-        },
-        "handlers.UpdateShadowsocksServerRequest": {
-            "type": "object",
-            "properties": {
-                "cipher": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "aes-256-gcm"
-                },
-                "excludes": {
-                    "type": "string",
-                    "example": "192.168.0.0/16"
-                },
-                "group_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "host": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "us01.example.com"
-                },
-                "ips": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "0.0.0.0/0"
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "US-01"
-                },
-                "obfs": {
-                    "type": "string",
-                    "maxLength": 11,
-                    "example": "tls"
-                },
-                "obfs_settings": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "obfs=tls"
-                },
-                "parent_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "port": {
-                    "type": "integer",
-                    "maximum": 65535,
-                    "minimum": 1,
-                    "example": 443
-                },
-                "rate": {
-                    "type": "number",
-                    "minimum": 0.1,
-                    "example": 1
-                },
-                "route_id": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "route-1"
-                },
-                "server_port": {
-                    "type": "integer",
-                    "maximum": 65535,
-                    "minimum": 1,
-                    "example": 8388
-                },
-                "show": {
-                    "type": "integer",
-                    "maximum": 1,
-                    "minimum": 0,
-                    "example": 1
-                },
-                "sort": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "tags": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "premium,fast"
                 }
             }
         },
@@ -25927,61 +26619,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.UserCreateTicketRequest": {
-            "type": "object",
-            "required": [
-                "category",
-                "description",
-                "title"
-            ],
-            "properties": {
-                "category": {
-                    "type": "string",
-                    "enum": [
-                        "general",
-                        "technical",
-                        "billing",
-                        "account",
-                        "feature",
-                        "bug",
-                        "subscription",
-                        "payment"
-                    ],
-                    "example": "subscription"
-                },
-                "description": {
-                    "type": "string",
-                    "maxLength": 5000,
-                    "minLength": 10,
-                    "example": "I am unable to access my premium subscription features"
-                },
-                "metadata": {
-                    "type": "string",
-                    "example": "{\"browser\": \"Chrome\", \"os\": \"Windows\"}"
-                },
-                "priority": {
-                    "type": "string",
-                    "enum": [
-                        "low",
-                        "normal",
-                        "high",
-                        "urgent",
-                        "critical"
-                    ],
-                    "example": "normal"
-                },
-                "tags": {
-                    "type": "string",
-                    "example": "urgent,subscription"
-                },
-                "title": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 5,
-                    "example": "Unable to access my subscription"
-                }
-            }
-        },
         "handlers.UserProfileUpdateRequest": {
             "type": "object",
             "properties": {
@@ -25993,56 +26630,6 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
-                }
-            }
-        },
-        "handlers.UserTicketMessageRequest": {
-            "type": "object",
-            "required": [
-                "content"
-            ],
-            "properties": {
-                "attachments": {
-                    "type": "string",
-                    "example": "[{\"name\":\"screenshot.png\",\"url\":\"https://example.com/file.png\"}]"
-                },
-                "content": {
-                    "type": "string",
-                    "maxLength": 5000,
-                    "minLength": 1,
-                    "example": "Thank you for your response. I tried the suggested solution but the issue persists."
-                },
-                "metadata": {
-                    "type": "string",
-                    "example": "{\"client_ip\":\"192.168.1.1\"}"
-                }
-            }
-        },
-        "handlers.ValidateCouponRequest": {
-            "type": "object",
-            "required": [
-                "code",
-                "currency",
-                "order_amount",
-                "plan_id"
-            ],
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "example": "SAVE20"
-                },
-                "currency": {
-                    "type": "string",
-                    "example": "USD"
-                },
-                "order_amount": {
-                    "type": "number",
-                    "minimum": 0,
-                    "example": 29.99
-                },
-                "plan_id": {
-                    "type": "integer",
-                    "example": 1
                 }
             }
         },
@@ -26060,64 +26647,6 @@ const docTemplate = `{
                 "send_notification": {
                     "type": "boolean",
                     "example": true
-                }
-            }
-        },
-        "interfaces.AdminRetryResponse": {
-            "type": "object",
-            "properties": {
-                "page": {
-                    "type": "integer"
-                },
-                "page_size": {
-                    "type": "integer"
-                },
-                "retries": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entities.PaymentRetry"
-                    }
-                },
-                "statistics": {
-                    "$ref": "#/definitions/interfaces.AdminRetryStatistics"
-                },
-                "total_count": {
-                    "type": "integer"
-                },
-                "total_pages": {
-                    "type": "integer"
-                }
-            }
-        },
-        "interfaces.AdminRetryStatistics": {
-            "type": "object",
-            "properties": {
-                "average_attempts": {
-                    "type": "number"
-                },
-                "average_delay_time": {
-                    "type": "number"
-                },
-                "cancelled_retries": {
-                    "type": "integer"
-                },
-                "completed_retries": {
-                    "type": "integer"
-                },
-                "failed_retries": {
-                    "type": "integer"
-                },
-                "in_progress_retries": {
-                    "type": "integer"
-                },
-                "overall_success_rate": {
-                    "type": "number"
-                },
-                "pending_retries": {
-                    "type": "integer"
-                },
-                "total_retries": {
-                    "type": "integer"
                 }
             }
         },
@@ -26470,137 +26999,6 @@ const docTemplate = `{
                 }
             }
         },
-        "interfaces.CreatePaymentConfigRequest": {
-            "type": "object",
-            "required": [
-                "config",
-                "gateway",
-                "name"
-            ],
-            "properties": {
-                "config": {
-                    "type": "string",
-                    "example": "{\"api_url\":\"...\"}"
-                },
-                "fixed_fee": {
-                    "type": "number",
-                    "example": 0
-                },
-                "gateway": {
-                    "type": "string",
-                    "example": "epay"
-                },
-                "is_enabled": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "max_amount": {
-                    "type": "number",
-                    "example": 99999.99
-                },
-                "methods": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entities.Method"
-                    }
-                },
-                "min_amount": {
-                    "type": "number",
-                    "example": 0.01
-                },
-                "name": {
-                    "type": "string",
-                    "example": "EPay Gateway"
-                },
-                "percentage_fee": {
-                    "type": "number",
-                    "example": 0.6
-                },
-                "sort_order": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "supported_currencies": {
-                    "type": "string",
-                    "example": "CNY"
-                }
-            }
-        },
-        "interfaces.CreateReferralCampaignRequest": {
-            "type": "object",
-            "required": [
-                "name",
-                "referrer_reward_amount",
-                "type"
-            ],
-            "properties": {
-                "description": {
-                    "type": "string",
-                    "maxLength": 1000,
-                    "example": "Refer friends and earn rewards"
-                },
-                "end_date": {
-                    "type": "string",
-                    "example": "2024-08-31T23:59:59Z"
-                },
-                "is_public": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "max_referrals": {
-                    "type": "integer",
-                    "example": 10
-                },
-                "max_rewards": {
-                    "type": "integer",
-                    "example": 1000
-                },
-                "min_referrals": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "Summer Referral Campaign"
-                },
-                "referee_reward_amount": {
-                    "type": "number",
-                    "example": 5
-                },
-                "referrer_reward_amount": {
-                    "type": "number",
-                    "minimum": 0,
-                    "example": 10
-                },
-                "reward_currency": {
-                    "type": "string",
-                    "example": "USD"
-                },
-                "start_date": {
-                    "type": "string",
-                    "example": "2024-06-01T00:00:00Z"
-                },
-                "status": {
-                    "type": "string",
-                    "example": "active"
-                },
-                "terms": {
-                    "type": "string",
-                    "maxLength": 5000,
-                    "example": "Terms and conditions"
-                },
-                "type": {
-                    "type": "string",
-                    "enum": [
-                        "standard",
-                        "bonus",
-                        "limited"
-                    ],
-                    "example": "standard"
-                }
-            }
-        },
         "interfaces.CurrentUsageDetails": {
             "type": "object",
             "properties": {
@@ -26756,33 +27154,6 @@ const docTemplate = `{
                 }
             }
         },
-        "interfaces.GatewayHealthMetric": {
-            "type": "object",
-            "properties": {
-                "active_retries": {
-                    "type": "integer"
-                },
-                "average_attempts": {
-                    "type": "number"
-                },
-                "gateway": {
-                    "type": "string"
-                },
-                "health_status": {
-                    "description": "healthy, degraded, critical",
-                    "type": "string"
-                },
-                "processing_rate": {
-                    "type": "number"
-                },
-                "queue_depth": {
-                    "type": "integer"
-                },
-                "success_rate": {
-                    "type": "number"
-                }
-            }
-        },
         "interfaces.GetAlertConfigsResponse": {
             "type": "object",
             "properties": {
@@ -26875,41 +27246,6 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 255,
                     "example": "User requested pause"
-                }
-            }
-        },
-        "interfaces.PaymentMethodUsageStats": {
-            "type": "object",
-            "properties": {
-                "average_amount": {
-                    "type": "number"
-                },
-                "failed_uses": {
-                    "type": "integer"
-                },
-                "failure_rate": {
-                    "type": "number"
-                },
-                "last_used": {
-                    "type": "string"
-                },
-                "payment_method_id": {
-                    "type": "integer"
-                },
-                "recent_uses_30_days": {
-                    "type": "integer"
-                },
-                "success_rate": {
-                    "type": "number"
-                },
-                "successful_uses": {
-                    "type": "integer"
-                },
-                "total_amount": {
-                    "type": "number"
-                },
-                "total_uses": {
-                    "type": "integer"
                 }
             }
         },
@@ -27105,96 +27441,6 @@ const docTemplate = `{
                     "description": "Whether to adjust billing dates based on pause duration",
                     "type": "boolean",
                     "example": true
-                }
-            }
-        },
-        "interfaces.RetryHealthMetrics": {
-            "type": "object",
-            "properties": {
-                "alerts_triggered": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "average_retry_delay": {
-                    "type": "number"
-                },
-                "gateway_health": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/interfaces.GatewayHealthMetric"
-                    }
-                },
-                "overdue_retries": {
-                    "type": "integer"
-                },
-                "success_rate_24h": {
-                    "type": "number"
-                },
-                "success_rate_7d": {
-                    "type": "number"
-                },
-                "system_recommendations": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "total_active_retries": {
-                    "type": "integer"
-                }
-            }
-        },
-        "interfaces.RetryStatistics": {
-            "type": "object",
-            "properties": {
-                "average_attempts": {
-                    "type": "number"
-                },
-                "average_delay_time": {
-                    "type": "number"
-                },
-                "cancelled_retries": {
-                    "type": "integer"
-                },
-                "failed_retries": {
-                    "type": "integer"
-                },
-                "from_date": {
-                    "type": "string"
-                },
-                "gateway": {
-                    "type": "string"
-                },
-                "payment_method": {
-                    "type": "string"
-                },
-                "success_rate": {
-                    "type": "number"
-                },
-                "successful_retries": {
-                    "type": "integer"
-                },
-                "to_date": {
-                    "type": "string"
-                },
-                "total_retries": {
-                    "type": "integer"
-                }
-            }
-        },
-        "interfaces.RetryWithHistory": {
-            "type": "object",
-            "properties": {
-                "history": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entities.PaymentRetryHistory"
-                    }
-                },
-                "retry": {
-                    "$ref": "#/definitions/entities.PaymentRetry"
                 }
             }
         },
@@ -27405,76 +27651,6 @@ const docTemplate = `{
                         "percentage",
                         "absolute"
                     ]
-                }
-            }
-        },
-        "interfaces.UpdatePaymentConfigRequest": {
-            "type": "object",
-            "properties": {
-                "config": {
-                    "type": "string",
-                    "example": "{\"api_url\":\"...\"}"
-                },
-                "fixed_fee": {
-                    "type": "number",
-                    "example": 0
-                },
-                "is_enabled": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "max_amount": {
-                    "type": "number",
-                    "example": 99999.99
-                },
-                "methods": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entities.Method"
-                    }
-                },
-                "min_amount": {
-                    "type": "number",
-                    "example": 0.01
-                },
-                "name": {
-                    "type": "string",
-                    "example": "EPay Gateway"
-                },
-                "percentage_fee": {
-                    "type": "number",
-                    "example": 0.6
-                },
-                "sort_order": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "supported_currencies": {
-                    "type": "string",
-                    "example": "CNY"
-                }
-            }
-        },
-        "interfaces.UpdateTicketMessageRequest": {
-            "type": "object",
-            "properties": {
-                "attachments": {
-                    "type": "string",
-                    "example": "[{\"name\":\"updated.png\",\"url\":\"https://example.com/updated.png\"}]"
-                },
-                "content": {
-                    "type": "string",
-                    "maxLength": 5000,
-                    "minLength": 1,
-                    "example": "Updated message content"
-                },
-                "is_internal": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "metadata": {
-                    "type": "string",
-                    "example": "{\"updated_by\":\"admin\"}"
                 }
             }
         },
@@ -27710,30 +27886,6 @@ const docTemplate = `{
                 },
                 "user_subscription_id": {
                     "type": "integer"
-                }
-            }
-        },
-        "interfaces.ValidateCouponResponse": {
-            "type": "object",
-            "properties": {
-                "coupon": {
-                    "$ref": "#/definitions/entities.CouponResponse"
-                },
-                "discount_amount": {
-                    "type": "number",
-                    "example": 5.99
-                },
-                "final_amount": {
-                    "type": "number",
-                    "example": 24
-                },
-                "message": {
-                    "type": "string",
-                    "example": "Coupon is valid"
-                },
-                "valid": {
-                    "type": "boolean",
-                    "example": true
                 }
             }
         },

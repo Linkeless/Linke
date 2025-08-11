@@ -13,6 +13,7 @@ import (
 	"linke/internal/domains/auth/usecases/interfaces"
 	referralEntities "linke/internal/domains/referral/entities"
 	referralInterfaces "linke/internal/domains/referral/usecases/interfaces"
+	userConstants "linke/internal/domains/user/constants"
 	userEntities "linke/internal/domains/user/entities"
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/shared/logger"
@@ -92,8 +93,8 @@ func (a *AuthService) Register(ctx context.Context, req *interfaces.RegisterRequ
 		Name:     name,
 		Username: username,
 		Password: string(hashedPassword),
-		Provider: userEntities.ProviderLocal,
-		Status:   userEntities.UserStatusActive,
+		Provider: userConstants.ProviderLocal,
+		Status:   userConstants.UserStatusActive,
 	}
 
 	// Set invite code information if provided
@@ -221,9 +222,9 @@ func (a *AuthService) Login(ctx context.Context, req *interfaces.LoginRequest) (
 	if !user.IsActive() {
 		var reason string
 		switch user.Status {
-		case userEntities.UserStatusInactive:
+		case userConstants.UserStatusInactive:
 			reason = authEntities.LoginFailureAccountInactive
-		case userEntities.UserStatusBanned:
+		case userConstants.UserStatusBanned:
 			reason = authEntities.LoginFailureAccountBanned
 		default:
 			reason = authEntities.LoginFailureAccountInactive
@@ -606,8 +607,8 @@ func (a *AuthService) CreateOrUpdateOAuthUser(ctx context.Context, userInfo *int
 			Avatar:   userInfo.Avatar,
 			Username: userInfo.Username,
 			Provider: userInfo.Provider,
-			Status:   userEntities.UserStatusActive,
-			Role:     userEntities.UserRoleUser,
+			Status:   userConstants.UserStatusActive,
+			Role:     userConstants.UserRoleUser,
 		}
 
 		// Set provider-specific ID for backwards compatibility

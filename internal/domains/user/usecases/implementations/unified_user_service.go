@@ -19,11 +19,11 @@ import (
 
 // UnifiedUserService consolidates all user service functionality using composition
 type UnifiedUserService struct {
-	db            *gorm.DB
-	logger        framework.Logger
-	caching       CachingBehavior
-	events        EventBehavior
-	capabilities  ServiceCapabilities
+	db           *gorm.DB
+	logger       framework.Logger
+	caching      CachingBehavior
+	events       EventBehavior
+	capabilities ServiceCapabilities
 }
 
 // CachingBehavior encapsulates caching functionality
@@ -211,7 +211,7 @@ func (s *UnifiedUserService) GetUsersByIDs(ctx context.Context, ids []uint) ([]*
 
 func (s *UnifiedUserService) BatchDeleteUsers(ctx context.Context, ids []uint) (*interfaces.BatchOperationResult, error) {
 	result := &interfaces.BatchOperationResult{}
-	
+
 	for _, id := range ids {
 		if err := s.SoftDeleteUser(ctx, id); err != nil {
 			result.FailedIDs = append(result.FailedIDs, id)
@@ -219,13 +219,13 @@ func (s *UnifiedUserService) BatchDeleteUsers(ctx context.Context, ids []uint) (
 			result.DeletedCount++
 		}
 	}
-	
+
 	return result, nil
 }
 
 func (s *UnifiedUserService) BatchRestoreUsers(ctx context.Context, ids []uint) (*interfaces.BatchOperationResult, error) {
 	result := &interfaces.BatchOperationResult{}
-	
+
 	for _, id := range ids {
 		if err := s.RestoreUser(ctx, id); err != nil {
 			result.FailedIDs = append(result.FailedIDs, id)
@@ -233,7 +233,7 @@ func (s *UnifiedUserService) BatchRestoreUsers(ctx context.Context, ids []uint) 
 			result.RestoredCount++
 		}
 	}
-	
+
 	return result, nil
 }
 
@@ -276,6 +276,49 @@ func (s *UnifiedUserService) ListUsers(ctx context.Context, limit, offset int) (
 
 	if err := s.db.WithContext(ctx).Limit(limit).Offset(offset).Find(&users).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to list users: %w", err)
+	}
+
+	return users, total, nil
+}
+
+// ListUsersFiltered lists users with optional filters (query/status/role/provider) and pagination
+func (s *UnifiedUserService) ListUsersFiltered(ctx context.Context, req *interfaces.AdvancedUserSearchRequest) ([]*entities.User, int64, error) {
+	var users []*entities.User
+	var total int64
+
+	q := s.db.WithContext(ctx).Model(&entities.User{})
+
+	if req == nil {
+		req = &interfaces.AdvancedUserSearchRequest{}
+	}
+
+	if strings.TrimSpace(req.Query) != "" {
+		like := "%" + strings.TrimSpace(req.Query) + "%"
+		q = q.Where("email ILIKE ? OR username ILIKE ? OR name ILIKE ?", like, like, like)
+	}
+	if strings.TrimSpace(req.Status) != "" {
+		q = q.Where("status = ?", strings.ToLower(req.Status))
+	}
+	if strings.TrimSpace(req.Role) != "" {
+		q = q.Where("role = ?", strings.ToLower(req.Role))
+	}
+	if strings.TrimSpace(req.Provider) != "" {
+		q = q.Where("provider = ?", strings.ToLower(req.Provider))
+	}
+
+	if err := q.Count(&total).Error; err != nil {
+		return nil, 0, fmt.Errorf("failed to count users with filters: %w", err)
+	}
+
+	if req.Limit > 0 {
+		q = q.Limit(req.Limit)
+	}
+	if req.Offset > 0 {
+		q = q.Offset(req.Offset)
+	}
+
+	if err := q.Find(&users).Error; err != nil {
+		return nil, 0, fmt.Errorf("failed to list users with filters: %w", err)
 	}
 
 	return users, total, nil
@@ -329,7 +372,7 @@ func (s *UnifiedUserService) SearchUsers(ctx context.Context, query string, limi
 	var total int64
 
 	searchQuery := s.db.WithContext(ctx).Model(&entities.User{}).
-		Where("email ILIKE ? OR username ILIKE ? OR name ILIKE ?", 
+		Where("email ILIKE ? OR username ILIKE ? OR name ILIKE ?",
 			"%"+query+"%", "%"+query+"%", "%"+query+"%")
 
 	if err := searchQuery.Count(&total).Error; err != nil {
@@ -399,7 +442,7 @@ func (s *UnifiedUserService) GetUserStats(ctx context.Context) (*interfaces.User
 	s.db.WithContext(ctx).Model(&entities.User{}).Where("google_id IS NOT NULL").Count(&googleCount)
 	s.db.WithContext(ctx).Model(&entities.User{}).Where("github_id IS NOT NULL").Count(&githubCount)
 	s.db.WithContext(ctx).Model(&entities.User{}).Where("telegram_id IS NOT NULL").Count(&telegramCount)
-	
+
 	stats.ByProvider["google"] = googleCount
 	stats.ByProvider["github"] = githubCount
 	stats.ByProvider["telegram"] = telegramCount
@@ -418,7 +461,7 @@ func (s *UnifiedUserService) handleUserUpdated(ctx context.Context, user *entiti
 	if s.capabilities.CachingEnabled && s.caching != nil {
 		s.caching.InvalidateUser(ctx, user)
 	}
-	
+
 	if s.capabilities.EventsEnabled && s.events != nil {
 		s.events.PublishUserEvent(ctx, "user.updated", user)
 	}

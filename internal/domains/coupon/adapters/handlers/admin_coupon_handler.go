@@ -20,13 +20,19 @@ type AdminCouponHandler struct {
 	couponService couponInterfaces.CouponService
 }
 
+// BulkUpdateRequestDoc is used for Swagger documentation only
+// It mirrors dto.BulkUpdateRequest to avoid package name conflicts in docs generation
+type BulkUpdateRequestDoc struct {
+	IDs    []uint64 `json:"ids"`
+	Status *string  `json:"status,omitempty" enums:"active,inactive,expired"`
+}
+
 // NewAdminCouponHandler creates a new AdminCouponHandler
 func NewAdminCouponHandler(couponService couponInterfaces.CouponService) *AdminCouponHandler {
 	return &AdminCouponHandler{
 		couponService: couponService,
 	}
 }
-
 
 // CreateCoupon godoc
 // @Summary Create new coupon
@@ -160,7 +166,7 @@ func (h *AdminCouponHandler) ListCoupons(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Coupon ID"
-// @Success 200 {object} response.StandardResponse{data=entities.CouponResponse}
+// @Success 200 {object} response.StandardResponse{data=dto.CouponResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -283,7 +289,7 @@ func (h *AdminCouponHandler) DeleteCoupon(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Coupon ID"
 // @Param status body dto.ToggleStatusRequest true "Status data"
-// @Success 200 {object} response.StandardResponse{data=entities.CouponResponse}
+// @Success 200 {object} response.StandardResponse{data=dto.CouponResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -349,7 +355,7 @@ func (h *AdminCouponHandler) ToggleCouponStatus(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Coupon ID"
 // @Param extend body dto.ExtendExpiryRequest true "Expiry extension data"
-// @Success 200 {object} response.StandardResponse{data=entities.CouponResponse}
+// @Success 200 {object} response.StandardResponse{data=dto.CouponResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -599,20 +605,20 @@ func (h *AdminCouponHandler) GetCouponStatistics(c *gin.Context) {
 // @Router /admin/coupons/analytics [get]
 func (h *AdminCouponHandler) GetCouponAnalytics(c *gin.Context) {
 	period := c.DefaultQuery("period", "30d")
-	
+
 	// This would be implemented in the service layer
 	analytics := gin.H{
-		"period": period,
-		"total_coupons": 0,
-		"active_coupons": 0,
-		"total_redemptions": 0,
-		"total_savings": 0,
-		"average_discount": 0,
+		"period":                 period,
+		"total_coupons":          0,
+		"active_coupons":         0,
+		"total_redemptions":      0,
+		"total_savings":          0,
+		"average_discount":       0,
 		"top_performing_coupons": []gin.H{},
-		"redemption_trends": []gin.H{},
+		"redemption_trends":      []gin.H{},
 		"fraud_indicators": gin.H{
 			"suspicious_patterns": 0,
-			"blocked_attempts": 0,
+			"blocked_attempts":    0,
 		},
 	}
 
@@ -722,7 +728,7 @@ func (h *AdminCouponHandler) BulkCreateCoupons(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param bulk body dto.BulkUpdateRequest true "Bulk update data"
+// @Param bulk body handlers.BulkUpdateRequestDoc true "Bulk update data"
 // @Success 200 {object} response.StandardResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -778,7 +784,7 @@ func (h *AdminCouponHandler) BulkUpdateCoupons(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param bulk body dto.BulkUpdateRequest true "Bulk deactivation data"
+// @Param bulk body handlers.BulkUpdateRequestDoc true "Bulk deactivation data"
 // @Success 200 {object} response.StandardResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse

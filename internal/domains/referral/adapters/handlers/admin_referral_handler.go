@@ -33,7 +33,6 @@ func NewAdminReferralHandler(
 	}
 }
 
-
 // CreateReferral godoc
 // @Summary Create new referral
 // @Description Create a new referral relationship (Admin only)
@@ -41,8 +40,8 @@ func NewAdminReferralHandler(
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param referral body CreateReferralRequest true "Referral creation data"
-// @Success 201 {object} response.StandardResponse{data=entities.ReferralResponse}
+// @Param referral body dto.CreateReferralRequest true "Referral creation data"
+// @Success 201 {object} response.StandardResponse{data=dto.ReferralResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -176,7 +175,7 @@ func (h *AdminReferralHandler) ListReferrals(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Referral ID"
-// @Success 200 {object} response.StandardResponse{data=entities.ReferralResponse}
+// @Success 200 {object} response.StandardResponse{data=dto.ReferralResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -211,8 +210,8 @@ func (h *AdminReferralHandler) GetReferral(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Referral ID"
-// @Param referral body UpdateReferralRequest true "Referral update data"
-// @Success 200 {object} response.StandardResponse{data=entities.ReferralResponse}
+// @Param referral body dto.UpdateReferralRequest true "Referral update data"
+// @Success 200 {object} response.StandardResponse{data=dto.ReferralResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -269,8 +268,8 @@ func (h *AdminReferralHandler) UpdateReferral(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Referral ID"
-// @Param approve body ApproveReferralRequest true "Approval data"
-// @Success 200 {object} response.StandardResponse{data=entities.ReferralResponse}
+// @Param approve body dto.ApproveReferralRequest true "Approval data"
+// @Success 200 {object} response.StandardResponse{data=dto.ReferralResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -336,8 +335,8 @@ func (h *AdminReferralHandler) ApproveReferral(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Referral ID"
-// @Param reject body RejectReferralRequest true "Rejection data"
-// @Success 200 {object} response.StandardResponse{data=entities.ReferralResponse}
+// @Param reject body dto.RejectReferralRequest true "Rejection data"
+// @Success 200 {object} response.StandardResponse{data=dto.ReferralResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -394,8 +393,8 @@ func (h *AdminReferralHandler) RejectReferral(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Referral ID"
-// @Param payout body PayoutReferralRequest true "Payout data"
-// @Success 200 {object} response.StandardResponse{data=entities.ReferralResponse}
+// @Param payout body dto.PayoutReferralRequest true "Payout data"
+// @Success 200 {object} response.StandardResponse{data=dto.ReferralResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -560,23 +559,23 @@ func (h *AdminReferralHandler) GetReferralStatistics(c *gin.Context) {
 // @Router /admin/referrals/analytics [get]
 func (h *AdminReferralHandler) GetReferralAnalytics(c *gin.Context) {
 	period := c.DefaultQuery("period", "30d")
-	
+
 	// This would be implemented in the service layer
 	analytics := gin.H{
-		"period": period,
-		"total_referrals": 0,
-		"active_referrals": 0,
-		"total_conversions": 0,
-		"conversion_rate": 0.0,
-		"total_rewards_paid": 0.0,
-		"average_reward": 0.0,
-		"top_referrers": []gin.H{},
-		"conversion_trends": []gin.H{},
+		"period":               period,
+		"total_referrals":      0,
+		"active_referrals":     0,
+		"total_conversions":    0,
+		"conversion_rate":      0.0,
+		"total_rewards_paid":   0.0,
+		"average_reward":       0.0,
+		"top_referrers":        []gin.H{},
+		"conversion_trends":    []gin.H{},
 		"campaign_performance": []gin.H{},
 		"fraud_indicators": gin.H{
 			"suspicious_patterns": 0,
 			"duplicate_referrals": 0,
-			"blocked_attempts": 0,
+			"blocked_attempts":    0,
 		},
 	}
 
@@ -595,7 +594,7 @@ func (h *AdminReferralHandler) GetReferralAnalytics(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param bulk body BulkReferralRequest true "Bulk approval data"
+// @Param bulk body dto.BulkReferralRequest true "Bulk approval data"
 // @Success 200 {object} response.StandardResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -665,7 +664,7 @@ func (h *AdminReferralHandler) BulkApproveReferrals(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param bulk body BulkReferralRequest true "Bulk payout data"
+// @Param bulk body dto.BulkReferralRequest true "Bulk payout data"
 // @Success 200 {object} response.StandardResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -774,8 +773,8 @@ func (h *AdminReferralHandler) ListCampaigns(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param campaign body interfaces.CreateReferralCampaignRequest true "Campaign creation data"
-// @Success 201 {object} response.StandardResponse{data=entities.ReferralCampaignResponse}
+// @Param campaign body dto.CreateReferralCampaignRequest true "Campaign creation data"
+// @Success 201 {object} response.StandardResponse{data=dto.ReferralCampaignResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse

@@ -5,8 +5,10 @@ import (
 	"strings"
 
 	authInterfaces "linke/internal/domains/auth/usecases/interfaces"
+	"linke/internal/domains/user/constants"
 	"linke/internal/domains/user/entities"
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
+	userInterfacesDto "linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/middleware"
 	"linke/internal/shared/response"
@@ -80,7 +82,7 @@ func (h *AdminUserHandler) CreateUser(c *gin.Context) {
 		Name:     createReq.Name,
 		Role:     createReq.Role,
 		Status:   createReq.Status,
-		Provider: entities.ProviderLocal,
+		Provider: constants.ProviderLocal,
 	}
 
 	// Set password if provided (hash the password before storing)
@@ -99,10 +101,10 @@ func (h *AdminUserHandler) CreateUser(c *gin.Context) {
 
 	// Set default values if not provided
 	if user.Role == "" {
-		user.Role = entities.UserRoleUser
+		user.Role = constants.UserRoleUser
 	}
 	if user.Status == "" {
-		user.Status = entities.UserStatusActive
+		user.Status = constants.UserStatusActive
 	}
 
 	// Create the user
@@ -175,6 +177,10 @@ func (h *AdminUserHandler) GetUser(c *gin.Context) {
 // @Security BearerAuth
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
+// @Param q query string false "Search by email/username/name (substring match)"
+// @Param status query string false "Filter by status" Enums(active,inactive,banned)
+// @Param role query string false "Filter by role" Enums(user,admin)
+// @Param provider query string false "Filter by provider" Enums(local,google,github,telegram)
 // @Success 200 {object} response.StandardListResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -193,7 +199,22 @@ func (h *AdminUserHandler) ListUsers(c *gin.Context) {
 
 	offset := (page - 1) * limit
 
-	users, total, err := h.userService.ListUsers(c.Request.Context(), limit, offset)
+	// Optional filters
+	q := strings.TrimSpace(c.Query("q"))
+	status := strings.TrimSpace(c.Query("status"))
+	role := strings.TrimSpace(c.Query("role"))
+	provider := strings.TrimSpace(c.Query("provider"))
+
+	req := &userInterfacesDto.AdvancedUserSearchRequest{
+		Query:    q,
+		Status:   status,
+		Provider: provider,
+		Role:     role,
+		Limit:    limit,
+		Offset:   offset,
+	}
+
+	users, total, err := h.userService.ListUsersFiltered(c.Request.Context(), req)
 	if err != nil {
 		logger.Error("Admin failed to list users", logger.Error2("error", err))
 		response.InternalServerError(c, "Failed to list users")
@@ -547,9 +568,9 @@ func (h *AdminUserHandler) ListUsersByProvider(c *gin.Context) {
 	}
 
 	validProviders := map[string]bool{
-		entities.ProviderGoogle:   true,
-		entities.ProviderGitHub:   true,
-		entities.ProviderTelegram: true,
+		constants.ProviderGoogle:   true,
+		constants.ProviderGitHub:   true,
+		constants.ProviderTelegram: true,
 	}
 
 	if !validProviders[provider] {

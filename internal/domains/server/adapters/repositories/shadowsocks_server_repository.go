@@ -84,14 +84,14 @@ func (r *shadowsocksServerRepository) ListActive(ctx context.Context, limit, off
 	var total int64
 
 	// Get total count of active servers (show = 1)
-	if err := r.GetDB().WithContext(ctx).Model(&entities.ShadowsocksServer{}).Where("show = ?", 1).Count(&total).Error; err != nil {
+    if err := r.GetDB().WithContext(ctx).Model(&entities.ShadowsocksServer{}).Where("`show` = ?", 1).Count(&total).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to count active shadowsocks servers: %w", err)
 	}
 
 	// Select all fields except group_id to avoid JSON scan error
-	query := r.GetDB().WithContext(ctx).
-		Select("id, route_id, parent_id, tags, excludes, ips, name, rate, host, port, server_port, cipher, obfs, obfs_settings, `show`, sort, created_at, updated_at").
-		Where("show = ?", 1).
+    query := r.GetDB().WithContext(ctx).
+        Select("id, route_id, parent_id, tags, excludes, ips, name, rate, host, port, server_port, cipher, obfs, obfs_settings, `show`, sort, created_at, updated_at").
+        Where("`show` = ?", 1).
 		Order("sort ASC, created_at DESC")
 
 	if limit > 0 {

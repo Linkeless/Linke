@@ -31,13 +31,13 @@ type UserService interface {
 	UpdateUserRole(ctx context.Context, id uint, role string) (*entities.User, error)
 
 	// Queries and statistics
+	ListUsersFiltered(ctx context.Context, req *AdvancedUserSearchRequest) ([]*entities.User, int64, error)
 	ListUsers(ctx context.Context, limit, offset int) ([]*entities.User, int64, error)
 	ListDeletedUsers(ctx context.Context, limit, offset int) ([]*entities.User, int64, error)
 	ListUsersByProvider(ctx context.Context, provider string, limit, offset int) ([]*entities.User, int64, error)
 	SearchUsers(ctx context.Context, query string, limit, offset int) ([]*entities.User, int64, error)
 	GetUserStats(ctx context.Context) (*UserStats, error)
 }
-
 
 // UserStats represents user statistics
 type UserStats struct {

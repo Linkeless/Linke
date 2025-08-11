@@ -13,7 +13,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-
 // UpdateServerStatusRequest represents the request body for updating server status
 type UpdateServerStatusRequest struct {
 	Status string `json:"status" binding:"required,oneof=active inactive maintenance" example:"active"`
@@ -126,6 +125,7 @@ func (h *AdminServerHandler) CreateServer(c *gin.Context) {
 // @Param limit query int false "Items per page" default(10)
 // @Param group_id query int false "Filter by server group ID"
 // @Param show query int false "Filter by visibility (0 or 1)"
+// @Param name query string false "Filter by server name (substring match)"
 // @Success 200 {object} response.StandardListResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -160,10 +160,13 @@ func (h *AdminServerHandler) ListServers(c *gin.Context) {
 		}
 	}
 
+	name := c.Query("name")
+
 	// Create service request
 	serviceReq := &dto.GetShadowsocksServersRequest{
 		GroupID: groupID,
 		Show:    show,
+		Name:    name,
 		Limit:   limit,
 		Offset:  offset,
 	}
