@@ -1,12 +1,11 @@
 package entities
 
 import (
-	"strings"
 	"time"
 
 	"gorm.io/gorm"
 
-	"linke/internal/shared/dto"
+	"linke/internal/domains/payment/constants"
 )
 
 // PaymentRecord represents a payment transaction record
@@ -83,76 +82,35 @@ func (PaymentRecord) TableName() string {
 	return "payment_records"
 }
 
-// Payment status constants
-const (
-	PaymentRecordStatusPending    = "pending"
-	PaymentRecordStatusProcessing = "processing"
-	PaymentRecordStatusCompleted  = "completed"
-	PaymentRecordStatusFailed     = "failed"
-	PaymentRecordStatusCancelled  = "cancelled"
-	PaymentRecordStatusRefunded   = "refunded"
-)
-
-// Payment gateway constants
-const (
-	PaymentGatewayEpay   = "epay"
-	PaymentGatewayEPUSDT = "epusdt"
-)
-
-// Payment method constants
-const (
-	PaymentMethodAlipay   = "alipay"
-	PaymentMethodWechat   = "wechat"
-	PaymentMethodQQ       = "qqpay"
-	PaymentMethodUnionPay = "unionpay"
-	PaymentMethodUSDT     = "usdt"
-	PaymentMethodBTC      = "btc"
-	PaymentMethodETH      = "eth"
-)
-
-// Refund status constants
-const (
-	RefundStatusNone       = "none"
-	RefundStatusProcessing = "processing"
-	RefundStatusCompleted  = "completed"
-	RefundStatusFailed     = "failed"
-)
-
-// Currency constants
-const (
-	CurrencyCNY  = "CNY"
-	CurrencyUSD  = "USD"
-	CurrencyUSDT = "USDT"
-)
 
 // IsPending checks if the payment is pending
 func (pr *PaymentRecord) IsPending() bool {
-	return pr.Status == PaymentRecordStatusPending
+	return pr.Status == constants.PaymentRecordStatusPending
 }
 
 // IsProcessing checks if the payment is processing
 func (pr *PaymentRecord) IsProcessing() bool {
-	return pr.Status == PaymentRecordStatusProcessing
+	return pr.Status == constants.PaymentRecordStatusProcessing
 }
 
 // IsCompleted checks if the payment is completed
 func (pr *PaymentRecord) IsCompleted() bool {
-	return pr.Status == PaymentRecordStatusCompleted
+	return pr.Status == constants.PaymentRecordStatusCompleted
 }
 
 // IsFailed checks if the payment has failed
 func (pr *PaymentRecord) IsFailed() bool {
-	return pr.Status == PaymentRecordStatusFailed
+	return pr.Status == constants.PaymentRecordStatusFailed
 }
 
 // IsCancelled checks if the payment is cancelled
 func (pr *PaymentRecord) IsCancelled() bool {
-	return pr.Status == PaymentRecordStatusCancelled
+	return pr.Status == constants.PaymentRecordStatusCancelled
 }
 
 // IsRefunded checks if the payment is refunded
 func (pr *PaymentRecord) IsRefunded() bool {
-	return pr.Status == PaymentRecordStatusRefunded
+	return pr.Status == constants.PaymentRecordStatusRefunded
 }
 
 // IsExpired checks if the payment has expired
@@ -162,7 +120,7 @@ func (pr *PaymentRecord) IsExpired() bool {
 
 // CanBeRefunded checks if the payment can be refunded
 func (pr *PaymentRecord) CanBeRefunded() bool {
-	return pr.IsCompleted() && pr.RefundStatus != RefundStatusCompleted
+	return pr.IsCompleted() && pr.RefundStatus != constants.RefundStatusCompleted
 }
 
 // GetRefundableAmount returns the amount that can be refunded
@@ -178,164 +136,3 @@ func (pr *PaymentRecord) IsDeleted() bool {
 	return pr.DeletedAt.Valid
 }
 
-// PaymentRecordResponse represents the payment record data structure for API responses
-type PaymentRecordResponse struct {
-	ID                  uint       `json:"id" example:"1"`                                          // Payment ID
-	UserID              uint       `json:"user_id" example:"1"`                                     // User ID
-	SubscriptionOrderID *uint      `json:"subscription_order_id,omitempty" example:"1"`             // Subscription order ID
-	PaymentNo           string     `json:"payment_no" example:"PAY202401010001"`                    // Payment number
-	OutTradeNo          string     `json:"out_trade_no" example:"ORDER202401010001"`                // Merchant order number
-	TransactionID       string     `json:"transaction_id,omitempty" example:"TXN123456789"`         // Transaction ID
-	Gateway             string     `json:"gateway" example:"epay"`                                  // Payment gateway
-	PaymentMethod       string     `json:"payment_method" example:"alipay"`                         // Payment method
-	Amount              float64    `json:"amount" example:"29.99"`                                  // Payment amount
-	Currency            string     `json:"currency" example:"CNY"`                                  // Currency
-	ExchangeRate        float64    `json:"exchange_rate" example:"1.0000"`                          // Exchange rate
-	Status              string     `json:"status" example:"completed"`                              // Payment status
-	PaymentStatus       string     `json:"payment_status,omitempty" example:"success"`              // Gateway payment status
-	PaymentURL          string     `json:"payment_url,omitempty" example:"https://example.com/pay"` // Payment URL
-	QRCodeURL           string     `json:"qr_code_url,omitempty" example:"https://example.com/qr"`  // QR code URL
-	ExpiredAt           *time.Time `json:"expired_at,omitempty" example:"2024-01-01T01:00:00Z"`     // Expiration time
-	PaidAt              *time.Time `json:"paid_at,omitempty" example:"2024-01-01T00:30:00Z"`        // Payment completion time
-	NotifiedAt          *time.Time `json:"notified_at,omitempty" example:"2024-01-01T00:31:00Z"`    // Notification time
-	RefundAmount        float64    `json:"refund_amount" example:"0"`                               // Refund amount
-	RefundStatus        string     `json:"refund_status,omitempty" example:"none"`                  // Refund status
-	RefundedAt          *time.Time `json:"refunded_at,omitempty" example:"2024-01-02T10:00:00Z"`    // Refund time
-	RefundReason        string     `json:"refund_reason,omitempty" example:"User request"`          // Refund reason
-	Remark              string     `json:"remark,omitempty" example:"Subscription payment"`         // Remark
-	CreatedAt           time.Time  `json:"created_at" example:"2024-01-01T00:00:00Z"`               // Creation time
-	UpdatedAt           time.Time  `json:"updated_at" example:"2024-01-01T00:30:00Z"`               // Update time
-
-	// Related data (to be populated at application layer)
-	User              *dto.UserBasicDTO              `json:"user,omitempty"`               // User info
-	SubscriptionOrder *dto.SubscriptionOrderBasicDTO `json:"subscription_order,omitempty"` // Subscription order info
-
-	// Computed fields
-	IsExpired        bool    `json:"is_expired"`        // Expiration status
-	CanRefund        bool    `json:"can_refund"`        // Refundable status
-	RefundableAmount float64 `json:"refundable_amount"` // Refundable amount
-}
-
-// ToResponse converts PaymentRecord to PaymentRecordResponse
-func (pr *PaymentRecord) ToResponse() *PaymentRecordResponse {
-	resp := &PaymentRecordResponse{
-		ID:                  pr.ID,
-		UserID:              pr.UserID,
-		SubscriptionOrderID: pr.SubscriptionOrderID,
-		PaymentNo:           pr.PaymentNo,
-		OutTradeNo:          pr.OutTradeNo,
-		TransactionID:       pr.TransactionID,
-		Gateway:             pr.Gateway,
-		PaymentMethod:       pr.PaymentMethod,
-		Amount:              pr.Amount,
-		Currency:            pr.Currency,
-		ExchangeRate:        pr.ExchangeRate,
-		Status:              pr.Status,
-		PaymentStatus:       pr.PaymentStatus,
-		PaymentURL:          pr.PaymentURL,
-		QRCodeURL:           pr.QRCodeURL,
-		ExpiredAt:           pr.ExpiredAt,
-		PaidAt:              pr.PaidAt,
-		NotifiedAt:          pr.NotifiedAt,
-		RefundAmount:        pr.RefundAmount,
-		RefundStatus:        pr.RefundStatus,
-		RefundedAt:          pr.RefundedAt,
-		RefundReason:        pr.RefundReason,
-		Remark:              pr.Remark,
-		CreatedAt:           pr.CreatedAt,
-		UpdatedAt:           pr.UpdatedAt,
-
-		// Computed fields
-		IsExpired:        pr.IsExpired(),
-		CanRefund:        pr.CanBeRefunded(),
-		RefundableAmount: pr.GetRefundableAmount(),
-	}
-
-	// Note: Related data should be populated at the application layer
-	// to avoid cross-domain dependencies
-
-	return resp
-}
-
-// ToUserResponse converts PaymentRecord to a response suitable for the paying user
-func (pr *PaymentRecord) ToUserResponse() *PaymentRecordResponse {
-	resp := pr.ToResponse()
-
-	// Remove sensitive information for user
-	resp.User = nil
-	resp.NotifiedAt = nil
-
-	return resp
-}
-
-// ToSecureResponse converts PaymentRecord to a secure response for API consumption
-// This removes all sensitive internal fields
-func (pr *PaymentRecord) ToSecureResponse() *PaymentRecordResponse {
-	resp := &PaymentRecordResponse{
-		ID:                  pr.ID,
-		UserID:              pr.UserID,
-		SubscriptionOrderID: pr.SubscriptionOrderID,
-		PaymentNo:           pr.PaymentNo,
-		// OutTradeNo is omitted for security
-		// TransactionID might be partially masked
-		TransactionID: pr.maskTransactionID(),
-		Gateway:       pr.Gateway,
-		PaymentMethod: pr.PaymentMethod,
-		Amount:        pr.Amount,
-		Currency:      pr.Currency,
-		Status:        pr.Status,
-		// Payment URLs are omitted after expiration for security
-		PaymentURL:   pr.getSecurePaymentURL(),
-		QRCodeURL:    pr.getSecureQRCodeURL(),
-		ExpiredAt:    pr.ExpiredAt,
-		PaidAt:       pr.PaidAt,
-		RefundAmount: pr.RefundAmount,
-		RefundStatus: pr.RefundStatus,
-		RefundedAt:   pr.RefundedAt,
-		RefundReason: pr.RefundReason,
-		CreatedAt:    pr.CreatedAt,
-		UpdatedAt:    pr.UpdatedAt,
-
-		// Computed fields
-		IsExpired:        pr.IsExpired(),
-		CanRefund:        pr.CanBeRefunded(),
-		RefundableAmount: pr.GetRefundableAmount(),
-	}
-
-	return resp
-}
-
-// maskTransactionID partially masks the transaction ID for security
-func (pr *PaymentRecord) maskTransactionID() string {
-	if pr.TransactionID == "" {
-		return ""
-	}
-
-	// Test expectation: mask positions 4..= (len-4), keep first 3 and last 3 for 12+ length
-	// For short IDs (<= 6), mask all
-	id := pr.TransactionID
-	n := len(id)
-	if n <= 6 {
-		return strings.Repeat("*", n)
-	}
-	// Keep first 3 and last 3
-	prefix := id[:3]
-	suffix := id[n-3:]
-	return prefix + strings.Repeat("*", n-6) + suffix
-}
-
-// getSecurePaymentURL returns payment URL only if payment is still pending and not expired
-func (pr *PaymentRecord) getSecurePaymentURL() string {
-	if pr.IsPending() && !pr.IsExpired() {
-		return pr.PaymentURL
-	}
-	return ""
-}
-
-// getSecureQRCodeURL returns QR code URL only if payment is still pending and not expired
-func (pr *PaymentRecord) getSecureQRCodeURL() string {
-	if pr.IsPending() && !pr.IsExpired() {
-		return pr.QRCodeURL
-	}
-	return ""
-}

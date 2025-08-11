@@ -12,6 +12,7 @@ import (
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
 	subscriptionInterfaces "linke/internal/domains/subscription/usecases/interfaces"
 	paymentInterfaces "linke/internal/domains/payment/usecases/interfaces"
+	invoiceDto "linke/internal/domains/invoice/dto"
 	invoiceInterfaces "linke/internal/domains/invoice/usecases/interfaces"
 	serverInterfaces "linke/internal/domains/server/usecases/interfaces"
 )
@@ -265,13 +266,13 @@ func (h *CrossDomainEventHandlers) PaymentCompletedHandler() EventHandler {
 			}
 
 			// Step 4: Create invoice if not already exists
-			existingInvoices, _, err := h.invoiceService.GetInvoices(ctx, &invoiceInterfaces.GetInvoicesRequest{
+			existingInvoices, _, err := h.invoiceService.GetInvoices(ctx, &invoiceDto.GetInvoicesRequest{
 				UserID: order.UserID,
 				Limit:  1,
 			})
 			if err == nil && len(existingInvoices) == 0 {
 				// Create invoice for the order
-				invoice, err := h.invoiceService.CreateInvoiceFromOrder(ctx, order.ID, &invoiceInterfaces.CreateInvoiceRequest{
+				invoice, err := h.invoiceService.CreateInvoiceFromOrder(ctx, order.ID, &invoiceDto.CreateInvoiceRequest{
 					UserID:              order.UserID,
 					SubscriptionOrderID: order.ID,
 					Amount:              order.TotalAmount,
@@ -362,7 +363,7 @@ func (h *CrossDomainEventHandlers) OrderPaidHandler() EventHandler {
 			}
 
 			// Step 2: Create invoice for the paid order
-			invoice, err := h.invoiceService.CreateInvoiceFromOrder(ctx, order.ID, &invoiceInterfaces.CreateInvoiceRequest{
+			invoice, err := h.invoiceService.CreateInvoiceFromOrder(ctx, order.ID, &invoiceDto.CreateInvoiceRequest{
 				UserID:              order.UserID,
 				SubscriptionOrderID: order.ID,
 				Amount:              order.TotalAmount,

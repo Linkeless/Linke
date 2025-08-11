@@ -7,6 +7,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"linke/internal/domains/subscription/constants"
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/domains/subscription/usecases/interfaces"
 )
@@ -142,9 +143,9 @@ func (r *alertRepository) GetUsageAlerts(ctx context.Context, filter interfaces.
 	}
 	if filter.IsActive != nil {
 		if *filter.IsActive {
-			query = query.Where("status = ? AND resolved_at IS NULL", entities.AlertStatusFired)
+			query = query.Where("status = ? AND resolved_at IS NULL", constants.AlertStatusFired)
 		} else {
-			query = query.Where("status != ? OR resolved_at IS NOT NULL", entities.AlertStatusFired)
+			query = query.Where("status != ? OR resolved_at IS NOT NULL", constants.AlertStatusFired)
 		}
 	}
 	if !filter.IncludeDeleted {
@@ -190,7 +191,7 @@ func (r *alertRepository) ResolveAlert(ctx context.Context, alertID uint) error 
 	return r.db.WithContext(ctx).Model(&entities.UsageAlert{}).
 		Where("id = ?", alertID).
 		Updates(map[string]any{
-			"status":      entities.AlertStatusResolved,
+			"status":      constants.AlertStatusResolved,
 			"resolved_at": &now,
 			"updated_at":  now,
 		}).Error
@@ -201,7 +202,7 @@ func (r *alertRepository) AcknowledgeAlert(ctx context.Context, alertID uint) er
 	return r.db.WithContext(ctx).Model(&entities.UsageAlert{}).
 		Where("id = ?", alertID).
 		Updates(map[string]any{
-			"status":     entities.AlertStatusAcknowledged,
+			"status":     constants.AlertStatusAcknowledged,
 			"updated_at": now,
 		}).Error
 }
@@ -211,7 +212,7 @@ func (r *alertRepository) SuppressAlert(ctx context.Context, alertID uint, durat
 	return r.db.WithContext(ctx).Model(&entities.UsageAlert{}).
 		Where("id = ?", alertID).
 		Updates(map[string]any{
-			"status":     entities.AlertStatusSuppressed,
+			"status":     constants.AlertStatusSuppressed,
 			"updated_at": now,
 			// Note: Suppression end time would need to be stored in metadata or separate field
 		}).Error
@@ -222,7 +223,7 @@ func (r *alertRepository) SuppressAlert(ctx context.Context, alertID uint, durat
 func (r *alertRepository) GetActiveAlerts(ctx context.Context, subscriptionID uint) ([]*entities.UsageAlert, error) {
 	var alerts []*entities.UsageAlert
 	err := r.db.WithContext(ctx).
-		Where("user_subscription_id = ? AND status = ? AND resolved_at IS NULL", subscriptionID, entities.AlertStatusFired).
+		Where("user_subscription_id = ? AND status = ? AND resolved_at IS NULL", subscriptionID, constants.AlertStatusFired).
 		Order("fired_at DESC").
 		Find(&alerts).Error
 	return alerts, err
@@ -260,14 +261,14 @@ func (r *alertRepository) GetActiveAlertConfigurations(ctx context.Context, subs
 func (r *alertRepository) ResolveAlertsForSubscription(ctx context.Context, subscriptionID uint, usageType string) error {
 	now := time.Now()
 	query := r.db.WithContext(ctx).Model(&entities.UsageAlert{}).
-		Where("user_subscription_id = ? AND status = ? AND resolved_at IS NULL", subscriptionID, entities.AlertStatusFired)
+		Where("user_subscription_id = ? AND status = ? AND resolved_at IS NULL", subscriptionID, constants.AlertStatusFired)
 
 	if usageType != "" {
 		query = query.Where("usage_type = ?", usageType)
 	}
 
 	return query.Updates(map[string]any{
-		"status":      entities.AlertStatusResolved,
+		"status":      constants.AlertStatusResolved,
 		"resolved_at": &now,
 		"updated_at":  now,
 	}).Error
@@ -276,7 +277,7 @@ func (r *alertRepository) ResolveAlertsForSubscription(ctx context.Context, subs
 func (r *alertRepository) CleanupOldAlerts(ctx context.Context, olderThan time.Time) (int64, error) {
 	// Delete resolved alerts older than the specified time
 	result := r.db.WithContext(ctx).
-		Where("status = ? AND resolved_at < ?", entities.AlertStatusResolved, olderThan).
+		Where("status = ? AND resolved_at < ?", constants.AlertStatusResolved, olderThan).
 		Delete(&entities.UsageAlert{})
 	return result.RowsAffected, result.Error
 }

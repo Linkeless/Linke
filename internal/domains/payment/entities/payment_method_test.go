@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"linke/internal/domains/payment/constants"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )
@@ -18,7 +19,7 @@ func TestPaymentMethod_IsActive(t *testing.T) {
 			name: "active payment method",
 			paymentMethod: &PaymentMethod{
 				Active: true,
-				Status: PaymentMethodStatusActive,
+				Status: constants.PaymentMethodStatusActive,
 			},
 			expectedActive: true,
 		},
@@ -26,7 +27,7 @@ func TestPaymentMethod_IsActive(t *testing.T) {
 			name: "inactive payment method",
 			paymentMethod: &PaymentMethod{
 				Active: false,
-				Status: PaymentMethodStatusActive,
+				Status: constants.PaymentMethodStatusActive,
 			},
 			expectedActive: false,
 		},
@@ -34,7 +35,7 @@ func TestPaymentMethod_IsActive(t *testing.T) {
 			name: "invalid status payment method",
 			paymentMethod: &PaymentMethod{
 				Active: true,
-				Status: PaymentMethodStatusInvalid,
+				Status: constants.PaymentMethodStatusInvalid,
 			},
 			expectedActive: false,
 		},
@@ -42,7 +43,7 @@ func TestPaymentMethod_IsActive(t *testing.T) {
 			name: "expired card",
 			paymentMethod: &PaymentMethod{
 				Active:      true,
-				Status:      PaymentMethodStatusActive,
+				Status:      constants.PaymentMethodStatusActive,
 				ExpiryMonth: intPtr(1),
 				ExpiryYear:  intPtr(2020), // Expired year
 			},
@@ -127,7 +128,7 @@ func TestPaymentMethod_CanBeUsedForPayment(t *testing.T) {
 			name: "active payment method",
 			paymentMethod: &PaymentMethod{
 				Active: true,
-				Status: PaymentMethodStatusActive,
+				Status: constants.PaymentMethodStatusActive,
 			},
 			expectedUsable: true,
 		},
@@ -135,7 +136,7 @@ func TestPaymentMethod_CanBeUsedForPayment(t *testing.T) {
 			name: "inactive payment method",
 			paymentMethod: &PaymentMethod{
 				Active: false,
-				Status: PaymentMethodStatusActive,
+				Status: constants.PaymentMethodStatusActive,
 			},
 			expectedUsable: false,
 		},
@@ -143,7 +144,7 @@ func TestPaymentMethod_CanBeUsedForPayment(t *testing.T) {
 			name: "soft deleted payment method",
 			paymentMethod: &PaymentMethod{
 				Active:    true,
-				Status:    PaymentMethodStatusActive,
+				Status:    constants.PaymentMethodStatusActive,
 				DeletedAt: gorm.DeletedAt{Valid: true, Time: time.Now()},
 			},
 			expectedUsable: false,
@@ -288,65 +289,6 @@ func TestPaymentMethod_UpdateLastUsed(t *testing.T) {
 	assert.Equal(t, 3, paymentMethod.FailedUses)
 }
 
-func TestPaymentMethod_ToResponse(t *testing.T) {
-	now := time.Now()
-	paymentMethod := &PaymentMethod{
-		ID:              1,
-		UserID:          10,
-		Type:            PaymentMethodTypeCard,
-		Gateway:         PaymentGatewayEpay,
-		Method:          PaymentMethodAlipay,
-		DisplayName:     "My Alipay Account",
-		MaskedInfo:      "ali***@example.com",
-		Brand:           "Alipay",
-		ExpiryMonth:     intPtr(12),
-		ExpiryYear:      intPtr(2025),
-		IsDefault:       true,
-		Active:          true,
-		Status:          PaymentMethodStatusActive,
-		LastValidatedAt: &now,
-		BillingCountry:  "CN",
-		BillingPostcode: "100000",
-		LastUsedAt:      &now,
-		SuccessfulUses:  10,
-		FailedUses:      1,
-		CreatedAt:       now,
-		UpdatedAt:       now,
-	}
-
-	response := paymentMethod.ToResponse()
-
-	assert.Equal(t, paymentMethod.ID, response.ID)
-	assert.Equal(t, paymentMethod.UserID, response.UserID)
-	assert.Equal(t, paymentMethod.DisplayName, response.DisplayName)
-	assert.Equal(t, paymentMethod.MaskedInfo, response.MaskedInfo)
-	assert.Equal(t, paymentMethod.IsDefault, response.IsDefault)
-	assert.Equal(t, paymentMethod.Active, response.IsActive)
-	assert.Equal(t, paymentMethod.SuccessfulUses, response.SuccessfulUses)
-	assert.Equal(t, paymentMethod.FailedUses, response.FailedUses)
-
-	// Check computed fields
-	assert.Equal(t, paymentMethod.IsExpired(), response.IsExpired)
-	assert.Equal(t, paymentMethod.CanBeUsedForPayment(), response.CanBeUsed)
-	assert.Equal(t, paymentMethod.GetFailureRate(), response.FailureRate)
-	assert.Equal(t, paymentMethod.NeedsRevalidation(), response.NeedsValidation)
-}
-
-func TestPaymentMethod_ToSecureResponse(t *testing.T) {
-	paymentMethod := &PaymentMethod{
-		ID:          1,
-		UserID:      10,
-		DisplayName: "My Alipay Account",
-		MaskedInfo:  "ali***@example.com",
-	}
-
-	response := paymentMethod.ToSecureResponse()
-
-	assert.Equal(t, paymentMethod.ID, response.ID)
-	assert.Equal(t, uint(0), response.UserID) // Should be masked
-	assert.Equal(t, paymentMethod.DisplayName, response.DisplayName)
-	assert.Equal(t, paymentMethod.MaskedInfo, response.MaskedInfo)
-}
 
 // Helper functions
 func intPtr(i int) *int {

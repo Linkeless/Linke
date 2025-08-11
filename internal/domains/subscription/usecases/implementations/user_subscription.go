@@ -6,6 +6,7 @@ import (
 	"slices"
 	"time"
 
+	"linke/internal/domains/subscription/constants"
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/domains/subscription/usecases/interfaces"
 	"linke/internal/shared/dto"
@@ -55,7 +56,7 @@ func (s *UserSubscriptionService) CreateUserSubscription(ctx context.Context, re
 		var existingSubscription entities.UserSubscription
 		if err := s.db.WithContext(ctx).
 			Where("user_id = ? AND subscription_plan_id = ? AND status IN (?)",
-				req.UserID, req.SubscriptionPlanID, []string{entities.UserSubscriptionStatusActive, entities.UserSubscriptionStatusTrial}).
+				req.UserID, req.SubscriptionPlanID, []string{constants.UserSubscriptionStatusActive, constants.UserSubscriptionStatusTrial}).
 			First(&existingSubscription).Error; err == nil {
 			return nil, fmt.Errorf("user already has an active subscription to this plan")
 		} else if err != gorm.ErrRecordNotFound {
@@ -88,7 +89,7 @@ func (s *UserSubscriptionService) CreateUserSubscription(ctx context.Context, re
 	}
 
 	// Calculate billing dates based on plan
-	if plan.BillingCycle != entities.BillingCycleLifetime {
+	if plan.BillingCycle != constants.BillingCycleLifetime {
 		periodStart := startDate
 		if trialEndDate != nil {
 			periodStart = *trialEndDate
@@ -98,9 +99,9 @@ func (s *UserSubscriptionService) CreateUserSubscription(ctx context.Context, re
 		// Calculate period end based on billing cycle and interval
 		var periodEnd time.Time
 		switch plan.BillingCycle {
-		case entities.BillingCycleMonthly:
+		case constants.BillingCycleMonthly:
 			periodEnd = periodStart.AddDate(0, plan.BillingInterval, 0)
-		case entities.BillingCycleYearly:
+		case constants.BillingCycleYearly:
 			periodEnd = periodStart.AddDate(plan.BillingInterval, 0, 0)
 		}
 		currentPeriodEnd = &periodEnd
@@ -109,9 +110,9 @@ func (s *UserSubscriptionService) CreateUserSubscription(ctx context.Context, re
 	// For lifetime subscriptions, endDate remains nil
 
 	// Determine initial status
-	status := entities.UserSubscriptionStatusActive
+	status := constants.UserSubscriptionStatusActive
 	if trialEndDate != nil {
-		status = entities.UserSubscriptionStatusTrial
+		status = constants.UserSubscriptionStatusTrial
 	}
 
 	// Generate UUID for server access
@@ -125,7 +126,7 @@ func (s *UserSubscriptionService) CreateUserSubscription(ctx context.Context, re
 	// Check if traffic limit is disabled for this subscription
 	if req.DisableTrafficLimit != nil && *req.DisableTrafficLimit {
 		trafficLimit = 0 // Unlimited
-		trafficResetCycle = entities.TrafficResetCycleNever
+		trafficResetCycle = constants.TrafficResetCycleNever
 	} else {
 		// Use custom traffic limit if provided, otherwise use plan default
 		if req.CustomTrafficLimit != nil {
@@ -142,10 +143,10 @@ func (s *UserSubscriptionService) CreateUserSubscription(ctx context.Context, re
 		}
 
 		// Calculate traffic reset date based on configuration
-		if trafficResetCycle != entities.TrafficResetCycleNever && trafficLimit > 0 {
+		if trafficResetCycle != constants.TrafficResetCycleNever && trafficLimit > 0 {
 			var resetDate time.Time
 			switch trafficResetCycle {
-			case entities.TrafficResetCycleMonthly:
+			case constants.TrafficResetCycleMonthly:
 				// Set traffic reset to the next month's start date
 				resetDate = startDate.AddDate(0, 1, 0)
 				// Reset to the first day of the month
@@ -427,7 +428,7 @@ func (s *UserSubscriptionService) GetActiveUserSubscription(ctx context.Context,
 	var subscription entities.UserSubscription
 	if err := s.db.WithContext(ctx).
 		Where("user_id = ? AND subscription_plan_id = ? AND status IN (?)",
-			userID, planID, []string{entities.UserSubscriptionStatusActive, entities.UserSubscriptionStatusTrial}).
+			userID, planID, []string{constants.UserSubscriptionStatusActive, constants.UserSubscriptionStatusTrial}).
 		First(&subscription).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("no active subscription found")
@@ -458,22 +459,22 @@ func (s *UserSubscriptionService) UpdateUserSubscription(ctx context.Context, su
 
 		// Define allowed status transitions
 		allowedTransitions := map[string][]string{
-			entities.UserSubscriptionStatusActive: {
-				entities.UserSubscriptionStatusPaused,
-				entities.UserSubscriptionStatusCancelled,
+			constants.UserSubscriptionStatusActive: {
+				constants.UserSubscriptionStatusPaused,
+				constants.UserSubscriptionStatusCancelled,
 			},
-			entities.UserSubscriptionStatusPaused: {
-				entities.UserSubscriptionStatusActive,
-				entities.UserSubscriptionStatusCancelled,
+			constants.UserSubscriptionStatusPaused: {
+				constants.UserSubscriptionStatusActive,
+				constants.UserSubscriptionStatusCancelled,
 			},
-			entities.UserSubscriptionStatusTrial: {
-				entities.UserSubscriptionStatusActive,
-				entities.UserSubscriptionStatusCancelled,
-				entities.UserSubscriptionStatusExpired,
+			constants.UserSubscriptionStatusTrial: {
+				constants.UserSubscriptionStatusActive,
+				constants.UserSubscriptionStatusCancelled,
+				constants.UserSubscriptionStatusExpired,
 			},
-			entities.UserSubscriptionStatusCancelled: {}, // No transitions allowed from cancelled
-			entities.UserSubscriptionStatusExpired: {
-				entities.UserSubscriptionStatusActive, // Only allow reactivation
+			constants.UserSubscriptionStatusCancelled: {}, // No transitions allowed from cancelled
+			constants.UserSubscriptionStatusExpired: {
+				constants.UserSubscriptionStatusActive, // Only allow reactivation
 			},
 		}
 
@@ -494,13 +495,13 @@ func (s *UserSubscriptionService) UpdateUserSubscription(ctx context.Context, su
 		updates["status"] = *req.Status
 
 		// If cancelling, set cancellation date
-		if *req.Status == entities.UserSubscriptionStatusCancelled && subscription.CancelledAt == nil {
+		if *req.Status == constants.UserSubscriptionStatusCancelled && subscription.CancelledAt == nil {
 			now := time.Now()
 			updates["cancelled_at"] = &now
 		}
 
 		// If reactivating from expired, clear cancellation data
-		if *req.Status == entities.UserSubscriptionStatusActive && subscription.Status == entities.UserSubscriptionStatusExpired {
+		if *req.Status == constants.UserSubscriptionStatusActive && subscription.Status == constants.UserSubscriptionStatusExpired {
 			updates["cancelled_at"] = nil
 			updates["cancellation_reason"] = ""
 		}
@@ -564,7 +565,7 @@ func (s *UserSubscriptionService) CancelUserSubscription(ctx context.Context, su
 		return err
 	}
 
-	if subscription.Status == entities.UserSubscriptionStatusCancelled {
+	if subscription.Status == constants.UserSubscriptionStatusCancelled {
 		return fmt.Errorf("subscription is already cancelled")
 	}
 
@@ -576,7 +577,7 @@ func (s *UserSubscriptionService) CancelUserSubscription(ctx context.Context, su
 	}
 
 	if !cancelAtPeriodEnd {
-		updates["status"] = entities.UserSubscriptionStatusCancelled
+		updates["status"] = constants.UserSubscriptionStatusCancelled
 	}
 
 	if err := s.db.WithContext(ctx).Model(subscription).Updates(updates).Error; err != nil {
@@ -618,9 +619,9 @@ func (s *UserSubscriptionService) RenewUserSubscription(ctx context.Context, sub
 	}
 
 	switch plan.BillingCycle {
-	case entities.BillingCycleMonthly:
+	case constants.BillingCycleMonthly:
 		newPeriodEnd = newPeriodStart.AddDate(0, plan.BillingInterval, 0)
-	case entities.BillingCycleYearly:
+	case constants.BillingCycleYearly:
 		newPeriodEnd = newPeriodStart.AddDate(plan.BillingInterval, 0, 0)
 	default:
 		return fmt.Errorf("cannot renew lifetime subscription")
@@ -632,7 +633,7 @@ func (s *UserSubscriptionService) RenewUserSubscription(ctx context.Context, sub
 		"current_period_start": &newPeriodStart,
 		"current_period_end":   &newPeriodEnd,
 		"next_billing_date":    &newNextBillingDate,
-		"status":               entities.UserSubscriptionStatusActive,
+		"status":               constants.UserSubscriptionStatusActive,
 	}
 
 	if err := s.db.WithContext(ctx).Model(subscription).Updates(updates).Error; err != nil {
@@ -708,7 +709,7 @@ func (s *UserSubscriptionService) ResetTrafficUsage(ctx context.Context, subscri
 	}
 
 	// Only reset if subscription has traffic limits and reset cycle is enabled
-	if subscription.TrafficLimit == 0 || subscription.TrafficResetCycle == entities.TrafficResetCycleNever {
+	if subscription.TrafficLimit == 0 || subscription.TrafficResetCycle == constants.TrafficResetCycleNever {
 		tx.Rollback()
 		return nil, fmt.Errorf("traffic reset is not enabled for this subscription")
 	}
@@ -718,7 +719,7 @@ func (s *UserSubscriptionService) ResetTrafficUsage(ctx context.Context, subscri
 	now := time.Now()
 
 	switch subscription.TrafficResetCycle {
-	case entities.TrafficResetCycleMonthly:
+	case constants.TrafficResetCycleMonthly:
 		// Reset to the next month's start date
 		nextReset := now.AddDate(0, 1, 0)
 		nextReset = time.Date(nextReset.Year(), nextReset.Month(), 1, 0, 0, 0, 0, nextReset.Location())
@@ -782,7 +783,7 @@ func (s *UserSubscriptionService) ResetTrafficForSubscriptions(ctx context.Conte
 		var subscriptions []entities.UserSubscription
 		if err := s.db.WithContext(ctx).
 			Where("traffic_reset_cycle != ? AND traffic_limit > 0 AND (traffic_reset_date IS NULL OR traffic_reset_date <= ?)",
-				entities.TrafficResetCycleNever, time.Now()).
+				constants.TrafficResetCycleNever, time.Now()).
 			Find(&subscriptions).Error; err != nil {
 			logger.Error("Failed to find subscriptions for traffic reset", logger.Error2("error", err))
 			return 0, fmt.Errorf("failed to find subscriptions for traffic reset: %w", err)
@@ -802,7 +803,7 @@ func (s *UserSubscriptionService) ResetTrafficForSubscriptions(ctx context.Conte
 		var subscriptions []entities.UserSubscription
 		if err := s.db.WithContext(ctx).
 			Where("user_id = ? AND traffic_reset_cycle != ? AND traffic_limit > 0",
-				*req.UserID, entities.TrafficResetCycleNever).
+				*req.UserID, constants.TrafficResetCycleNever).
 			Find(&subscriptions).Error; err != nil {
 			logger.Error("Failed to find user subscriptions for traffic reset", logger.Error2("error", err))
 			return 0, fmt.Errorf("failed to find user subscriptions for traffic reset: %w", err)
@@ -845,10 +846,10 @@ func (s *UserSubscriptionService) UpdateSubscriptionTrafficLimit(ctx context.Con
 
 	// Calculate new reset date if cycle is changing
 	var nextResetDate *time.Time
-	if resetCycle != entities.TrafficResetCycleNever && newLimit > 0 {
+	if resetCycle != constants.TrafficResetCycleNever && newLimit > 0 {
 		now := time.Now()
 		switch resetCycle {
-		case entities.TrafficResetCycleMonthly:
+		case constants.TrafficResetCycleMonthly:
 			nextReset := now.AddDate(0, 1, 0)
 			nextReset = time.Date(nextReset.Year(), nextReset.Month(), 1, 0, 0, 0, 0, nextReset.Location())
 			nextResetDate = &nextReset
@@ -900,7 +901,7 @@ func (s *UserSubscriptionService) ProcessAutoRenewals(ctx context.Context) (int,
 	var subscriptions []entities.UserSubscription
 	if err := s.db.WithContext(ctx).
 		Where("auto_renew = ? AND status IN (?) AND next_billing_date IS NOT NULL AND next_billing_date <= ? AND renewal_attempts < 3",
-			true, []string{entities.UserSubscriptionStatusActive, entities.UserSubscriptionStatusTrial}, time.Now().Add(24*time.Hour)).
+			true, []string{constants.UserSubscriptionStatusActive, constants.UserSubscriptionStatusTrial}, time.Now().Add(24*time.Hour)).
 		Find(&subscriptions).Error; err != nil {
 		logger.Error("Failed to find subscriptions for auto-renewal", logger.Error2("error", err))
 		return 0, fmt.Errorf("failed to find subscriptions for auto-renewal: %w", err)
@@ -991,7 +992,7 @@ func (s *UserSubscriptionService) GetSubscriptionsForAutoRenewal(ctx context.Con
 	var subscriptions []*entities.UserSubscription
 	if err := s.db.WithContext(ctx).
 		Where("auto_renew = ? AND status IN (?) AND next_billing_date IS NOT NULL AND next_billing_date <= ? AND renewal_attempts < 3",
-			true, []string{entities.UserSubscriptionStatusActive, entities.UserSubscriptionStatusTrial}, time.Now().Add(24*time.Hour)).
+			true, []string{constants.UserSubscriptionStatusActive, constants.UserSubscriptionStatusTrial}, time.Now().Add(24*time.Hour)).
 		Preload("User").
 		Preload("SubscriptionPlan").
 		Find(&subscriptions).Error; err != nil {
@@ -1043,7 +1044,7 @@ func (s *UserSubscriptionService) DisableAutoRenewal(ctx context.Context, subscr
 func (s *UserSubscriptionService) GetUserActiveSubscriptions(ctx context.Context, userID uint) ([]*entities.UserSubscription, error) {
 	var subscriptions []*entities.UserSubscription
 	if err := s.db.WithContext(ctx).
-		Where("user_id = ? AND status = ?", userID, entities.UserSubscriptionStatusActive).
+		Where("user_id = ? AND status = ?", userID, constants.UserSubscriptionStatusActive).
 		Find(&subscriptions).Error; err != nil {
 		logger.Error("Failed to get user active subscriptions", logger.Error2("error", err), logger.Uint("user_id", userID))
 		return nil, fmt.Errorf("failed to get user active subscriptions: %w", err)
@@ -1122,11 +1123,11 @@ func (s *UserSubscriptionService) GetSubscriptionStatistics(ctx context.Context)
 
 	// Count subscriptions by status
 	statuses := []string{
-		entities.UserSubscriptionStatusActive,
-		entities.UserSubscriptionStatusPaused,
-		entities.UserSubscriptionStatusCancelled,
-		entities.UserSubscriptionStatusExpired,
-		entities.UserSubscriptionStatusTrial,
+		constants.UserSubscriptionStatusActive,
+		constants.UserSubscriptionStatusPaused,
+		constants.UserSubscriptionStatusCancelled,
+		constants.UserSubscriptionStatusExpired,
+		constants.UserSubscriptionStatusTrial,
 	}
 
 	for _, status := range statuses {
@@ -1295,7 +1296,7 @@ func (s *UserSubscriptionService) ProcessSubscriptionChange(ctx context.Context,
 	}
 
 	// Validate current subscription is active
-	if currentSubscription.Status != entities.UserSubscriptionStatusActive {
+	if currentSubscription.Status != constants.UserSubscriptionStatusActive {
 		tx.Rollback()
 		return nil, fmt.Errorf("subscription is not active, current status: %s", currentSubscription.Status)
 	}

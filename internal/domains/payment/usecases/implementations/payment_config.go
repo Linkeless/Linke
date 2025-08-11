@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"linke/internal/domains/payment/dto"
 	"linke/internal/domains/payment/entities"
-	"linke/internal/domains/payment/usecases/interfaces"
 	"linke/internal/shared/logger"
 
 	"gorm.io/gorm"
@@ -23,7 +23,7 @@ func NewPaymentConfigService(db *gorm.DB) *PaymentConfigService {
 }
 
 // CreatePaymentConfig creates a new payment config
-func (pcs *PaymentConfigService) CreatePaymentConfig(ctx context.Context, req *interfaces.CreatePaymentConfigRequest) (*entities.PaymentConfig, error) {
+func (pcs *PaymentConfigService) CreatePaymentConfig(ctx context.Context, req *dto.CreatePaymentConfigRequest) (*entities.PaymentConfig, error) {
 	// Check if config already exists
 	var existingConfig entities.PaymentConfig
 	if err := pcs.db.WithContext(ctx).Where("gateway = ?", req.Gateway).First(&existingConfig).Error; err == nil {
@@ -117,7 +117,7 @@ func (pcs *PaymentConfigService) GetPaymentConfigByGateway(ctx context.Context, 
 }
 
 // GetPaymentConfigs gets payment configs with filtering and pagination
-func (pcs *PaymentConfigService) GetPaymentConfigs(ctx context.Context, req *interfaces.GetPaymentConfigsRequest) ([]*entities.PaymentConfig, int64, error) {
+func (pcs *PaymentConfigService) GetPaymentConfigs(ctx context.Context, req *dto.GetPaymentConfigsRequest) ([]*entities.PaymentConfig, int64, error) {
 	query := pcs.db.WithContext(ctx).Model(&entities.PaymentConfig{})
 
 	// Apply filters
@@ -176,7 +176,7 @@ func (pcs *PaymentConfigService) GetActivePaymentConfigs(ctx context.Context, cu
 }
 
 // UpdatePaymentConfig updates a payment config
-func (pcs *PaymentConfigService) UpdatePaymentConfig(ctx context.Context, configID uint, req *interfaces.UpdatePaymentConfigRequest) (*entities.PaymentConfig, error) {
+func (pcs *PaymentConfigService) UpdatePaymentConfig(ctx context.Context, configID uint, req *dto.UpdatePaymentConfigRequest) (*entities.PaymentConfig, error) {
 	// Get existing config
 	config, err := pcs.GetPaymentConfig(ctx, configID)
 	if err != nil {

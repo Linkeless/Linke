@@ -1,11 +1,15 @@
 package entities
 
-import "time"
+import (
+	"time"
+
+	"linke/internal/domains/server/constants"
+)
 
 // ServerGroup represents a server group
 type ServerGroup struct {
 	ID        uint      `json:"id" gorm:"primaryKey;autoIncrement"`
-	Name      string    `json:"name" gorm:"size:255;not null;uniqueIndex" binding:"required,max=255"`
+	Name      string    `json:"name" gorm:"size:255;not null;uniqueIndex" binding:"required" validate:"max=255"`
 	CreatedAt time.Time `json:"created_at" gorm:"not null;index"`
 	UpdatedAt time.Time `json:"updated_at" gorm:"not null"`
 
@@ -15,7 +19,7 @@ type ServerGroup struct {
 
 // TableName returns the table name for ServerGroup model
 func (ServerGroup) TableName() string {
-	return "server_groups"
+	return constants.TableServerGroups
 }
 
 // ServerGroupResponse represents the server group data structure for API responses

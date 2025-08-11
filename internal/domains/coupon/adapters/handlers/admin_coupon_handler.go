@@ -5,12 +5,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
+
+	"linke/internal/domains/coupon/constants"
+	"linke/internal/domains/coupon/dto"
 	"linke/internal/domains/coupon/entities"
 	couponInterfaces "linke/internal/domains/coupon/usecases/interfaces"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/response"
-
-	"github.com/gin-gonic/gin"
 )
 
 // AdminCouponHandler handles admin coupon operations
@@ -25,92 +27,6 @@ func NewAdminCouponHandler(couponService couponInterfaces.CouponService) *AdminC
 	}
 }
 
-// CreateCouponRequest represents the request body for creating a coupon
-type CreateCouponRequest struct {
-	Code            string     `json:"code" binding:"required,min=3,max=50" example:"SAVE20"`
-	Name            string     `json:"name" binding:"required,min=1,max=100" example:"20% Off All Plans"`
-	Description     string     `json:"description,omitempty" binding:"max=1000" example:"Save 20% on any subscription plan"`
-	Type            string     `json:"type" binding:"required,oneof=percentage fixed_amount" example:"percentage"`
-	Value           float64    `json:"value" binding:"required,min=0" example:"20"`
-	MaxUses         int        `json:"max_uses,omitempty" binding:"min=0" example:"100"`
-	MaxUsesPerUser  int        `json:"max_uses_per_user,omitempty" binding:"min=1" example:"1"`
-	MinOrderAmount  float64    `json:"min_order_amount,omitempty" binding:"min=0" example:"10"`
-	Currency        string     `json:"currency,omitempty" binding:"omitempty,len=3" example:"USD"`
-	ValidFrom       *time.Time `json:"valid_from,omitempty" example:"2024-01-01T00:00:00Z"`
-	ValidUntil      *time.Time `json:"valid_until,omitempty" example:"2024-12-31T23:59:59Z"`
-	ApplicablePlans string     `json:"applicable_plans,omitempty" example:"[1,2,3]"`
-	IsPublic        *bool      `json:"is_public,omitempty" example:"true"`
-}
-
-// UpdateCouponRequest represents the request body for updating a coupon
-type UpdateCouponRequest struct {
-	Name            *string    `json:"name,omitempty" binding:"omitempty,min=1,max=100" example:"Updated Coupon Name"`
-	Description     *string    `json:"description,omitempty" binding:"omitempty,max=1000" example:"Updated description"`
-	Type            *string    `json:"type,omitempty" binding:"omitempty,oneof=percentage fixed_amount" example:"percentage"`
-	Value           *float64   `json:"value,omitempty" binding:"omitempty,min=0" example:"25"`
-	MaxUses         *int       `json:"max_uses,omitempty" binding:"omitempty,min=0" example:"200"`
-	MaxUsesPerUser  *int       `json:"max_uses_per_user,omitempty" binding:"omitempty,min=1" example:"2"`
-	MinOrderAmount  *float64   `json:"min_order_amount,omitempty" binding:"omitempty,min=0" example:"15"`
-	ValidFrom       *time.Time `json:"valid_from,omitempty" example:"2024-02-01T00:00:00Z"`
-	ValidUntil      *time.Time `json:"valid_until,omitempty" example:"2024-11-30T23:59:59Z"`
-	ApplicablePlans *string    `json:"applicable_plans,omitempty" example:"[1,2,4]"`
-	Status          *string    `json:"status,omitempty" binding:"omitempty,oneof=active inactive expired" example:"active"`
-	IsPublic        *bool      `json:"is_public,omitempty" example:"false"`
-}
-
-// ToggleStatusRequest represents the request for toggling coupon status
-type ToggleStatusRequest struct {
-	Status string `json:"status" binding:"required,oneof=active inactive" example:"active"`
-}
-
-// ExtendExpiryRequest represents the request for extending coupon expiry
-type ExtendExpiryRequest struct {
-	ExtendDays  int        `json:"extend_days,omitempty" binding:"omitempty,min=1" example:"30"`
-	NewExpiry   *time.Time `json:"new_expiry,omitempty" example:"2024-12-31T23:59:59Z"`
-	ExtendType  string     `json:"extend_type" binding:"required,oneof=days specific" example:"days"`
-}
-
-// BulkCreateCouponRequest represents the request for bulk coupon creation
-type BulkCreateCouponRequest struct {
-	CodePrefix      string     `json:"code_prefix" binding:"required,min=2,max=20" example:"BULK"`
-	Count           int        `json:"count" binding:"required,min=1,max=1000" example:"100"`
-	Name            string     `json:"name" binding:"required,min=1,max=100" example:"Bulk Generated Coupons"`
-	Description     string     `json:"description,omitempty" binding:"max=1000" example:"Bulk generated discount coupons"`
-	Type            string     `json:"type" binding:"required,oneof=percentage fixed_amount" example:"percentage"`
-	Value           float64    `json:"value" binding:"required,min=0" example:"20"`
-	MaxUses         int        `json:"max_uses,omitempty" binding:"min=0" example:"1"`
-	MaxUsesPerUser  int        `json:"max_uses_per_user,omitempty" binding:"min=1" example:"1"`
-	MinOrderAmount  float64    `json:"min_order_amount,omitempty" binding:"min=0" example:"10"`
-	Currency        string     `json:"currency,omitempty" binding:"omitempty,len=3" example:"USD"`
-	ValidFrom       *time.Time `json:"valid_from,omitempty" example:"2024-01-01T00:00:00Z"`
-	ValidUntil      *time.Time `json:"valid_until,omitempty" example:"2024-12-31T23:59:59Z"`
-	ApplicablePlans string     `json:"applicable_plans,omitempty" example:"[1,2,3]"`
-	IsPublic        *bool      `json:"is_public,omitempty" example:"true"`
-}
-
-// BulkUpdateRequest represents the request for bulk operations
-type BulkUpdateRequest struct {
-	IDs    []uint64 `json:"ids" binding:"required,min=1,max=100"`
-	Status *string  `json:"status,omitempty" binding:"omitempty,oneof=active inactive expired"`
-}
-
-// SearchCouponsRequest represents the search request
-type SearchCouponsRequest struct {
-	Query           string     `form:"q" binding:"omitempty,min=1,max=100"`
-	Status          string     `form:"status,omitempty" binding:"omitempty,oneof=active inactive expired"`
-	Type            string     `form:"type,omitempty" binding:"omitempty,oneof=percentage fixed_amount"`
-	IsPublic        *bool      `form:"is_public,omitempty"`
-	CreatedAfter    *time.Time `form:"created_after,omitempty"`
-	CreatedBefore   *time.Time `form:"created_before,omitempty"`
-	ExpiresAfter    *time.Time `form:"expires_after,omitempty"`
-	ExpiresBefore   *time.Time `form:"expires_before,omitempty"`
-	MinValue        *float64   `form:"min_value,omitempty" binding:"omitempty,min=0"`
-	MaxValue        *float64   `form:"max_value,omitempty" binding:"omitempty,min=0"`
-	MinUsed         *int       `form:"min_used,omitempty" binding:"omitempty,min=0"`
-	MaxUsed         *int       `form:"max_used,omitempty" binding:"omitempty,min=0"`
-	Page            int        `form:"page,omitempty" binding:"omitempty,min=1" example:"1"`
-	Limit           int        `form:"limit,omitempty" binding:"omitempty,min=1,max=100" example:"10"`
-}
 
 // CreateCoupon godoc
 // @Summary Create new coupon
@@ -119,8 +35,8 @@ type SearchCouponsRequest struct {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param coupon body CreateCouponRequest true "Coupon creation data"
-// @Success 201 {object} response.StandardResponse{data=entities.CouponResponse}
+// @Param coupon body dto.CreateCouponRequest true "Coupon creation data"
+// @Success 201 {object} response.StandardResponse{data=dto.CouponResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -128,41 +44,24 @@ type SearchCouponsRequest struct {
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /admin/coupons [post]
 func (h *AdminCouponHandler) CreateCoupon(c *gin.Context) {
-	var createReq CreateCouponRequest
+	var createReq dto.CreateCouponRequest
 	if err := c.ShouldBindJSON(&createReq); err != nil {
 		response.BadRequest(c, err.Error())
 		return
 	}
 
-	// Convert request to service request
-	serviceReq := &couponInterfaces.CreateCouponRequest{
-		Code:            createReq.Code,
-		Name:            createReq.Name,
-		Description:     createReq.Description,
-		Type:            createReq.Type,
-		Value:           createReq.Value,
-		MaxUses:         createReq.MaxUses,
-		MaxUsesPerUser:  createReq.MaxUsesPerUser,
-		MinOrderAmount:  createReq.MinOrderAmount,
-		Currency:        createReq.Currency,
-		ValidFrom:       createReq.ValidFrom,
-		ValidUntil:      createReq.ValidUntil,
-		ApplicablePlans: createReq.ApplicablePlans,
-		IsPublic:        createReq.IsPublic,
-	}
-
 	// Set default values
-	if serviceReq.Currency == "" {
-		serviceReq.Currency = "USD"
+	if createReq.Currency == "" {
+		createReq.Currency = constants.DefaultCurrency
 	}
-	if serviceReq.MaxUsesPerUser == 0 {
-		serviceReq.MaxUsesPerUser = 1
+	if createReq.MaxUsesPerUser == 0 {
+		createReq.MaxUsesPerUser = constants.DefaultMaxUsesPerUser
 	}
 
 	// Get creator ID from context (admin user)
 	creatorID := uint64(1) // TODO: Get from auth context
 
-	coupon, err := h.couponService.CreateCoupon(c.Request.Context(), creatorID, serviceReq)
+	coupon, err := h.couponService.CreateCoupon(c.Request.Context(), creatorID, &createReq)
 	if err != nil {
 		logger.Error("Admin failed to create coupon",
 			logger.String("code", createReq.Code),
@@ -185,7 +84,7 @@ func (h *AdminCouponHandler) CreateCoupon(c *gin.Context) {
 		logger.String("admin_action", "create_coupon"),
 	)
 
-	response.Created(c, coupon.ToResponse())
+	response.Created(c, dto.ToResponse(coupon))
 }
 
 // ListCoupons godoc
@@ -229,7 +128,7 @@ func (h *AdminCouponHandler) ListCoupons(c *gin.Context) {
 
 	offset := (page - 1) * limit
 
-	serviceReq := &couponInterfaces.GetCouponsRequest{
+	serviceReq := &dto.GetCouponsRequest{
 		Status:   status,
 		Type:     couponType,
 		IsPublic: isPublic,
@@ -245,9 +144,9 @@ func (h *AdminCouponHandler) ListCoupons(c *gin.Context) {
 	}
 
 	// Convert to responses
-	var couponResponses []*entities.CouponResponse
+	var couponResponses []*dto.CouponResponse
 	for _, coupon := range coupons {
-		couponResponses = append(couponResponses, coupon.ToResponse())
+		couponResponses = append(couponResponses, dto.ToResponse(coupon))
 	}
 
 	response.SuccessList(c, couponResponses, page, limit, total)
@@ -285,7 +184,7 @@ func (h *AdminCouponHandler) GetCoupon(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, coupon.ToResponse())
+	response.Success(c, dto.ToResponse(coupon))
 }
 
 // UpdateCoupon godoc
@@ -296,8 +195,8 @@ func (h *AdminCouponHandler) GetCoupon(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Coupon ID"
-// @Param coupon body UpdateCouponRequest true "Coupon update data"
-// @Success 200 {object} response.StandardResponse{data=entities.CouponResponse}
+// @Param coupon body dto.UpdateCouponRequest true "Coupon update data"
+// @Success 200 {object} response.StandardResponse{data=dto.CouponResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -312,29 +211,13 @@ func (h *AdminCouponHandler) UpdateCoupon(c *gin.Context) {
 		return
 	}
 
-	var updateReq UpdateCouponRequest
+	var updateReq dto.UpdateCouponRequest
 	if err := c.ShouldBindJSON(&updateReq); err != nil {
 		response.BadRequest(c, err.Error())
 		return
 	}
 
-	// Convert to service request
-	serviceReq := &couponInterfaces.UpdateCouponRequest{
-		Name:            updateReq.Name,
-		Description:     updateReq.Description,
-		Type:            updateReq.Type,
-		Value:           updateReq.Value,
-		MaxUses:         updateReq.MaxUses,
-		MaxUsesPerUser:  updateReq.MaxUsesPerUser,
-		MinOrderAmount:  updateReq.MinOrderAmount,
-		ValidFrom:       updateReq.ValidFrom,
-		ValidUntil:      updateReq.ValidUntil,
-		ApplicablePlans: updateReq.ApplicablePlans,
-		Status:          updateReq.Status,
-		IsPublic:        updateReq.IsPublic,
-	}
-
-	coupon, err := h.couponService.UpdateCoupon(c.Request.Context(), id, serviceReq)
+	coupon, err := h.couponService.UpdateCoupon(c.Request.Context(), id, &updateReq)
 	if err != nil {
 		logger.Error("Admin failed to update coupon",
 			logger.Uint("coupon_id", uint(id)),
@@ -349,7 +232,7 @@ func (h *AdminCouponHandler) UpdateCoupon(c *gin.Context) {
 		logger.String("admin_action", "update_coupon"),
 	)
 
-	response.Success(c, coupon.ToResponse())
+	response.Success(c, dto.ToResponse(coupon))
 }
 
 // DeleteCoupon godoc
@@ -399,7 +282,7 @@ func (h *AdminCouponHandler) DeleteCoupon(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Coupon ID"
-// @Param status body ToggleStatusRequest true "Status data"
+// @Param status body dto.ToggleStatusRequest true "Status data"
 // @Success 200 {object} response.StandardResponse{data=entities.CouponResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -414,7 +297,7 @@ func (h *AdminCouponHandler) ToggleCouponStatus(c *gin.Context) {
 		return
 	}
 
-	var statusReq ToggleStatusRequest
+	var statusReq dto.ToggleStatusRequest
 	if err := c.ShouldBindJSON(&statusReq); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -454,7 +337,7 @@ func (h *AdminCouponHandler) ToggleCouponStatus(c *gin.Context) {
 		logger.String("admin_action", "toggle_coupon_status"),
 	)
 
-	response.Success(c, coupon.ToResponse())
+	response.Success(c, dto.ToResponse(coupon))
 }
 
 // ExtendCouponExpiry godoc
@@ -465,7 +348,7 @@ func (h *AdminCouponHandler) ToggleCouponStatus(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Coupon ID"
-// @Param extend body ExtendExpiryRequest true "Expiry extension data"
+// @Param extend body dto.ExtendExpiryRequest true "Expiry extension data"
 // @Success 200 {object} response.StandardResponse{data=entities.CouponResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -480,7 +363,7 @@ func (h *AdminCouponHandler) ExtendCouponExpiry(c *gin.Context) {
 		return
 	}
 
-	var extendReq ExtendExpiryRequest
+	var extendReq dto.ExtendExpiryRequest
 	if err := c.ShouldBindJSON(&extendReq); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -511,7 +394,7 @@ func (h *AdminCouponHandler) ExtendCouponExpiry(c *gin.Context) {
 	}
 
 	// Update coupon with new expiry
-	updateReq := &couponInterfaces.UpdateCouponRequest{
+	updateReq := &dto.UpdateCouponRequest{
 		ValidUntil: newExpiry,
 	}
 
@@ -531,7 +414,7 @@ func (h *AdminCouponHandler) ExtendCouponExpiry(c *gin.Context) {
 		logger.String("admin_action", "extend_coupon"),
 	)
 
-	response.Success(c, updatedCoupon.ToResponse())
+	response.Success(c, dto.ToResponse(updatedCoupon))
 }
 
 // GetCouponUsage godoc
@@ -581,9 +464,9 @@ func (h *AdminCouponHandler) GetCouponUsage(c *gin.Context) {
 	}
 
 	// Convert to responses
-	var usageResponses []*entities.CouponUsageResponse
+	var usageResponses []*dto.CouponUsageResponse
 	for _, usage := range usageRecords {
-		usageResponses = append(usageResponses, usage.ToResponse())
+		usageResponses = append(usageResponses, dto.CouponUsageToResponse(usage))
 	}
 
 	response.SuccessList(c, usageResponses, page, limit, total)
@@ -617,7 +500,7 @@ func (h *AdminCouponHandler) GetCouponUsage(c *gin.Context) {
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /admin/coupons/search [get]
 func (h *AdminCouponHandler) SearchCoupons(c *gin.Context) {
-	var searchReq SearchCouponsRequest
+	var searchReq dto.SearchCouponsRequest
 	if err := c.ShouldBindQuery(&searchReq); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -638,7 +521,7 @@ func (h *AdminCouponHandler) SearchCoupons(c *gin.Context) {
 	offset := (searchReq.Page - 1) * searchReq.Limit
 
 	// Build service request
-	serviceReq := &couponInterfaces.GetCouponsRequest{
+	serviceReq := &dto.GetCouponsRequest{
 		Status:   searchReq.Status,
 		Type:     searchReq.Type,
 		IsPublic: searchReq.IsPublic,
@@ -668,9 +551,9 @@ func (h *AdminCouponHandler) SearchCoupons(c *gin.Context) {
 	}
 
 	// Convert to responses
-	var couponResponses []*entities.CouponResponse
+	var couponResponses []*dto.CouponResponse
 	for _, coupon := range filteredCoupons {
-		couponResponses = append(couponResponses, coupon.ToResponse())
+		couponResponses = append(couponResponses, dto.ToResponse(coupon))
 	}
 
 	response.SuccessListWithExtra(c, "Search completed", couponResponses, searchReq.Page, searchReq.Limit, int64(len(filteredCoupons)), gin.H{
@@ -748,7 +631,7 @@ func (h *AdminCouponHandler) GetCouponAnalytics(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param bulk body BulkCreateCouponRequest true "Bulk creation data"
+// @Param bulk body dto.BulkCreateCouponRequest true "Bulk creation data"
 // @Success 201 {object} response.StandardResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -756,7 +639,7 @@ func (h *AdminCouponHandler) GetCouponAnalytics(c *gin.Context) {
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /admin/coupons/bulk/create [post]
 func (h *AdminCouponHandler) BulkCreateCoupons(c *gin.Context) {
-	var bulkReq BulkCreateCouponRequest
+	var bulkReq dto.BulkCreateCouponRequest
 	if err := c.ShouldBindJSON(&bulkReq); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -781,7 +664,7 @@ func (h *AdminCouponHandler) BulkCreateCoupons(c *gin.Context) {
 		// Generate unique code
 		code := h.generateCouponCode(bulkReq.CodePrefix, i+1)
 
-		serviceReq := &couponInterfaces.CreateCouponRequest{
+		serviceReq := &dto.CreateCouponRequest{
 			Code:            code,
 			Name:            bulkReq.Name,
 			Description:     bulkReq.Description,
@@ -822,10 +705,10 @@ func (h *AdminCouponHandler) BulkCreateCoupons(c *gin.Context) {
 		"created_count":   len(createdCoupons),
 		"failed_count":    len(failedCodes),
 		"failed_codes":    failedCodes,
-		"created_coupons": func() []*entities.CouponResponse {
-			var responses []*entities.CouponResponse
+		"created_coupons": func() []*dto.CouponResponse {
+			var responses []*dto.CouponResponse
 			for _, coupon := range createdCoupons {
-				responses = append(responses, coupon.ToResponse())
+				responses = append(responses, dto.ToResponse(coupon))
 			}
 			return responses
 		}(),
@@ -839,7 +722,7 @@ func (h *AdminCouponHandler) BulkCreateCoupons(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param bulk body BulkUpdateRequest true "Bulk update data"
+// @Param bulk body dto.BulkUpdateRequest true "Bulk update data"
 // @Success 200 {object} response.StandardResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -847,7 +730,7 @@ func (h *AdminCouponHandler) BulkCreateCoupons(c *gin.Context) {
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /admin/coupons/bulk/update [post]
 func (h *AdminCouponHandler) BulkUpdateCoupons(c *gin.Context) {
-	var bulkReq BulkUpdateRequest
+	var bulkReq dto.BulkUpdateRequest
 	if err := c.ShouldBindJSON(&bulkReq); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -856,7 +739,7 @@ func (h *AdminCouponHandler) BulkUpdateCoupons(c *gin.Context) {
 	successCount := 0
 	failedIDs := make([]uint64, 0)
 
-	serviceReq := &couponInterfaces.UpdateCouponRequest{
+	serviceReq := &dto.UpdateCouponRequest{
 		Status: bulkReq.Status,
 	}
 
@@ -895,7 +778,7 @@ func (h *AdminCouponHandler) BulkUpdateCoupons(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param bulk body BulkUpdateRequest true "Bulk deactivation data"
+// @Param bulk body dto.BulkUpdateRequest true "Bulk deactivation data"
 // @Success 200 {object} response.StandardResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -903,7 +786,7 @@ func (h *AdminCouponHandler) BulkUpdateCoupons(c *gin.Context) {
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /admin/coupons/bulk/deactivate [post]
 func (h *AdminCouponHandler) BulkDeactivateCoupons(c *gin.Context) {
-	var bulkReq BulkUpdateRequest
+	var bulkReq dto.BulkUpdateRequest
 	if err := c.ShouldBindJSON(&bulkReq); err != nil {
 		response.BadRequest(c, err.Error())
 		return

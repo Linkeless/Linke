@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"linke/internal/domains/subscription/constants"
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/domains/subscription/usecases/interfaces"
 	"linke/internal/shared/logger"
@@ -67,7 +68,7 @@ func (s *SubscriptionPlanService) CreateSubscriptionPlan(ctx context.Context, cr
 		TrialPeriodDays: req.TrialPeriodDays,
 		Features:        req.Features,
 		Limits:          req.Limits,
-		Status:          entities.SubscriptionPlanStatusActive,
+		Status:          constants.SubscriptionPlanStatusActive,
 		IsVisible:       isVisible,
 		SortOrder:       req.SortOrder,
 		IsPopular:       isPopular,
@@ -227,7 +228,7 @@ func (s *SubscriptionPlanService) GetSubscriptionPlans(ctx context.Context, req 
 // GetVisibleSubscriptionPlans gets visible and active subscription plans for public display
 func (s *SubscriptionPlanService) GetVisibleSubscriptionPlans(ctx context.Context, currency string) ([]*entities.SubscriptionPlan, error) {
 	query := s.db.WithContext(ctx).Model(&entities.SubscriptionPlan{}).
-		Where("status = ? AND is_visible = ?", entities.SubscriptionPlanStatusActive, true)
+		Where("status = ? AND is_visible = ?", constants.SubscriptionPlanStatusActive, true)
 
 	if currency != "" {
 		query = query.Where("currency = ?", strings.ToUpper(currency))
@@ -260,7 +261,7 @@ func (s *SubscriptionPlanService) GetVisibleSubscriptionPlans(ctx context.Contex
 // GetPopularSubscriptionPlans gets popular subscription plans
 func (s *SubscriptionPlanService) GetPopularSubscriptionPlans(ctx context.Context, limit int) ([]*entities.SubscriptionPlan, error) {
 	query := s.db.WithContext(ctx).Model(&entities.SubscriptionPlan{}).
-		Where("status = ? AND is_visible = ? AND is_popular = ?", entities.SubscriptionPlanStatusActive, true, true)
+		Where("status = ? AND is_visible = ? AND is_popular = ?", constants.SubscriptionPlanStatusActive, true, true)
 
 	if limit > 0 {
 		query = query.Limit(limit)
@@ -414,7 +415,7 @@ func (s *SubscriptionPlanService) DeleteSubscriptionPlan(ctx context.Context, pl
 	// Check if plan has active subscriptions
 	var activeSubscriptionCount int64
 	if err := s.db.WithContext(ctx).Model(&entities.UserSubscription{}).
-		Where("subscription_plan_id = ? AND status = ?", planID, entities.UserSubscriptionStatusActive).
+		Where("subscription_plan_id = ? AND status = ?", planID, constants.UserSubscriptionStatusActive).
 		Count(&activeSubscriptionCount).Error; err != nil {
 		logger.Error("Failed to check active subscriptions", logger.Error2("error", err), logger.Uint("plan_id", planID))
 		return fmt.Errorf("failed to check active subscriptions: %w", err)
@@ -446,10 +447,10 @@ func (s *SubscriptionPlanService) ToggleSubscriptionPlanStatus(ctx context.Conte
 	// Toggle status
 	var newStatus string
 	switch plan.Status {
-	case entities.SubscriptionPlanStatusActive:
-		newStatus = entities.SubscriptionPlanStatusInactive
-	case entities.SubscriptionPlanStatusInactive:
-		newStatus = entities.SubscriptionPlanStatusActive
+	case constants.SubscriptionPlanStatusActive:
+		newStatus = constants.SubscriptionPlanStatusInactive
+	case constants.SubscriptionPlanStatusInactive:
+		newStatus = constants.SubscriptionPlanStatusActive
 	default:
 		return nil, fmt.Errorf("cannot toggle status of archived plan")
 	}
@@ -497,7 +498,7 @@ func (s *SubscriptionPlanService) ArchiveSubscriptionPlan(ctx context.Context, p
 	// Check if plan has active subscriptions
 	var activeSubscriptionCount int64
 	if err := s.db.WithContext(ctx).Model(&entities.UserSubscription{}).
-		Where("subscription_plan_id = ? AND status = ?", planID, entities.UserSubscriptionStatusActive).
+		Where("subscription_plan_id = ? AND status = ?", planID, constants.UserSubscriptionStatusActive).
 		Count(&activeSubscriptionCount).Error; err != nil {
 		logger.Error("Failed to check active subscriptions for archiving", logger.Error2("error", err), logger.Uint("plan_id", planID))
 		return fmt.Errorf("failed to check active subscriptions: %w", err)
@@ -509,7 +510,7 @@ func (s *SubscriptionPlanService) ArchiveSubscriptionPlan(ctx context.Context, p
 
 	// Archive the plan
 	if err := s.db.WithContext(ctx).Model(plan).Updates(map[string]any{
-		"status":     entities.SubscriptionPlanStatusArchived,
+		"status":     constants.SubscriptionPlanStatusArchived,
 		"is_visible": false,
 	}).Error; err != nil {
 		logger.Error("Failed to archive subscription plan", logger.Error2("error", err), logger.Uint("plan_id", planID))

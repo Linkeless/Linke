@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"linke/internal/domains/payment/dto"
 	"linke/internal/domains/payment/entities"
-	"linke/internal/domains/payment/usecases/interfaces"
 	"linke/internal/shared/cache"
 	"linke/internal/shared/logger"
 )
@@ -32,7 +32,7 @@ func NewCachedPaymentConfigService(
 }
 
 // CreatePaymentConfig creates a new payment config and invalidates cache
-func (ccs *CachedPaymentConfigService) CreatePaymentConfig(ctx context.Context, req *interfaces.CreatePaymentConfigRequest) (*entities.PaymentConfig, error) {
+func (ccs *CachedPaymentConfigService) CreatePaymentConfig(ctx context.Context, req *dto.CreatePaymentConfigRequest) (*entities.PaymentConfig, error) {
 	config, err := ccs.base.CreatePaymentConfig(ctx, req)
 	if err != nil {
 		return nil, err
@@ -103,7 +103,7 @@ func (ccs *CachedPaymentConfigService) GetPaymentConfigByGateway(ctx context.Con
 }
 
 // GetPaymentConfigs gets payment configs with filtering and pagination (no caching due to dynamic filters)
-func (ccs *CachedPaymentConfigService) GetPaymentConfigs(ctx context.Context, req *interfaces.GetPaymentConfigsRequest) ([]*entities.PaymentConfig, int64, error) {
+func (ccs *CachedPaymentConfigService) GetPaymentConfigs(ctx context.Context, req *dto.GetPaymentConfigsRequest) ([]*entities.PaymentConfig, int64, error) {
 	// Don't cache paginated/filtered results due to complexity
 	return ccs.base.GetPaymentConfigs(ctx, req)
 }
@@ -140,7 +140,7 @@ func (ccs *CachedPaymentConfigService) GetActivePaymentConfigs(ctx context.Conte
 }
 
 // UpdatePaymentConfig updates a payment config and invalidates cache
-func (ccs *CachedPaymentConfigService) UpdatePaymentConfig(ctx context.Context, configID uint, req *interfaces.UpdatePaymentConfigRequest) (*entities.PaymentConfig, error) {
+func (ccs *CachedPaymentConfigService) UpdatePaymentConfig(ctx context.Context, configID uint, req *dto.UpdatePaymentConfigRequest) (*entities.PaymentConfig, error) {
 	config, err := ccs.base.UpdatePaymentConfig(ctx, configID, req)
 	if err != nil {
 		return nil, err

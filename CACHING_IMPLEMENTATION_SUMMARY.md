@@ -12,12 +12,12 @@
    - 向依赖注入中添加了缓存依赖
    - 更新为提供 `CachedUserService` 作为主要的 `UserService` 实现
 
-2. **创建**: `/internal/domains/user/usecases/implementations/cached_user.go`
-   - 主要的缓存服务实现（445 行）
-   - 实现了所有带缓存的 `UserService` 接口方法
+2. **重构为**: `/internal/domains/user/usecases/implementations/unified_user_service.go`
+   - 统一的用户服务实现，集成缓存和事件功能
+   - 通过配置选项支持可选的缓存和事件处理
    - 使用 cache-aside 和 write-through 模式
 
-3. **创建**: `/internal/domains/user/usecases/implementations/cached_user_test.go`
+3. **保留**: 用户服务测试文件
    - 缓存功能的单元测试
    - 测试缓存键生成和用户实体方法
 
@@ -91,9 +91,16 @@
 // 基础服务
 implementations.NewUserService,
 
-// 缓存服务（主要实现）
+// 统一用户服务（支持可配置的缓存和事件功能）
 fx.Annotate(
-    implementations.NewCachedUserService,
+    func(db *gorm.DB, logger framework.Logger, cacheManager cache.CacheManager, eventBus events.EventBus) interfaces.UserService {
+        return implementations.NewUnifiedUserService(
+            db,
+            logger,
+            implementations.WithCaching(cacheManager.GetCache()),
+            implementations.WithEvents(eventBus),
+        )
+    },
     fx.As(new(interfaces.UserService)),
 ),
 ```

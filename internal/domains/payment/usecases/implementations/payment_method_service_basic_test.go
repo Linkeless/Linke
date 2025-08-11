@@ -5,6 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"linke/internal/domains/payment/constants"
+	"linke/internal/domains/payment/dto"
 	"linke/internal/domains/payment/entities"
 )
 
@@ -25,7 +27,7 @@ func TestPaymentMethodValidation(t *testing.T) {
 			name: "active payment method",
 			paymentMethod: &entities.PaymentMethod{
 				Active: true,
-				Status: entities.PaymentMethodStatusActive,
+				Status: constants.PaymentMethodStatusActive,
 			},
 			expectedActive: true,
 		},
@@ -33,7 +35,7 @@ func TestPaymentMethodValidation(t *testing.T) {
 			name: "inactive payment method",
 			paymentMethod: &entities.PaymentMethod{
 				Active: false,
-				Status: entities.PaymentMethodStatusActive,
+				Status: constants.PaymentMethodStatusActive,
 			},
 			expectedActive: false,
 		},
@@ -41,7 +43,7 @@ func TestPaymentMethodValidation(t *testing.T) {
 			name: "invalid status payment method",
 			paymentMethod: &entities.PaymentMethod{
 				Active: true,
-				Status: entities.PaymentMethodStatusInvalid,
+				Status: constants.PaymentMethodStatusInvalid,
 			},
 			expectedActive: false,
 		},
@@ -57,10 +59,10 @@ func TestPaymentMethodValidation(t *testing.T) {
 
 // Test payment method request validation
 func TestCreatePaymentMethodRequest(t *testing.T) {
-	req := &entities.CreatePaymentMethodRequest{
-		Type:            entities.PaymentMethodTypeCard,
-		Gateway:         entities.PaymentGatewayEpay,
-		Method:          entities.PaymentMethodAlipay,
+	req := &dto.CreatePaymentMethodRequest{
+		Type:            constants.PaymentMethodTypeCard,
+		Gateway:         constants.PaymentGatewayEpay,
+		Method:          constants.PaymentMethodAlipay,
 		DisplayName:     "My Alipay Account",
 		PaymentToken:    "epay_test_token_12345",
 		MaskedInfo:      "ali***@example.com",
@@ -70,9 +72,9 @@ func TestCreatePaymentMethodRequest(t *testing.T) {
 		SetAsDefault:    false,
 	}
 
-	assert.Equal(t, entities.PaymentMethodTypeCard, req.Type)
-	assert.Equal(t, entities.PaymentGatewayEpay, req.Gateway)
-	assert.Equal(t, entities.PaymentMethodAlipay, req.Method)
+	assert.Equal(t, constants.PaymentMethodTypeCard, req.Type)
+	assert.Equal(t, constants.PaymentGatewayEpay, req.Gateway)
+	assert.Equal(t, constants.PaymentMethodAlipay, req.Method)
 	assert.Equal(t, "My Alipay Account", req.DisplayName)
 	assert.Equal(t, "epay_test_token_12345", req.PaymentToken)
 	assert.False(t, req.SetAsDefault)
@@ -80,28 +82,28 @@ func TestCreatePaymentMethodRequest(t *testing.T) {
 
 // Test payment method list response
 func TestPaymentMethodListResponse(t *testing.T) {
-	methods := []entities.PaymentMethodResponse{
+	methods := []dto.PaymentMethodResponse{
 		{
 			ID:          1,
 			UserID:      100,
-			Type:        entities.PaymentMethodTypeCard,
-			Gateway:     entities.PaymentGatewayEpay,
-			Method:      entities.PaymentMethodAlipay,
+			Type:        constants.PaymentMethodTypeCard,
+			Gateway:     constants.PaymentGatewayEpay,
+			Method:      constants.PaymentMethodAlipay,
 			DisplayName: "Method 1",
 			IsDefault:   true,
 		},
 		{
 			ID:          2,
 			UserID:      100,
-			Type:        entities.PaymentMethodTypeCard,
-			Gateway:     entities.PaymentGatewayEpay,
-			Method:      entities.PaymentMethodWechat,
+			Type:        constants.PaymentMethodTypeCard,
+			Gateway:     constants.PaymentGatewayEpay,
+			Method:      constants.PaymentMethodWechat,
 			DisplayName: "Method 2",
 			IsDefault:   false,
 		},
 	}
 
-	listResponse := &entities.PaymentMethodListResponse{
+	listResponse := &dto.PaymentMethodListResponse{
 		PaymentMethods: methods,
 		Total:          len(methods),
 		DefaultMethod:  &methods[0],

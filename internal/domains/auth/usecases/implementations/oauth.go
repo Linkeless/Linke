@@ -28,15 +28,8 @@ type OAuthService struct {
 	cfg *config.Config
 }
 
-type TelegramUser struct {
-	ID        int64  `json:"id"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name,omitempty"`
-	Username  string `json:"username,omitempty"`
-	PhotoURL  string `json:"photo_url,omitempty"`
-	AuthDate  int64  `json:"auth_date"`
-	Hash      string `json:"hash"`
-}
+// 注意：TelegramUser 已统一到 interfaces/oauth_service.go 中定义
+// 请使用 interfaces.TelegramUser
 
 func NewOAuthService(cfg *config.Config) *OAuthService {
 	return &OAuthService{
@@ -44,16 +37,11 @@ func NewOAuthService(cfg *config.Config) *OAuthService {
 	}
 }
 
-// generateState generates a secure random state parameter
-func (o *OAuthService) generateState() string {
+// GenerateState generates a secure random state parameter
+func (o *OAuthService) GenerateState() string {
 	b := make([]byte, 16)
 	rand.Read(b)
 	return base64.URLEncoding.EncodeToString(b)
-}
-
-// GenerateState generates a secure random state parameter (public method)
-func (o *OAuthService) GenerateState() string {
-	return o.generateState()
 }
 
 func (o *OAuthService) GetAuthURL(provider, state string) (string, error) {

@@ -7,6 +7,7 @@ import (
 	"sort"
 	"time"
 
+	"linke/internal/domains/subscription/constants"
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/domains/subscription/usecases/interfaces"
 	subscriptionInterfaces "linke/internal/domains/subscription/usecases/interfaces"
@@ -51,13 +52,13 @@ func (s *usageTrackingService) RecordUsage(ctx context.Context, req *interfaces.
 
 	// Set defaults
 	if req.Unit == "" {
-		req.Unit = entities.UnitBytes
+		req.Unit = constants.UnitBytes
 	}
 	if req.Timestamp.IsZero() {
 		req.Timestamp = time.Now()
 	}
 	if req.SourceType == "" {
-		req.SourceType = entities.SourceTypeSystem
+		req.SourceType = constants.SourceTypeSystem
 	}
 
 	// Create usage record
@@ -127,13 +128,13 @@ func (s *usageTrackingService) RecordUsageBatch(ctx context.Context, requests []
 	for i, req := range requests {
 		// Set defaults
 		if req.Unit == "" {
-			req.Unit = entities.UnitBytes
+			req.Unit = constants.UnitBytes
 		}
 		if req.Timestamp.IsZero() {
 			req.Timestamp = time.Now()
 		}
 		if req.SourceType == "" {
-			req.SourceType = entities.SourceTypeSystem
+			req.SourceType = constants.SourceTypeSystem
 		}
 
 		records[i] = &entities.UsageRecord{
@@ -211,7 +212,7 @@ func (s *usageTrackingService) GetCurrentUsage(ctx context.Context, subscription
 		if resetDate.After(now) {
 			// If reset date is in the future, find the previous reset
 			switch subscription.TrafficResetCycle {
-			case entities.TrafficResetCycleMonthly:
+			case constants.TrafficResetCycleMonthly:
 				periodStart = resetDate.AddDate(0, -1, 0)
 			default:
 				periodStart = resetDate.AddDate(0, -1, 0) // Default to monthly
@@ -221,7 +222,7 @@ func (s *usageTrackingService) GetCurrentUsage(ctx context.Context, subscription
 		}
 
 		switch subscription.TrafficResetCycle {
-		case entities.TrafficResetCycleMonthly:
+		case constants.TrafficResetCycleMonthly:
 			periodEnd = periodStart.AddDate(0, 1, 0)
 		default:
 			periodEnd = periodStart.AddDate(0, 1, 0) // Default to monthly
@@ -251,12 +252,12 @@ func (s *usageTrackingService) GetCurrentUsage(ctx context.Context, subscription
 
 		// Get usage limit based on type
 		var usageLimit int64
-		unit := entities.UnitBytes
+		unit := constants.UnitBytes
 
 		switch usageType {
-		case entities.UsageTypeTraffic:
+		case constants.UsageTypeTraffic:
 			usageLimit = subscription.TrafficLimit
-			unit = entities.UnitBytes
+			unit = constants.UnitBytes
 		default:
 			// For other usage types, we'd need to get limits from subscription plan
 			usageLimit = 0 // Unlimited for now
@@ -311,7 +312,7 @@ func (s *usageTrackingService) GetCurrentUsage(ctx context.Context, subscription
 		}
 	} else {
 		// Get usage for all types
-		allUsageTypes := []string{entities.UsageTypeTraffic, entities.UsageTypeAPICall, entities.UsageTypeStorage}
+		allUsageTypes := []string{constants.UsageTypeTraffic, constants.UsageTypeAPICall, constants.UsageTypeStorage}
 
 		for _, uType := range allUsageTypes {
 			currentUsage, err := s.usageRepo.GetCurrentUsageByPeriod(ctx, subscriptionID, uType, periodStart, periodEnd)
@@ -326,12 +327,12 @@ func (s *usageTrackingService) GetCurrentUsage(ctx context.Context, subscription
 
 			// Get usage limit and unit based on type
 			var usageLimit int64
-			unit := entities.UnitBytes
+			unit := constants.UnitBytes
 
 			switch uType {
-			case entities.UsageTypeTraffic:
+			case constants.UsageTypeTraffic:
 				usageLimit = subscription.TrafficLimit
-				unit = entities.UnitBytes
+				unit = constants.UnitBytes
 			default:
 				usageLimit = 0 // Unlimited for now
 			}
@@ -408,13 +409,13 @@ func (s *usageTrackingService) GetCurrentUsage(ctx context.Context, subscription
 func (s *usageTrackingService) GetUsageHistory(ctx context.Context, req *interfaces.UsageHistoryRequest) (*interfaces.UsageHistoryResponse, error) {
 	// Set defaults
 	if req.Granularity == "" {
-		req.Granularity = interfaces.GranularityDaily
+		req.Granularity = constants.GranularityDaily
 	}
 	if req.Limit == 0 {
-		req.Limit = interfaces.DefaultPageSize
+		req.Limit = constants.DefaultPageSize
 	}
-	if req.Limit > interfaces.MaxPageSize {
-		req.Limit = interfaces.MaxPageSize
+	if req.Limit > constants.MaxPageSize {
+		req.Limit = constants.MaxPageSize
 	}
 
 	// Determine time range
@@ -460,7 +461,7 @@ func (s *usageTrackingService) GetUsageHistory(ctx context.Context, req *interfa
 
 	for _, agg := range aggregations {
 		periodKey := agg.PeriodStart.Format("2006-01-02")
-		if req.Granularity == interfaces.GranularityHourly {
+		if req.Granularity == constants.GranularityHourly {
 			periodKey = agg.PeriodStart.Format("2006-01-02 15:00")
 		}
 
@@ -487,7 +488,7 @@ func (s *usageTrackingService) GetUsageHistory(ctx context.Context, req *interfa
 			RecordCount:   agg.RecordCount,
 			FirstUsage:    agg.FirstUsage,
 			LastUsage:     agg.LastUsage,
-			Unit:          entities.UnitBytes, // Default unit
+			Unit:          constants.UnitBytes, // Default unit
 		}
 
 		entry.TotalUsage += agg.TotalAmount
@@ -508,7 +509,7 @@ func (s *usageTrackingService) GetUsageHistory(ctx context.Context, req *interfa
 	if req.IncludeDetails {
 		summaryFilter := interfaces.UsageSummaryFilter{
 			UserSubscriptionID: req.UserSubscriptionID,
-			Period:             interfaces.PeriodCustom,
+			Period:             constants.PeriodCustom,
 			PeriodStart:        &startTime,
 			PeriodEnd:          &endTime,
 			IncludeBreakdown:   true,
@@ -613,7 +614,7 @@ func (s *usageTrackingService) GetUsageTrends(ctx context.Context, req *interfac
 		// TODO: Implement proper moving average calculation
 
 		// Determine trend direction (simplified)
-		trendDirection := interfaces.TrendDirectionStable
+		trendDirection := constants.TrendDirectionStable
 		// TODO: Implement trend direction calculation
 
 		trends = append(trends, &interfaces.UsageTrendEntry{
@@ -632,7 +633,7 @@ func (s *usageTrackingService) GetUsageTrends(ctx context.Context, req *interfac
 		predictionReq := &interfaces.UsagePredictionRequest{
 			UserSubscriptionID: req.UserSubscriptionID,
 			UsageType:          req.UsageType,
-			PredictionType:     interfaces.PredictionTypeDaily,
+			PredictionType:     constants.PredictionTypeDaily,
 			BasedOnDays:        30,
 			IncludeConfidence:  true,
 			IncludeTrends:      true,
@@ -670,10 +671,10 @@ func (s *usageTrackingService) PredictUsage(ctx context.Context, req *interfaces
 	// Get historical data for prediction
 	basedOnDays := req.BasedOnDays
 	if basedOnDays == 0 {
-		basedOnDays = interfaces.DefaultPredictionDays
+		basedOnDays = constants.DefaultPredictionDays
 	}
-	if basedOnDays > interfaces.MaxPredictionDays {
-		basedOnDays = interfaces.MaxPredictionDays
+	if basedOnDays > constants.MaxPredictionDays {
+		basedOnDays = constants.MaxPredictionDays
 	}
 
 	startTime := time.Now().AddDate(0, 0, -basedOnDays)
@@ -695,7 +696,7 @@ func (s *usageTrackingService) PredictUsage(ctx context.Context, req *interfaces
 			Confidence:         0,
 			PredictionDate:     time.Now(),
 			BasedOnDays:        basedOnDays,
-			Trend:              entities.TrendStable,
+			Trend:              constants.TrendStable,
 			EstimatedDaysLeft:  -1,
 		}, nil
 	}
@@ -732,13 +733,13 @@ func (s *usageTrackingService) PredictUsage(ctx context.Context, req *interfaces
 	var confidence float64 = 0.7 // Base confidence
 
 	switch req.PredictionType {
-	case entities.PredictionTypeDaily:
+	case constants.PredictionTypeDaily:
 		predictedUsage = int64(averageDailyUsage)
-	case entities.PredictionTypeWeekly:
+	case constants.PredictionTypeWeekly:
 		predictedUsage = int64(averageDailyUsage * 7)
-	case entities.PredictionTypeMonthly:
+	case constants.PredictionTypeMonthly:
 		predictedUsage = int64(averageDailyUsage * 30)
-	case entities.PredictionTypePeriodEnd:
+	case constants.PredictionTypePeriodEnd:
 		// Predict usage until period end (monthly reset)
 		// TODO: Get actual period end from subscription
 		daysUntilPeriodEnd := 30 // Simplified
@@ -756,7 +757,7 @@ func (s *usageTrackingService) PredictUsage(ctx context.Context, req *interfaces
 	}
 
 	// Calculate trend
-	trend := entities.TrendStable
+	trend := constants.TrendStable
 	if len(records) >= 2 {
 		firstHalf := records[:len(records)/2]
 		secondHalf := records[len(records)/2:]
@@ -770,9 +771,9 @@ func (s *usageTrackingService) PredictUsage(ctx context.Context, req *interfaces
 		}
 
 		if secondHalfTotal > firstHalfTotal*110/100 { // 10% increase
-			trend = entities.TrendIncreasing
+			trend = constants.TrendIncreasing
 		} else if secondHalfTotal < firstHalfTotal*90/100 { // 10% decrease
-			trend = entities.TrendDecreasing
+			trend = constants.TrendDecreasing
 		}
 	}
 
@@ -781,7 +782,7 @@ func (s *usageTrackingService) PredictUsage(ctx context.Context, req *interfaces
 
 	// Get subscription to check limits
 	subscription, err := s.subscriptionSvc.GetUserSubscription(ctx, req.UserSubscriptionID)
-	if err == nil && subscription.TrafficLimit > 0 && req.UsageType == entities.UsageTypeTraffic {
+	if err == nil && subscription.TrafficLimit > 0 && req.UsageType == constants.UsageTypeTraffic {
 		remainingUsage := subscription.TrafficLimit - currentUsage
 		if remainingUsage > 0 && averageDailyUsage > 0 {
 			estimatedDaysLeft = int(float64(remainingUsage) / averageDailyUsage)
@@ -807,10 +808,10 @@ func (s *usageTrackingService) GetUsagePredictions(ctx context.Context, subscrip
 
 	// Generate predictions for different time horizons
 	predictionTypes := []string{
-		entities.PredictionTypeDaily,
-		entities.PredictionTypeWeekly,
-		entities.PredictionTypeMonthly,
-		entities.PredictionTypePeriodEnd,
+		constants.PredictionTypeDaily,
+		constants.PredictionTypeWeekly,
+		constants.PredictionTypeMonthly,
+		constants.PredictionTypePeriodEnd,
 	}
 
 	for _, predType := range predictionTypes {
@@ -852,7 +853,7 @@ func (s *usageTrackingService) UpdateSubscriptionUsage(ctx context.Context, subs
 		if resetDate.After(now) {
 			// Find previous reset
 			switch subscription.TrafficResetCycle {
-			case entities.TrafficResetCycleMonthly:
+			case constants.TrafficResetCycleMonthly:
 				periodStart = resetDate.AddDate(0, -1, 0)
 			default:
 				periodStart = resetDate.AddDate(0, -1, 0)
@@ -868,7 +869,7 @@ func (s *usageTrackingService) UpdateSubscriptionUsage(ctx context.Context, subs
 	}
 
 	// Get current traffic usage
-	currentTrafficUsage, err := s.usageRepo.GetCurrentUsageByPeriod(ctx, subscriptionID, entities.UsageTypeTraffic, periodStart, now)
+	currentTrafficUsage, err := s.usageRepo.GetCurrentUsageByPeriod(ctx, subscriptionID, constants.UsageTypeTraffic, periodStart, now)
 	if err != nil {
 		return fmt.Errorf("failed to get current traffic usage: %w", err)
 	}
@@ -898,7 +899,7 @@ func (s *usageTrackingService) UpdateSubscriptionUsage(ctx context.Context, subs
 func (s *usageTrackingService) ResetUsageForSubscription(ctx context.Context, subscriptionID uint, usageType string) error {
 	// This would typically be called during traffic reset periods
 	// For now, we'll just reset the traffic usage to 0
-	if usageType == entities.UsageTypeTraffic {
+	if usageType == constants.UsageTypeTraffic {
 		// Use the reset traffic usage method
 		_, err := s.subscriptionSvc.ResetTrafficUsage(ctx, subscriptionID, 0) // 0 for system reset
 		return err
@@ -1020,9 +1021,9 @@ func (s *usageTrackingService) GetRealTimeUsage(ctx context.Context, subscriptio
 		}
 
 		// Determine trend direction (simplified)
-		trendDirection := interfaces.TrendDirectionStable
+		trendDirection := constants.TrendDirectionStable
 		if usageRate > 0 {
-			trendDirection = interfaces.TrendDirectionUp
+			trendDirection = constants.TrendDirectionUp
 		}
 
 		// Check if near limit (>80%)
@@ -1049,7 +1050,7 @@ func (s *usageTrackingService) GetRealTimeUsage(ctx context.Context, subscriptio
 	alertCount := len(activeAlerts)
 
 	// Get predictions
-	predictions, _ := s.GetUsagePredictions(ctx, subscriptionID, entities.UsageTypeTraffic)
+	predictions, _ := s.GetUsagePredictions(ctx, subscriptionID, constants.UsageTypeTraffic)
 
 	return &interfaces.RealTimeUsageResponse{
 		UserSubscriptionID: subscriptionID,
@@ -1070,7 +1071,7 @@ func (s *usageTrackingService) GetUsageAlerts(ctx context.Context, subscriptionI
 func (s *usageTrackingService) calculateTrendSummary(trends []*interfaces.UsageTrendEntry) *interfaces.TrendSummary {
 	if len(trends) == 0 {
 		return &interfaces.TrendSummary{
-			OverallTrend:        interfaces.TrendDirectionStable,
+			OverallTrend:        constants.TrendDirectionStable,
 			AverageUsage:        0,
 			PeakUsage:           0,
 			LowestUsage:         0,
@@ -1107,7 +1108,7 @@ func (s *usageTrackingService) calculateTrendSummary(trends []*interfaces.UsageT
 	averageUsage := float64(totalUsage) / float64(len(trends))
 
 	// Simple trend detection
-	overallTrend := interfaces.TrendDirectionStable
+	overallTrend := constants.TrendDirectionStable
 	if len(trends) >= 2 {
 		firstHalf := trends[:len(trends)/2]
 		secondHalf := trends[len(trends)/2:]
@@ -1124,9 +1125,9 @@ func (s *usageTrackingService) calculateTrendSummary(trends []*interfaces.UsageT
 		secondHalfAvg /= float64(len(secondHalf))
 
 		if secondHalfAvg > firstHalfAvg*1.1 {
-			overallTrend = interfaces.TrendDirectionUp
+			overallTrend = constants.TrendDirectionUp
 		} else if secondHalfAvg < firstHalfAvg*0.9 {
-			overallTrend = interfaces.TrendDirectionDown
+			overallTrend = constants.TrendDirectionDown
 		}
 	}
 

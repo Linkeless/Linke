@@ -5,7 +5,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"linke/internal/shared/dto"
+	"linke/internal/domains/referral/constants"
 )
 
 // ReferralCampaign represents a referral marketing campaign
@@ -83,41 +83,10 @@ func (ReferralCampaign) TableName() string {
 	return "referral_campaigns"
 }
 
-// Campaign Type constants
-const (
-	CampaignTypeStandard   = "standard"
-	CampaignTypeBonus      = "bonus"
-	CampaignTypeSeasonal   = "seasonal"
-	CampaignTypeInfluencer = "influencer"
-	CampaignTypePartner    = "partner"
-)
-
-// Campaign Status constants
-const (
-	CampaignStatusActive = "active"
-	CampaignStatusPaused = "paused"
-	CampaignStatusEnded  = "ended"
-)
-
-// Reward Type constants (for campaigns)
-const (
-	RewardTypeFixed      = "fixed"
-	RewardTypePercentage = "percentage"
-	RewardTypeTiered     = "tiered"
-	RewardTypeDiscount   = "discount"
-)
-
-// Reward Trigger constants
-const (
-	RewardTriggerRegistration  = "registration"
-	RewardTriggerFirstPurchase = "first_purchase"
-	RewardTriggerSubscription  = "subscription"
-	RewardTriggerActivation    = "activation"
-)
 
 // IsActive checks if the campaign is currently active
 func (rc *ReferralCampaign) IsActive() bool {
-	if rc.Status != CampaignStatusActive {
+	if rc.Status != constants.CampaignStatusActive {
 		return false
 	}
 
@@ -155,9 +124,9 @@ func (rc *ReferralCampaign) HasBudgetRemaining() bool {
 // CalculateReferrerReward calculates the referrer reward based on campaign settings
 func (rc *ReferralCampaign) CalculateReferrerReward(conversionValue float64) float64 {
 	switch rc.ReferrerRewardType {
-	case RewardTypeFixed:
+	case constants.RewardTypeFixed:
 		return rc.ReferrerRewardAmount
-	case RewardTypePercentage:
+	case constants.RewardTypePercentage:
 		reward := conversionValue * (rc.ReferrerRewardAmount / 100)
 		if rc.ReferrerRewardCap > 0 && reward > rc.ReferrerRewardCap {
 			return rc.ReferrerRewardCap
@@ -171,115 +140,20 @@ func (rc *ReferralCampaign) CalculateReferrerReward(conversionValue float64) flo
 // CalculateRefereeReward calculates the referee reward based on campaign settings
 func (rc *ReferralCampaign) CalculateRefereeReward(conversionValue float64) float64 {
 	switch rc.RefereeRewardType {
-	case RewardTypeFixed:
+	case constants.RewardTypeFixed:
 		return rc.RefereeRewardAmount
-	case RewardTypePercentage:
+	case constants.RewardTypePercentage:
 		return conversionValue * (rc.RefereeRewardAmount / 100)
-	case RewardTypeDiscount:
+	case constants.RewardTypeDiscount:
 		return conversionValue * (rc.RefereeRewardAmount / 100)
 	default:
 		return rc.RefereeRewardAmount
 	}
 }
 
-// ReferralCampaignResponse represents the campaign data structure for API responses
-type ReferralCampaignResponse struct {
-	ID                     uint       `json:"id" example:"1"`
-	Name                   string     `json:"name" example:"Summer Referral Campaign"`
-	Code                   string     `json:"code" example:"SUMMER2024"`
-	Description            string     `json:"description" example:"Summer referral campaign with bonus rewards"`
-	CampaignType           string     `json:"campaign_type" example:"seasonal"`
-	Status                 string     `json:"status" example:"active"`
-	IsPublic               bool       `json:"is_public" example:"true"`
-	RequiresApproval       bool       `json:"requires_approval" example:"false"`
-	StartDate              *time.Time `json:"start_date,omitempty" example:"2024-06-01T00:00:00Z"`
-	EndDate                *time.Time `json:"end_date,omitempty" example:"2024-08-31T23:59:59Z"`
-	ReferrerRewardType     string     `json:"referrer_reward_type" example:"fixed"`
-	ReferrerRewardAmount   float64    `json:"referrer_reward_amount" example:"10.00"`
-	ReferrerRewardCurrency string     `json:"referrer_reward_currency" example:"USD"`
-	ReferrerRewardCap      float64    `json:"referrer_reward_cap" example:"100.00"`
-	RefereeRewardType      string     `json:"referee_reward_type" example:"discount"`
-	RefereeRewardAmount    float64    `json:"referee_reward_amount" example:"20.00"`
-	RefereeRewardCurrency  string     `json:"referee_reward_currency" example:"USD"`
-	MinimumPurchaseAmount  float64    `json:"minimum_purchase_amount" example:"25.00"`
-	RewardTrigger          string     `json:"reward_trigger" example:"first_purchase"`
-	RewardDelay            int        `json:"reward_delay" example:"7"`
-	MaxReferrals           int        `json:"max_referrals" example:"50"`
-	MaxRewards             int        `json:"max_rewards" example:"50"`
-	TotalRewardBudget      float64    `json:"total_reward_budget" example:"5000.00"`
-	TotalReferrals         int        `json:"total_referrals" example:"123"`
-	TotalConversions       int        `json:"total_conversions" example:"45"`
-	TotalRewardsPaid       float64    `json:"total_rewards_paid" example:"450.00"`
-	ConversionRate         float64    `json:"conversion_rate" example:"0.3659"`
-	CreatedByID            uint       `json:"created_by_id" example:"1"`
-	CreatedAt              time.Time  `json:"created_at" example:"2024-01-01T00:00:00Z"`
-	UpdatedAt              time.Time  `json:"updated_at" example:"2024-01-01T00:00:00Z"`
 
-	// Optional related data
-	CreatedBy *dto.UserBasicDTO   `json:"created_by,omitempty"`
-	Referrals []*ReferralResponse `json:"referrals,omitempty"`
-}
+// ToResponse should be implemented in service layer to avoid import cycles
+// Use dto.ToReferralCampaignResponse(rc) instead
 
-// ToResponse converts ReferralCampaign to ReferralCampaignResponse
-func (rc *ReferralCampaign) ToResponse() *ReferralCampaignResponse {
-	resp := &ReferralCampaignResponse{
-		ID:                     rc.ID,
-		Name:                   rc.Name,
-		Code:                   rc.Code,
-		Description:            rc.Description,
-		CampaignType:           rc.CampaignType,
-		Status:                 rc.Status,
-		IsPublic:               rc.IsPublic,
-		RequiresApproval:       rc.RequiresApproval,
-		StartDate:              rc.StartDate,
-		EndDate:                rc.EndDate,
-		ReferrerRewardType:     rc.ReferrerRewardType,
-		ReferrerRewardAmount:   rc.ReferrerRewardAmount,
-		ReferrerRewardCurrency: rc.ReferrerRewardCurrency,
-		ReferrerRewardCap:      rc.ReferrerRewardCap,
-		RefereeRewardType:      rc.RefereeRewardType,
-		RefereeRewardAmount:    rc.RefereeRewardAmount,
-		RefereeRewardCurrency:  rc.RefereeRewardCurrency,
-		MinimumPurchaseAmount:  rc.MinimumPurchaseAmount,
-		RewardTrigger:          rc.RewardTrigger,
-		RewardDelay:            rc.RewardDelay,
-		MaxReferrals:           rc.MaxReferrals,
-		MaxRewards:             rc.MaxRewards,
-		TotalRewardBudget:      rc.TotalRewardBudget,
-		TotalReferrals:         rc.TotalReferrals,
-		TotalConversions:       rc.TotalConversions,
-		TotalRewardsPaid:       rc.TotalRewardsPaid,
-		ConversionRate:         rc.ConversionRate,
-		CreatedByID:            rc.CreatedByID,
-		CreatedAt:              rc.CreatedAt,
-		UpdatedAt:              rc.UpdatedAt,
-	}
-
-	// Note: Related data should be populated at the application layer
-	// to avoid cross-domain dependencies
-
-	return resp
-}
-
-// ToPublicResponse converts ReferralCampaign to a public response (limited info)
-func (rc *ReferralCampaign) ToPublicResponse() *ReferralCampaignResponse {
-	return &ReferralCampaignResponse{
-		ID:                     rc.ID,
-		Name:                   rc.Name,
-		Code:                   rc.Code,
-		Description:            rc.Description,
-		CampaignType:           rc.CampaignType,
-		Status:                 rc.Status,
-		StartDate:              rc.StartDate,
-		EndDate:                rc.EndDate,
-		ReferrerRewardType:     rc.ReferrerRewardType,
-		ReferrerRewardAmount:   rc.ReferrerRewardAmount,
-		ReferrerRewardCurrency: rc.ReferrerRewardCurrency,
-		RefereeRewardType:      rc.RefereeRewardType,
-		RefereeRewardAmount:    rc.RefereeRewardAmount,
-		RefereeRewardCurrency:  rc.RefereeRewardCurrency,
-		MinimumPurchaseAmount:  rc.MinimumPurchaseAmount,
-		RewardTrigger:          rc.RewardTrigger,
-		MaxReferrals:           rc.MaxReferrals,
-	}
-}
+// ToPublicResponse should be implemented in service layer to avoid import cycles
+// Use dto.ToReferralCampaignResponse(rc) and clean sensitive data instead

@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	invoiceEntities "linke/internal/domains/invoice/entities"
+	invoiceDto "linke/internal/domains/invoice/dto"
 	"linke/internal/domains/subscription/entities"
 )
 
@@ -50,7 +50,7 @@ type CreateSubscriptionOrderRequest struct {
 // CreateSubscriptionOrderResponse represents the response after creating a subscription order
 type CreateSubscriptionOrderResponse struct {
 	Order         *entities.SubscriptionOrderResponse `json:"order"`
-	Invoice       *invoiceEntities.InvoiceResponse    `json:"invoice"`
+	Invoice       *invoiceDto.InvoiceResponse        `json:"invoice"`
 	PaymentRecord any                                 `json:"payment_record" swaggertype:"object"`
 	PaymentURL    string                              `json:"payment_url"`
 	QRCodeURL     string                              `json:"qr_code_url,omitempty"`

@@ -5,7 +5,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"linke/internal/shared/dto"
+	"linke/internal/domains/referral/constants"
 )
 
 // Referral represents a referral relationship between users
@@ -75,42 +75,10 @@ func (Referral) TableName() string {
 	return "referrals"
 }
 
-// Status constants
-const (
-	ReferralStatusPending   = "pending"
-	ReferralStatusConfirmed = "confirmed"
-	ReferralStatusRewarded  = "rewarded"
-	ReferralStatusCancelled = "cancelled"
-)
-
-// Referee Status constants
-const (
-	RefereeStatusRegistered = "registered"
-	RefereeStatusActivated  = "activated"
-	RefereeStatusSubscribed = "subscribed"
-	RefereeStatusChurned    = "churned"
-)
-
-// Reward Status constants
-const (
-	RewardStatusPending   = "pending"
-	RewardStatusEarned    = "earned"
-	RewardStatusPaid      = "paid"
-	RewardStatusCancelled = "cancelled"
-)
-
-// Referral Source constants
-const (
-	ReferralSourceInviteCode = "invite_code"
-	ReferralSourceLink       = "link"
-	ReferralSourceEmail      = "email"
-	ReferralSourceSocial     = "social"
-	ReferralSourceOrganic    = "organic"
-)
 
 // IsActive checks if the referral is active
 func (r *Referral) IsActive() bool {
-	return r.Status == ReferralStatusConfirmed || r.Status == ReferralStatusRewarded
+	return r.Status == constants.ReferralStatusConfirmed || r.Status == constants.ReferralStatusRewarded
 }
 
 // IsExpired checks if the referral has expired
@@ -123,7 +91,7 @@ func (r *Referral) IsExpired() bool {
 
 // CanEarnReward checks if referral can earn rewards
 func (r *Referral) CanEarnReward() bool {
-	return r.IsActive() && !r.IsExpired() && r.RewardStatus == RewardStatusPending
+	return r.IsActive() && !r.IsExpired() && r.RewardStatus == constants.RewardStatusPending
 }
 
 // IsConverted checks if the referee has converted
@@ -131,88 +99,9 @@ func (r *Referral) IsConverted() bool {
 	return r.ConvertedAt != nil
 }
 
-// ReferralResponse represents the referral data structure for API responses
-type ReferralResponse struct {
-	ID              uint       `json:"id" example:"1"`
-	ReferrerID      uint       `json:"referrer_id" example:"1"`
-	RefereeID       uint       `json:"referee_id" example:"2"`
-	InviteCodeID    *uint      `json:"invite_code_id,omitempty" example:"1"`
-	ReferralSource  string     `json:"referral_source" example:"invite_code"`
-	ReferralChannel string     `json:"referral_channel" example:"organic"`
-	ReferralCode    string     `json:"referral_code" example:"REF123"`
-	CampaignID      *uint      `json:"campaign_id,omitempty" example:"1"`
-	Status          string     `json:"status" example:"confirmed"`
-	RefereeStatus   string     `json:"referee_status" example:"activated"`
-	ConvertedAt     *time.Time `json:"converted_at,omitempty" example:"2024-01-01T00:00:00Z"`
-	ConversionValue float64    `json:"conversion_value" example:"29.99"`
-	ConversionType  string     `json:"conversion_type" example:"subscription"`
-	RewardStatus    string     `json:"reward_status" example:"earned"`
-	RewardAmount    float64    `json:"reward_amount" example:"5.00"`
-	RewardCurrency  string     `json:"reward_currency" example:"USD"`
-	RefereeReward   float64    `json:"referee_reward" example:"2.50"`
-	RewardedAt      *time.Time `json:"rewarded_at,omitempty" example:"2024-01-01T00:00:00Z"`
-	FirstClickAt    *time.Time `json:"first_click_at,omitempty" example:"2024-01-01T00:00:00Z"`
-	LastClickAt     *time.Time `json:"last_click_at,omitempty" example:"2024-01-01T00:00:00Z"`
-	ClickCount      int        `json:"click_count" example:"3"`
-	ExpiresAt       *time.Time `json:"expires_at,omitempty" example:"2024-12-31T23:59:59Z"`
-	CreatedAt       time.Time  `json:"created_at" example:"2024-01-01T00:00:00Z"`
-	UpdatedAt       time.Time  `json:"updated_at" example:"2024-01-01T00:00:00Z"`
 
-	// Optional related data (to be populated at application layer)
-	Referrer        *dto.UserBasicDTO         `json:"referrer,omitempty"`
-	Referee         *dto.UserBasicDTO         `json:"referee,omitempty"`
-	InviteCode      *InviteCodeResponse       `json:"invite_code,omitempty"`
-	Campaign        *ReferralCampaignResponse `json:"campaign,omitempty"`
-	ReferralEvents  []*ReferralEventResponse  `json:"referral_events,omitempty"`
-	ReferralRewards []*ReferralRewardResponse `json:"referral_rewards,omitempty"`
-}
+// ToResponse should be implemented in service layer to avoid import cycles
+// Use dto.ToReferralResponse(r) instead
 
-// ToResponse converts Referral to ReferralResponse
-func (r *Referral) ToResponse() *ReferralResponse {
-	resp := &ReferralResponse{
-		ID:              r.ID,
-		ReferrerID:      r.ReferrerID,
-		RefereeID:       r.RefereeID,
-		InviteCodeID:    r.InviteCodeID,
-		ReferralSource:  r.ReferralSource,
-		ReferralChannel: r.ReferralChannel,
-		ReferralCode:    r.ReferralCode,
-		CampaignID:      r.CampaignID,
-		Status:          r.Status,
-		RefereeStatus:   r.RefereeStatus,
-		ConvertedAt:     r.ConvertedAt,
-		ConversionValue: r.ConversionValue,
-		ConversionType:  r.ConversionType,
-		RewardStatus:    r.RewardStatus,
-		RewardAmount:    r.RewardAmount,
-		RewardCurrency:  r.RewardCurrency,
-		RefereeReward:   r.RefereeReward,
-		RewardedAt:      r.RewardedAt,
-		FirstClickAt:    r.FirstClickAt,
-		LastClickAt:     r.LastClickAt,
-		ClickCount:      r.ClickCount,
-		ExpiresAt:       r.ExpiresAt,
-		CreatedAt:       r.CreatedAt,
-		UpdatedAt:       r.UpdatedAt,
-	}
-
-	// Note: Related data should be populated at the application layer
-	// to avoid cross-domain dependencies
-
-	return resp
-}
-
-// ToPublicResponse converts Referral to a public response (limited info)
-func (r *Referral) ToPublicResponse() *ReferralResponse {
-	return &ReferralResponse{
-		ID:              r.ID,
-		ReferralSource:  r.ReferralSource,
-		ReferralChannel: r.ReferralChannel,
-		Status:          r.Status,
-		RefereeStatus:   r.RefereeStatus,
-		ConvertedAt:     r.ConvertedAt,
-		ConversionType:  r.ConversionType,
-		RewardStatus:    r.RewardStatus,
-		CreatedAt:       r.CreatedAt,
-	}
-}
+// ToPublicResponse should be implemented in service layer to avoid import cycles
+// Use dto.ToReferralResponse(r) and clean sensitive data instead

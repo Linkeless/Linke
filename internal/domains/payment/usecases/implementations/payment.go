@@ -11,6 +11,8 @@ import (
 	"time"
 
 	invoiceInterfaces "linke/internal/domains/invoice/usecases/interfaces"
+	"linke/internal/domains/payment/constants"
+	"linke/internal/domains/payment/dto"
 	"linke/internal/domains/payment/entities"
 	"linke/internal/domains/payment/usecases/interfaces"
 	"linke/internal/shared/logger"
@@ -80,7 +82,7 @@ func (ps *PaymentService) GeneratePaymentNo() (string, error) {
 }
 
 // CreatePaymentOrder creates a new payment order
-func (ps *PaymentService) CreatePaymentOrder(ctx context.Context, req *interfaces.CreatePaymentOrderRequest) (*entities.PaymentRecord, error) {
+func (ps *PaymentService) CreatePaymentOrder(ctx context.Context, req *dto.CreatePaymentOrderRequest) (*entities.PaymentRecord, error) {
 	// Get gateway
 	gateway, err := ps.GetGateway(req.Gateway)
 	if err != nil {
@@ -115,7 +117,7 @@ func (ps *PaymentService) CreatePaymentOrder(ctx context.Context, req *interface
 	}
 
 	// Create gateway order request
-	gatewayReq := &interfaces.CreatePaymentOrderRequest{
+	gatewayReq := &dto.CreatePaymentOrderRequest{
 		UserID:              req.UserID,
 		SubscriptionOrderID: req.SubscriptionOrderID,
 		InvoiceID:           req.InvoiceID,
@@ -151,7 +153,7 @@ func (ps *PaymentService) CreatePaymentOrder(ctx context.Context, req *interface
 		PaymentMethod:       req.PaymentMethod,
 		Amount:              req.Amount,
 		Currency:            req.Currency,
-		Status:              entities.PaymentRecordStatusPending,
+		Status:              constants.PaymentRecordStatusPending,
 		GatewayResponse:     gatewayData,
 		PaymentURL:          gatewayResp.PaymentURL,
 		QRCodeURL:           gatewayResp.QRCodeURL,
@@ -301,7 +303,7 @@ func (ps *PaymentService) ProcessNotification(ctx context.Context, gateway strin
 	}
 
 	// SECURITY: Check for status downgrade attempts
-	if paymentRecord.Status == entities.PaymentRecordStatusCompleted &&
+	if paymentRecord.Status == constants.PaymentRecordStatusCompleted &&
 		!gatewayInstance.IsPaymentCompleted(notifyData.Status) {
 		logger.Warn("Attempted status downgrade from completed, ignoring",
 			logger.String("payment_no", paymentRecord.PaymentNo),
@@ -330,7 +332,7 @@ func (ps *PaymentService) ProcessNotification(ctx context.Context, gateway strin
 		}
 
 		// Update payment status with notification tracking
-		updateFields["status"] = entities.PaymentRecordStatusCompleted
+		updateFields["status"] = constants.PaymentRecordStatusCompleted
 		updateFields["transaction_id"] = notifyData.TransactionID
 		updateFields["paid_at"] = &paidAt
 
@@ -348,11 +350,11 @@ func (ps *PaymentService) ProcessNotification(ctx context.Context, gateway strin
 		var status string
 		switch notifyData.Status {
 		case "TRADE_CLOSED", "TRADE_CANCELLED":
-			status = entities.PaymentRecordStatusCancelled
+			status = constants.PaymentRecordStatusCancelled
 		case "TRADE_FAILED":
-			status = entities.PaymentRecordStatusFailed
+			status = constants.PaymentRecordStatusFailed
 		default:
-			status = entities.PaymentRecordStatusProcessing
+			status = constants.PaymentRecordStatusProcessing
 		}
 
 		updateFields["status"] = status

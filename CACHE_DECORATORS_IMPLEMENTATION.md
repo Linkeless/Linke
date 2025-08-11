@@ -211,7 +211,7 @@ Subscription领域已经正确配置了缓存装饰器的依赖注入。
 - `/internal/domains/subscription/usecases/implementations/subscription_plan_cached.go`
 - `/internal/domains/subscription/usecases/implementations/user_subscription_cached.go`
 - `/internal/domains/subscription/usecases/implementations/subscription_order_cached.go`
-- `/internal/domains/user/usecases/implementations/cached_user.go`
+- `/internal/domains/user/usecases/implementations/unified_user_service.go` - 统一的用户服务，支持可配置的缓存功能
 
 ## 总结
 

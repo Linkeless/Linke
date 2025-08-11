@@ -4,13 +4,13 @@
 
 ## 概述
 
-用户领域现在包含一个复杂的缓存层，实现了多种缓存模式以提高性能并减少数据库负载。该实现使用 `CachedUserService` 包装现有的 `UserService`，在不改变服务接口的情况下提供透明的缓存。
+用户领域现在包含一个统一的用户服务实现，通过可配置的选项支持缓存和事件处理功能。该实现使用 `UnifiedUserService` 提供透明的缓存和事件功能，在不改变服务接口的情况下提供高性能。
 
 ## 架构
 
 ### 组件
 
-- **CachedUserService**: 主要服务，使用缓存逻辑包装基础 UserService
+- **UnifiedUserService**: 主要服务，支持可配置的缓存和事件处理功能
 - **Cache Manager**: 管理基于 Redis 的缓存操作
 - **Cache Keys**: 结构化缓存键生成，确保命名一致性
 - **TTL Configuration**: 不同缓存条目的可配置生存时间
@@ -296,7 +296,7 @@ redis-cli get "user:id:123"
 ### 回退计划
 
 如果缓存导致问题：
-1. 更新 DI 配置以使用基础 `UserService` 而不是 `CachedUserService`
+1. 更新 DI 配置以禁用缓存选项，使用纯净的 `UnifiedUserService`
 2. 无需数据迁移
 3. 可以安全地清理缓存：`redis-cli flushdb`
 4. 应用程序在没有缓存的情况下继续正常工作

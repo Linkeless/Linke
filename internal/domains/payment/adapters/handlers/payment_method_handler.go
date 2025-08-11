@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"linke/internal/domains/payment/entities"
+	"linke/internal/domains/payment/dto"
 	"linke/internal/domains/payment/usecases/interfaces"
 	userEntities "linke/internal/domains/user/entities"
 	"linke/internal/shared/logger"
@@ -36,8 +36,8 @@ func NewPaymentMethodHandler(
 // @Tags User-Payment
 // @Accept json
 // @Produce json
-// @Param request body entities.CreatePaymentMethodRequest true "Payment method creation request"
-// @Success 201 {object} response.APIResponse{data=entities.PaymentMethodResponse}
+// @Param request body dto.CreatePaymentMethodRequest true "Payment method creation request"
+// @Success 201 {object} response.APIResponse{data=dto.PaymentMethodResponse}
 // @Failure 400 {object} response.APIResponse
 // @Failure 401 {object} response.APIResponse
 // @Failure 409 {object} response.APIResponse
@@ -52,7 +52,7 @@ func (h *PaymentMethodHandler) CreatePaymentMethod(c *gin.Context) {
 		return
 	}
 
-	var req entities.CreatePaymentMethodRequest
+	var req dto.CreatePaymentMethodRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Error("Invalid request body", logger.ErrorField(err))
 		response.BadRequest(c, "Invalid request body", err.Error())
@@ -97,7 +97,7 @@ func (h *PaymentMethodHandler) CreatePaymentMethod(c *gin.Context) {
 // @Tags User-Payment
 // @Produce json
 // @Param id path int true "Payment method ID"
-// @Success 200 {object} response.APIResponse{data=entities.PaymentMethodResponse}
+// @Success 200 {object} response.APIResponse{data=dto.PaymentMethodResponse}
 // @Failure 400 {object} response.APIResponse
 // @Failure 401 {object} response.APIResponse
 // @Failure 404 {object} response.APIResponse
@@ -140,7 +140,7 @@ func (h *PaymentMethodHandler) GetPaymentMethod(c *gin.Context) {
 // @Produce json
 // @Param gateway query string false "Filter by payment gateway"
 // @Param active_only query bool false "Show only active payment methods"
-// @Success 200 {object} response.APIResponse{data=entities.PaymentMethodListResponse}
+// @Success 200 {object} response.APIResponse{data=dto.PaymentMethodListResponse}
 // @Failure 401 {object} response.APIResponse
 // @Failure 500 {object} response.APIResponse
 // @Security BearerAuth
@@ -155,7 +155,7 @@ func (h *PaymentMethodHandler) ListPaymentMethods(c *gin.Context) {
 	gateway := c.Query("gateway")
 	activeOnly := c.Query("active_only") == "true"
 
-	var result *entities.PaymentMethodListResponse
+	var result *dto.PaymentMethodListResponse
 	var err error
 
 	switch {
@@ -164,7 +164,7 @@ func (h *PaymentMethodHandler) ListPaymentMethods(c *gin.Context) {
 		result, err = h.paymentMethodService.ListPaymentMethodsByGateway(c.Request.Context(), userID, gateway)
 		if err == nil && result != nil {
 			// Filter for active only
-			activeResults := make([]entities.PaymentMethodResponse, 0)
+			activeResults := make([]dto.PaymentMethodResponse, 0)
 			for _, pm := range result.PaymentMethods {
 				if pm.CanBeUsed {
 					activeResults = append(activeResults, pm)
@@ -200,8 +200,8 @@ func (h *PaymentMethodHandler) ListPaymentMethods(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Payment method ID"
-// @Param request body entities.UpdatePaymentMethodRequest true "Payment method update request"
-// @Success 200 {object} response.APIResponse{data=entities.PaymentMethodResponse}
+// @Param request body dto.UpdatePaymentMethodRequest true "Payment method update request"
+// @Success 200 {object} response.APIResponse{data=dto.PaymentMethodResponse}
 // @Failure 400 {object} response.APIResponse
 // @Failure 401 {object} response.APIResponse
 // @Failure 404 {object} response.APIResponse
@@ -221,7 +221,7 @@ func (h *PaymentMethodHandler) UpdatePaymentMethod(c *gin.Context) {
 		return
 	}
 
-	var req entities.UpdatePaymentMethodRequest
+	var req dto.UpdatePaymentMethodRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Error("Invalid request body", logger.ErrorField(err))
 		response.BadRequest(c, "Invalid request body", err.Error())
@@ -251,7 +251,7 @@ func (h *PaymentMethodHandler) UpdatePaymentMethod(c *gin.Context) {
 // @Tags User-Payment
 // @Produce json
 // @Param id path int true "Payment method ID"
-// @Success 200 {object} response.APIResponse{data=entities.PaymentMethodResponse}
+// @Success 200 {object} response.APIResponse{data=dto.PaymentMethodResponse}
 // @Failure 400 {object} response.APIResponse
 // @Failure 401 {object} response.APIResponse
 // @Failure 404 {object} response.APIResponse
@@ -341,7 +341,7 @@ func (h *PaymentMethodHandler) DeletePaymentMethod(c *gin.Context) {
 // @Tags User-Payment
 // @Produce json
 // @Param id path int true "Payment method ID"
-// @Success 200 {object} response.APIResponse{data=entities.PaymentMethodResponse}
+// @Success 200 {object} response.APIResponse{data=dto.PaymentMethodResponse}
 // @Failure 400 {object} response.APIResponse
 // @Failure 401 {object} response.APIResponse
 // @Failure 404 {object} response.APIResponse
@@ -395,7 +395,7 @@ func (h *PaymentMethodHandler) ValidatePaymentMethod(c *gin.Context) {
 // @Tags User-Payment
 // @Produce json
 // @Param gateway query string false "Filter by payment gateway"
-// @Success 200 {object} response.APIResponse{data=entities.PaymentMethodResponse}
+// @Success 200 {object} response.APIResponse{data=dto.PaymentMethodResponse}
 // @Failure 401 {object} response.APIResponse
 // @Failure 404 {object} response.APIResponse
 // @Failure 500 {object} response.APIResponse
@@ -410,7 +410,7 @@ func (h *PaymentMethodHandler) GetDefaultPaymentMethod(c *gin.Context) {
 
 	gateway := c.Query("gateway")
 
-	var result *entities.PaymentMethodResponse
+	var result *dto.PaymentMethodResponse
 	var err error
 
 	if gateway != "" {
@@ -440,7 +440,7 @@ func (h *PaymentMethodHandler) GetDefaultPaymentMethod(c *gin.Context) {
 // @Tags User-Payment
 // @Produce json
 // @Param id path int true "Payment method ID"
-// @Success 200 {object} response.APIResponse{data=interfaces.PaymentMethodUsageStats}
+// @Success 200 {object} response.APIResponse{data=dto.PaymentMethodUsageStats}
 // @Failure 400 {object} response.APIResponse
 // @Failure 401 {object} response.APIResponse
 // @Failure 404 {object} response.APIResponse

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"linke/internal/domains/ticket/constants"
 	"linke/internal/domains/ticket/entities"
 	"linke/internal/domains/ticket/usecases/interfaces"
 	"linke/internal/shared/framework"
@@ -27,12 +28,12 @@ func NewTicketRepository(db *gorm.DB, logger framework.Logger) interfaces.Ticket
 
 // ListOpen retrieves open tickets with pagination
 func (r *ticketRepository) ListOpen(ctx context.Context, limit, offset int) ([]*entities.Ticket, int64, error) {
-	return r.ListByStatus(ctx, entities.TicketStatusOpen, limit, offset)
+	return r.ListByStatus(ctx, constants.TicketStatusOpen, limit, offset)
 }
 
 // ListClosed retrieves closed tickets with pagination
 func (r *ticketRepository) ListClosed(ctx context.Context, limit, offset int) ([]*entities.Ticket, int64, error) {
-	return r.ListByStatus(ctx, entities.TicketStatusClosed, limit, offset)
+	return r.ListByStatus(ctx, constants.TicketStatusClosed, limit, offset)
 }
 
 // ListByPriority retrieves tickets by priority with pagination
@@ -68,7 +69,7 @@ func (r *ticketRepository) ListHighPriority(ctx context.Context, limit, offset i
 
 	// Count high and urgent priority tickets
 	query := r.GetDB().WithContext(ctx).Model(&entities.Ticket{}).
-		Where("priority IN (?)", []string{entities.TicketPriorityHigh, entities.TicketPriorityUrgent, entities.TicketPriorityCritical})
+		Where("priority IN (?)", []string{constants.TicketPriorityHigh, constants.TicketPriorityUrgent, constants.TicketPriorityCritical})
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to count high priority tickets: %w", err)

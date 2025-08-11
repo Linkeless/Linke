@@ -7,6 +7,7 @@ import (
 
 	"go.uber.org/zap"
 
+	couponDto "linke/internal/domains/coupon/dto"
 	couponInterfaces "linke/internal/domains/coupon/usecases/interfaces"
 	invoiceInterfaces "linke/internal/domains/invoice/usecases/interfaces"
 	paymentInterfaces "linke/internal/domains/payment/usecases/interfaces"
@@ -121,7 +122,7 @@ func (w *SubscriptionWorkflow) PurchaseSubscription(ctx context.Context, req *Pu
 	if req.CouponCode != "" {
 		workflowLogger.Info("Validating coupon", zap.String("coupon_code", req.CouponCode))
 
-		couponValidationReq := &couponInterfaces.ValidateCouponRequest{
+		couponValidationReq := &couponDto.ValidateCouponRequest{
 			Code:        req.CouponCode,
 			UserID:      uint64(req.UserID),
 			PlanID:      uint64(req.SubscriptionPlanID),

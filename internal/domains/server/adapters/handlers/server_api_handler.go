@@ -7,8 +7,10 @@ import (
 	"strconv"
 	"time"
 
+	serverConstants "linke/internal/domains/server/constants"
 	serverEntities "linke/internal/domains/server/entities"
 	serverInterfaces "linke/internal/domains/server/usecases/interfaces"
+	subscriptionConstants "linke/internal/domains/subscription/constants"
 	subscriptionEntities "linke/internal/domains/subscription/entities"
 	subscriptionInterfaces "linke/internal/domains/subscription/usecases/interfaces"
 	userEntities "linke/internal/domains/user/entities"
@@ -121,12 +123,12 @@ func (h *ServerAPIHandler) UniProxyConfig(c *gin.Context) {
 	}
 
 	// Validate node_type (for now only support shadowsocks)
-	if nodeType != "shadowsocks" {
+	if nodeType != serverConstants.NodeTypeShadowsocks {
 		logger.Warn("Unsupported node_type",
 			logger.String("node_type", nodeType),
 			logger.String("remote_addr", c.ClientIP()),
 		)
-		response.BadRequest(c, "only shadowsocks node_type is supported")
+		response.BadRequest(c, "only "+serverConstants.NodeTypeShadowsocks+" node_type is supported")
 		return
 	}
 
@@ -245,12 +247,12 @@ func (h *ServerAPIHandler) UniProxyUsers(c *gin.Context) {
 	}
 
 	// Validate node_type (for now only support shadowsocks)
-	if nodeType != "shadowsocks" {
+	if nodeType != serverConstants.NodeTypeShadowsocks {
 		logger.Warn("Unsupported node_type",
 			logger.String("node_type", nodeType),
 			logger.String("remote_addr", c.ClientIP()),
 		)
-		response.BadRequest(c, "only shadowsocks node_type is supported")
+		response.BadRequest(c, "only "+serverConstants.NodeTypeShadowsocks+" node_type is supported")
 		return
 	}
 
@@ -318,7 +320,7 @@ func (h *ServerAPIHandler) getUsersForServer(ctx context.Context, server *server
 	if err := h.db.DB.WithContext(ctx).
 		Table("user_subscriptions").
 		Select("id, user_id, uuid, server_group_ids, status, traffic_limit, traffic_used, traffic_suspended, trial_end_date").
-		Where("status IN ?", []string{subscriptionEntities.UserSubscriptionStatusActive, subscriptionEntities.UserSubscriptionStatusTrial}).
+		Where("status IN ?", []string{subscriptionConstants.UserSubscriptionStatusActive, subscriptionConstants.UserSubscriptionStatusTrial}).
 		Where("deleted_at IS NULL").
 		Where("end_date IS NULL OR end_date > NOW()"). // Use database NOW() instead of Go time.Now()
 		Where("traffic_suspended = ?", false).

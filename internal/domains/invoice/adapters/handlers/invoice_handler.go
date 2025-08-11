@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"linke/internal/domains/invoice/dto"
 	"linke/internal/domains/invoice/entities"
 	"linke/internal/domains/invoice/usecases/interfaces"
 	userEntities "linke/internal/domains/user/entities"
@@ -41,7 +42,7 @@ func NewInvoiceHandler(invoiceService interfaces.InvoiceService, logger logger.L
 // @Produce json
 // @Security BearerAuth
 // @Param id path uint true "Invoice ID"
-// @Success 200 {object} response.StandardResponse{data=entities.InvoiceResponse}
+// @Success 200 {object} response.StandardResponse{data=dto.InvoiceResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 404 {object} response.NotFoundResponse
@@ -68,7 +69,7 @@ func (h *InvoiceHandler) GetInvoice(c *gin.Context) {
 		return
 	}
 
-	response.SuccessWithMessage(c, "Invoice retrieved successfully", invoice.ToResponse())
+	response.SuccessWithMessage(c, "Invoice retrieved successfully", dto.ToResponse(invoice))
 }
 
 // Removed GetInvoiceByNumber to keep surface minimal
@@ -87,7 +88,7 @@ func (h *InvoiceHandler) GetInvoice(c *gin.Context) {
 // @Security BearerAuth
 // @Param limit query int false "Limit" default(10)
 // @Param offset query int false "Offset" default(0)
-// @Success 200 {object} response.PaginatedResponse{data=[]entities.InvoiceResponse}
+// @Success 200 {object} response.PaginatedResponse{data=[]dto.InvoiceResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -130,9 +131,9 @@ func (h *InvoiceHandler) GetUserInvoices(c *gin.Context) {
 	}
 
 	// Convert to response format
-	invoiceResponses := make([]*entities.InvoiceResponse, len(invoices))
+	invoiceResponses := make([]*dto.InvoiceResponse, len(invoices))
 	for i, invoice := range invoices {
-		invoiceResponses[i] = invoice.ToResponse()
+		invoiceResponses[i] = dto.ToResponse(invoice)
 	}
 
 	response.OKPaginated(c, "User invoices retrieved successfully", invoiceResponses, total, limit, offset)
@@ -200,7 +201,7 @@ func (h *InvoiceHandler) DownloadInvoicePDF(c *gin.Context) {
 	}
 
 	// Create PDF generation options
-	options := &interfaces.PDFGenerationRequest{
+	options := &dto.PDFGenerationRequest{
 		Template:  template,
 		Language:  language,
 		Watermark: watermark,

@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
+	"linke/internal/domains/subscription/constants"
 	"linke/internal/shared/dto"
 )
 
@@ -99,29 +100,9 @@ func (us *UserSubscription) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
-// Status constants
-const (
-	UserSubscriptionStatusActive    = "active"
-	UserSubscriptionStatusPaused    = "paused"
-	UserSubscriptionStatusCancelled = "cancelled"
-	UserSubscriptionStatusExpired   = "expired"
-	UserSubscriptionStatusTrial     = "trial"
-)
-
-// Traffic reset cycle constants
-const (
-	TrafficResetCycleMonthly = "monthly"
-	TrafficResetCycleNever   = "never"
-)
-
-// Traffic limit constants
-const (
-	TrafficUnlimited = int64(0) // 0 means unlimited traffic
-)
-
 // IsActive checks if the subscription is currently active
 func (us *UserSubscription) IsActive() bool {
-	if us.Status != UserSubscriptionStatusActive {
+	if us.Status != constants.UserSubscriptionStatusActive {
 		return false
 	}
 
@@ -162,12 +143,12 @@ func (us *UserSubscription) IsExpired() bool {
 
 // IsCancelled checks if the subscription is cancelled
 func (us *UserSubscription) IsCancelled() bool {
-	return us.Status == UserSubscriptionStatusCancelled
+	return us.Status == constants.UserSubscriptionStatusCancelled
 }
 
 // IsPaused checks if the subscription is paused
 func (us *UserSubscription) IsPaused() bool {
-	return us.Status == UserSubscriptionStatusPaused
+	return us.Status == constants.UserSubscriptionStatusPaused
 }
 
 // IsDeleted checks if the subscription is soft deleted
@@ -229,7 +210,7 @@ func (us *UserSubscription) IsRenewalOverdue() bool {
 
 // HasTrafficLimit checks if the subscription has a traffic limit
 func (us *UserSubscription) HasTrafficLimit() bool {
-	return us.TrafficLimit > TrafficUnlimited
+	return us.TrafficLimit > constants.TrafficUnlimited
 }
 
 // IsTrafficExceeded checks if the subscription has exceeded its traffic limit
@@ -269,7 +250,7 @@ func (us *UserSubscription) GetTrafficUsagePercentage() float64 {
 
 // ShouldResetTraffic checks if the traffic should be reset based on reset cycle
 func (us *UserSubscription) ShouldResetTraffic() bool {
-	if us.TrafficResetCycle == TrafficResetCycleNever {
+	if us.TrafficResetCycle == constants.TrafficResetCycleNever {
 		return false
 	}
 	if us.TrafficResetDate == nil {
@@ -294,13 +275,13 @@ func (us *UserSubscription) AddTrafficUsage(bytes int64) bool {
 // CanBePaused checks if the subscription can be paused
 func (us *UserSubscription) CanBePaused() bool {
 	// Only active subscriptions can be paused
-	return us.Status == UserSubscriptionStatusActive && !us.IsDeleted()
+	return us.Status == constants.UserSubscriptionStatusActive && !us.IsDeleted()
 }
 
 // CanBeResumed checks if the subscription can be resumed
 func (us *UserSubscription) CanBeResumed() bool {
 	// Only paused subscriptions can be resumed
-	return us.Status == UserSubscriptionStatusPaused && !us.IsDeleted()
+	return us.Status == constants.UserSubscriptionStatusPaused && !us.IsDeleted()
 }
 
 // GetPauseDuration returns the current pause duration in days

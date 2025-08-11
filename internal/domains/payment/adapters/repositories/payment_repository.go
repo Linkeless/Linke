@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"linke/internal/domains/payment/constants"
 	"linke/internal/domains/payment/entities"
 	"linke/internal/domains/payment/usecases/interfaces"
 	"linke/internal/shared/framework"
@@ -101,7 +102,7 @@ func (r *paymentRecordRepository) GetUserCompletedPayments(ctx context.Context, 
 	var total int64
 
 	condition := "user_id = ? AND status = ?"
-	args := []any{userID, entities.PaymentRecordStatusCompleted}
+	args := []any{userID, constants.PaymentRecordStatusCompleted}
 
 	// Count total completed payments for user
 	if err := r.GetDB().WithContext(ctx).Model(&entities.PaymentRecord{}).
@@ -130,7 +131,7 @@ func (r *paymentRecordRepository) GetUserCompletedPayments(ctx context.Context, 
 func (r *paymentRecordRepository) GetUserTotalPaid(ctx context.Context, userID uint, currency string) (float64, error) {
 	var total float64
 	if err := r.GetDB().WithContext(ctx).Model(&entities.PaymentRecord{}).
-		Where("user_id = ? AND currency = ? AND status = ?", userID, currency, entities.PaymentRecordStatusCompleted).
+		Where("user_id = ? AND currency = ? AND status = ?", userID, currency, constants.PaymentRecordStatusCompleted).
 		Select("COALESCE(SUM(amount), 0)").Scan(&total).Error; err != nil {
 		logger.Error("Failed to get user total paid",
 			logger.Uint("user_id", userID),
@@ -144,17 +145,17 @@ func (r *paymentRecordRepository) GetUserTotalPaid(ctx context.Context, userID u
 
 // ListPendingPayments lists pending payment records
 func (r *paymentRecordRepository) ListPendingPayments(ctx context.Context, limit, offset int) ([]*entities.PaymentRecord, int64, error) {
-	return r.ListByStatus(ctx, entities.PaymentRecordStatusPending, limit, offset)
+	return r.ListByStatus(ctx, constants.PaymentRecordStatusPending, limit, offset)
 }
 
 // ListCompletedPayments lists completed payment records
 func (r *paymentRecordRepository) ListCompletedPayments(ctx context.Context, limit, offset int) ([]*entities.PaymentRecord, int64, error) {
-	return r.ListByStatus(ctx, entities.PaymentRecordStatusCompleted, limit, offset)
+	return r.ListByStatus(ctx, constants.PaymentRecordStatusCompleted, limit, offset)
 }
 
 // ListFailedPayments lists failed payment records
 func (r *paymentRecordRepository) ListFailedPayments(ctx context.Context, limit, offset int) ([]*entities.PaymentRecord, int64, error) {
-	return r.ListByStatus(ctx, entities.PaymentRecordStatusFailed, limit, offset)
+	return r.ListByStatus(ctx, constants.PaymentRecordStatusFailed, limit, offset)
 }
 
 // ListExpiredPayments lists expired payment records
@@ -302,7 +303,7 @@ func (r *paymentRecordRepository) ListRecentPayments(ctx context.Context, since 
 // MarkAsCompleted marks a payment as completed
 func (r *paymentRecordRepository) MarkAsCompleted(ctx context.Context, id uint, transactionID string, paidAt time.Time) error {
 	updates := map[string]any{
-		"status":         entities.PaymentRecordStatusCompleted,
+		"status":         constants.PaymentRecordStatusCompleted,
 		"transaction_id": transactionID,
 		"paid_at":        paidAt,
 		"updated_at":     time.Now(),
@@ -332,7 +333,7 @@ func (r *paymentRecordRepository) MarkAsCompleted(ctx context.Context, id uint, 
 // MarkAsFailed marks a payment as failed
 func (r *paymentRecordRepository) MarkAsFailed(ctx context.Context, id uint, reason string) error {
 	updates := map[string]any{
-		"status":         entities.PaymentRecordStatusFailed,
+		"status":         constants.PaymentRecordStatusFailed,
 		"payment_status": reason,
 		"updated_at":     time.Now(),
 	}
@@ -362,7 +363,7 @@ func (r *paymentRecordRepository) MarkAsFailed(ctx context.Context, id uint, rea
 func (r *paymentRecordRepository) GetTotalRevenue(ctx context.Context, currency string, since time.Time) (float64, error) {
 	var total float64
 	if err := r.GetDB().WithContext(ctx).Model(&entities.PaymentRecord{}).
-		Where("currency = ? AND status = ? AND paid_at >= ?", currency, entities.PaymentRecordStatusCompleted, since).
+		Where("currency = ? AND status = ? AND paid_at >= ?", currency, constants.PaymentRecordStatusCompleted, since).
 		Select("COALESCE(SUM(amount), 0)").Scan(&total).Error; err != nil {
 		logger.Error("Failed to get total revenue",
 			logger.String("currency", currency),
@@ -426,7 +427,7 @@ func (r *paymentRecordRepository) GetOrderPayments(ctx context.Context, orderID 
 // GetOrderCompletedPayments gets completed payment records for an order
 func (r *paymentRecordRepository) GetOrderCompletedPayments(ctx context.Context, orderID uint) ([]*entities.PaymentRecord, error) {
 	var payments []*entities.PaymentRecord
-	if err := r.GetDB().WithContext(ctx).Where("subscription_order_id = ? AND status = ?", orderID, entities.PaymentRecordStatusCompleted).Find(&payments).Error; err != nil {
+	if err := r.GetDB().WithContext(ctx).Where("subscription_order_id = ? AND status = ?", orderID, constants.PaymentRecordStatusCompleted).Find(&payments).Error; err != nil {
 		return nil, fmt.Errorf("failed to get order completed payments: %w", err)
 	}
 	return payments, nil
@@ -464,10 +465,10 @@ func (r *paymentRecordRepository) ListRefundablePayments(ctx context.Context, li
 	var payments []*entities.PaymentRecord
 	var total int64
 	condition := "status = ? AND refund_amount = 0"
-	if err := r.GetDB().WithContext(ctx).Model(&entities.PaymentRecord{}).Where(condition, entities.PaymentRecordStatusCompleted).Count(&total).Error; err != nil {
+	if err := r.GetDB().WithContext(ctx).Model(&entities.PaymentRecord{}).Where(condition, constants.PaymentRecordStatusCompleted).Count(&total).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to count refundable payments: %w", err)
 	}
-	if err := r.GetDB().WithContext(ctx).Where(condition, entities.PaymentRecordStatusCompleted).Limit(limit).Offset(offset).Find(&payments).Error; err != nil {
+	if err := r.GetDB().WithContext(ctx).Where(condition, constants.PaymentRecordStatusCompleted).Limit(limit).Offset(offset).Find(&payments).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to list refundable payments: %w", err)
 	}
 	return payments, total, nil
@@ -551,7 +552,7 @@ func (r *paymentRecordRepository) IncrementNotifyCount(ctx context.Context, id u
 // ListExpiringPayments lists payments expiring before specified time
 func (r *paymentRecordRepository) ListExpiringPayments(ctx context.Context, beforeTime time.Time, limit int) ([]*entities.PaymentRecord, error) {
 	var payments []*entities.PaymentRecord
-	if err := r.GetDB().WithContext(ctx).Where("expired_at IS NOT NULL AND expired_at < ? AND status = ?", beforeTime, entities.PaymentRecordStatusPending).Limit(limit).Find(&payments).Error; err != nil {
+	if err := r.GetDB().WithContext(ctx).Where("expired_at IS NOT NULL AND expired_at < ? AND status = ?", beforeTime, constants.PaymentRecordStatusPending).Limit(limit).Find(&payments).Error; err != nil {
 		return nil, fmt.Errorf("failed to list expiring payments: %w", err)
 	}
 	return payments, nil
@@ -559,7 +560,7 @@ func (r *paymentRecordRepository) ListExpiringPayments(ctx context.Context, befo
 
 // MarkExpiredPayments marks payments as expired
 func (r *paymentRecordRepository) MarkExpiredPayments(ctx context.Context, beforeTime time.Time) (int64, error) {
-	result := r.GetDB().WithContext(ctx).Model(&entities.PaymentRecord{}).Where("expired_at IS NOT NULL AND expired_at < ? AND status = ?", beforeTime, entities.PaymentRecordStatusPending).Update("status", entities.PaymentRecordStatusFailed)
+	result := r.GetDB().WithContext(ctx).Model(&entities.PaymentRecord{}).Where("expired_at IS NOT NULL AND expired_at < ? AND status = ?", beforeTime, constants.PaymentRecordStatusPending).Update("status", constants.PaymentRecordStatusFailed)
 	if result.Error != nil {
 		return 0, fmt.Errorf("failed to mark expired payments: %w", result.Error)
 	}
@@ -576,7 +577,7 @@ func (r *paymentRecordRepository) SearchByUserEmail(ctx context.Context, email s
 func (r *paymentRecordRepository) GetRevenueByGateway(ctx context.Context, gateway, currency string, since time.Time) (float64, error) {
 	var total float64
 	if err := r.GetDB().WithContext(ctx).Model(&entities.PaymentRecord{}).
-		Where("gateway = ? AND currency = ? AND status = ? AND paid_at >= ?", gateway, currency, entities.PaymentRecordStatusCompleted, since).
+		Where("gateway = ? AND currency = ? AND status = ? AND paid_at >= ?", gateway, currency, constants.PaymentRecordStatusCompleted, since).
 		Select("COALESCE(SUM(amount), 0)").Scan(&total).Error; err != nil {
 		return 0, fmt.Errorf("failed to get revenue by gateway: %w", err)
 	}
@@ -587,7 +588,7 @@ func (r *paymentRecordRepository) GetRevenueByGateway(ctx context.Context, gatew
 func (r *paymentRecordRepository) GetRevenueByMethod(ctx context.Context, paymentMethod, currency string, since time.Time) (float64, error) {
 	var total float64
 	if err := r.GetDB().WithContext(ctx).Model(&entities.PaymentRecord{}).
-		Where("payment_method = ? AND currency = ? AND status = ? AND paid_at >= ?", paymentMethod, currency, entities.PaymentRecordStatusCompleted, since).
+		Where("payment_method = ? AND currency = ? AND status = ? AND paid_at >= ?", paymentMethod, currency, constants.PaymentRecordStatusCompleted, since).
 		Select("COALESCE(SUM(amount), 0)").Scan(&total).Error; err != nil {
 		return 0, fmt.Errorf("failed to get revenue by method: %w", err)
 	}
@@ -624,7 +625,7 @@ func (r *paymentRecordRepository) ListByAmountRange(ctx context.Context, minAmou
 // GetLargestPayment gets the largest payment record
 func (r *paymentRecordRepository) GetLargestPayment(ctx context.Context, currency string, since time.Time) (*entities.PaymentRecord, error) {
 	var payment entities.PaymentRecord
-	if err := r.GetDB().WithContext(ctx).Where("currency = ? AND status = ? AND paid_at >= ?", currency, entities.PaymentRecordStatusCompleted, since).Order("amount DESC").First(&payment).Error; err != nil {
+	if err := r.GetDB().WithContext(ctx).Where("currency = ? AND status = ? AND paid_at >= ?", currency, constants.PaymentRecordStatusCompleted, since).Order("amount DESC").First(&payment).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("no payment found")
 		}
@@ -648,7 +649,7 @@ func (r *paymentRecordRepository) GetLastPaymentNumber(ctx context.Context, pref
 // GetPendingPaymentByUserAndAmount gets pending payment by user and amount
 func (r *paymentRecordRepository) GetPendingPaymentByUserAndAmount(ctx context.Context, userID uint, amount float64, currency string) (*entities.PaymentRecord, error) {
 	var payment entities.PaymentRecord
-	if err := r.GetDB().WithContext(ctx).Where("user_id = ? AND amount = ? AND currency = ? AND status = ?", userID, amount, currency, entities.PaymentRecordStatusPending).First(&payment).Error; err != nil {
+	if err := r.GetDB().WithContext(ctx).Where("user_id = ? AND amount = ? AND currency = ? AND status = ?", userID, amount, currency, constants.PaymentRecordStatusPending).First(&payment).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
 		}
@@ -679,7 +680,7 @@ func (r *paymentRecordRepository) CountByGateway(ctx context.Context, gateway st
 // CountCompletedPayments counts completed payment records since a specific time
 func (r *paymentRecordRepository) CountCompletedPayments(ctx context.Context, since time.Time) (int64, error) {
 	var count int64
-	if err := r.GetDB().WithContext(ctx).Model(&entities.PaymentRecord{}).Where("status = ? AND paid_at >= ?", entities.PaymentRecordStatusCompleted, since).Count(&count).Error; err != nil {
+	if err := r.GetDB().WithContext(ctx).Model(&entities.PaymentRecord{}).Where("status = ? AND paid_at >= ?", constants.PaymentRecordStatusCompleted, since).Count(&count).Error; err != nil {
 		logger.Error("Failed to count completed payment records",
 			logger.String("since", since.Format(time.RFC3339)),
 			logger.Error2("error", err),
@@ -692,7 +693,7 @@ func (r *paymentRecordRepository) CountCompletedPayments(ctx context.Context, si
 // CountFailedPayments counts failed payment records since a specific time
 func (r *paymentRecordRepository) CountFailedPayments(ctx context.Context, since time.Time) (int64, error) {
 	var count int64
-	if err := r.GetDB().WithContext(ctx).Model(&entities.PaymentRecord{}).Where("status = ? AND created_at >= ?", entities.PaymentRecordStatusFailed, since).Count(&count).Error; err != nil {
+	if err := r.GetDB().WithContext(ctx).Model(&entities.PaymentRecord{}).Where("status = ? AND created_at >= ?", constants.PaymentRecordStatusFailed, since).Count(&count).Error; err != nil {
 		logger.Error("Failed to count failed payment records",
 			logger.String("since", since.Format(time.RFC3339)),
 			logger.Error2("error", err),
@@ -706,7 +707,7 @@ func (r *paymentRecordRepository) CountFailedPayments(ctx context.Context, since
 func (r *paymentRecordRepository) GetAveragePaymentAmount(ctx context.Context, currency string, since time.Time) (float64, error) {
 	var avg float64
 	if err := r.GetDB().WithContext(ctx).Model(&entities.PaymentRecord{}).
-		Where("currency = ? AND status = ? AND paid_at >= ?", currency, entities.PaymentRecordStatusCompleted, since).
+		Where("currency = ? AND status = ? AND paid_at >= ?", currency, constants.PaymentRecordStatusCompleted, since).
 		Select("COALESCE(AVG(amount), 0)").Scan(&avg).Error; err != nil {
 		logger.Error("Failed to get average payment amount",
 			logger.String("currency", currency),

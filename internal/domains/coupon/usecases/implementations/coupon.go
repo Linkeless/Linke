@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"strings"
 
+	"gorm.io/gorm"
+
+	"linke/internal/domains/coupon/constants"
+	"linke/internal/domains/coupon/dto"
 	"linke/internal/domains/coupon/entities"
 	"linke/internal/domains/coupon/usecases/interfaces"
 	"linke/internal/shared/logger"
-
-	"gorm.io/gorm"
 )
 
 type CouponService struct {
@@ -23,7 +25,7 @@ func NewCouponService(db *gorm.DB) interfaces.CouponService {
 }
 
 // CreateCoupon creates a new coupon
-func (s *CouponService) CreateCoupon(ctx context.Context, creatorID uint64, req *interfaces.CreateCouponRequest) (*entities.Coupon, error) {
+func (s *CouponService) CreateCoupon(ctx context.Context, creatorID uint64, req *dto.CreateCouponRequest) (*entities.Coupon, error) {
 	// Validate and normalize code
 	code := strings.TrimSpace(strings.ToUpper(req.Code))
 	if code == "" {
@@ -40,7 +42,7 @@ func (s *CouponService) CreateCoupon(ctx context.Context, creatorID uint64, req 
 	}
 
 	// Validate percentage values
-	if req.Type == entities.CouponTypePercentage && req.Value > 100 {
+	if req.Type == constants.CouponTypePercentage && req.Value > 100 {
 		return nil, fmt.Errorf("percentage discount cannot exceed 100%%")
 	}
 
@@ -74,7 +76,7 @@ func (s *CouponService) CreateCoupon(ctx context.Context, creatorID uint64, req 
 		ValidFrom:       req.ValidFrom,
 		ValidUntil:      req.ValidUntil,
 		ApplicablePlans: req.ApplicablePlans,
-		Status:          entities.CouponStatusActive,
+		Status:          constants.CouponStatusActive,
 		IsPublic:        isPublic,
 		CreatedBy:       creatorID,
 	}
@@ -121,7 +123,7 @@ func (s *CouponService) GetCouponByCode(ctx context.Context, code string) (*enti
 }
 
 // GetCoupons gets coupons with filtering and pagination
-func (s *CouponService) GetCoupons(ctx context.Context, req *interfaces.GetCouponsRequest) ([]*entities.Coupon, int64, error) {
+func (s *CouponService) GetCoupons(ctx context.Context, req *dto.GetCouponsRequest) ([]*entities.Coupon, int64, error) {
 	query := s.db.WithContext(ctx).Model(&entities.Coupon{})
 
 	// Apply filters
@@ -171,7 +173,7 @@ func (s *CouponService) GetCoupons(ctx context.Context, req *interfaces.GetCoupo
 // in user interfaces after proper authentication and authorization.
 func (s *CouponService) GetPublicCoupons(ctx context.Context, limit int) ([]*entities.Coupon, error) {
 	query := s.db.WithContext(ctx).
-		Where("status = ? AND is_public = ?", entities.CouponStatusActive, true).
+		Where("status = ? AND is_public = ?", constants.CouponStatusActive, true).
 		Order("created_at DESC")
 
 	if limit > 0 {
@@ -188,7 +190,7 @@ func (s *CouponService) GetPublicCoupons(ctx context.Context, limit int) ([]*ent
 }
 
 // UpdateCoupon updates a coupon
-func (s *CouponService) UpdateCoupon(ctx context.Context, couponID uint64, req *interfaces.UpdateCouponRequest) (*entities.Coupon, error) {
+func (s *CouponService) UpdateCoupon(ctx context.Context, couponID uint64, req *dto.UpdateCouponRequest) (*entities.Coupon, error) {
 	// Get existing coupon
 	coupon, err := s.GetCoupon(ctx, couponID)
 	if err != nil {
@@ -212,8 +214,8 @@ func (s *CouponService) UpdateCoupon(ctx context.Context, couponID uint64, req *
 
 	if req.Value != nil {
 		// Validate percentage values
-		if (req.Type != nil && *req.Type == entities.CouponTypePercentage) ||
-			(req.Type == nil && coupon.Type == entities.CouponTypePercentage) {
+		if (req.Type != nil && *req.Type == constants.CouponTypePercentage) ||
+			(req.Type == nil && coupon.Type == constants.CouponTypePercentage) {
 			if *req.Value > 100 {
 				return nil, fmt.Errorf("percentage discount cannot exceed 100%%")
 			}
@@ -290,11 +292,11 @@ func (s *CouponService) DeleteCoupon(ctx context.Context, couponID uint64) error
 }
 
 // ValidateCoupon validates a coupon for a specific user and order
-func (s *CouponService) ValidateCoupon(ctx context.Context, req *interfaces.ValidateCouponRequest) (*interfaces.ValidateCouponResponse, error) {
+func (s *CouponService) ValidateCoupon(ctx context.Context, req *dto.ValidateCouponRequest) (*dto.ValidateCouponResponse, error) {
 	// Get coupon by code
 	coupon, err := s.GetCouponByCode(ctx, req.Code)
 	if err != nil {
-		return &interfaces.ValidateCouponResponse{
+		return &dto.ValidateCouponResponse{
 			Valid:   false,
 			Message: "Coupon not found",
 		}, nil
@@ -303,19 +305,19 @@ func (s *CouponService) ValidateCoupon(ctx context.Context, req *interfaces.Vali
 	// Check if coupon can be used by this user
 	canUse, message := coupon.CanBeUsedBy(req.UserID, req.OrderAmount, req.PlanID, s.db)
 	if !canUse {
-		return &interfaces.ValidateCouponResponse{
+		return &dto.ValidateCouponResponse{
 			Valid:   false,
 			Message: message,
-			Coupon:  coupon.ToPublicResponse(),
+			Coupon:  dto.ToResponse(coupon),
 		}, nil
 	}
 
 	// Check currency match
 	if coupon.Currency != req.Currency {
-		return &interfaces.ValidateCouponResponse{
+		return &dto.ValidateCouponResponse{
 			Valid:   false,
 			Message: fmt.Sprintf("Coupon is only valid for %s currency", coupon.Currency),
-			Coupon:  coupon.ToPublicResponse(),
+			Coupon:  dto.ToResponse(coupon),
 		}, nil
 	}
 
@@ -323,12 +325,12 @@ func (s *CouponService) ValidateCoupon(ctx context.Context, req *interfaces.Vali
 	discountAmount := coupon.CalculateDiscount(req.OrderAmount)
 	finalAmount := req.OrderAmount - discountAmount
 
-	return &interfaces.ValidateCouponResponse{
+	return &dto.ValidateCouponResponse{
 		Valid:          true,
 		Message:        "Coupon is valid",
 		DiscountAmount: discountAmount,
 		FinalAmount:    finalAmount,
-		Coupon:         coupon.ToPublicResponse(),
+		Coupon:         dto.ToResponse(coupon),
 	}, nil
 }
 
@@ -473,7 +475,7 @@ func (s *CouponService) GetCouponUsages(ctx context.Context, couponID *uint64, u
 func (s *CouponService) GetActiveCoupons(ctx context.Context) ([]*entities.Coupon, error) {
 	var coupons []*entities.Coupon
 	if err := s.db.WithContext(ctx).
-		Where("status = ?", entities.CouponStatusActive).
+		Where("status = ?", constants.CouponStatusActive).
 		Order("created_at DESC").
 		Find(&coupons).Error; err != nil {
 		logger.Error("Failed to get active coupons", logger.Error2("error", err))
@@ -487,7 +489,7 @@ func (s *CouponService) GetActiveCoupons(ctx context.Context) ([]*entities.Coupo
 func (s *CouponService) ActivateCoupon(ctx context.Context, couponID uint64) error {
 	if err := s.db.WithContext(ctx).Model(&entities.Coupon{}).
 		Where("id = ?", couponID).
-		Update("status", entities.CouponStatusActive).Error; err != nil {
+		Update("status", constants.CouponStatusActive).Error; err != nil {
 		logger.Error("Failed to activate coupon", logger.Error2("error", err), logger.Any("coupon_id", couponID))
 		return fmt.Errorf("failed to activate coupon: %w", err)
 	}
@@ -500,7 +502,7 @@ func (s *CouponService) ActivateCoupon(ctx context.Context, couponID uint64) err
 func (s *CouponService) DeactivateCoupon(ctx context.Context, couponID uint64) error {
 	if err := s.db.WithContext(ctx).Model(&entities.Coupon{}).
 		Where("id = ?", couponID).
-		Update("status", entities.CouponStatusInactive).Error; err != nil {
+		Update("status", constants.CouponStatusInactive).Error; err != nil {
 		logger.Error("Failed to deactivate coupon", logger.Error2("error", err), logger.Any("coupon_id", couponID))
 		return fmt.Errorf("failed to deactivate coupon: %w", err)
 	}
@@ -513,7 +515,7 @@ func (s *CouponService) DeactivateCoupon(ctx context.Context, couponID uint64) e
 func (s *CouponService) ExpireCoupon(ctx context.Context, couponID uint64) error {
 	if err := s.db.WithContext(ctx).Model(&entities.Coupon{}).
 		Where("id = ?", couponID).
-		Update("status", entities.CouponStatusExpired).Error; err != nil {
+		Update("status", constants.CouponStatusExpired).Error; err != nil {
 		logger.Error("Failed to expire coupon", logger.Error2("error", err), logger.Any("coupon_id", couponID))
 		return fmt.Errorf("failed to expire coupon: %w", err)
 	}
@@ -579,7 +581,7 @@ func (s *CouponService) GetCouponSystemStatistics(ctx context.Context) (map[stri
 	stats := make(map[string]any)
 
 	// Count coupons by status
-	statuses := []string{entities.CouponStatusActive, entities.CouponStatusInactive, entities.CouponStatusExpired}
+	statuses := []string{constants.CouponStatusActive, constants.CouponStatusInactive, constants.CouponStatusExpired}
 	for _, status := range statuses {
 		var count int64
 		if err := s.db.WithContext(ctx).Model(&entities.Coupon{}).

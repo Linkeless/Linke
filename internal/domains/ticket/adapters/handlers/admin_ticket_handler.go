@@ -7,93 +7,16 @@ import (
 
 	ticketInterfaces "linke/internal/domains/ticket/usecases/interfaces"
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
+	"linke/internal/domains/ticket/constants"
+	"linke/internal/domains/ticket/dto"
 	"linke/internal/domains/ticket/entities"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/response"
-	"linke/internal/shared/dto"
+	sharedDTO "linke/internal/shared/dto"
 
 	"github.com/gin-gonic/gin"
 )
 
-// AdminCreateTicketRequest represents the request body for admin ticket creation
-type AdminCreateTicketRequest struct {
-	Title       string `json:"title" binding:"required,min=5,max=255" example:"Unable to access account"`
-	Description string `json:"description" binding:"required,min=10,max=5000" example:"Customer reports unable to log in to their account"`
-	Category    string `json:"category" binding:"required,oneof=general technical billing account feature bug subscription payment" example:"technical"`
-	Priority    string `json:"priority" binding:"omitempty,oneof=low normal high urgent critical" example:"normal"`
-	UserID      uint   `json:"user_id" binding:"required" example:"123"`
-	AssignedToID *uint  `json:"assigned_to_id,omitempty" example:"456"`
-	Tags        string `json:"tags,omitempty" example:"urgent,login"`
-	Metadata    string `json:"metadata,omitempty" example:"{\"source\": \"admin_created\"}"`
-}
-
-// AdminUpdateTicketRequest represents the request body for admin ticket updates
-type AdminUpdateTicketRequest struct {
-	Title       *string `json:"title,omitempty" binding:"omitempty,min=5,max=255" example:"Updated ticket title"`
-	Description *string `json:"description,omitempty" binding:"omitempty,min=10,max=5000" example:"Updated description"`
-	Category    *string `json:"category,omitempty" binding:"omitempty,oneof=general technical billing account feature bug subscription payment" example:"billing"`
-	Priority    *string `json:"priority,omitempty" binding:"omitempty,oneof=low normal high urgent critical" example:"high"`
-	Status      *string `json:"status,omitempty" binding:"omitempty,oneof=open in_progress pending resolved closed" example:"in_progress"`
-	Tags        *string `json:"tags,omitempty" example:"urgent,billing"`
-	Metadata    *string `json:"metadata,omitempty" example:"{\"updated_by\": \"admin\"}"`
-}
-
-// AssignTicketRequest represents the request body for ticket assignment
-type AssignTicketRequest struct {
-	AssignedToID uint   `json:"assigned_to_id" binding:"required" example:"456"`
-	Note         string `json:"note,omitempty" example:"Assigned to senior support agent"`
-}
-
-// EscalateTicketRequest represents the request body for ticket escalation
-type EscalateTicketRequest struct {
-	EscalatedToID uint   `json:"escalated_to_id" binding:"required" example:"789"`
-	EscalationReason string `json:"escalation_reason" binding:"required,min=10,max=1000" example:"Customer demands supervisor escalation"`
-	Priority      *string `json:"priority,omitempty" binding:"omitempty,oneof=high urgent critical" example:"urgent"`
-}
-
-// AdminTicketMessageRequest represents the request body for admin message creation
-type AdminTicketMessageRequest struct {
-	Content     string `json:"content" binding:"required,min=1,max=5000" example:"Thank you for contacting support. We are reviewing your issue."`
-	MessageType string `json:"message_type" binding:"omitempty,oneof=admin system" example:"admin"`
-	IsInternal  bool   `json:"is_internal,omitempty" example:"false"`
-	Attachments string `json:"attachments,omitempty" example:"[{\"name\":\"response.pdf\",\"url\":\"https://example.com/file.pdf\"}]"`
-	Metadata    string `json:"metadata,omitempty" example:"{\"agent_id\":\"456\"}"`
-}
-
-// BulkTicketActionRequest represents the request body for bulk ticket operations
-type BulkTicketActionRequest struct {
-	TicketIDs []uint  `json:"ticket_ids" binding:"required,min=1,max=100"`
-	Action    string  `json:"action" binding:"required,oneof=assign close reopen update_priority update_status" example:"assign"`
-	AssignedToID *uint `json:"assigned_to_id,omitempty" example:"456"`
-	Status    *string `json:"status,omitempty" binding:"omitempty,oneof=open in_progress pending resolved closed" example:"closed"`
-	Priority  *string `json:"priority,omitempty" binding:"omitempty,oneof=low normal high urgent critical" example:"high"`
-	Reason    string  `json:"reason,omitempty" example:"Bulk closing resolved tickets"`
-}
-
-// TicketSearchRequest represents the request for advanced ticket search
-type TicketSearchRequest struct {
-	Query         string    `form:"query" example:"login issue"`
-	UserID        uint      `form:"user_id" example:"123"`
-	AssignedToID  *uint     `form:"assigned_to_id" example:"456"`
-	Status        string    `form:"status" binding:"omitempty,oneof=open in_progress pending resolved closed" example:"open"`
-	Priority      string    `form:"priority" binding:"omitempty,oneof=low normal high urgent critical" example:"high"`
-	Category      string    `form:"category" binding:"omitempty,oneof=general technical billing account feature bug subscription payment" example:"technical"`
-	CreatedAfter  *time.Time `form:"created_after" time_format:"2006-01-02" example:"2024-01-01"`
-	CreatedBefore *time.Time `form:"created_before" time_format:"2006-01-02" example:"2024-12-31"`
-	Tags          string    `form:"tags" example:"urgent,billing"`
-	Limit         int       `form:"limit" binding:"omitempty,min=1,max=100" example:"20"`
-	Offset        int       `form:"offset" binding:"omitempty,min=0" example:"0"`
-}
-
-// TicketAnalyticsRequest represents the request for ticket analytics
-type TicketAnalyticsRequest struct {
-	StartDate   string `form:"start_date" time_format:"2006-01-02" example:"2024-01-01"`
-	EndDate     string `form:"end_date" time_format:"2006-01-02" example:"2024-12-31"`
-	GroupBy     string `form:"group_by" binding:"omitempty,oneof=day week month agent category priority" example:"day"`
-	AgentID     *uint  `form:"agent_id" example:"456"`
-	Category    string `form:"category" binding:"omitempty,oneof=general technical billing account feature bug subscription payment" example:"technical"`
-	Priority    string `form:"priority" binding:"omitempty,oneof=low normal high urgent critical" example:"high"`
-}
 
 // AdminTicketHandler provides comprehensive admin ticket management functionality
 type AdminTicketHandler struct {
@@ -122,7 +45,7 @@ func NewAdminTicketHandler(
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param ticket body AdminCreateTicketRequest true "Ticket creation data"
+// @Param ticket body dto.AdminCreateTicketRequest true "Ticket creation data"
 // @Success 201 {object} response.StandardResponse{data=entities.TicketResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -131,7 +54,7 @@ func NewAdminTicketHandler(
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /admin/tickets [post]
 func (h *AdminTicketHandler) CreateTicket(c *gin.Context) {
-	var req AdminCreateTicketRequest
+	var req dto.AdminCreateTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -166,7 +89,7 @@ func (h *AdminTicketHandler) CreateTicket(c *gin.Context) {
 	}
 
 	// Create ticket request for service layer
-	createReq := &ticketInterfaces.CreateTicketRequest{
+	createReq := &dto.CreateTicketRequest{
 		Title:       req.Title,
 		Description: req.Description,
 		Category:    req.Category,
@@ -188,7 +111,7 @@ func (h *AdminTicketHandler) CreateTicket(c *gin.Context) {
 
 	// Assign ticket if specified
 	if req.AssignedToID != nil {
-		assignReq := &ticketInterfaces.AssignTicketRequest{
+		assignReq := &dto.AssignTicketRequest{
 			AssignedToID: *req.AssignedToID,
 		}
 		ticket, err = h.ticketService.AssignTicket(c.Request.Context(), ticket.ID, assignReq)
@@ -203,7 +126,7 @@ func (h *AdminTicketHandler) CreateTicket(c *gin.Context) {
 
 	// Populate user data in response
 	ticketResponse := ticket.ToResponse()
-	ticketResponse.User = &dto.UserBasicDTO{
+	ticketResponse.User = &sharedDTO.UserBasicDTO{
 		ID:       user.ID,
 		Email:    user.Email,
 		Username: user.Username,
@@ -273,7 +196,7 @@ func (h *AdminTicketHandler) ListTickets(c *gin.Context) {
 	}
 
 	// Create request for service layer
-	req := &ticketInterfaces.GetTicketsRequest{
+	req := &dto.GetTicketsRequest{
 		UserID:       userID,
 		AssignedToID: assignedToID,
 		Status:       c.Query("status"),
@@ -298,7 +221,7 @@ func (h *AdminTicketHandler) ListTickets(c *gin.Context) {
 		
 		// Populate user data if available
 		if user, err := h.userService.GetUserByID(c.Request.Context(), ticket.UserID); err == nil {
-			responses[i].User = &dto.UserBasicDTO{
+			responses[i].User = &sharedDTO.UserBasicDTO{
 				ID:       user.ID,
 				Email:    user.Email,
 				Username: user.Username,
@@ -313,7 +236,7 @@ func (h *AdminTicketHandler) ListTickets(c *gin.Context) {
 		// Populate assigned user data if available
 		if ticket.AssignedToID != nil {
 			if assignedUser, err := h.userService.GetUserByID(c.Request.Context(), *ticket.AssignedToID); err == nil {
-				responses[i].AssignedTo = &dto.UserBasicDTO{
+				responses[i].AssignedTo = &sharedDTO.UserBasicDTO{
 					ID:       assignedUser.ID,
 					Email:    assignedUser.Email,
 					Username: assignedUser.Username,
@@ -329,7 +252,7 @@ func (h *AdminTicketHandler) ListTickets(c *gin.Context) {
 		// Populate resolved by user data if available
 		if ticket.ResolvedByID != nil {
 			if resolvedUser, err := h.userService.GetUserByID(c.Request.Context(), *ticket.ResolvedByID); err == nil {
-				responses[i].ResolvedBy = &dto.UserBasicDTO{
+				responses[i].ResolvedBy = &sharedDTO.UserBasicDTO{
 					ID:       resolvedUser.ID,
 					Email:    resolvedUser.Email,
 					Username: resolvedUser.Username,
@@ -382,7 +305,7 @@ func (h *AdminTicketHandler) GetTicket(c *gin.Context) {
 	
 	// Populate user data
 	if user, err := h.userService.GetUserByID(c.Request.Context(), ticket.UserID); err == nil {
-		ticketResponse.User = &dto.UserBasicDTO{
+		ticketResponse.User = &sharedDTO.UserBasicDTO{
 			ID:       user.ID,
 			Email:    user.Email,
 			Username: user.Username,
@@ -397,7 +320,7 @@ func (h *AdminTicketHandler) GetTicket(c *gin.Context) {
 	// Populate assigned user data if available
 	if ticket.AssignedToID != nil {
 		if assignedUser, err := h.userService.GetUserByID(c.Request.Context(), *ticket.AssignedToID); err == nil {
-			ticketResponse.AssignedTo = &dto.UserBasicDTO{
+			ticketResponse.AssignedTo = &sharedDTO.UserBasicDTO{
 				ID:       assignedUser.ID,
 				Email:    assignedUser.Email,
 				Username: assignedUser.Username,
@@ -413,7 +336,7 @@ func (h *AdminTicketHandler) GetTicket(c *gin.Context) {
 	// Populate resolved by user data if available
 	if ticket.ResolvedByID != nil {
 		if resolvedUser, err := h.userService.GetUserByID(c.Request.Context(), *ticket.ResolvedByID); err == nil {
-			ticketResponse.ResolvedBy = &dto.UserBasicDTO{
+			ticketResponse.ResolvedBy = &sharedDTO.UserBasicDTO{
 				ID:       resolvedUser.ID,
 				Email:    resolvedUser.Email,
 				Username: resolvedUser.Username,
@@ -429,7 +352,7 @@ func (h *AdminTicketHandler) GetTicket(c *gin.Context) {
 	// Populate message user data
 	for i := range ticketResponse.Messages {
 		if user, err := h.userService.GetUserByID(c.Request.Context(), ticketResponse.Messages[i].UserID); err == nil {
-			ticketResponse.Messages[i].User = &dto.UserBasicDTO{
+			ticketResponse.Messages[i].User = &sharedDTO.UserBasicDTO{
 				ID:       user.ID,
 				Email:    user.Email,
 				Username: user.Username,
@@ -453,7 +376,7 @@ func (h *AdminTicketHandler) GetTicket(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
-// @Param ticket body AdminUpdateTicketRequest true "Ticket update data"
+// @Param ticket body dto.AdminUpdateTicketRequest true "Ticket update data"
 // @Success 200 {object} response.StandardResponse{data=entities.TicketResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -469,14 +392,14 @@ func (h *AdminTicketHandler) UpdateTicket(c *gin.Context) {
 		return
 	}
 
-	var req AdminUpdateTicketRequest
+	var req dto.AdminUpdateTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
 	}
 
 	// Create update request for service layer
-	updateReq := &ticketInterfaces.UpdateTicketRequest{
+	updateReq := &dto.UpdateTicketRequest{
 		Title:       req.Title,
 		Description: req.Description,
 		Category:    req.Category,
@@ -503,7 +426,7 @@ func (h *AdminTicketHandler) UpdateTicket(c *gin.Context) {
 	// Convert to response format and populate user data
 	ticketResponse := ticket.ToResponse()
 	if user, err := h.userService.GetUserByID(c.Request.Context(), ticket.UserID); err == nil {
-		ticketResponse.User = &dto.UserBasicDTO{
+		ticketResponse.User = &sharedDTO.UserBasicDTO{
 			ID:       user.ID,
 			Email:    user.Email,
 			Username: user.Username,
@@ -529,7 +452,7 @@ func (h *AdminTicketHandler) UpdateTicket(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
-// @Param assignment body AssignTicketRequest true "Assignment data"
+// @Param assignment body dto.AssignTicketRequest true "Assignment data"
 // @Success 200 {object} response.StandardResponse{data=entities.TicketResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -545,7 +468,7 @@ func (h *AdminTicketHandler) AssignTicket(c *gin.Context) {
 		return
 	}
 
-	var req AssignTicketRequest
+	var req dto.AssignTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -567,7 +490,7 @@ func (h *AdminTicketHandler) AssignTicket(c *gin.Context) {
 	}
 
 	// Assign ticket
-	assignReq := &ticketInterfaces.AssignTicketRequest{
+	assignReq := &dto.AssignTicketRequest{
 		AssignedToID: req.AssignedToID,
 	}
 
@@ -588,9 +511,9 @@ func (h *AdminTicketHandler) AssignTicket(c *gin.Context) {
 
 	// Add internal note if provided
 	if req.Note != "" {
-		noteReq := &ticketInterfaces.CreateTicketMessageRequest{
+		noteReq := &dto.CreateTicketMessageRequest{
 			Content:     req.Note,
-			MessageType: "system",
+			MessageType: constants.MessageTypeSystem,
 			IsInternal:  true,
 		}
 
@@ -607,7 +530,7 @@ func (h *AdminTicketHandler) AssignTicket(c *gin.Context) {
 	// Convert to response format and populate user data
 	ticketResponse := ticket.ToResponse()
 	if user, err := h.userService.GetUserByID(c.Request.Context(), ticket.UserID); err == nil {
-		ticketResponse.User = &dto.UserBasicDTO{
+		ticketResponse.User = &sharedDTO.UserBasicDTO{
 			ID:       user.ID,
 			Email:    user.Email,
 			Username: user.Username,
@@ -619,7 +542,7 @@ func (h *AdminTicketHandler) AssignTicket(c *gin.Context) {
 		}
 	}
 
-	ticketResponse.AssignedTo = &dto.UserBasicDTO{
+	ticketResponse.AssignedTo = &sharedDTO.UserBasicDTO{
 		ID:       assignedUser.ID,
 		Email:    assignedUser.Email,
 		Username: assignedUser.Username,
@@ -645,7 +568,7 @@ func (h *AdminTicketHandler) AssignTicket(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
-// @Param escalation body EscalateTicketRequest true "Escalation data"
+// @Param escalation body dto.EscalateTicketRequest true "Escalation data"
 // @Success 200 {object} response.StandardResponse{data=entities.TicketResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -661,7 +584,7 @@ func (h *AdminTicketHandler) EscalateTicket(c *gin.Context) {
 		return
 	}
 
-	var req EscalateTicketRequest
+	var req dto.EscalateTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -693,7 +616,7 @@ func (h *AdminTicketHandler) EscalateTicket(c *gin.Context) {
 	}
 
 	// Update priority if specified
-	updateReq := &ticketInterfaces.UpdateTicketRequest{}
+	updateReq := &dto.UpdateTicketRequest{}
 	if req.Priority != nil {
 		updateReq.Priority = req.Priority
 	}
@@ -711,7 +634,7 @@ func (h *AdminTicketHandler) EscalateTicket(c *gin.Context) {
 	}
 
 	// Reassign ticket
-	assignReq := &ticketInterfaces.AssignTicketRequest{
+	assignReq := &dto.AssignTicketRequest{
 		AssignedToID: req.EscalatedToID,
 	}
 
@@ -727,9 +650,9 @@ func (h *AdminTicketHandler) EscalateTicket(c *gin.Context) {
 
 	// Add escalation note
 	escalationNote := "Ticket escalated. Reason: " + req.EscalationReason
-	noteReq := &ticketInterfaces.CreateTicketMessageRequest{
+	noteReq := &dto.CreateTicketMessageRequest{
 		Content:     escalationNote,
-		MessageType: "system",
+		MessageType: constants.MessageTypeSystem,
 		IsInternal:  true,
 	}
 
@@ -744,7 +667,7 @@ func (h *AdminTicketHandler) EscalateTicket(c *gin.Context) {
 	// Convert to response format and populate user data
 	ticketResponse := ticket.ToResponse()
 	if user, err := h.userService.GetUserByID(c.Request.Context(), ticket.UserID); err == nil {
-		ticketResponse.User = &dto.UserBasicDTO{
+		ticketResponse.User = &sharedDTO.UserBasicDTO{
 			ID:       user.ID,
 			Email:    user.Email,
 			Username: user.Username,
@@ -756,7 +679,7 @@ func (h *AdminTicketHandler) EscalateTicket(c *gin.Context) {
 		}
 	}
 
-	ticketResponse.AssignedTo = &dto.UserBasicDTO{
+	ticketResponse.AssignedTo = &sharedDTO.UserBasicDTO{
 		ID:       escalatedUser.ID,
 		Email:    escalatedUser.Email,
 		Username: escalatedUser.Username,
@@ -814,7 +737,7 @@ func (h *AdminTicketHandler) CloseTicket(c *gin.Context) {
 	// Convert to response format and populate user data
 	ticketResponse := ticket.ToResponse()
 	if user, err := h.userService.GetUserByID(c.Request.Context(), ticket.UserID); err == nil {
-		ticketResponse.User = &dto.UserBasicDTO{
+		ticketResponse.User = &sharedDTO.UserBasicDTO{
 			ID:       user.ID,
 			Email:    user.Email,
 			Username: user.Username,
@@ -872,7 +795,7 @@ func (h *AdminTicketHandler) ReopenTicket(c *gin.Context) {
 	// Convert to response format and populate user data
 	ticketResponse := ticket.ToResponse()
 	if user, err := h.userService.GetUserByID(c.Request.Context(), ticket.UserID); err == nil {
-		ticketResponse.User = &dto.UserBasicDTO{
+		ticketResponse.User = &sharedDTO.UserBasicDTO{
 			ID:       user.ID,
 			Email:    user.Email,
 			Username: user.Username,
@@ -938,7 +861,7 @@ func (h *AdminTicketHandler) GetTicketMessages(c *gin.Context) {
 		return
 	}
 
-	req := &ticketInterfaces.GetTicketMessagesRequest{
+	req := &dto.GetTicketMessagesRequest{
 		TicketID:        uint(ticketID),
 		IncludeInternal: includeInternal,
 		Limit:           limit,
@@ -961,7 +884,7 @@ func (h *AdminTicketHandler) GetTicketMessages(c *gin.Context) {
 		
 		// Populate user data
 		if user, err := h.userService.GetUserByID(c.Request.Context(), message.UserID); err == nil {
-			responses[i].User = &dto.UserBasicDTO{
+			responses[i].User = &sharedDTO.UserBasicDTO{
 				ID:       user.ID,
 				Email:    user.Email,
 				Username: user.Username,
@@ -985,7 +908,7 @@ func (h *AdminTicketHandler) GetTicketMessages(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
-// @Param message body AdminTicketMessageRequest true "Message data"
+// @Param message body dto.AdminTicketMessageRequest true "Message data"
 // @Success 201 {object} response.StandardResponse{data=entities.TicketMessageResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -1001,7 +924,7 @@ func (h *AdminTicketHandler) AddMessage(c *gin.Context) {
 		return
 	}
 
-	var req AdminTicketMessageRequest
+	var req dto.AdminTicketMessageRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -1027,7 +950,7 @@ func (h *AdminTicketHandler) AddMessage(c *gin.Context) {
 		messageType = "admin"
 	}
 
-	createReq := &ticketInterfaces.CreateTicketMessageRequest{
+	createReq := &dto.CreateTicketMessageRequest{
 		Content:     req.Content,
 		MessageType: messageType,
 		IsInternal:  req.IsInternal,
@@ -1047,7 +970,7 @@ func (h *AdminTicketHandler) AddMessage(c *gin.Context) {
 	// Convert to response format and populate user data
 	messageResponse := message.ToResponse()
 	if user, err := h.userService.GetUserByID(c.Request.Context(), message.UserID); err == nil {
-		messageResponse.User = &dto.UserBasicDTO{
+		messageResponse.User = &sharedDTO.UserBasicDTO{
 			ID:       user.ID,
 			Email:    user.Email,
 			Username: user.Username,
@@ -1101,7 +1024,7 @@ func (h *AdminTicketHandler) GetMessage(c *gin.Context) {
 	// Convert to response format and populate user data
 	messageResponse := message.ToResponse()
 	if user, err := h.userService.GetUserByID(c.Request.Context(), message.UserID); err == nil {
-		messageResponse.User = &dto.UserBasicDTO{
+		messageResponse.User = &sharedDTO.UserBasicDTO{
 			ID:       user.ID,
 			Email:    user.Email,
 			Username: user.Username,
@@ -1141,7 +1064,7 @@ func (h *AdminTicketHandler) UpdateMessage(c *gin.Context) {
 		return
 	}
 
-	var req ticketInterfaces.UpdateTicketMessageRequest
+	var req dto.UpdateTicketMessageRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -1164,7 +1087,7 @@ func (h *AdminTicketHandler) UpdateMessage(c *gin.Context) {
 	// Convert to response format and populate user data
 	messageResponse := message.ToResponse()
 	if user, err := h.userService.GetUserByID(c.Request.Context(), message.UserID); err == nil {
-		messageResponse.User = &dto.UserBasicDTO{
+		messageResponse.User = &sharedDTO.UserBasicDTO{
 			ID:       user.ID,
 			Email:    user.Email,
 			Username: user.Username,
@@ -1234,7 +1157,7 @@ func (h *AdminTicketHandler) DeleteMessage(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
-// @Param note body AdminTicketMessageRequest true "Internal note data"
+// @Param note body dto.AdminTicketMessageRequest true "Internal note data"
 // @Success 201 {object} response.StandardResponse{data=entities.TicketMessageResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -1250,7 +1173,7 @@ func (h *AdminTicketHandler) AddInternalNote(c *gin.Context) {
 		return
 	}
 
-	var req AdminTicketMessageRequest
+	var req dto.AdminTicketMessageRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -1282,7 +1205,7 @@ func (h *AdminTicketHandler) AddInternalNote(c *gin.Context) {
 	// Convert to response format and populate user data
 	messageResponse := message.ToResponse()
 	if user, err := h.userService.GetUserByID(c.Request.Context(), message.UserID); err == nil {
-		messageResponse.User = &dto.UserBasicDTO{
+		messageResponse.User = &sharedDTO.UserBasicDTO{
 			ID:       user.ID,
 			Email:    user.Email,
 			Username: user.Username,
@@ -1326,7 +1249,7 @@ func (h *AdminTicketHandler) AddInternalNote(c *gin.Context) {
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /admin/tickets/search [get]
 func (h *AdminTicketHandler) SearchTickets(c *gin.Context) {
-	var req TicketSearchRequest
+	var req dto.TicketSearchRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -1341,7 +1264,7 @@ func (h *AdminTicketHandler) SearchTickets(c *gin.Context) {
 	}
 
 	// Convert to service request format
-	serviceReq := &ticketInterfaces.GetTicketsRequest{
+	serviceReq := &dto.GetTicketsRequest{
 		UserID:       req.UserID,
 		AssignedToID: req.AssignedToID,
 		Status:       req.Status,
@@ -1368,7 +1291,7 @@ func (h *AdminTicketHandler) SearchTickets(c *gin.Context) {
 		
 		// Populate user data
 		if user, err := h.userService.GetUserByID(c.Request.Context(), ticket.UserID); err == nil {
-			responses[i].User = &dto.UserBasicDTO{
+			responses[i].User = &sharedDTO.UserBasicDTO{
 				ID:       user.ID,
 				Email:    user.Email,
 				Username: user.Username,
@@ -1383,7 +1306,7 @@ func (h *AdminTicketHandler) SearchTickets(c *gin.Context) {
 		// Populate assigned user data if available
 		if ticket.AssignedToID != nil {
 			if assignedUser, err := h.userService.GetUserByID(c.Request.Context(), *ticket.AssignedToID); err == nil {
-				responses[i].AssignedTo = &dto.UserBasicDTO{
+				responses[i].AssignedTo = &sharedDTO.UserBasicDTO{
 					ID:       assignedUser.ID,
 					Email:    assignedUser.Email,
 					Username: assignedUser.Username,
@@ -1452,7 +1375,7 @@ func (h *AdminTicketHandler) GetStatistics(c *gin.Context) {
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /admin/tickets/analytics [get]
 func (h *AdminTicketHandler) GetAnalytics(c *gin.Context) {
-	var req TicketAnalyticsRequest
+	var req dto.TicketAnalyticsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -1537,10 +1460,10 @@ func (h *AdminTicketHandler) GetAgents(c *gin.Context) {
 	}
 
 	// Filter only admin users
-	agents := make([]*dto.UserBasicDTO, 0)
+	agents := make([]*sharedDTO.UserBasicDTO, 0)
 	for _, user := range users {
 		if user.Role == "admin" {
-			agents = append(agents, &dto.UserBasicDTO{
+			agents = append(agents, &sharedDTO.UserBasicDTO{
 				ID:       user.ID,
 				Email:    user.Email,
 				Username: user.Username,
@@ -1563,7 +1486,7 @@ func (h *AdminTicketHandler) GetAgents(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param assignment body BulkTicketActionRequest true "Bulk assignment data"
+// @Param assignment body dto.BulkTicketActionRequest true "Bulk assignment data"
 // @Success 200 {object} response.StandardResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -1571,7 +1494,7 @@ func (h *AdminTicketHandler) GetAgents(c *gin.Context) {
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /admin/tickets/bulk/assign [post]
 func (h *AdminTicketHandler) BulkAssignTickets(c *gin.Context) {
-	var req BulkTicketActionRequest
+	var req dto.BulkTicketActionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -1628,7 +1551,7 @@ func (h *AdminTicketHandler) BulkAssignTickets(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param update body BulkTicketActionRequest true "Bulk status update data"
+// @Param update body dto.BulkTicketActionRequest true "Bulk status update data"
 // @Success 200 {object} response.StandardResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -1636,7 +1559,7 @@ func (h *AdminTicketHandler) BulkAssignTickets(c *gin.Context) {
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /admin/tickets/bulk/status [post]
 func (h *AdminTicketHandler) BulkUpdateStatus(c *gin.Context) {
-	var req BulkTicketActionRequest
+	var req dto.BulkTicketActionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -1681,7 +1604,7 @@ func (h *AdminTicketHandler) BulkUpdateStatus(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param closure body BulkTicketActionRequest true "Bulk closure data"
+// @Param closure body dto.BulkTicketActionRequest true "Bulk closure data"
 // @Success 200 {object} response.StandardResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -1689,7 +1612,7 @@ func (h *AdminTicketHandler) BulkUpdateStatus(c *gin.Context) {
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /admin/tickets/bulk/close [post]
 func (h *AdminTicketHandler) BulkCloseTickets(c *gin.Context) {
-	var req BulkTicketActionRequest
+	var req dto.BulkTicketActionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -1701,7 +1624,7 @@ func (h *AdminTicketHandler) BulkCloseTickets(c *gin.Context) {
 	}
 
 	// Bulk close tickets by updating status to closed
-	err := h.ticketService.BulkUpdateTicketStatus(c.Request.Context(), req.TicketIDs, entities.TicketStatusClosed)
+	err := h.ticketService.BulkUpdateTicketStatus(c.Request.Context(), req.TicketIDs, constants.TicketStatusClosed)
 	if err != nil {
 		logger.Error("Admin failed to bulk close tickets",
 			logger.Any("ticket_ids", req.TicketIDs),

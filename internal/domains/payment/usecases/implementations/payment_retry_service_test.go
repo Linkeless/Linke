@@ -10,6 +10,8 @@ import (
 	"github.com/stretchr/testify/mock"
 	"gorm.io/gorm"
 
+	"linke/internal/domains/payment/constants"
+	"linke/internal/domains/payment/dto"
 	"linke/internal/domains/payment/entities"
 	"linke/internal/domains/payment/usecases/interfaces"
 	"linke/internal/shared/queue"
@@ -68,14 +70,14 @@ func (m *MockPaymentRetryRepository) GetRetriesForUser(ctx context.Context, user
 	return args.Get(0).([]*entities.PaymentRetry), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockPaymentRetryRepository) GetRetryStatsByGateway(ctx context.Context, gateway string, fromDate, toDate time.Time) (*interfaces.RetryStatistics, error) {
+func (m *MockPaymentRetryRepository) GetRetryStatsByGateway(ctx context.Context, gateway string, fromDate, toDate time.Time) (*dto.RetryStatistics, error) {
 	args := m.Called(ctx, gateway, fromDate, toDate)
-	return args.Get(0).(*interfaces.RetryStatistics), args.Error(1)
+	return args.Get(0).(*dto.RetryStatistics), args.Error(1)
 }
 
-func (m *MockPaymentRetryRepository) GetRetryStatsByDate(ctx context.Context, fromDate, toDate time.Time) ([]*interfaces.DailyRetryStats, error) {
+func (m *MockPaymentRetryRepository) GetRetryStatsByDate(ctx context.Context, fromDate, toDate time.Time) ([]*dto.DailyRetryStats, error) {
 	args := m.Called(ctx, fromDate, toDate)
-	return args.Get(0).([]*interfaces.DailyRetryStats), args.Error(1)
+	return args.Get(0).([]*dto.DailyRetryStats), args.Error(1)
 }
 
 func (m *MockPaymentRetryRepository) GetRetrySuccessRate(ctx context.Context, gateway string, days int) (float64, error) {
@@ -83,7 +85,7 @@ func (m *MockPaymentRetryRepository) GetRetrySuccessRate(ctx context.Context, ga
 	return args.Get(0).(float64), args.Error(1)
 }
 
-func (m *MockPaymentRetryRepository) GetAllRetries(ctx context.Context, filters *interfaces.RetryFilters, limit, offset int) ([]*entities.PaymentRetry, int64, error) {
+func (m *MockPaymentRetryRepository) GetAllRetries(ctx context.Context, filters *dto.RetryFilters, limit, offset int) ([]*entities.PaymentRetry, int64, error) {
 	args := m.Called(ctx, filters, limit, offset)
 	return args.Get(0).([]*entities.PaymentRetry), args.Get(1).(int64), args.Error(2)
 }
@@ -277,14 +279,14 @@ func (m *MockPaymentRetryHistoryRepository) GetAttemptsForPayment(ctx context.Co
 	return args.Get(0).([]*entities.PaymentRetryHistory), args.Error(1)
 }
 
-func (m *MockPaymentRetryHistoryRepository) GetAttemptStatistics(ctx context.Context, retryID uint) (*interfaces.AttemptStatistics, error) {
+func (m *MockPaymentRetryHistoryRepository) GetAttemptStatistics(ctx context.Context, retryID uint) (*dto.AttemptStatistics, error) {
 	args := m.Called(ctx, retryID)
-	return args.Get(0).(*interfaces.AttemptStatistics), args.Error(1)
+	return args.Get(0).(*dto.AttemptStatistics), args.Error(1)
 }
 
-func (m *MockPaymentRetryHistoryRepository) GetFailurePatterns(ctx context.Context, gateway string, days int) ([]*interfaces.FailurePattern, error) {
+func (m *MockPaymentRetryHistoryRepository) GetFailurePatterns(ctx context.Context, gateway string, days int) ([]*dto.FailurePattern, error) {
 	args := m.Called(ctx, gateway, days)
-	return args.Get(0).([]*interfaces.FailurePattern), args.Error(1)
+	return args.Get(0).([]*dto.FailurePattern), args.Error(1)
 }
 
 // Methods from Repository interface
@@ -426,7 +428,7 @@ func (m *MockPaymentService) GetGateway(name string) (interfaces.PaymentGateway,
 	return args.Get(0).(interfaces.PaymentGateway), args.Error(1)
 }
 
-func (m *MockPaymentService) CreatePaymentOrder(ctx context.Context, req *interfaces.CreatePaymentOrderRequest) (*entities.PaymentRecord, error) {
+func (m *MockPaymentService) CreatePaymentOrder(ctx context.Context, req *dto.CreatePaymentOrderRequest) (*entities.PaymentRecord, error) {
 	args := m.Called(ctx, req)
 	return args.Get(0).(*entities.PaymentRecord), args.Error(1)
 }
@@ -510,10 +512,10 @@ func TestPaymentRetryService_InitiateRetry(t *testing.T) {
 	ctx := context.Background()
 	paymentRecord := &entities.PaymentRecord{
 		ID:            1,
-		Gateway:       entities.PaymentGatewayEpay,
-		PaymentMethod: entities.PaymentMethodAlipay,
+		Gateway:       constants.PaymentGatewayEpay,
+		PaymentMethod: constants.PaymentMethodAlipay,
 		Amount:        100.0,
-		Currency:      entities.CurrencyCNY,
+		Currency:      constants.CurrencyCNY,
 	}
 
 	// Test case: New retry
@@ -521,14 +523,14 @@ func TestPaymentRetryService_InitiateRetry(t *testing.T) {
 	mockRetryRepo.On("Create", ctx, mock.AnythingOfType("*entities.PaymentRetry")).Return(nil)
 	mockTaskQueue.On("EnqueueDelayed", ctx, "payment_retries", mock.AnythingOfType("*queue.Task"), mock.AnythingOfType("time.Duration")).Return(nil)
 
-	retry, err := service.InitiateRetry(ctx, paymentRecord, entities.FailureTypeTemporary, "NETWORK_ERROR", "Network timeout")
+	retry, err := service.InitiateRetry(ctx, paymentRecord, constants.FailureTypeTemporary, "NETWORK_ERROR", "Network timeout")
 
 	assert.NoError(t, err)
 	assert.NotNil(t, retry)
 	assert.Equal(t, uint(1), retry.PaymentRecordID)
-	assert.Equal(t, entities.FailureTypeTemporary, retry.FailureType)
+	assert.Equal(t, constants.FailureTypeTemporary, retry.FailureType)
 	assert.Equal(t, "NETWORK_ERROR", retry.LastFailureCode)
-	assert.Equal(t, entities.PaymentRetryStatusPending, retry.Status)
+	assert.Equal(t, constants.PaymentRetryStatusPending, retry.Status)
 
 	mockRetryRepo.AssertExpectations(t)
 	mockTaskQueue.AssertExpectations(t)
@@ -562,35 +564,35 @@ func TestPaymentRetryService_ClassifyFailure(t *testing.T) {
 	}{
 		{
 			name:          "Permanent failure - invalid card",
-			gateway:       entities.PaymentGatewayEpay,
-			paymentMethod: entities.PaymentMethodAlipay,
+			gateway:       constants.PaymentGatewayEpay,
+			paymentMethod: constants.PaymentMethodAlipay,
 			errorCode:     "INVALID_CARD",
 			errorMessage:  "Invalid card number",
-			expected:      entities.FailureTypePermanent,
+			expected:      constants.FailureTypePermanent,
 		},
 		{
 			name:          "Network failure",
-			gateway:       entities.PaymentGatewayEpay,
-			paymentMethod: entities.PaymentMethodAlipay,
+			gateway:       constants.PaymentGatewayEpay,
+			paymentMethod: constants.PaymentMethodAlipay,
 			errorCode:     "NETWORK_ERROR",
 			errorMessage:  "Connection timeout",
-			expected:      entities.FailureTypeNetwork,
+			expected:      constants.FailureTypeNetwork,
 		},
 		{
 			name:          "Gateway failure",
-			gateway:       entities.PaymentGatewayEpay,
-			paymentMethod: entities.PaymentMethodAlipay,
+			gateway:       constants.PaymentGatewayEpay,
+			paymentMethod: constants.PaymentMethodAlipay,
 			errorCode:     "GATEWAY_ERROR",
 			errorMessage:  "Gateway temporarily unavailable",
-			expected:      entities.FailureTypeGateway,
+			expected:      constants.FailureTypeGateway,
 		},
 		{
 			name:          "Temporary failure",
-			gateway:       entities.PaymentGatewayEpay,
-			paymentMethod: entities.PaymentMethodAlipay,
+			gateway:       constants.PaymentGatewayEpay,
+			paymentMethod: constants.PaymentMethodAlipay,
 			errorCode:     "UNKNOWN_ERROR",
 			errorMessage:  "Unknown error occurred",
-			expected:      entities.FailureTypeTemporary,
+			expected:      constants.FailureTypeTemporary,
 		},
 	}
 
@@ -620,14 +622,14 @@ func TestPaymentRetryService_GetRetryStrategy(t *testing.T) {
 	ctx := context.Background()
 
 	// Test getting default strategy for known gateway
-	strategy, err := service.GetRetryStrategy(ctx, entities.PaymentGatewayEpay, entities.PaymentMethodAlipay)
+	strategy, err := service.GetRetryStrategy(ctx, constants.PaymentGatewayEpay, constants.PaymentMethodAlipay)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, strategy)
-	assert.Equal(t, entities.PaymentGatewayEpay, strategy.Gateway)
+	assert.Equal(t, constants.PaymentGatewayEpay, strategy.Gateway)
 	assert.Equal(t, 3, strategy.MaxAttempts)
 	assert.Equal(t, 3600, strategy.InitialDelay) // 1 hour
-	assert.Equal(t, entities.RetryStrategyExponential, strategy.Strategy)
+	assert.Equal(t, constants.RetryStrategyExponential, strategy.Strategy)
 }
 
 func TestPaymentRetry_CalculateNextRetryTime(t *testing.T) {
@@ -639,7 +641,7 @@ func TestPaymentRetry_CalculateNextRetryTime(t *testing.T) {
 		InitialDelay:  3600,  // 1 hour
 		MaxDelay:      86400, // 24 hours
 		BackoffFactor: 2.0,
-		RetryStrategy: entities.RetryStrategyExponential,
+		RetryStrategy: constants.RetryStrategyExponential,
 	}
 
 	// First attempt - should be initial delay
@@ -665,7 +667,7 @@ func TestPaymentRetry_ShouldRetry(t *testing.T) {
 			retry: &entities.PaymentRetry{
 				AttemptNumber: 1,
 				MaxAttempts:   3,
-				FailureType:   entities.FailureTypeTemporary,
+				FailureType:   constants.FailureTypeTemporary,
 			},
 			expected: true,
 		},
@@ -674,7 +676,7 @@ func TestPaymentRetry_ShouldRetry(t *testing.T) {
 			retry: &entities.PaymentRetry{
 				AttemptNumber: 1,
 				MaxAttempts:   3,
-				FailureType:   entities.FailureTypePermanent,
+				FailureType:   constants.FailureTypePermanent,
 			},
 			expected: false,
 		},
@@ -683,7 +685,7 @@ func TestPaymentRetry_ShouldRetry(t *testing.T) {
 			retry: &entities.PaymentRetry{
 				AttemptNumber: 3,
 				MaxAttempts:   3,
-				FailureType:   entities.FailureTypeTemporary,
+				FailureType:   constants.FailureTypeTemporary,
 			},
 			expected: false,
 		},
@@ -692,7 +694,7 @@ func TestPaymentRetry_ShouldRetry(t *testing.T) {
 			retry: &entities.PaymentRetry{
 				AttemptNumber: 1,
 				MaxAttempts:   3,
-				FailureType:   entities.FailureTypeNetwork,
+				FailureType:   constants.FailureTypeNetwork,
 			},
 			expected: true,
 		},

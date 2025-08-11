@@ -5,7 +5,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"linke/internal/shared/dto"
+	"linke/internal/domains/referral/constants"
 )
 
 // ReferralReward represents rewards earned from referrals
@@ -71,38 +71,12 @@ func (ReferralReward) TableName() string {
 	return "referral_rewards"
 }
 
-// Reward Type constants
-const (
-	RewardTypeCash         = "cash"
-	RewardTypeCredit       = "credit"
-	RewardTypeBonus        = "bonus"
-	RewardTypeCoupon       = "coupon"
-	RewardTypeSubscription = "subscription"
-	RewardTypeProduct      = "product"
-	RewardTypeService      = "service"
-)
-
-// Reward Status constants (specific to referral rewards)
-const (
-	RewardStatusExpired  = "expired"
-	RewardStatusRejected = "rejected"
-)
-
-// Payment Method constants
-const (
-	PaymentMethodPayPal       = "paypal"
-	PaymentMethodStripe       = "stripe"
-	PaymentMethodBankTransfer = "bank_transfer"
-	PaymentMethodCredit       = "credit"
-	PaymentMethodCrypto       = "crypto"
-	PaymentMethodCheck        = "check"
-)
 
 // IsActive checks if the reward is in an active state
 func (rr *ReferralReward) IsActive() bool {
 	activeStatuses := map[string]bool{
-		RewardStatusPending: true,
-		RewardStatusEarned:  true,
+		constants.RewardStatusPending: true,
+		constants.RewardStatusEarned:  true,
 	}
 	return activeStatuses[rr.Status]
 }
@@ -117,7 +91,7 @@ func (rr *ReferralReward) IsExpired() bool {
 
 // CanBePaid checks if the reward can be paid out
 func (rr *ReferralReward) CanBePaid() bool {
-	if rr.Status != RewardStatusEarned {
+	if rr.Status != constants.RewardStatusEarned {
 		return false
 	}
 	if rr.IsExpired() {
@@ -131,100 +105,12 @@ func (rr *ReferralReward) CanBePaid() bool {
 
 // IsPaymentCompleted checks if payment has been completed
 func (rr *ReferralReward) IsPaymentCompleted() bool {
-	return rr.Status == RewardStatusPaid && rr.PaidAt != nil
+	return rr.Status == constants.RewardStatusPaid && rr.PaidAt != nil
 }
 
-// ReferralRewardResponse represents the referral reward data structure for API responses
-type ReferralRewardResponse struct {
-	ID                uint       `json:"id" example:"1"`
-	ReferralID        uint       `json:"referral_id" example:"1"`
-	UserID            uint       `json:"user_id" example:"2"`
-	CampaignID        *uint      `json:"campaign_id,omitempty" example:"1"`
-	RewardType        string     `json:"reward_type" example:"cash"`
-	RewardAmount      float64    `json:"reward_amount" example:"10.00"`
-	RewardCurrency    string     `json:"reward_currency" example:"USD"`
-	RewardDescription string     `json:"reward_description" example:"Referral bonus for new subscriber"`
-	Status            string     `json:"status" example:"earned"`
-	EarnedAt          *time.Time `json:"earned_at,omitempty" example:"2024-01-01T00:00:00Z"`
-	PaidAt            *time.Time `json:"paid_at,omitempty" example:"2024-01-01T00:00:00Z"`
-	ExpiresAt         *time.Time `json:"expires_at,omitempty" example:"2024-12-31T23:59:59Z"`
-	PaymentMethod     string     `json:"payment_method" example:"paypal"`
-	PaymentReference  string     `json:"payment_reference" example:"PAY-123456789"`
-	ConversionValue   float64    `json:"conversion_value" example:"29.99"`
-	ConversionType    string     `json:"conversion_type" example:"subscription"`
-	ConversionID      *uint      `json:"conversion_id,omitempty" example:"5"`
-	PayoutBatchID     *uint      `json:"payout_batch_id,omitempty" example:"1"`
-	PayoutFee         float64    `json:"payout_fee" example:"0.50"`
-	NetAmount         float64    `json:"net_amount" example:"9.50"`
-	RequiresApproval  bool       `json:"requires_approval" example:"false"`
-	ApprovedAt        *time.Time `json:"approved_at,omitempty" example:"2024-01-01T00:00:00Z"`
-	ApprovedByID      *uint      `json:"approved_by_id,omitempty" example:"1"`
-	RejectedAt        *time.Time `json:"rejected_at,omitempty" example:"2024-01-01T00:00:00Z"`
-	RejectedByID      *uint      `json:"rejected_by_id,omitempty" example:"1"`
-	RejectionReason   string     `json:"rejection_reason" example:"Fraudulent activity detected"`
-	CreatedAt         time.Time  `json:"created_at" example:"2024-01-01T00:00:00Z"`
-	UpdatedAt         time.Time  `json:"updated_at" example:"2024-01-01T00:00:00Z"`
 
-	// Optional related data (to be populated at application layer)
-	Referral   *ReferralResponse         `json:"referral,omitempty"`
-	User       *dto.UserBasicDTO         `json:"user,omitempty"`
-	Campaign   *ReferralCampaignResponse `json:"campaign,omitempty"`
-	ApprovedBy *dto.UserBasicDTO         `json:"approved_by,omitempty"`
-	RejectedBy *dto.UserBasicDTO         `json:"rejected_by,omitempty"`
-}
+// ToResponse should be implemented in service layer to avoid import cycles
+// Use dto.ToReferralRewardResponse(rr) instead
 
-// ToResponse converts ReferralReward to ReferralRewardResponse
-func (rr *ReferralReward) ToResponse() *ReferralRewardResponse {
-	resp := &ReferralRewardResponse{
-		ID:                rr.ID,
-		ReferralID:        rr.ReferralID,
-		UserID:            rr.UserID,
-		CampaignID:        rr.CampaignID,
-		RewardType:        rr.RewardType,
-		RewardAmount:      rr.RewardAmount,
-		RewardCurrency:    rr.RewardCurrency,
-		RewardDescription: rr.RewardDescription,
-		Status:            rr.Status,
-		EarnedAt:          rr.EarnedAt,
-		PaidAt:            rr.PaidAt,
-		ExpiresAt:         rr.ExpiresAt,
-		PaymentMethod:     rr.PaymentMethod,
-		PaymentReference:  rr.PaymentReference,
-		ConversionValue:   rr.ConversionValue,
-		ConversionType:    rr.ConversionType,
-		ConversionID:      rr.ConversionID,
-		PayoutBatchID:     rr.PayoutBatchID,
-		PayoutFee:         rr.PayoutFee,
-		NetAmount:         rr.NetAmount,
-		RequiresApproval:  rr.RequiresApproval,
-		ApprovedAt:        rr.ApprovedAt,
-		ApprovedByID:      rr.ApprovedByID,
-		RejectedAt:        rr.RejectedAt,
-		RejectedByID:      rr.RejectedByID,
-		RejectionReason:   rr.RejectionReason,
-		CreatedAt:         rr.CreatedAt,
-		UpdatedAt:         rr.UpdatedAt,
-	}
-
-	// Note: Related data should be populated at the application layer
-	// to avoid cross-domain dependencies
-
-	return resp
-}
-
-// ToPublicResponse converts ReferralReward to a public response (limited info)
-func (rr *ReferralReward) ToPublicResponse() *ReferralRewardResponse {
-	return &ReferralRewardResponse{
-		ID:                rr.ID,
-		RewardType:        rr.RewardType,
-		RewardAmount:      rr.RewardAmount,
-		RewardCurrency:    rr.RewardCurrency,
-		RewardDescription: rr.RewardDescription,
-		Status:            rr.Status,
-		EarnedAt:          rr.EarnedAt,
-		PaidAt:            rr.PaidAt,
-		ExpiresAt:         rr.ExpiresAt,
-		ConversionType:    rr.ConversionType,
-		CreatedAt:         rr.CreatedAt,
-	}
-}
+// ToPublicResponse should be implemented in service layer to avoid import cycles
+// Use dto.ToReferralRewardResponse(rr) and clean sensitive data instead

@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"linke/internal/domains/payment/constants"
+	"linke/internal/domains/payment/dto"
 	"linke/internal/domains/payment/entities"
 	"linke/internal/domains/payment/usecases/interfaces"
 	"linke/internal/shared/config"
@@ -43,7 +45,7 @@ func (m *MockPaymentService) GetGateway(name string) (interfaces.PaymentGateway,
 	return args.Get(0).(interfaces.PaymentGateway), args.Error(1)
 }
 
-func (m *MockPaymentService) CreatePaymentOrder(ctx context.Context, req *interfaces.CreatePaymentOrderRequest) (*entities.PaymentRecord, error) {
+func (m *MockPaymentService) CreatePaymentOrder(ctx context.Context, req *dto.CreatePaymentOrderRequest) (*entities.PaymentRecord, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -102,7 +104,7 @@ type MockPaymentConfigService struct {
 	mock.Mock
 }
 
-func (m *MockPaymentConfigService) CreatePaymentConfig(ctx context.Context, req *interfaces.CreatePaymentConfigRequest) (*entities.PaymentConfig, error) {
+func (m *MockPaymentConfigService) CreatePaymentConfig(ctx context.Context, req *dto.CreatePaymentConfigRequest) (*entities.PaymentConfig, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -126,7 +128,7 @@ func (m *MockPaymentConfigService) GetPaymentConfigByGateway(ctx context.Context
 	return args.Get(0).(*entities.PaymentConfig), args.Error(1)
 }
 
-func (m *MockPaymentConfigService) UpdatePaymentConfig(ctx context.Context, configID uint, req *interfaces.UpdatePaymentConfigRequest) (*entities.PaymentConfig, error) {
+func (m *MockPaymentConfigService) UpdatePaymentConfig(ctx context.Context, configID uint, req *dto.UpdatePaymentConfigRequest) (*entities.PaymentConfig, error) {
 	args := m.Called(ctx, configID, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -139,7 +141,7 @@ func (m *MockPaymentConfigService) DeletePaymentConfig(ctx context.Context, conf
 	return args.Error(0)
 }
 
-func (m *MockPaymentConfigService) GetPaymentConfigs(ctx context.Context, req *interfaces.GetPaymentConfigsRequest) ([]*entities.PaymentConfig, int64, error) {
+func (m *MockPaymentConfigService) GetPaymentConfigs(ctx context.Context, req *dto.GetPaymentConfigsRequest) ([]*entities.PaymentConfig, int64, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
@@ -189,12 +191,12 @@ func (m *MockPaymentRetryService) ProcessPendingRetries(ctx context.Context, bat
 	return args.Int(0), args.Error(1)
 }
 
-func (m *MockPaymentRetryService) ProcessRetry(ctx context.Context, retryID uint) (*interfaces.RetryResult, error) {
+func (m *MockPaymentRetryService) ProcessRetry(ctx context.Context, retryID uint) (*dto.RetryResult, error) {
 	args := m.Called(ctx, retryID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*interfaces.RetryResult), args.Error(1)
+	return args.Get(0).(*dto.RetryResult), args.Error(1)
 }
 
 func (m *MockPaymentRetryService) CancelRetry(ctx context.Context, retryID uint, reason string) error {
@@ -233,15 +235,15 @@ func (m *MockPaymentRetryService) GetRetryByPaymentID(ctx context.Context, payme
 	return args.Get(0).(*entities.PaymentRetry), args.Error(1)
 }
 
-func (m *MockPaymentRetryService) GetRetryWithHistory(ctx context.Context, retryID uint) (*interfaces.RetryWithHistory, error) {
+func (m *MockPaymentRetryService) GetRetryWithHistory(ctx context.Context, retryID uint) (*dto.RetryWithHistory, error) {
 	args := m.Called(ctx, retryID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*interfaces.RetryWithHistory), args.Error(1)
+	return args.Get(0).(*dto.RetryWithHistory), args.Error(1)
 }
 
-func (m *MockPaymentRetryService) GetActiveRetries(ctx context.Context, filters *interfaces.RetryFilters, limit, offset int) ([]*entities.PaymentRetry, int64, error) {
+func (m *MockPaymentRetryService) GetActiveRetries(ctx context.Context, filters *dto.RetryFilters, limit, offset int) ([]*entities.PaymentRetry, int64, error) {
 	args := m.Called(ctx, filters, limit, offset)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
@@ -257,36 +259,36 @@ func (m *MockPaymentRetryService) GetRetryHistory(ctx context.Context, retryID u
 	return args.Get(0).([]*entities.PaymentRetryHistory), args.Error(1)
 }
 
-func (m *MockPaymentRetryService) GetRetryStatistics(ctx context.Context, gateway string, days int) (*interfaces.RetryStatistics, error) {
+func (m *MockPaymentRetryService) GetRetryStatistics(ctx context.Context, gateway string, days int) (*dto.RetryStatistics, error) {
 	args := m.Called(ctx, gateway, days)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*interfaces.RetryStatistics), args.Error(1)
+	return args.Get(0).(*dto.RetryStatistics), args.Error(1)
 }
 
-func (m *MockPaymentRetryService) GetFailureAnalysis(ctx context.Context, gateway string, days int) (*interfaces.FailureAnalysis, error) {
+func (m *MockPaymentRetryService) GetFailureAnalysis(ctx context.Context, gateway string, days int) (*dto.FailureAnalysis, error) {
 	args := m.Called(ctx, gateway, days)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*interfaces.FailureAnalysis), args.Error(1)
+	return args.Get(0).(*dto.FailureAnalysis), args.Error(1)
 }
 
-func (m *MockPaymentRetryService) GetRetryHealthMetrics(ctx context.Context) (*interfaces.RetryHealthMetrics, error) {
+func (m *MockPaymentRetryService) GetRetryHealthMetrics(ctx context.Context) (*dto.RetryHealthMetrics, error) {
 	args := m.Called(ctx)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*interfaces.RetryHealthMetrics), args.Error(1)
+	return args.Get(0).(*dto.RetryHealthMetrics), args.Error(1)
 }
 
-func (m *MockPaymentRetryService) GetRetriesForAdmin(ctx context.Context, filters *interfaces.AdminRetryFilters) (*interfaces.AdminRetryResponse, error) {
+func (m *MockPaymentRetryService) GetRetriesForAdmin(ctx context.Context, filters *dto.AdminRetryFilters) (*dto.AdminRetryResponse, error) {
 	args := m.Called(ctx, filters)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*interfaces.AdminRetryResponse), args.Error(1)
+	return args.Get(0).(*dto.AdminRetryResponse), args.Error(1)
 }
 
 func (m *MockPaymentRetryService) BulkCancelRetries(ctx context.Context, retryIDs []uint, reason string) error {
@@ -633,7 +635,7 @@ func createTestPaymentRecord() *entities.PaymentRecord {
 		PaymentMethod: "alipay",
 		Amount:        99.99,
 		Currency:      "CNY",
-		Status:        entities.PaymentRecordStatusPending,
+		Status:        constants.PaymentRecordStatusPending,
 		PaymentURL:    "https://payment.example.com/pay/123",
 		CreatedAt:     now,
 		UpdatedAt:     now,
@@ -644,23 +646,23 @@ func createTestPaymentRecord() *entities.PaymentRecord {
 func TestPaymentRecord_SecurityMethods(t *testing.T) {
 	record := createTestPaymentRecord()
 
-	// Test transaction ID masking
-	secureResp := record.ToSecureResponse()
+	// Test secure response conversion using DTO helper
+	secureResp := dto.ToPaymentRecordSecureResponse(record)
 	assert.Equal(t, "TXN******789", secureResp.TransactionID, "Transaction ID should be properly masked")
 
 	// Test secure URL handling for pending payment
 	assert.NotEmpty(t, record.PaymentURL, "Payment URL should be set for test")
 	record.PaymentURL = "https://payment.example.com/pay/123"
-	secureResp = record.ToSecureResponse()
+	secureResp = dto.ToPaymentRecordSecureResponse(record)
 
 	// For pending payments without expiration, URL should be available
-	if record.ExpiredAt == nil && record.Status == entities.PaymentRecordStatusPending {
+	if record.ExpiredAt == nil && record.Status == constants.PaymentRecordStatusPending {
 		assert.NotEmpty(t, secureResp.PaymentURL, "Payment URL should be available for pending payments without expiration")
 	}
 
 	// Test expired payment URL handling
 	expired := time.Now().Add(-1 * time.Hour)
 	record.ExpiredAt = &expired
-	secureRespExpired := record.ToSecureResponse()
+	secureRespExpired := dto.ToPaymentRecordSecureResponse(record)
 	assert.Empty(t, secureRespExpired.PaymentURL, "Payment URL should be empty for expired payments")
 }

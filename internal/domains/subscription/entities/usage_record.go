@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+
+	"linke/internal/domains/subscription/constants"
 )
 
 // UsageRecord represents detailed usage tracking data
@@ -40,33 +42,6 @@ type UsageRecord struct {
 func (UsageRecord) TableName() string {
 	return "usage_records"
 }
-
-// Usage type constants
-const (
-	UsageTypeTraffic     = "traffic"
-	UsageTypeAPICall     = "api_call"
-	UsageTypeStorage     = "storage"
-	UsageTypeBandwidth   = "bandwidth"
-	UsageTypeConnections = "connections"
-)
-
-// Unit constants
-const (
-	UnitBytes = "bytes"
-	UnitCount = "count"
-	UnitMB    = "mb"
-	UnitGB    = "gb"
-	UnitTB    = "tb"
-)
-
-// Source type constants
-const (
-	SourceTypeServer = "server"
-	SourceTypeAPI    = "api"
-	SourceTypeAdmin  = "admin"
-	SourceTypeSystem = "system"
-	SourceTypeUser   = "user"
-)
 
 // UsageAggregation represents aggregated usage data for reporting
 type UsageAggregation struct {
@@ -123,21 +98,6 @@ type UsagePrediction struct {
 	EstimatedDaysLeft  int       `json:"estimated_days_left"` // Days until limit reached
 }
 
-// Prediction type constants
-const (
-	PredictionTypeDaily     = "daily"
-	PredictionTypeWeekly    = "weekly"
-	PredictionTypeMonthly   = "monthly"
-	PredictionTypePeriodEnd = "period_end"
-)
-
-// Trend constants
-const (
-	TrendIncreasing = "increasing"
-	TrendDecreasing = "decreasing"
-	TrendStable     = "stable"
-)
-
 // IsDeleted checks if the usage record is soft deleted
 func (ur *UsageRecord) IsDeleted() bool {
 	return ur.DeletedAt.Valid
@@ -146,13 +106,13 @@ func (ur *UsageRecord) IsDeleted() bool {
 // GetFormattedAmount returns the usage amount in a human-readable format
 func (ur *UsageRecord) GetFormattedAmount() string {
 	switch ur.Unit {
-	case UnitBytes:
+	case constants.UnitBytes:
 		return formatBytes(ur.Amount)
-	case UnitMB:
+	case constants.UnitMB:
 		return formatMB(ur.Amount)
-	case UnitGB:
+	case constants.UnitGB:
 		return formatGB(ur.Amount)
-	case UnitTB:
+	case constants.UnitTB:
 		return formatTB(ur.Amount)
 	default:
 		return formatCount(ur.Amount)

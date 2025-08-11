@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"linke/internal/domains/subscription/constants"
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/domains/subscription/usecases/interfaces"
 	"linke/internal/shared/framework"
@@ -74,7 +75,7 @@ func (r *subscriptionPlanRepository) ListActive(ctx context.Context, limit, offs
 	var total int64
 
 	condition := "status = ?"
-	args := []any{entities.SubscriptionPlanStatusActive}
+	args := []any{constants.SubscriptionPlanStatusActive}
 
 	// Count total active plans
 	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
@@ -184,7 +185,7 @@ func (r *subscriptionPlanRepository) ListPopular(ctx context.Context, limit, off
 	var total int64
 
 	condition := "is_popular = ? AND status = ? AND is_visible = ?"
-	args := []any{true, entities.SubscriptionPlanStatusActive, true}
+	args := []any{true, constants.SubscriptionPlanStatusActive, true}
 
 	// Count total popular plans
 	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
@@ -210,7 +211,7 @@ func (r *subscriptionPlanRepository) ListRecommended(ctx context.Context, limit,
 	var total int64
 
 	condition := "is_recommended = ? AND status = ? AND is_visible = ?"
-	args := []any{true, entities.SubscriptionPlanStatusActive, true}
+	args := []any{true, constants.SubscriptionPlanStatusActive, true}
 
 	// Count total recommended plans
 	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
@@ -236,7 +237,7 @@ func (r *subscriptionPlanRepository) ListPublic(ctx context.Context, limit, offs
 	var total int64
 
 	condition := "status = ? AND is_visible = ?"
-	args := []any{entities.SubscriptionPlanStatusActive, true}
+	args := []any{constants.SubscriptionPlanStatusActive, true}
 
 	// Count total public plans
 	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
@@ -262,7 +263,7 @@ func (r *subscriptionPlanRepository) ListPublicByCurrency(ctx context.Context, c
 	var total int64
 
 	condition := "status = ? AND is_visible = ? AND currency = ?"
-	args := []any{entities.SubscriptionPlanStatusActive, true, currency}
+	args := []any{constants.SubscriptionPlanStatusActive, true, currency}
 
 	// Count total public plans by currency
 	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
@@ -327,7 +328,7 @@ func (r *subscriptionPlanRepository) ListByPriceRange(ctx context.Context, minPr
 // GetCheapest gets the cheapest plan for a currency
 func (r *subscriptionPlanRepository) GetCheapest(ctx context.Context, currency string) (*entities.SubscriptionPlan, error) {
 	var plan entities.SubscriptionPlan
-	if err := r.GetDB().WithContext(ctx).Where("currency = ? AND status = ?", currency, entities.SubscriptionPlanStatusActive).
+	if err := r.GetDB().WithContext(ctx).Where("currency = ? AND status = ?", currency, constants.SubscriptionPlanStatusActive).
 		Order("price ASC").First(&plan).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("no plans found for currency %s", currency)
@@ -344,7 +345,7 @@ func (r *subscriptionPlanRepository) GetCheapest(ctx context.Context, currency s
 // GetMostExpensive gets the most expensive plan for a currency
 func (r *subscriptionPlanRepository) GetMostExpensive(ctx context.Context, currency string) (*entities.SubscriptionPlan, error) {
 	var plan entities.SubscriptionPlan
-	if err := r.GetDB().WithContext(ctx).Where("currency = ? AND status = ?", currency, entities.SubscriptionPlanStatusActive).
+	if err := r.GetDB().WithContext(ctx).Where("currency = ? AND status = ?", currency, constants.SubscriptionPlanStatusActive).
 		Order("price DESC").First(&plan).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("no plans found for currency %s", currency)

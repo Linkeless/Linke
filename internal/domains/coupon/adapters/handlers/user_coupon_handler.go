@@ -3,15 +3,15 @@ package handlers
 import (
 	"strconv"
 
-	"linke/internal/domains/coupon/entities"
+	"github.com/gin-gonic/gin"
+
+	"linke/internal/domains/coupon/dto"
 	"linke/internal/domains/coupon/usecases/interfaces"
 	userEntities "linke/internal/domains/user/entities"
 	authInterfaces "linke/internal/domains/auth/usecases/interfaces"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/middleware"
 	"linke/internal/shared/response"
-
-	"github.com/gin-gonic/gin"
 )
 
 // UserCouponHandler handles user coupon operations
@@ -28,13 +28,6 @@ func NewUserCouponHandler(couponService interfaces.CouponService, authService au
 	}
 }
 
-// ValidateCouponRequest represents the request body for validating a coupon
-type ValidateCouponRequest struct {
-	Code        string  `json:"code" binding:"required" example:"SAVE20"`
-	OrderAmount float64 `json:"order_amount" binding:"required,min=0" example:"29.99"`
-	PlanID      uint64  `json:"plan_id" binding:"required" example:"1"`
-	Currency    string  `json:"currency" binding:"required,len=3" example:"USD"`
-}
 
 // GetPublicCoupons godoc
 // @Summary Get public coupons
@@ -43,7 +36,7 @@ type ValidateCouponRequest struct {
 // @Accept json
 // @Produce json
 // @Param limit query int false "Limit results" minimum(1) maximum(50) default(10) example(10)
-// @Success 200 {object} response.StandardResponse{data=[]entities.CouponResponse}
+// @Success 200 {object} response.StandardResponse{data=[]dto.CouponResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /coupons [get]
@@ -67,9 +60,9 @@ func (h *UserCouponHandler) GetPublicCoupons(c *gin.Context) {
 	}
 
 	// Convert to public response format (without sensitive info)
-	var couponResponses []*entities.CouponResponse
+	var couponResponses []*dto.CouponResponse
 	for _, coupon := range coupons {
-		couponResponses = append(couponResponses, coupon.ToPublicResponse())
+		couponResponses = append(couponResponses, dto.ToPublicResponse(coupon))
 	}
 
 	response.OK(c, "Public coupons retrieved successfully", couponResponses)
@@ -82,8 +75,8 @@ func (h *UserCouponHandler) GetPublicCoupons(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param coupon body ValidateCouponRequest true "Coupon validation data"
-// @Success 200 {object} response.StandardResponse{data=interfaces.ValidateCouponResponse}
+// @Param coupon body dto.ValidateCouponRequest true "Coupon validation data"
+// @Success 200 {object} response.StandardResponse{data=dto.ValidateCouponResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 404 {object} response.NotFoundResponse
@@ -104,23 +97,17 @@ func (h *UserCouponHandler) ValidateCoupon(c *gin.Context) {
 	}
 
 	// Bind request
-	var req ValidateCouponRequest
+	var req dto.ValidateCouponRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "Invalid request data", err.Error())
 		return
 	}
 
-	// Convert to service request
-	serviceReq := &interfaces.ValidateCouponRequest{
-		Code:        req.Code,
-		UserID:      uint64(user.ID),
-		OrderAmount: req.OrderAmount,
-		PlanID:      req.PlanID,
-		Currency:    req.Currency,
-	}
+	// Add user ID to request
+	req.UserID = uint64(user.ID)
 
 	// Validate coupon
-	validationResponse, err := h.couponService.ValidateCoupon(c.Request.Context(), serviceReq)
+	validationResponse, err := h.couponService.ValidateCoupon(c.Request.Context(), &req)
 	if err != nil {
 		logger.Error("Failed to validate coupon",
 			logger.String("code", req.Code),
@@ -156,7 +143,7 @@ func (h *UserCouponHandler) ValidateCoupon(c *gin.Context) {
 // @Security BearerAuth
 // @Param page query int false "Page number" minimum(1) default(1) example(1)
 // @Param limit query int false "Items per page" minimum(1) maximum(100) default(10) example(10)
-// @Success 200 {object} response.PaginatedResponse{data=[]entities.CouponUsageResponse}
+// @Success 200 {object} response.PaginatedResponse{data=[]dto.CouponUsageResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -200,9 +187,9 @@ func (h *UserCouponHandler) GetMyCouponUsage(c *gin.Context) {
 	}
 
 	// Convert to responses
-	var usageResponses []*entities.CouponUsageResponse
+	var usageResponses []*dto.CouponUsageResponse
 	for _, usage := range usageRecords {
-		usageResponses = append(usageResponses, usage.ToResponse())
+		usageResponses = append(usageResponses, dto.CouponUsageToResponse(usage))
 	}
 
 	response.OKPaginated(c, "Coupon usage history retrieved successfully", usageResponses, total, limit, offset)

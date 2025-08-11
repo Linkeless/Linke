@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	paymentEntities "linke/internal/domains/payment/entities"
+	paymentDto "linke/internal/domains/payment/dto"
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/domains/subscription/usecases/interfaces"
 	userEntities "linke/internal/domains/user/entities"
@@ -92,7 +92,7 @@ func TestQuickPurchaseHandler_QuickPurchase(t *testing.T) {
 
 		// Mock service response
 		expectedResponse := &interfaces.QuickPurchaseResponse{
-			PaymentRecord: &paymentEntities.PaymentRecordResponse{
+			PaymentRecord: &paymentDto.PaymentRecordResponse{
 				PaymentNo: "PAY123456789",
 			},
 			PaymentURL: "https://payment.example.com/pay/123",

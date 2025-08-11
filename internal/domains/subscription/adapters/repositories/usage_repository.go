@@ -7,6 +7,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"linke/internal/domains/subscription/constants"
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/domains/subscription/usecases/interfaces"
 )
@@ -134,16 +135,16 @@ func (r *usageRepository) GetUsageAggregations(ctx context.Context, filter inter
 	groupByClause := "user_subscription_id, usage_type"
 
 	switch filter.Period {
-	case interfaces.PeriodHourly:
+	case constants.PeriodHourly:
 		selectClause += ", DATE_FORMAT(timestamp, '%Y-%m-%d %H:00:00') as period_start"
 		groupByClause += ", DATE_FORMAT(timestamp, '%Y-%m-%d %H:00:00')"
-	case interfaces.PeriodDaily:
+	case constants.PeriodDaily:
 		selectClause += ", DATE(timestamp) as period_start"
 		groupByClause += ", DATE(timestamp)"
-	case interfaces.PeriodWeekly:
+	case constants.PeriodWeekly:
 		selectClause += ", DATE_SUB(DATE(timestamp), INTERVAL WEEKDAY(timestamp) DAY) as period_start"
 		groupByClause += ", DATE_SUB(DATE(timestamp), INTERVAL WEEKDAY(timestamp) DAY)"
-	case interfaces.PeriodMonthly:
+	case constants.PeriodMonthly:
 		selectClause += ", DATE_FORMAT(timestamp, '%Y-%m-01') as period_start"
 		groupByClause += ", DATE_FORMAT(timestamp, '%Y-%m-01')"
 	default:
@@ -213,13 +214,13 @@ func (r *usageRepository) GetUsageAggregations(ctx context.Context, filter inter
 	for i, result := range results {
 		periodEnd := result.PeriodStart
 		switch filter.Period {
-		case interfaces.PeriodHourly:
+		case constants.PeriodHourly:
 			periodEnd = result.PeriodStart.Add(time.Hour)
-		case interfaces.PeriodDaily:
+		case constants.PeriodDaily:
 			periodEnd = result.PeriodStart.AddDate(0, 0, 1)
-		case interfaces.PeriodWeekly:
+		case constants.PeriodWeekly:
 			periodEnd = result.PeriodStart.AddDate(0, 0, 7)
-		case interfaces.PeriodMonthly:
+		case constants.PeriodMonthly:
 			periodEnd = result.PeriodStart.AddDate(0, 1, 0)
 		}
 
@@ -252,14 +253,14 @@ func (r *usageRepository) GetUsageSummary(ctx context.Context, filter interfaces
 		periodEnd = *filter.PeriodEnd
 	} else {
 		switch filter.Period {
-		case interfaces.PeriodDaily:
+		case constants.PeriodDaily:
 			periodStart = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 			periodEnd = periodStart.AddDate(0, 0, 1)
-		case interfaces.PeriodWeekly:
+		case constants.PeriodWeekly:
 			weekday := int(now.Weekday())
 			periodStart = now.AddDate(0, 0, -weekday).Truncate(24 * time.Hour)
 			periodEnd = periodStart.AddDate(0, 0, 7)
-		case interfaces.PeriodMonthly:
+		case constants.PeriodMonthly:
 			periodStart = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
 			periodEnd = periodStart.AddDate(0, 1, 0)
 		default:

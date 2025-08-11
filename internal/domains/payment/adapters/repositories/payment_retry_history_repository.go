@@ -6,6 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"linke/internal/domains/payment/dto"
 	"linke/internal/domains/payment/entities"
 	"linke/internal/domains/payment/usecases/interfaces"
 	"linke/internal/shared/framework"
@@ -68,7 +69,7 @@ func (r *paymentRetryHistoryRepository) GetAttemptsForPayment(ctx context.Contex
 
 // Statistics
 
-func (r *paymentRetryHistoryRepository) GetAttemptStatistics(ctx context.Context, retryID uint) (*interfaces.AttemptStatistics, error) {
+func (r *paymentRetryHistoryRepository) GetAttemptStatistics(ctx context.Context, retryID uint) (*dto.AttemptStatistics, error) {
 	var stats struct {
 		TotalAttempts   int     `gorm:"column:total_attempts"`
 		SuccessfulCount int     `gorm:"column:successful_count"`
@@ -96,7 +97,7 @@ func (r *paymentRetryHistoryRepository) GetAttemptStatistics(ctx context.Context
 		return nil, fmt.Errorf("failed to get attempt statistics: %w", err)
 	}
 
-	return &interfaces.AttemptStatistics{
+	return &dto.AttemptStatistics{
 		RetryID:         retryID,
 		TotalAttempts:   stats.TotalAttempts,
 		SuccessfulCount: stats.SuccessfulCount,
@@ -108,8 +109,8 @@ func (r *paymentRetryHistoryRepository) GetAttemptStatistics(ctx context.Context
 	}, nil
 }
 
-func (r *paymentRetryHistoryRepository) GetFailurePatterns(ctx context.Context, gateway string, days int) ([]*interfaces.FailurePattern, error) {
-	var patterns []*interfaces.FailurePattern
+func (r *paymentRetryHistoryRepository) GetFailurePatterns(ctx context.Context, gateway string, days int) ([]*dto.FailurePattern, error) {
+	var patterns []*dto.FailurePattern
 
 	query := `
 		SELECT 
@@ -136,7 +137,7 @@ func (r *paymentRetryHistoryRepository) GetFailurePatterns(ctx context.Context, 
 	defer rows.Close()
 
 	for rows.Next() {
-		var pattern interfaces.FailurePattern
+		var pattern dto.FailurePattern
 		if err := rows.Scan(&pattern.ErrorType, &pattern.FailureReason, &pattern.Count, &pattern.SuccessRate, &pattern.AverageAttempts); err != nil {
 			continue
 		}

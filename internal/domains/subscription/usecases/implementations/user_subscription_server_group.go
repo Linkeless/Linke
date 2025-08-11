@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	serverEntities "linke/internal/domains/server/entities"
+	"linke/internal/domains/subscription/constants"
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/domains/subscription/usecases/interfaces"
 	"linke/internal/shared/logger"
@@ -180,7 +181,7 @@ func (s *UserSubscriptionService) GetUserAccessibleServers(ctx context.Context, 
 	// Get all active subscriptions for the user
 	activeSubscriptions, _, err := s.GetUserSubscriptions(ctx, &interfaces.GetUserSubscriptionsRequest{
 		UserID: userID,
-		Status: entities.UserSubscriptionStatusActive,
+		Status: constants.UserSubscriptionStatusActive,
 		Limit:  1000, // Get all active subscriptions
 	})
 	if err != nil {
@@ -272,7 +273,7 @@ func (s *UserSubscriptionService) ValidateUserServerAccess(ctx context.Context, 
 	// Get all active subscriptions for the user
 	activeSubscriptions, _, err := s.GetUserSubscriptions(ctx, &interfaces.GetUserSubscriptionsRequest{
 		UserID: userID,
-		Status: entities.UserSubscriptionStatusActive,
+		Status: constants.UserSubscriptionStatusActive,
 		Limit:  1000,
 	})
 	if err != nil {
@@ -294,7 +295,7 @@ func (s *UserSubscriptionService) GetServerGroupUsageStats(ctx context.Context, 
 	// Get all active subscriptions for the user
 	activeSubscriptions, _, err := s.GetUserSubscriptions(ctx, &interfaces.GetUserSubscriptionsRequest{
 		UserID: userID,
-		Status: entities.UserSubscriptionStatusActive,
+		Status: constants.UserSubscriptionStatusActive,
 		Limit:  1000,
 	})
 	if err != nil {

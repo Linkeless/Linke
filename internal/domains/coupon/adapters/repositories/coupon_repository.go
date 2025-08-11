@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"time"
 
+	"gorm.io/gorm"
+
+	"linke/internal/domains/coupon/constants"
 	"linke/internal/domains/coupon/entities"
 	"linke/internal/domains/coupon/usecases/interfaces"
 	"linke/internal/shared/framework"
 	"linke/internal/shared/repository"
-
-	"gorm.io/gorm"
 )
 
 // couponRepository implements the CouponRepository interface
@@ -39,7 +40,7 @@ func (r *couponRepository) GetByCode(ctx context.Context, code string) (*entitie
 
 // ListActive retrieves active coupons with pagination
 func (r *couponRepository) ListActive(ctx context.Context, limit, offset int) ([]*entities.Coupon, int64, error) {
-	return r.ListByStatus(ctx, entities.CouponStatusActive, limit, offset)
+	return r.ListByStatus(ctx, constants.CouponStatusActive, limit, offset)
 }
 
 // ListPublic retrieves public coupons with pagination
@@ -101,7 +102,7 @@ func (r *couponRepository) ListValid(ctx context.Context, limit, offset int) ([]
 
 	now := time.Now()
 	query := r.GetDB().WithContext(ctx).Model(&entities.Coupon{}).
-		Where("status = ?", entities.CouponStatusActive).
+		Where("status = ?", constants.CouponStatusActive).
 		Where("(valid_from IS NULL OR valid_from <= ?)", now).
 		Where("(valid_until IS NULL OR valid_until >= ?)", now).
 		Where("(max_uses = 0 OR used_count < max_uses)")
@@ -127,7 +128,7 @@ func (r *couponRepository) ListExpired(ctx context.Context, limit, offset int) (
 	now := time.Now()
 	query := r.GetDB().WithContext(ctx).Model(&entities.Coupon{}).
 		Where("status = ? OR valid_until < ? OR (max_uses > 0 AND used_count >= max_uses)",
-			entities.CouponStatusExpired, now)
+			constants.CouponStatusExpired, now)
 
 	// Count total expired coupons
 	if err := query.Count(&total).Error; err != nil {
@@ -149,7 +150,7 @@ func (r *couponRepository) ListExpiringBefore(ctx context.Context, beforeDate ti
 
 	query := r.GetDB().WithContext(ctx).Model(&entities.Coupon{}).
 		Where("valid_until IS NOT NULL AND valid_until < ?", beforeDate).
-		Where("status = ?", entities.CouponStatusActive)
+		Where("status = ?", constants.CouponStatusActive)
 
 	// Count total expiring coupons
 	if err := query.Count(&total).Error; err != nil {
@@ -250,7 +251,7 @@ func (r *couponRepository) ListAvailable(ctx context.Context, limit, offset int)
 	var total int64
 
 	query := r.GetDB().WithContext(ctx).Model(&entities.Coupon{}).
-		Where("status = ?", entities.CouponStatusActive).
+		Where("status = ?", constants.CouponStatusActive).
 		Where("max_uses = 0 OR used_count < max_uses")
 
 	// Count total available coupons
@@ -414,7 +415,7 @@ func (r *couponRepository) CountValid(ctx context.Context) (int64, error) {
 	var count int64
 	now := time.Now()
 	if err := r.GetDB().WithContext(ctx).Model(&entities.Coupon{}).
-		Where("status = ?", entities.CouponStatusActive).
+		Where("status = ?", constants.CouponStatusActive).
 		Where("(valid_from IS NULL OR valid_from <= ?)", now).
 		Where("(valid_until IS NULL OR valid_until >= ?)", now).
 		Where("(max_uses = 0 OR used_count < max_uses)").
@@ -430,7 +431,7 @@ func (r *couponRepository) CountExpired(ctx context.Context) (int64, error) {
 	now := time.Now()
 	if err := r.GetDB().WithContext(ctx).Model(&entities.Coupon{}).
 		Where("status = ? OR valid_until < ? OR (max_uses > 0 AND used_count >= max_uses)",
-			entities.CouponStatusExpired, now).
+			constants.CouponStatusExpired, now).
 		Count(&count).Error; err != nil {
 		return 0, fmt.Errorf("failed to count expired coupons: %w", err)
 	}
@@ -459,9 +460,9 @@ func (r *couponRepository) ExistsByCode(ctx context.Context, code string) (bool,
 func (r *couponRepository) MarkExpiredCoupons(ctx context.Context) (int64, error) {
 	now := time.Now()
 	result := r.GetDB().WithContext(ctx).Model(&entities.Coupon{}).
-		Where("status = ?", entities.CouponStatusActive).
+		Where("status = ?", constants.CouponStatusActive).
 		Where("valid_until IS NOT NULL AND valid_until < ?", now).
-		Update("status", entities.CouponStatusExpired)
+		Update("status", constants.CouponStatusExpired)
 
 	if result.Error != nil {
 		return 0, fmt.Errorf("failed to mark expired coupons: %w", result.Error)

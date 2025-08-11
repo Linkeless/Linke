@@ -3,9 +3,9 @@ package entities
 import (
 	"time"
 
-	// TODO: Remove cross-domain dependencies
-	// userEntities "linke/internal/domains/user/entities"
 	"gorm.io/gorm"
+
+	"linke/internal/domains/referral/constants"
 )
 
 // InviteCode represents an invitation code
@@ -48,16 +48,10 @@ func (InviteCode) TableName() string {
 	return "invite_codes"
 }
 
-// Status constants
-const (
-	InviteCodeStatusActive   = "active"
-	InviteCodeStatusUsed     = "used"
-	InviteCodeStatusDisabled = "disabled"
-)
 
 // IsActive checks if the invite code is active and can be used
 func (ic *InviteCode) IsActive() bool {
-	if ic.Status != InviteCodeStatusActive {
+	if ic.Status != constants.InviteCodeStatusActive {
 		return false
 	}
 
@@ -84,71 +78,9 @@ func (ic *InviteCode) IsDeleted() bool {
 	return ic.DeletedAt.Valid
 }
 
-// InviteCodeResponse represents the invite code data structure for API responses
-type InviteCodeResponse struct {
-	ID          uint      `json:"id" example:"1"`                                          // Invite code ID
-	Code        string    `json:"code" example:"a1b2c3d4e5f6789012345678901234567890abcd"` // Invite code string
-	CreatedByID uint      `json:"created_by_id" example:"1"`                               // Creator user ID
-	Status      string    `json:"status" example:"active" enums:"active,used,disabled"`    // Invite code status
-	MaxUses     int       `json:"max_uses" example:"10"`                                   // Maximum number of uses
-	UsedCount   int       `json:"used_count" example:"0"`                                  // Current usage count
-	Description string    `json:"description" example:"Friend invitation code"`            // Description
-	CreatedAt   time.Time `json:"created_at" example:"2024-01-01T00:00:00Z"`               // Creation time
-	UpdatedAt   time.Time `json:"updated_at" example:"2024-01-01T00:00:00Z"`               // Last update time
 
-	// Referral Integration Fields
-	ReferralCampaignID     *uint   `json:"referral_campaign_id,omitempty" example:"1"` // Associated referral campaign ID
-	ReferralRewardAmount   float64 `json:"referral_reward_amount" example:"5.00"`      // Referral reward amount
-	ReferralRewardCurrency string  `json:"referral_reward_currency" example:"USD"`     // Referral reward currency
+// ToResponse should be implemented in service layer to avoid import cycles
+// Use dto.ToInviteCodeResponse(ic) instead
 
-	// Optional related data
-	// TODO: Fix cross-domain references in response types
-	// CreatedBy    *userEntities.UserResponse               `json:"created_by,omitempty"`    // Creator user info
-	// UsageRecords []*InviteCodeUsageResponse  `json:"usage_records,omitempty"` // Usage records
-	// ReferralCampaign *ReferralCampaignResponse `json:"referral_campaign,omitempty"` // Associated referral campaign
-}
-
-// ToResponse converts InviteCode to InviteCodeResponse
-func (ic *InviteCode) ToResponse() *InviteCodeResponse {
-	resp := &InviteCodeResponse{
-		ID:                     ic.ID,
-		Code:                   ic.Code,
-		CreatedByID:            ic.CreatedByID,
-		Status:                 ic.Status,
-		MaxUses:                ic.MaxUses,
-		UsedCount:              ic.UsedCount,
-		Description:            ic.Description,
-		CreatedAt:              ic.CreatedAt,
-		UpdatedAt:              ic.UpdatedAt,
-		ReferralCampaignID:     ic.ReferralCampaignID,
-		ReferralRewardAmount:   ic.ReferralRewardAmount,
-		ReferralRewardCurrency: ic.ReferralRewardCurrency,
-	}
-
-	// Include related data if loaded
-	// TODO: Fix cross-domain references
-	// if ic.CreatedBy != nil {
-	//	resp.CreatedBy = ic.CreatedBy.ToResponse()
-	// }
-	// if ic.UsageRecords != nil {
-	//	for _, usage := range ic.UsageRecords {
-	//		resp.UsageRecords = append(resp.UsageRecords, usage.ToResponse())
-	//	}
-	// }
-	// if ic.ReferralCampaign != nil {
-	//	resp.ReferralCampaign = ic.ReferralCampaign.ToResponse()
-	// }
-
-	return resp
-}
-
-// ToPublicResponse converts InviteCode to a public response (hides sensitive info)
-func (ic *InviteCode) ToPublicResponse() *InviteCodeResponse {
-	return &InviteCodeResponse{
-		Code:        ic.Code,
-		Status:      ic.Status,
-		MaxUses:     ic.MaxUses,
-		UsedCount:   ic.UsedCount,
-		Description: ic.Description,
-	}
-}
+// ToPublicResponse should be implemented in service layer to avoid import cycles
+// Use dto.ToInviteCodeResponse(ic) and clean sensitive data instead

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"linke/internal/domains/payment/dto"
 	"linke/internal/domains/payment/entities"
 	"linke/internal/domains/payment/usecases/interfaces"
 	"linke/internal/shared/cache"
@@ -49,7 +50,7 @@ func (cs *CachedPaymentService) GeneratePaymentNo() (string, error) {
 }
 
 // CreatePaymentOrder creates a new payment order
-func (cs *CachedPaymentService) CreatePaymentOrder(ctx context.Context, req *interfaces.CreatePaymentOrderRequest) (*entities.PaymentRecord, error) {
+func (cs *CachedPaymentService) CreatePaymentOrder(ctx context.Context, req *dto.CreatePaymentOrderRequest) (*entities.PaymentRecord, error) {
 	record, err := cs.base.CreatePaymentOrder(ctx, req)
 	if err != nil {
 		return nil, err

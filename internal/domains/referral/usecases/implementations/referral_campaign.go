@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"linke/internal/domains/referral/constants"
+	"linke/internal/domains/referral/dto"
 	"linke/internal/domains/referral/entities"
-	"linke/internal/domains/referral/usecases/interfaces"
 	"linke/internal/shared/database"
 	"linke/internal/shared/logger"
 )
@@ -23,7 +24,7 @@ func NewReferralCampaignService(db *database.Database) *ReferralCampaignService 
 
 
 // CreateReferralCampaign creates a new referral campaign
-func (s *ReferralCampaignService) CreateReferralCampaign(ctx context.Context, req *interfaces.CreateReferralCampaignRequest) (*entities.ReferralCampaign, error) {
+func (s *ReferralCampaignService) CreateReferralCampaign(ctx context.Context, req *dto.CreateReferralCampaignRequest) (*entities.ReferralCampaign, error) {
 	// Check if name already exists
 	var existingCampaign entities.ReferralCampaign
 	if err := s.db.DB.Where("name = ?", req.Name).First(&existingCampaign).Error; err == nil {
@@ -40,7 +41,7 @@ func (s *ReferralCampaignService) CreateReferralCampaign(ctx context.Context, re
 		Name:                   req.Name,
 		Description:            req.Description,
 		CampaignType:           req.Type,
-		Status:                 entities.CampaignStatusActive,
+		Status:                 constants.CampaignStatusActive,
 		StartDate:              req.StartDate,
 		EndDate:                req.EndDate,
 		ReferrerRewardAmount:   req.ReferrerRewardAmount,
@@ -66,7 +67,7 @@ func (s *ReferralCampaignService) CreateReferralCampaign(ctx context.Context, re
 }
 
 // GetReferralCampaigns gets referral campaigns with filters
-func (s *ReferralCampaignService) GetReferralCampaigns(ctx context.Context, req *interfaces.GetReferralCampaignsRequest) ([]*entities.ReferralCampaign, int64, error) {
+func (s *ReferralCampaignService) GetReferralCampaigns(ctx context.Context, req *dto.GetReferralCampaignsRequest) ([]*entities.ReferralCampaign, int64, error) {
 	var campaigns []*entities.ReferralCampaign
 	var total int64
 
@@ -123,7 +124,7 @@ func (s *ReferralCampaignService) GetReferralCampaignByCode(ctx context.Context,
 }
 
 // UpdateReferralCampaign updates a referral campaign
-func (s *ReferralCampaignService) UpdateReferralCampaign(ctx context.Context, campaignID uint, req *interfaces.UpdateReferralCampaignRequest) (*entities.ReferralCampaign, error) {
+func (s *ReferralCampaignService) UpdateReferralCampaign(ctx context.Context, campaignID uint, req *dto.UpdateReferralCampaignRequest) (*entities.ReferralCampaign, error) {
 	var campaign entities.ReferralCampaign
 	if err := s.db.DB.First(&campaign, campaignID).Error; err != nil {
 		return nil, fmt.Errorf("campaign not found: %w", err)
@@ -205,7 +206,7 @@ func (s *ReferralCampaignService) GetActiveCampaigns(ctx context.Context) ([]*en
 	var campaigns []*entities.ReferralCampaign
 
 	now := time.Now()
-	query := s.db.DB.Where("status = ? AND is_public = ?", entities.CampaignStatusActive, true)
+	query := s.db.DB.Where("status = ? AND is_public = ?", constants.CampaignStatusActive, true)
 
 	// Add date filters
 	query = query.Where("(start_date IS NULL OR start_date <= ?)", now)
@@ -238,20 +239,20 @@ func (s *ReferralCampaignService) GetCampaignStatistics(ctx context.Context, cam
 
 	// Get additional stats
 	var pendingReferrals int64
-	if err := s.db.DB.Model(&entities.Referral{}).Where("campaign_id = ? AND status = ?", campaignID, entities.ReferralStatusPending).Count(&pendingReferrals).Error; err != nil {
+	if err := s.db.DB.Model(&entities.Referral{}).Where("campaign_id = ? AND status = ?", campaignID, constants.ReferralStatusPending).Count(&pendingReferrals).Error; err != nil {
 		return nil, fmt.Errorf("failed to count pending referrals: %w", err)
 	}
 	stats["pending_referrals"] = pendingReferrals
 
 	var activeReferrals int64
-	if err := s.db.DB.Model(&entities.Referral{}).Where("campaign_id = ? AND status = ?", campaignID, entities.ReferralStatusConfirmed).Count(&activeReferrals).Error; err != nil {
+	if err := s.db.DB.Model(&entities.Referral{}).Where("campaign_id = ? AND status = ?", campaignID, constants.ReferralStatusConfirmed).Count(&activeReferrals).Error; err != nil {
 		return nil, fmt.Errorf("failed to count active referrals: %w", err)
 	}
 	stats["active_referrals"] = activeReferrals
 
 	// Get reward stats
 	var pendingRewards float64
-	if err := s.db.DB.Model(&entities.ReferralReward{}).Where("campaign_id = ? AND status IN (?)", campaignID, []string{entities.RewardStatusPending, entities.RewardStatusEarned}).Select("COALESCE(SUM(reward_amount), 0)").Scan(&pendingRewards).Error; err != nil {
+	if err := s.db.DB.Model(&entities.ReferralReward{}).Where("campaign_id = ? AND status IN (?)", campaignID, []string{constants.RewardStatusPending, constants.RewardStatusEarned}).Select("COALESCE(SUM(reward_amount), 0)").Scan(&pendingRewards).Error; err != nil {
 		return nil, fmt.Errorf("failed to calculate pending rewards: %w", err)
 	}
 	stats["pending_rewards"] = pendingRewards
@@ -272,7 +273,7 @@ func (s *ReferralCampaignService) GetCampaignStatistics(ctx context.Context, cam
 // ActivateCampaign activates a referral campaign
 func (s *ReferralCampaignService) ActivateCampaign(ctx context.Context, campaignID uint) error {
 	updates := map[string]any{
-		"status":     entities.CampaignStatusActive,
+		"status":     constants.CampaignStatusActive,
 		"updated_at": time.Now(),
 	}
 
@@ -288,7 +289,7 @@ func (s *ReferralCampaignService) ActivateCampaign(ctx context.Context, campaign
 // DeactivateCampaign deactivates a referral campaign
 func (s *ReferralCampaignService) DeactivateCampaign(ctx context.Context, campaignID uint) error {
 	updates := map[string]any{
-		"status":     entities.CampaignStatusPaused,
+		"status":     constants.CampaignStatusPaused,
 		"updated_at": time.Now(),
 	}
 
@@ -304,7 +305,7 @@ func (s *ReferralCampaignService) DeactivateCampaign(ctx context.Context, campai
 // ExpireCampaign expires a referral campaign
 func (s *ReferralCampaignService) ExpireCampaign(ctx context.Context, campaignID uint) error {
 	updates := map[string]any{
-		"status":     entities.CampaignStatusEnded,
+		"status":     constants.CampaignStatusEnded,
 		"updated_at": time.Now(),
 	}
 

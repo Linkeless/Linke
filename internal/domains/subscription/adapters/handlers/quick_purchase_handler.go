@@ -3,7 +3,7 @@ package handlers
 import (
 	"net"
 
-	paymententities "linke/internal/domains/payment/entities"
+	paymentDto "linke/internal/domains/payment/dto"
 	"linke/internal/domains/subscription/usecases/interfaces"
 	userEntities "linke/internal/domains/user/entities"
 	"linke/internal/shared/logger"
@@ -98,7 +98,7 @@ func (h *QuickPurchaseHandler) QuickPurchase(c *gin.Context) {
 
 	// Type assert PaymentRecord to get the payment number for logging
 	var paymentNo string
-	if paymentRecord, ok := purchaseResponse.PaymentRecord.(*paymententities.PaymentRecordResponse); ok {
+	if paymentRecord, ok := purchaseResponse.PaymentRecord.(*paymentDto.PaymentRecordResponse); ok {
 		paymentNo = paymentRecord.PaymentNo
 	}
 

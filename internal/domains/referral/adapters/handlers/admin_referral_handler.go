@@ -3,9 +3,9 @@ package handlers
 import (
 	"strconv"
 	"strings"
-	"time"
 
-	"linke/internal/domains/referral/entities"
+	"linke/internal/domains/referral/constants"
+	"linke/internal/domains/referral/dto"
 	referralInterfaces "linke/internal/domains/referral/usecases/interfaces"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/response"
@@ -33,78 +33,6 @@ func NewAdminReferralHandler(
 	}
 }
 
-// CreateReferralRequest represents the request body for creating a referral
-type CreateReferralRequest struct {
-	ReferrerID      uint           `json:"referrer_id" binding:"required" example:"1"`
-	RefereeID       uint           `json:"referee_id" binding:"required" example:"2"`
-	InviteCodeID    *uint          `json:"invite_code_id,omitempty" example:"1"`
-	ReferralSource  string         `json:"referral_source" binding:"required" example:"invite_code"`
-	ReferralChannel string         `json:"referral_channel,omitempty" example:"organic"`
-	ReferralCode    string         `json:"referral_code,omitempty" example:"REF123"`
-	CampaignID      *uint          `json:"campaign_id,omitempty" example:"1"`
-	ConversionValue float64        `json:"conversion_value,omitempty" example:"29.99"`
-	ConversionType  string         `json:"conversion_type,omitempty" example:"subscription"`
-	ExpirationDays  int            `json:"expiration_days,omitempty" example:"30"`
-	AttributionData map[string]any `json:"attribution_data,omitempty"`
-}
-
-// UpdateReferralRequest represents the request body for updating a referral
-type UpdateReferralRequest struct {
-	Status          *string  `json:"status,omitempty" binding:"omitempty,oneof=pending confirmed rewarded cancelled"`
-	RefereeStatus   *string  `json:"referee_status,omitempty" binding:"omitempty,oneof=registered activated subscribed churned"`
-	RewardStatus    *string  `json:"reward_status,omitempty" binding:"omitempty,oneof=pending earned paid cancelled"`
-	RewardAmount    *float64 `json:"reward_amount,omitempty" binding:"omitempty,min=0"`
-	ConversionValue *float64 `json:"conversion_value,omitempty" binding:"omitempty,min=0"`
-	ConversionType  *string  `json:"conversion_type,omitempty"`
-}
-
-// ApproveReferralRequest represents the request for approving referrals
-type ApproveReferralRequest struct {
-	RewardAmount *float64 `json:"reward_amount,omitempty" binding:"omitempty,min=0" example:"10.00"`
-	Note         string   `json:"note,omitempty" example:"Approved by admin"`
-}
-
-// RejectReferralRequest represents the request for rejecting referrals
-type RejectReferralRequest struct {
-	Reason string `json:"reason" binding:"required" example:"Invalid referral"`
-	Note   string `json:"note,omitempty" example:"Rejected due to policy violation"`
-}
-
-// PayoutReferralRequest represents the request for processing payouts
-type PayoutReferralRequest struct {
-	PaymentMethod string  `json:"payment_method" binding:"required" example:"paypal"`
-	PaymentInfo   string  `json:"payment_info" binding:"required" example:"user@example.com"`
-	Amount        float64 `json:"amount" binding:"required,min=0" example:"10.00"`
-	Note          string  `json:"note,omitempty" example:"Monthly referral payout"`
-}
-
-// BulkReferralRequest represents the request for bulk operations
-type BulkReferralRequest struct {
-	IDs    []uint  `json:"ids" binding:"required,min=1,max=100"`
-	Action string  `json:"action" binding:"required,oneof=approve reject payout"`
-	Amount float64 `json:"amount,omitempty" binding:"omitempty,min=0"`
-	Note   string  `json:"note,omitempty"`
-}
-
-
-// SearchReferralsRequest represents the search request
-type SearchReferralsRequest struct {
-	Query           string     `form:"q" binding:"omitempty,min=1,max=100"`
-	ReferrerID      uint       `form:"referrer_id,omitempty"`
-	RefereeID       uint       `form:"referee_id,omitempty"`
-	Status          string     `form:"status,omitempty" binding:"omitempty,oneof=pending confirmed rewarded cancelled"`
-	RefereeStatus   string     `form:"referee_status,omitempty" binding:"omitempty,oneof=registered activated subscribed churned"`
-	RewardStatus    string     `form:"reward_status,omitempty" binding:"omitempty,oneof=pending earned paid cancelled"`
-	CampaignID      *uint      `form:"campaign_id,omitempty"`
-	ReferralSource  string     `form:"referral_source,omitempty"`
-	ReferralChannel string     `form:"referral_channel,omitempty"`
-	DateFrom        *time.Time `form:"date_from,omitempty"`
-	DateTo          *time.Time `form:"date_to,omitempty"`
-	MinReward       *float64   `form:"min_reward,omitempty" binding:"omitempty,min=0"`
-	MaxReward       *float64   `form:"max_reward,omitempty" binding:"omitempty,min=0"`
-	Page            int        `form:"page,omitempty" binding:"omitempty,min=1" example:"1"`
-	Limit           int        `form:"limit,omitempty" binding:"omitempty,min=1,max=100" example:"10"`
-}
 
 // CreateReferral godoc
 // @Summary Create new referral
@@ -122,14 +50,14 @@ type SearchReferralsRequest struct {
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /admin/referrals [post]
 func (h *AdminReferralHandler) CreateReferral(c *gin.Context) {
-	var createReq CreateReferralRequest
+	var createReq dto.CreateReferralRequest
 	if err := c.ShouldBindJSON(&createReq); err != nil {
 		response.BadRequest(c, err.Error())
 		return
 	}
 
 	// Convert request to service request
-	serviceReq := &referralInterfaces.CreateReferralRequest{
+	serviceReq := &dto.CreateReferralRequest{
 		ReferrerID:      createReq.ReferrerID,
 		RefereeID:       createReq.RefereeID,
 		InviteCodeID:    createReq.InviteCodeID,
@@ -167,7 +95,7 @@ func (h *AdminReferralHandler) CreateReferral(c *gin.Context) {
 		logger.String("admin_action", "create_referral"),
 	)
 
-	response.Created(c, referral.ToResponse())
+	response.Created(c, dto.ToReferralResponse(referral))
 }
 
 // ListReferrals godoc
@@ -214,7 +142,7 @@ func (h *AdminReferralHandler) ListReferrals(c *gin.Context) {
 	referrerID, _ := strconv.ParseUint(c.Query("referrer_id"), 10, 32)
 	refereeID, _ := strconv.ParseUint(c.Query("referee_id"), 10, 32)
 
-	serviceReq := &referralInterfaces.GetReferralsRequest{
+	serviceReq := &dto.GetReferralsRequest{
 		ReferrerID:   uint(referrerID),
 		RefereeID:    uint(refereeID),
 		Status:       c.Query("status"),
@@ -232,9 +160,9 @@ func (h *AdminReferralHandler) ListReferrals(c *gin.Context) {
 	}
 
 	// Convert to responses
-	var referralResponses []*entities.ReferralResponse
+	var referralResponses []*dto.ReferralResponse
 	for _, referral := range referrals {
-		referralResponses = append(referralResponses, referral.ToResponse())
+		referralResponses = append(referralResponses, dto.ToReferralResponse(referral))
 	}
 
 	response.SuccessList(c, referralResponses, page, limit, total)
@@ -272,7 +200,7 @@ func (h *AdminReferralHandler) GetReferral(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, referral.ToResponse())
+	response.Success(c, dto.ToReferralResponse(referral))
 }
 
 // UpdateReferral godoc
@@ -299,14 +227,14 @@ func (h *AdminReferralHandler) UpdateReferral(c *gin.Context) {
 		return
 	}
 
-	var updateReq UpdateReferralRequest
+	var updateReq dto.UpdateReferralRequest
 	if err := c.ShouldBindJSON(&updateReq); err != nil {
 		response.BadRequest(c, err.Error())
 		return
 	}
 
 	// Convert to service request
-	serviceReq := &referralInterfaces.UpdateReferralRequest{
+	serviceReq := &dto.UpdateReferralRequest{
 		Status:          updateReq.Status,
 		RefereeStatus:   updateReq.RefereeStatus,
 		RewardStatus:    updateReq.RewardStatus,
@@ -330,7 +258,7 @@ func (h *AdminReferralHandler) UpdateReferral(c *gin.Context) {
 		logger.String("admin_action", "update_referral"),
 	)
 
-	response.Success(c, referral.ToResponse())
+	response.Success(c, dto.ToReferralResponse(referral))
 }
 
 // ApproveReferral godoc
@@ -356,7 +284,7 @@ func (h *AdminReferralHandler) ApproveReferral(c *gin.Context) {
 		return
 	}
 
-	var approveReq ApproveReferralRequest
+	var approveReq dto.ApproveReferralRequest
 	if err := c.ShouldBindJSON(&approveReq); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -397,7 +325,7 @@ func (h *AdminReferralHandler) ApproveReferral(c *gin.Context) {
 		logger.String("admin_action", "approve_referral"),
 	)
 
-	response.Success(c, referral.ToResponse())
+	response.Success(c, dto.ToReferralResponse(referral))
 }
 
 // RejectReferral godoc
@@ -423,16 +351,16 @@ func (h *AdminReferralHandler) RejectReferral(c *gin.Context) {
 		return
 	}
 
-	var rejectReq RejectReferralRequest
+	var rejectReq dto.RejectReferralRequest
 	if err := c.ShouldBindJSON(&rejectReq); err != nil {
 		response.BadRequest(c, err.Error())
 		return
 	}
 
 	// Update referral status to cancelled
-	cancelledStatus := entities.ReferralStatusCancelled
-	cancelledRewardStatus := entities.RewardStatusCancelled
-	updateReq := &referralInterfaces.UpdateReferralRequest{
+	cancelledStatus := constants.ReferralStatusCancelled
+	cancelledRewardStatus := constants.RewardStatusCancelled
+	updateReq := &dto.UpdateReferralRequest{
 		Status:       &cancelledStatus,
 		RewardStatus: &cancelledRewardStatus,
 	}
@@ -455,7 +383,7 @@ func (h *AdminReferralHandler) RejectReferral(c *gin.Context) {
 		logger.String("admin_action", "reject_referral"),
 	)
 
-	response.Success(c, referral.ToResponse())
+	response.Success(c, dto.ToReferralResponse(referral))
 }
 
 // ProcessReferralPayout godoc
@@ -481,7 +409,7 @@ func (h *AdminReferralHandler) ProcessReferralPayout(c *gin.Context) {
 		return
 	}
 
-	var payoutReq PayoutReferralRequest
+	var payoutReq dto.PayoutReferralRequest
 	if err := c.ShouldBindJSON(&payoutReq); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -513,7 +441,7 @@ func (h *AdminReferralHandler) ProcessReferralPayout(c *gin.Context) {
 		logger.String("admin_action", "process_payout"),
 	)
 
-	response.Success(c, referral.ToResponse())
+	response.Success(c, dto.ToReferralResponse(referral))
 }
 
 // SearchReferrals godoc
@@ -542,7 +470,7 @@ func (h *AdminReferralHandler) ProcessReferralPayout(c *gin.Context) {
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /admin/referrals/search [get]
 func (h *AdminReferralHandler) SearchReferrals(c *gin.Context) {
-	var searchReq SearchReferralsRequest
+	var searchReq dto.SearchReferralsRequest
 	if err := c.ShouldBindQuery(&searchReq); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -563,7 +491,7 @@ func (h *AdminReferralHandler) SearchReferrals(c *gin.Context) {
 	offset := (searchReq.Page - 1) * searchReq.Limit
 
 	// Build service request
-	serviceReq := &referralInterfaces.GetReferralsRequest{
+	serviceReq := &dto.GetReferralsRequest{
 		ReferrerID:   searchReq.ReferrerID,
 		RefereeID:    searchReq.RefereeID,
 		Status:       searchReq.Status,
@@ -584,9 +512,9 @@ func (h *AdminReferralHandler) SearchReferrals(c *gin.Context) {
 	}
 
 	// Convert to responses
-	var referralResponses []*entities.ReferralResponse
+	var referralResponses []*dto.ReferralResponse
 	for _, referral := range referrals {
-		referralResponses = append(referralResponses, referral.ToResponse())
+		referralResponses = append(referralResponses, dto.ToReferralResponse(referral))
 	}
 
 	response.SuccessListWithExtra(c, "Search completed", referralResponses, searchReq.Page, searchReq.Limit, total, gin.H{
@@ -675,7 +603,7 @@ func (h *AdminReferralHandler) GetReferralAnalytics(c *gin.Context) {
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /admin/referrals/bulk/approve [post]
 func (h *AdminReferralHandler) BulkApproveReferrals(c *gin.Context) {
-	var bulkReq BulkReferralRequest
+	var bulkReq dto.BulkReferralRequest
 	if err := c.ShouldBindJSON(&bulkReq); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -745,7 +673,7 @@ func (h *AdminReferralHandler) BulkApproveReferrals(c *gin.Context) {
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /admin/referrals/bulk/payout [post]
 func (h *AdminReferralHandler) BulkProcessPayouts(c *gin.Context) {
-	var bulkReq BulkReferralRequest
+	var bulkReq dto.BulkReferralRequest
 	if err := c.ShouldBindJSON(&bulkReq); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -817,7 +745,7 @@ func (h *AdminReferralHandler) ListCampaigns(c *gin.Context) {
 
 	offset := (page - 1) * limit
 
-	serviceReq := &referralInterfaces.GetReferralCampaignsRequest{
+	serviceReq := &dto.GetReferralCampaignsRequest{
 		Status: c.Query("status"),
 		Limit:  limit,
 		Offset: offset,
@@ -831,9 +759,9 @@ func (h *AdminReferralHandler) ListCampaigns(c *gin.Context) {
 	}
 
 	// Convert to responses
-	var campaignResponses []*entities.ReferralCampaignResponse
+	var campaignResponses []*dto.ReferralCampaignResponse
 	for _, campaign := range campaigns {
-		campaignResponses = append(campaignResponses, campaign.ToResponse())
+		campaignResponses = append(campaignResponses, dto.ToReferralCampaignResponse(campaign))
 	}
 
 	response.SuccessList(c, campaignResponses, page, limit, total)
@@ -854,7 +782,7 @@ func (h *AdminReferralHandler) ListCampaigns(c *gin.Context) {
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /admin/referrals/campaigns [post]
 func (h *AdminReferralHandler) CreateCampaign(c *gin.Context) {
-	var createReq referralInterfaces.CreateReferralCampaignRequest
+	var createReq dto.CreateReferralCampaignRequest
 	if err := c.ShouldBindJSON(&createReq); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -876,7 +804,7 @@ func (h *AdminReferralHandler) CreateCampaign(c *gin.Context) {
 		logger.String("admin_action", "create_campaign"),
 	)
 
-	response.Created(c, campaign.ToResponse())
+	response.Created(c, dto.ToReferralCampaignResponse(campaign))
 }
 
 // Invite Code Management Methods

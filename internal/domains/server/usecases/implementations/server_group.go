@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"linke/internal/domains/server/dto"
 	"linke/internal/domains/server/entities"
-	"linke/internal/domains/server/usecases/interfaces"
 	"linke/internal/shared/database"
 	"linke/internal/shared/logger"
 
@@ -23,7 +23,7 @@ func NewServerGroupService(db *database.Database) *ServerGroupService {
 }
 
 // CreateServerGroup creates a new server group
-func (s *ServerGroupService) CreateServerGroup(ctx context.Context, req *interfaces.CreateServerGroupRequest) (*entities.ServerGroup, error) {
+func (s *ServerGroupService) CreateServerGroup(ctx context.Context, req *dto.CreateServerGroupRequest) (*entities.ServerGroup, error) {
 	// Check if server group with the same name already exists
 	var existingGroup entities.ServerGroup
 	if err := s.db.DB.WithContext(ctx).Where("name = ?", req.Name).First(&existingGroup).Error; err == nil {
@@ -66,7 +66,7 @@ func (s *ServerGroupService) GetServerGroup(ctx context.Context, id uint) (*enti
 }
 
 // GetServerGroups gets server groups with filtering and pagination
-func (s *ServerGroupService) GetServerGroups(ctx context.Context, req *interfaces.GetServerGroupsRequest) ([]*entities.ServerGroup, int64, error) {
+func (s *ServerGroupService) GetServerGroups(ctx context.Context, req *dto.GetServerGroupsRequest) ([]*entities.ServerGroup, int64, error) {
 	var groups []*entities.ServerGroup
 	var total int64
 
@@ -98,7 +98,7 @@ func (s *ServerGroupService) GetServerGroups(ctx context.Context, req *interface
 }
 
 // UpdateServerGroup updates a server group
-func (s *ServerGroupService) UpdateServerGroup(ctx context.Context, id uint, req *interfaces.UpdateServerGroupRequest) (*entities.ServerGroup, error) {
+func (s *ServerGroupService) UpdateServerGroup(ctx context.Context, id uint, req *dto.UpdateServerGroupRequest) (*entities.ServerGroup, error) {
 	// Get existing group
 	group, err := s.GetServerGroup(ctx, id)
 	if err != nil {

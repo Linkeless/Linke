@@ -3,6 +3,8 @@ package implementations
 import (
 	"context"
 
+	"linke/internal/domains/ticket/constants"
+	"linke/internal/domains/ticket/dto"
 	"linke/internal/domains/ticket/entities"
 	"linke/internal/domains/ticket/usecases/interfaces"
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
@@ -31,7 +33,7 @@ func NewEventAwareTicketService(
 }
 
 // CreateTicket creates a new ticket and publishes an event
-func (s *EventAwareTicketService) CreateTicket(ctx context.Context, userID uint, req *interfaces.CreateTicketRequest) (*entities.Ticket, error) {
+func (s *EventAwareTicketService) CreateTicket(ctx context.Context, userID uint, req *dto.CreateTicketRequest) (*entities.Ticket, error) {
 	// Create the ticket
 	ticket, err := s.ticketService.CreateTicket(ctx, userID, req)
 	if err != nil {
@@ -73,7 +75,7 @@ func (s *EventAwareTicketService) CreateTicket(ctx context.Context, userID uint,
 }
 
 // AssignTicket assigns a ticket to an agent and publishes an event
-func (s *EventAwareTicketService) AssignTicket(ctx context.Context, ticketID uint, req *interfaces.AssignTicketRequest) (*entities.Ticket, error) {
+func (s *EventAwareTicketService) AssignTicket(ctx context.Context, ticketID uint, req *dto.AssignTicketRequest) (*entities.Ticket, error) {
 	// Get ticket before assignment for comparison
 	oldTicket, _ := s.ticketService.GetTicket(ctx, ticketID)
 	
@@ -191,7 +193,7 @@ func (s *EventAwareTicketService) UpdateTicketStatus(ctx context.Context, ticket
 }
 
 // ResolveTicket resolves a ticket and publishes an event
-func (s *EventAwareTicketService) ResolveTicket(ctx context.Context, ticketID uint, resolvedByID uint, req *interfaces.ResolveTicketRequest) (*entities.Ticket, error) {
+func (s *EventAwareTicketService) ResolveTicket(ctx context.Context, ticketID uint, resolvedByID uint, req *dto.ResolveTicketRequest) (*entities.Ticket, error) {
 	// Resolve the ticket
 	ticket, err := s.ticketService.ResolveTicket(ctx, ticketID, resolvedByID, req)
 	if err != nil {
@@ -335,11 +337,11 @@ func (s *EventAwareTicketService) UpdateTicketPriority(ctx context.Context, tick
 // isEscalation checks if priority change is an escalation
 func (s *EventAwareTicketService) isEscalation(oldPriority, newPriority string) bool {
 	priorityLevels := map[string]int{
-		entities.TicketPriorityLow:      1,
-		entities.TicketPriorityNormal:   2,
-		entities.TicketPriorityHigh:     3,
-		entities.TicketPriorityUrgent:   4,
-		entities.TicketPriorityCritical: 5,
+		constants.TicketPriorityLow:      1,
+		constants.TicketPriorityNormal:   2,
+		constants.TicketPriorityHigh:     3,
+		constants.TicketPriorityUrgent:   4,
+		constants.TicketPriorityCritical: 5,
 	}
 	
 	oldLevel := priorityLevels[oldPriority]
@@ -358,7 +360,7 @@ func (s *EventAwareTicketService) GetTicketByNumber(ctx context.Context, ticketN
 	return s.ticketService.GetTicketByNumber(ctx, ticketNo)
 }
 
-func (s *EventAwareTicketService) UpdateTicket(ctx context.Context, ticketID uint, req *interfaces.UpdateTicketRequest) (*entities.Ticket, error) {
+func (s *EventAwareTicketService) UpdateTicket(ctx context.Context, ticketID uint, req *dto.UpdateTicketRequest) (*entities.Ticket, error) {
 	return s.ticketService.UpdateTicket(ctx, ticketID, req)
 }
 
@@ -366,7 +368,7 @@ func (s *EventAwareTicketService) DeleteTicket(ctx context.Context, ticketID uin
 	return s.ticketService.DeleteTicket(ctx, ticketID)
 }
 
-func (s *EventAwareTicketService) GetTickets(ctx context.Context, req *interfaces.GetTicketsRequest) ([]*entities.Ticket, int64, error) {
+func (s *EventAwareTicketService) GetTickets(ctx context.Context, req *dto.GetTicketsRequest) ([]*entities.Ticket, int64, error) {
 	return s.ticketService.GetTickets(ctx, req)
 }
 
@@ -390,7 +392,7 @@ func (s *EventAwareTicketService) GetAgentWorkload(ctx context.Context, agentID 
 	return s.ticketService.GetAgentWorkload(ctx, agentID)
 }
 
-func (s *EventAwareTicketService) GetAvailableAgents(ctx context.Context, category string) ([]*interfaces.AgentInfo, error) {
+func (s *EventAwareTicketService) GetAvailableAgents(ctx context.Context, category string) ([]*dto.AgentInfo, error) {
 	return s.ticketService.GetAvailableAgents(ctx, category)
 }
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"linke/internal/domains/subscription/constants"
 	"linke/internal/domains/subscription/usecases/interfaces"
 	userEntities "linke/internal/domains/user/entities"
 	"linke/internal/shared/middleware"
@@ -216,7 +217,7 @@ func (h *UsageHandler) GetUsageHistory(c *gin.Context) {
 	req := &interfaces.UsageHistoryRequest{
 		UserSubscriptionID: uint(subscriptionID),
 		UsageType:          c.Query("usage_type"),
-		Granularity:        c.DefaultQuery("granularity", interfaces.GranularityDaily),
+		Granularity:        c.DefaultQuery("granularity", constants.GranularityDaily),
 		Limit:              50,
 		Offset:             0,
 		IncludeDetails:     c.Query("include_details") == "true",
@@ -292,7 +293,7 @@ func (h *UsageHandler) GetUsageSummary(c *gin.Context) {
 
 	req := &interfaces.UsageSummaryRequest{
 		UserSubscriptionID:  uint(subscriptionID),
-		Period:              c.DefaultQuery("period", interfaces.PeriodMonthly),
+		Period:              c.DefaultQuery("period", constants.PeriodMonthly),
 		IncludeBreakdown:    c.Query("include_breakdown") == "true",
 		IncludePredictions:  c.Query("include_predictions") == "true",
 		CompareWithPrevious: c.Query("compare_with_previous") == "true",
@@ -360,7 +361,7 @@ func (h *UsageHandler) GetUsageStatistics(c *gin.Context) {
 	req := &interfaces.UsageStatsRequest{
 		UserSubscriptionID: uint(subscriptionID),
 		UsageType:          c.Query("usage_type"),
-		Period:             c.DefaultQuery("period", interfaces.PeriodMonthly),
+		Period:             c.DefaultQuery("period", constants.PeriodMonthly),
 		IncludeComparison:  c.Query("include_comparison") == "true",
 	}
 
@@ -419,7 +420,7 @@ func (h *UsageHandler) GetUsageTrends(c *gin.Context) {
 		UserSubscriptionID: uint(subscriptionID),
 		UsageType:          c.Query("usage_type"),
 		Period:             c.DefaultQuery("period", "30d"),
-		Granularity:        c.DefaultQuery("granularity", interfaces.GranularityDaily),
+		Granularity:        c.DefaultQuery("granularity", constants.GranularityDaily),
 		IncludePredictions: c.Query("include_predictions") == "true",
 		IncludeAnomalies:   c.Query("include_anomalies") == "true",
 	}

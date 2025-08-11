@@ -7,33 +7,14 @@ import (
 	"github.com/gin-gonic/gin"
 
 	ticketInterfaces "linke/internal/domains/ticket/usecases/interfaces"
+	"linke/internal/domains/ticket/constants"
+	"linke/internal/domains/ticket/dto"
 	"linke/internal/domains/ticket/entities"
 	"linke/internal/shared/handlers"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/response"
 )
 
-// UserCreateTicketRequest represents the request body for user ticket creation
-type UserCreateTicketRequest struct {
-	Title       string `json:"title" binding:"required,min=5,max=255" example:"Unable to access my subscription"`
-	Description string `json:"description" binding:"required,min=10,max=5000" example:"I am unable to access my premium subscription features"`
-	Category    string `json:"category" binding:"required,oneof=general technical billing account feature bug subscription payment" example:"subscription"`
-	Priority    string `json:"priority" binding:"omitempty,oneof=low normal high urgent critical" example:"normal"`
-	Tags        string `json:"tags,omitempty" example:"urgent,subscription"`
-	Metadata    string `json:"metadata,omitempty" example:"{\"browser\": \"Chrome\", \"os\": \"Windows\"}"`
-}
-
-// UserTicketMessageRequest represents the request body for user message creation
-type UserTicketMessageRequest struct {
-	Content     string `json:"content" binding:"required,min=1,max=5000" example:"Thank you for your response. I tried the suggested solution but the issue persists."`
-	Attachments string `json:"attachments,omitempty" example:"[{\"name\":\"screenshot.png\",\"url\":\"https://example.com/file.png\"}]"`
-	Metadata    string `json:"metadata,omitempty" example:"{\"client_ip\":\"192.168.1.1\"}"`
-}
-
-// CloseTicketRequest represents the request body for closing a ticket
-type CloseTicketRequest struct {
-	Reason string `json:"reason,omitempty" example:"Issue resolved, closing ticket"`
-}
 
 // UserTicketHandler provides user ticket management functionality
 type UserTicketHandler struct {
@@ -59,7 +40,7 @@ func NewUserTicketHandler(
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param ticket body UserCreateTicketRequest true "Ticket creation data"
+// @Param ticket body dto.UserCreateTicketRequest true "Ticket creation data"
 // @Success 201 {object} response.StandardResponse{data=entities.TicketUserResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -72,13 +53,13 @@ func (h *UserTicketHandler) CreateTicket(c *gin.Context) {
 		return // Error response already handled by GetCurrentUser
 	}
 
-	var req UserCreateTicketRequest
+	var req dto.UserCreateTicketRequest
 	if !handlers.BindJSONRequest(c, &req) {
 		return // Error response already handled by BindJSONRequest
 	}
 
 	// Create ticket request for service layer
-	createReq := &ticketInterfaces.CreateTicketRequest{
+	createReq := &dto.CreateTicketRequest{
 		Title:       req.Title,
 		Description: req.Description,
 		Category:    req.Category,
@@ -89,7 +70,7 @@ func (h *UserTicketHandler) CreateTicket(c *gin.Context) {
 
 	// Set default priority if not provided
 	if createReq.Priority == "" {
-		createReq.Priority = entities.TicketPriorityNormal
+		createReq.Priority = constants.TicketPriorityNormal
 	}
 
 	// Create ticket
@@ -147,7 +128,7 @@ func (h *UserTicketHandler) GetMyTickets(c *gin.Context) {
 	offset := (page - 1) * pagination.Limit
 
 	// Create request for service layer with user-specific filtering
-	req := &ticketInterfaces.GetTicketsRequest{
+	req := &dto.GetTicketsRequest{
 		UserID:   user.ID, // Only get tickets for this user
 		Status:   c.Query("status"),
 		Priority: c.Query("priority"),
@@ -235,7 +216,7 @@ func (h *UserTicketHandler) GetTicket(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
-// @Param closure body CloseTicketRequest false "Closure reason"
+// @Param closure body dto.CloseTicketRequest false "Closure reason"
 // @Success 200 {object} response.StandardResponse{data=entities.TicketUserResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -257,7 +238,7 @@ func (h *UserTicketHandler) CloseTicket(c *gin.Context) {
 	}
 
 	// Parse request body (optional)
-	var req CloseTicketRequest
+	var req dto.CloseTicketRequest
 	c.ShouldBindJSON(&req) // Don't fail if body is empty
 
 	// Get ticket to verify ownership
@@ -282,7 +263,7 @@ func (h *UserTicketHandler) CloseTicket(c *gin.Context) {
 	}
 
 	// Check if ticket is already closed
-	if ticket.Status == entities.TicketStatusClosed {
+	if ticket.Status == constants.TicketStatusClosed {
 		response.BadRequest(c, "Ticket is already closed")
 		return
 	}
@@ -378,7 +359,7 @@ func (h *UserTicketHandler) GetTicketMessages(c *gin.Context) {
 	}
 
 	// Get messages (excluding internal notes)
-	req := &ticketInterfaces.GetTicketMessagesRequest{
+	req := &dto.GetTicketMessagesRequest{
 		TicketID:        ticketID,
 		IncludeInternal: false, // Users should not see internal admin notes
 		Limit:           pagination.Limit,
@@ -412,7 +393,7 @@ func (h *UserTicketHandler) GetTicketMessages(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
-// @Param message body UserTicketMessageRequest true "Message data"
+// @Param message body dto.UserTicketMessageRequest true "Message data"
 // @Success 201 {object} response.StandardResponse{data=entities.TicketMessageUserResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -433,7 +414,7 @@ func (h *UserTicketHandler) AddMessage(c *gin.Context) {
 		return // Error response already handled by ParseIDParam
 	}
 
-	var req UserTicketMessageRequest
+	var req dto.UserTicketMessageRequest
 	if !handlers.BindJSONRequest(c, &req) {
 		return // Error response already handled by BindJSONRequest
 	}
@@ -460,15 +441,15 @@ func (h *UserTicketHandler) AddMessage(c *gin.Context) {
 	}
 
 	// Check if ticket is closed
-	if ticket.Status == entities.TicketStatusClosed {
+	if ticket.Status == constants.TicketStatusClosed {
 		response.BadRequest(c, "Cannot add messages to closed tickets")
 		return
 	}
 
 	// Create message request for service layer
-	createReq := &ticketInterfaces.CreateTicketMessageRequest{
+	createReq := &dto.CreateTicketMessageRequest{
 		Content:     req.Content,
-		MessageType: "user", // User messages are always type "user"
+		MessageType: constants.MessageTypeUser, // User messages are always type "user"
 		Attachments: req.Attachments,
 		IsInternal:  false, // User messages are never internal
 		Metadata:    req.Metadata,

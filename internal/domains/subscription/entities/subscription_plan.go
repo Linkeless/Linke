@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+
+	"linke/internal/domains/subscription/constants"
 )
 
 // SubscriptionPlan represents a subscription plan/package
@@ -64,20 +66,6 @@ func (SubscriptionPlan) TableName() string {
 	return "subscription_plans"
 }
 
-// Status constants
-const (
-	SubscriptionPlanStatusActive   = "active"
-	SubscriptionPlanStatusInactive = "inactive"
-	SubscriptionPlanStatusArchived = "archived"
-)
-
-// Billing cycle constants
-const (
-	BillingCycleMonthly  = "monthly"
-	BillingCycleYearly   = "yearly"
-	BillingCycleLifetime = "lifetime"
-)
-
 // Currency constants (removed duplicates - defined in payment_record.go)
 // Traffic reset cycle constants are defined in user_subscription.go
 // const (
@@ -88,7 +76,7 @@ const (
 
 // IsActive checks if the subscription plan is active
 func (sp *SubscriptionPlan) IsActive() bool {
-	return sp.Status == SubscriptionPlanStatusActive && !sp.IsDeleted()
+	return sp.Status == constants.SubscriptionPlanStatusActive && !sp.IsDeleted()
 }
 
 // IsDeleted checks if the subscription plan is soft deleted
@@ -103,7 +91,7 @@ func (sp *SubscriptionPlan) IsAvailableForPurchase() bool {
 
 // GetMonthlyPrice calculates the monthly equivalent price
 func (sp *SubscriptionPlan) GetMonthlyPrice() float64 {
-	if sp.BillingCycle == BillingCycleLifetime {
+	if sp.BillingCycle == constants.BillingCycleLifetime {
 		return 0 // Lifetime plans don't have monthly equivalent
 	}
 	return sp.Price / float64(sp.BillingInterval)
@@ -137,7 +125,7 @@ func (sp *SubscriptionPlan) FormatTrafficLimit() string {
 
 // IsTrafficResetEnabled checks if traffic reset is enabled for this plan
 func (sp *SubscriptionPlan) IsTrafficResetEnabled() bool {
-	return sp.TrafficResetCycle != TrafficResetCycleNever
+	return sp.TrafficResetCycle != constants.TrafficResetCycleNever
 }
 
 // GetDefaultServerGroupID returns the default server group ID for this plan

@@ -8,8 +8,9 @@ import (
 	"fmt"
 	"time"
 
+	"linke/internal/domains/invoice/constants"
+	"linke/internal/domains/invoice/dto"
 	"linke/internal/domains/invoice/entities"
-	"linke/internal/domains/invoice/usecases/interfaces"
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/shared/logger"
 
@@ -33,7 +34,7 @@ func NewInvoiceService(db *gorm.DB, userService userInterfaces.UserService, pdfG
 }
 
 // CreateInvoice creates a new invoice
-func (is *InvoiceService) CreateInvoice(ctx context.Context, req *interfaces.CreateInvoiceRequest) (*entities.Invoice, error) {
+func (is *InvoiceService) CreateInvoice(ctx context.Context, req *dto.CreateInvoiceRequest) (*entities.Invoice, error) {
 	// TODO: Replace with subscription service interface call
 	// For now, we'll validate the order ID exists in the subscription context
 	if req.SubscriptionOrderID == 0 {
@@ -46,7 +47,7 @@ func (is *InvoiceService) CreateInvoice(ctx context.Context, req *interfaces.Cre
 	// Set defaults
 	invoiceType := req.InvoiceType
 	if invoiceType == "" {
-		invoiceType = entities.InvoiceTypeStandard
+		invoiceType = constants.InvoiceTypeStandard
 	}
 
 	currency := req.Currency
@@ -87,7 +88,7 @@ func (is *InvoiceService) CreateInvoice(ctx context.Context, req *interfaces.Cre
 		SubscriptionOrderID: req.SubscriptionOrderID,
 		InvoiceNumber:       invoiceNumber,
 		InvoiceType:         invoiceType,
-		Status:              entities.InvoiceStatusDraft,
+		Status:              constants.InvoiceStatusDraft,
 		Amount:              req.Amount,
 		Currency:            currency,
 		TaxAmount:           taxAmount,
@@ -121,7 +122,7 @@ func (is *InvoiceService) CreateInvoice(ctx context.Context, req *interfaces.Cre
 
 	// Auto-send if requested
 	if req.AutoSend {
-		emailRequest := &interfaces.SendInvoiceRequest{
+		emailRequest := &dto.SendInvoiceRequest{
 			ToEmail: req.BillingEmail,
 			Subject: fmt.Sprintf("Invoice %s", invoiceNumber),
 			Message: "Please find your invoice attached.",
@@ -144,7 +145,7 @@ func (is *InvoiceService) CreateInvoice(ctx context.Context, req *interfaces.Cre
 }
 
 // CreateInvoiceFromOrder creates an invoice from a subscription order
-func (is *InvoiceService) CreateInvoiceFromOrder(ctx context.Context, orderID uint, options *interfaces.CreateInvoiceRequest) (*entities.Invoice, error) {
+func (is *InvoiceService) CreateInvoiceFromOrder(ctx context.Context, orderID uint, options *dto.CreateInvoiceRequest) (*entities.Invoice, error) {
 	// TODO: Replace with subscription service interface call
 	// For now, we'll create the invoice with the provided order ID
 	if orderID == 0 {
@@ -165,7 +166,7 @@ func (is *InvoiceService) CreateInvoiceFromOrder(ctx context.Context, orderID ui
 		return nil, fmt.Errorf("options are required for invoice creation")
 	}
 
-	req := &interfaces.CreateInvoiceRequest{
+	req := &dto.CreateInvoiceRequest{
 		UserID:              options.UserID,
 		SubscriptionOrderID: orderID,
 		Amount:              options.Amount,
@@ -272,7 +273,7 @@ func (is *InvoiceService) GetInvoiceWithRelations(ctx context.Context, invoiceID
 }
 
 // GetInvoices gets invoices with filtering
-func (is *InvoiceService) GetInvoices(ctx context.Context, req *interfaces.GetInvoicesRequest) ([]*entities.Invoice, int64, error) {
+func (is *InvoiceService) GetInvoices(ctx context.Context, req *dto.GetInvoicesRequest) ([]*entities.Invoice, int64, error) {
 	query := is.db.WithContext(ctx).Model(&entities.Invoice{})
 
 	// Apply filters
@@ -329,7 +330,7 @@ func (is *InvoiceService) GetInvoices(ctx context.Context, req *interfaces.GetIn
 }
 
 // UpdateInvoice updates an invoice
-func (is *InvoiceService) UpdateInvoice(ctx context.Context, invoiceID uint, req *interfaces.UpdateInvoiceRequest) (*entities.Invoice, error) {
+func (is *InvoiceService) UpdateInvoice(ctx context.Context, invoiceID uint, req *dto.UpdateInvoiceRequest) (*entities.Invoice, error) {
 	// Get invoice
 	invoice, err := is.GetInvoice(ctx, invoiceID)
 	if err != nil {
@@ -429,7 +430,7 @@ func (is *InvoiceService) UpdateInvoice(ctx context.Context, invoiceID uint, req
 }
 
 // SendInvoice sends an invoice to the customer
-func (is *InvoiceService) SendInvoice(ctx context.Context, invoiceID uint, emailRequest *interfaces.SendInvoiceRequest) error {
+func (is *InvoiceService) SendInvoice(ctx context.Context, invoiceID uint, emailRequest *dto.SendInvoiceRequest) error {
 	// Get invoice
 	invoice, err := is.GetInvoice(ctx, invoiceID)
 	if err != nil {
@@ -444,7 +445,7 @@ func (is *InvoiceService) SendInvoice(ctx context.Context, invoiceID uint, email
 	// Update invoice status
 	now := time.Now()
 	updateData := map[string]any{
-		"status":     entities.InvoiceStatusSent,
+		"status":     constants.InvoiceStatusSent,
 		"sent_at":    now,
 		"updated_at": now,
 	}
@@ -491,7 +492,7 @@ func (is *InvoiceService) MarkInvoiceAsPaid(ctx context.Context, invoiceID uint,
 
 	// Update invoice status
 	updateData := map[string]any{
-		"status":     entities.InvoiceStatusPaid,
+		"status":     constants.InvoiceStatusPaid,
 		"paid_at":    paidAt,
 		"updated_at": time.Now(),
 	}
@@ -524,7 +525,7 @@ func (is *InvoiceService) MarkInvoiceAsVoid(ctx context.Context, invoiceID uint,
 	// Update invoice status
 	now := time.Now()
 	updateData := map[string]any{
-		"status":     entities.InvoiceStatusVoided,
+		"status":     constants.InvoiceStatusVoided,
 		"voided_at":  now,
 		"updated_at": now,
 	}
@@ -645,7 +646,7 @@ func (is *InvoiceService) GenerateInvoicePDF(ctx context.Context, invoiceID uint
 }
 
 // GenerateInvoicePDFWithOptions generates a PDF with custom options
-func (is *InvoiceService) GenerateInvoicePDFWithOptions(ctx context.Context, invoiceID uint, options *interfaces.PDFGenerationRequest) ([]byte, string, error) {
+func (is *InvoiceService) GenerateInvoicePDFWithOptions(ctx context.Context, invoiceID uint, options *dto.PDFGenerationRequest) ([]byte, string, error) {
 	invoice, err := is.GetInvoice(ctx, invoiceID)
 	if err != nil {
 		return nil, "", err
@@ -717,7 +718,7 @@ func (is *InvoiceService) GenerateInvoicePDFWithOptions(ctx context.Context, inv
 }
 
 // GenerateBulkInvoicePDFs generates PDFs for multiple invoices and returns them as a ZIP
-func (is *InvoiceService) GenerateBulkInvoicePDFs(ctx context.Context, invoiceIDs []uint, options *interfaces.PDFGenerationRequest) ([]byte, error) {
+func (is *InvoiceService) GenerateBulkInvoicePDFs(ctx context.Context, invoiceIDs []uint, options *dto.PDFGenerationRequest) ([]byte, error) {
 	if len(invoiceIDs) == 0 {
 		return nil, fmt.Errorf("no invoice IDs provided")
 	}
@@ -882,12 +883,12 @@ func (is *InvoiceService) ResendInvoice(ctx context.Context, invoiceID uint) err
 	}
 
 	// Check if invoice can be sent
-	if !invoice.CanBeSent() && invoice.Status != entities.InvoiceStatusSent {
+	if !invoice.CanBeSent() && invoice.Status != constants.InvoiceStatusSent {
 		return fmt.Errorf("invoice cannot be resent in status: %s", invoice.Status)
 	}
 
 	// Create a default send request
-	emailRequest := &interfaces.SendInvoiceRequest{
+	emailRequest := &dto.SendInvoiceRequest{
 		ToEmail: invoice.BillingEmail,
 		Subject: fmt.Sprintf("Invoice %s", invoice.InvoiceNumber),
 		Message: "Please find your invoice attached.",
@@ -910,13 +911,13 @@ func (is *InvoiceService) MarkInvoiceAsOverdue(ctx context.Context, invoiceID ui
 	}
 
 	// Check if invoice can be marked as overdue
-	if invoice.Status == entities.InvoiceStatusPaid || invoice.Status == entities.InvoiceStatusVoided {
+	if invoice.Status == constants.InvoiceStatusPaid || invoice.Status == constants.InvoiceStatusVoided {
 		return fmt.Errorf("invoice cannot be marked as overdue in status: %s", invoice.Status)
 	}
 
 	// Update invoice status
 	updateData := map[string]any{
-		"status":     entities.InvoiceStatusOverdue,
+		"status":     constants.InvoiceStatusOverdue,
 		"updated_at": time.Now(),
 	}
 
@@ -1041,7 +1042,7 @@ func (is *InvoiceService) GetUserInvoiceStatistics(ctx context.Context, userID u
 
 	// Overdue count
 	var overdueCount int64
-	if err := query.Where("due_at < ? AND status != ?", time.Now(), entities.InvoiceStatusPaid).Count(&overdueCount).Error; err != nil {
+	if err := query.Where("due_at < ? AND status != ?", time.Now(), constants.InvoiceStatusPaid).Count(&overdueCount).Error; err != nil {
 		return nil, fmt.Errorf("failed to count overdue invoices: %w", err)
 	}
 	stats["overdue_count"] = overdueCount
@@ -1052,7 +1053,7 @@ func (is *InvoiceService) GetUserInvoiceStatistics(ctx context.Context, userID u
 }
 
 // SendInvoiceWithPDF sends an invoice with custom PDF options
-func (is *InvoiceService) SendInvoiceWithPDF(ctx context.Context, invoiceID uint, emailRequest *interfaces.SendInvoiceRequest, pdfOptions *interfaces.PDFGenerationRequest) error {
+func (is *InvoiceService) SendInvoiceWithPDF(ctx context.Context, invoiceID uint, emailRequest *dto.SendInvoiceRequest, pdfOptions *dto.PDFGenerationRequest) error {
 	// Generate PDF with custom options
 	pdfBytes, _, err := is.GenerateInvoicePDFWithOptions(ctx, invoiceID, pdfOptions)
 	if err != nil {
@@ -1070,7 +1071,7 @@ func (is *InvoiceService) SendInvoiceWithPDF(ctx context.Context, invoiceID uint
 
 	now := time.Now()
 	updateData := map[string]any{
-		"status":     entities.InvoiceStatusSent,
+		"status":     constants.InvoiceStatusSent,
 		"sent_at":    now,
 		"updated_at": now,
 	}
@@ -1104,7 +1105,7 @@ func (is *InvoiceService) GetInvoicePDFCached(ctx context.Context, invoiceID uin
 	}
 
 	// Generate new PDF
-	options := &interfaces.PDFGenerationRequest{
+	options := &dto.PDFGenerationRequest{
 		Template:   template,
 		Language:   invoice.Language,
 		SaveToDisk: true,
@@ -1124,7 +1125,7 @@ func (is *InvoiceService) GetInvoicePDFCached(ctx context.Context, invoiceID uin
 
 // DownloadInvoiceAsZip creates a ZIP file with multiple invoices
 func (is *InvoiceService) DownloadInvoiceAsZip(ctx context.Context, invoiceIDs []uint) ([]byte, string, error) {
-	zipBytes, err := is.GenerateBulkInvoicePDFs(ctx, invoiceIDs, &interfaces.PDFGenerationRequest{
+	zipBytes, err := is.GenerateBulkInvoicePDFs(ctx, invoiceIDs, &dto.PDFGenerationRequest{
 		Template: "professional",
 		Language: "en",
 	})
@@ -1137,10 +1138,10 @@ func (is *InvoiceService) DownloadInvoiceAsZip(ctx context.Context, invoiceIDs [
 }
 
 // GetInvoiceDownloadHistory returns download history for a user
-func (is *InvoiceService) GetInvoiceDownloadHistory(ctx context.Context, userID uint) ([]*interfaces.InvoiceDownloadRecord, error) {
+func (is *InvoiceService) GetInvoiceDownloadHistory(ctx context.Context, userID uint) ([]*dto.InvoiceDownloadRecord, error) {
 	// TODO: Implement download history tracking
 	// This would require a separate table to track downloads
-	return []*interfaces.InvoiceDownloadRecord{}, nil
+	return []*dto.InvoiceDownloadRecord{}, nil
 }
 
 // GetAvailableTemplates returns available PDF templates

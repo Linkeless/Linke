@@ -5,6 +5,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"linke/internal/domains/subscription/constants"
 	"linke/internal/shared/dto"
 )
 
@@ -74,72 +75,29 @@ func (SubscriptionOrder) TableName() string {
 	return "subscription_orders"
 }
 
-// Order type constants
-const (
-	OrderTypeNew       = "new"
-	OrderTypeRenewal   = "renewal"
-	OrderTypeUpgrade   = "upgrade"
-	OrderTypeDowngrade = "downgrade"
-)
-
-// Order status constants
-const (
-	OrderStatusPending   = "pending"
-	OrderStatusConfirmed = "confirmed"
-	OrderStatusPaid      = "paid"
-	OrderStatusFailed    = "failed"
-	OrderStatusCancelled = "cancelled"
-	OrderStatusRefunded  = "refunded"
-)
-
-// Payment status constants
-const (
-	PaymentStatusPending    = "pending"
-	PaymentStatusProcessing = "processing"
-	PaymentStatusCompleted  = "completed"
-	PaymentStatusFailed     = "failed"
-	PaymentStatusCancelled  = "cancelled"
-	PaymentStatusRefunded   = "refunded"
-)
-
-// Invoice status constants
-const (
-	InvoiceStatusPending = "pending"
-	InvoiceStatusSent    = "sent"
-	InvoiceStatusPaid    = "paid"
-	InvoiceStatusOverdue = "overdue"
-	InvoiceStatusVoided  = "voided"
-)
-
-// Discount type constants
-const (
-	DiscountTypePercentage = "percentage"
-	DiscountTypeFixed      = "fixed"
-)
-
 // IsPaid checks if the order is paid
 func (so *SubscriptionOrder) IsPaid() bool {
-	return so.Status == OrderStatusPaid
+	return so.Status == constants.OrderStatusPaid
 }
 
 // IsPending checks if the order is pending
 func (so *SubscriptionOrder) IsPending() bool {
-	return so.Status == OrderStatusPending
+	return so.Status == constants.OrderStatusPending
 }
 
 // IsFailed checks if the order has failed
 func (so *SubscriptionOrder) IsFailed() bool {
-	return so.Status == OrderStatusFailed
+	return so.Status == constants.OrderStatusFailed
 }
 
 // IsCancelled checks if the order is cancelled
 func (so *SubscriptionOrder) IsCancelled() bool {
-	return so.Status == OrderStatusCancelled
+	return so.Status == constants.OrderStatusCancelled
 }
 
 // IsRefunded checks if the order is refunded
 func (so *SubscriptionOrder) IsRefunded() bool {
-	return so.Status == OrderStatusRefunded
+	return so.Status == constants.OrderStatusRefunded
 }
 
 // IsDeleted checks if the order is soft deleted

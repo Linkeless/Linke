@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"linke/internal/domains/subscription/constants"
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/domains/subscription/usecases/interfaces"
 	"linke/internal/shared/logger"
@@ -62,13 +63,13 @@ func (s *UserSubscriptionService) GetUserSubscriptionStats(ctx context.Context, 
 	for _, sc := range statusCounts {
 		stats.TotalSubscriptions += sc.Count
 		switch sc.Status {
-		case entities.UserSubscriptionStatusActive:
+		case constants.UserSubscriptionStatusActive:
 			stats.ActiveSubscriptions = sc.Count
-		case entities.UserSubscriptionStatusPaused:
+		case constants.UserSubscriptionStatusPaused:
 			stats.PausedSubscriptions = sc.Count
-		case entities.UserSubscriptionStatusCancelled:
+		case constants.UserSubscriptionStatusCancelled:
 			stats.CancelledSubscriptions = sc.Count
-		case entities.UserSubscriptionStatusExpired:
+		case constants.UserSubscriptionStatusExpired:
 			stats.ExpiredSubscriptions = sc.Count
 		}
 	}
@@ -110,7 +111,7 @@ func (s *UserSubscriptionService) GetUserSubscriptionStats(ctx context.Context, 
 	if err := s.db.WithContext(ctx).
 		Model(&entities.UserSubscription{}).
 		Select("COALESCE(SUM(CASE WHEN billing_cycle = 'monthly' THEN price WHEN billing_cycle = 'yearly' THEN price/12 ELSE 0 END), 0)").
-		Where("user_id = ? AND status = ?", userID, entities.UserSubscriptionStatusActive).
+		Where("user_id = ? AND status = ?", userID, constants.UserSubscriptionStatusActive).
 		Scan(&monthlyCost).Error; err != nil {
 		logger.Error("Failed to calculate current monthly cost", logger.Error2("error", err))
 	}
@@ -121,7 +122,7 @@ func (s *UserSubscriptionService) GetUserSubscriptionStats(ctx context.Context, 
 	if err := s.db.WithContext(ctx).
 		Model(&entities.UserSubscription{}).
 		Select("MIN(next_billing_date)").
-		Where("user_id = ? AND status = ? AND next_billing_date IS NOT NULL", userID, entities.UserSubscriptionStatusActive).
+		Where("user_id = ? AND status = ? AND next_billing_date IS NOT NULL", userID, constants.UserSubscriptionStatusActive).
 		Scan(&nextBilling).Error; err == nil && !nextBilling.IsZero() {
 		stats.NextBillingDate = &nextBilling
 	}
@@ -151,7 +152,7 @@ func (s *UserSubscriptionService) getUserUsageStats(ctx context.Context, userID 
 	if err := s.db.WithContext(ctx).
 		Model(&entities.UserSubscription{}).
 		Select("COALESCE(SUM(traffic_used), 0) as total_used, COALESCE(SUM(CASE WHEN traffic_limit > 0 THEN traffic_limit ELSE 0 END), 0) as total_limit").
-		Where("user_id = ? AND status = ?", userID, entities.UserSubscriptionStatusActive).
+		Where("user_id = ? AND status = ?", userID, constants.UserSubscriptionStatusActive).
 		Scan(&trafficData).Error; err != nil {
 		return nil, fmt.Errorf("failed to get traffic data: %w", err)
 	}
@@ -286,7 +287,7 @@ func (s *UserSubscriptionService) PauseUserSubscription(ctx context.Context, sub
 	now := time.Now()
 	oldStatus := subscription.Status
 	updates := map[string]any{
-		"status":              entities.UserSubscriptionStatusPaused,
+		"status":              constants.UserSubscriptionStatusPaused,
 		"paused_at":           &now,
 		"pause_reason":        req.Reason,
 		"paused_by_admin_id":  &adminUserID,
@@ -319,7 +320,7 @@ func (s *UserSubscriptionService) PauseUserSubscription(ctx context.Context, sub
 	}
 
 	// Update subscription with new values for return
-	subscription.Status = entities.UserSubscriptionStatusPaused
+	subscription.Status = constants.UserSubscriptionStatusPaused
 	subscription.PausedAt = &now
 	subscription.PauseReason = req.Reason
 	subscription.PausedByAdminID = &adminUserID
@@ -371,7 +372,7 @@ func (s *UserSubscriptionService) ResumeUserSubscription(ctx context.Context, su
 	now := time.Now()
 	oldStatus := subscription.Status
 	updates := map[string]any{
-		"status":              entities.UserSubscriptionStatusActive,
+		"status":              constants.UserSubscriptionStatusActive,
 		"resumed_at":          &now,
 		"resumed_by_admin_id": &adminUserID,
 		"traffic_suspended":   false, // Clear traffic suspension on resume
@@ -428,7 +429,7 @@ func (s *UserSubscriptionService) ResumeUserSubscription(ctx context.Context, su
 	}
 
 	// Update subscription with new values for return
-	subscription.Status = entities.UserSubscriptionStatusActive
+	subscription.Status = constants.UserSubscriptionStatusActive
 	subscription.ResumedAt = &now
 	subscription.ResumedByAdminID = &adminUserID
 	subscription.TrafficSuspended = false
@@ -448,7 +449,7 @@ func (s *UserSubscriptionService) CheckAndProcessAutoResume(ctx context.Context)
 	var subscriptions []entities.UserSubscription
 	if err := s.db.WithContext(ctx).
 		Where("status = ? AND paused_at IS NOT NULL AND paused_at <= ?",
-			entities.UserSubscriptionStatusPaused,
+			constants.UserSubscriptionStatusPaused,
 			time.Now().AddDate(0, 0, -90)). // Default 90 days ago
 		Find(&subscriptions).Error; err != nil {
 		return fmt.Errorf("failed to find subscriptions for auto-resume: %w", err)

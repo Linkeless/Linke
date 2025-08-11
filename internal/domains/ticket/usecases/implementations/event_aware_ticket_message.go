@@ -3,6 +3,7 @@ package implementations
 import (
 	"context"
 
+	"linke/internal/domains/ticket/dto"
 	"linke/internal/domains/ticket/entities"
 	"linke/internal/domains/ticket/usecases/interfaces"
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
@@ -34,7 +35,7 @@ func NewEventAwareTicketMessageService(
 }
 
 // CreateTicketMessage creates a new ticket message and publishes an event
-func (s *EventAwareTicketMessageService) CreateTicketMessage(ctx context.Context, ticketID uint, userID uint, req *interfaces.CreateTicketMessageRequest) (*entities.TicketMessage, error) {
+func (s *EventAwareTicketMessageService) CreateTicketMessage(ctx context.Context, ticketID uint, userID uint, req *dto.CreateTicketMessageRequest) (*entities.TicketMessage, error) {
 	// Create the message
 	message, err := s.ticketMessageService.CreateTicketMessage(ctx, ticketID, userID, req)
 	if err != nil {
@@ -162,7 +163,7 @@ func (s *EventAwareTicketMessageService) GetTicketMessage(ctx context.Context, m
 	return s.ticketMessageService.GetTicketMessage(ctx, messageID)
 }
 
-func (s *EventAwareTicketMessageService) UpdateTicketMessage(ctx context.Context, messageID uint, req *interfaces.UpdateTicketMessageRequest) (*entities.TicketMessage, error) {
+func (s *EventAwareTicketMessageService) UpdateTicketMessage(ctx context.Context, messageID uint, req *dto.UpdateTicketMessageRequest) (*entities.TicketMessage, error) {
 	return s.ticketMessageService.UpdateTicketMessage(ctx, messageID, req)
 }
 
@@ -170,7 +171,7 @@ func (s *EventAwareTicketMessageService) DeleteTicketMessage(ctx context.Context
 	return s.ticketMessageService.DeleteTicketMessage(ctx, messageID)
 }
 
-func (s *EventAwareTicketMessageService) GetTicketMessages(ctx context.Context, req *interfaces.GetTicketMessagesRequest) ([]*entities.TicketMessage, int64, error) {
+func (s *EventAwareTicketMessageService) GetTicketMessages(ctx context.Context, req *dto.GetTicketMessagesRequest) ([]*entities.TicketMessage, int64, error) {
 	return s.ticketMessageService.GetTicketMessages(ctx, req)
 }
 

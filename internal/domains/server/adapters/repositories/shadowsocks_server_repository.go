@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"linke/internal/domains/server/constants"
 	"linke/internal/domains/server/entities"
 	"linke/internal/domains/server/usecases/interfaces"
 	"linke/internal/shared/framework"
@@ -24,6 +25,20 @@ func NewShadowsocksServerRepository(db *gorm.DB, logger framework.Logger) interf
 	}
 }
 
+// GetAll overrides base repository method to avoid group_id JSON scan error
+func (r *shadowsocksServerRepository) GetAll(ctx context.Context) ([]*entities.ShadowsocksServer, error) {
+	var servers []*entities.ShadowsocksServer
+	
+	if err := r.GetDB().WithContext(ctx).
+		Select("id, route_id, parent_id, tags, excludes, ips, name, rate, host, port, server_port, cipher, obfs, obfs_settings, `show`, sort, created_at, updated_at").
+		Order("sort ASC, created_at DESC").
+		Find(&servers).Error; err != nil {
+		return nil, fmt.Errorf("failed to get all shadowsocks servers: %w", err)
+	}
+	
+	return servers, nil
+}
+
 // ListByGroup retrieves shadowsocks servers by group ID with pagination
 func (r *shadowsocksServerRepository) ListByGroup(ctx context.Context, groupID uint, limit, offset int) ([]*entities.ShadowsocksServer, int64, error) {
 	var servers []*entities.ShadowsocksServer
@@ -34,7 +49,11 @@ func (r *shadowsocksServerRepository) ListByGroup(ctx context.Context, groupID u
 		return nil, 0, fmt.Errorf("failed to count shadowsocks servers by group: %w", err)
 	}
 
-	query := r.GetDB().WithContext(ctx).Preload("ServerGroup").Where("group_id = ?", groupID).Order("sort ASC, created_at DESC")
+	// Select all fields except group_id to avoid JSON scan error
+	query := r.GetDB().WithContext(ctx).
+		Select("id, route_id, parent_id, tags, excludes, ips, name, rate, host, port, server_port, cipher, obfs, obfs_settings, `show`, sort, created_at, updated_at").
+		Where("group_id = ?", groupID).
+		Order("sort ASC, created_at DESC")
 
 	if limit > 0 {
 		query = query.Limit(limit)
@@ -69,7 +88,11 @@ func (r *shadowsocksServerRepository) ListActive(ctx context.Context, limit, off
 		return nil, 0, fmt.Errorf("failed to count active shadowsocks servers: %w", err)
 	}
 
-	query := r.GetDB().WithContext(ctx).Preload("ServerGroup").Where("show = ?", 1).Order("sort ASC, created_at DESC")
+	// Select all fields except group_id to avoid JSON scan error
+	query := r.GetDB().WithContext(ctx).
+		Select("id, route_id, parent_id, tags, excludes, ips, name, rate, host, port, server_port, cipher, obfs, obfs_settings, `show`, sort, created_at, updated_at").
+		Where("show = ?", 1).
+		Order("sort ASC, created_at DESC")
 
 	if limit > 0 {
 		query = query.Limit(limit)
@@ -108,8 +131,8 @@ func (r *shadowsocksServerRepository) ListByLocation(ctx context.Context, countr
 		return nil, 0, fmt.Errorf("failed to count shadowsocks servers by location: %w", err)
 	}
 
-	// Apply preload, ordering, and pagination
-	query = query.Preload("ServerGroup").Order("sort ASC, created_at DESC")
+	// Apply select fields to avoid group_id scan error, ordering, and pagination
+	query = query.Select("id, route_id, parent_id, tags, excludes, ips, name, rate, host, port, server_port, cipher, obfs, obfs_settings, `show`, sort, created_at, updated_at").Order("sort ASC, created_at DESC")
 
 	if limit > 0 {
 		query = query.Limit(limit)
@@ -148,7 +171,7 @@ func (r *shadowsocksServerRepository) GetLocationStats(ctx context.Context) (map
 				ELSE 'Other'
 			END as location,
 			COUNT(*) as count
-		FROM shadowsocks_servers 
+		FROM ` + constants.TableShadowsocksServers + ` 
 		GROUP BY location
 	`).Scan(&results).Error; err != nil {
 		return nil, fmt.Errorf("failed to get location stats: %w", err)
@@ -172,12 +195,12 @@ func (r *shadowsocksServerRepository) GetStatusStats(ctx context.Context) (map[s
 	if err := r.GetDB().WithContext(ctx).Raw(`
 		SELECT 
 			CASE 
-				WHEN show = 1 THEN 'active'
-				WHEN show = 0 THEN 'inactive'
+				WHEN show = ` + fmt.Sprintf("%d", constants.ServerShowVisible) + ` THEN 'active'
+				WHEN show = ` + fmt.Sprintf("%d", constants.ServerShowHidden) + ` THEN 'inactive'
 				ELSE 'unknown'
 			END as status,
 			COUNT(*) as count
-		FROM shadowsocks_servers 
+		FROM ` + constants.TableShadowsocksServers + ` 
 		GROUP BY status
 	`).Scan(&results).Error; err != nil {
 		return nil, fmt.Errorf("failed to get status stats: %w", err)

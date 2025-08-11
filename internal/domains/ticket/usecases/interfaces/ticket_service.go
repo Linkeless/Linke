@@ -2,25 +2,26 @@ package interfaces
 
 import (
 	"context"
+	"linke/internal/domains/ticket/dto"
 	"linke/internal/domains/ticket/entities"
 )
 
 // TicketService defines the interface for ticket operations
 type TicketService interface {
 	// Ticket CRUD operations
-	CreateTicket(ctx context.Context, userID uint, req *CreateTicketRequest) (*entities.Ticket, error)
+	CreateTicket(ctx context.Context, userID uint, req *dto.CreateTicketRequest) (*entities.Ticket, error)
 	GetTicket(ctx context.Context, ticketID uint) (*entities.Ticket, error)
 	GetTicketByNumber(ctx context.Context, ticketNo string) (*entities.Ticket, error)
-	UpdateTicket(ctx context.Context, ticketID uint, req *UpdateTicketRequest) (*entities.Ticket, error)
+	UpdateTicket(ctx context.Context, ticketID uint, req *dto.UpdateTicketRequest) (*entities.Ticket, error)
 	DeleteTicket(ctx context.Context, ticketID uint) error
 
 	// Ticket listing and filtering
-	GetTickets(ctx context.Context, req *GetTicketsRequest) ([]*entities.Ticket, int64, error)
+	GetTickets(ctx context.Context, req *dto.GetTicketsRequest) ([]*entities.Ticket, int64, error)
 	GetUserTickets(ctx context.Context, userID uint, limit, offset int) ([]*entities.Ticket, int64, error)
 	GetAssignedTickets(ctx context.Context, assignedToID uint, limit, offset int) ([]*entities.Ticket, int64, error)
 
 	// Ticket assignment and status management
-	AssignTicket(ctx context.Context, ticketID uint, req *AssignTicketRequest) (*entities.Ticket, error)
+	AssignTicket(ctx context.Context, ticketID uint, req *dto.AssignTicketRequest) (*entities.Ticket, error)
 	AutoAssignTicket(ctx context.Context, ticketID uint) (*entities.Ticket, error)
 	UnassignTicket(ctx context.Context, ticketID uint) (*entities.Ticket, error)
 	UpdateTicketStatus(ctx context.Context, ticketID uint, status string) (*entities.Ticket, error)
@@ -28,11 +29,11 @@ type TicketService interface {
 	
 	// Agent workload management
 	GetAgentWorkload(ctx context.Context, agentID uint) (int, error)
-	GetAvailableAgents(ctx context.Context, category string) ([]*AgentInfo, error)
+	GetAvailableAgents(ctx context.Context, category string) ([]*dto.AgentInfo, error)
 	FindBestAgentForTicket(ctx context.Context, ticket *entities.Ticket) (uint, error)
 
 	// Ticket resolution
-	ResolveTicket(ctx context.Context, ticketID uint, resolvedByID uint, req *ResolveTicketRequest) (*entities.Ticket, error)
+	ResolveTicket(ctx context.Context, ticketID uint, resolvedByID uint, req *dto.ResolveTicketRequest) (*entities.Ticket, error)
 	CloseTicket(ctx context.Context, ticketID uint, reason string) (*entities.Ticket, error)
 	ReopenTicket(ctx context.Context, ticketID uint, reason string) (*entities.Ticket, error)
 
@@ -46,59 +47,3 @@ type TicketService interface {
 	BulkUpdateTicketStatus(ctx context.Context, ticketIDs []uint, status string) error
 }
 
-// CreateTicketRequest represents the request to create a ticket
-type CreateTicketRequest struct {
-	Title       string `json:"title" binding:"required,min=5,max=255" example:"Unable to access my account"`
-	Description string `json:"description" binding:"required,min=10,max=5000" example:"I cannot log in to my account even with correct credentials"`
-	Category    string `json:"category" binding:"required,oneof=general technical billing account feature bug subscription payment" example:"technical"`
-	Priority    string `json:"priority" binding:"omitempty,oneof=low normal high urgent critical" example:"normal"`
-	Tags        string `json:"tags,omitempty" example:"login,authentication"`
-	Metadata    string `json:"metadata,omitempty" example:"{\"browser\": \"Chrome\", \"os\": \"Windows\"}"`
-}
-
-// UpdateTicketRequest represents the request to update a ticket
-type UpdateTicketRequest struct {
-	Title       *string `json:"title,omitempty" binding:"omitempty,min=5,max=255" example:"Updated ticket title"`
-	Description *string `json:"description,omitempty" binding:"omitempty,min=10,max=5000" example:"Updated description"`
-	Category    *string `json:"category,omitempty" binding:"omitempty,oneof=general technical billing account feature bug subscription payment" example:"billing"`
-	Priority    *string `json:"priority,omitempty" binding:"omitempty,oneof=low normal high urgent critical" example:"high"`
-	Status      *string `json:"status,omitempty" binding:"omitempty,oneof=open in_progress pending resolved closed" example:"in_progress"`
-	Tags        *string `json:"tags,omitempty" example:"urgent,billing"`
-	Metadata    *string `json:"metadata,omitempty" example:"{\"updated_by\": \"admin\"}"`
-}
-
-// AssignTicketRequest represents the request to assign a ticket
-type AssignTicketRequest struct {
-	AssignedToID uint `json:"assigned_to_id" binding:"required" example:"2"`
-}
-
-// ResolveTicketRequest represents the request to resolve a ticket
-type ResolveTicketRequest struct {
-	Resolution string `json:"resolution" binding:"required,min=10,max=5000" example:"Issue resolved by updating user permissions"`
-}
-
-// GetTicketsRequest represents the request to get tickets with filters
-type GetTicketsRequest struct {
-	UserID       uint   `form:"user_id" example:"1"`
-	AssignedToID *uint  `form:"assigned_to_id" example:"2"`
-	Status       string `form:"status" binding:"omitempty,oneof=open in_progress pending resolved closed" example:"open"`
-	Priority     string `form:"priority" binding:"omitempty,oneof=low normal high urgent critical" example:"high"`
-	Category     string `form:"category" binding:"omitempty,oneof=general technical billing account feature bug subscription payment" example:"technical"`
-	Search       string `form:"search" example:"login issue"`
-	Limit        int    `form:"limit" binding:"omitempty,min=1,max=100" example:"10"`
-	Offset       int    `form:"offset" binding:"omitempty,min=0" example:"0"`
-}
-
-// AgentInfo represents information about an agent for ticket assignment
-type AgentInfo struct {
-	UserID         uint     `json:"user_id"`
-	Name           string   `json:"name"`
-	Email          string   `json:"email"`
-	Specialties    []string `json:"specialties"` // Categories this agent specializes in
-	CurrentLoad    int      `json:"current_load"` // Number of currently assigned tickets
-	MaxLoad        int      `json:"max_load"`     // Maximum tickets this agent can handle
-	IsOnline       bool     `json:"is_online"`
-	LastActiveAt   string   `json:"last_active_at,omitempty"`
-	AvgResponseTime int     `json:"avg_response_time"` // In minutes
-	SatisfactionScore float64 `json:"satisfaction_score"` // 0-10 scale
-}

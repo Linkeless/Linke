@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"strings"
 
+	"linke/internal/domains/server/dto"
 	"linke/internal/domains/server/entities"
 	"linke/internal/domains/server/usecases/interfaces"
 	"linke/internal/shared/logger"
@@ -12,25 +13,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// CreateServerGroupRequest represents the request body for creating a server group
-type CreateServerGroupRequest struct {
-	Name string `json:"name" binding:"required,max=255" example:"Asia Pacific"`
-}
-
-// UpdateServerGroupRequest represents the request body for updating a server group
-type UpdateServerGroupRequest struct {
-	Name *string `json:"name,omitempty" binding:"omitempty,max=255" example:"Europe"`
-}
-
-// PatchServerGroupRequest represents the request body for patching server group fields
-type PatchServerGroupRequest struct {
-	Name *string `json:"name,omitempty" example:"Europe"`
-}
-
-// BatchServerGroupIDsRequest represents the request body for batch operations on server groups
-type BatchServerGroupIDsRequest struct {
-	IDs []uint `json:"ids" binding:"required,min=1,max=100"`
-}
 
 type AdminServerGroupHandler struct {
 	serverGroupService     interfaces.ServerGroupService
@@ -54,7 +36,7 @@ func NewAdminServerGroupHandler(
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param group body CreateServerGroupRequest true "Server group creation data"
+// @Param group body dto.CreateServerGroupRequest true "Server group creation data"
 // @Success 201 {object} response.StandardResponse{data=entities.ServerGroupResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -63,14 +45,14 @@ func NewAdminServerGroupHandler(
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /admin/server-groups [post]
 func (h *AdminServerGroupHandler) CreateGroup(c *gin.Context) {
-	var createReq CreateServerGroupRequest
+	var createReq dto.CreateServerGroupRequest
 	if err := c.ShouldBindJSON(&createReq); err != nil {
 		response.BadRequest(c, err.Error())
 		return
 	}
 
 	// Convert to service request
-	serviceReq := &interfaces.CreateServerGroupRequest{
+	serviceReq := &dto.CreateServerGroupRequest{
 		Name: createReq.Name,
 	}
 
@@ -128,7 +110,7 @@ func (h *AdminServerGroupHandler) ListGroups(c *gin.Context) {
 	offset := (page - 1) * limit
 
 	// Create service request
-	serviceReq := &interfaces.GetServerGroupsRequest{
+	serviceReq := &dto.GetServerGroupsRequest{
 		Limit:  limit,
 		Offset: offset,
 	}
@@ -192,7 +174,7 @@ func (h *AdminServerGroupHandler) GetGroup(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Group ID"
-// @Param group body UpdateServerGroupRequest true "Server group data"
+// @Param group body dto.UpdateServerGroupRequest true "Server group data"
 // @Success 200 {object} response.StandardResponse{data=entities.ServerGroupResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -208,14 +190,14 @@ func (h *AdminServerGroupHandler) UpdateGroup(c *gin.Context) {
 		return
 	}
 
-	var updateReq UpdateServerGroupRequest
+	var updateReq dto.UpdateServerGroupRequest
 	if err := c.ShouldBindJSON(&updateReq); err != nil {
 		response.BadRequest(c, err.Error())
 		return
 	}
 
 	// Convert to service request
-	serviceReq := &interfaces.UpdateServerGroupRequest{
+	serviceReq := &dto.UpdateServerGroupRequest{
 		Name: updateReq.Name,
 	}
 
@@ -246,7 +228,7 @@ func (h *AdminServerGroupHandler) UpdateGroup(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Group ID"
-// @Param group body PatchServerGroupRequest true "Partial server group data"
+// @Param group body dto.PatchServerGroupRequest true "Partial server group data"
 // @Success 200 {object} response.StandardResponse{data=entities.ServerGroupResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -262,14 +244,14 @@ func (h *AdminServerGroupHandler) PatchGroup(c *gin.Context) {
 		return
 	}
 
-	var patchReq PatchServerGroupRequest
+	var patchReq dto.PatchServerGroupRequest
 	if err := c.ShouldBindJSON(&patchReq); err != nil {
 		response.BadRequest(c, err.Error())
 		return
 	}
 
 	// Convert to service request (only non-nil fields)
-	serviceReq := &interfaces.UpdateServerGroupRequest{
+	serviceReq := &dto.UpdateServerGroupRequest{
 		Name: patchReq.Name,
 	}
 

@@ -7,8 +7,9 @@ import (
 	"fmt"
 	"time"
 
+	"linke/internal/domains/referral/constants"
+	"linke/internal/domains/referral/dto"
 	"linke/internal/domains/referral/entities"
-	"linke/internal/domains/referral/usecases/interfaces"
 	"linke/internal/shared/logger"
 
 	"gorm.io/gorm"
@@ -47,7 +48,7 @@ func (s *InviteCodeService) GenerateInviteCode() (string, error) {
 }
 
 // CreateInviteCode creates a new invite code
-func (s *InviteCodeService) CreateInviteCode(ctx context.Context, createdByID uint, req *interfaces.CreateInviteCodeRequest) (*entities.InviteCode, error) {
+func (s *InviteCodeService) CreateInviteCode(ctx context.Context, createdByID uint, req *dto.CreateInviteCodeRequest) (*entities.InviteCode, error) {
 	// Generate unique code
 	code, err := s.GenerateInviteCode()
 	if err != nil {
@@ -58,7 +59,7 @@ func (s *InviteCodeService) CreateInviteCode(ctx context.Context, createdByID ui
 	inviteCode := &entities.InviteCode{
 		Code:                   code,
 		CreatedByID:            createdByID,
-		Status:                 entities.InviteCodeStatusActive,
+		Status:                 constants.InviteCodeStatusActive,
 		MaxUses:                req.MaxUses,
 		UsedCount:              0,
 		Description:            req.Description,
@@ -167,7 +168,7 @@ func (s *InviteCodeService) UseInviteCode(ctx context.Context, code string, user
 
 	// Update status if exhausted
 	if inviteCode.UsedCount >= inviteCode.MaxUses {
-		inviteCode.Status = entities.InviteCodeStatusUsed
+		inviteCode.Status = constants.InviteCodeStatusUsed
 	}
 
 	// Update invite code
@@ -332,21 +333,21 @@ func (s *InviteCodeService) GetInviteCodeStats(ctx context.Context) (map[string]
 
 	// Active invite codes
 	var activeCodes int64
-	if err := s.db.WithContext(ctx).Model(&entities.InviteCode{}).Where("status = ?", entities.InviteCodeStatusActive).Count(&activeCodes).Error; err != nil {
+	if err := s.db.WithContext(ctx).Model(&entities.InviteCode{}).Where("status = ?", constants.InviteCodeStatusActive).Count(&activeCodes).Error; err != nil {
 		return nil, fmt.Errorf("failed to count active invite codes: %w", err)
 	}
 	stats["active_codes"] = activeCodes
 
 	// Used invite codes
 	var usedCodes int64
-	if err := s.db.WithContext(ctx).Model(&entities.InviteCode{}).Where("status = ?", entities.InviteCodeStatusUsed).Count(&usedCodes).Error; err != nil {
+	if err := s.db.WithContext(ctx).Model(&entities.InviteCode{}).Where("status = ?", constants.InviteCodeStatusUsed).Count(&usedCodes).Error; err != nil {
 		return nil, fmt.Errorf("failed to count used invite codes: %w", err)
 	}
 	stats["used_codes"] = usedCodes
 
 	// Disabled invite codes
 	var disabledCodes int64
-	if err := s.db.WithContext(ctx).Model(&entities.InviteCode{}).Where("status = ?", entities.InviteCodeStatusDisabled).Count(&disabledCodes).Error; err != nil {
+	if err := s.db.WithContext(ctx).Model(&entities.InviteCode{}).Where("status = ?", constants.InviteCodeStatusDisabled).Count(&disabledCodes).Error; err != nil {
 		return nil, fmt.Errorf("failed to count disabled invite codes: %w", err)
 	}
 	stats["disabled_codes"] = disabledCodes
@@ -367,7 +368,7 @@ func (s *InviteCodeService) GetInviteCode(ctx context.Context, inviteCodeID uint
 }
 
 // UpdateInviteCode updates an invite code
-func (s *InviteCodeService) UpdateInviteCode(ctx context.Context, inviteCodeID uint, req *interfaces.UpdateInviteCodeRequest) (*entities.InviteCode, error) {
+func (s *InviteCodeService) UpdateInviteCode(ctx context.Context, inviteCodeID uint, req *dto.UpdateInviteCodeRequest) (*entities.InviteCode, error) {
 	// Get existing invite code
 	inviteCode, err := s.GetInviteCode(ctx, inviteCodeID)
 	if err != nil {
@@ -413,7 +414,7 @@ func (s *InviteCodeService) UpdateInviteCode(ctx context.Context, inviteCodeID u
 }
 
 // GetInviteCodes gets invite codes with filtering and pagination
-func (s *InviteCodeService) GetInviteCodes(ctx context.Context, req *interfaces.GetInviteCodesRequest) ([]*entities.InviteCode, int64, error) {
+func (s *InviteCodeService) GetInviteCodes(ctx context.Context, req *dto.GetInviteCodesRequest) ([]*entities.InviteCode, int64, error) {
 	query := s.db.WithContext(ctx).Model(&entities.InviteCode{})
 
 	// Apply filters
@@ -463,19 +464,19 @@ func (s *InviteCodeService) GetUserInviteCodes(ctx context.Context, userID uint,
 
 // ActivateInviteCode activates an invite code
 func (s *InviteCodeService) ActivateInviteCode(ctx context.Context, inviteCodeID uint) error {
-	_, err := s.UpdateInviteCodeStatus(ctx, inviteCodeID, entities.InviteCodeStatusActive)
+	_, err := s.UpdateInviteCodeStatus(ctx, inviteCodeID, constants.InviteCodeStatusActive)
 	return err
 }
 
 // DeactivateInviteCode deactivates an invite code
 func (s *InviteCodeService) DeactivateInviteCode(ctx context.Context, inviteCodeID uint) error {
-	_, err := s.UpdateInviteCodeStatus(ctx, inviteCodeID, entities.InviteCodeStatusDisabled)
+	_, err := s.UpdateInviteCodeStatus(ctx, inviteCodeID, constants.InviteCodeStatusDisabled)
 	return err
 }
 
 // ExpireInviteCode expires an invite code
 func (s *InviteCodeService) ExpireInviteCode(ctx context.Context, inviteCodeID uint) error {
-	_, err := s.UpdateInviteCodeStatus(ctx, inviteCodeID, entities.InviteCodeStatusDisabled)
+	_, err := s.UpdateInviteCodeStatus(ctx, inviteCodeID, constants.InviteCodeStatusDisabled)
 	return err
 }
 
@@ -589,7 +590,7 @@ func (s *InviteCodeService) GetUserInviteCodeStatistics(ctx context.Context, use
 
 	// Count active codes
 	var activeCodes int64
-	if err := s.db.WithContext(ctx).Model(&entities.InviteCode{}).Where("created_by_id = ? AND status = ?", userID, entities.InviteCodeStatusActive).Count(&activeCodes).Error; err != nil {
+	if err := s.db.WithContext(ctx).Model(&entities.InviteCode{}).Where("created_by_id = ? AND status = ?", userID, constants.InviteCodeStatusActive).Count(&activeCodes).Error; err != nil {
 		return nil, fmt.Errorf("failed to count active user invite codes: %w", err)
 	}
 	stats["active_codes"] = activeCodes

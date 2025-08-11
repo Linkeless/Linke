@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"linke/internal/domains/payment/constants"
+	"linke/internal/domains/payment/dto"
 	"linke/internal/domains/payment/entities"
 	"linke/internal/domains/payment/usecases/interfaces"
 	"linke/internal/shared/logger"
@@ -39,7 +41,7 @@ const (
 )
 
 // CreatePaymentMethod creates a new payment method for a user
-func (s *paymentMethodService) CreatePaymentMethod(ctx context.Context, userID uint, req *entities.CreatePaymentMethodRequest) (*entities.PaymentMethodResponse, error) {
+func (s *paymentMethodService) CreatePaymentMethod(ctx context.Context, userID uint, req *dto.CreatePaymentMethodRequest) (*dto.PaymentMethodResponse, error) {
 	s.logger.Info("Creating payment method", logger.Uint("user_id", userID), logger.String("gateway", req.Gateway), logger.String("method", req.Method))
 
 	// Check if user has reached the payment method limit
@@ -80,7 +82,7 @@ func (s *paymentMethodService) CreatePaymentMethod(ctx context.Context, userID u
 		ExpiryYear:        req.ExpiryYear,
 		IsDefault:         false, // Will be set later if requested
 		Active:            true,
-		Status:            entities.PaymentMethodStatusActive,
+		Status:            constants.PaymentMethodStatusActive,
 		BillingCountry:    req.BillingCountry,
 		BillingPostcode:   req.BillingPostcode,
 		LastValidatedAt:   timePtr(time.Now()),
@@ -102,11 +104,11 @@ func (s *paymentMethodService) CreatePaymentMethod(ctx context.Context, userID u
 	}
 
 	s.logger.Info("Payment method created successfully", logger.Uint("payment_method_id", paymentMethod.ID), logger.Uint("user_id", userID))
-	return paymentMethod.ToResponse(), nil
+	return dto.ToPaymentMethodResponse(paymentMethod), nil
 }
 
 // GetPaymentMethod retrieves a payment method by ID for a specific user
-func (s *paymentMethodService) GetPaymentMethod(ctx context.Context, userID, paymentMethodID uint) (*entities.PaymentMethodResponse, error) {
+func (s *paymentMethodService) GetPaymentMethod(ctx context.Context, userID, paymentMethodID uint) (*dto.PaymentMethodResponse, error) {
 	// Validate ownership
 	isOwner, err := s.paymentMethodRepo.ValidateOwnership(ctx, paymentMethodID, userID)
 	if err != nil {
@@ -124,28 +126,28 @@ func (s *paymentMethodService) GetPaymentMethod(ctx context.Context, userID, pay
 		return nil, fmt.Errorf("payment method not found")
 	}
 
-	return paymentMethod.ToResponse(), nil
+	return dto.ToPaymentMethodResponse(paymentMethod), nil
 }
 
 // ListPaymentMethods retrieves all payment methods for a user
-func (s *paymentMethodService) ListPaymentMethods(ctx context.Context, userID uint) (*entities.PaymentMethodListResponse, error) {
+func (s *paymentMethodService) ListPaymentMethods(ctx context.Context, userID uint) (*dto.PaymentMethodListResponse, error) {
 	paymentMethods, err := s.paymentMethodRepo.GetByUserID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list payment methods: %w", err)
 	}
 
-	responses := make([]entities.PaymentMethodResponse, len(paymentMethods))
-	var defaultMethod *entities.PaymentMethodResponse
+	responses := make([]dto.PaymentMethodResponse, len(paymentMethods))
+	var defaultMethod *dto.PaymentMethodResponse
 
 	for i, pm := range paymentMethods {
-		responses[i] = *pm.ToResponse()
+		responses[i] = *dto.ToPaymentMethodResponse(pm)
 		if pm.IsDefault {
-			resp := pm.ToResponse()
+			resp := dto.ToPaymentMethodResponse(pm)
 			defaultMethod = resp
 		}
 	}
 
-	return &entities.PaymentMethodListResponse{
+	return &dto.PaymentMethodListResponse{
 		PaymentMethods: responses,
 		Total:          len(responses),
 		DefaultMethod:  defaultMethod,
@@ -153,24 +155,24 @@ func (s *paymentMethodService) ListPaymentMethods(ctx context.Context, userID ui
 }
 
 // ListActivePaymentMethods retrieves all active payment methods for a user
-func (s *paymentMethodService) ListActivePaymentMethods(ctx context.Context, userID uint) (*entities.PaymentMethodListResponse, error) {
+func (s *paymentMethodService) ListActivePaymentMethods(ctx context.Context, userID uint) (*dto.PaymentMethodListResponse, error) {
 	paymentMethods, err := s.paymentMethodRepo.GetActiveByUserID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list active payment methods: %w", err)
 	}
 
-	responses := make([]entities.PaymentMethodResponse, len(paymentMethods))
-	var defaultMethod *entities.PaymentMethodResponse
+	responses := make([]dto.PaymentMethodResponse, len(paymentMethods))
+	var defaultMethod *dto.PaymentMethodResponse
 
 	for i, pm := range paymentMethods {
-		responses[i] = *pm.ToResponse()
+		responses[i] = *dto.ToPaymentMethodResponse(pm)
 		if pm.IsDefault {
-			resp := pm.ToResponse()
+			resp := dto.ToPaymentMethodResponse(pm)
 			defaultMethod = resp
 		}
 	}
 
-	return &entities.PaymentMethodListResponse{
+	return &dto.PaymentMethodListResponse{
 		PaymentMethods: responses,
 		Total:          len(responses),
 		DefaultMethod:  defaultMethod,
@@ -178,24 +180,24 @@ func (s *paymentMethodService) ListActivePaymentMethods(ctx context.Context, use
 }
 
 // ListPaymentMethodsByGateway retrieves payment methods for a user by gateway
-func (s *paymentMethodService) ListPaymentMethodsByGateway(ctx context.Context, userID uint, gateway string) (*entities.PaymentMethodListResponse, error) {
+func (s *paymentMethodService) ListPaymentMethodsByGateway(ctx context.Context, userID uint, gateway string) (*dto.PaymentMethodListResponse, error) {
 	paymentMethods, err := s.paymentMethodRepo.GetByUserIDAndGateway(ctx, userID, gateway)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list payment methods by gateway: %w", err)
 	}
 
-	responses := make([]entities.PaymentMethodResponse, len(paymentMethods))
-	var defaultMethod *entities.PaymentMethodResponse
+	responses := make([]dto.PaymentMethodResponse, len(paymentMethods))
+	var defaultMethod *dto.PaymentMethodResponse
 
 	for i, pm := range paymentMethods {
-		responses[i] = *pm.ToResponse()
+		responses[i] = *dto.ToPaymentMethodResponse(pm)
 		if pm.IsDefault {
-			resp := pm.ToResponse()
+			resp := dto.ToPaymentMethodResponse(pm)
 			defaultMethod = resp
 		}
 	}
 
-	return &entities.PaymentMethodListResponse{
+	return &dto.PaymentMethodListResponse{
 		PaymentMethods: responses,
 		Total:          len(responses),
 		DefaultMethod:  defaultMethod,
@@ -203,7 +205,7 @@ func (s *paymentMethodService) ListPaymentMethodsByGateway(ctx context.Context, 
 }
 
 // UpdatePaymentMethod updates an existing payment method
-func (s *paymentMethodService) UpdatePaymentMethod(ctx context.Context, userID, paymentMethodID uint, req *entities.UpdatePaymentMethodRequest) (*entities.PaymentMethodResponse, error) {
+func (s *paymentMethodService) UpdatePaymentMethod(ctx context.Context, userID, paymentMethodID uint, req *dto.UpdatePaymentMethodRequest) (*dto.PaymentMethodResponse, error) {
 	// Validate ownership
 	isOwner, err := s.paymentMethodRepo.ValidateOwnership(ctx, paymentMethodID, userID)
 	if err != nil {
@@ -240,9 +242,9 @@ func (s *paymentMethodService) UpdatePaymentMethod(ctx context.Context, userID, 
 	if req.Active != nil {
 		paymentMethod.Active = *req.Active
 		if !*req.Active {
-			paymentMethod.Status = entities.PaymentMethodStatusInactive
+			paymentMethod.Status = constants.PaymentMethodStatusInactive
 		} else {
-			paymentMethod.Status = entities.PaymentMethodStatusActive
+			paymentMethod.Status = constants.PaymentMethodStatusActive
 		}
 	}
 
@@ -251,11 +253,11 @@ func (s *paymentMethodService) UpdatePaymentMethod(ctx context.Context, userID, 
 	}
 
 	s.logger.Info("Payment method updated", logger.Uint("payment_method_id", paymentMethodID), logger.Uint("user_id", userID))
-	return paymentMethod.ToResponse(), nil
+	return dto.ToPaymentMethodResponse(paymentMethod), nil
 }
 
 // SetDefaultPaymentMethod sets a payment method as the default for the user
-func (s *paymentMethodService) SetDefaultPaymentMethod(ctx context.Context, userID, paymentMethodID uint) (*entities.PaymentMethodResponse, error) {
+func (s *paymentMethodService) SetDefaultPaymentMethod(ctx context.Context, userID, paymentMethodID uint) (*dto.PaymentMethodResponse, error) {
 	// Validate ownership
 	isOwner, err := s.paymentMethodRepo.ValidateOwnership(ctx, paymentMethodID, userID)
 	if err != nil {
@@ -284,7 +286,7 @@ func (s *paymentMethodService) SetDefaultPaymentMethod(ctx context.Context, user
 
 	paymentMethod.IsDefault = true
 	s.logger.Info("Payment method set as default", logger.Uint("payment_method_id", paymentMethodID), logger.Uint("user_id", userID))
-	return paymentMethod.ToResponse(), nil
+	return dto.ToPaymentMethodResponse(paymentMethod), nil
 }
 
 // DeletePaymentMethod soft deletes a payment method
@@ -307,7 +309,7 @@ func (s *paymentMethodService) DeletePaymentMethod(ctx context.Context, userID, 
 }
 
 // GetDefaultPaymentMethod retrieves the default payment method for a user
-func (s *paymentMethodService) GetDefaultPaymentMethod(ctx context.Context, userID uint) (*entities.PaymentMethodResponse, error) {
+func (s *paymentMethodService) GetDefaultPaymentMethod(ctx context.Context, userID uint) (*dto.PaymentMethodResponse, error) {
 	paymentMethod, err := s.paymentMethodRepo.GetDefaultByUserID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get default payment method: %w", err)
@@ -316,11 +318,11 @@ func (s *paymentMethodService) GetDefaultPaymentMethod(ctx context.Context, user
 		return nil, fmt.Errorf("no default payment method found")
 	}
 
-	return paymentMethod.ToResponse(), nil
+	return dto.ToPaymentMethodResponse(paymentMethod), nil
 }
 
 // GetDefaultPaymentMethodByGateway retrieves the default payment method for a user and gateway
-func (s *paymentMethodService) GetDefaultPaymentMethodByGateway(ctx context.Context, userID uint, gateway string) (*entities.PaymentMethodResponse, error) {
+func (s *paymentMethodService) GetDefaultPaymentMethodByGateway(ctx context.Context, userID uint, gateway string) (*dto.PaymentMethodResponse, error) {
 	paymentMethod, err := s.paymentMethodRepo.GetDefaultByUserIDAndGateway(ctx, userID, gateway)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get default payment method by gateway: %w", err)
@@ -329,11 +331,11 @@ func (s *paymentMethodService) GetDefaultPaymentMethodByGateway(ctx context.Cont
 		return nil, fmt.Errorf("no default payment method found for gateway %s", gateway)
 	}
 
-	return paymentMethod.ToResponse(), nil
+	return dto.ToPaymentMethodResponse(paymentMethod), nil
 }
 
 // ValidatePaymentMethod validates a payment method with the gateway
-func (s *paymentMethodService) ValidatePaymentMethod(ctx context.Context, userID, paymentMethodID uint) (*entities.PaymentMethodResponse, error) {
+func (s *paymentMethodService) ValidatePaymentMethod(ctx context.Context, userID, paymentMethodID uint) (*dto.PaymentMethodResponse, error) {
 	// Validate ownership
 	isOwner, err := s.paymentMethodRepo.ValidateOwnership(ctx, paymentMethodID, userID)
 	if err != nil {
@@ -354,7 +356,7 @@ func (s *paymentMethodService) ValidatePaymentMethod(ctx context.Context, userID
 	// Validate with gateway (mock implementation)
 	if err := s.validatePaymentTokenWithGateway(paymentMethod.Gateway, paymentMethod.PaymentToken); err != nil {
 		// Mark as invalid if validation fails
-		paymentMethod.Status = entities.PaymentMethodStatusInvalid
+		paymentMethod.Status = constants.PaymentMethodStatusInvalid
 		if updateErr := s.paymentMethodRepo.Update(ctx, paymentMethod); updateErr != nil {
 			s.logger.Error("Failed to update payment method status", logger.ErrorField(updateErr))
 		}
@@ -369,7 +371,7 @@ func (s *paymentMethodService) ValidatePaymentMethod(ctx context.Context, userID
 	}
 
 	s.logger.Info("Payment method validated", logger.Uint("payment_method_id", paymentMethodID), logger.Uint("user_id", userID))
-	return paymentMethod.ToResponse(), nil
+	return dto.ToPaymentMethodResponse(paymentMethod), nil
 }
 
 // ProcessPaymentWithMethod processes a payment using a specific payment method
@@ -412,7 +414,7 @@ func (s *paymentMethodService) ProcessPaymentWithMethod(ctx context.Context, use
 		Gateway:       paymentMethod.Gateway,
 		Amount:        amount,
 		Currency:      currency,
-		Status:        entities.PaymentRecordStatusPending,
+		Status:        constants.PaymentRecordStatusPending,
 	}, nil
 }
 
@@ -443,7 +445,7 @@ func (s *paymentMethodService) RetryFailedPayment(ctx context.Context, userID ui
 }
 
 // GetPaymentMethodUsageStats retrieves usage statistics for a payment method
-func (s *paymentMethodService) GetPaymentMethodUsageStats(ctx context.Context, userID, paymentMethodID uint) (*interfaces.PaymentMethodUsageStats, error) {
+func (s *paymentMethodService) GetPaymentMethodUsageStats(ctx context.Context, userID, paymentMethodID uint) (*dto.PaymentMethodUsageStats, error) {
 	// Validate ownership
 	isOwner, err := s.paymentMethodRepo.ValidateOwnership(ctx, paymentMethodID, userID)
 	if err != nil {
@@ -474,7 +476,7 @@ func (s *paymentMethodService) GetPaymentMethodUsageStats(ctx context.Context, u
 		lastUsed = &lastUsedStr
 	}
 
-	return &interfaces.PaymentMethodUsageStats{
+	return &dto.PaymentMethodUsageStats{
 		PaymentMethodID:  paymentMethodID,
 		TotalUses:        totalUses,
 		SuccessfulUses:   paymentMethod.SuccessfulUses,
@@ -496,7 +498,7 @@ func (s *paymentMethodService) RefreshExpiredMethods(ctx context.Context) error 
 	}
 
 	for _, method := range expiredMethods {
-		if err := s.paymentMethodRepo.UpdateStatus(ctx, method.ID, entities.PaymentMethodStatusExpired); err != nil {
+		if err := s.paymentMethodRepo.UpdateStatus(ctx, method.ID, constants.PaymentMethodStatusExpired); err != nil {
 			s.logger.Error("Failed to update expired method status", logger.ErrorField(err), logger.Uint("payment_method_id", method.ID))
 		}
 	}
@@ -516,7 +518,7 @@ func (s *paymentMethodService) RevalidatePaymentMethods(ctx context.Context) err
 	for _, method := range methods {
 		if err := s.validatePaymentTokenWithGateway(method.Gateway, method.PaymentToken); err != nil {
 			// Mark as invalid
-			if updateErr := s.paymentMethodRepo.UpdateStatus(ctx, method.ID, entities.PaymentMethodStatusInvalid); updateErr != nil {
+			if updateErr := s.paymentMethodRepo.UpdateStatus(ctx, method.ID, constants.PaymentMethodStatusInvalid); updateErr != nil {
 				s.logger.Error("Failed to mark method as invalid", logger.ErrorField(updateErr), logger.Uint("payment_method_id", method.ID))
 			}
 		} else {
@@ -550,11 +552,11 @@ func (s *paymentMethodService) IsPaymentMethodLimitReached(ctx context.Context, 
 }
 
 // GetRecommendedPaymentMethod returns the best payment method for a user based on history
-func (s *paymentMethodService) GetRecommendedPaymentMethod(ctx context.Context, userID uint, gateway string) (*entities.PaymentMethodResponse, error) {
+func (s *paymentMethodService) GetRecommendedPaymentMethod(ctx context.Context, userID uint, gateway string) (*dto.PaymentMethodResponse, error) {
 	// First try to get default method for the gateway
 	defaultMethod, err := s.paymentMethodRepo.GetDefaultByUserIDAndGateway(ctx, userID, gateway)
 	if err == nil && defaultMethod != nil && defaultMethod.CanBeUsedForPayment() {
-		return defaultMethod.ToResponse(), nil
+		return dto.ToPaymentMethodResponse(defaultMethod), nil
 	}
 
 	// Get all active methods for the gateway
@@ -588,7 +590,7 @@ func (s *paymentMethodService) GetRecommendedPaymentMethod(ctx context.Context, 
 		return nil, fmt.Errorf("no usable payment method found for gateway %s", gateway)
 	}
 
-	return bestMethod.ToResponse(), nil
+	return dto.ToPaymentMethodResponse(bestMethod), nil
 }
 
 // Helper functions
@@ -602,11 +604,11 @@ func (s *paymentMethodService) validatePaymentTokenWithGateway(gateway, token st
 
 	// Mock validation logic
 	switch gateway {
-	case entities.PaymentGatewayEpay:
+	case constants.PaymentGatewayEpay:
 		if !strings.HasPrefix(token, "epay_") {
 			return fmt.Errorf("invalid epay token format")
 		}
-	case entities.PaymentGatewayEPUSDT:
+	case constants.PaymentGatewayEPUSDT:
 		if !strings.HasPrefix(token, "epusdt_") {
 			return fmt.Errorf("invalid epusdt token format")
 		}

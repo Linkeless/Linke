@@ -5,38 +5,10 @@ import (
 
 	"gorm.io/gorm"
 
+	"linke/internal/domains/ticket/constants"
 	"linke/internal/shared/dto"
 )
 
-// Ticket status constants
-const (
-	TicketStatusOpen       = "open"
-	TicketStatusInProgress = "in_progress"
-	TicketStatusPending    = "pending"
-	TicketStatusResolved   = "resolved"
-	TicketStatusClosed     = "closed"
-)
-
-// Ticket priority constants
-const (
-	TicketPriorityLow      = "low"
-	TicketPriorityNormal   = "normal"
-	TicketPriorityHigh     = "high"
-	TicketPriorityUrgent   = "urgent"
-	TicketPriorityCritical = "critical"
-)
-
-// Ticket category constants
-const (
-	TicketCategoryGeneral      = "general"
-	TicketCategoryTechnical    = "technical"
-	TicketCategoryBilling      = "billing"
-	TicketCategoryAccount      = "account"
-	TicketCategoryFeature      = "feature"
-	TicketCategoryBug          = "bug"
-	TicketCategorySubscription = "subscription"
-	TicketCategoryPayment      = "payment"
-)
 
 // Ticket represents a support ticket
 type Ticket struct {
@@ -282,10 +254,10 @@ func (tm *TicketMessage) ToUserResponse() *TicketMessageUserResponse {
 
 // TableName returns the table name for Ticket
 func (Ticket) TableName() string {
-	return "tickets"
+	return constants.TableTickets
 }
 
 // TableName returns the table name for TicketMessage
 func (TicketMessage) TableName() string {
-	return "ticket_messages"
+	return constants.TableTicketMessages
 }

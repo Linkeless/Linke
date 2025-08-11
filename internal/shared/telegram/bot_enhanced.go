@@ -10,6 +10,7 @@ import (
 	"linke/internal/domains/subscription/usecases/interfaces"
 	ticketInterfaces "linke/internal/domains/ticket/usecases/interfaces"
 	ticketEntities "linke/internal/domains/ticket/entities"
+	"linke/internal/domains/ticket/dto"
 	"linke/internal/domains/user/entities"
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/shared/config"
@@ -1973,7 +1974,7 @@ func (b *BotEnhanced) showTicketDetails(chatID int64, messageID int, ticketID ui
 	sb.WriteString(fmt.Sprintf("_%s_\n\n", b.escapeMarkdownV2(ticket.Description)))
 	
 	// Recent Messages Section
-	messages, _, msgErr := b.ticketMessageService.GetTicketMessages(ctx, &ticketInterfaces.GetTicketMessagesRequest{
+	messages, _, msgErr := b.ticketMessageService.GetTicketMessages(ctx, &dto.GetTicketMessagesRequest{
 		TicketID: ticketID,
 		Limit:    3,
 	})
@@ -2059,7 +2060,7 @@ func (b *BotEnhanced) showMyTicketDetails(chatID int64, messageID int, ticketID 
 	sb.WriteString(fmt.Sprintf("\n描述:\n%s\n", ticket.Description))
 	
 	// Get user-visible messages
-	messages, _, msgErr := b.ticketMessageService.GetTicketMessages(ctx, &ticketInterfaces.GetTicketMessagesRequest{
+	messages, _, msgErr := b.ticketMessageService.GetTicketMessages(ctx, &dto.GetTicketMessagesRequest{
 		TicketID:        ticketID,
 		IncludeInternal: false, // Hide internal messages from users
 		Limit:           10,
@@ -2337,7 +2338,7 @@ func (b *BotEnhanced) handleTicketReply(chatID int64, ticketID uint, content str
 	b.api.Send(typingAction)
 	
 	// Create the ticket message
-	req := &ticketInterfaces.CreateTicketMessageRequest{
+	req := &dto.CreateTicketMessageRequest{
 		Content:     content,
 		MessageType: messageType,
 		IsInternal:  false,
@@ -2613,7 +2614,7 @@ func (b *BotEnhanced) showTicketHistory(chatID int64, messageID int, ticketID ui
 	ctx := context.Background()
 	
 	// Get all messages for the ticket
-	messages, _, err := b.ticketMessageService.GetTicketMessages(ctx, &ticketInterfaces.GetTicketMessagesRequest{
+	messages, _, err := b.ticketMessageService.GetTicketMessages(ctx, &dto.GetTicketMessagesRequest{
 		TicketID: ticketID,
 		Limit:    50, // Get more history
 	})
@@ -2895,7 +2896,7 @@ func (b *BotEnhanced) handleMessageSearch(chatID int64, ticketID uint, searchQue
 	}
 	
 	// Get all messages for the ticket
-	messages, _, err := b.ticketMessageService.GetTicketMessages(ctx, &ticketInterfaces.GetTicketMessagesRequest{
+	messages, _, err := b.ticketMessageService.GetTicketMessages(ctx, &dto.GetTicketMessagesRequest{
 		TicketID: ticketID,
 		Limit:    100, // Get more messages for search
 	})

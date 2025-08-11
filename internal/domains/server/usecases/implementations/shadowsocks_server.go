@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"linke/internal/domains/server/dto"
 	"linke/internal/domains/server/entities"
-	"linke/internal/domains/server/usecases/interfaces"
 	"linke/internal/shared/database"
 	"linke/internal/shared/logger"
 
@@ -24,7 +24,7 @@ func NewShadowsocksServerService(db *database.Database) *ShadowsocksServerServic
 }
 
 // CreateShadowsocksServer creates a new shadowsocks server
-func (s *ShadowsocksServerService) CreateShadowsocksServer(ctx context.Context, req *interfaces.CreateShadowsocksServerRequest) (*entities.ShadowsocksServer, error) {
+func (s *ShadowsocksServerService) CreateShadowsocksServer(ctx context.Context, req *dto.CreateShadowsocksServerRequest) (*entities.ShadowsocksServer, error) {
 	// Set default values
 	if req.Rate == 0 {
 		req.Rate = 1.0
@@ -85,11 +85,11 @@ func (s *ShadowsocksServerService) GetShadowsocksServerByID(ctx context.Context,
 }
 
 // GetShadowsocksServers retrieves shadowsocks servers with optional filters
-func (s *ShadowsocksServerService) GetShadowsocksServers(ctx context.Context, req *interfaces.GetShadowsocksServersRequest) ([]*entities.ShadowsocksServer, int64, error) {
+func (s *ShadowsocksServerService) GetShadowsocksServers(ctx context.Context, req *dto.GetShadowsocksServersRequest) ([]*entities.ShadowsocksServer, int64, error) {
 	var servers []*entities.ShadowsocksServer
 	var total int64
 
-	query := s.db.DB.WithContext(ctx).Model(&entities.ShadowsocksServer{})
+	query := s.db.DB.WithContext(ctx).Model(&entities.ShadowsocksServer{}).Select("id, route_id, parent_id, name, tags, excludes, ips, rate, host, port, server_port, cipher, obfs, obfs_settings, `show`, sort, created_at, updated_at")
 
 	// Apply filters
 	if req.GroupID != nil {
@@ -158,7 +158,7 @@ func (s *ShadowsocksServerService) GetShadowsocksServer(ctx context.Context, ser
 }
 
 // UpdateShadowsocksServer updates a shadowsocks server
-func (s *ShadowsocksServerService) UpdateShadowsocksServer(ctx context.Context, serverID uint, req *interfaces.UpdateShadowsocksServerRequest) (*entities.ShadowsocksServer, error) {
+func (s *ShadowsocksServerService) UpdateShadowsocksServer(ctx context.Context, serverID uint, req *dto.UpdateShadowsocksServerRequest) (*entities.ShadowsocksServer, error) {
 	var server entities.ShadowsocksServer
 	if err := s.db.DB.WithContext(ctx).First(&server, serverID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {

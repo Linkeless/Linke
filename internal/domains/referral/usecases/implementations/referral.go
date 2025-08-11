@@ -9,8 +9,9 @@ import (
 	"strings"
 	"time"
 
+	"linke/internal/domains/referral/constants"
+	"linke/internal/domains/referral/dto"
 	"linke/internal/domains/referral/entities"
-	"linke/internal/domains/referral/usecases/interfaces"
 	"linke/internal/shared/database"
 	"linke/internal/shared/logger"
 
@@ -29,7 +30,7 @@ func NewReferralService(db *database.Database) *ReferralService {
 
 
 // CreateReferral creates a new referral relationship
-func (s *ReferralService) CreateReferral(ctx context.Context, req *interfaces.CreateReferralRequest) (*entities.Referral, error) {
+func (s *ReferralService) CreateReferral(ctx context.Context, req *dto.CreateReferralRequest) (*entities.Referral, error) {
 	// Validate that referrer and referee are different
 	if req.ReferrerID == req.RefereeID {
 		return nil, fmt.Errorf("referrer and referee cannot be the same user")
@@ -57,9 +58,9 @@ func (s *ReferralService) CreateReferral(ctx context.Context, req *interfaces.Cr
 		ReferralChannel: req.ReferralChannel,
 		ReferralCode:    referralCode,
 		CampaignID:      req.CampaignID,
-		Status:          entities.ReferralStatusPending,
-		RefereeStatus:   entities.RefereeStatusRegistered,
-		RewardStatus:    entities.RewardStatusPending,
+		Status:          constants.ReferralStatusPending,
+		RefereeStatus:   constants.RefereeStatusRegistered,
+		RewardStatus:    constants.RewardStatusPending,
 		RewardCurrency:  "USD",
 		ConversionValue: req.ConversionValue,
 		ConversionType:  req.ConversionType,
@@ -108,7 +109,7 @@ func (s *ReferralService) CreateReferral(ctx context.Context, req *interfaces.Cr
 	}
 
 	// Log referral creation event
-	s.createReferralEvent(ctx, referral.ID, req.RefereeID, entities.EventTypeRegistration,
+	s.createReferralEvent(ctx, referral.ID, req.RefereeID, constants.EventTypeRegistration,
 		"User registered via referral", req.AttributionData)
 
 	logger.Info("Referral created successfully",
@@ -129,16 +130,16 @@ func (s *ReferralService) CreateReferralFromInviteCode(ctx context.Context, invi
 		campaignID = inviteCode.ReferralCampaignID
 	} else {
 		var defaultCampaign entities.ReferralCampaign
-		if err := s.db.DB.Where("code = ? AND status = ?", "DEFAULT", entities.CampaignStatusActive).First(&defaultCampaign).Error; err == nil {
+		if err := s.db.DB.Where("code = ? AND status = ?", "DEFAULT", constants.CampaignStatusActive).First(&defaultCampaign).Error; err == nil {
 			campaignID = &defaultCampaign.ID
 		}
 	}
 
-	req := &interfaces.CreateReferralRequest{
+	req := &dto.CreateReferralRequest{
 		ReferrerID:      inviteCode.CreatedByID,
 		RefereeID:       refereeID,
 		InviteCodeID:    &inviteCode.ID,
-		ReferralSource:  entities.ReferralSourceInviteCode,
+		ReferralSource:  constants.ReferralSourceInviteCode,
 		ReferralChannel: "organic",
 		ReferralCode:    inviteCode.Code,
 		CampaignID:      campaignID,
@@ -175,7 +176,7 @@ func (s *ReferralService) TrackReferralClick(ctx context.Context, referralCode s
 	}
 
 	// Create click event
-	s.createReferralEvent(ctx, referral.ID, referral.RefereeID, entities.EventTypeClick,
+	s.createReferralEvent(ctx, referral.ID, referral.RefereeID, constants.EventTypeClick,
 		"Referral link clicked", attributionData)
 
 	return nil
@@ -188,20 +189,20 @@ func (s *ReferralService) ConfirmReferral(ctx context.Context, referralID uint) 
 		return fmt.Errorf("referral not found: %w", err)
 	}
 
-	if referral.Status != entities.ReferralStatusPending {
+	if referral.Status != constants.ReferralStatusPending {
 		return fmt.Errorf("referral is not in pending status")
 	}
 
 	// Update referral status
 	if err := s.db.DB.Model(&referral).Updates(map[string]any{
-		"status":     entities.ReferralStatusConfirmed,
+		"status":     constants.ReferralStatusConfirmed,
 		"updated_at": time.Now(),
 	}).Error; err != nil {
 		return fmt.Errorf("failed to confirm referral: %w", err)
 	}
 
 	// Create confirmation event
-	s.createReferralEvent(ctx, referral.ID, referral.RefereeID, entities.EventTypeActivation,
+	s.createReferralEvent(ctx, referral.ID, referral.RefereeID, constants.EventTypeActivation,
 		"Referral confirmed", nil)
 
 	logger.Info("Referral confirmed",
@@ -217,7 +218,7 @@ func (s *ReferralService) ConfirmReferral(ctx context.Context, referralID uint) 
 func (s *ReferralService) TrackConversion(ctx context.Context, userID uint, conversionType string, conversionValue float64, conversionID *uint) error {
 	// Find referral where user is the referee
 	var referral entities.Referral
-	if err := s.db.DB.Where("referee_id = ? AND status = ?", userID, entities.ReferralStatusConfirmed).First(&referral).Error; err != nil {
+	if err := s.db.DB.Where("referee_id = ? AND status = ?", userID, constants.ReferralStatusConfirmed).First(&referral).Error; err != nil {
 		// No active referral found, this is normal
 		return nil
 	}
@@ -234,12 +235,12 @@ func (s *ReferralService) TrackConversion(ctx context.Context, userID uint, conv
 		"converted_at":     now,
 		"conversion_value": conversionValue,
 		"conversion_type":  conversionType,
-		"referee_status":   entities.RefereeStatusActivated,
+		"referee_status":   constants.RefereeStatusActivated,
 		"updated_at":       now,
 	}
 
 	if conversionType == "subscription" {
-		updates["referee_status"] = entities.RefereeStatusSubscribed
+		updates["referee_status"] = constants.RefereeStatusSubscribed
 	}
 
 	if err := s.db.DB.Model(&referral).Updates(updates).Error; err != nil {
@@ -255,7 +256,7 @@ func (s *ReferralService) TrackConversion(ctx context.Context, userID uint, conv
 		eventData["conversion_id"] = *conversionID
 	}
 
-	s.createReferralEvent(ctx, referral.ID, userID, entities.EventTypeConversion,
+	s.createReferralEvent(ctx, referral.ID, userID, constants.EventTypeConversion,
 		fmt.Sprintf("User converted: %s", conversionType), eventData)
 
 	// Process rewards if applicable
@@ -358,14 +359,14 @@ func (s *ReferralService) GetReferralStats(ctx context.Context, userID uint) (ma
 
 	// Total rewards earned
 	var totalRewards float64
-	if err := s.db.DB.Model(&entities.ReferralReward{}).Where("user_id = ? AND status = ?", userID, entities.RewardStatusPaid).Select("COALESCE(SUM(reward_amount), 0)").Scan(&totalRewards).Error; err != nil {
+	if err := s.db.DB.Model(&entities.ReferralReward{}).Where("user_id = ? AND status = ?", userID, constants.RewardStatusPaid).Select("COALESCE(SUM(reward_amount), 0)").Scan(&totalRewards).Error; err != nil {
 		return nil, fmt.Errorf("failed to calculate total rewards: %w", err)
 	}
 	stats["total_rewards"] = totalRewards
 
 	// Pending rewards
 	var pendingRewards float64
-	if err := s.db.DB.Model(&entities.ReferralReward{}).Where("user_id = ? AND status IN (?)", userID, []string{entities.RewardStatusPending, entities.RewardStatusEarned}).Select("COALESCE(SUM(reward_amount), 0)").Scan(&pendingRewards).Error; err != nil {
+	if err := s.db.DB.Model(&entities.ReferralReward{}).Where("user_id = ? AND status IN (?)", userID, []string{constants.RewardStatusPending, constants.RewardStatusEarned}).Select("COALESCE(SUM(reward_amount), 0)").Scan(&pendingRewards).Error; err != nil {
 		return nil, fmt.Errorf("failed to calculate pending rewards: %w", err)
 	}
 	stats["pending_rewards"] = pendingRewards
@@ -484,7 +485,7 @@ func (s *ReferralService) GetReferralByCode(ctx context.Context, code string) (*
 }
 
 // UpdateReferral updates a referral
-func (s *ReferralService) UpdateReferral(ctx context.Context, referralID uint, req *interfaces.UpdateReferralRequest) (*entities.Referral, error) {
+func (s *ReferralService) UpdateReferral(ctx context.Context, referralID uint, req *dto.UpdateReferralRequest) (*entities.Referral, error) {
 	// Get existing referral
 	referral, err := s.GetReferral(ctx, referralID)
 	if err != nil {
@@ -538,7 +539,7 @@ func (s *ReferralService) UpdateReferral(ctx context.Context, referralID uint, r
 }
 
 // GetReferrals gets referrals with filtering and pagination
-func (s *ReferralService) GetReferrals(ctx context.Context, req *interfaces.GetReferralsRequest) ([]*entities.Referral, int64, error) {
+func (s *ReferralService) GetReferrals(ctx context.Context, req *dto.GetReferralsRequest) ([]*entities.Referral, int64, error) {
 	query := s.db.DB.WithContext(ctx).Model(&entities.Referral{})
 
 	// Apply filters
@@ -618,7 +619,7 @@ func (s *ReferralService) ProcessReferralReward(ctx context.Context, referralID 
 	// Update reward amount and status
 	updates := map[string]any{
 		"reward_amount": rewardAmount,
-		"reward_status": entities.RewardStatusEarned,
+		"reward_status": constants.RewardStatusEarned,
 		"updated_at":    time.Now(),
 	}
 
@@ -637,7 +638,7 @@ func (s *ReferralService) ProcessReferralReward(ctx context.Context, referralID 
 // MarkReferralAsPaid marks a referral reward as paid
 func (s *ReferralService) MarkReferralAsPaid(ctx context.Context, referralID uint) error {
 	updates := map[string]any{
-		"reward_status": entities.RewardStatusPaid,
+		"reward_status": constants.RewardStatusPaid,
 		"paid_at":       time.Now(),
 		"updated_at":    time.Now(),
 	}
@@ -703,7 +704,7 @@ func (s *ReferralService) GetSystemReferralStatistics(ctx context.Context) (map[
 	// Total rewards paid
 	var totalRewardsPaid float64
 	if err := s.db.DB.Model(&entities.ReferralReward{}).
-		Where("status = ?", entities.RewardStatusPaid).
+		Where("status = ?", constants.RewardStatusPaid).
 		Select("COALESCE(SUM(reward_amount), 0)").
 		Scan(&totalRewardsPaid).Error; err != nil {
 		return nil, fmt.Errorf("failed to calculate total rewards paid: %w", err)

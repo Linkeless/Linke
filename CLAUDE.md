@@ -97,7 +97,9 @@ internal/
 **领域内部结构 (清洁架构):**
 ```
 domains/[领域]/
-├── entities/           # 业务实体 + 验证逻辑
+├── constants/          # 领域常量定义 (状态、类型等)
+├── dto/               # 数据传输对象和转换函数
+├── entities/          # 业务实体 + 验证逻辑
 ├── usecases/
 │   ├── interfaces/    # 服务接口契约
 │   └── implementations/
@@ -211,6 +213,7 @@ domains/[领域]/
 - `/api/v1/user/bindings/*` - 第三方账号绑定 (Google, GitHub, Telegram)
 - `/api/v1/subscriptions/*` - 订阅服务
 - `/api/v1/payments/*` - 支付处理
+- `/api/v1/invoices/*` - 发票管理
 - `/api/v1/tickets/*` - 工单管理
 - `/api/v1/admin/*` - 管理员功能
 
@@ -236,12 +239,24 @@ domains/[领域]/
 
 **添加新功能时:**
 1. **领域优先**: 在对应的 `domains/` 目录下创建实体、用例和适配器
-2. **接口契约**: 先定义 `interfaces/` 中的服务契约
+2. **架构分离**: 
+   - `constants/` - 领域特定的常量 (状态、类型等)
+   - `dto/` - 数据传输对象和转换函数
+   - `entities/` - 纯业务实体，不包含常量或DTO
+   - `usecases/interfaces/` - 服务契约，使用dto包类型
 3. **依赖注入**: 在领域的 `module.go` 中注册 Fx 提供者
 4. **路由注册**: 在 `shared/router/router.go` 中添加 HTTP 路由
 5. **缓存考虑**: 对于频繁访问的数据，创建缓存装饰器
 6. **事件集成**: 考虑是否需要发布领域事件
 7. **Telegram 通知**: 对于重要操作考虑添加 Telegram 通知
+
+**架构重构准则 (重要):**
+- 所有领域必须遵循统一的包结构: `constants/`, `dto/`, `entities/`, `usecases/`, `adapters/`
+- 实体(entities)应该是纯业务对象，不包含常量定义或DTO
+- 常量应该集中在 `constants/` 包中，按功能分组
+- DTO和转换函数应该独立在 `dto/` 包中
+- 服务接口应该使用 `dto` 包的类型，而不是在接口文件中重复定义
+- 已重构领域: payment, coupon, referral, ticket, invoice - 作为标准参考
 
 **修改现有代码时:**
 - 遵循现有的 VSA + Clean Architecture 模式

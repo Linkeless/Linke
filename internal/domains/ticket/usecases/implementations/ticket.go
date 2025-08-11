@@ -6,8 +6,9 @@ import (
 	"math/rand"
 	"time"
 
+	"linke/internal/domains/ticket/constants"
+	"linke/internal/domains/ticket/dto"
 	"linke/internal/domains/ticket/entities"
-	"linke/internal/domains/ticket/usecases/interfaces"
 	"linke/internal/shared/logger"
 
 	"gorm.io/gorm"
@@ -25,7 +26,7 @@ func NewTicketService(db *gorm.DB) *TicketService {
 
 
 // CreateTicket creates a new ticket
-func (s *TicketService) CreateTicket(ctx context.Context, userID uint, req *interfaces.CreateTicketRequest) (*entities.Ticket, error) {
+func (s *TicketService) CreateTicket(ctx context.Context, userID uint, req *dto.CreateTicketRequest) (*entities.Ticket, error) {
 	// Generate unique ticket number
 	ticketNo := s.generateTicketNumber()
 
@@ -44,7 +45,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, userID uint, req *inte
 	// Set default priority if not specified
 	priority := req.Priority
 	if priority == "" {
-		priority = entities.TicketPriorityNormal
+		priority = constants.TicketPriorityNormal
 	}
 
 	// Create the ticket
@@ -54,7 +55,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, userID uint, req *inte
 		Description: req.Description,
 		Category:    req.Category,
 		Priority:    priority,
-		Status:      entities.TicketStatusOpen,
+		Status:      constants.TicketStatusOpen,
 		UserID:      userID,
 		Tags:        &req.Tags,
 		Metadata:    &req.Metadata,
@@ -125,7 +126,7 @@ func (s *TicketService) GetTicketByNumber(ctx context.Context, ticketNo string) 
 }
 
 // GetTickets gets tickets with filtering and pagination
-func (s *TicketService) GetTickets(ctx context.Context, req *interfaces.GetTicketsRequest) ([]*entities.Ticket, int64, error) {
+func (s *TicketService) GetTickets(ctx context.Context, req *dto.GetTicketsRequest) ([]*entities.Ticket, int64, error) {
 	query := s.db.WithContext(ctx).Model(&entities.Ticket{})
 
 	// Apply filters
@@ -182,7 +183,7 @@ func (s *TicketService) GetTickets(ctx context.Context, req *interfaces.GetTicke
 }
 
 // UpdateTicket updates a ticket
-func (s *TicketService) UpdateTicket(ctx context.Context, ticketID uint, req *interfaces.UpdateTicketRequest) (*entities.Ticket, error) {
+func (s *TicketService) UpdateTicket(ctx context.Context, ticketID uint, req *dto.UpdateTicketRequest) (*entities.Ticket, error) {
 	// Get existing ticket
 	ticket, err := s.GetTicket(ctx, ticketID)
 	if err != nil {
@@ -214,9 +215,9 @@ func (s *TicketService) UpdateTicket(ctx context.Context, ticketID uint, req *in
 		// Update timing fields based on status
 		now := time.Now()
 		switch *req.Status {
-		case entities.TicketStatusResolved:
+		case constants.TicketStatusResolved:
 			updates["resolved_at"] = &now
-		case entities.TicketStatusClosed:
+		case constants.TicketStatusClosed:
 			updates["closed_at"] = &now
 		}
 	}
@@ -247,7 +248,7 @@ func (s *TicketService) UpdateTicket(ctx context.Context, ticketID uint, req *in
 }
 
 // AssignTicket assigns a ticket to an admin
-func (s *TicketService) AssignTicket(ctx context.Context, ticketID uint, req *interfaces.AssignTicketRequest) (*entities.Ticket, error) {
+func (s *TicketService) AssignTicket(ctx context.Context, ticketID uint, req *dto.AssignTicketRequest) (*entities.Ticket, error) {
 	// Get existing ticket
 	ticket, err := s.GetTicket(ctx, ticketID)
 	if err != nil {
@@ -268,8 +269,8 @@ func (s *TicketService) AssignTicket(ctx context.Context, ticketID uint, req *in
 	}
 
 	// Update status to in_progress if it's currently open
-	if ticket.Status == entities.TicketStatusOpen {
-		updates["status"] = entities.TicketStatusInProgress
+	if ticket.Status == constants.TicketStatusOpen {
+		updates["status"] = constants.TicketStatusInProgress
 	}
 
 	if err := s.db.WithContext(ctx).Model(ticket).Updates(updates).Error; err != nil {
@@ -291,7 +292,7 @@ func (s *TicketService) AssignTicket(ctx context.Context, ticketID uint, req *in
 }
 
 // ResolveTicket resolves a ticket
-func (s *TicketService) ResolveTicket(ctx context.Context, ticketID uint, resolvedByID uint, req *interfaces.ResolveTicketRequest) (*entities.Ticket, error) {
+func (s *TicketService) ResolveTicket(ctx context.Context, ticketID uint, resolvedByID uint, req *dto.ResolveTicketRequest) (*entities.Ticket, error) {
 	// Get existing ticket
 	ticket, err := s.GetTicket(ctx, ticketID)
 	if err != nil {
@@ -301,7 +302,7 @@ func (s *TicketService) ResolveTicket(ctx context.Context, ticketID uint, resolv
 	// Update resolution
 	now := time.Now()
 	updates := map[string]any{
-		"status":         entities.TicketStatusResolved,
+		"status":         constants.TicketStatusResolved,
 		"resolved_by_id": resolvedByID,
 		"resolved_at":    &now,
 		"resolution":     req.Resolution,
@@ -336,7 +337,7 @@ func (s *TicketService) CloseTicket(ctx context.Context, ticketID uint, reason s
 	// Update status to closed
 	now := time.Now()
 	updates := map[string]any{
-		"status":    entities.TicketStatusClosed,
+		"status":    constants.TicketStatusClosed,
 		"closed_at": &now,
 	}
 
@@ -381,7 +382,7 @@ func (s *TicketService) DeleteTicket(ctx context.Context, ticketID uint) error {
 
 // GetUserTickets gets tickets for a specific user
 func (s *TicketService) GetUserTickets(ctx context.Context, userID uint, limit, offset int) ([]*entities.Ticket, int64, error) {
-	req := &interfaces.GetTicketsRequest{
+	req := &dto.GetTicketsRequest{
 		UserID: userID,
 		Limit:  limit,
 		Offset: offset,
@@ -391,7 +392,7 @@ func (s *TicketService) GetUserTickets(ctx context.Context, userID uint, limit, 
 
 // GetAssignedTickets gets tickets assigned to a specific agent
 func (s *TicketService) GetAssignedTickets(ctx context.Context, assignedToID uint, limit, offset int) ([]*entities.Ticket, int64, error) {
-	req := &interfaces.GetTicketsRequest{
+	req := &dto.GetTicketsRequest{
 		AssignedToID: &assignedToID,
 		Limit:        limit,
 		Offset:       offset,
@@ -414,8 +415,8 @@ func (s *TicketService) UnassignTicket(ctx context.Context, ticketID uint) (*ent
 	}
 
 	// Update status back to open if it was in_progress
-	if ticket.Status == entities.TicketStatusInProgress {
-		updates["status"] = entities.TicketStatusOpen
+	if ticket.Status == constants.TicketStatusInProgress {
+		updates["status"] = constants.TicketStatusOpen
 	}
 
 	if err := s.db.WithContext(ctx).Model(ticket).Updates(updates).Error; err != nil {
@@ -436,7 +437,7 @@ func (s *TicketService) UnassignTicket(ctx context.Context, ticketID uint) (*ent
 
 // UpdateTicketStatus updates a ticket's status
 func (s *TicketService) UpdateTicketStatus(ctx context.Context, ticketID uint, status string) (*entities.Ticket, error) {
-	req := &interfaces.UpdateTicketRequest{
+	req := &dto.UpdateTicketRequest{
 		Status: &status,
 	}
 	return s.UpdateTicket(ctx, ticketID, req)
@@ -444,7 +445,7 @@ func (s *TicketService) UpdateTicketStatus(ctx context.Context, ticketID uint, s
 
 // UpdateTicketPriority updates a ticket's priority
 func (s *TicketService) UpdateTicketPriority(ctx context.Context, ticketID uint, priority string) (*entities.Ticket, error) {
-	req := &interfaces.UpdateTicketRequest{
+	req := &dto.UpdateTicketRequest{
 		Priority: &priority,
 	}
 	return s.UpdateTicket(ctx, ticketID, req)
@@ -460,7 +461,7 @@ func (s *TicketService) ReopenTicket(ctx context.Context, ticketID uint, reason 
 
 	// Update status to open and clear resolved fields
 	updates := map[string]any{
-		"status":         entities.TicketStatusOpen,
+		"status":         constants.TicketStatusOpen,
 		"resolved_by_id": nil,
 		"resolved_at":    nil,
 		"resolution":     "",
@@ -659,8 +660,8 @@ func (s *TicketService) BulkAssignTickets(ctx context.Context, ticketIDs []uint,
 
 	// Update tickets that are currently open to in_progress
 	if err := s.db.WithContext(ctx).Model(&entities.Ticket{}).
-		Where("id IN ? AND status = ?", ticketIDs, entities.TicketStatusOpen).
-		Update("status", entities.TicketStatusInProgress).Error; err != nil {
+		Where("id IN ? AND status = ?", ticketIDs, constants.TicketStatusOpen).
+		Update("status", constants.TicketStatusInProgress).Error; err != nil {
 		logger.Error("Failed to update ticket status during bulk assignment", logger.Error2("error", err))
 		return fmt.Errorf("failed to update ticket status: %w", err)
 	}
@@ -693,9 +694,9 @@ func (s *TicketService) BulkUpdateTicketStatus(ctx context.Context, ticketIDs []
 	// Set timing fields based on status
 	now := time.Now()
 	switch status {
-	case entities.TicketStatusResolved:
+	case constants.TicketStatusResolved:
 		updates["resolved_at"] = &now
-	case entities.TicketStatusClosed:
+	case constants.TicketStatusClosed:
 		updates["closed_at"] = &now
 	}
 
@@ -719,14 +720,14 @@ func (s *TicketService) generateTicketNumber() string {
 	now := time.Now()
 	dateStr := now.Format("20060102")
 
-	// Generate 6-character random string
+	// Generate random string using constant length
 	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	b := make([]byte, 6)
+	b := make([]byte, constants.TicketNumberLength)
 	for i := range b {
 		b[i] = charset[rand.Intn(len(charset))]
 	}
 
-	return fmt.Sprintf("TK-%s-%s", dateStr, string(b))
+	return fmt.Sprintf("%s-%s-%s", constants.TicketNumberPrefix, dateStr, string(b))
 }
 
 // AutoAssignTicket automatically assigns a ticket to the best available agent
@@ -764,7 +765,7 @@ func (s *TicketService) AutoAssignTicket(ctx context.Context, ticketID uint) (*e
 	updates := map[string]any{
 		"assigned_to_id": bestAgentID,
 		"assigned_at":    &now,
-		"status":         entities.TicketStatusInProgress,
+		"status":         constants.TicketStatusInProgress,
 		"updated_at":     now,
 	}
 
@@ -779,7 +780,7 @@ func (s *TicketService) AutoAssignTicket(ctx context.Context, ticketID uint) (*e
 	// Update the ticket object with new values
 	ticket.AssignedToID = &bestAgentID
 	ticket.AssignedAt = &now
-	ticket.Status = entities.TicketStatusInProgress
+	ticket.Status = constants.TicketStatusInProgress
 	ticket.UpdatedAt = now
 
 	logger.Info("Ticket auto-assigned successfully",
@@ -796,7 +797,7 @@ func (s *TicketService) GetAgentWorkload(ctx context.Context, agentID uint) (int
 	var count int64
 	if err := s.db.WithContext(ctx).Model(&entities.Ticket{}).
 		Where("assigned_to_id = ? AND status IN ?", agentID, 
-			[]string{entities.TicketStatusOpen, entities.TicketStatusInProgress, entities.TicketStatusPending}).
+			[]string{constants.TicketStatusOpen, constants.TicketStatusInProgress, constants.TicketStatusPending}).
 		Count(&count).Error; err != nil {
 		return 0, fmt.Errorf("failed to get agent workload: %w", err)
 	}
@@ -804,7 +805,7 @@ func (s *TicketService) GetAgentWorkload(ctx context.Context, agentID uint) (int
 }
 
 // GetAvailableAgents returns a list of agents available for assignment in a specific category
-func (s *TicketService) GetAvailableAgents(ctx context.Context, category string) ([]*interfaces.AgentInfo, error) {
+func (s *TicketService) GetAvailableAgents(ctx context.Context, category string) ([]*dto.AgentInfo, error) {
 	// Query for admin users (agents) - simplified approach
 	// In a real implementation, you might have a separate agents table or role system
 	var agents []struct {
@@ -822,7 +823,7 @@ func (s *TicketService) GetAvailableAgents(ctx context.Context, category string)
 		return nil, fmt.Errorf("failed to get available agents: %w", err)
 	}
 
-	var agentInfos []*interfaces.AgentInfo
+	var agentInfos []*dto.AgentInfo
 	for _, agent := range agents {
 		// Get current workload for this agent
 		workload, err := s.GetAgentWorkload(ctx, agent.ID)
@@ -834,7 +835,7 @@ func (s *TicketService) GetAvailableAgents(ctx context.Context, category string)
 		}
 
 		// Create agent info with defaults (in real implementation, these would come from agent profile)
-		agentInfo := &interfaces.AgentInfo{
+		agentInfo := &dto.AgentInfo{
 			UserID:            agent.ID,
 			Name:              agent.Name,
 			Email:             agent.Email,
@@ -876,7 +877,7 @@ func (s *TicketService) FindBestAgentForTicket(ctx context.Context, ticket *enti
 	// - Agent availability/online status
 	// - Priority-based assignment for urgent tickets
 
-	var bestAgent *interfaces.AgentInfo
+	var bestAgent *dto.AgentInfo
 	lowestWorkload := int(^uint(0) >> 1) // Max int
 
 	for _, agent := range availableAgents {
@@ -897,7 +898,7 @@ func (s *TicketService) FindBestAgentForTicket(ctx context.Context, ticket *enti
 		}
 
 		// For urgent tickets, prefer agents with better response times
-		if ticket.Priority == entities.TicketPriorityUrgent || ticket.Priority == entities.TicketPriorityCritical {
+		if ticket.Priority == constants.TicketPriorityUrgent || ticket.Priority == constants.TicketPriorityCritical {
 			if agent.AvgResponseTime < 30 { // Less than 30 minutes
 				score -= 1
 			}

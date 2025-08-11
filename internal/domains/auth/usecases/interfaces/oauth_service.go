@@ -18,15 +18,8 @@ type OAuthService interface {
 	GetTelegramLoginURL() string
 }
 
-// UserInfo represents OAuth user information
-type UserInfo struct {
-	ID       string `json:"id"`
-	Email    string `json:"email"`
-	Name     string `json:"name"`
-	Username string `json:"username"`
-	Avatar   string `json:"avatar"`
-	Provider string `json:"provider"`
-}
+// 注意：UserInfo 已统一到 auth_service.go 中定义
+// 请使用 interfaces.UserInfo
 
 // AuthorizeURLRequest represents request for authorization URL
 type AuthorizeURLRequest struct {

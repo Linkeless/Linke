@@ -258,18 +258,8 @@ func (h *AuthHandler) handleTelegramCallback(c *gin.Context) {
 }
 
 func (h *AuthHandler) createOrUpdateUser(userInfo *interfaces.UserInfo) (*userEntities.User, error) {
-	// Convert UserInfo to OAuthUserInfo (they have identical fields)
-	oauthUserInfo := &interfaces.OAuthUserInfo{
-		ID:       userInfo.ID,
-		Email:    userInfo.Email,
-		Name:     userInfo.Name,
-		Avatar:   userInfo.Avatar,
-		Username: userInfo.Username,
-		Provider: userInfo.Provider,
-	}
-
 	// Use the AuthService to handle OAuth user creation/update
-	return h.authService.CreateOrUpdateOAuthUser(context.Background(), oauthUserInfo)
+	return h.authService.CreateOrUpdateOAuthUser(context.Background(), userInfo)
 }
 
 // Register godoc

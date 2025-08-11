@@ -6,7 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"linke/internal/shared/dto"
+	"linke/internal/domains/coupon/constants"
 )
 
 // Coupon represents a discount coupon
@@ -56,22 +56,10 @@ func (Coupon) TableName() string {
 	return "coupons"
 }
 
-// Coupon type constants
-const (
-	CouponTypePercentage  = "percentage"
-	CouponTypeFixedAmount = "fixed_amount"
-)
-
-// Coupon status constants
-const (
-	CouponStatusActive   = "active"
-	CouponStatusInactive = "inactive"
-	CouponStatusExpired  = "expired"
-)
 
 // IsValid checks if the coupon is valid for use
 func (c *Coupon) IsValid() bool {
-	if c.Status != CouponStatusActive {
+	if c.Status != constants.CouponStatusActive {
 		return false
 	}
 
@@ -140,9 +128,9 @@ func (c *Coupon) CalculateDiscount(orderAmount float64) float64 {
 	var discount float64
 
 	switch c.Type {
-	case CouponTypePercentage:
+	case constants.CouponTypePercentage:
 		discount = orderAmount * (c.Value / 100)
-	case CouponTypeFixedAmount:
+	case constants.CouponTypeFixedAmount:
 		discount = c.Value
 	default:
 		return 0
@@ -185,103 +173,3 @@ func (CouponUsage) TableName() string {
 	return "coupon_usages"
 }
 
-// CouponResponse represents the coupon data structure for API responses
-type CouponResponse struct {
-	ID              uint64     `json:"id" example:"1"`                                       // Coupon ID
-	Code            string     `json:"code" example:"SAVE20"`                                // Coupon code
-	Name            string     `json:"name" example:"20% Off"`                               // Coupon name
-	Description     string     `json:"description" example:"Save 20% on any plan"`           // Description
-	Type            string     `json:"type" example:"percentage"`                            // Discount type
-	Value           float64    `json:"value" example:"20"`                                   // Discount value
-	MaxUses         int        `json:"max_uses" example:"100"`                               // Maximum uses
-	UsedCount       int        `json:"used_count" example:"15"`                              // Used count
-	MaxUsesPerUser  int        `json:"max_uses_per_user" example:"1"`                        // Max uses per user
-	MinOrderAmount  float64    `json:"min_order_amount" example:"10"`                        // Minimum order amount
-	Currency        string     `json:"currency" example:"USD"`                               // Currency
-	ValidFrom       *time.Time `json:"valid_from,omitempty" example:"2024-01-01T00:00:00Z"`  // Valid from
-	ValidUntil      *time.Time `json:"valid_until,omitempty" example:"2024-12-31T23:59:59Z"` // Valid until
-	ApplicablePlans string     `json:"applicable_plans,omitempty"`                           // Applicable plans
-	Status          string     `json:"status" example:"active"`                              // Status
-	IsPublic        bool       `json:"is_public" example:"true"`                             // Public visibility
-	CreatedAt       time.Time  `json:"created_at" example:"2024-01-01T00:00:00Z"`            // Creation time
-	UpdatedAt       time.Time  `json:"updated_at" example:"2024-01-01T00:00:00Z"`            // Update time
-}
-
-// ToResponse converts Coupon to CouponResponse
-func (c *Coupon) ToResponse() *CouponResponse {
-	return &CouponResponse{
-		ID:              c.ID,
-		Code:            c.Code,
-		Name:            c.Name,
-		Description:     c.Description,
-		Type:            c.Type,
-		Value:           c.Value,
-		MaxUses:         c.MaxUses,
-		UsedCount:       c.UsedCount,
-		MaxUsesPerUser:  c.MaxUsesPerUser,
-		MinOrderAmount:  c.MinOrderAmount,
-		Currency:        c.Currency,
-		ValidFrom:       c.ValidFrom,
-		ValidUntil:      c.ValidUntil,
-		ApplicablePlans: c.ApplicablePlans,
-		Status:          c.Status,
-		IsPublic:        c.IsPublic,
-		CreatedAt:       c.CreatedAt,
-		UpdatedAt:       c.UpdatedAt,
-	}
-}
-
-// ToPublicResponse converts Coupon to a public response (limited information)
-func (c *Coupon) ToPublicResponse() *CouponResponse {
-	return &CouponResponse{
-		ID:             c.ID,
-		Code:           c.Code,
-		Name:           c.Name,
-		Description:    c.Description,
-		Type:           c.Type,
-		Value:          c.Value,
-		MinOrderAmount: c.MinOrderAmount,
-		Currency:       c.Currency,
-		ValidFrom:      c.ValidFrom,
-		ValidUntil:     c.ValidUntil,
-		Status:         c.Status,
-	}
-}
-
-// CouponUsageResponse represents the coupon usage data structure for API responses
-type CouponUsageResponse struct {
-	ID                  uint64    `json:"id" example:"1"`                            // Usage ID
-	CouponID            uint64    `json:"coupon_id" example:"1"`                     // Coupon ID
-	UserID              uint64    `json:"user_id" example:"1"`                       // User ID
-	SubscriptionOrderID uint64    `json:"subscription_order_id" example:"1"`         // Order ID
-	DiscountAmount      float64   `json:"discount_amount" example:"5.99"`            // Discount amount
-	OrderAmount         float64   `json:"order_amount" example:"29.99"`              // Original order amount
-	Currency            string    `json:"currency" example:"USD"`                    // Currency
-	CreatedAt           time.Time `json:"created_at" example:"2024-01-01T00:00:00Z"` // Creation time
-	UpdatedAt           time.Time `json:"updated_at" example:"2024-01-01T00:00:00Z"` // Update time
-
-	// Related data (to be populated at application layer)
-	Coupon            *CouponResponse                `json:"coupon,omitempty"`             // Coupon info
-	User              *dto.UserBasicDTO              `json:"user,omitempty"`               // User info
-	SubscriptionOrder *dto.SubscriptionOrderBasicDTO `json:"subscription_order,omitempty"` // Order info
-}
-
-// ToResponse converts CouponUsage to CouponUsageResponse
-func (cu *CouponUsage) ToResponse() *CouponUsageResponse {
-	resp := &CouponUsageResponse{
-		ID:                  cu.ID,
-		CouponID:            cu.CouponID,
-		UserID:              cu.UserID,
-		SubscriptionOrderID: cu.SubscriptionOrderID,
-		DiscountAmount:      cu.DiscountAmount,
-		OrderAmount:         cu.OrderAmount,
-		Currency:            cu.Currency,
-		CreatedAt:           cu.CreatedAt,
-		UpdatedAt:           cu.UpdatedAt,
-	}
-
-	// Note: Related data should be populated at the application layer
-	// to avoid cross-domain dependencies
-
-	return resp
-}

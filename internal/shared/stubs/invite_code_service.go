@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"linke/internal/domains/referral/dto"
 	"linke/internal/domains/referral/entities"
 	"linke/internal/domains/referral/usecases/interfaces"
 )
@@ -16,7 +17,7 @@ func NewStubInviteCodeService() interfaces.InviteCodeService {
 	return &stubInviteCodeService{}
 }
 
-func (s *stubInviteCodeService) CreateInviteCode(ctx context.Context, createdByID uint, req *interfaces.CreateInviteCodeRequest) (*entities.InviteCode, error) {
+func (s *stubInviteCodeService) CreateInviteCode(ctx context.Context, createdByID uint, req *dto.CreateInviteCodeRequest) (*entities.InviteCode, error) {
 	return nil, fmt.Errorf("invite code service not implemented")
 }
 
@@ -28,7 +29,7 @@ func (s *stubInviteCodeService) GetInviteCodeByCode(ctx context.Context, code st
 	return nil, fmt.Errorf("invite code service not implemented")
 }
 
-func (s *stubInviteCodeService) UpdateInviteCode(ctx context.Context, inviteCodeID uint, req *interfaces.UpdateInviteCodeRequest) (*entities.InviteCode, error) {
+func (s *stubInviteCodeService) UpdateInviteCode(ctx context.Context, inviteCodeID uint, req *dto.UpdateInviteCodeRequest) (*entities.InviteCode, error) {
 	return nil, fmt.Errorf("invite code service not implemented")
 }
 
@@ -36,7 +37,7 @@ func (s *stubInviteCodeService) DeleteInviteCode(ctx context.Context, inviteCode
 	return fmt.Errorf("invite code service not implemented")
 }
 
-func (s *stubInviteCodeService) GetInviteCodes(ctx context.Context, req *interfaces.GetInviteCodesRequest) ([]*entities.InviteCode, int64, error) {
+func (s *stubInviteCodeService) GetInviteCodes(ctx context.Context, req *dto.GetInviteCodesRequest) ([]*entities.InviteCode, int64, error) {
 	return nil, 0, fmt.Errorf("invite code service not implemented")
 }
 

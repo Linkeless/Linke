@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"strings"
 
+	"linke/internal/domains/server/dto"
 	"linke/internal/domains/server/entities"
 	"linke/internal/domains/server/usecases/interfaces"
 	"linke/internal/shared/logger"
@@ -12,65 +13,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// CreateShadowsocksServerRequest represents the request body for creating a shadowsocks server
-type CreateShadowsocksServerRequest struct {
-	GroupID      uint    `json:"group_id" binding:"required" example:"1"`
-	RouteID      string  `json:"route_id,omitempty" binding:"max=255" example:"route-1"`
-	ParentID     *int    `json:"parent_id,omitempty" example:"1"`
-	Name         string  `json:"name" binding:"required,max=255" example:"US-01"`
-	Tags         string  `json:"tags,omitempty" binding:"max=255" example:"premium,fast"`
-	Host         string  `json:"host" binding:"required,max=255" example:"us01.example.com"`
-	Port         int     `json:"port" binding:"required,min=1,max=65535" example:"443"`
-	ServerPort   int     `json:"server_port" binding:"required,min=1,max=65535" example:"8388"`
-	Cipher       string  `json:"cipher" binding:"required,max=255" example:"aes-256-gcm"`
-	Obfs         string  `json:"obfs,omitempty" binding:"max=11" example:"tls"`
-	ObfsSettings string  `json:"obfs_settings,omitempty" binding:"max=255" example:"obfs=tls"`
-	Excludes     string  `json:"excludes,omitempty" example:"192.168.0.0/16"`
-	IPs          string  `json:"ips,omitempty" binding:"max=255" example:"0.0.0.0/0"`
-	Rate         float64 `json:"rate" binding:"required,min=0.1" example:"1.0"`
-	Show         int     `json:"show" binding:"min=0,max=1" example:"1"`
-	Sort         *int    `json:"sort,omitempty" example:"1"`
-}
-
-// UpdateShadowsocksServerRequest represents the request body for updating a shadowsocks server
-type UpdateShadowsocksServerRequest struct {
-	GroupID      *uint    `json:"group_id,omitempty" example:"1"`
-	RouteID      *string  `json:"route_id,omitempty" binding:"omitempty,max=255" example:"route-1"`
-	ParentID     *int     `json:"parent_id,omitempty" example:"1"`
-	Name         *string  `json:"name,omitempty" binding:"omitempty,max=255" example:"US-01"`
-	Tags         *string  `json:"tags,omitempty" binding:"omitempty,max=255" example:"premium,fast"`
-	Host         *string  `json:"host,omitempty" binding:"omitempty,max=255" example:"us01.example.com"`
-	Port         *int     `json:"port,omitempty" binding:"omitempty,min=1,max=65535" example:"443"`
-	ServerPort   *int     `json:"server_port,omitempty" binding:"omitempty,min=1,max=65535" example:"8388"`
-	Cipher       *string  `json:"cipher,omitempty" binding:"omitempty,max=255" example:"aes-256-gcm"`
-	Obfs         *string  `json:"obfs,omitempty" binding:"omitempty,max=11" example:"tls"`
-	ObfsSettings *string  `json:"obfs_settings,omitempty" binding:"omitempty,max=255" example:"obfs=tls"`
-	Excludes     *string  `json:"excludes,omitempty" example:"192.168.0.0/16"`
-	IPs          *string  `json:"ips,omitempty" binding:"omitempty,max=255" example:"0.0.0.0/0"`
-	Rate         *float64 `json:"rate,omitempty" binding:"omitempty,min=0.1" example:"1.0"`
-	Show         *int     `json:"show,omitempty" binding:"omitempty,min=0,max=1" example:"1"`
-	Sort         *int     `json:"sort,omitempty" example:"1"`
-}
-
-// PatchShadowsocksServerRequest represents the request body for patching server fields
-type PatchShadowsocksServerRequest struct {
-	GroupID      *uint    `json:"group_id,omitempty" example:"1"`
-	RouteID      *string  `json:"route_id,omitempty" example:"route-1"`
-	ParentID     *int     `json:"parent_id,omitempty" example:"1"`
-	Name         *string  `json:"name,omitempty" example:"US-01"`
-	Tags         *string  `json:"tags,omitempty" example:"premium,fast"`
-	Host         *string  `json:"host,omitempty" example:"us01.example.com"`
-	Port         *int     `json:"port,omitempty" example:"443"`
-	ServerPort   *int     `json:"server_port,omitempty" example:"8388"`
-	Cipher       *string  `json:"cipher,omitempty" example:"aes-256-gcm"`
-	Obfs         *string  `json:"obfs,omitempty" example:"tls"`
-	ObfsSettings *string  `json:"obfs_settings,omitempty" example:"obfs=tls"`
-	Excludes     *string  `json:"excludes,omitempty" example:"192.168.0.0/16"`
-	IPs          *string  `json:"ips,omitempty" example:"0.0.0.0/0"`
-	Rate         *float64 `json:"rate,omitempty" example:"1.0"`
-	Show         *int     `json:"show,omitempty" example:"1"`
-	Sort         *int     `json:"sort,omitempty" example:"1"`
-}
 
 // UpdateServerStatusRequest represents the request body for updating server status
 type UpdateServerStatusRequest struct {
@@ -110,7 +52,7 @@ func NewAdminServerHandler(
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param server body CreateShadowsocksServerRequest true "Server creation data"
+// @Param server body dto.CreateShadowsocksServerRequest true "Server creation data"
 // @Success 201 {object} response.StandardResponse{data=entities.ShadowsocksServerResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -119,14 +61,14 @@ func NewAdminServerHandler(
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /admin/servers [post]
 func (h *AdminServerHandler) CreateServer(c *gin.Context) {
-	var createReq CreateShadowsocksServerRequest
+	var createReq dto.CreateShadowsocksServerRequest
 	if err := c.ShouldBindJSON(&createReq); err != nil {
 		response.BadRequest(c, err.Error())
 		return
 	}
 
 	// Convert to service request
-	serviceReq := &interfaces.CreateShadowsocksServerRequest{
+	serviceReq := &dto.CreateShadowsocksServerRequest{
 		GroupID:      createReq.GroupID,
 		RouteID:      createReq.RouteID,
 		ParentID:     createReq.ParentID,
@@ -219,7 +161,7 @@ func (h *AdminServerHandler) ListServers(c *gin.Context) {
 	}
 
 	// Create service request
-	serviceReq := &interfaces.GetShadowsocksServersRequest{
+	serviceReq := &dto.GetShadowsocksServersRequest{
 		GroupID: groupID,
 		Show:    show,
 		Limit:   limit,
@@ -285,7 +227,7 @@ func (h *AdminServerHandler) GetServer(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Server ID"
-// @Param server body UpdateShadowsocksServerRequest true "Server data"
+// @Param server body dto.UpdateShadowsocksServerRequest true "Server data"
 // @Success 200 {object} response.StandardResponse{data=entities.ShadowsocksServerResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -301,14 +243,14 @@ func (h *AdminServerHandler) UpdateServer(c *gin.Context) {
 		return
 	}
 
-	var updateReq UpdateShadowsocksServerRequest
+	var updateReq dto.UpdateShadowsocksServerRequest
 	if err := c.ShouldBindJSON(&updateReq); err != nil {
 		response.BadRequest(c, err.Error())
 		return
 	}
 
 	// Convert to service request
-	serviceReq := &interfaces.UpdateShadowsocksServerRequest{
+	serviceReq := &dto.UpdateShadowsocksServerRequest{
 		GroupID:      updateReq.GroupID,
 		RouteID:      updateReq.RouteID,
 		ParentID:     updateReq.ParentID,
@@ -348,7 +290,7 @@ func (h *AdminServerHandler) UpdateServer(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Server ID"
-// @Param server body PatchShadowsocksServerRequest true "Partial server data"
+// @Param server body dto.PatchShadowsocksServerRequest true "Partial server data"
 // @Success 200 {object} response.StandardResponse{data=entities.ShadowsocksServerResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -364,14 +306,14 @@ func (h *AdminServerHandler) PatchServer(c *gin.Context) {
 		return
 	}
 
-	var patchReq PatchShadowsocksServerRequest
+	var patchReq dto.PatchShadowsocksServerRequest
 	if err := c.ShouldBindJSON(&patchReq); err != nil {
 		response.BadRequest(c, err.Error())
 		return
 	}
 
 	// Convert to service request (only non-nil fields)
-	serviceReq := &interfaces.UpdateShadowsocksServerRequest{
+	serviceReq := &dto.UpdateShadowsocksServerRequest{
 		GroupID:      patchReq.GroupID,
 		RouteID:      patchReq.RouteID,
 		ParentID:     patchReq.ParentID,

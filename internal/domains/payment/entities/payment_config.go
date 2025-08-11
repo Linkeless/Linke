@@ -49,11 +49,11 @@ type Method struct {
 	Icon        string  `json:"icon,omitempty"`        // Icon URL
 	IsEnabled   bool    `json:"is_enabled"`            // Whether enabled
 	SortOrder   int     `json:"sort_order"`            // Sort order
-	FeeType     string  `json:"fee_type"`              // none, fixed, percentage
+	FeeType     string  `json:"fee_type"`              // constants.FeeTypeNone, constants.FeeTypeFixed, constants.FeeTypePercentage
 	FeeValue    float64 `json:"fee_value"`             // Fee value
 	FeeMin      float64 `json:"fee_min"`               // Minimum fee
 	FeeMax      float64 `json:"fee_max"`               // Maximum fee
-	Environment string  `json:"environment"`           // production, sandbox, test
+	Environment string  `json:"environment"`           // constants.EnvironmentProduction, constants.EnvironmentSandbox, constants.EnvironmentTest
 }
 
 // TableName returns the table name for PaymentConfig model
@@ -61,19 +61,6 @@ func (PaymentConfig) TableName() string {
 	return "payment_configs"
 }
 
-// Fee type constants
-const (
-	FeeTypeNone       = "none"
-	FeeTypeFixed      = "fixed"
-	FeeTypePercentage = "percentage"
-)
-
-// Environment constants
-const (
-	EnvironmentProduction = "production"
-	EnvironmentSandbox    = "sandbox"
-	EnvironmentTest       = "test"
-)
 
 // GetMethods returns the parsed methods from SupportedMethods JSON
 func (pc *PaymentConfig) GetMethods() ([]Method, error) {
@@ -153,70 +140,3 @@ func (pc *PaymentConfig) IsAmountValid(amount float64) bool {
 	return amount >= pc.MinAmount && amount <= pc.MaxAmount
 }
 
-// PaymentConfigResponse represents the payment config data structure for API responses
-type PaymentConfigResponse struct {
-	ID                  uint      `json:"id" example:"1"`                            // Config ID
-	Gateway             string    `json:"gateway" example:"epay"`                    // Payment gateway
-	Name                string    `json:"name" example:"EPay Gateway"`               // Display name
-	IsEnabled           bool      `json:"is_enabled" example:"true"`                 // Enabled status
-	SortOrder           int       `json:"sort_order" example:"1"`                    // Sort order
-	SupportedCurrencies string    `json:"supported_currencies" example:"CNY"`        // Supported currencies
-	Methods             []Method  `json:"methods,omitempty"`                         // Payment methods
-	MinAmount           float64   `json:"min_amount" example:"0.01"`                 // Minimum amount
-	MaxAmount           float64   `json:"max_amount" example:"99999.99"`             // Maximum amount
-	FixedFee            float64   `json:"fixed_fee" example:"0.00"`                  // Fixed fee
-	PercentageFee       float64   `json:"percentage_fee" example:"0.6"`              // Percentage fee
-	CreatedAt           time.Time `json:"created_at" example:"2024-01-01T00:00:00Z"` // Creation time
-	UpdatedAt           time.Time `json:"updated_at" example:"2024-01-01T00:00:00Z"` // Update time
-}
-
-// ToResponse converts PaymentConfig to PaymentConfigResponse
-func (pc *PaymentConfig) ToResponse() *PaymentConfigResponse {
-	response := &PaymentConfigResponse{
-		ID:                  pc.ID,
-		Gateway:             pc.Gateway,
-		Name:                pc.Name,
-		IsEnabled:           pc.IsEnabled,
-		SortOrder:           pc.SortOrder,
-		SupportedCurrencies: pc.SupportedCurrencies,
-		MinAmount:           pc.MinAmount,
-		MaxAmount:           pc.MaxAmount,
-		FixedFee:            pc.FixedFee,
-		PercentageFee:       pc.PercentageFee,
-		CreatedAt:           pc.CreatedAt,
-		UpdatedAt:           pc.UpdatedAt,
-	}
-
-	// Parse methods if available
-	if methods, err := pc.GetMethods(); err == nil {
-		response.Methods = methods
-	}
-
-	return response
-}
-
-// ToPublicResponse converts PaymentConfig to a public response (without sensitive config)
-func (pc *PaymentConfig) ToPublicResponse() *PaymentConfigResponse {
-	response := &PaymentConfigResponse{
-		ID:                  pc.ID,
-		Gateway:             pc.Gateway,
-		Name:                pc.Name,
-		SupportedCurrencies: pc.SupportedCurrencies,
-		MinAmount:           pc.MinAmount,
-		MaxAmount:           pc.MaxAmount,
-		SortOrder:           pc.SortOrder,
-	}
-
-	// Parse methods if available and filter for public display
-	if methods, err := pc.GetMethods(); err == nil {
-		var publicMethods []Method
-		for _, method := range methods {
-			if method.IsEnabled {
-				publicMethods = append(publicMethods, method)
-			}
-		}
-		response.Methods = publicMethods
-	}
-
-	return response
-}

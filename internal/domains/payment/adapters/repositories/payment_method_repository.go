@@ -7,6 +7,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"linke/internal/domains/payment/constants"
 	"linke/internal/domains/payment/entities"
 	"linke/internal/domains/payment/usecases/interfaces"
 	"linke/internal/shared/framework"
@@ -39,7 +40,7 @@ func (r *paymentMethodRepository) Create(ctx context.Context, paymentMethod *ent
 func (r *paymentMethodRepository) GetActiveByUserID(ctx context.Context, userID uint) ([]*entities.PaymentMethod, error) {
 	var paymentMethods []*entities.PaymentMethod
 	if err := r.GetDB().WithContext(ctx).
-		Where("user_id = ? AND is_active = ? AND status = ?", userID, true, entities.PaymentMethodStatusActive).
+		Where("user_id = ? AND is_active = ? AND status = ?", userID, true, constants.PaymentMethodStatusActive).
 		Order("is_default DESC, created_at DESC").
 		Find(&paymentMethods).Error; err != nil {
 		return nil, fmt.Errorf("failed to get active payment methods by user ID: %w", err)
@@ -66,7 +67,7 @@ func (r *paymentMethodRepository) GetDefaultByUserID(ctx context.Context, userID
 	var paymentMethod entities.PaymentMethod
 	if err := r.GetDB().WithContext(ctx).
 		Where("user_id = ? AND is_default = ? AND is_active = ? AND status = ?",
-			userID, true, true, entities.PaymentMethodStatusActive).
+			userID, true, true, constants.PaymentMethodStatusActive).
 		First(&paymentMethod).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
@@ -82,7 +83,7 @@ func (r *paymentMethodRepository) GetDefaultByUserIDAndGateway(ctx context.Conte
 	var paymentMethod entities.PaymentMethod
 	if err := r.GetDB().WithContext(ctx).
 		Where("user_id = ? AND gateway = ? AND is_default = ? AND is_active = ? AND status = ?",
-			userID, gateway, true, true, entities.PaymentMethodStatusActive).
+			userID, gateway, true, true, constants.PaymentMethodStatusActive).
 		First(&paymentMethod).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
@@ -98,7 +99,7 @@ func (r *paymentMethodRepository) GetByPaymentToken(ctx context.Context, gateway
 	var paymentMethod entities.PaymentMethod
 	if err := r.GetDB().WithContext(ctx).
 		Where("gateway = ? AND payment_token = ? AND status = ?",
-			gateway, token, entities.PaymentMethodStatusActive).
+			gateway, token, constants.PaymentMethodStatusActive).
 		First(&paymentMethod).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
@@ -162,7 +163,7 @@ func (r *paymentMethodRepository) GetExpiredMethods(ctx context.Context) ([]*ent
 		Where("expiry_year IS NOT NULL AND expiry_month IS NOT NULL").
 		Where("(expiry_year < ? OR (expiry_year = ? AND expiry_month < ?))",
 			now.Year(), now.Year(), int(now.Month())).
-		Where("status != ?", entities.PaymentMethodStatusExpired).
+		Where("status != ?", constants.PaymentMethodStatusExpired).
 		Find(&paymentMethods).Error; err != nil {
 		return nil, fmt.Errorf("failed to get expired payment methods: %w", err)
 	}
@@ -177,7 +178,7 @@ func (r *paymentMethodRepository) GetMethodsNeedingValidation(ctx context.Contex
 
 	if err := r.GetDB().WithContext(ctx).
 		Where("(last_validated_at IS NULL OR last_validated_at < ?) AND status = ?",
-			thirtyDaysAgo, entities.PaymentMethodStatusActive).
+			thirtyDaysAgo, constants.PaymentMethodStatusActive).
 		Find(&paymentMethods).Error; err != nil {
 		return nil, fmt.Errorf("failed to get payment methods needing validation: %w", err)
 	}

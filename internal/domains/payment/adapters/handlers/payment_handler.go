@@ -6,7 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	"linke/internal/domains/payment/entities"
+	"linke/internal/domains/payment/constants"
+	"linke/internal/domains/payment/dto"
 	"linke/internal/domains/payment/usecases/interfaces"
 	userEntities "linke/internal/domains/user/entities"
 	"linke/internal/shared/logger"
@@ -30,19 +31,6 @@ func NewPaymentHandler(paymentService interfaces.PaymentService, paymentConfigSe
 	}
 }
 
-// CreatePaymentOrderRequest represents the request to create a payment order
-type CreatePaymentOrderRequest struct {
-	SubscriptionOrderID *uint   `json:"subscription_order_id,omitempty" example:"1"`
-	InvoiceID           *uint   `json:"invoice_id,omitempty" example:"1"`
-	Gateway             string  `json:"gateway" binding:"required" example:"epay"`
-	PaymentMethod       string  `json:"payment_method" binding:"required" example:"alipay"`
-	Amount              float64 `json:"amount" binding:"required,gt=0" example:"29.99"`
-	Currency            string  `json:"currency" binding:"required" example:"CNY"`
-	Subject             string  `json:"subject" binding:"required" example:"Premium Subscription"`
-	Body                string  `json:"body,omitempty" example:"Monthly premium subscription payment"`
-	ReturnURL           string  `json:"return_url,omitempty" example:"https://example.com/payment/return"`
-	ExpiredMinutes      int     `json:"expired_minutes,omitempty" example:"30"`
-}
 
 // CreatePaymentOrder godoc
 // @Summary [User] Create payment order
@@ -51,8 +39,8 @@ type CreatePaymentOrderRequest struct {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param payment_order body CreatePaymentOrderRequest true "Payment order data"
-// @Success 201 {object} response.StandardResponse{data=entities.PaymentRecordResponse}
+// @Param payment_order body dto.CreatePaymentOrderRequest true "Payment order data"
+// @Success 201 {object} response.StandardResponse{data=dto.PaymentRecordResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -72,7 +60,7 @@ func (h *PaymentHandler) CreatePaymentOrder(c *gin.Context) {
 	}
 
 	// Bind request
-	var req CreatePaymentOrderRequest
+	var req dto.CreatePaymentOrderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "Invalid request data", err.Error())
 		return
@@ -91,7 +79,7 @@ func (h *PaymentHandler) CreatePaymentOrder(c *gin.Context) {
 	notifyURL := "https://" + c.Request.Host + "/api/v1/payment/notify/" + req.Gateway
 
 	// Create payment service request
-	paymentReq := &interfaces.CreatePaymentOrderRequest{
+	paymentReq := &dto.CreatePaymentOrderRequest{
 		UserID:              user.ID,
 		SubscriptionOrderID: req.SubscriptionOrderID,
 		InvoiceID:           req.InvoiceID,
@@ -115,7 +103,7 @@ func (h *PaymentHandler) CreatePaymentOrder(c *gin.Context) {
 		return
 	}
 
-	response.CreatedWithMessage(c, "Payment order created successfully", paymentRecord.ToUserResponse())
+	response.CreatedWithMessage(c, "Payment order created successfully", dto.ToPaymentRecordUserResponse(paymentRecord))
 }
 
 // GetPaymentOrder godoc
@@ -126,7 +114,7 @@ func (h *PaymentHandler) CreatePaymentOrder(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param payment_no path string true "Payment number"
-// @Success 200 {object} response.StandardResponse{data=entities.PaymentRecordResponse}
+// @Success 200 {object} response.StandardResponse{data=dto.PaymentRecordResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -172,7 +160,7 @@ func (h *PaymentHandler) GetPaymentOrder(c *gin.Context) {
 		return
 	}
 
-	response.OK(c, "Payment order retrieved successfully", paymentRecord.ToUserResponse())
+	response.OK(c, "Payment order retrieved successfully", dto.ToPaymentRecordUserResponse(paymentRecord))
 }
 
 // GetMyPaymentOrders godoc
@@ -184,7 +172,7 @@ func (h *PaymentHandler) GetPaymentOrder(c *gin.Context) {
 // @Security BearerAuth
 // @Param limit query int false "Limit results" minimum(1) maximum(100) example(10)
 // @Param offset query int false "Offset results" minimum(0) example(0)
-// @Success 200 {object} response.PaginatedResponse{data=[]entities.PaymentRecordResponse}
+// @Success 200 {object} response.PaginatedResponse{data=[]dto.PaymentRecordResponse}
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /payment/orders/my [get]
@@ -225,9 +213,9 @@ func (h *PaymentHandler) GetMyPaymentOrders(c *gin.Context) {
 	}
 
 	// Convert to response format
-	var recordResponses []*entities.PaymentRecordResponse
+	var recordResponses []*dto.PaymentRecordResponse
 	for _, record := range records {
-		recordResponses = append(recordResponses, record.ToUserResponse())
+		recordResponses = append(recordResponses, dto.ToPaymentRecordUserResponse(record))
 	}
 
 	response.OKPaginated(c, "My payment orders retrieved successfully", recordResponses, totalCount, limit, offset)
@@ -261,7 +249,7 @@ func (h *PaymentHandler) GetAvailablePaymentMethods(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param currency query string false "Filter by currency" example("CNY")
-// @Success 200 {object} response.StandardResponse{data=[]entities.PaymentConfigResponse}
+// @Success 200 {object} response.StandardResponse{data=[]dto.PaymentConfigResponse}
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /payment/configs [get]
 func (h *PaymentHandler) GetActivePaymentConfigs(c *gin.Context) {
@@ -276,9 +264,9 @@ func (h *PaymentHandler) GetActivePaymentConfigs(c *gin.Context) {
 	}
 
 	// Convert to public response format
-	var configResponses []*entities.PaymentConfigResponse
+	var configResponses []*dto.PaymentConfigResponse
 	for _, config := range configs {
-		configResponses = append(configResponses, config.ToPublicResponse())
+		configResponses = append(configResponses, dto.ToPaymentConfigPublicResponse(config))
 	}
 
 	response.OK(c, "Active payment configs retrieved successfully", configResponses)
@@ -303,7 +291,7 @@ func (h *PaymentHandler) PaymentNotify(c *gin.Context) {
 	}
 
 	// SECURITY: Validate gateway parameter
-	validGateways := []string{entities.PaymentGatewayEpay, entities.PaymentGatewayEPUSDT}
+	validGateways := []string{constants.PaymentGatewayEpay, constants.PaymentGatewayEPUSDT}
 	isValidGateway := false
 	for _, validGateway := range validGateways {
 		if gateway == validGateway {
@@ -355,9 +343,9 @@ func (h *PaymentHandler) PaymentNotify(c *gin.Context) {
 
 	// Return success response based on gateway
 	switch gateway {
-	case entities.PaymentGatewayEpay:
+	case constants.PaymentGatewayEpay:
 		c.String(200, "success")
-	case entities.PaymentGatewayEPUSDT:
+	case constants.PaymentGatewayEPUSDT:
 		c.JSON(200, gin.H{"code": 1, "message": "success"})
 	default:
 		c.String(200, "success")
@@ -427,8 +415,8 @@ func (h *PaymentHandler) parseNotificationData(c *gin.Context, gateway string) (
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param config body interfaces.CreatePaymentConfigRequest true "Payment config data"
-// @Success 201 {object} response.StandardResponse{data=entities.PaymentConfigResponse}
+// @Param config body dto.CreatePaymentConfigRequest true "Payment config data"
+// @Success 201 {object} response.StandardResponse{data=dto.PaymentConfigResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -455,7 +443,7 @@ func (h *PaymentHandler) CreatePaymentConfig(c *gin.Context) {
 	}
 
 	// Bind request
-	var req interfaces.CreatePaymentConfigRequest
+	var req dto.CreatePaymentConfigRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "Invalid request data", err.Error())
 		return
@@ -469,7 +457,7 @@ func (h *PaymentHandler) CreatePaymentConfig(c *gin.Context) {
 		return
 	}
 
-	response.CreatedWithMessage(c, "Payment config created successfully", config.ToResponse())
+	response.CreatedWithMessage(c, "Payment config created successfully", dto.ToPaymentConfigResponse(config))
 }
 
 // GetPaymentConfigs godoc
@@ -485,7 +473,7 @@ func (h *PaymentHandler) CreatePaymentConfig(c *gin.Context) {
 // @Param environment query string false "Filter by environment" example("production")
 // @Param limit query int false "Limit results" minimum(1) maximum(100) example(10)
 // @Param offset query int false "Offset results" minimum(0) example(0)
-// @Success 200 {object} response.PaginatedResponse{data=[]entities.PaymentConfigResponse}
+// @Success 200 {object} response.PaginatedResponse{data=[]dto.PaymentConfigResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -512,7 +500,7 @@ func (h *PaymentHandler) GetPaymentConfigs(c *gin.Context) {
 	}
 
 	// Bind query parameters
-	var req interfaces.GetPaymentConfigsRequest
+	var req dto.GetPaymentConfigsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		response.BadRequest(c, "Invalid query parameters", err.Error())
 		return
@@ -527,9 +515,9 @@ func (h *PaymentHandler) GetPaymentConfigs(c *gin.Context) {
 	}
 
 	// Convert to response format
-	var configResponses []*entities.PaymentConfigResponse
+	var configResponses []*dto.PaymentConfigResponse
 	for _, config := range configs {
-		configResponses = append(configResponses, config.ToResponse())
+		configResponses = append(configResponses, dto.ToPaymentConfigResponse(config))
 	}
 
 	response.OKPaginated(c, "Payment configs retrieved successfully", configResponses, totalCount, req.Limit, req.Offset)
@@ -543,8 +531,8 @@ func (h *PaymentHandler) GetPaymentConfigs(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Payment config ID"
-// @Param config body interfaces.UpdatePaymentConfigRequest true "Updated payment config data"
-// @Success 200 {object} response.StandardResponse{data=entities.PaymentConfigResponse}
+// @Param config body dto.UpdatePaymentConfigRequest true "Updated payment config data"
+// @Success 200 {object} response.StandardResponse{data=dto.PaymentConfigResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -580,7 +568,7 @@ func (h *PaymentHandler) UpdatePaymentConfig(c *gin.Context) {
 	}
 
 	// Bind request
-	var req interfaces.UpdatePaymentConfigRequest
+	var req dto.UpdatePaymentConfigRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "Invalid request data", err.Error())
 		return
@@ -598,7 +586,7 @@ func (h *PaymentHandler) UpdatePaymentConfig(c *gin.Context) {
 		return
 	}
 
-	response.OK(c, "Payment config updated successfully", config.ToResponse())
+	response.OK(c, "Payment config updated successfully", dto.ToPaymentConfigResponse(config))
 }
 
 // DeletePaymentConfig godoc
@@ -681,7 +669,7 @@ func (h *PaymentHandler) DeletePaymentConfig(c *gin.Context) {
 // @Param sort_order query string false "Sort order" Enums(asc, desc) example("desc")
 // @Param limit query int false "Limit results" minimum(1) maximum(100) example(20)
 // @Param offset query int false "Offset results" minimum(0) example(0)
-// @Success 200 {object} response.PaginatedResponse{data=interfaces.AdminRetryResponse}
+// @Success 200 {object} response.PaginatedResponse{data=dto.AdminRetryResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -708,8 +696,8 @@ func (h *PaymentHandler) GetPaymentRetries(c *gin.Context) {
 	}
 
 	// Parse filters
-	filters := &interfaces.AdminRetryFilters{
-		RetryFilters: &interfaces.RetryFilters{},
+	filters := &dto.AdminRetryFilters{
+		RetryFilters: &dto.RetryFilters{},
 		Limit:        20,
 		Offset:       0,
 		SortBy:       "created_at",
@@ -807,7 +795,7 @@ func (h *PaymentHandler) GetPaymentRetries(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Retry ID"
-// @Success 200 {object} response.StandardResponse{data=interfaces.RetryWithHistory}
+// @Success 200 {object} response.StandardResponse{data=dto.RetryWithHistory}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -1104,7 +1092,7 @@ func (h *PaymentHandler) BulkResetPaymentRetries(c *gin.Context) {
 // @Security BearerAuth
 // @Param gateway query string true "Gateway name" example("epay")
 // @Param days query int false "Number of days to analyze" minimum(1) maximum(365) example(30)
-// @Success 200 {object} response.StandardResponse{data=interfaces.RetryStatistics}
+// @Success 200 {object} response.StandardResponse{data=dto.RetryStatistics}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -1161,7 +1149,7 @@ func (h *PaymentHandler) GetRetryStatistics(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} response.StandardResponse{data=interfaces.RetryHealthMetrics}
+// @Success 200 {object} response.StandardResponse{data=dto.RetryHealthMetrics}
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse

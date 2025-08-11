@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"linke/internal/domains/payment/constants"
+	"linke/internal/domains/payment/dto"
 	"linke/internal/domains/payment/entities"
 	"linke/internal/domains/payment/usecases/interfaces"
 	"linke/internal/shared/logger"
@@ -26,7 +28,7 @@ type paymentRetryService struct {
 	retryHistoryRepo interfaces.PaymentRetryHistoryRepository
 	paymentService   interfaces.PaymentService
 	taskQueue        TaskQueueInterface
-	config           *interfaces.RetryConfiguration
+	config           *dto.RetryConfiguration
 }
 
 // NewPaymentRetryService creates a new payment retry service
@@ -98,7 +100,7 @@ func (s *paymentRetryService) InitiateRetry(ctx context.Context, paymentRecord *
 		InitialDelay:     strategy.InitialDelay,
 		MaxDelay:         strategy.MaxDelay,
 		BackoffFactor:    strategy.BackoffFactor,
-		Status:           entities.PaymentRetryStatusPending,
+		Status:           constants.PaymentRetryStatusPending,
 		FailureType:      failureType,
 		LastFailureCode:  failureCode,
 		LastErrorMessage: errorMessage,
@@ -174,7 +176,7 @@ func (s *paymentRetryService) ProcessPendingRetries(ctx context.Context, batchSi
 	return processed, nil
 }
 
-func (s *paymentRetryService) ProcessRetry(ctx context.Context, retryID uint) (*interfaces.RetryResult, error) {
+func (s *paymentRetryService) ProcessRetry(ctx context.Context, retryID uint) (*dto.RetryResult, error) {
 	// Get retry record
 	retry, err := s.retryRepo.GetByID(ctx, retryID)
 	if err != nil {
@@ -183,7 +185,7 @@ func (s *paymentRetryService) ProcessRetry(ctx context.Context, retryID uint) (*
 
 	// Check if retry is still valid
 	if !retry.ShouldRetry() {
-		return &interfaces.RetryResult{
+		return &dto.RetryResult{
 			Success:      false,
 			RetryID:      retryID,
 			Status:       retry.Status,
@@ -192,7 +194,7 @@ func (s *paymentRetryService) ProcessRetry(ctx context.Context, retryID uint) (*
 	}
 
 	// Mark as in progress
-	retry.Status = entities.PaymentRetryStatusInProgress
+	retry.Status = constants.PaymentRetryStatusInProgress
 	if err := s.retryRepo.Update(ctx, retry); err != nil {
 		return nil, fmt.Errorf("failed to mark retry as in progress: %w", err)
 	}
@@ -201,7 +203,7 @@ func (s *paymentRetryService) ProcessRetry(ctx context.Context, retryID uint) (*
 	paymentRecord, err := s.paymentService.GetPaymentRecord(ctx, "")
 	if err != nil {
 		// If we can't get payment record, mark retry as failed
-		retry.Status = entities.PaymentRetryStatusFailed
+		retry.Status = constants.PaymentRetryStatusFailed
 		s.retryRepo.Update(ctx, retry)
 		return nil, fmt.Errorf("failed to get payment record: %w", err)
 	}
@@ -217,8 +219,8 @@ func (s *paymentRetryService) ProcessRetry(ctx context.Context, retryID uint) (*
 	}
 
 	// Process the payment retry
-	var result *interfaces.RetryResult
-	var paymentResult *interfaces.PaymentProcessResult
+	var result *dto.RetryResult
+	var paymentResult *dto.PaymentProcessResult
 
 	// Simulate payment processing - in reality this would call the payment gateway
 	paymentResult, err = s.processPaymentRetry(ctx, paymentRecord, retry)
@@ -229,7 +231,7 @@ func (s *paymentRetryService) ProcessRetry(ctx context.Context, retryID uint) (*
 
 	if err != nil {
 		// Handle retry failure
-		attemptHistory.Status = entities.AttemptStatusFailed
+		attemptHistory.Status = constants.AttemptStatusFailed
 		attemptHistory.ErrorType = s.ClassifyFailure(ctx, paymentRecord.Gateway, paymentRecord.PaymentMethod, paymentResult.ErrorCode, err.Error())
 		attemptHistory.FailureReason = err.Error()
 		attemptHistory.ResponseCode = paymentResult.ErrorCode
@@ -237,7 +239,7 @@ func (s *paymentRetryService) ProcessRetry(ctx context.Context, retryID uint) (*
 		// Update retry for next attempt
 		retry.UpdateForNextAttempt(attemptHistory.ErrorType, paymentResult.ErrorCode, err.Error())
 
-		result = &interfaces.RetryResult{
+		result = &dto.RetryResult{
 			Success:       false,
 			RetryID:       retryID,
 			AttemptNumber: retry.AttemptNumber,
@@ -264,12 +266,12 @@ func (s *paymentRetryService) ProcessRetry(ctx context.Context, retryID uint) (*
 		}
 	} else {
 		// Handle retry success
-		attemptHistory.Status = entities.AttemptStatusSuccess
+		attemptHistory.Status = constants.AttemptStatusSuccess
 		attemptHistory.ResponseCode = "SUCCESS"
 
 		retry.MarkAsSuccessful()
 
-		result = &interfaces.RetryResult{
+		result = &dto.RetryResult{
 			Success:       true,
 			RetryID:       retryID,
 			AttemptNumber: retry.AttemptNumber,
@@ -295,7 +297,7 @@ func (s *paymentRetryService) ProcessRetry(ctx context.Context, retryID uint) (*
 		)
 	}
 
-	result.History = attemptHistory
+	result.History = dto.ToPaymentRetryHistoryResponse(attemptHistory)
 
 	// Send notification
 	if err := s.NotifyRetryAttempt(ctx, retry, attemptHistory); err != nil {
@@ -360,7 +362,7 @@ func (s *paymentRetryService) GetRetryByPaymentID(ctx context.Context, paymentRe
 	return s.retryRepo.GetByPaymentRecordID(ctx, paymentRecordID)
 }
 
-func (s *paymentRetryService) GetRetryWithHistory(ctx context.Context, retryID uint) (*interfaces.RetryWithHistory, error) {
+func (s *paymentRetryService) GetRetryWithHistory(ctx context.Context, retryID uint) (*dto.RetryWithHistory, error) {
 	retry, err := s.retryRepo.GetByID(ctx, retryID)
 	if err != nil {
 		return nil, err
@@ -371,13 +373,13 @@ func (s *paymentRetryService) GetRetryWithHistory(ctx context.Context, retryID u
 		return nil, err
 	}
 
-	return &interfaces.RetryWithHistory{
-		Retry:   retry,
-		History: history,
+	return &dto.RetryWithHistory{
+		Retry:   dto.ToPaymentRetryResponse(retry),
+		History: convertRetryHistorySlice(history),
 	}, nil
 }
 
-func (s *paymentRetryService) GetActiveRetries(ctx context.Context, filters *interfaces.RetryFilters, limit, offset int) ([]*entities.PaymentRetry, int64, error) {
+func (s *paymentRetryService) GetActiveRetries(ctx context.Context, filters *dto.RetryFilters, limit, offset int) ([]*entities.PaymentRetry, int64, error) {
 	return s.retryRepo.GetAllRetries(ctx, filters, limit, offset)
 }
 
@@ -387,13 +389,13 @@ func (s *paymentRetryService) GetRetryHistory(ctx context.Context, retryID uint)
 
 // Statistics and monitoring
 
-func (s *paymentRetryService) GetRetryStatistics(ctx context.Context, gateway string, days int) (*interfaces.RetryStatistics, error) {
+func (s *paymentRetryService) GetRetryStatistics(ctx context.Context, gateway string, days int) (*dto.RetryStatistics, error) {
 	fromDate := time.Now().AddDate(0, 0, -days)
 	toDate := time.Now()
 	return s.retryRepo.GetRetryStatsByGateway(ctx, gateway, fromDate, toDate)
 }
 
-func (s *paymentRetryService) GetFailureAnalysis(ctx context.Context, gateway string, days int) (*interfaces.FailureAnalysis, error) {
+func (s *paymentRetryService) GetFailureAnalysis(ctx context.Context, gateway string, days int) (*dto.FailureAnalysis, error) {
 	// Get failure patterns
 	patterns, err := s.retryHistoryRepo.GetFailurePatterns(ctx, gateway, days)
 	if err != nil {
@@ -407,7 +409,7 @@ func (s *paymentRetryService) GetFailureAnalysis(ctx context.Context, gateway st
 	}
 
 	// Analyze failure types and create recommendations
-	analysis := &interfaces.FailureAnalysis{
+	analysis := &dto.FailureAnalysis{
 		Gateway:            gateway,
 		TotalFailures:      stats.FailedRetries,
 		FailurePatterns:    patterns,
@@ -418,7 +420,7 @@ func (s *paymentRetryService) GetFailureAnalysis(ctx context.Context, gateway st
 	return analysis, nil
 }
 
-func (s *paymentRetryService) GetRetryHealthMetrics(ctx context.Context) (*interfaces.RetryHealthMetrics, error) {
+func (s *paymentRetryService) GetRetryHealthMetrics(ctx context.Context) (*dto.RetryHealthMetrics, error) {
 	// Get overall metrics
 	activeRetries, err := s.retryRepo.GetPendingRetries(ctx, 0)
 	if err != nil {
@@ -434,12 +436,12 @@ func (s *paymentRetryService) GetRetryHealthMetrics(ctx context.Context) (*inter
 	successRate7d, _ := s.retryRepo.GetRetrySuccessRate(ctx, "", 7)
 
 	// Get gateway-specific health
-	gatewayHealth := []*interfaces.GatewayHealthMetric{}
+	gatewayHealth := []*dto.GatewayHealthMetric{}
 	for gateway := range entities.DefaultRetryStrategies {
 		activeGatewayRetries, _ := s.retryRepo.GetActiveRetriesForGateway(ctx, gateway)
 		successRate, _ := s.retryRepo.GetRetrySuccessRate(ctx, gateway, 7)
 
-		health := &interfaces.GatewayHealthMetric{
+		health := &dto.GatewayHealthMetric{
 			Gateway:       gateway,
 			ActiveRetries: int64(len(activeGatewayRetries)),
 			SuccessRate:   successRate,
@@ -452,7 +454,7 @@ func (s *paymentRetryService) GetRetryHealthMetrics(ctx context.Context) (*inter
 	alerts := s.generateHealthAlerts(int64(len(activeRetries)), int64(len(overdueRetries)), successRate24h)
 	recommendations := s.generateSystemRecommendations(gatewayHealth)
 
-	return &interfaces.RetryHealthMetrics{
+	return &dto.RetryHealthMetrics{
 		TotalActiveRetries:    int64(len(activeRetries)),
 		OverdueRetries:        int64(len(overdueRetries)),
 		SuccessRate24h:        successRate24h,
@@ -465,7 +467,7 @@ func (s *paymentRetryService) GetRetryHealthMetrics(ctx context.Context) (*inter
 
 // Admin operations
 
-func (s *paymentRetryService) GetRetriesForAdmin(ctx context.Context, filters *interfaces.AdminRetryFilters) (*interfaces.AdminRetryResponse, error) {
+func (s *paymentRetryService) GetRetriesForAdmin(ctx context.Context, filters *dto.AdminRetryFilters) (*dto.AdminRetryResponse, error) {
 	retries, total, err := s.retryRepo.GetAllRetries(ctx, filters.RetryFilters, filters.Limit, filters.Offset)
 	if err != nil {
 		return nil, err
@@ -475,8 +477,8 @@ func (s *paymentRetryService) GetRetriesForAdmin(ctx context.Context, filters *i
 	page := (filters.Offset / filters.Limit) + 1
 	totalPages := int((total + int64(filters.Limit) - 1) / int64(filters.Limit))
 
-	response := &interfaces.AdminRetryResponse{
-		Retries:    retries,
+	response := &dto.AdminRetryResponse{
+		Retries:    convertRetrySliceToDTO(retries),
 		TotalCount: total,
 		Page:       page,
 		PageSize:   filters.Limit,
@@ -554,7 +556,7 @@ func (s *paymentRetryService) ShouldRetryPayment(ctx context.Context, paymentRec
 	failureType := s.ClassifyFailure(ctx, paymentRecord.Gateway, paymentRecord.PaymentMethod, errorCode, "")
 
 	// Don't retry permanent failures
-	return failureType != entities.FailureTypePermanent
+	return failureType != constants.FailureTypePermanent
 }
 
 func (s *paymentRetryService) NotifyRetryAttempt(ctx context.Context, retry *entities.PaymentRetry, attempt *entities.PaymentRetryHistory) error {
@@ -600,11 +602,11 @@ func (s *paymentRetryService) scheduleRetryTask(ctx context.Context, retry *enti
 	return s.taskQueue.EnqueueDelayed(ctx, "payment_retries", task, delay)
 }
 
-func (s *paymentRetryService) processPaymentRetry(ctx context.Context, paymentRecord *entities.PaymentRecord, retry *entities.PaymentRetry) (*interfaces.PaymentProcessResult, error) {
+func (s *paymentRetryService) processPaymentRetry(ctx context.Context, paymentRecord *entities.PaymentRecord, retry *entities.PaymentRetry) (*dto.PaymentProcessResult, error) {
 	// This is a simplified implementation
 	// In reality, this would call the actual payment gateway
 
-	result := &interfaces.PaymentProcessResult{
+	result := &dto.PaymentProcessResult{
 		PaymentRecordID: paymentRecord.ID,
 	}
 
@@ -653,7 +655,7 @@ func (s *paymentRetryService) classifyFailureDefault(errorCode, errorMessage str
 
 	for _, pattern := range permanentPatterns {
 		if strings.Contains(errorMessage, pattern) {
-			return entities.FailureTypePermanent
+			return constants.FailureTypePermanent
 		}
 	}
 
@@ -664,7 +666,7 @@ func (s *paymentRetryService) classifyFailureDefault(errorCode, errorMessage str
 
 	for _, pattern := range networkPatterns {
 		if strings.Contains(errorMessage, pattern) {
-			return entities.FailureTypeNetwork
+			return constants.FailureTypeNetwork
 		}
 	}
 
@@ -675,15 +677,15 @@ func (s *paymentRetryService) classifyFailureDefault(errorCode, errorMessage str
 
 	for _, pattern := range gatewayPatterns {
 		if strings.Contains(errorMessage, pattern) {
-			return entities.FailureTypeGateway
+			return constants.FailureTypeGateway
 		}
 	}
 
 	// Default to temporary
-	return entities.FailureTypeTemporary
+	return constants.FailureTypeTemporary
 }
 
-func (s *paymentRetryService) generateFailureRecommendations(patterns []*interfaces.FailurePattern) []string {
+func (s *paymentRetryService) generateFailureRecommendations(patterns []*dto.FailurePattern) []string {
 	recommendations := []string{}
 
 	for _, pattern := range patterns {
@@ -724,7 +726,7 @@ func (s *paymentRetryService) generateHealthAlerts(activeRetries, overdueRetries
 	return alerts
 }
 
-func (s *paymentRetryService) generateSystemRecommendations(gatewayHealth []*interfaces.GatewayHealthMetric) []string {
+func (s *paymentRetryService) generateSystemRecommendations(gatewayHealth []*dto.GatewayHealthMetric) []string {
 	recommendations := []string{}
 
 	for _, health := range gatewayHealth {
@@ -737,9 +739,30 @@ func (s *paymentRetryService) generateSystemRecommendations(gatewayHealth []*int
 	return recommendations
 }
 
-// getDefaultRetryConfiguration returns default retry configuration
-func getDefaultRetryConfiguration() *interfaces.RetryConfiguration {
-	return &interfaces.RetryConfiguration{
+func convertRetryHistorySlice(history []*entities.PaymentRetryHistory) []*dto.PaymentRetryHistoryResponse {
+	if history == nil {
+		return nil
+	}
+	result := make([]*dto.PaymentRetryHistoryResponse, len(history))
+	for i, h := range history {
+		result[i] = dto.ToPaymentRetryHistoryResponse(h)
+	}
+	return result
+}
+
+// convertRetrySliceToDTO converts entity retry slice to DTO slice
+func convertRetrySliceToDTO(retries []*entities.PaymentRetry) []*dto.PaymentRetryResponse {
+	if retries == nil {
+		return nil
+	}
+	result := make([]*dto.PaymentRetryResponse, len(retries))
+	for i, r := range retries {
+		result[i] = dto.ToPaymentRetryResponse(r)
+	}
+	return result
+}
+func getDefaultRetryConfiguration() *dto.RetryConfiguration {
+	return &dto.RetryConfiguration{
 		Enabled:              true,
 		MaxConcurrentRetries: 100,
 		ProcessingInterval:   (time.Minute * 5).String(),
@@ -749,26 +772,26 @@ func getDefaultRetryConfiguration() *interfaces.RetryConfiguration {
 			InitialDelay:     3600,  // 1 hour
 			MaxDelay:         86400, // 24 hours
 			BackoffFactor:    2.0,
-			Strategy:         entities.RetryStrategyExponential,
-			FailureTypes:     []string{entities.FailureTypeTemporary, entities.FailureTypeNetwork, entities.FailureTypeGateway},
+			Strategy:         constants.RetryStrategyExponential,
+			FailureTypes:     []string{constants.FailureTypeTemporary, constants.FailureTypeNetwork, constants.FailureTypeGateway},
 			TimeoutSeconds:   30,
 			EnableAfterHours: true,
 			MaxConcurrent:    5,
 		},
 		GatewayStrategies: make(map[string]*entities.RetryStrategyConfig),
-		NotificationSettings: &interfaces.RetryNotificationSettings{
+		NotificationSettings: &dto.RetryNotificationSettings{
 			Enabled:             true,
 			NotifyOnFailure:     true,
 			NotifyOnSuccess:     false,
 			NotifyOnMaxAttempts: true,
 		},
-		MonitoringSettings: &interfaces.RetryMonitoringSettings{
+		MonitoringSettings: &dto.RetryMonitoringSettings{
 			MetricsEnabled:     true,
 			AlertsEnabled:      true,
 			HealthCheckEnabled: true,
 			LogLevel:           "info",
 			RetentionPeriod:    (time.Hour * 24 * 30).String(), // 30 days
-			AlertThresholds: &interfaces.AlertThresholds{
+			AlertThresholds: &dto.AlertThresholds{
 				MaxPendingRetries:  50,
 				MaxOverdueRetries:  10,
 				MinSuccessRate:     80.0,

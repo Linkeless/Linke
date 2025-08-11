@@ -30,16 +30,16 @@ var Module = fx.Module("user",
 
 	// 提供 Service 实现
 	fx.Provide(
-		// 提供基础的 UserService 实现
-		implementations.NewUserService,
-
-		// 提供带缓存的 UserService 实现
-		implementations.NewCachedUserService,
-
-		// 提供事件感知的 UserService 实现
+		// 提供统一的 UserService 实现，支持可配置的缓存和事件功能
 		fx.Annotate(
-			func(cachedUserService *implementations.CachedUserService, eventBus events.EventBus, logger framework.Logger) interfaces.UserService {
-				return implementations.NewEventAwareUserService(cachedUserService, eventBus, logger)
+			func(db *gorm.DB, logger framework.Logger, cacheManager cache.CacheManager, eventBus events.EventBus) interfaces.UserService {
+				// 创建带有缓存和事件功能的统一用户服务
+				return implementations.NewUnifiedUserService(
+					db,
+					logger,
+					implementations.WithCaching(cacheManager.GetCache()),
+					implementations.WithEvents(eventBus),
+				)
 			},
 			fx.As(new(interfaces.UserService)),
 		),

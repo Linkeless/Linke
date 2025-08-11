@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"linke/internal/domains/subscription/constants"
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/domains/subscription/usecases/interfaces"
 
@@ -13,35 +14,35 @@ import (
 func TestUserSubscription_PauseResume_EntityMethods(t *testing.T) {
 	t.Run("CanBePaused returns true for active subscription", func(t *testing.T) {
 		subscription := &entities.UserSubscription{
-			Status: entities.UserSubscriptionStatusActive,
+			Status: constants.UserSubscriptionStatusActive,
 		}
 		assert.True(t, subscription.CanBePaused())
 	})
 
 	t.Run("CanBePaused returns false for non-active subscription", func(t *testing.T) {
 		subscription := &entities.UserSubscription{
-			Status: entities.UserSubscriptionStatusCancelled,
+			Status: constants.UserSubscriptionStatusCancelled,
 		}
 		assert.False(t, subscription.CanBePaused())
 	})
 
 	t.Run("CanBeResumed returns true for paused subscription", func(t *testing.T) {
 		subscription := &entities.UserSubscription{
-			Status: entities.UserSubscriptionStatusPaused,
+			Status: constants.UserSubscriptionStatusPaused,
 		}
 		assert.True(t, subscription.CanBeResumed())
 	})
 
 	t.Run("CanBeResumed returns false for non-paused subscription", func(t *testing.T) {
 		subscription := &entities.UserSubscription{
-			Status: entities.UserSubscriptionStatusActive,
+			Status: constants.UserSubscriptionStatusActive,
 		}
 		assert.False(t, subscription.CanBeResumed())
 	})
 
 	t.Run("IsPaused returns true for paused subscription", func(t *testing.T) {
 		subscription := &entities.UserSubscription{
-			Status: entities.UserSubscriptionStatusPaused,
+			Status: constants.UserSubscriptionStatusPaused,
 		}
 		assert.True(t, subscription.IsPaused())
 	})
@@ -67,7 +68,7 @@ func TestUserSubscription_PauseResume_EntityMethods(t *testing.T) {
 	t.Run("ShouldAutoResume returns true for paused subscription exceeding max duration", func(t *testing.T) {
 		pausedAt := time.Now().AddDate(0, 0, -100) // 100 days ago
 		subscription := &entities.UserSubscription{
-			Status:           entities.UserSubscriptionStatusPaused,
+			Status:           constants.UserSubscriptionStatusPaused,
 			PausedAt:         &pausedAt,
 			MaxPauseDuration: 90,
 		}
@@ -112,7 +113,7 @@ func TestUserSubscription_ResponseFields(t *testing.T) {
 
 		subscription := &entities.UserSubscription{
 			ID:               1,
-			Status:           entities.UserSubscriptionStatusPaused,
+			Status:           constants.UserSubscriptionStatusPaused,
 			PausedAt:         &pausedAt,
 			PauseReason:      "User request",
 			PausedByAdminID:  &adminID,
@@ -121,7 +122,7 @@ func TestUserSubscription_ResponseFields(t *testing.T) {
 
 		response := subscription.ToResponse()
 
-		assert.Equal(t, entities.UserSubscriptionStatusPaused, response.Status)
+		assert.Equal(t, constants.UserSubscriptionStatusPaused, response.Status)
 		assert.True(t, response.IsPaused)
 		assert.Equal(t, &pausedAt, response.PausedAt)
 		assert.Equal(t, "User request", response.PauseReason)
@@ -139,7 +140,7 @@ func TestUserSubscription_ResponseFields(t *testing.T) {
 
 		subscription := &entities.UserSubscription{
 			ID:               1,
-			Status:           entities.UserSubscriptionStatusActive,
+			Status:           constants.UserSubscriptionStatusActive,
 			PausedAt:         &pausedAt,
 			PauseReason:      "User request",
 			PausedByAdminID:  &adminID,
@@ -150,7 +151,7 @@ func TestUserSubscription_ResponseFields(t *testing.T) {
 
 		response := subscription.ToResponse()
 
-		assert.Equal(t, entities.UserSubscriptionStatusActive, response.Status)
+		assert.Equal(t, constants.UserSubscriptionStatusActive, response.Status)
 		assert.False(t, response.IsPaused)
 		assert.Equal(t, &pausedAt, response.PausedAt)
 		assert.Equal(t, "User request", response.PauseReason)

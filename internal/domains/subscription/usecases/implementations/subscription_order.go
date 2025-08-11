@@ -6,11 +6,15 @@ import (
 	"slices"
 	"time"
 
+	couponDto "linke/internal/domains/coupon/dto"
 	couponInterfaces "linke/internal/domains/coupon/usecases/interfaces"
+	invoiceDto "linke/internal/domains/invoice/dto"
 	invoiceEntities "linke/internal/domains/invoice/entities"
 	invoiceInterfaces "linke/internal/domains/invoice/usecases/interfaces"
+	paymentDto "linke/internal/domains/payment/dto"
 	paymentEntities "linke/internal/domains/payment/entities"
 	paymentInterfaces "linke/internal/domains/payment/usecases/interfaces"
+	"linke/internal/domains/subscription/constants"
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/domains/subscription/usecases/interfaces"
 	"linke/internal/shared/logger"
@@ -70,10 +74,10 @@ func (sos *SubscriptionOrderService) GetSubscriptionOrderSummary(ctx context.Con
 		"invoice": nil,
 	}
 	if payment.ID != 0 {
-		result["payment"] = payment.ToSecureResponse()
+		result["payment"] = paymentDto.ToPaymentRecordSecureResponse(&payment)
 	}
 	if invoice.ID != 0 {
-		result["invoice"] = invoice.ToResponse()
+		result["invoice"] = invoiceDto.ToResponse(&invoice)
 	}
 	return result, nil
 }
@@ -134,15 +138,15 @@ func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context
 	var billingPeriodStart, billingPeriodEnd *time.Time
 	now := time.Now()
 
-	if plan.BillingCycle != entities.BillingCycleLifetime {
+	if plan.BillingCycle != constants.BillingCycleLifetime {
 		periodStart := now
 		billingPeriodStart = &periodStart
 
 		var periodEnd time.Time
 		switch plan.BillingCycle {
-		case entities.BillingCycleMonthly:
+		case constants.BillingCycleMonthly:
 			periodEnd = periodStart.AddDate(0, plan.BillingInterval, 0)
-		case entities.BillingCycleYearly:
+		case constants.BillingCycleYearly:
 			periodEnd = periodStart.AddDate(plan.BillingInterval, 0, 0)
 		}
 		billingPeriodEnd = &periodEnd
@@ -156,7 +160,7 @@ func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context
 
 	// Apply coupon discount if provided
 	if req.CouponCode != "" {
-		validateReq := &couponInterfaces.ValidateCouponRequest{
+		validateReq := &couponDto.ValidateCouponRequest{
 			Code:        req.CouponCode,
 			UserID:      uint64(req.UserID),
 			OrderAmount: amount + setupFee,
@@ -210,7 +214,7 @@ func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context
 		SubscriptionPlanID: req.SubscriptionPlanID,
 		OrderNumber:        orderNumber,
 		OrderType:          req.OrderType,
-		Status:             entities.OrderStatusPending,
+		Status:             constants.OrderStatusPending,
 		Amount:             amount,
 		Currency:           plan.Currency,
 		SetupFee:           setupFee,
@@ -225,7 +229,7 @@ func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context
 	}
 
 	// Set order status to confirmed (ready for invoice generation)
-	order.Status = entities.OrderStatusConfirmed
+	order.Status = constants.OrderStatusConfirmed
 
 	// Save order to database
 	if err := tx.Create(order).Error; err != nil {
@@ -235,7 +239,7 @@ func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context
 	}
 
 	// Generate invoice from order
-	invoiceReq := &invoiceInterfaces.CreateInvoiceRequest{
+	invoiceReq := &invoiceDto.CreateInvoiceRequest{
 		UserID:              req.UserID,
 		SubscriptionOrderID: order.ID,
 		Amount:              totalAmount,
@@ -254,7 +258,7 @@ func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context
 	}
 
 	// Create payment order from invoice
-	paymentReq := &paymentInterfaces.CreatePaymentOrderRequest{
+	paymentReq := &paymentDto.CreatePaymentOrderRequest{
 		UserID:              req.UserID,
 		SubscriptionOrderID: &order.ID,   // Keep the order reference for service activation
 		InvoiceID:           &invoice.ID, // Add invoice reference for invoice payment tracking
@@ -327,8 +331,8 @@ func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context
 	// Return response
 	response := &interfaces.CreateSubscriptionOrderResponse{
 		Order:         order.ToResponse(),
-		Invoice:       invoice.ToResponse(),
-		PaymentRecord: paymentRecord.ToUserResponse(),
+		Invoice:       invoiceDto.ToResponse(invoice),
+		PaymentRecord: paymentDto.ToPaymentRecordUserResponse(paymentRecord),
 		PaymentURL:    paymentRecord.PaymentURL,
 		QRCodeURL:     paymentRecord.QRCodeURL,
 		ExpiredAt:     *paymentRecord.ExpiredAt,
@@ -355,17 +359,17 @@ func (sos *SubscriptionOrderService) ProcessOrderPaymentSuccess(ctx context.Cont
 	}
 
 	// SECURITY: Validate order status to prevent duplicate processing
-	if order.Status == entities.OrderStatusPaid {
+	if order.Status == constants.OrderStatusPaid {
 		tx.Rollback()
 		return fmt.Errorf("order %d is already paid", orderID)
 	}
-	if order.Status == entities.OrderStatusCancelled || order.Status == entities.OrderStatusFailed {
+	if order.Status == constants.OrderStatusCancelled || order.Status == constants.OrderStatusFailed {
 		tx.Rollback()
 		return fmt.Errorf("order %d cannot be processed in status: %s", orderID, order.Status)
 	}
 
 	// Only allow processing from pending or confirmed status
-	if order.Status != entities.OrderStatusPending && order.Status != entities.OrderStatusConfirmed {
+	if order.Status != constants.OrderStatusPending && order.Status != constants.OrderStatusConfirmed {
 		tx.Rollback()
 		return fmt.Errorf("order %d can only be processed from pending or confirmed status, current status: %s", orderID, order.Status)
 	}
@@ -379,7 +383,7 @@ func (sos *SubscriptionOrderService) ProcessOrderPaymentSuccess(ctx context.Cont
 
 	// Update order status
 	if err := tx.Model(&order).Updates(map[string]any{
-		"status":     entities.OrderStatusPaid,
+		"status":     constants.OrderStatusPaid,
 		"paid_at":    time.Now(),
 		"updated_at": time.Now(),
 	}).Error; err != nil {
@@ -389,7 +393,7 @@ func (sos *SubscriptionOrderService) ProcessOrderPaymentSuccess(ctx context.Cont
 
 	// Create or update user subscription based on order type
 	switch order.OrderType {
-	case entities.OrderTypeNew:
+	case constants.OrderTypeNew:
 		// Create new subscription
 		subscriptionReq := &interfaces.CreateSubscriptionRequest{
 			UserID:             order.UserID,
@@ -418,7 +422,7 @@ func (sos *SubscriptionOrderService) ProcessOrderPaymentSuccess(ctx context.Cont
 			logger.Uint("order_id", order.ID),
 			logger.Uint("subscription_id", subscription.ID))
 
-	case entities.OrderTypeRenewal:
+	case constants.OrderTypeRenewal:
 		// Find and renew existing subscription
 		var subscription entities.UserSubscription
 		if err := tx.Where("user_id = ? AND subscription_plan_id = ?", order.UserID, order.SubscriptionPlanID).
@@ -437,11 +441,11 @@ func (sos *SubscriptionOrderService) ProcessOrderPaymentSuccess(ctx context.Cont
 			logger.Uint("order_id", order.ID),
 			logger.Uint("subscription_id", subscription.ID))
 
-	case entities.OrderTypeUpgrade, entities.OrderTypeDowngrade:
+	case constants.OrderTypeUpgrade, constants.OrderTypeDowngrade:
 		// Find existing subscription for this user and current active plan
 		var currentSubscription entities.UserSubscription
 		if err := tx.Where("user_id = ? AND status IN (?)",
-			order.UserID, []string{entities.UserSubscriptionStatusActive, entities.UserSubscriptionStatusTrial}).
+			order.UserID, []string{constants.UserSubscriptionStatusActive, constants.UserSubscriptionStatusTrial}).
 			First(&currentSubscription).Error; err != nil {
 			tx.Rollback()
 			return fmt.Errorf("failed to find current subscription for upgrade/downgrade: %w", err)
@@ -492,7 +496,7 @@ func (sos *SubscriptionOrderService) ProcessOrderPaymentSuccess(ctx context.Cont
 
 		// For upgrade: start immediately
 		// For downgrade: start at end of current billing period
-		if order.OrderType == entities.OrderTypeUpgrade {
+		if order.OrderType == constants.OrderTypeUpgrade {
 			subscriptionReq.StartDate = time.Now().Format(time.RFC3339)
 		} else if currentSubscription.CurrentPeriodEnd != nil {
 			subscriptionReq.StartDate = currentSubscription.CurrentPeriodEnd.Format(time.RFC3339)
@@ -516,9 +520,9 @@ func (sos *SubscriptionOrderService) ProcessOrderPaymentSuccess(ctx context.Cont
 		}
 
 		// For upgrades, immediately activate the new subscription and deactivate the old one
-		if order.OrderType == entities.OrderTypeUpgrade {
+		if order.OrderType == constants.OrderTypeUpgrade {
 			// Deactivate current subscription immediately
-			if err := tx.Model(&currentSubscription).Update("status", entities.UserSubscriptionStatusCancelled).Error; err != nil {
+			if err := tx.Model(&currentSubscription).Update("status", constants.UserSubscriptionStatusCancelled).Error; err != nil {
 				tx.Rollback()
 				return fmt.Errorf("failed to deactivate current subscription: %w", err)
 			}
@@ -610,7 +614,7 @@ func (sos *SubscriptionOrderService) generateOrderNumber() string {
 // calculateProration calculates the prorated credit for subscription changes
 func calculateProration(currentSubscription *entities.UserSubscription, currentPlan *entities.SubscriptionPlan, newPlan *entities.SubscriptionPlan) float64 {
 	// Skip proration for lifetime subscriptions
-	if currentPlan.BillingCycle == entities.BillingCycleLifetime || newPlan.BillingCycle == entities.BillingCycleLifetime {
+	if currentPlan.BillingCycle == constants.BillingCycleLifetime || newPlan.BillingCycle == constants.BillingCycleLifetime {
 		return 0.0
 	}
 
@@ -703,9 +707,9 @@ func (sos *SubscriptionOrderService) CreateUpgradeDowngradeOrder(ctx context.Con
 	// Determine order type based on plan prices
 	var orderType string
 	if newPlan.Price > currentPlan.Price {
-		orderType = entities.OrderTypeUpgrade
+		orderType = constants.OrderTypeUpgrade
 	} else if newPlan.Price < currentPlan.Price {
-		orderType = entities.OrderTypeDowngrade
+		orderType = constants.OrderTypeDowngrade
 	} else {
 		return nil, fmt.Errorf("cannot change to plan with same price - use regular renewal instead")
 	}
@@ -732,7 +736,7 @@ func getApplyImmediately(orderType string, userPreference *bool) bool {
 	}
 
 	// Default behavior: upgrades apply immediately, downgrades apply at period end
-	return orderType == entities.OrderTypeUpgrade
+	return orderType == constants.OrderTypeUpgrade
 }
 
 // ================ Admin Order Management Methods ================
@@ -944,7 +948,7 @@ func (sos *SubscriptionOrderService) UpdateOrderStatusWithEvidence(ctx context.C
 	}
 
 	// SECURITY: Enhanced validation for status changes to "paid"
-	if req.Status == entities.OrderStatusPaid {
+	if req.Status == constants.OrderStatusPaid {
 		// Require payment evidence for manual payment confirmation
 		if req.PaymentEvidence == nil {
 			tx.Rollback()
@@ -982,7 +986,7 @@ func (sos *SubscriptionOrderService) UpdateOrderStatusWithEvidence(ctx context.C
 	// Add admin notes with enhanced security logging
 	adminNote := fmt.Sprintf("[%s] Admin (ID:%d)", time.Now().Format("2006-01-02 15:04:05"), adminID)
 
-	if req.Status == entities.OrderStatusPaid && req.PaymentEvidence != nil {
+	if req.Status == constants.OrderStatusPaid && req.PaymentEvidence != nil {
 		adminNote += fmt.Sprintf(" - Payment verified: Method=%s, TxnID=%s, Amount=%.2f",
 			req.PaymentEvidence.PaymentMethod,
 			req.PaymentEvidence.TransactionID,
@@ -1009,7 +1013,7 @@ func (sos *SubscriptionOrderService) UpdateOrderStatusWithEvidence(ctx context.C
 	}
 
 	// Set paid_at if status is paid
-	if req.Status == entities.OrderStatusPaid && order.PaidAt == nil {
+	if req.Status == constants.OrderStatusPaid && order.PaidAt == nil {
 		updateData["paid_at"] = time.Now()
 	}
 
@@ -1020,7 +1024,7 @@ func (sos *SubscriptionOrderService) UpdateOrderStatusWithEvidence(ctx context.C
 	}
 
 	// If changing to paid status, process the order
-	if req.Status == entities.OrderStatusPaid && order.Status != entities.OrderStatusPaid {
+	if req.Status == constants.OrderStatusPaid && order.Status != constants.OrderStatusPaid {
 		if err := sos.ProcessOrderPaymentSuccess(ctx, orderID); err != nil {
 			logger.Error("Failed to process order after status update",
 				logger.Error2("error", err),
@@ -1090,11 +1094,11 @@ func (sos *SubscriptionOrderService) validatePaymentEvidence(order *entities.Sub
 // isCriticalOperation determines if a status change requires additional confirmation
 func (sos *SubscriptionOrderService) isCriticalOperation(oldStatus, newStatus string) bool {
 	criticalChanges := map[string][]string{
-		entities.OrderStatusPending:   {entities.OrderStatusPaid},                                    // Manual payment confirmation
-		entities.OrderStatusConfirmed: {entities.OrderStatusPaid},                                    // Manual payment confirmation for confirmed orders
-		entities.OrderStatusFailed:    {entities.OrderStatusPaid},                                    // Retry failed payment
-		entities.OrderStatusCancelled: {entities.OrderStatusPaid, entities.OrderStatusPending},       // Reactivate cancelled order
-		entities.OrderStatusPaid:      {entities.OrderStatusRefunded, entities.OrderStatusCancelled}, // Reverse paid order
+		constants.OrderStatusPending:   {constants.OrderStatusPaid},                                    // Manual payment confirmation
+		constants.OrderStatusConfirmed: {constants.OrderStatusPaid},                                    // Manual payment confirmation for confirmed orders
+		constants.OrderStatusFailed:    {constants.OrderStatusPaid},                                    // Retry failed payment
+		constants.OrderStatusCancelled: {constants.OrderStatusPaid, constants.OrderStatusPending},       // Reactivate cancelled order
+		constants.OrderStatusPaid:      {constants.OrderStatusRefunded, constants.OrderStatusCancelled}, // Reverse paid order
 	}
 
 	allowedTargets, exists := criticalChanges[oldStatus]
@@ -1166,7 +1170,7 @@ func (sos *SubscriptionOrderService) ProcessRefund(ctx context.Context, req *Pro
 
 	// If full refund, update status
 	if order.RefundAmount+req.Amount >= order.TotalAmount {
-		updateData["status"] = entities.OrderStatusRefunded
+		updateData["status"] = constants.OrderStatusRefunded
 	}
 
 	// Add admin notes
@@ -1305,14 +1309,14 @@ func (sos *SubscriptionOrderService) CancelSubscriptionOrder(ctx context.Context
 	}
 
 	// Check if order can be cancelled
-	if order.Status != entities.OrderStatusPending {
+	if order.Status != constants.OrderStatusPending {
 		tx.Rollback()
 		return fmt.Errorf("order cannot be cancelled in status: %s", order.Status)
 	}
 
 	// Update order status
 	updateData := map[string]any{
-		"status":              entities.OrderStatusCancelled,
+		"status":              constants.OrderStatusCancelled,
 		"cancellation_reason": reason,
 		"cancelled_at":        time.Now(),
 		"updated_at":          time.Now(),
@@ -1368,15 +1372,15 @@ func (sos *SubscriptionOrderService) GetOrderStatistics(ctx context.Context, fro
 	var pendingOrders, paidOrders, failedOrders, cancelledOrders, refundedOrders int64
 	for _, sc := range statusCounts {
 		switch sc.Status {
-		case entities.OrderStatusPending:
+		case constants.OrderStatusPending:
 			pendingOrders = sc.Count
-		case entities.OrderStatusPaid:
+		case constants.OrderStatusPaid:
 			paidOrders = sc.Count
-		case entities.OrderStatusFailed:
+		case constants.OrderStatusFailed:
 			failedOrders = sc.Count
-		case entities.OrderStatusCancelled:
+		case constants.OrderStatusCancelled:
 			cancelledOrders = sc.Count
-		case entities.OrderStatusRefunded:
+		case constants.OrderStatusRefunded:
 			refundedOrders = sc.Count
 		}
 	}
@@ -1450,7 +1454,7 @@ func (sos *SubscriptionOrderService) BulkUpdateOrders(ctx context.Context, req *
 
 		switch req.Operation {
 		case "cancel":
-			_, err = sos.UpdateOrderStatus(ctx, orderID, entities.OrderStatusCancelled, req.ProcessedBy, req.Notes, req.Reason)
+			_, err = sos.UpdateOrderStatus(ctx, orderID, constants.OrderStatusCancelled, req.ProcessedBy, req.Notes, req.Reason)
 		case "refund":
 			// For bulk refund, we'll refund the full amount
 			order, getErr := sos.GetSubscriptionOrder(ctx, orderID)
@@ -1499,7 +1503,7 @@ func (sos *SubscriptionOrderService) checkDuplicateOrders(ctx context.Context, u
 	var pendingCount int64
 	if err := sos.db.WithContext(ctx).Model(&entities.SubscriptionOrder{}).
 		Where("user_id = ? AND subscription_plan_id = ? AND order_type = ? AND status IN (?)",
-			userID, planID, orderType, []string{entities.OrderStatusPending}).
+			userID, planID, orderType, []string{constants.OrderStatusPending}).
 		Count(&pendingCount).Error; err != nil {
 		return fmt.Errorf("failed to check pending orders: %w", err)
 	}
@@ -1523,7 +1527,7 @@ func (sos *SubscriptionOrderService) checkDuplicateOrders(ctx context.Context, u
 	}
 
 	// BUSINESS LOGIC: For new subscriptions, check plan-specific subscription limits
-	if orderType == entities.OrderTypeNew {
+	if orderType == constants.OrderTypeNew {
 		// Get subscription plan to check its limits configuration
 		plan, err := sos.subscriptionPlanService.GetSubscriptionPlan(ctx, planID)
 		if err != nil {
@@ -1535,7 +1539,7 @@ func (sos *SubscriptionOrderService) checkDuplicateOrders(ctx context.Context, u
 			var activeCount int64
 			if err := sos.db.WithContext(ctx).Model(&entities.UserSubscription{}).
 				Where("user_id = ? AND subscription_plan_id = ? AND status IN (?)",
-					userID, planID, []string{entities.UserSubscriptionStatusActive, entities.UserSubscriptionStatusTrial}).
+					userID, planID, []string{constants.UserSubscriptionStatusActive, constants.UserSubscriptionStatusTrial}).
 				Count(&activeCount).Error; err != nil {
 				return fmt.Errorf("failed to check active subscriptions: %w", err)
 			}
@@ -1550,7 +1554,7 @@ func (sos *SubscriptionOrderService) checkDuplicateOrders(ctx context.Context, u
 				var activeCount int64
 				if err := sos.db.WithContext(ctx).Model(&entities.UserSubscription{}).
 					Where("user_id = ? AND subscription_plan_id = ? AND status IN (?)",
-						userID, planID, []string{entities.UserSubscriptionStatusActive, entities.UserSubscriptionStatusTrial}).
+						userID, planID, []string{constants.UserSubscriptionStatusActive, constants.UserSubscriptionStatusTrial}).
 					Count(&activeCount).Error; err != nil {
 					return fmt.Errorf("failed to check active subscriptions: %w", err)
 				}
@@ -1569,7 +1573,7 @@ func (sos *SubscriptionOrderService) checkDuplicateOrders(ctx context.Context, u
 // Order and invoice are created asynchronously after payment success
 func (sos *SubscriptionOrderService) QuickPurchase(ctx context.Context, req *interfaces.QuickPurchaseRequest) (*interfaces.QuickPurchaseResponse, error) {
 	// SECURITY: Check for duplicate pending orders to prevent order spam
-	if err := sos.checkDuplicateOrders(ctx, req.UserID, req.PlanID, entities.OrderTypeNew); err != nil {
+	if err := sos.checkDuplicateOrders(ctx, req.UserID, req.PlanID, constants.OrderTypeNew); err != nil {
 		return nil, fmt.Errorf("duplicate order check failed: %w", err)
 	}
 
@@ -1591,7 +1595,7 @@ func (sos *SubscriptionOrderService) QuickPurchase(ctx context.Context, req *int
 
 	// Apply coupon discount if provided
 	if req.CouponCode != "" {
-		validateReq := &couponInterfaces.ValidateCouponRequest{
+		validateReq := &couponDto.ValidateCouponRequest{
 			Code:        req.CouponCode,
 			UserID:      uint64(req.UserID),
 			OrderAmount: amount + setupFee,
@@ -1641,7 +1645,7 @@ func (sos *SubscriptionOrderService) QuickPurchase(ctx context.Context, req *int
 	}
 
 	// Create payment order directly
-	paymentReq := &paymentInterfaces.CreatePaymentOrderRequest{
+	paymentReq := &paymentDto.CreatePaymentOrderRequest{
 		UserID:         req.UserID,
 		Gateway:        req.PaymentGateway,
 		PaymentMethod:  req.PaymentMethod,
@@ -1669,7 +1673,7 @@ func (sos *SubscriptionOrderService) QuickPurchase(ctx context.Context, req *int
 
 	// Build response
 	response := &interfaces.QuickPurchaseResponse{
-		PaymentRecord: paymentRecord.ToUserResponse(),
+		PaymentRecord: paymentDto.ToPaymentRecordUserResponse(paymentRecord),
 		PaymentURL:    paymentRecord.PaymentURL,
 		QRCodeURL:     paymentRecord.QRCodeURL,
 		ExpiredAt:     *paymentRecord.ExpiredAt,

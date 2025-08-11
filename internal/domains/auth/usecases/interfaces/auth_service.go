@@ -21,8 +21,8 @@ type AuthService interface {
 	// Token validation
 	ValidateToken(tokenString string) (*userEntities.User, error)
 
-	// OAuth authentication
-	CreateOrUpdateOAuthUser(ctx context.Context, userInfo *OAuthUserInfo) (*userEntities.User, error)
+	// OAuth authentication (使用 oauth_service.UserInfo 类型)
+	CreateOrUpdateOAuthUser(ctx context.Context, userInfo *UserInfo) (*userEntities.User, error)
 }
 
 // RegisterRequest represents registration request data
@@ -88,12 +88,12 @@ type TokenResponse struct {
 	RefreshToken string    `json:"refresh_token,omitempty"`
 }
 
-// OAuthUserInfo represents OAuth user information from providers
-type OAuthUserInfo struct {
+// UserInfo represents OAuth user information from providers
+type UserInfo struct {
 	ID       string `json:"id"`
 	Email    string `json:"email"`
 	Name     string `json:"name"`
-	Avatar   string `json:"avatar"`
 	Username string `json:"username"`
+	Avatar   string `json:"avatar"`
 	Provider string `json:"provider"`
 }

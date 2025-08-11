@@ -6,8 +6,9 @@ import (
 	"strings"
 	"time"
 
+	"linke/internal/domains/ticket/constants"
+	"linke/internal/domains/ticket/dto"
 	"linke/internal/domains/ticket/entities"
-	"linke/internal/domains/ticket/usecases/interfaces"
 	"linke/internal/shared/logger"
 
 	"gorm.io/gorm"
@@ -25,7 +26,7 @@ func NewTicketMessageService(db *gorm.DB) *TicketMessageService {
 
 
 // CreateTicketMessage creates a new ticket message
-func (s *TicketMessageService) CreateTicketMessage(ctx context.Context, ticketID uint, userID uint, req *interfaces.CreateTicketMessageRequest) (*entities.TicketMessage, error) {
+func (s *TicketMessageService) CreateTicketMessage(ctx context.Context, ticketID uint, userID uint, req *dto.CreateTicketMessageRequest) (*entities.TicketMessage, error) {
 	// Verify ticket exists
 	var ticket entities.Ticket
 	if err := s.db.WithContext(ctx).First(&ticket, ticketID).Error; err != nil {
@@ -38,7 +39,7 @@ func (s *TicketMessageService) CreateTicketMessage(ctx context.Context, ticketID
 	// Set default message type if not specified
 	messageType := req.MessageType
 	if messageType == "" {
-		messageType = "user"
+		messageType = constants.MessageTypeUser
 	}
 
 	// Create the message
@@ -125,7 +126,7 @@ func (s *TicketMessageService) GetTicketMessage(ctx context.Context, messageID u
 }
 
 // GetTicketMessages gets messages for a ticket
-func (s *TicketMessageService) GetTicketMessages(ctx context.Context, req *interfaces.GetTicketMessagesRequest) ([]*entities.TicketMessage, int64, error) {
+func (s *TicketMessageService) GetTicketMessages(ctx context.Context, req *dto.GetTicketMessagesRequest) ([]*entities.TicketMessage, int64, error) {
 	query := s.db.WithContext(ctx).Model(&entities.TicketMessage{}).
 		Where("ticket_id = ?", req.TicketID)
 
@@ -166,7 +167,7 @@ func (s *TicketMessageService) GetTicketMessages(ctx context.Context, req *inter
 }
 
 // UpdateTicketMessage updates a ticket message
-func (s *TicketMessageService) UpdateTicketMessage(ctx context.Context, messageID uint, req *interfaces.UpdateTicketMessageRequest) (*entities.TicketMessage, error) {
+func (s *TicketMessageService) UpdateTicketMessage(ctx context.Context, messageID uint, req *dto.UpdateTicketMessageRequest) (*entities.TicketMessage, error) {
 	// Get existing message
 	message, err := s.GetTicketMessage(ctx, messageID)
 	if err != nil {
@@ -330,9 +331,9 @@ func (s *TicketMessageService) MarkTicketMessagesAsRead(ctx context.Context, tic
 
 // CreateInternalMessage creates an internal message
 func (s *TicketMessageService) CreateInternalMessage(ctx context.Context, ticketID uint, userID uint, content string) (*entities.TicketMessage, error) {
-	req := &interfaces.CreateTicketMessageRequest{
+	req := &dto.CreateTicketMessageRequest{
 		Content:     content,
-		MessageType: "admin",
+		MessageType: constants.MessageTypeAdmin,
 		IsInternal:  true,
 	}
 	return s.CreateTicketMessage(ctx, ticketID, userID, req)

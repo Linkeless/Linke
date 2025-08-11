@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+
+	"linke/internal/domains/subscription/constants"
 )
 
 // AlertConfiguration represents alert configuration for usage monitoring
@@ -41,29 +43,6 @@ type AlertConfiguration struct {
 func (AlertConfiguration) TableName() string {
 	return "alert_configurations"
 }
-
-// Threshold type constants
-const (
-	ThresholdTypePercentage = "percentage"
-	ThresholdTypeAbsolute   = "absolute"
-)
-
-// Priority constants
-const (
-	PriorityLow      = "low"
-	PriorityMedium   = "medium"
-	PriorityHigh     = "high"
-	PriorityCritical = "critical"
-)
-
-// Notification channel constants
-const (
-	NotificationChannelEmail    = "email"
-	NotificationChannelWebhook  = "webhook"
-	NotificationChannelInApp    = "in_app"
-	NotificationChannelSMS      = "sms"
-	NotificationChannelTelegram = "telegram"
-)
 
 // UsageAlert represents a fired usage alert
 type UsageAlert struct {
@@ -107,22 +86,6 @@ type UsageAlert struct {
 func (UsageAlert) TableName() string {
 	return "usage_alerts"
 }
-
-// Alert status constants
-const (
-	AlertStatusFired        = "fired"
-	AlertStatusResolved     = "resolved"
-	AlertStatusSuppressed   = "suppressed"
-	AlertStatusAcknowledged = "acknowledged"
-)
-
-// Alert severity constants
-const (
-	AlertSeverityInfo     = "info"
-	AlertSeverityWarning  = "warning"
-	AlertSeverityError    = "error"
-	AlertSeverityCritical = "critical"
-)
 
 // NotificationChannel represents a notification channel configuration
 type NotificationChannel struct {
@@ -191,13 +154,13 @@ func (ac *AlertConfiguration) ShouldTrigger(currentUsage, usageLimit int64) bool
 	}
 
 	switch ac.ThresholdType {
-	case ThresholdTypePercentage:
+	case constants.ThresholdTypePercentage:
 		if usageLimit == 0 {
 			return false // No limit, can't calculate percentage
 		}
 		percentage := float64(currentUsage) / float64(usageLimit) * 100
 		return percentage >= ac.Threshold
-	case ThresholdTypeAbsolute:
+	case constants.ThresholdTypeAbsolute:
 		return float64(currentUsage) >= ac.Threshold
 	default:
 		return false
@@ -207,20 +170,20 @@ func (ac *AlertConfiguration) ShouldTrigger(currentUsage, usageLimit int64) bool
 // GetSeverityLevel returns the severity level based on usage percentage
 func (ac *AlertConfiguration) GetSeverityLevel(currentUsage, usageLimit int64) string {
 	if usageLimit == 0 {
-		return AlertSeverityInfo
+		return constants.AlertSeverityInfo
 	}
 
 	percentage := float64(currentUsage) / float64(usageLimit) * 100
 
 	switch {
 	case percentage >= 100:
-		return AlertSeverityCritical
+		return constants.AlertSeverityCritical
 	case percentage >= 90:
-		return AlertSeverityError
+		return constants.AlertSeverityError
 	case percentage >= 80:
-		return AlertSeverityWarning
+		return constants.AlertSeverityWarning
 	default:
-		return AlertSeverityInfo
+		return constants.AlertSeverityInfo
 	}
 }
 
@@ -284,12 +247,12 @@ func (ua *UsageAlert) AddNotificationResult(result NotificationResult) error {
 
 // IsActive checks if the alert is still active (not resolved)
 func (ua *UsageAlert) IsActive() bool {
-	return ua.Status == AlertStatusFired && ua.ResolvedAt == nil && !ua.IsDeleted()
+	return ua.Status == constants.AlertStatusFired && ua.ResolvedAt == nil && !ua.IsDeleted()
 }
 
 // IsResolved checks if the alert has been resolved
 func (ua *UsageAlert) IsResolved() bool {
-	return ua.Status == AlertStatusResolved && ua.ResolvedAt != nil
+	return ua.Status == constants.AlertStatusResolved && ua.ResolvedAt != nil
 }
 
 // IsDeleted checks if the alert is soft deleted
@@ -300,7 +263,7 @@ func (ua *UsageAlert) IsDeleted() bool {
 // Resolve marks the alert as resolved
 func (ua *UsageAlert) Resolve() {
 	now := time.Now()
-	ua.Status = AlertStatusResolved
+	ua.Status = constants.AlertStatusResolved
 	ua.ResolvedAt = &now
 }
 

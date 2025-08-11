@@ -1,5 +1,7 @@
 package entities
 
+import "linke/internal/domains/server/constants"
+
 // ShadowsocksServer represents a Shadowsocks proxy server node
 // Updated to use proper foreign key relationship with ServerGroup
 type ShadowsocksServer struct {
@@ -29,12 +31,12 @@ type ShadowsocksServer struct {
 
 // TableName returns the table name for ShadowsocksServer model
 func (ShadowsocksServer) TableName() string {
-	return "shadowsocks_servers"
+	return constants.TableShadowsocksServers
 }
 
 // IsVisible checks if the shadowsocks server should be shown to users
 func (s *ShadowsocksServer) IsVisible() bool {
-	return s.Show == 1
+	return s.Show == constants.ServerShowVisible
 }
 
 // ShadowsocksServerResponse represents the shadowsocks server data structure for API responses

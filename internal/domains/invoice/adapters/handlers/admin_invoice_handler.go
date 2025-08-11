@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"linke/internal/domains/invoice/dto"
 	"linke/internal/domains/invoice/entities"
 	"linke/internal/domains/invoice/usecases/interfaces"
 	paymentInterfaces "linke/internal/domains/payment/usecases/interfaces"
@@ -168,7 +169,7 @@ type RegeneratePDFRequest struct {
 // @Produce json
 // @Security BearerAuth
 // @Param invoice body AdminCreateInvoiceRequest true "Invoice creation data"
-// @Success 201 {object} response.StandardResponse{data=entities.InvoiceResponse}
+// @Success 201 {object} response.StandardResponse{data=dto.InvoiceResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -194,7 +195,7 @@ func (h *AdminInvoiceHandler) CreateInvoice(c *gin.Context) {
 	}
 
 	// Convert to service request
-	serviceReq := &interfaces.CreateInvoiceRequest{
+	serviceReq := &dto.CreateInvoiceRequest{
 		UserID:              createReq.UserID,
 		SubscriptionOrderID: createReq.SubscriptionOrderID,
 		InvoiceType:         createReq.InvoiceType,
@@ -246,7 +247,7 @@ func (h *AdminInvoiceHandler) CreateInvoice(c *gin.Context) {
 		logger.String("admin_action", "create_invoice"),
 	)
 
-	response.Created(c, invoice.ToResponse())
+	response.Created(c, dto.ToResponse(invoice))
 }
 
 // GetInvoice godoc
@@ -257,7 +258,7 @@ func (h *AdminInvoiceHandler) CreateInvoice(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Invoice ID"
-// @Success 200 {object} response.StandardResponse{data=entities.InvoiceResponse}
+// @Success 200 {object} response.StandardResponse{data=dto.InvoiceResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -281,7 +282,7 @@ func (h *AdminInvoiceHandler) GetInvoice(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, invoice.ToResponse())
+	response.Success(c, dto.ToResponse(invoice))
 }
 
 // ListInvoices godoc
@@ -327,7 +328,7 @@ func (h *AdminInvoiceHandler) ListInvoices(c *gin.Context) {
 		}
 	}
 
-	filterReq := &interfaces.GetInvoicesRequest{
+	filterReq := &dto.GetInvoicesRequest{
 		Status:      c.Query("status"),
 		InvoiceType: c.Query("invoice_type"),
 		DateFrom:    c.Query("date_from"),
@@ -348,9 +349,9 @@ func (h *AdminInvoiceHandler) ListInvoices(c *gin.Context) {
 	}
 
 	// Convert to response format
-	invoiceResponses := make([]*entities.InvoiceResponse, len(invoices))
+	invoiceResponses := make([]*dto.InvoiceResponse, len(invoices))
 	for i, invoice := range invoices {
-		invoiceResponses[i] = invoice.ToResponse()
+		invoiceResponses[i] = dto.ToResponse(invoice)
 	}
 
 	response.SuccessList(c, invoiceResponses, page, limit, total)
@@ -365,7 +366,7 @@ func (h *AdminInvoiceHandler) ListInvoices(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Invoice ID"
 // @Param invoice body AdminUpdateInvoiceRequest true "Invoice update data"
-// @Success 200 {object} response.StandardResponse{data=entities.InvoiceResponse}
+// @Success 200 {object} response.StandardResponse{data=dto.InvoiceResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -387,7 +388,7 @@ func (h *AdminInvoiceHandler) UpdateInvoice(c *gin.Context) {
 	}
 
 	// Convert to service request
-	serviceReq := &interfaces.UpdateInvoiceRequest{
+	serviceReq := &dto.UpdateInvoiceRequest{
 		InvoiceType:    updateReq.InvoiceType,
 		Amount:         updateReq.Amount,
 		TaxRate:        updateReq.TaxRate,
@@ -437,7 +438,7 @@ func (h *AdminInvoiceHandler) UpdateInvoice(c *gin.Context) {
 		logger.String("admin_action", "update_invoice"),
 	)
 
-	response.Success(c, invoice.ToResponse())
+	response.Success(c, dto.ToResponse(invoice))
 }
 
 // DeleteInvoice godoc
@@ -499,7 +500,7 @@ func (h *AdminInvoiceHandler) DeleteInvoice(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Invoice ID"
 // @Param request body VoidInvoiceRequest true "Void request data"
-// @Success 200 {object} response.StandardResponse{data=entities.InvoiceResponse}
+// @Success 200 {object} response.StandardResponse{data=dto.InvoiceResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -556,7 +557,7 @@ func (h *AdminInvoiceHandler) VoidInvoice(c *gin.Context) {
 		logger.String("admin_action", "void_invoice"),
 	)
 
-	response.SuccessWithMessage(c, "Invoice voided successfully", invoice.ToResponse())
+	response.SuccessWithMessage(c, "Invoice voided successfully", dto.ToResponse(invoice))
 }
 
 // MarkInvoiceAsPaid godoc
@@ -568,7 +569,7 @@ func (h *AdminInvoiceHandler) VoidInvoice(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Invoice ID"
 // @Param request body MarkPaidRequest true "Mark paid request data"
-// @Success 200 {object} response.StandardResponse{data=entities.InvoiceResponse}
+// @Success 200 {object} response.StandardResponse{data=dto.InvoiceResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -633,7 +634,7 @@ func (h *AdminInvoiceHandler) MarkInvoiceAsPaid(c *gin.Context) {
 		logger.String("admin_action", "mark_paid"),
 	)
 
-	response.SuccessWithMessage(c, "Invoice marked as paid successfully", invoice.ToResponse())
+	response.SuccessWithMessage(c, "Invoice marked as paid successfully", dto.ToResponse(invoice))
 }
 
 // RegenerateInvoicePDF godoc
@@ -667,7 +668,7 @@ func (h *AdminInvoiceHandler) RegenerateInvoicePDF(c *gin.Context) {
 	}
 
 	// Prepare PDF generation options
-	pdfOptions := &interfaces.PDFGenerationRequest{
+	pdfOptions := &dto.PDFGenerationRequest{
 		SaveToDisk: true, // Admin regeneration should save to disk
 	}
 
@@ -755,7 +756,7 @@ func (h *AdminInvoiceHandler) ResendInvoice(c *gin.Context) {
 	}
 
 	// Prepare email request
-	emailReq := &interfaces.SendInvoiceRequest{
+	emailReq := &dto.SendInvoiceRequest{
 		ToEmail: invoice.BillingEmail,
 	}
 
@@ -840,7 +841,7 @@ func (h *AdminInvoiceHandler) SearchInvoices(c *gin.Context) {
 	}
 
 	// Build search request for service
-	filterReq := &interfaces.GetInvoicesRequest{
+	filterReq := &dto.GetInvoicesRequest{
 		Status:      searchReq.Status,
 		InvoiceType: searchReq.InvoiceType,
 		DateFrom:    searchReq.DateFrom,
@@ -924,9 +925,9 @@ func (h *AdminInvoiceHandler) SearchInvoices(c *gin.Context) {
 	}
 
 	// Convert to response format
-	invoiceResponses := make([]*entities.InvoiceResponse, len(filteredInvoices))
+	invoiceResponses := make([]*dto.InvoiceResponse, len(filteredInvoices))
 	for i, invoice := range filteredInvoices {
-		invoiceResponses[i] = invoice.ToResponse()
+		invoiceResponses[i] = dto.ToResponse(invoice)
 	}
 
 	response.SuccessListWithExtra(c, "Search completed", invoiceResponses, 
@@ -1087,8 +1088,8 @@ func (h *AdminInvoiceHandler) GetOverdueInvoices(c *gin.Context) {
 	offset := (page - 1) * limit
 
 	// Get all invoices with overdue status or past due date
-	filterReq := &interfaces.GetInvoicesRequest{
-		Status: entities.InvoiceStatusOverdue,
+	filterReq := &dto.GetInvoicesRequest{
+		Status: "overdue",
 		Limit:  limit * 2, // Get more to filter client-side
 		Offset: offset,
 	}
@@ -1115,9 +1116,9 @@ func (h *AdminInvoiceHandler) GetOverdueInvoices(c *gin.Context) {
 	}
 
 	// Convert to response format
-	invoiceResponses := make([]*entities.InvoiceResponse, len(overdueInvoices))
+	invoiceResponses := make([]*dto.InvoiceResponse, len(overdueInvoices))
 	for i, invoice := range overdueInvoices {
-		invoiceResponses[i] = invoice.ToResponse()
+		invoiceResponses[i] = dto.ToResponse(invoice)
 	}
 
 	response.SuccessListWithExtra(c, "Overdue invoices retrieved", invoiceResponses, 
@@ -1342,7 +1343,7 @@ func (h *AdminInvoiceHandler) BulkRegeneratePDF(c *gin.Context) {
 	}
 
 	// Use bulk PDF generation service if available
-	pdfOptions := &interfaces.PDFGenerationRequest{
+	pdfOptions := &dto.PDFGenerationRequest{
 		SaveToDisk: true,
 	}
 

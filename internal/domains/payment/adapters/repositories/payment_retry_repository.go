@@ -7,6 +7,8 @@ import (
 
 	"gorm.io/gorm"
 
+	"linke/internal/domains/payment/constants"
+	"linke/internal/domains/payment/dto"
 	"linke/internal/domains/payment/entities"
 	"linke/internal/domains/payment/usecases/interfaces"
 	"linke/internal/shared/framework"
@@ -42,7 +44,7 @@ func (r *paymentRetryRepository) GetByPaymentRecordID(ctx context.Context, payme
 func (r *paymentRetryRepository) GetPendingRetries(ctx context.Context, limit int) ([]*entities.PaymentRetry, error) {
 	var retries []*entities.PaymentRetry
 	query := r.GetDB().WithContext(ctx).
-		Where("status = ?", entities.PaymentRetryStatusPending).
+		Where("status = ?", constants.PaymentRetryStatusPending).
 		Order("next_retry_at ASC")
 
 	if limit > 0 {
@@ -59,7 +61,7 @@ func (r *paymentRetryRepository) GetPendingRetries(ctx context.Context, limit in
 func (r *paymentRetryRepository) GetRetriesDueForProcessing(ctx context.Context, beforeTime time.Time, limit int) ([]*entities.PaymentRetry, error) {
 	var retries []*entities.PaymentRetry
 	query := r.GetDB().WithContext(ctx).
-		Where("status = ? AND next_retry_at <= ?", entities.PaymentRetryStatusPending, beforeTime).
+		Where("status = ? AND next_retry_at <= ?", constants.PaymentRetryStatusPending, beforeTime).
 		Order("next_retry_at ASC")
 
 	if limit > 0 {
@@ -78,7 +80,7 @@ func (r *paymentRetryRepository) GetActiveRetriesForGateway(ctx context.Context,
 	if err := r.GetDB().WithContext(ctx).
 		Joins("JOIN payment_records ON payment_retries.payment_record_id = payment_records.id").
 		Where("payment_records.gateway = ? AND payment_retries.status IN (?)",
-			gateway, []string{entities.PaymentRetryStatusPending, entities.PaymentRetryStatusInProgress}).
+			gateway, []string{constants.PaymentRetryStatusPending, constants.PaymentRetryStatusInProgress}).
 		Find(&retries).Error; err != nil {
 		return nil, fmt.Errorf("failed to get active retries for gateway: %w", err)
 	}
@@ -121,7 +123,7 @@ func (r *paymentRetryRepository) GetRetriesForUser(ctx context.Context, userID u
 
 // Statistics and reporting
 
-func (r *paymentRetryRepository) GetRetryStatsByGateway(ctx context.Context, gateway string, fromDate, toDate time.Time) (*interfaces.RetryStatistics, error) {
+func (r *paymentRetryRepository) GetRetryStatsByGateway(ctx context.Context, gateway string, fromDate, toDate time.Time) (*dto.RetryStatistics, error) {
 	var stats struct {
 		TotalRetries      int64   `gorm:"column:total_retries"`
 		SuccessfulRetries int64   `gorm:"column:successful_retries"`
@@ -153,7 +155,7 @@ func (r *paymentRetryRepository) GetRetryStatsByGateway(ctx context.Context, gat
 		successRate = float64(stats.SuccessfulRetries) / float64(stats.TotalRetries) * 100
 	}
 
-	return &interfaces.RetryStatistics{
+	return &dto.RetryStatistics{
 		Gateway:           gateway,
 		TotalRetries:      stats.TotalRetries,
 		SuccessfulRetries: stats.SuccessfulRetries,
@@ -167,8 +169,8 @@ func (r *paymentRetryRepository) GetRetryStatsByGateway(ctx context.Context, gat
 	}, nil
 }
 
-func (r *paymentRetryRepository) GetRetryStatsByDate(ctx context.Context, fromDate, toDate time.Time) ([]*interfaces.DailyRetryStats, error) {
-	var stats []*interfaces.DailyRetryStats
+func (r *paymentRetryRepository) GetRetryStatsByDate(ctx context.Context, fromDate, toDate time.Time) ([]*dto.DailyRetryStats, error) {
+	var stats []*dto.DailyRetryStats
 
 	query := `
 		SELECT 
@@ -189,7 +191,7 @@ func (r *paymentRetryRepository) GetRetryStatsByDate(ctx context.Context, fromDa
 	defer rows.Close()
 
 	for rows.Next() {
-		var stat interfaces.DailyRetryStats
+		var stat dto.DailyRetryStats
 		if err := rows.Scan(&stat.Date, &stat.TotalRetries, &stat.SuccessfulRetries, &stat.FailedRetries); err != nil {
 			continue
 		}
@@ -234,7 +236,7 @@ func (r *paymentRetryRepository) GetRetrySuccessRate(ctx context.Context, gatewa
 
 // Admin operations
 
-func (r *paymentRetryRepository) GetAllRetries(ctx context.Context, filters *interfaces.RetryFilters, limit, offset int) ([]*entities.PaymentRetry, int64, error) {
+func (r *paymentRetryRepository) GetAllRetries(ctx context.Context, filters *dto.RetryFilters, limit, offset int) ([]*entities.PaymentRetry, int64, error) {
 	var retries []*entities.PaymentRetry
 	var total int64
 
@@ -302,7 +304,7 @@ func (r *paymentRetryRepository) GetAllRetries(ctx context.Context, filters *int
 func (r *paymentRetryRepository) CancelRetry(ctx context.Context, id uint, reason string) error {
 	now := time.Now()
 	updates := map[string]any{
-		"status":       entities.PaymentRetryStatusCancelled,
+		"status":       constants.PaymentRetryStatusCancelled,
 		"cancelled_at": &now,
 		"completed_at": &now,
 		"notes":        reason,
@@ -318,7 +320,7 @@ func (r *paymentRetryRepository) CancelRetry(ctx context.Context, id uint, reaso
 func (r *paymentRetryRepository) ResetRetry(ctx context.Context, id uint) error {
 	updates := map[string]any{
 		"attempt_number":   0,
-		"status":           entities.PaymentRetryStatusPending,
+		"status":           constants.PaymentRetryStatusPending,
 		"next_retry_at":    time.Now().Add(time.Hour), // Reset to 1 hour from now
 		"last_attempt_at":  time.Now(),
 		"completed_at":     nil,
@@ -343,7 +345,7 @@ func (r *paymentRetryRepository) MarkRetriesAsInProgress(ctx context.Context, id
 
 	if err := r.GetDB().WithContext(ctx).Model(&entities.PaymentRetry{}).
 		Where("id IN (?)", ids).
-		Update("status", entities.PaymentRetryStatusInProgress).Error; err != nil {
+		Update("status", constants.PaymentRetryStatusInProgress).Error; err != nil {
 		return fmt.Errorf("failed to mark retries as in progress: %w", err)
 	}
 

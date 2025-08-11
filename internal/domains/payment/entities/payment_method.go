@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+
+	"linke/internal/domains/payment/constants"
 )
 
 // PaymentMethod represents a user's stored payment method
@@ -71,25 +73,10 @@ func (PaymentMethod) TableName() string {
 	return "payment_methods"
 }
 
-// Payment method type constants
-const (
-	PaymentMethodTypeCard          = "card"
-	PaymentMethodTypeBankAccount   = "bank_account"
-	PaymentMethodTypeDigitalWallet = "digital_wallet"
-	PaymentMethodTypeCrypto        = "crypto"
-)
-
-// Payment method status constants
-const (
-	PaymentMethodStatusActive   = "active"
-	PaymentMethodStatusInactive = "inactive"
-	PaymentMethodStatusExpired  = "expired"
-	PaymentMethodStatusInvalid  = "invalid"
-)
 
 // IsActive checks if the payment method is active and can be used
 func (pm *PaymentMethod) IsActive() bool {
-	return pm.Active && pm.Status == PaymentMethodStatusActive && !pm.IsExpired()
+	return pm.Active && pm.Status == constants.PaymentMethodStatusActive && !pm.IsExpired()
 }
 
 // IsExpired checks if the payment method has expired (for cards)
@@ -158,115 +145,3 @@ func (pm *PaymentMethod) GetFailureRate() float64 {
 	return float64(pm.FailedUses) / float64(total)
 }
 
-// PaymentMethodResponse represents the payment method data structure for API responses
-type PaymentMethodResponse struct {
-	ID              uint       `json:"id" example:"1"`                                             // Payment method ID
-	UserID          uint       `json:"user_id" example:"1"`                                        // User ID
-	Type            string     `json:"type" example:"card"`                                        // Payment method type
-	Gateway         string     `json:"gateway" example:"epay"`                                     // Payment gateway
-	Method          string     `json:"method" example:"alipay"`                                    // Payment method
-	DisplayName     string     `json:"display_name" example:"My Alipay Account"`                   // User-friendly name
-	MaskedInfo      string     `json:"masked_info" example:"ali***@example.com"`                   // Masked payment info
-	Brand           string     `json:"brand,omitempty" example:"Alipay"`                           // Brand/provider
-	ExpiryMonth     *int       `json:"expiry_month,omitempty" example:"12"`                        // Expiry month (cards only)
-	ExpiryYear      *int       `json:"expiry_year,omitempty" example:"2025"`                       // Expiry year (cards only)
-	IsDefault       bool       `json:"is_default" example:"true"`                                  // Is default payment method
-	IsActive        bool       `json:"is_active" example:"true"`                                   // Is active
-	Status          string     `json:"status" example:"active"`                                    // Status
-	LastValidatedAt *time.Time `json:"last_validated_at,omitempty" example:"2024-01-01T00:00:00Z"` // Last validation
-	BillingCountry  string     `json:"billing_country,omitempty" example:"CN"`                     // Billing country
-	BillingPostcode string     `json:"billing_postcode,omitempty" example:"100000"`                // Billing postcode
-	LastUsedAt      *time.Time `json:"last_used_at,omitempty" example:"2024-01-01T00:00:00Z"`      // Last used
-	SuccessfulUses  int        `json:"successful_uses" example:"5"`                                // Successful payment count
-	FailedUses      int        `json:"failed_uses" example:"1"`                                    // Failed payment count
-	CreatedAt       time.Time  `json:"created_at" example:"2024-01-01T00:00:00Z"`                  // Creation time
-	UpdatedAt       time.Time  `json:"updated_at" example:"2024-01-01T00:00:00Z"`                  // Update time
-
-	// Computed fields
-	IsExpired       bool    `json:"is_expired"`       // Expiration status
-	CanBeUsed       bool    `json:"can_be_used"`      // Usability status
-	FailureRate     float64 `json:"failure_rate"`     // Failure rate
-	NeedsValidation bool    `json:"needs_validation"` // Validation requirement
-}
-
-// ToResponse converts PaymentMethod to PaymentMethodResponse
-func (pm *PaymentMethod) ToResponse() *PaymentMethodResponse {
-	return &PaymentMethodResponse{
-		ID:              pm.ID,
-		UserID:          pm.UserID,
-		Type:            pm.Type,
-		Gateway:         pm.Gateway,
-		Method:          pm.Method,
-		DisplayName:     pm.DisplayName,
-		MaskedInfo:      pm.MaskedInfo,
-		Brand:           pm.Brand,
-		ExpiryMonth:     pm.ExpiryMonth,
-		ExpiryYear:      pm.ExpiryYear,
-		IsDefault:       pm.IsDefault,
-		IsActive:        pm.Active,
-		Status:          pm.Status,
-		LastValidatedAt: pm.LastValidatedAt,
-		BillingCountry:  pm.BillingCountry,
-		BillingPostcode: pm.BillingPostcode,
-		LastUsedAt:      pm.LastUsedAt,
-		SuccessfulUses:  pm.SuccessfulUses,
-		FailedUses:      pm.FailedUses,
-		CreatedAt:       pm.CreatedAt,
-		UpdatedAt:       pm.UpdatedAt,
-
-		// Computed fields
-		IsExpired:       pm.IsExpired(),
-		CanBeUsed:       pm.CanBeUsedForPayment(),
-		FailureRate:     pm.GetFailureRate(),
-		NeedsValidation: pm.NeedsRevalidation(),
-	}
-}
-
-// ToSecureResponse converts PaymentMethod to a secure response that excludes sensitive fields
-func (pm *PaymentMethod) ToSecureResponse() *PaymentMethodResponse {
-	resp := pm.ToResponse()
-
-	// Remove sensitive information
-	resp.UserID = 0 // Remove user ID for external APIs
-
-	return resp
-}
-
-// CreatePaymentMethodRequest represents the request to create a new payment method
-type CreatePaymentMethodRequest struct {
-	Type              string `json:"type" binding:"required,oneof=card bank_account digital_wallet crypto" example:"card"`
-	Gateway           string `json:"gateway" binding:"required" example:"epay"`
-	Method            string `json:"method" binding:"required" example:"alipay"`
-	DisplayName       string `json:"display_name" binding:"required,max=100" example:"My Alipay Account"`
-	PaymentToken      string `json:"payment_token" binding:"required" example:"tok_1234567890"`
-	GatewayCustomerID string `json:"gateway_customer_id,omitempty" example:"cus_1234567890"`
-	MaskedInfo        string `json:"masked_info" binding:"max=100" example:"ali***@example.com"`
-	Brand             string `json:"brand,omitempty" example:"Alipay"`
-	ExpiryMonth       *int   `json:"expiry_month,omitempty" example:"12"`
-	ExpiryYear        *int   `json:"expiry_year,omitempty" example:"2025"`
-	BillingCountry    string `json:"billing_country,omitempty" example:"CN"`
-	BillingPostcode   string `json:"billing_postcode,omitempty" example:"100000"`
-	SetAsDefault      bool   `json:"set_as_default" example:"false"`
-}
-
-// UpdatePaymentMethodRequest represents the request to update a payment method
-type UpdatePaymentMethodRequest struct {
-	DisplayName     *string `json:"display_name,omitempty" binding:"omitempty,max=100" example:"Updated Payment Method"`
-	ExpiryMonth     *int    `json:"expiry_month,omitempty" example:"12"`
-	ExpiryYear      *int    `json:"expiry_year,omitempty" example:"2026"`
-	BillingCountry  *string `json:"billing_country,omitempty" example:"CN"`
-	BillingPostcode *string `json:"billing_postcode,omitempty" example:"100000"`
-	Active          *bool   `json:"is_active,omitempty" example:"true"`
-}
-
-// SetDefaultPaymentMethodRequest represents the request to set a payment method as default
-type SetDefaultPaymentMethodRequest struct {
-	PaymentMethodID uint `json:"payment_method_id" binding:"required" example:"1"`
-}
-
-// PaymentMethodListResponse represents the response for listing payment methods
-type PaymentMethodListResponse struct {
-	PaymentMethods []PaymentMethodResponse `json:"payment_methods"`
-	Total          int                     `json:"total" example:"5"`
-	DefaultMethod  *PaymentMethodResponse  `json:"default_method,omitempty"`
-}

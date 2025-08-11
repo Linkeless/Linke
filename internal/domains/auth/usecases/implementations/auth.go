@@ -192,7 +192,7 @@ func (a *AuthService) Login(ctx context.Context, req *interfaces.LoginRequest) (
 	}
 
 	// Get user by email directly from repository (bypass cache to ensure we have password field)
-	user, err := a.userRepository.GetByEmail(ctx, req.Email)
+	user, err := a.userRepository.GetByField(ctx, "email", req.Email)
 	if err != nil {
 		logger.Warn("Login attempt with non-existent email",
 			logger.String("email", req.Email),
@@ -497,7 +497,7 @@ func (a *AuthService) Logout(ctx context.Context, tokenString string, userID uin
 }
 
 // CreateOrUpdateOAuthUser creates a new user or finds existing user through account bindings
-func (a *AuthService) CreateOrUpdateOAuthUser(ctx context.Context, userInfo *interfaces.OAuthUserInfo) (*userEntities.User, error) {
+func (a *AuthService) CreateOrUpdateOAuthUser(ctx context.Context, userInfo *interfaces.UserInfo) (*userEntities.User, error) {
 	var user *userEntities.User
 	var err error
 
@@ -539,11 +539,11 @@ func (a *AuthService) CreateOrUpdateOAuthUser(ctx context.Context, userInfo *int
 	// Find user by provider-specific ID in the users table
 	switch userInfo.Provider {
 	case "google":
-		user, err = a.userRepository.GetByGoogleID(ctx, userInfo.ID)
+		user, err = a.userRepository.GetByField(ctx, "google_id", userInfo.ID)
 	case "github":
-		user, err = a.userRepository.GetByGitHubID(ctx, userInfo.ID)
+		user, err = a.userRepository.GetByField(ctx, "github_id", userInfo.ID)
 	case "telegram":
-		user, err = a.userRepository.GetByTelegramID(ctx, userInfo.ID)
+		user, err = a.userRepository.GetByField(ctx, "telegram_id", userInfo.ID)
 	default:
 		return nil, fmt.Errorf("unsupported OAuth provider: %s", userInfo.Provider)
 	}

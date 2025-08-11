@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"linke/internal/domains/invoice/constants"
 	"linke/internal/domains/invoice/entities"
 	"linke/internal/shared/logger"
 
@@ -640,13 +641,13 @@ func (pgs *PDFGeneratorService) addProfessionalFooter(pdf *gofpdf.Fpdf, invoice 
 // getStatusColor returns appropriate color for invoice status
 func (pgs *PDFGeneratorService) getStatusColor(status string) struct{ R, G, B int } {
 	switch status {
-	case entities.InvoiceStatusPaid:
+	case constants.InvoiceStatusPaid:
 		return struct{ R, G, B int }{34, 139, 34} // Forest green
-	case entities.InvoiceStatusOverdue:
+	case constants.InvoiceStatusOverdue:
 		return struct{ R, G, B int }{220, 20, 60} // Crimson
-	case entities.InvoiceStatusVoided:
+	case constants.InvoiceStatusVoided:
 		return struct{ R, G, B int }{128, 128, 128} // Gray
-	case entities.InvoiceStatusSent:
+	case constants.InvoiceStatusSent:
 		return struct{ R, G, B int }{70, 130, 180} // Steel blue
 	default:
 		return struct{ R, G, B int }{255, 140, 0} // Dark orange

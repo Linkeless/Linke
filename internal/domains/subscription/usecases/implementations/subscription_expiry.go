@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"linke/internal/domains/subscription/constants"
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/shared/logger"
 
@@ -31,7 +32,7 @@ func (s *SubscriptionExpiryService) ProcessExpiredSubscriptions(ctx context.Cont
 	var expiredSubscriptions []entities.UserSubscription
 	if err := s.db.WithContext(ctx).
 		Where("status IN (?) AND end_date IS NOT NULL AND end_date <= ?",
-			[]string{entities.UserSubscriptionStatusActive, entities.UserSubscriptionStatusTrial}, now).
+			[]string{constants.UserSubscriptionStatusActive, constants.UserSubscriptionStatusTrial}, now).
 		Find(&expiredSubscriptions).Error; err != nil {
 		logger.Error("Failed to find expired subscriptions", logger.Error2("error", err))
 		return 0, fmt.Errorf("failed to find expired subscriptions: %w", err)
@@ -60,7 +61,7 @@ func (s *SubscriptionExpiryService) ProcessCancelledSubscriptions(ctx context.Co
 	var subscriptions []entities.UserSubscription
 	if err := s.db.WithContext(ctx).
 		Where("cancel_at_period_end = ? AND status IN (?) AND current_period_end IS NOT NULL AND current_period_end <= ?",
-			true, []string{entities.UserSubscriptionStatusActive, entities.UserSubscriptionStatusTrial}, now).
+			true, []string{constants.UserSubscriptionStatusActive, constants.UserSubscriptionStatusTrial}, now).
 		Find(&subscriptions).Error; err != nil {
 		logger.Error("Failed to find subscriptions to cancel", logger.Error2("error", err))
 		return 0, fmt.Errorf("failed to find subscriptions to cancel: %w", err)
@@ -89,7 +90,7 @@ func (s *SubscriptionExpiryService) ProcessOverdueSubscriptions(ctx context.Cont
 	var overdueSubscriptions []entities.UserSubscription
 	if err := s.db.WithContext(ctx).
 		Where("status IN (?) AND next_billing_date IS NOT NULL AND next_billing_date <= ? AND auto_renew = ?",
-			[]string{entities.UserSubscriptionStatusActive, entities.UserSubscriptionStatusTrial}, overdueThreshold, false).
+			[]string{constants.UserSubscriptionStatusActive, constants.UserSubscriptionStatusTrial}, overdueThreshold, false).
 		Find(&overdueSubscriptions).Error; err != nil {
 		logger.Error("Failed to find overdue subscriptions", logger.Error2("error", err))
 		return 0, fmt.Errorf("failed to find overdue subscriptions: %w", err)
@@ -128,7 +129,7 @@ func (s *SubscriptionExpiryService) ExpireSubscription(ctx context.Context, subs
 	}
 
 	// Validate subscription is eligible for expiry
-	if subscription.Status == entities.UserSubscriptionStatusExpired {
+	if subscription.Status == constants.UserSubscriptionStatusExpired {
 		tx.Rollback()
 		return fmt.Errorf("subscription is already expired")
 	}
@@ -137,7 +138,7 @@ func (s *SubscriptionExpiryService) ExpireSubscription(ctx context.Context, subs
 	now := time.Now()
 	oldStatus := subscription.Status
 	updates := map[string]any{
-		"status":     entities.UserSubscriptionStatusExpired,
+		"status":     constants.UserSubscriptionStatusExpired,
 		"updated_at": now,
 	}
 
@@ -190,7 +191,7 @@ func (s *SubscriptionExpiryService) CancelSubscriptionAtPeriodEnd(ctx context.Co
 		return fmt.Errorf("subscription is not marked for period-end cancellation")
 	}
 
-	if subscription.Status == entities.UserSubscriptionStatusCancelled {
+	if subscription.Status == constants.UserSubscriptionStatusCancelled {
 		tx.Rollback()
 		return fmt.Errorf("subscription is already cancelled")
 	}
@@ -199,7 +200,7 @@ func (s *SubscriptionExpiryService) CancelSubscriptionAtPeriodEnd(ctx context.Co
 	now := time.Now()
 	oldStatus := subscription.Status
 	updates := map[string]any{
-		"status":               entities.UserSubscriptionStatusCancelled,
+		"status":               constants.UserSubscriptionStatusCancelled,
 		"cancelled_at":         &now,
 		"cancel_at_period_end": false,
 		"updated_at":           now,
@@ -253,7 +254,7 @@ func (s *SubscriptionExpiryService) SuspendOverdueSubscription(ctx context.Conte
 	}
 
 	// Validate subscription is eligible for suspension
-	if subscription.Status == entities.UserSubscriptionStatusPaused {
+	if subscription.Status == constants.UserSubscriptionStatusPaused {
 		tx.Rollback()
 		return fmt.Errorf("subscription is already suspended")
 	}
@@ -262,7 +263,7 @@ func (s *SubscriptionExpiryService) SuspendOverdueSubscription(ctx context.Conte
 	now := time.Now()
 	oldStatus := subscription.Status
 	updates := map[string]any{
-		"status":     entities.UserSubscriptionStatusPaused,
+		"status":     constants.UserSubscriptionStatusPaused,
 		"updated_at": now,
 	}
 

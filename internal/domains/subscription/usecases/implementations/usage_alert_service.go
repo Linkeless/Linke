@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"linke/internal/domains/subscription/constants"
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/domains/subscription/usecases/interfaces"
 	subscriptionInterfaces "linke/internal/domains/subscription/usecases/interfaces"
@@ -48,7 +49,7 @@ func (s *usageAlertService) CreateAlertConfiguration(ctx context.Context, req *i
 	if req.Threshold <= 0 {
 		return nil, fmt.Errorf("threshold must be positive")
 	}
-	if req.ThresholdType != entities.ThresholdTypePercentage && req.ThresholdType != entities.ThresholdTypeAbsolute {
+	if req.ThresholdType != constants.ThresholdTypePercentage && req.ThresholdType != constants.ThresholdTypeAbsolute {
 		return nil, fmt.Errorf("invalid threshold_type")
 	}
 
@@ -60,10 +61,10 @@ func (s *usageAlertService) CreateAlertConfiguration(ctx context.Context, req *i
 
 	// Set defaults
 	if req.Priority == "" {
-		req.Priority = entities.PriorityMedium
+		req.Priority = constants.PriorityMedium
 	}
 	if req.CooldownMinutes == 0 {
-		req.CooldownMinutes = interfaces.DefaultCooldownMinutes
+		req.CooldownMinutes = constants.DefaultCooldownMinutes
 	}
 
 	// Create alert configuration
@@ -101,7 +102,7 @@ func (s *usageAlertService) UpdateAlertConfiguration(ctx context.Context, req *i
 
 	// Update fields
 	if req.ThresholdType != nil {
-		if *req.ThresholdType != entities.ThresholdTypePercentage && *req.ThresholdType != entities.ThresholdTypeAbsolute {
+		if *req.ThresholdType != constants.ThresholdTypePercentage && *req.ThresholdType != constants.ThresholdTypeAbsolute {
 			return nil, fmt.Errorf("invalid threshold_type")
 		}
 		config.ThresholdType = *req.ThresholdType
@@ -159,10 +160,10 @@ func (s *usageAlertService) GetAlertConfiguration(ctx context.Context, configID 
 func (s *usageAlertService) GetAlertConfigurations(ctx context.Context, req *interfaces.GetAlertConfigsRequest) (*interfaces.GetAlertConfigsResponse, error) {
 	// Set defaults
 	if req.Limit == 0 {
-		req.Limit = interfaces.DefaultPageSize
+		req.Limit = constants.DefaultPageSize
 	}
-	if req.Limit > interfaces.MaxPageSize {
-		req.Limit = interfaces.MaxPageSize
+	if req.Limit > constants.MaxPageSize {
+		req.Limit = constants.MaxPageSize
 	}
 
 	// Build filter
@@ -248,7 +249,7 @@ func (s *usageAlertService) CheckUsageThresholds(ctx context.Context, subscripti
 	// Determine usage limit based on type
 	var usageLimit int64
 	switch usageType {
-	case entities.UsageTypeTraffic:
+	case constants.UsageTypeTraffic:
 		usageLimit = subscription.TrafficLimit
 	default:
 		usageLimit = 0 // Unlimited for other types
@@ -375,7 +376,7 @@ func (s *usageAlertService) FireAlert(ctx context.Context, req *interfaces.FireA
 		UsageLimit:           req.UsageLimit,
 		ThresholdValue:       config.Threshold,
 		UsagePercent:         usagePercent,
-		Status:               entities.AlertStatusFired,
+		Status:               constants.AlertStatusFired,
 		Severity:             severity,
 		FiredAt:              time.Now(),
 		Message:              message,
@@ -419,10 +420,10 @@ func (s *usageAlertService) ResolveAlert(ctx context.Context, alertID uint, reas
 func (s *usageAlertService) GetUsageAlerts(ctx context.Context, req *interfaces.GetUsageAlertsRequest) (*interfaces.GetUsageAlertsResponse, error) {
 	// Set defaults
 	if req.Limit == 0 {
-		req.Limit = interfaces.DefaultPageSize
+		req.Limit = constants.DefaultPageSize
 	}
-	if req.Limit > interfaces.MaxPageSize {
-		req.Limit = interfaces.MaxPageSize
+	if req.Limit > constants.MaxPageSize {
+		req.Limit = constants.MaxPageSize
 	}
 
 	// Build filter
@@ -566,7 +567,7 @@ func (s *usageAlertService) SendNotification(ctx context.Context, alert *entitie
 
 		// Send notification based on channel type
 		switch channel.Type {
-		case entities.NotificationChannelEmail:
+		case constants.NotificationChannelEmail:
 			err := s.sendEmailNotification(ctx, alert, channel)
 			result.Success = err == nil
 			if err != nil {
@@ -576,7 +577,7 @@ func (s *usageAlertService) SendNotification(ctx context.Context, alert *entitie
 				result.Message = "Email sent successfully"
 			}
 
-		case entities.NotificationChannelWebhook:
+		case constants.NotificationChannelWebhook:
 			err := s.sendWebhookNotification(ctx, alert, channel)
 			result.Success = err == nil
 			if err != nil {
@@ -586,7 +587,7 @@ func (s *usageAlertService) SendNotification(ctx context.Context, alert *entitie
 				result.Message = "Webhook sent successfully"
 			}
 
-		case entities.NotificationChannelInApp:
+		case constants.NotificationChannelInApp:
 			err := s.sendInAppNotification(ctx, alert, channel)
 			result.Success = err == nil
 			if err != nil {
@@ -596,7 +597,7 @@ func (s *usageAlertService) SendNotification(ctx context.Context, alert *entitie
 				result.Message = "In-app notification created"
 			}
 
-		case entities.NotificationChannelTelegram:
+		case constants.NotificationChannelTelegram:
 			err := s.sendTelegramNotification(ctx, alert, channel)
 			result.Success = err == nil
 			if err != nil {
@@ -635,11 +636,11 @@ func (s *usageAlertService) TestNotificationChannel(ctx context.Context, req *in
 	// Create a test alert
 	testAlert := &entities.UsageAlert{
 		UserSubscriptionID: req.UserSubscriptionID,
-		UsageType:          entities.UsageTypeTraffic,
+		UsageType:          constants.UsageTypeTraffic,
 		CurrentUsage:       8589934592,  // 8GB
 		UsageLimit:         10737418240, // 10GB
 		UsagePercent:       80.0,
-		Severity:           entities.AlertSeverityWarning,
+		Severity:           constants.AlertSeverityWarning,
 		Message:            req.TestMessage,
 		FiredAt:            time.Now(),
 	}
@@ -725,10 +726,10 @@ func (s *usageAlertService) GetAlertStatistics(ctx context.Context, req *interfa
 func (s *usageAlertService) GetAlertHistory(ctx context.Context, req *interfaces.AlertHistoryRequest) (*interfaces.AlertHistoryResponse, error) {
 	// Set defaults
 	if req.Limit == 0 {
-		req.Limit = interfaces.DefaultPageSize
+		req.Limit = constants.DefaultPageSize
 	}
-	if req.Limit > interfaces.MaxPageSize {
-		req.Limit = interfaces.MaxPageSize
+	if req.Limit > constants.MaxPageSize {
+		req.Limit = constants.MaxPageSize
 	}
 
 	// Build filter for alerts
@@ -828,16 +829,16 @@ func (s *usageAlertService) CreateDefaultAlertConfigurations(ctx context.Context
 	defaultConfigs := []interfaces.CreateAlertConfigRequest{
 		{
 			UserSubscriptionID: subscriptionID,
-			UsageType:          entities.UsageTypeTraffic,
-			ThresholdType:      entities.ThresholdTypePercentage,
+			UsageType:          constants.UsageTypeTraffic,
+			ThresholdType:      constants.ThresholdTypePercentage,
 			Threshold:          50.0,
 			Name:               "Traffic 50% Warning",
 			Description:        "Alert when traffic usage reaches 50% of limit",
-			Priority:           entities.PriorityLow,
+			Priority:           constants.PriorityLow,
 			IsEnabled:          true,
 			NotificationChannels: []entities.NotificationChannel{
 				{
-					Type:    entities.NotificationChannelInApp,
+					Type:    constants.NotificationChannelInApp,
 					Target:  "user",
 					Enabled: true,
 				},
@@ -846,21 +847,21 @@ func (s *usageAlertService) CreateDefaultAlertConfigurations(ctx context.Context
 		},
 		{
 			UserSubscriptionID: subscriptionID,
-			UsageType:          entities.UsageTypeTraffic,
-			ThresholdType:      entities.ThresholdTypePercentage,
+			UsageType:          constants.UsageTypeTraffic,
+			ThresholdType:      constants.ThresholdTypePercentage,
 			Threshold:          80.0,
 			Name:               "Traffic 80% Alert",
 			Description:        "Alert when traffic usage reaches 80% of limit",
-			Priority:           entities.PriorityMedium,
+			Priority:           constants.PriorityMedium,
 			IsEnabled:          true,
 			NotificationChannels: []entities.NotificationChannel{
 				{
-					Type:    entities.NotificationChannelEmail,
+					Type:    constants.NotificationChannelEmail,
 					Target:  "user",
 					Enabled: true,
 				},
 				{
-					Type:    entities.NotificationChannelInApp,
+					Type:    constants.NotificationChannelInApp,
 					Target:  "user",
 					Enabled: true,
 				},
@@ -869,21 +870,21 @@ func (s *usageAlertService) CreateDefaultAlertConfigurations(ctx context.Context
 		},
 		{
 			UserSubscriptionID: subscriptionID,
-			UsageType:          entities.UsageTypeTraffic,
-			ThresholdType:      entities.ThresholdTypePercentage,
+			UsageType:          constants.UsageTypeTraffic,
+			ThresholdType:      constants.ThresholdTypePercentage,
 			Threshold:          90.0,
 			Name:               "Traffic 90% Critical",
 			Description:        "Critical alert when traffic usage reaches 90% of limit",
-			Priority:           entities.PriorityHigh,
+			Priority:           constants.PriorityHigh,
 			IsEnabled:          true,
 			NotificationChannels: []entities.NotificationChannel{
 				{
-					Type:    entities.NotificationChannelEmail,
+					Type:    constants.NotificationChannelEmail,
 					Target:  "user",
 					Enabled: true,
 				},
 				{
-					Type:    entities.NotificationChannelInApp,
+					Type:    constants.NotificationChannelInApp,
 					Target:  "user",
 					Enabled: true,
 				},
@@ -892,21 +893,21 @@ func (s *usageAlertService) CreateDefaultAlertConfigurations(ctx context.Context
 		},
 		{
 			UserSubscriptionID: subscriptionID,
-			UsageType:          entities.UsageTypeTraffic,
-			ThresholdType:      entities.ThresholdTypePercentage,
+			UsageType:          constants.UsageTypeTraffic,
+			ThresholdType:      constants.ThresholdTypePercentage,
 			Threshold:          100.0,
 			Name:               "Traffic Limit Exceeded",
 			Description:        "Critical alert when traffic limit is exceeded",
-			Priority:           entities.PriorityCritical,
+			Priority:           constants.PriorityCritical,
 			IsEnabled:          true,
 			NotificationChannels: []entities.NotificationChannel{
 				{
-					Type:    entities.NotificationChannelEmail,
+					Type:    constants.NotificationChannelEmail,
 					Target:  "user",
 					Enabled: true,
 				},
 				{
-					Type:    entities.NotificationChannelInApp,
+					Type:    constants.NotificationChannelInApp,
 					Target:  "user",
 					Enabled: true,
 				},
@@ -1035,7 +1036,7 @@ func (s *usageAlertService) sendTelegramNotification(ctx context.Context, alert 
 
 	// Create notification request using appropriate template
 	template := "telegram_subscription_expired"
-	if alert.Severity == entities.AlertSeverityCritical {
+	if alert.Severity == constants.AlertSeverityCritical {
 		template = "telegram_invoice_overdue" // Use urgent template for critical alerts
 	}
 
@@ -1125,13 +1126,13 @@ func (s *usageAlertService) createBasicAlertsSummary(alerts []*entities.UsageAle
 
 		// Count by severity
 		switch alert.Severity {
-		case entities.AlertSeverityCritical:
+		case constants.AlertSeverityCritical:
 			summary.CriticalAlerts++
-		case entities.AlertSeverityError:
+		case constants.AlertSeverityError:
 			summary.HighAlerts++
-		case entities.AlertSeverityWarning:
+		case constants.AlertSeverityWarning:
 			summary.MediumAlerts++
-		case entities.AlertSeverityInfo:
+		case constants.AlertSeverityInfo:
 			summary.LowAlerts++
 		}
 

@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+
+	"linke/internal/domains/payment/constants"
 )
 
 // PaymentRetry represents a payment retry record
@@ -57,30 +59,6 @@ func (PaymentRetry) TableName() string {
 	return "payment_retries"
 }
 
-// Retry status constants
-const (
-	PaymentRetryStatusPending    = "pending"     // Waiting for next retry
-	PaymentRetryStatusInProgress = "in_progress" // Currently being retried
-	PaymentRetryStatusCompleted  = "completed"   // Retry sequence finished (success)
-	PaymentRetryStatusFailed     = "failed"      // Retry sequence exhausted (failure)
-	PaymentRetryStatusCancelled  = "cancelled"   // Retry sequence cancelled
-)
-
-// Retry strategy constants
-const (
-	RetryStrategyExponential = "exponential" // Exponential backoff
-	RetryStrategyLinear      = "linear"      // Linear backoff
-	RetryStrategyCustom      = "custom"      // Custom strategy per gateway
-)
-
-// Failure type constants
-const (
-	FailureTypeTemporary = "temporary" // Temporary failure, should retry
-	FailureTypePermanent = "permanent" // Permanent failure, don't retry
-	FailureTypeNetwork   = "network"   // Network-related failure
-	FailureTypeGateway   = "gateway"   // Gateway/service unavailable
-	FailureTypeBusiness  = "business"  // Business logic failure
-)
 
 // PaymentRetryHistory represents individual retry attempt history
 type PaymentRetryHistory struct {
@@ -125,13 +103,6 @@ func (PaymentRetryHistory) TableName() string {
 	return "payment_retry_histories"
 }
 
-// Attempt status constants for history
-const (
-	AttemptStatusSuccess = "success"
-	AttemptStatusFailed  = "failed"
-	AttemptStatusTimeout = "timeout"
-	AttemptStatusError   = "error"
-)
 
 // RetryStrategyConfig represents retry configuration for different gateways
 type RetryStrategyConfig struct {
@@ -151,26 +122,26 @@ type RetryStrategyConfig struct {
 
 // DefaultRetryStrategies defines default retry strategies for different gateways
 var DefaultRetryStrategies = map[string]RetryStrategyConfig{
-	PaymentGatewayEpay: {
-		Gateway:          PaymentGatewayEpay,
+	constants.PaymentGatewayEpay: {
+		Gateway:          constants.PaymentGatewayEpay,
 		MaxAttempts:      3,
 		InitialDelay:     3600,  // 1 hour
 		MaxDelay:         86400, // 24 hours
 		BackoffFactor:    2.0,
-		Strategy:         RetryStrategyExponential,
-		FailureTypes:     []string{FailureTypeTemporary, FailureTypeNetwork, FailureTypeGateway},
+		Strategy:         constants.RetryStrategyExponential,
+		FailureTypes:     []string{constants.FailureTypeTemporary, constants.FailureTypeNetwork, constants.FailureTypeGateway},
 		TimeoutSeconds:   30,
 		EnableAfterHours: true,
 		MaxConcurrent:    5,
 	},
-	PaymentGatewayEPUSDT: {
-		Gateway:          PaymentGatewayEPUSDT,
+	constants.PaymentGatewayEPUSDT: {
+		Gateway:          constants.PaymentGatewayEPUSDT,
 		MaxAttempts:      3,
 		InitialDelay:     3600,  // 1 hour
 		MaxDelay:         86400, // 24 hours
 		BackoffFactor:    2.0,
-		Strategy:         RetryStrategyExponential,
-		FailureTypes:     []string{FailureTypeTemporary, FailureTypeNetwork, FailureTypeGateway},
+		Strategy:         constants.RetryStrategyExponential,
+		FailureTypes:     []string{constants.FailureTypeTemporary, constants.FailureTypeNetwork, constants.FailureTypeGateway},
 		TimeoutSeconds:   30,
 		EnableAfterHours: true,
 		MaxConcurrent:    5,
@@ -181,27 +152,27 @@ var DefaultRetryStrategies = map[string]RetryStrategyConfig{
 
 // IsPending checks if retry is pending
 func (pr *PaymentRetry) IsPending() bool {
-	return pr.Status == PaymentRetryStatusPending
+	return pr.Status == constants.PaymentRetryStatusPending
 }
 
 // IsInProgress checks if retry is in progress
 func (pr *PaymentRetry) IsInProgress() bool {
-	return pr.Status == PaymentRetryStatusInProgress
+	return pr.Status == constants.PaymentRetryStatusInProgress
 }
 
 // IsCompleted checks if retry sequence is completed
 func (pr *PaymentRetry) IsCompleted() bool {
-	return pr.Status == PaymentRetryStatusCompleted
+	return pr.Status == constants.PaymentRetryStatusCompleted
 }
 
 // IsFailed checks if retry sequence has failed
 func (pr *PaymentRetry) IsFailed() bool {
-	return pr.Status == PaymentRetryStatusFailed
+	return pr.Status == constants.PaymentRetryStatusFailed
 }
 
 // IsCancelled checks if retry sequence was cancelled
 func (pr *PaymentRetry) IsCancelled() bool {
-	return pr.Status == PaymentRetryStatusCancelled
+	return pr.Status == constants.PaymentRetryStatusCancelled
 }
 
 // IsActive checks if retry is still active (pending or in progress)
@@ -221,12 +192,12 @@ func (pr *PaymentRetry) ShouldRetry() bool {
 	}
 
 	// Don't retry permanent failures
-	if pr.FailureType == FailureTypePermanent {
+	if pr.FailureType == constants.FailureTypePermanent {
 		return false
 	}
 
 	// Only retry for specific failure types
-	retryableTypes := []string{FailureTypeTemporary, FailureTypeNetwork, FailureTypeGateway}
+	retryableTypes := []string{constants.FailureTypeTemporary, constants.FailureTypeNetwork, constants.FailureTypeGateway}
 	for _, failureType := range retryableTypes {
 		if pr.FailureType == failureType {
 			return true
@@ -241,15 +212,15 @@ func (pr *PaymentRetry) CalculateNextRetryTime() time.Time {
 	now := time.Now()
 
 	switch pr.RetryStrategy {
-	case RetryStrategyExponential:
+	case constants.RetryStrategyExponential:
 		delay := pr.calculateExponentialDelay()
 		return now.Add(time.Duration(delay) * time.Second)
 
-	case RetryStrategyLinear:
+	case constants.RetryStrategyLinear:
 		delay := pr.calculateLinearDelay()
 		return now.Add(time.Duration(delay) * time.Second)
 
-	case RetryStrategyCustom:
+	case constants.RetryStrategyCustom:
 		delay := pr.calculateCustomDelay()
 		return now.Add(time.Duration(delay) * time.Second)
 
@@ -308,9 +279,9 @@ func (pr *PaymentRetry) UpdateForNextAttempt(failureType, failureCode, errorMess
 
 	if pr.ShouldRetry() {
 		pr.NextRetryAt = pr.CalculateNextRetryTime()
-		pr.Status = PaymentRetryStatusPending
+		pr.Status = constants.PaymentRetryStatusPending
 	} else {
-		pr.Status = PaymentRetryStatusFailed
+		pr.Status = constants.PaymentRetryStatusFailed
 		now := time.Now()
 		pr.CompletedAt = &now
 	}
@@ -318,7 +289,7 @@ func (pr *PaymentRetry) UpdateForNextAttempt(failureType, failureCode, errorMess
 
 // MarkAsSuccessful marks the retry as successful
 func (pr *PaymentRetry) MarkAsSuccessful() {
-	pr.Status = PaymentRetryStatusCompleted
+	pr.Status = constants.PaymentRetryStatusCompleted
 	now := time.Now()
 	pr.SuccessfulAt = &now
 	pr.CompletedAt = &now
@@ -326,7 +297,7 @@ func (pr *PaymentRetry) MarkAsSuccessful() {
 
 // MarkAsCancelled marks the retry as cancelled
 func (pr *PaymentRetry) MarkAsCancelled(reason string) {
-	pr.Status = PaymentRetryStatusCancelled
+	pr.Status = constants.PaymentRetryStatusCancelled
 	now := time.Now()
 	pr.CancelledAt = &now
 	pr.CompletedAt = &now
@@ -367,82 +338,3 @@ func (pr *PaymentRetry) SetGatewayConfig(config *RetryStrategyConfig) error {
 	return nil
 }
 
-// Response DTOs
-
-// PaymentRetryResponse represents the payment retry data structure for API responses
-type PaymentRetryResponse struct {
-	ID              uint       `json:"id"`
-	PaymentRecordID uint       `json:"payment_record_id"`
-	AttemptNumber   int        `json:"attempt_number"`
-	MaxAttempts     int        `json:"max_attempts"`
-	NextRetryAt     time.Time  `json:"next_retry_at" swaggertype:"string" format:"date-time" example:"2024-01-01T12:00:00Z"`
-	LastAttemptAt   time.Time  `json:"last_attempt_at" swaggertype:"string" format:"date-time" example:"2024-01-01T11:00:00Z"`
-	RetryStrategy   string     `json:"retry_strategy"`
-	Status          string     `json:"status"`
-	FailureType     string     `json:"failure_type,omitempty"`
-	LastFailureCode string     `json:"last_failure_code,omitempty"`
-	TotalDelayTime  int        `json:"total_delay_time"`
-	CompletedAt     *time.Time `json:"completed_at,omitempty" swaggertype:"string" format:"date-time" example:"2024-01-01T13:00:00Z"`
-	CancelledAt     *time.Time `json:"cancelled_at,omitempty" swaggertype:"string" format:"date-time" example:"2024-01-01T12:30:00Z"`
-	SuccessfulAt    *time.Time `json:"successful_at,omitempty" swaggertype:"string" format:"date-time" example:"2024-01-01T12:15:00Z"`
-	Notes           string     `json:"notes,omitempty"`
-	CreatedAt       time.Time  `json:"created_at" swaggertype:"string" format:"date-time" example:"2024-01-01T10:00:00Z"`
-	UpdatedAt       time.Time  `json:"updated_at" swaggertype:"string" format:"date-time" example:"2024-01-01T10:00:00Z"`
-}
-
-// ToResponse converts PaymentRetry to PaymentRetryResponse
-func (pr *PaymentRetry) ToResponse() *PaymentRetryResponse {
-	return &PaymentRetryResponse{
-		ID:              pr.ID,
-		PaymentRecordID: pr.PaymentRecordID,
-		AttemptNumber:   pr.AttemptNumber,
-		MaxAttempts:     pr.MaxAttempts,
-		NextRetryAt:     pr.NextRetryAt,
-		LastAttemptAt:   pr.LastAttemptAt,
-		RetryStrategy:   pr.RetryStrategy,
-		Status:          pr.Status,
-		FailureType:     pr.FailureType,
-		LastFailureCode: pr.LastFailureCode,
-		TotalDelayTime:  pr.TotalDelayTime,
-		CompletedAt:     pr.CompletedAt,
-		CancelledAt:     pr.CancelledAt,
-		SuccessfulAt:    pr.SuccessfulAt,
-		Notes:           pr.Notes,
-		CreatedAt:       pr.CreatedAt,
-		UpdatedAt:       pr.UpdatedAt,
-	}
-}
-
-// PaymentRetryHistoryResponse represents the retry history response
-type PaymentRetryHistoryResponse struct {
-	ID                uint       `json:"id"`
-	AttemptNumber     int        `json:"attempt_number"`
-	AttemptedAt       time.Time  `json:"attempted_at" swaggertype:"string" format:"date-time" example:"2024-01-01T12:00:00Z"`
-	Duration          int        `json:"duration"`
-	Status            string     `json:"status"`
-	ResponseCode      string     `json:"response_code,omitempty"`
-	ResponseMessage   string     `json:"response_message,omitempty"`
-	ErrorType         string     `json:"error_type,omitempty"`
-	FailureReason     string     `json:"failure_reason,omitempty"`
-	NextRetryAt       *time.Time `json:"next_retry_at,omitempty" swaggertype:"string" format:"date-time" example:"2024-01-01T13:00:00Z"`
-	DelayFromPrevious int        `json:"delay_from_previous"`
-	CreatedAt         time.Time  `json:"created_at" swaggertype:"string" format:"date-time" example:"2024-01-01T12:00:00Z"`
-}
-
-// ToResponse converts PaymentRetryHistory to PaymentRetryHistoryResponse
-func (prh *PaymentRetryHistory) ToResponse() *PaymentRetryHistoryResponse {
-	return &PaymentRetryHistoryResponse{
-		ID:                prh.ID,
-		AttemptNumber:     prh.AttemptNumber,
-		AttemptedAt:       prh.AttemptedAt,
-		Duration:          prh.Duration,
-		Status:            prh.Status,
-		ResponseCode:      prh.ResponseCode,
-		ResponseMessage:   prh.ResponseMessage,
-		ErrorType:         prh.ErrorType,
-		FailureReason:     prh.FailureReason,
-		NextRetryAt:       prh.NextRetryAt,
-		DelayFromPrevious: prh.DelayFromPrevious,
-		CreatedAt:         prh.CreatedAt,
-	}
-}

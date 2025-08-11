@@ -322,39 +322,3 @@ type PaginationInfo struct {
 	HasNext     bool  `json:"has_next"`
 	HasPrevious bool  `json:"has_previous"`
 }
-
-// Common validation and constraints
-const (
-	// Granularity options
-	GranularityHourly  = "hourly"
-	GranularityDaily   = "daily"
-	GranularityWeekly  = "weekly"
-	GranularityMonthly = "monthly"
-
-	// Prediction types
-	PredictionTypeDaily     = "daily"
-	PredictionTypeWeekly    = "weekly"
-	PredictionTypeMonthly   = "monthly"
-	PredictionTypePeriodEnd = "period_end"
-
-	// Export formats
-	FormatCSV  = "csv"
-	FormatJSON = "json"
-	FormatXLSX = "xlsx"
-
-	// Trend directions
-	TrendDirectionUp     = "up"
-	TrendDirectionDown   = "down"
-	TrendDirectionStable = "stable"
-
-	// Anomaly types
-	AnomalyTypeSpike         = "spike"
-	AnomalyTypeDrop          = "drop"
-	AnomalyTypePatternChange = "pattern_change"
-
-	// Default limits
-	DefaultPageSize       = 50
-	MaxPageSize           = 1000
-	DefaultPredictionDays = 30
-	MaxPredictionDays     = 90
-)
