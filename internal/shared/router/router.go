@@ -64,7 +64,9 @@ func SetupRoutes(
 	adminInvoiceHandler *invoiceHandlers.AdminInvoiceHandler,
 	adminTicketHandler *ticketHandlers.AdminTicketHandler,
 	userTicketHandler *ticketHandlers.UserTicketHandler,
-	paymentHandler *paymentHandlers.PaymentHandler,
+	paymentOrderHandler *paymentHandlers.PaymentOrderHandler,
+	paymentConfigHandler *paymentHandlers.PaymentConfigHandler,
+	paymentRecordHandler *paymentHandlers.PaymentRecordHandler,
 	paymentMethodHandler *paymentHandlers.PaymentMethodHandler,
 	serverHandler *serverHandlers.ServerAPIHandler,
 	// Admin server handlers
@@ -270,27 +272,11 @@ func SetupRoutes(
 	adminPaymentGroup := adminGroup.Group("/payment")
 	{
 		// Payment configuration management routes
-		adminPaymentGroup.POST("/configs", paymentHandler.CreatePaymentConfig)
-		adminPaymentGroup.GET("/configs", paymentHandler.GetPaymentConfigs)
-		adminPaymentGroup.PUT("/configs/:id", paymentHandler.UpdatePaymentConfig)
-		adminPaymentGroup.DELETE("/configs/:id", paymentHandler.DeletePaymentConfig)
-		
-		// Dynamic payment configuration routes
-		adminPaymentGroup.GET("/schemas", paymentHandler.GetPaymentMethodSchemas)
-		adminPaymentGroup.GET("/schemas/:method", paymentHandler.GetPaymentMethodSchema)
-		adminPaymentGroup.POST("/configs/dynamic", paymentHandler.CreateDynamicPaymentConfig)
-		adminPaymentGroup.GET("/configs/dynamic", paymentHandler.GetDynamicPaymentConfigs)
-		adminPaymentGroup.PUT("/configs/dynamic/:id", paymentHandler.UpdateDynamicPaymentConfig)
+		adminPaymentGroup.POST("/configs", paymentConfigHandler.CreatePaymentConfig)
+		adminPaymentGroup.GET("/configs", paymentConfigHandler.GetPaymentConfigs)
+		adminPaymentGroup.PUT("/configs/:id", paymentConfigHandler.UpdatePaymentConfig)
+		adminPaymentGroup.DELETE("/configs/:id", paymentConfigHandler.DeletePaymentConfig)
 
-		// Payment retry management routes
-		adminPaymentGroup.GET("/retries", paymentHandler.GetPaymentRetries)
-		adminPaymentGroup.GET("/retries/:id", paymentHandler.GetPaymentRetry)
-		adminPaymentGroup.POST("/retries/:id/cancel", paymentHandler.CancelPaymentRetry)
-		adminPaymentGroup.POST("/retries/:id/reset", paymentHandler.ResetPaymentRetry)
-		adminPaymentGroup.POST("/retries/bulk/cancel", paymentHandler.BulkCancelPaymentRetries)
-		adminPaymentGroup.POST("/retries/bulk/reset", paymentHandler.BulkResetPaymentRetries)
-		adminPaymentGroup.GET("/retries/statistics", paymentHandler.GetRetryStatistics)
-		adminPaymentGroup.GET("/retries/health", paymentHandler.GetRetryHealthMetrics)
 
 	}
 	logger.Debug("Registered admin payment routes", zap.String("prefix", "/api/v1/admin/payment"))
@@ -644,14 +630,14 @@ func SetupRoutes(
 	// Payment routes (/api/v1/payment)
 	paymentGroup := apiV1.Group("/payment")
 	{
-		paymentGroup.POST("/orders", middleware.AuthMiddleware(newAuthServiceAdapter(authService)), paymentHandler.CreatePaymentOrder)
-		paymentGroup.GET("/orders/:payment_no", middleware.AuthMiddleware(newAuthServiceAdapter(authService)), paymentHandler.GetPaymentOrder)
-		paymentGroup.GET("/orders/my", middleware.AuthMiddleware(newAuthServiceAdapter(authService)), paymentHandler.GetMyPaymentOrders)
+		paymentGroup.POST("/orders", middleware.AuthMiddleware(newAuthServiceAdapter(authService)), paymentOrderHandler.CreatePaymentOrder)
+		paymentGroup.GET("/orders/:payment_no", middleware.AuthMiddleware(newAuthServiceAdapter(authService)), paymentOrderHandler.GetPaymentOrder)
+		paymentGroup.GET("/orders/my", middleware.AuthMiddleware(newAuthServiceAdapter(authService)), paymentRecordHandler.GetMyPaymentOrders)
 		// Public endpoint - no auth needed
-		paymentGroup.GET("/methods", paymentHandler.GetAvailablePaymentMethods)
-		paymentGroup.GET("/configs", paymentHandler.GetActivePaymentConfigs)
+		paymentGroup.GET("/methods", paymentMethodHandler.GetAvailablePaymentMethods)
+		paymentGroup.GET("/configs", paymentConfigHandler.GetActivePaymentConfigs)
 		// Webhook endpoint - no auth needed (uses signature validation)
-		paymentGroup.POST("/notify/:gateway", paymentHandler.PaymentNotify)
+		paymentGroup.POST("/notify/:gateway", paymentOrderHandler.PaymentNotify)
 	}
 
 	// Payment methods management routes (/api/v1/payment-methods) - requires authentication

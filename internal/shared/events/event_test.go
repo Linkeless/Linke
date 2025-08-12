@@ -72,7 +72,7 @@ func TestDomainEvents(t *testing.T) {
 		userID := uint(456)
 		eventType := EventTypePaymentCompleted
 		data := map[string]any{
-			"currency": "USD",
+			"currency": "CNY",
 			"method":   "credit_card",
 		}
 

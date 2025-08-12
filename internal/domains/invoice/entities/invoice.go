@@ -24,7 +24,7 @@ type Invoice struct {
 
 	// Financial Details
 	Amount      float64 `json:"amount" gorm:"type:decimal(10,2);not null"`
-	Currency    string  `json:"currency" gorm:"size:3;not null;default:'USD'"`
+	Currency    string  `json:"currency" gorm:"size:3;not null;default:'CNY'"`
 	TaxAmount   float64 `json:"tax_amount" gorm:"type:decimal(10,2);default:0"`
 	TotalAmount float64 `json:"total_amount" gorm:"type:decimal(10,2);not null"`
 

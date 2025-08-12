@@ -61,7 +61,7 @@ func (s *ReferralService) CreateReferral(ctx context.Context, req *dto.CreateRef
 		Status:          constants.ReferralStatusPending,
 		RefereeStatus:   constants.RefereeStatusRegistered,
 		RewardStatus:    constants.RewardStatusPending,
-		RewardCurrency:  "USD",
+		RewardCurrency:  "CNY",
 		ConversionValue: req.ConversionValue,
 		ConversionType:  req.ConversionType,
 	}

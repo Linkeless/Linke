@@ -657,7 +657,7 @@ func (h *AdminCouponHandler) BulkCreateCoupons(c *gin.Context) {
 
 	// Set defaults
 	if bulkReq.Currency == "" {
-		bulkReq.Currency = "USD"
+		bulkReq.Currency = "CNY"
 	}
 	if bulkReq.MaxUsesPerUser == 0 {
 		bulkReq.MaxUsesPerUser = 1

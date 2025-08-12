@@ -6,12 +6,10 @@ import (
 
 	"linke/internal/domains/payment/adapters/repositories"
 	"linke/internal/domains/payment/adapters/handlers"
+	"linke/internal/domains/payment/gateways"
 	"linke/internal/domains/payment/usecases/implementations"
 	"linke/internal/domains/payment/usecases/interfaces"
 	"linke/internal/shared/cache"
-	"linke/internal/shared/queue"
-
-	"github.com/go-redis/redis/v8"
 )
 
 // Module Payment 领域模块
@@ -28,14 +26,6 @@ var Module = fx.Module("payment",
 			fx.As(new(interfaces.PaymentConfigRepository)),
 		),
 		fx.Annotate(
-			repositories.NewPaymentRetryRepository,
-			fx.As(new(interfaces.PaymentRetryRepository)),
-		),
-		fx.Annotate(
-			repositories.NewPaymentRetryHistoryRepository,
-			fx.As(new(interfaces.PaymentRetryHistoryRepository)),
-		),
-		fx.Annotate(
 			repositories.NewPaymentMethodRepository,
 			fx.As(new(interfaces.PaymentMethodRepository)),
 		),
@@ -43,6 +33,9 @@ var Module = fx.Module("payment",
 
 	// 提供 Service 实现
 	fx.Provide(
+		// Gateway factory
+		gateways.NewGatewayFactory,
+
 		// Base service implementations
 		implementations.NewPaymentService,
 		implementations.NewPaymentConfigService,
@@ -52,21 +45,6 @@ var Module = fx.Module("payment",
 			implementations.NewPaymentMethodService,
 			fx.As(new(interfaces.PaymentMethodService)),
 		),
-
-		// Task queue for retry service
-		fx.Annotate(
-			NewTaskQueueForPayment,
-			fx.As(new(implementations.TaskQueueInterface)),
-		),
-
-		// Retry service implementation
-		fx.Annotate(
-			implementations.NewPaymentRetryService,
-			fx.As(new(interfaces.PaymentRetryService)),
-		),
-
-		// Worker implementation
-		implementations.NewPaymentRetryWorker,
 
 		// Cached service implementations
 		fx.Annotate(
@@ -81,7 +59,9 @@ var Module = fx.Module("payment",
 
 	// 提供 Handler 实现
 	fx.Provide(
-		handlers.NewPaymentHandler,
+		handlers.NewPaymentOrderHandler,
+		handlers.NewPaymentConfigHandler,
+		handlers.NewPaymentRecordHandler,
 		handlers.NewPaymentMethodHandler,
 	),
 
@@ -96,8 +76,8 @@ var Module = fx.Module("payment",
 type ServiceProvider struct {
 	PaymentService       interfaces.PaymentService
 	PaymentConfigService interfaces.PaymentConfigService
-	PaymentRetryService  interfaces.PaymentRetryService
 	PaymentMethodService interfaces.PaymentMethodService
+	GatewayFactory       *gateways.GatewayFactory
 	CacheManager         cache.CacheManager
 }
 
@@ -105,22 +85,17 @@ type ServiceProvider struct {
 func NewServiceProvider(
 	paymentService interfaces.PaymentService,
 	paymentConfigService interfaces.PaymentConfigService,
-	paymentRetryService interfaces.PaymentRetryService,
 	paymentMethodService interfaces.PaymentMethodService,
+	gatewayFactory *gateways.GatewayFactory,
 	cacheManager cache.CacheManager,
 ) *ServiceProvider {
 	return &ServiceProvider{
 		PaymentService:       paymentService,
 		PaymentConfigService: paymentConfigService,
-		PaymentRetryService:  paymentRetryService,
 		PaymentMethodService: paymentMethodService,
+		GatewayFactory:       gatewayFactory,
 		CacheManager:         cacheManager,
 	}
-}
-
-// NewTaskQueueForPayment 创建用于支付重试的任务队列
-func NewTaskQueueForPayment(redisClient *redis.Client) implementations.TaskQueueInterface {
-	return queue.NewDelayedTaskQueue(redisClient)
 }
 
 // 对外暴露的服务提供者模块

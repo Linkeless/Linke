@@ -21,7 +21,7 @@ type ReferralReward struct {
 	// Reward Details
 	RewardType        string  `json:"reward_type" gorm:"size:50;not null;index"`             // Type of reward (cash, credit, discount, etc.)
 	RewardAmount      float64 `json:"reward_amount" gorm:"type:decimal(10,2);not null"`      // Reward amount
-	RewardCurrency    string  `json:"reward_currency" gorm:"size:10;not null;default:'USD'"` // Currency
+	RewardCurrency    string  `json:"reward_currency" gorm:"size:10;not null;default:'CNY'"` // Currency
 	RewardDescription string  `json:"reward_description" gorm:"size:255"`                    // Description of the reward
 
 	// Reward Status

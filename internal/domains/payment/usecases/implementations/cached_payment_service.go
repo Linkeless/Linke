@@ -14,7 +14,9 @@ import (
 	"linke/internal/shared/logger"
 )
 
-// CachedPaymentService wraps PaymentService with caching capabilities
+// CachedPaymentService wraps PaymentService with minimal caching for security and performance
+// Only caches: idempotency keys (security) and payment methods (static config data)
+// NO payment record caching - all payment queries are real-time for transactional consistency
 type CachedPaymentService struct {
 	base         *PaymentService
 	cacheManager cache.CacheManager
@@ -51,64 +53,26 @@ func (cs *CachedPaymentService) GeneratePaymentNo() (string, error) {
 
 // CreatePaymentOrder creates a new payment order
 func (cs *CachedPaymentService) CreatePaymentOrder(ctx context.Context, req *dto.CreatePaymentOrderRequest) (*entities.PaymentRecord, error) {
-	record, err := cs.base.CreatePaymentOrder(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-
-	// Cache the payment record with short TTL for security
-	cs.cachePaymentRecord(ctx, record)
-
-	return record, nil
+	// No caching - all payment operations are transactional and require real-time consistency
+	return cs.base.CreatePaymentOrder(ctx, req)
 }
 
-// GetPaymentRecord gets a payment record by payment number with caching
+// GetPaymentRecord gets a payment record by payment number (real-time, no caching)
 func (cs *CachedPaymentService) GetPaymentRecord(ctx context.Context, paymentNo string) (*entities.PaymentRecord, error) {
-	cacheKey := cs.cacheKeys.PaymentByNo(paymentNo)
-
-	// Try to get from cache first
-	cached, err := cs.cacheManager.GetCache().Get(ctx, cacheKey)
-	if err == nil && cached != nil {
-		var record entities.PaymentRecord
-		if err := json.Unmarshal(cached, &record); err == nil {
-			return &record, nil
-		}
-		// If unmarshal fails, continue to fetch from database
-		logger.Warn("Failed to unmarshal cached payment record",
-			logger.String("payment_no", paymentNo),
-			logger.ErrorField(err))
-	}
-
-	// Fetch from database
-	record, err := cs.base.GetPaymentRecord(ctx, paymentNo)
-	if err != nil {
-		return nil, err
-	}
-
-	// Cache the result
-	cs.cachePaymentRecord(ctx, record)
-
-	return record, nil
+	// No caching - payment records must be real-time for transactional consistency
+	return cs.base.GetPaymentRecord(ctx, paymentNo)
 }
 
-// GetPaymentRecordByOutTradeNo gets a payment record by out trade number
+// GetPaymentRecordByOutTradeNo gets a payment record by out trade number (real-time, no caching)
 func (cs *CachedPaymentService) GetPaymentRecordByOutTradeNo(ctx context.Context, outTradeNo string) (*entities.PaymentRecord, error) {
-	// For security reasons, we don't cache by transaction ID to avoid exposing sensitive data
-	// Always fetch from database for transaction-based lookups
+	// No caching - payment records must be real-time for transactional consistency
 	return cs.base.GetPaymentRecordByOutTradeNo(ctx, outTradeNo)
 }
 
-// UpdatePaymentStatus updates payment record status and invalidates cache
+// UpdatePaymentStatus updates payment record status (real-time, no caching)
 func (cs *CachedPaymentService) UpdatePaymentStatus(ctx context.Context, paymentNo string, status string, transactionID string, paidAt *time.Time) error {
-	err := cs.base.UpdatePaymentStatus(ctx, paymentNo, status, transactionID, paidAt)
-	if err != nil {
-		return err
-	}
-
-	// Invalidate cache entries for this payment
-	cs.invalidatePaymentCache(ctx, paymentNo)
-
-	return nil
+	// No caching involved - direct database update for transactional consistency
+	return cs.base.UpdatePaymentStatus(ctx, paymentNo, status, transactionID, paidAt)
 }
 
 // ProcessNotification processes payment notification with idempotency caching
@@ -146,9 +110,9 @@ func (cs *CachedPaymentService) ProcessNotification(ctx context.Context, gateway
 	return nil
 }
 
-// GetUserPaymentRecords gets payment records for a user (no caching for user queries due to pagination)
+// GetUserPaymentRecords gets payment records for a user (real-time, no caching)
 func (cs *CachedPaymentService) GetUserPaymentRecords(ctx context.Context, userID uint, limit, offset int) ([]*entities.PaymentRecord, int64, error) {
-	// Don't cache paginated user results due to complexity and freshness requirements
+	// No caching - payment records must be real-time for transactional consistency
 	return cs.base.GetUserPaymentRecords(ctx, userID, limit, offset)
 }
 
@@ -185,62 +149,6 @@ func (cs *CachedPaymentService) SetSubscriptionOrderService(subscriptionOrderSer
 }
 
 // Helper methods
-
-// cachePaymentRecord caches a payment record with appropriate TTL
-func (cs *CachedPaymentService) cachePaymentRecord(ctx context.Context, record *entities.PaymentRecord) {
-	if record == nil {
-		return
-	}
-
-	cacheKey := cs.cacheKeys.PaymentByNo(record.PaymentNo)
-
-	// Create a sanitized version for caching (remove sensitive data)
-	cachedRecord := &entities.PaymentRecord{
-		ID:                  record.ID,
-		UserID:              record.UserID,
-		SubscriptionOrderID: record.SubscriptionOrderID,
-		InvoiceID:           record.InvoiceID,
-		PaymentNo:           record.PaymentNo,
-		Gateway:             record.Gateway,
-		PaymentMethod:       record.PaymentMethod,
-		Amount:              record.Amount,
-		Currency:            record.Currency,
-		ExchangeRate:        record.ExchangeRate,
-		Status:              record.Status,
-		PaymentStatus:       record.PaymentStatus,
-		PaymentURL:          record.PaymentURL,
-		QRCodeURL:           record.QRCodeURL,
-		ExpiredAt:           record.ExpiredAt,
-		PaidAt:              record.PaidAt,
-		RefundAmount:        record.RefundAmount,
-		RefundStatus:        record.RefundStatus,
-		RefundedAt:          record.RefundedAt,
-		RefundReason:        record.RefundReason,
-		ClientIP:            record.ClientIP,
-		NotifyURL:           record.NotifyURL,
-		ReturnURL:           record.ReturnURL,
-		Remark:              record.Remark,
-		CreatedAt:           record.CreatedAt,
-		UpdatedAt:           record.UpdatedAt,
-		// Deliberately exclude sensitive fields:
-		// - OutTradeNo (sensitive transaction identifier)
-		// - TransactionID (sensitive payment gateway identifier)
-		// - GatewayResponse (may contain sensitive gateway data)
-		// - Metadata (may contain sensitive user data)
-		// - NotifySource, LastNotifyHash, NotifyCount, LastNotifyTime (internal security data)
-	}
-
-	if data, err := json.Marshal(cachedRecord); err == nil {
-		// Use short TTL for payment records for security and freshness
-		_ = cs.cacheManager.GetCache().Set(ctx, cacheKey, data, cache.DefaultCacheTTL)
-	}
-}
-
-// invalidatePaymentCache invalidates all cache entries for a payment
-func (cs *CachedPaymentService) invalidatePaymentCache(ctx context.Context, paymentNo string) {
-	cacheKey := cs.cacheKeys.PaymentByNo(paymentNo)
-	_ = cs.cacheManager.GetCache().Delete(ctx, cacheKey)
-}
 
 // generateIdempotencyKey generates a consistent key for notification idempotency
 func (cs *CachedPaymentService) generateIdempotencyKey(gateway string, data map[string]any) string {

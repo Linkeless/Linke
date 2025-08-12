@@ -26,7 +26,7 @@ type SubscriptionOrder struct {
 
 	// Pricing Details
 	Amount         float64 `json:"amount" gorm:"type:decimal(10,2);not null"`           // 订单金额
-	Currency       string  `json:"currency" gorm:"size:3;not null;default:'USD'"`       // 货币
+	Currency       string  `json:"currency" gorm:"size:3;not null;default:'CNY'"`       // 货币
 	SetupFee       float64 `json:"setup_fee" gorm:"type:decimal(10,2);default:0"`       // 初装费
 	DiscountAmount float64 `json:"discount_amount" gorm:"type:decimal(10,2);default:0"` // 折扣金额
 	TotalAmount    float64 `json:"total_amount" gorm:"type:decimal(10,2);not null"`     // 总金额
@@ -128,7 +128,7 @@ type SubscriptionOrderResponse struct {
 	OrderType          string     `json:"order_type" example:"new"`                                      // Order type
 	Status             string     `json:"status" example:"paid"`                                         // Status
 	Amount             float64    `json:"amount" example:"29.99"`                                        // Amount
-	Currency           string     `json:"currency" example:"USD"`                                        // Currency
+	Currency           string     `json:"currency" example:"CNY"`                                        // Currency
 	SetupFee           float64    `json:"setup_fee" example:"0"`                                         // Setup fee
 	DiscountAmount     float64    `json:"discount_amount" example:"0"`                                   // Discount amount
 	TotalAmount        float64    `json:"total_amount" example:"29.99"`                                  // Total amount

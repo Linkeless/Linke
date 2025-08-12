@@ -30,7 +30,7 @@ type CreateSubscriptionPlanRequest struct {
 	Code            string  `json:"code" binding:"required,min=1,max=50" example:"premium-monthly"`
 	Description     string  `json:"description" binding:"max=1000" example:"Premium features with monthly billing"`
 	Price           float64 `json:"price" binding:"required,min=0" example:"29.99"`
-	Currency        string  `json:"currency" binding:"required,len=3" example:"USD"`
+	Currency        string  `json:"currency" binding:"required,len=3" example:"CNY"`
 	BillingCycle    string  `json:"billing_cycle" binding:"required,oneof=monthly yearly lifetime" example:"monthly"`
 	BillingInterval int     `json:"billing_interval" binding:"min=1,max=12" example:"1"`
 	TrialPeriodDays int     `json:"trial_period_days" binding:"min=0,max=365" example:"7"`
@@ -78,7 +78,7 @@ type UpdateSubscriptionPlanRequest struct {
 // GetSubscriptionPlansRequest represents the request to get subscription plans
 type GetSubscriptionPlansRequest struct {
 	Status      string `form:"status" binding:"omitempty,oneof=active inactive archived" example:"active"`
-	Currency    string `form:"currency" binding:"omitempty,len=3" example:"USD"`
+	Currency    string `form:"currency" binding:"omitempty,len=3" example:"CNY"`
 	Visible     *bool  `form:"visible" example:"true"`
 	Popular     *bool  `form:"popular" example:"false"`
 	Recommended *bool  `form:"recommended" example:"true"`

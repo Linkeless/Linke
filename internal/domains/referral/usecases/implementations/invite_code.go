@@ -65,7 +65,7 @@ func (s *InviteCodeService) CreateInviteCode(ctx context.Context, createdByID ui
 		Description:            req.Description,
 		ReferralCampaignID:     req.ReferralCampaignID,
 		ReferralRewardAmount:   req.ReferralRewardAmount,
-		ReferralRewardCurrency: "USD",
+		ReferralRewardCurrency: "CNY",
 	}
 
 	if err := s.db.WithContext(ctx).Create(inviteCode).Error; err != nil {

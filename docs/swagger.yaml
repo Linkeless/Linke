@@ -240,44 +240,6 @@ definitions:
     - title
     - user_id
     type: object
-  dto.AdminRetryResponse:
-    properties:
-      page:
-        type: integer
-      page_size:
-        type: integer
-      retries:
-        items:
-          $ref: '#/definitions/dto.PaymentRetryResponse'
-        type: array
-      statistics:
-        $ref: '#/definitions/dto.AdminRetryStatistics'
-      total_count:
-        type: integer
-      total_pages:
-        type: integer
-    type: object
-  dto.AdminRetryStatistics:
-    properties:
-      average_attempts:
-        type: number
-      average_delay_time:
-        type: number
-      cancelled_retries:
-        type: integer
-      completed_retries:
-        type: integer
-      failed_retries:
-        type: integer
-      in_progress_retries:
-        type: integer
-      overall_success_rate:
-        type: number
-      pending_retries:
-        type: integer
-      total_retries:
-        type: integer
-    type: object
   dto.AdminTicketMessageRequest:
     properties:
       attachments:
@@ -1208,150 +1170,6 @@ definitions:
         example: true
         type: boolean
     type: object
-  dto.DynamicCreatePaymentConfigRequest:
-    properties:
-      config:
-        additionalProperties: true
-        description: Dynamic configuration
-        type: object
-      fixed_fee:
-        description: Fixed fee
-        example: 0
-        type: number
-      is_enabled:
-        description: Is enabled
-        example: true
-        type: boolean
-      max_amount:
-        description: Max amount
-        example: 99999.99
-        type: number
-      method:
-        description: Payment method
-        example: epay
-        type: string
-      min_amount:
-        description: Min amount
-        example: 0.01
-        type: number
-      name:
-        description: Display name
-        example: EPay Payment Method
-        type: string
-      percentage_fee:
-        description: Percentage fee
-        example: 0.6
-        type: number
-      sort_order:
-        description: Sort order
-        example: 1
-        type: integer
-    required:
-    - config
-    - method
-    - name
-    type: object
-  dto.DynamicPaymentConfigResponse:
-    properties:
-      config:
-        additionalProperties: true
-        description: Dynamic fields based on payment method
-        type: object
-      created_at:
-        description: Creation time
-        example: "2024-01-01T00:00:00Z"
-        type: string
-      field_descriptions:
-        additionalProperties:
-          type: string
-        description: Field descriptions for UI
-        type: object
-      fixed_fee:
-        description: Fixed fee
-        example: 0
-        type: number
-      id:
-        description: Config ID
-        example: 1
-        type: integer
-      is_enabled:
-        description: Enabled status
-        example: true
-        type: boolean
-      max_amount:
-        description: Maximum amount
-        example: 99999.99
-        type: number
-      method:
-        description: Payment method identifier
-        example: epay
-        type: string
-      min_amount:
-        description: Minimum amount
-        example: 0.01
-        type: number
-      name:
-        description: Display name
-        example: EPay Payment Method
-        type: string
-      optional_fields:
-        description: Optional fields for this method
-        items:
-          type: string
-        type: array
-      percentage_fee:
-        description: Percentage fee
-        example: 0.6
-        type: number
-      required_fields:
-        description: Required fields for this method
-        items:
-          type: string
-        type: array
-      sort_order:
-        description: Sort order
-        example: 1
-        type: integer
-      updated_at:
-        description: Update time
-        example: "2024-01-01T00:00:00Z"
-        type: string
-    type: object
-  dto.DynamicUpdatePaymentConfigRequest:
-    properties:
-      config:
-        additionalProperties: true
-        description: Dynamic configuration
-        type: object
-      fixed_fee:
-        description: Fixed fee
-        example: 0
-        type: number
-      is_enabled:
-        description: Is enabled
-        example: true
-        type: boolean
-      max_amount:
-        description: Max amount
-        example: 99999.99
-        type: number
-      min_amount:
-        description: Min amount
-        example: 0.01
-        type: number
-      name:
-        description: Display name
-        example: EPay Payment Method
-        type: string
-      percentage_fee:
-        description: Percentage fee
-        example: 0.6
-        type: number
-      sort_order:
-        description: Sort order
-        example: 1
-        type: integer
-    type: object
   dto.EscalateTicketRequest:
     properties:
       escalated_to_id:
@@ -1390,133 +1208,6 @@ definitions:
         type: string
     required:
     - extend_type
-    type: object
-  dto.FailureAnalysis:
-    properties:
-      average_recovery_time:
-        type: number
-      business_failures:
-        type: integer
-      failure_patterns:
-        items:
-          $ref: '#/definitions/dto.FailurePattern'
-        type: array
-      gateway:
-        type: string
-      gateway_failures:
-        type: integer
-      network_failures:
-        type: integer
-      permanent_failures:
-        type: integer
-      recommended_actions:
-        items:
-          type: string
-        type: array
-      recovery_rate:
-        type: number
-      temporary_failures:
-        type: integer
-      top_failure_reasons:
-        items:
-          $ref: '#/definitions/dto.FailureReason'
-        type: array
-      total_failures:
-        type: integer
-    type: object
-  dto.FailurePattern:
-    properties:
-      average_attempts:
-        type: number
-      count:
-        type: integer
-      error_type:
-        description: Additional fields for compatibility
-        type: string
-      failure_reason:
-        type: string
-      occurrences:
-        type: integer
-      pattern:
-        type: string
-      percentage:
-        type: number
-      success_rate:
-        type: number
-    type: object
-  dto.FailureReason:
-    properties:
-      count:
-        type: integer
-      percentage:
-        type: number
-      reason:
-        type: string
-      retry_success_rate:
-        type: number
-    type: object
-  dto.FieldDefinition:
-    properties:
-      default_value:
-        description: Default value
-      description:
-        description: Field description
-        example: 支付网关的API接口地址
-        type: string
-      display_name:
-        description: Display name for UI
-        example: API接口地址
-        type: string
-      name:
-        description: Field name
-        example: url
-        type: string
-      options:
-        description: Options for select fields
-        example:
-        - production
-        - sandbox
-        items:
-          type: string
-        type: array
-      placeholder:
-        description: Input placeholder
-        example: https://pay.example.com
-        type: string
-      required:
-        description: Whether field is required
-        example: true
-        type: boolean
-      sensitive:
-        description: Whether field contains sensitive data
-        example: true
-        type: boolean
-      type:
-        description: 'Field type: string, number, boolean, url, email'
-        example: string
-        type: string
-      validation:
-        description: Validation rule
-        example: url
-        type: string
-    type: object
-  dto.GatewayHealthMetric:
-    properties:
-      active_retries:
-        type: integer
-      average_attempts:
-        type: number
-      gateway:
-        type: string
-      health_status:
-        description: healthy, degraded, critical
-        type: string
-      processing_rate:
-        type: number
-      queue_depth:
-        type: integer
-      success_rate:
-        type: number
     type: object
   dto.HealthCheckResponse:
     properties:
@@ -1840,48 +1531,6 @@ definitions:
         example: https://api.example.com
         type: string
     type: object
-  dto.PaymentMethodConfigSchema:
-    properties:
-      default_config:
-        additionalProperties: true
-        description: Default configuration values
-        type: object
-      description:
-        description: Method description
-        example: EPay支付网关，支持支付宝、微信等多种支付方式
-        type: string
-      display_name:
-        description: Display name for UI
-        example: EPay支付
-        type: string
-      method:
-        description: Payment method
-        example: epay
-        type: string
-      optional_fields:
-        description: Optional configuration fields
-        items:
-          $ref: '#/definitions/dto.FieldDefinition'
-        type: array
-      required_fields:
-        description: Required configuration fields
-        items:
-          $ref: '#/definitions/dto.FieldDefinition'
-        type: array
-      supported_currencies:
-        description: Supported currencies
-        example:
-        - CNY
-        - USD
-        items:
-          type: string
-        type: array
-      validation_rules:
-        additionalProperties:
-          type: string
-        description: Field validation rules
-        type: object
-    type: object
   dto.PaymentMethodListResponse:
     properties:
       default_method:
@@ -1991,19 +1640,6 @@ definitions:
       user_id:
         description: User ID
         example: 1
-        type: integer
-    type: object
-  dto.PaymentMethodStats:
-    properties:
-      average_attempts:
-        type: number
-      payment_method:
-        type: string
-      success_rate:
-        type: number
-      successful_retries:
-        type: integer
-      total_retries:
         type: integer
     type: object
   dto.PaymentMethodUsageStats:
@@ -2148,90 +1784,6 @@ definitions:
         description: User ID
         example: 1
         type: integer
-    type: object
-  dto.PaymentRetryHistoryResponse:
-    properties:
-      attempt_number:
-        type: integer
-      attempted_at:
-        example: "2024-01-01T12:00:00Z"
-        format: date-time
-        type: string
-      created_at:
-        example: "2024-01-01T12:00:00Z"
-        format: date-time
-        type: string
-      delay_from_previous:
-        type: integer
-      duration:
-        type: integer
-      error_type:
-        type: string
-      failure_reason:
-        type: string
-      id:
-        type: integer
-      next_retry_at:
-        example: "2024-01-01T13:00:00Z"
-        format: date-time
-        type: string
-      response_code:
-        type: string
-      response_message:
-        type: string
-      status:
-        type: string
-    type: object
-  dto.PaymentRetryResponse:
-    properties:
-      attempt_number:
-        type: integer
-      cancelled_at:
-        example: "2024-01-01T12:30:00Z"
-        format: date-time
-        type: string
-      completed_at:
-        example: "2024-01-01T13:00:00Z"
-        format: date-time
-        type: string
-      created_at:
-        example: "2024-01-01T10:00:00Z"
-        format: date-time
-        type: string
-      failure_type:
-        type: string
-      id:
-        type: integer
-      last_attempt_at:
-        example: "2024-01-01T11:00:00Z"
-        format: date-time
-        type: string
-      last_failure_code:
-        type: string
-      max_attempts:
-        type: integer
-      next_retry_at:
-        example: "2024-01-01T12:00:00Z"
-        format: date-time
-        type: string
-      notes:
-        type: string
-      payment_record_id:
-        type: integer
-      retry_strategy:
-        type: string
-      status:
-        type: string
-      successful_at:
-        example: "2024-01-01T12:15:00Z"
-        format: date-time
-        type: string
-      total_delay_time:
-        type: integer
-      updated_at:
-        example: "2024-01-01T10:00:00Z"
-        format: date-time
-        type: string
     type: object
   dto.PayoutReferralRequest:
     properties:
@@ -2625,90 +2177,6 @@ definitions:
         type: string
     required:
     - reason
-    type: object
-  dto.RetryHealthMetrics:
-    properties:
-      alerts_triggered:
-        items:
-          type: string
-        type: array
-      average_retry_delay:
-        type: number
-      gateway_health:
-        items:
-          $ref: '#/definitions/dto.GatewayHealthMetric'
-        type: array
-      overdue_retries:
-        type: integer
-      success_rate_7d:
-        type: number
-      success_rate_24h:
-        type: number
-      system_recommendations:
-        items:
-          type: string
-        type: array
-      total_active_retries:
-        type: integer
-    type: object
-  dto.RetryStatistics:
-    properties:
-      average_attempts:
-        type: number
-      average_delay_time:
-        type: number
-      average_retry_delay:
-        type: number
-      cancelled_retries:
-        type: integer
-      date_range:
-        type: string
-      failed_retries:
-        type: integer
-      failure_analysis:
-        $ref: '#/definitions/dto.FailureAnalysis'
-      from_date:
-        type: string
-      gateway:
-        type: string
-      payment_method:
-        type: string
-      payment_method_stats:
-        items:
-          $ref: '#/definitions/dto.PaymentMethodStats'
-        type: array
-      success_rate:
-        type: number
-      successful_retries:
-        type: integer
-      to_date:
-        type: string
-      total_retries:
-        type: integer
-      trend_data:
-        items:
-          $ref: '#/definitions/dto.RetryTrendData'
-        type: array
-    type: object
-  dto.RetryTrendData:
-    properties:
-      date:
-        type: string
-      failure_rate:
-        type: number
-      success_rate:
-        type: number
-      total_retries:
-        type: integer
-    type: object
-  dto.RetryWithHistory:
-    properties:
-      history:
-        items:
-          $ref: '#/definitions/dto.PaymentRetryHistoryResponse'
-        type: array
-      retry:
-        $ref: '#/definitions/dto.PaymentRetryResponse'
     type: object
   dto.ServerAPIHealthResponse:
     properties:
@@ -4672,18 +4140,6 @@ definitions:
     - action
     - invoice_ids
     type: object
-  handlers.BulkRetryActionRequest:
-    properties:
-      reason:
-        example: Bulk operation by admin
-        type: string
-      retry_ids:
-        items:
-          type: integer
-        type: array
-    required:
-    - retry_ids
-    type: object
   handlers.BulkSecurityActionRequest:
     properties:
       action:
@@ -4763,14 +4219,6 @@ definitions:
     required:
     - ids
     - updates
-    type: object
-  handlers.CancelRetryRequest:
-    properties:
-      reason:
-        example: Manual cancellation by admin
-        type: string
-    required:
-    - reason
     type: object
   handlers.CancelSubscriptionRequest:
     properties:
@@ -9443,691 +8891,6 @@ paths:
       security:
       - BearerAuth: []
       summary: '[Admin] Update payment config'
-      tags:
-      - Admin-Payment-Management
-  /admin/payment/configs/dynamic:
-    get:
-      consumes:
-      - application/json
-      description: Get payment configurations with dynamic field structure
-      parameters:
-      - description: Filter by payment method
-        example: '"epay"'
-        in: query
-        name: method
-        type: string
-      - description: Filter by enabled status
-        example: true
-        in: query
-        name: is_enabled
-        type: boolean
-      - description: Limit results
-        example: 10
-        in: query
-        maximum: 100
-        minimum: 1
-        name: limit
-        type: integer
-      - description: Offset results
-        example: 0
-        in: query
-        minimum: 0
-        name: offset
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.PaginatedResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/dto.DynamicPaymentConfigResponse'
-                  type: array
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[Admin] Get dynamic payment configs'
-      tags:
-      - Admin-Payment-Management
-    post:
-      consumes:
-      - application/json
-      description: Create a new payment configuration using dynamic field structure
-        based on payment method
-      parameters:
-      - description: Dynamic payment config data
-        in: body
-        name: config
-        required: true
-        schema:
-          $ref: '#/definitions/dto.DynamicCreatePaymentConfigRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.DynamicPaymentConfigResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[Admin] Create dynamic payment config'
-      tags:
-      - Admin-Payment-Management
-  /admin/payment/configs/dynamic/{id}:
-    put:
-      consumes:
-      - application/json
-      description: Update a payment configuration using dynamic field structure
-      parameters:
-      - description: Config ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Dynamic payment config update data
-        in: body
-        name: config
-        required: true
-        schema:
-          $ref: '#/definitions/dto.DynamicUpdatePaymentConfigRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.DynamicPaymentConfigResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.NotFoundResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[Admin] Update dynamic payment config'
-      tags:
-      - Admin-Payment-Management
-  /admin/payment/retries:
-    get:
-      consumes:
-      - application/json
-      description: Get payment retries with filtering and pagination
-      parameters:
-      - description: Filter by user ID
-        example: 1
-        in: query
-        name: user_id
-        type: integer
-      - description: Filter by payment method
-        example: '"epay"'
-        in: query
-        name: method
-        type: string
-      - description: Filter by specific payment method
-        example: '"alipay"'
-        in: query
-        name: payment_method
-        type: string
-      - description: Filter by retry status
-        enum:
-        - pending
-        - in_progress
-        - completed
-        - failed
-        - cancelled
-        example: '"pending"'
-        in: query
-        name: status
-        type: string
-      - description: Filter by failure type
-        enum:
-        - temporary
-        - permanent
-        - network
-        - gateway
-        - business
-        example: '"temporary"'
-        in: query
-        name: failure_type
-        type: string
-      - description: Filter from date (RFC3339)
-        example: '"2024-01-01T00:00:00Z"'
-        in: query
-        name: from_date
-        type: string
-      - description: Filter to date (RFC3339)
-        example: '"2024-12-31T23:59:59Z"'
-        in: query
-        name: to_date
-        type: string
-      - description: Minimum attempts
-        example: 1
-        in: query
-        name: min_attempts
-        type: integer
-      - description: Maximum attempts
-        example: 5
-        in: query
-        name: max_attempts
-        type: integer
-      - description: Include retry history
-        example: false
-        in: query
-        name: include_history
-        type: boolean
-      - description: Sort by field
-        enum:
-        - created_at
-        - next_retry_at
-        - attempt_number
-        example: '"created_at"'
-        in: query
-        name: sort_by
-        type: string
-      - description: Sort order
-        enum:
-        - asc
-        - desc
-        example: '"desc"'
-        in: query
-        name: sort_order
-        type: string
-      - description: Limit results
-        example: 20
-        in: query
-        maximum: 100
-        minimum: 1
-        name: limit
-        type: integer
-      - description: Offset results
-        example: 0
-        in: query
-        minimum: 0
-        name: offset
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.PaginatedResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.AdminRetryResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[Admin] Get payment retries'
-      tags:
-      - Admin-Payment-Management
-  /admin/payment/retries/{id}:
-    get:
-      consumes:
-      - application/json
-      description: Get detailed payment retry information with history
-      parameters:
-      - description: Retry ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.RetryWithHistory'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.NotFoundResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[Admin] Get payment retry details'
-      tags:
-      - Admin-Payment-Management
-  /admin/payment/retries/{id}/cancel:
-    post:
-      consumes:
-      - application/json
-      description: Cancel a payment retry sequence
-      parameters:
-      - description: Retry ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Cancel reason
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.CancelRetryRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.StandardResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.NotFoundResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[Admin] Cancel payment retry'
-      tags:
-      - Admin-Payment-Management
-  /admin/payment/retries/{id}/reset:
-    post:
-      consumes:
-      - application/json
-      description: Reset a payment retry sequence to start over
-      parameters:
-      - description: Retry ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.StandardResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.NotFoundResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[Admin] Reset payment retry'
-      tags:
-      - Admin-Payment-Management
-  /admin/payment/retries/bulk/cancel:
-    post:
-      consumes:
-      - application/json
-      description: Cancel multiple payment retry sequences
-      parameters:
-      - description: Retry IDs and reason
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.BulkRetryActionRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.StandardResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[Admin] Bulk cancel payment retries'
-      tags:
-      - Admin-Payment-Management
-  /admin/payment/retries/bulk/reset:
-    post:
-      consumes:
-      - application/json
-      description: Reset multiple payment retry sequences
-      parameters:
-      - description: Retry IDs
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.BulkRetryActionRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.StandardResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[Admin] Bulk reset payment retries'
-      tags:
-      - Admin-Payment-Management
-  /admin/payment/retries/health:
-    get:
-      consumes:
-      - application/json
-      description: Get overall health metrics for the retry system
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.RetryHealthMetrics'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[Admin] Get retry system health metrics'
-      tags:
-      - Admin-Payment-Management
-  /admin/payment/retries/statistics:
-    get:
-      consumes:
-      - application/json
-      description: Get payment retry statistics for a specific payment method
-      parameters:
-      - description: Payment method name
-        example: '"epay"'
-        in: query
-        name: method
-        required: true
-        type: string
-      - description: Number of days to analyze
-        example: 30
-        in: query
-        maximum: 365
-        minimum: 1
-        name: days
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.RetryStatistics'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[Admin] Get retry statistics'
-      tags:
-      - Admin-Payment-Management
-  /admin/payment/schemas:
-    get:
-      consumes:
-      - application/json
-      description: Get configuration schemas for all supported payment methods
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  additionalProperties:
-                    $ref: '#/definitions/dto.PaymentMethodConfigSchema'
-                  type: object
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[Admin] Get payment method schemas'
-      tags:
-      - Admin-Payment-Management
-  /admin/payment/schemas/{method}:
-    get:
-      consumes:
-      - application/json
-      description: Get configuration schema for a specific payment method
-      parameters:
-      - description: Payment method
-        example: '"epay"'
-        in: path
-        name: method
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.PaymentMethodConfigSchema'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.NotFoundResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[Admin] Get payment method schema'
       tags:
       - Admin-Payment-Management
   /admin/referrals:
@@ -16480,13 +15243,14 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get available payment methods organized by payment method type
-        (epay, crypto, etc.)
+      description: 'Get available payment methods organized by gateway. Returns enabled
+        payment gateways and their supported methods (epay: alipay, wechat, qqpay).
+        No authentication required.'
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Returns map of gateway to supported payment methods
           schema:
             allOf:
             - $ref: '#/definitions/response.StandardResponse'
@@ -16499,55 +15263,58 @@ paths:
                   type: object
               type: object
         "500":
-          description: Internal Server Error
+          description: Failed to retrieve payment methods from database
           schema:
             $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: '[Public] Get available payment methods'
       tags:
       - User-Payment
-  /payment/notify/{method}:
+  /payment/notify/{gateway}:
     post:
       consumes:
+      - application/x-www-form-urlencoded
       - application/json
-      description: Handle payment notification from payment method. Supports EPay
-        and crypto payment methods
+      description: Handle payment notification callbacks from payment gateways. Supports
+        epay gateway with MD5 signature verification and anti-replay protection. Updates
+        payment status and triggers subscription activation on successful payment.
       parameters:
-      - description: Payment method
+      - description: Payment gateway name
         enum:
         - epay
-        - epusdt
-        - crypto_btc
-        - crypto_usdt
         in: path
-        name: method
+        name: gateway
         required: true
         type: string
       produces:
-      - application/json
+      - text/plain
       responses:
         "200":
-          description: success
+          description: success" "Payment processed successfully
           schema:
             type: string
         "400":
-          description: fail
+          description: fail" "Invalid gateway, signature verification failed, or malformed
+            request
           schema:
             type: string
         "500":
-          description: fail
+          description: fail" "Internal processing error or database failure
           schema:
             type: string
-      summary: '[Webhook] Payment notification'
+      summary: '[Webhook] Payment notification callback'
       tags:
       - User-Payment
   /payment/orders:
     post:
       consumes:
       - application/json
-      description: Create a new payment order. Supports method-based payments (epay,
-        crypto, etc.)
+      description: Create a new payment order for invoice or subscription. Supports
+        epay gateway with Alipay, WeChat Pay, and QQ Pay. Includes anti-replay protection
+        and secure payment URL generation. Either invoice_id or subscription_order_id
+        must be provided.
       parameters:
-      - description: Payment order data with method field
+      - description: Payment order data with gateway (epay), method (alipay/wechat/qqpay),
+          amount, and either invoice_id or subscription_order_id
         in: body
         name: payment_order
         required: true
@@ -16557,7 +15324,8 @@ paths:
       - application/json
       responses:
         "201":
-          description: Created
+          description: Returns payment record with payment URL, QR code, and expiration
+            time
           schema:
             allOf:
             - $ref: '#/definitions/response.StandardResponse'
@@ -16566,15 +15334,20 @@ paths:
                   $ref: '#/definitions/dto.PaymentRecordResponse'
               type: object
         "400":
-          description: Bad Request
+          description: Invalid request data, unsupported payment method, or missing
+            required fields
           schema:
             $ref: '#/definitions/response.BadRequestResponse'
         "401":
-          description: Unauthorized
+          description: Authentication required
           schema:
             $ref: '#/definitions/response.UnauthorizedResponse'
+        "422":
+          description: Amount outside valid range or gateway configuration error
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
         "500":
-          description: Internal Server Error
+          description: Payment gateway error or database failure
           schema:
             $ref: '#/definitions/response.InternalServerErrorResponse'
       security:
@@ -16681,9 +15454,13 @@ paths:
       consumes:
       - application/json
       description: Create a payment directly for subscription without creating order/invoice
-        first. Order and invoice are created asynchronously after payment success.
+        first. Supports multiple payment gateways (epay with Alipay/WeChat/QQPay).
+        Includes coupon validation, price protection, and automatic service activation
+        after successful payment. Order and invoice are created asynchronously after
+        payment success.
       parameters:
-      - description: Quick purchase data
+      - description: Quick purchase data with gateway, method, plan_id, and optional
+          coupon_code
         in: body
         name: purchase
         required: true
@@ -16693,7 +15470,8 @@ paths:
       - application/json
       responses:
         "201":
-          description: Created
+          description: Returns payment URL, QR code, expiration time, and discount
+            info
           schema:
             allOf:
             - $ref: '#/definitions/response.StandardResponse'
@@ -16702,19 +15480,25 @@ paths:
                   $ref: '#/definitions/interfaces.QuickPurchaseResponse'
               type: object
         "400":
-          description: Bad Request
+          description: Invalid request data, unsupported payment method, or invalid
+            amount
           schema:
             $ref: '#/definitions/response.BadRequestResponse'
         "401":
-          description: Unauthorized
+          description: Authentication required
           schema:
             $ref: '#/definitions/response.UnauthorizedResponse'
         "403":
-          description: Forbidden
+          description: Insufficient permissions - users can only create purchases
+            for themselves
           schema:
             $ref: '#/definitions/response.ForbiddenResponse'
+        "422":
+          description: Coupon validation failed or discount exceeds limits
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
         "500":
-          description: Internal Server Error
+          description: Payment gateway error or internal service failure
           schema:
             $ref: '#/definitions/response.InternalServerErrorResponse'
       security:

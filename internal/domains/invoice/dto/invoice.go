@@ -18,7 +18,7 @@ type InvoiceResponse struct {
 	InvoiceType         string     `json:"invoice_type" example:"standard"`
 	Status              string     `json:"status" example:"sent"`
 	Amount              float64    `json:"amount" example:"29.99"`
-	Currency            string     `json:"currency" example:"USD"`
+	Currency            string     `json:"currency" example:"CNY"`
 	TaxAmount           float64    `json:"tax_amount" example:"5.99"`
 	TotalAmount         float64    `json:"total_amount" example:"35.98"`
 	TaxRate             float64    `json:"tax_rate" example:"0.2"`
@@ -131,7 +131,7 @@ type CreateInvoiceRequest struct {
 
 	// Financial Details
 	Amount    float64 `json:"amount" binding:"required,min=0"`
-	Currency  string  `json:"currency,omitempty" example:"USD"`
+	Currency  string  `json:"currency,omitempty" example:"CNY"` // CNY是人民币货币代码
 	TaxRate   float64 `json:"tax_rate,omitempty" example:"0.2"`
 	TaxType   string  `json:"tax_type,omitempty" example:"VAT"`
 	TaxNumber string  `json:"tax_number,omitempty" example:"GB123456789"`

@@ -20,7 +20,7 @@ type InviteCode struct {
 	// Referral Integration Fields
 	ReferralCampaignID     *uint   `json:"referral_campaign_id,omitempty" gorm:"index"`                            // 关联的推广活动ID
 	ReferralRewardAmount   float64 `json:"referral_reward_amount" gorm:"type:decimal(10,2);not null;default:0.00"` // 推广奖励金额
-	ReferralRewardCurrency string  `json:"referral_reward_currency" gorm:"size:10;not null;default:'USD'"`         // 推广奖励货币
+	ReferralRewardCurrency string  `json:"referral_reward_currency" gorm:"size:10;not null;default:'CNY'"`         // 推广奖励货币
 
 	// Status and Limits
 	Status    string `json:"status" gorm:"size:20;not null;default:'active';index"` // active, used, disabled

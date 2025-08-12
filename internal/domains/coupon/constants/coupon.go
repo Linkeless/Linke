@@ -15,7 +15,7 @@ const (
 
 // Default values
 const (
-	DefaultCurrency        = "USD"
+	DefaultCurrency        = "CNY"
 	DefaultMaxUsesPerUser  = 1
 	DefaultMaxDiscountRate = 100.0 // Maximum percentage discount
 )

@@ -127,7 +127,7 @@ func (w *SubscriptionWorkflow) PurchaseSubscription(ctx context.Context, req *Pu
 			UserID:      uint64(req.UserID),
 			PlanID:      uint64(req.SubscriptionPlanID),
 			OrderAmount: 0,     // 将在获取套餐价格后更新
-			Currency:    "USD", // 默认货币，实际应从套餐获取
+			Currency:    "CNY", // 默认货币，实际应从套餐获取
 		}
 
 		couponValidation, err := w.couponSvc.ValidateCoupon(ctx, couponValidationReq)

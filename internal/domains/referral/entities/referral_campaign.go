@@ -31,13 +31,13 @@ type ReferralCampaign struct {
 	// Referrer Rewards
 	ReferrerRewardType     string  `json:"referrer_reward_type" gorm:"size:20;not null;default:'fixed'"` // fixed, percentage, tiered
 	ReferrerRewardAmount   float64 `json:"referrer_reward_amount" gorm:"type:decimal(10,2);default:0"`   // Reward amount for referrer
-	ReferrerRewardCurrency string  `json:"referrer_reward_currency" gorm:"size:10;default:'USD'"`        // Reward currency
+	ReferrerRewardCurrency string  `json:"referrer_reward_currency" gorm:"size:10;default:'CNY'"`        // Reward currency
 	ReferrerRewardCap      float64 `json:"referrer_reward_cap" gorm:"type:decimal(10,2);default:0"`      // Maximum reward per referrer (0 = no cap)
 
 	// Referee Rewards
 	RefereeRewardType     string  `json:"referee_reward_type" gorm:"size:20;not null;default:'fixed'"` // fixed, percentage, discount
 	RefereeRewardAmount   float64 `json:"referee_reward_amount" gorm:"type:decimal(10,2);default:0"`   // Reward amount for referee
-	RefereeRewardCurrency string  `json:"referee_reward_currency" gorm:"size:10;default:'USD'"`        // Reward currency
+	RefereeRewardCurrency string  `json:"referee_reward_currency" gorm:"size:10;default:'CNY'"`        // Reward currency
 
 	// Reward Conditions
 	MinimumPurchaseAmount float64 `json:"minimum_purchase_amount" gorm:"type:decimal(10,2);default:0"`   // Minimum purchase for reward

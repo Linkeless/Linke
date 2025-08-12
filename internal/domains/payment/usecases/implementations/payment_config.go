@@ -22,6 +22,89 @@ func NewPaymentConfigService(db *gorm.DB) *PaymentConfigService {
 	}
 }
 
+// Business logic and validation methods
+
+// ValidateCreatePaymentConfig validates create payment config request with business rules
+func (pcs *PaymentConfigService) ValidateCreatePaymentConfig(ctx context.Context, req *dto.CreatePaymentConfigRequest) []string {
+	var errors []string
+
+	// Check if config already exists
+	var existingConfig entities.PaymentConfig
+	if err := pcs.db.WithContext(ctx).Where("method = ?", req.Method).First(&existingConfig).Error; err == nil {
+		errors = append(errors, fmt.Sprintf("payment config for method '%s' already exists", req.Method))
+	} else if err != nil && err != gorm.ErrRecordNotFound {
+		logger.Error("Failed to check existing payment config during validation", logger.ErrorField(err))
+		errors = append(errors, "failed to validate config uniqueness")
+	}
+
+	// Use DTO validation for specific payment method validation
+	validationErrors := dto.ValidateEpayConfig(req)
+	errors = append(errors, validationErrors...)
+
+	return errors
+}
+
+// ValidateUpdatePaymentConfig validates update payment config request with business rules
+func (pcs *PaymentConfigService) ValidateUpdatePaymentConfig(ctx context.Context, configID uint, req *dto.UpdatePaymentConfigRequest) []string {
+	var errors []string
+
+	// Get existing config to determine payment method for validation
+	existingConfig, err := pcs.GetPaymentConfig(ctx, configID)
+	if err != nil {
+		errors = append(errors, "payment config not found")
+		return errors
+	}
+
+	// Use DTO validation for specific payment method validation
+	validationErrors := dto.ValidateEpayUpdateConfig(req, existingConfig.Method)
+	errors = append(errors, validationErrors...)
+
+	return errors
+}
+
+// PrepareCreatePaymentConfig prepares and enriches create request with business logic
+func (pcs *PaymentConfigService) PrepareCreatePaymentConfig(ctx context.Context, req *dto.CreatePaymentConfigRequest) (*dto.CreatePaymentConfigRequest, error) {
+	// Make a copy to avoid modifying the original request
+	preparedReq := *req
+
+	// Set defaults
+	if preparedReq.IsEnabled == nil {
+		isEnabled := true
+		preparedReq.IsEnabled = &isEnabled
+	}
+
+	if preparedReq.SupportedCurrencies == "" {
+		preparedReq.SupportedCurrencies = "CNY"
+	}
+
+	if preparedReq.MinAmount <= 0 {
+		preparedReq.MinAmount = 0.01
+	}
+
+	if preparedReq.MaxAmount <= 0 {
+		preparedReq.MaxAmount = 99999.99
+	}
+
+	return &preparedReq, nil
+}
+
+// PrepareUpdatePaymentConfig prepares and enriches update request with business logic
+func (pcs *PaymentConfigService) PrepareUpdatePaymentConfig(ctx context.Context, configID uint, req *dto.UpdatePaymentConfigRequest) (*dto.UpdatePaymentConfigRequest, error) {
+	// Get existing config for context
+	_, err := pcs.GetPaymentConfig(ctx, configID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Make a copy to avoid modifying the original request
+	preparedReq := *req
+
+	// Apply business rules for update (e.g., validation, defaults)
+	// Currently no additional preparation needed for update
+
+	return &preparedReq, nil
+}
+
 // CreatePaymentConfig creates a new payment config
 func (pcs *PaymentConfigService) CreatePaymentConfig(ctx context.Context, req *dto.CreatePaymentConfigRequest) (*entities.PaymentConfig, error) {
 	// Check if config already exists
@@ -323,4 +406,30 @@ func (pcs *PaymentConfigService) GetPaymentConfigsByMethod(ctx context.Context, 
 	}
 
 	return configs, nil
+}
+
+// GetEnabledConfigs gets all enabled payment configurations (for gateway factory)
+func (pcs *PaymentConfigService) GetEnabledConfigs() ([]*entities.PaymentConfig, error) {
+	var configs []*entities.PaymentConfig
+	if err := pcs.db.Where("is_enabled = ?", true).
+		Order("sort_order ASC, created_at ASC").Find(&configs).Error; err != nil {
+		logger.Error("Failed to get enabled payment configs", logger.ErrorField(err))
+		return nil, fmt.Errorf("failed to get enabled payment configs: %w", err)
+	}
+
+	return configs, nil
+}
+
+// GetConfigByMethod gets a payment config by method (for gateway factory)
+func (pcs *PaymentConfigService) GetConfigByMethod(method string) (*entities.PaymentConfig, error) {
+	var config entities.PaymentConfig
+	if err := pcs.db.Where("method = ?", method).First(&config).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("payment config not found for method: %s", method)
+		}
+		logger.Error("Failed to get payment config by method", logger.ErrorField(err))
+		return nil, fmt.Errorf("failed to get payment config: %w", err)
+	}
+
+	return &config, nil
 }

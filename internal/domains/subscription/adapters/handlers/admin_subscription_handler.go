@@ -48,7 +48,7 @@ type CreatePlanRequest struct {
 	Code            string  `json:"code" binding:"required,min=1,max=50" example:"premium-monthly"`
 	Description     string  `json:"description" binding:"max=1000" example:"Premium features with monthly billing"`
 	Price           float64 `json:"price" binding:"required,min=0" example:"29.99"`
-	Currency        string  `json:"currency" binding:"required,len=3" example:"USD"`
+	Currency        string  `json:"currency" binding:"required,len=3" example:"CNY"`
 	BillingCycle    string  `json:"billing_cycle" binding:"required,oneof=monthly yearly lifetime" example:"monthly"`
 	BillingInterval int     `json:"billing_interval" binding:"min=1,max=12" example:"1"`
 	TrialPeriodDays int     `json:"trial_period_days" binding:"min=0,max=365" example:"7"`

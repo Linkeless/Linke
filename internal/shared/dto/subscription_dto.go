@@ -8,7 +8,7 @@ type SubscriptionPlanBasicDTO struct {
 	Name         string  `json:"name" example:"Premium Plan"`
 	Description  string  `json:"description" example:"Premium subscription with advanced features"`
 	Price        float64 `json:"price" example:"29.99"`
-	Currency     string  `json:"currency" example:"USD"`
+	Currency     string  `json:"currency" example:"CNY"`
 	Duration     int     `json:"duration" example:"30"`
 	DurationType string  `json:"duration_type" example:"days"`
 	Status       string  `json:"status" example:"active"`
@@ -23,7 +23,7 @@ type SubscriptionOrderBasicDTO struct {
 	OrderType          string     `json:"order_type" example:"new"`
 	Status             string     `json:"status" example:"paid"`
 	Amount             float64    `json:"amount" example:"29.99"`
-	Currency           string     `json:"currency" example:"USD"`
+	Currency           string     `json:"currency" example:"CNY"`
 	TotalAmount        float64    `json:"total_amount" example:"29.99"`
 	PaymentMethod      string     `json:"payment_method,omitempty" example:"credit_card"`
 	PaymentGateway     string     `json:"payment_gateway,omitempty" example:"stripe"`
@@ -39,7 +39,7 @@ type SubscriptionOrderSummaryDTO struct {
 	OrderType   string    `json:"order_type" example:"new"`
 	Status      string    `json:"status" example:"paid"`
 	TotalAmount float64   `json:"total_amount" example:"29.99"`
-	Currency    string    `json:"currency" example:"USD"`
+	Currency    string    `json:"currency" example:"CNY"`
 	CreatedAt   time.Time `json:"created_at" example:"2024-01-01T00:00:00Z"`
 }
 

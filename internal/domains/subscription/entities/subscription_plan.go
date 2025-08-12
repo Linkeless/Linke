@@ -20,7 +20,7 @@ type SubscriptionPlan struct {
 	Code        string  `json:"code" gorm:"uniqueIndex;size:50;not null"`            // 套餐代码 (唯一标识)
 	Description string  `json:"description" gorm:"type:text"`                        // 套餐描述
 	Price       float64 `json:"price" gorm:"type:decimal(10,2);not null"`            // 价格
-	Currency    string  `json:"currency" gorm:"size:3;not null;default:'USD';index"` // 货币代码
+	Currency    string  `json:"currency" gorm:"size:3;not null;default:'CNY';index"` // 货币代码
 
 	// Duration Fields
 	BillingCycle    string `json:"billing_cycle" gorm:"size:20;not null;index"` // monthly, yearly, lifetime
@@ -66,13 +66,8 @@ func (SubscriptionPlan) TableName() string {
 	return "subscription_plans"
 }
 
-// Currency constants (removed duplicates - defined in payment_record.go)
+// Currency constants moved to payment/constants/payment.go
 // Traffic reset cycle constants are defined in user_subscription.go
-// const (
-// 	CurrencyUSD = "USD"
-// 	CurrencyEUR = "EUR"
-// 	CurrencyCNY = "CNY"
-// )
 
 // IsActive checks if the subscription plan is active
 func (sp *SubscriptionPlan) IsActive() bool {
@@ -248,7 +243,7 @@ type SubscriptionPlanResponse struct {
 	Code            string  `json:"code" example:"premium-monthly"`         // Plan code
 	Description     string  `json:"description" example:"Premium features"` // Plan description
 	Price           float64 `json:"price" example:"29.99"`                  // Price
-	Currency        string  `json:"currency" example:"USD"`                 // Currency
+	Currency        string  `json:"currency" example:"CNY"`                 // Currency
 	BillingCycle    string  `json:"billing_cycle" example:"monthly"`        // Billing cycle
 	BillingInterval int     `json:"billing_interval" example:"1"`           // Billing interval
 	TrialPeriodDays int     `json:"trial_period_days" example:"7"`          // Trial period

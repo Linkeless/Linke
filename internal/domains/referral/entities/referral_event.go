@@ -37,7 +37,7 @@ type ReferralEvent struct {
 
 	// Event Value
 	EventValue    float64 `json:"event_value" gorm:"type:decimal(10,2);default:0"` // Monetary value associated with event
-	EventCurrency string  `json:"event_currency" gorm:"size:10;default:'USD'"`     // Currency of the event value
+	EventCurrency string  `json:"event_currency" gorm:"size:10;default:'CNY'"`     // Currency of the event value
 
 	// Metadata
 	Metadata    string     `json:"metadata,omitempty" gorm:"type:text"` // Additional event metadata (JSON)

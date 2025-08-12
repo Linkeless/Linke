@@ -47,7 +47,7 @@ func (s *CouponService) CreateCoupon(ctx context.Context, creatorID uint64, req 
 	}
 
 	// Set defaults
-	currency := "USD"
+	currency := "CNY"
 	if req.Currency != "" {
 		currency = strings.ToUpper(req.Currency)
 	}

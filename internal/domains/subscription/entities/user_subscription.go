@@ -37,7 +37,7 @@ type UserSubscription struct {
 
 	// Pricing (订阅时的价格，可能与当前套餐价格不同)
 	Price           float64 `json:"price" gorm:"type:decimal(10,2);not null"`      // 订阅价格
-	Currency        string  `json:"currency" gorm:"size:3;not null;default:'USD'"` // 货币
+	Currency        string  `json:"currency" gorm:"size:3;not null;default:'CNY'"` // 货币
 	BillingCycle    string  `json:"billing_cycle" gorm:"size:20;not null"`         // 计费周期
 	BillingInterval int     `json:"billing_interval" gorm:"not null;default:1"`    // 计费间隔
 
@@ -333,7 +333,7 @@ type UserSubscriptionResponse struct {
 	CurrentPeriodEnd   *time.Time `json:"current_period_end,omitempty" swaggertype:"string" format:"date-time" example:"2024-02-01T00:00:00Z"`   // Current period end
 	NextBillingDate    *time.Time `json:"next_billing_date,omitempty" swaggertype:"string" format:"date-time" example:"2024-02-01T00:00:00Z"`    // Next billing
 	Price              float64    `json:"price" example:"29.99"`                                                                                 // Price
-	Currency           string     `json:"currency" example:"USD"`                                                                                // Currency
+	Currency           string     `json:"currency" example:"CNY"`                                                                                // Currency
 	BillingCycle       string     `json:"billing_cycle" example:"monthly"`                                                                       // Billing cycle
 	BillingInterval    int        `json:"billing_interval" example:"1"`                                                                          // Billing interval
 	CancelledAt        *time.Time `json:"cancelled_at,omitempty" swaggertype:"string" format:"date-time" example:"2024-06-01T00:00:00Z"`         // Cancelled date

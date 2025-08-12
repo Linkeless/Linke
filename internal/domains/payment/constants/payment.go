@@ -30,10 +30,9 @@ const (
 	RefundStatusFailed     = "failed"
 )
 
-// Currency Constants
+// Currency Constants - 只保留系统支持的CNY货币
 const (
 	CurrencyCNY = "CNY"
-	CurrencyUSD = "USD"
 )
 
 // Payment Method Type Constants
@@ -56,38 +55,4 @@ const (
 	FeeTypeNone       = "none"
 	FeeTypeFixed      = "fixed"
 	FeeTypePercentage = "percentage"
-)
-
-
-// Payment Retry Status Constants
-const (
-	PaymentRetryStatusPending    = "pending"
-	PaymentRetryStatusInProgress = "in_progress"
-	PaymentRetryStatusCompleted  = "completed"
-	PaymentRetryStatusFailed     = "failed"
-	PaymentRetryStatusCancelled  = "cancelled"
-)
-
-// Retry Strategy Constants
-const (
-	RetryStrategyExponential = "exponential"
-	RetryStrategyLinear      = "linear"
-	RetryStrategyCustom      = "custom"
-)
-
-// Failure Type Constants
-const (
-	FailureTypeTemporary = "temporary"
-	FailureTypePermanent = "permanent"
-	FailureTypeNetwork   = "network"
-	FailureTypeGateway   = "gateway"
-	FailureTypeBusiness  = "business"
-)
-
-// Attempt Status Constants (for retry history)
-const (
-	AttemptStatusSuccess = "success"
-	AttemptStatusFailed  = "failed"
-	AttemptStatusTimeout = "timeout"
-	AttemptStatusError   = "error"
 )

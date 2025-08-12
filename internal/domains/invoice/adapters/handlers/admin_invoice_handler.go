@@ -45,7 +45,7 @@ type AdminCreateInvoiceRequest struct {
 	SubscriptionOrderID uint    `json:"subscription_order_id" binding:"required" example:"1"`
 	InvoiceType         string  `json:"invoice_type,omitempty" example:"standard"`
 	Amount              float64 `json:"amount" binding:"required,min=0" example:"29.99"`
-	Currency            string  `json:"currency,omitempty" example:"USD"`
+	Currency            string  `json:"currency,omitempty" example:"CNY"`
 	TaxRate             float64 `json:"tax_rate,omitempty" example:"0.2"`
 	TaxType             string  `json:"tax_type,omitempty" example:"VAT"`
 	TaxNumber           string  `json:"tax_number,omitempty" example:"GB123456789"`
@@ -122,7 +122,7 @@ type InvoiceSearchRequest struct {
 	InvoiceType      string  `form:"invoice_type,omitempty" example:"standard"`
 	AmountMin        *float64 `form:"amount_min,omitempty" example:"10.00"`
 	AmountMax        *float64 `form:"amount_max,omitempty" example:"100.00"`
-	Currency         string  `form:"currency,omitempty" example:"USD"`
+	Currency         string  `form:"currency,omitempty" example:"CNY"`
 	DateFrom         string  `form:"date_from,omitempty" example:"2024-01-01"`
 	DateTo           string  `form:"date_to,omitempty" example:"2024-12-31"`
 	IsOverdue        *bool   `form:"is_overdue,omitempty" example:"false"`
@@ -138,7 +138,7 @@ type InvoiceAnalyticsRequest struct {
 	DateFrom   string `form:"date_from,omitempty" example:"2024-01-01"`
 	DateTo     string `form:"date_to,omitempty" example:"2024-12-31"`
 	GroupBy    string `form:"group_by,omitempty" example:"month"`
-	Currency   string `form:"currency,omitempty" example:"USD"`
+	Currency   string `form:"currency,omitempty" example:"CNY"`
 	UserID     *uint  `form:"user_id,omitempty" example:"1"`
 	Breakdown  string `form:"breakdown,omitempty" example:"status"`
 }

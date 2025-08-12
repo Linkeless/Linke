@@ -25,17 +25,18 @@ func NewQuickPurchaseHandler(subscriptionOrderService interfaces.SubscriptionOrd
 
 // QuickPurchase godoc
 // @Summary [User] Quick purchase subscription
-// @Description Create a payment directly for subscription without creating order/invoice first. Order and invoice are created asynchronously after payment success.
+// @Description Create a payment directly for subscription without creating order/invoice first. Supports multiple payment gateways (epay with Alipay/WeChat/QQPay). Includes coupon validation, price protection, and automatic service activation after successful payment. Order and invoice are created asynchronously after payment success.
 // @Tags User-Subscription
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param purchase body interfaces.QuickPurchaseRequest true "Quick purchase data"
-// @Success 201 {object} response.StandardResponse{data=interfaces.QuickPurchaseResponse}
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Param purchase body interfaces.QuickPurchaseRequest true "Quick purchase data with gateway, method, plan_id, and optional coupon_code"
+// @Success 201 {object} response.StandardResponse{data=interfaces.QuickPurchaseResponse} "Returns payment URL, QR code, expiration time, and discount info"
+// @Failure 400 {object} response.BadRequestResponse "Invalid request data, unsupported payment method, or invalid amount"
+// @Failure 401 {object} response.UnauthorizedResponse "Authentication required"
+// @Failure 403 {object} response.ForbiddenResponse "Insufficient permissions - users can only create purchases for themselves"
+// @Failure 422 {object} response.BadRequestResponse "Coupon validation failed or discount exceeds limits"
+// @Failure 500 {object} response.InternalServerErrorResponse "Payment gateway error or internal service failure"
 // @Router /purchase [post]
 func (h *QuickPurchaseHandler) QuickPurchase(c *gin.Context) {
 	// Get current user from context

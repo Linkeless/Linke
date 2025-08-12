@@ -110,7 +110,7 @@ const (
 
 // Default values
 const (
-	DefaultCurrency        = "USD"
+	DefaultCurrency        = "CNY"
 	DefaultMaxUsesPerCode  = 10
 	DefaultRewardAmount    = 0.0
 	DefaultMaxReferrals    = 0

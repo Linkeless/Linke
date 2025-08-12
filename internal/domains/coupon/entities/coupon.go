@@ -28,7 +28,7 @@ type Coupon struct {
 
 	// Minimum Order Requirements
 	MinOrderAmount float64 `json:"min_order_amount" gorm:"type:decimal(10,2);default:0"` // 最小订单金额
-	Currency       string  `json:"currency" gorm:"size:3;not null;default:'USD'"`        // 货币
+	Currency       string  `json:"currency" gorm:"size:3;not null;default:'CNY'"`        // 货币
 
 	// Validity Period
 	ValidFrom  *time.Time `json:"valid_from,omitempty" gorm:"index"`  // 生效时间

@@ -4427,267 +4427,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/payment/configs/dynamic": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get payment configurations with dynamic field structure",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin-Payment-Management"
-                ],
-                "summary": "[Admin] Get dynamic payment configs",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "example": "\"epay\"",
-                        "description": "Filter by payment method",
-                        "name": "method",
-                        "in": "query"
-                    },
-                    {
-                        "type": "boolean",
-                        "example": true,
-                        "description": "Filter by enabled status",
-                        "name": "is_enabled",
-                        "in": "query"
-                    },
-                    {
-                        "maximum": 100,
-                        "minimum": 1,
-                        "type": "integer",
-                        "example": 10,
-                        "description": "Limit results",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "example": 0,
-                        "description": "Offset results",
-                        "name": "offset",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.PaginatedResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/dto.DynamicPaymentConfigResponse"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ForbiddenResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Create a new payment configuration using dynamic field structure based on payment method",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin-Payment-Management"
-                ],
-                "summary": "[Admin] Create dynamic payment config",
-                "parameters": [
-                    {
-                        "description": "Dynamic payment config data",
-                        "name": "config",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.DynamicCreatePaymentConfigRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.StandardResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/dto.DynamicPaymentConfigResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ForbiddenResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/payment/configs/dynamic/{id}": {
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Update a payment configuration using dynamic field structure",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin-Payment-Management"
-                ],
-                "summary": "[Admin] Update dynamic payment config",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Config ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Dynamic payment config update data",
-                        "name": "config",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.DynamicUpdatePaymentConfigRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.StandardResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/dto.DynamicPaymentConfigResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ForbiddenResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.NotFoundResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/admin/payment/configs/{id}": {
             "put": {
                 "security": [
@@ -4806,826 +4545,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/response.StandardResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ForbiddenResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.NotFoundResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/payment/retries": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get payment retries with filtering and pagination",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin-Payment-Management"
-                ],
-                "summary": "[Admin] Get payment retries",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "example": 1,
-                        "description": "Filter by user ID",
-                        "name": "user_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "example": "\"epay\"",
-                        "description": "Filter by payment method",
-                        "name": "method",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "example": "\"alipay\"",
-                        "description": "Filter by specific payment method",
-                        "name": "payment_method",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "pending",
-                            "in_progress",
-                            "completed",
-                            "failed",
-                            "cancelled"
-                        ],
-                        "type": "string",
-                        "example": "\"pending\"",
-                        "description": "Filter by retry status",
-                        "name": "status",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "temporary",
-                            "permanent",
-                            "network",
-                            "gateway",
-                            "business"
-                        ],
-                        "type": "string",
-                        "example": "\"temporary\"",
-                        "description": "Filter by failure type",
-                        "name": "failure_type",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "example": "\"2024-01-01T00:00:00Z\"",
-                        "description": "Filter from date (RFC3339)",
-                        "name": "from_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "example": "\"2024-12-31T23:59:59Z\"",
-                        "description": "Filter to date (RFC3339)",
-                        "name": "to_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "example": 1,
-                        "description": "Minimum attempts",
-                        "name": "min_attempts",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "example": 5,
-                        "description": "Maximum attempts",
-                        "name": "max_attempts",
-                        "in": "query"
-                    },
-                    {
-                        "type": "boolean",
-                        "example": false,
-                        "description": "Include retry history",
-                        "name": "include_history",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "created_at",
-                            "next_retry_at",
-                            "attempt_number"
-                        ],
-                        "type": "string",
-                        "example": "\"created_at\"",
-                        "description": "Sort by field",
-                        "name": "sort_by",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
-                        "type": "string",
-                        "example": "\"desc\"",
-                        "description": "Sort order",
-                        "name": "sort_order",
-                        "in": "query"
-                    },
-                    {
-                        "maximum": 100,
-                        "minimum": 1,
-                        "type": "integer",
-                        "example": 20,
-                        "description": "Limit results",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "example": 0,
-                        "description": "Offset results",
-                        "name": "offset",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.PaginatedResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/dto.AdminRetryResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ForbiddenResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/payment/retries/bulk/cancel": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Cancel multiple payment retry sequences",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin-Payment-Management"
-                ],
-                "summary": "[Admin] Bulk cancel payment retries",
-                "parameters": [
-                    {
-                        "description": "Retry IDs and reason",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.BulkRetryActionRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.StandardResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ForbiddenResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/payment/retries/bulk/reset": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Reset multiple payment retry sequences",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin-Payment-Management"
-                ],
-                "summary": "[Admin] Bulk reset payment retries",
-                "parameters": [
-                    {
-                        "description": "Retry IDs",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.BulkRetryActionRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.StandardResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ForbiddenResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/payment/retries/health": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get overall health metrics for the retry system",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin-Payment-Management"
-                ],
-                "summary": "[Admin] Get retry system health metrics",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.StandardResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/dto.RetryHealthMetrics"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ForbiddenResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/payment/retries/statistics": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get payment retry statistics for a specific payment method",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin-Payment-Management"
-                ],
-                "summary": "[Admin] Get retry statistics",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "example": "\"epay\"",
-                        "description": "Payment method name",
-                        "name": "method",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "maximum": 365,
-                        "minimum": 1,
-                        "type": "integer",
-                        "example": 30,
-                        "description": "Number of days to analyze",
-                        "name": "days",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.StandardResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/dto.RetryStatistics"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ForbiddenResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/payment/retries/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get detailed payment retry information with history",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin-Payment-Management"
-                ],
-                "summary": "[Admin] Get payment retry details",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Retry ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.StandardResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/dto.RetryWithHistory"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ForbiddenResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.NotFoundResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/payment/retries/{id}/cancel": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Cancel a payment retry sequence",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin-Payment-Management"
-                ],
-                "summary": "[Admin] Cancel payment retry",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Retry ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Cancel reason",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.CancelRetryRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.StandardResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ForbiddenResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.NotFoundResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/payment/retries/{id}/reset": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Reset a payment retry sequence to start over",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin-Payment-Management"
-                ],
-                "summary": "[Admin] Reset payment retry",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Retry ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.StandardResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ForbiddenResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.NotFoundResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/payment/schemas": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get configuration schemas for all supported payment methods",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin-Payment-Management"
-                ],
-                "summary": "[Admin] Get payment method schemas",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.StandardResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "additionalProperties": {
-                                                "$ref": "#/definitions/dto.PaymentMethodConfigSchema"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ForbiddenResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/payment/schemas/{method}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get configuration schema for a specific payment method",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin-Payment-Management"
-                ],
-                "summary": "[Admin] Get payment method schema",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "example": "\"epay\"",
-                        "description": "Payment method",
-                        "name": "method",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.StandardResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/dto.PaymentMethodConfigSchema"
-                                        }
-                                    }
-                                }
-                            ]
                         }
                     },
                     "400": {
@@ -15695,7 +14614,7 @@ const docTemplate = `{
         },
         "/payment/methods": {
             "get": {
-                "description": "Get available payment methods organized by payment method type (epay, crypto, etc.)",
+                "description": "Get available payment methods organized by gateway. Returns enabled payment gateways and their supported methods (epay: alipay, wechat, qqpay). No authentication required.",
                 "consumes": [
                     "application/json"
                 ],
@@ -15708,7 +14627,7 @@ const docTemplate = `{
                 "summary": "[Public] Get available payment methods",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Returns map of gateway to supported payment methods",
                         "schema": {
                             "allOf": [
                                 {
@@ -15732,7 +14651,7 @@ const docTemplate = `{
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Failed to retrieve payment methods from database",
                         "schema": {
                             "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
@@ -15740,49 +14659,47 @@ const docTemplate = `{
                 }
             }
         },
-        "/payment/notify/{method}": {
+        "/payment/notify/{gateway}": {
             "post": {
-                "description": "Handle payment notification from payment method. Supports EPay and crypto payment methods",
+                "description": "Handle payment notification callbacks from payment gateways. Supports epay gateway with MD5 signature verification and anti-replay protection. Updates payment status and triggers subscription activation on successful payment.",
                 "consumes": [
+                    "application/x-www-form-urlencoded",
                     "application/json"
                 ],
                 "produces": [
-                    "application/json"
+                    "text/plain"
                 ],
                 "tags": [
                     "User-Payment"
                 ],
-                "summary": "[Webhook] Payment notification",
+                "summary": "[Webhook] Payment notification callback",
                 "parameters": [
                     {
                         "enum": [
-                            "epay",
-                            "epusdt",
-                            "crypto_btc",
-                            "crypto_usdt"
+                            "epay"
                         ],
                         "type": "string",
-                        "description": "Payment method",
-                        "name": "method",
+                        "description": "Payment gateway name",
+                        "name": "gateway",
                         "in": "path",
                         "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "success",
+                        "description": "success\" \"Payment processed successfully",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "400": {
-                        "description": "fail",
+                        "description": "fail\" \"Invalid gateway, signature verification failed, or malformed request",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "500": {
-                        "description": "fail",
+                        "description": "fail\" \"Internal processing error or database failure",
                         "schema": {
                             "type": "string"
                         }
@@ -15797,7 +14714,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Create a new payment order. Supports method-based payments (epay, crypto, etc.)",
+                "description": "Create a new payment order for invoice or subscription. Supports epay gateway with Alipay, WeChat Pay, and QQ Pay. Includes anti-replay protection and secure payment URL generation. Either invoice_id or subscription_order_id must be provided.",
                 "consumes": [
                     "application/json"
                 ],
@@ -15810,7 +14727,7 @@ const docTemplate = `{
                 "summary": "[User] Create payment order",
                 "parameters": [
                     {
-                        "description": "Payment order data with method field",
+                        "description": "Payment order data with gateway (epay), method (alipay/wechat/qqpay), amount, and either invoice_id or subscription_order_id",
                         "name": "payment_order",
                         "in": "body",
                         "required": true,
@@ -15821,7 +14738,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created",
+                        "description": "Returns payment record with payment URL, QR code, and expiration time",
                         "schema": {
                             "allOf": [
                                 {
@@ -15839,19 +14756,25 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid request data, unsupported payment method, or missing required fields",
                         "schema": {
                             "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Authentication required",
                         "schema": {
                             "$ref": "#/definitions/response.UnauthorizedResponse"
                         }
                     },
+                    "422": {
+                        "description": "Amount outside valid range or gateway configuration error",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Payment gateway error or database failure",
                         "schema": {
                             "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
@@ -16019,7 +14942,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Create a payment directly for subscription without creating order/invoice first. Order and invoice are created asynchronously after payment success.",
+                "description": "Create a payment directly for subscription without creating order/invoice first. Supports multiple payment gateways (epay with Alipay/WeChat/QQPay). Includes coupon validation, price protection, and automatic service activation after successful payment. Order and invoice are created asynchronously after payment success.",
                 "consumes": [
                     "application/json"
                 ],
@@ -16032,7 +14955,7 @@ const docTemplate = `{
                 "summary": "[User] Quick purchase subscription",
                 "parameters": [
                     {
-                        "description": "Quick purchase data",
+                        "description": "Quick purchase data with gateway, method, plan_id, and optional coupon_code",
                         "name": "purchase",
                         "in": "body",
                         "required": true,
@@ -16043,7 +14966,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created",
+                        "description": "Returns payment URL, QR code, expiration time, and discount info",
                         "schema": {
                             "allOf": [
                                 {
@@ -16061,25 +14984,31 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid request data, unsupported payment method, or invalid amount",
                         "schema": {
                             "$ref": "#/definitions/response.BadRequestResponse"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Authentication required",
                         "schema": {
                             "$ref": "#/definitions/response.UnauthorizedResponse"
                         }
                     },
                     "403": {
-                        "description": "Forbidden",
+                        "description": "Insufficient permissions - users can only create purchases for themselves",
                         "schema": {
                             "$ref": "#/definitions/response.ForbiddenResponse"
                         }
                     },
+                    "422": {
+                        "description": "Coupon validation failed or discount exceeds limits",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Payment gateway error or internal service failure",
                         "schema": {
                             "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
@@ -20723,64 +19652,6 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.AdminRetryResponse": {
-            "type": "object",
-            "properties": {
-                "page": {
-                    "type": "integer"
-                },
-                "page_size": {
-                    "type": "integer"
-                },
-                "retries": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.PaymentRetryResponse"
-                    }
-                },
-                "statistics": {
-                    "$ref": "#/definitions/dto.AdminRetryStatistics"
-                },
-                "total_count": {
-                    "type": "integer"
-                },
-                "total_pages": {
-                    "type": "integer"
-                }
-            }
-        },
-        "dto.AdminRetryStatistics": {
-            "type": "object",
-            "properties": {
-                "average_attempts": {
-                    "type": "number"
-                },
-                "average_delay_time": {
-                    "type": "number"
-                },
-                "cancelled_retries": {
-                    "type": "integer"
-                },
-                "completed_retries": {
-                    "type": "integer"
-                },
-                "failed_retries": {
-                    "type": "integer"
-                },
-                "in_progress_retries": {
-                    "type": "integer"
-                },
-                "overall_success_rate": {
-                    "type": "number"
-                },
-                "pending_retries": {
-                    "type": "integer"
-                },
-                "total_retries": {
-                    "type": "integer"
-                }
-            }
-        },
         "dto.AdminTicketMessageRequest": {
             "type": "object",
             "required": [
@@ -22025,192 +20896,6 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.DynamicCreatePaymentConfigRequest": {
-            "type": "object",
-            "required": [
-                "config",
-                "method",
-                "name"
-            ],
-            "properties": {
-                "config": {
-                    "description": "Dynamic configuration",
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "fixed_fee": {
-                    "description": "Fixed fee",
-                    "type": "number",
-                    "example": 0
-                },
-                "is_enabled": {
-                    "description": "Is enabled",
-                    "type": "boolean",
-                    "example": true
-                },
-                "max_amount": {
-                    "description": "Max amount",
-                    "type": "number",
-                    "example": 99999.99
-                },
-                "method": {
-                    "description": "Payment method",
-                    "type": "string",
-                    "example": "epay"
-                },
-                "min_amount": {
-                    "description": "Min amount",
-                    "type": "number",
-                    "example": 0.01
-                },
-                "name": {
-                    "description": "Display name",
-                    "type": "string",
-                    "example": "EPay Payment Method"
-                },
-                "percentage_fee": {
-                    "description": "Percentage fee",
-                    "type": "number",
-                    "example": 0.6
-                },
-                "sort_order": {
-                    "description": "Sort order",
-                    "type": "integer",
-                    "example": 1
-                }
-            }
-        },
-        "dto.DynamicPaymentConfigResponse": {
-            "type": "object",
-            "properties": {
-                "config": {
-                    "description": "Dynamic fields based on payment method",
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "created_at": {
-                    "description": "Creation time",
-                    "type": "string",
-                    "example": "2024-01-01T00:00:00Z"
-                },
-                "field_descriptions": {
-                    "description": "Field descriptions for UI",
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                },
-                "fixed_fee": {
-                    "description": "Fixed fee",
-                    "type": "number",
-                    "example": 0
-                },
-                "id": {
-                    "description": "Config ID",
-                    "type": "integer",
-                    "example": 1
-                },
-                "is_enabled": {
-                    "description": "Enabled status",
-                    "type": "boolean",
-                    "example": true
-                },
-                "max_amount": {
-                    "description": "Maximum amount",
-                    "type": "number",
-                    "example": 99999.99
-                },
-                "method": {
-                    "description": "Payment method identifier",
-                    "type": "string",
-                    "example": "epay"
-                },
-                "min_amount": {
-                    "description": "Minimum amount",
-                    "type": "number",
-                    "example": 0.01
-                },
-                "name": {
-                    "description": "Display name",
-                    "type": "string",
-                    "example": "EPay Payment Method"
-                },
-                "optional_fields": {
-                    "description": "Optional fields for this method",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "percentage_fee": {
-                    "description": "Percentage fee",
-                    "type": "number",
-                    "example": 0.6
-                },
-                "required_fields": {
-                    "description": "Required fields for this method",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "sort_order": {
-                    "description": "Sort order",
-                    "type": "integer",
-                    "example": 1
-                },
-                "updated_at": {
-                    "description": "Update time",
-                    "type": "string",
-                    "example": "2024-01-01T00:00:00Z"
-                }
-            }
-        },
-        "dto.DynamicUpdatePaymentConfigRequest": {
-            "type": "object",
-            "properties": {
-                "config": {
-                    "description": "Dynamic configuration",
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "fixed_fee": {
-                    "description": "Fixed fee",
-                    "type": "number",
-                    "example": 0
-                },
-                "is_enabled": {
-                    "description": "Is enabled",
-                    "type": "boolean",
-                    "example": true
-                },
-                "max_amount": {
-                    "description": "Max amount",
-                    "type": "number",
-                    "example": 99999.99
-                },
-                "min_amount": {
-                    "description": "Min amount",
-                    "type": "number",
-                    "example": 0.01
-                },
-                "name": {
-                    "description": "Display name",
-                    "type": "string",
-                    "example": "EPay Payment Method"
-                },
-                "percentage_fee": {
-                    "description": "Percentage fee",
-                    "type": "number",
-                    "example": 0.6
-                },
-                "sort_order": {
-                    "description": "Sort order",
-                    "type": "integer",
-                    "example": 1
-                }
-            }
-        },
         "dto.EscalateTicketRequest": {
             "type": "object",
             "required": [
@@ -22261,189 +20946,6 @@ const docTemplate = `{
                 "new_expiry": {
                     "type": "string",
                     "example": "2024-12-31T23:59:59Z"
-                }
-            }
-        },
-        "dto.FailureAnalysis": {
-            "type": "object",
-            "properties": {
-                "average_recovery_time": {
-                    "type": "number"
-                },
-                "business_failures": {
-                    "type": "integer"
-                },
-                "failure_patterns": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.FailurePattern"
-                    }
-                },
-                "gateway": {
-                    "type": "string"
-                },
-                "gateway_failures": {
-                    "type": "integer"
-                },
-                "network_failures": {
-                    "type": "integer"
-                },
-                "permanent_failures": {
-                    "type": "integer"
-                },
-                "recommended_actions": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "recovery_rate": {
-                    "type": "number"
-                },
-                "temporary_failures": {
-                    "type": "integer"
-                },
-                "top_failure_reasons": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.FailureReason"
-                    }
-                },
-                "total_failures": {
-                    "type": "integer"
-                }
-            }
-        },
-        "dto.FailurePattern": {
-            "type": "object",
-            "properties": {
-                "average_attempts": {
-                    "type": "number"
-                },
-                "count": {
-                    "type": "integer"
-                },
-                "error_type": {
-                    "description": "Additional fields for compatibility",
-                    "type": "string"
-                },
-                "failure_reason": {
-                    "type": "string"
-                },
-                "occurrences": {
-                    "type": "integer"
-                },
-                "pattern": {
-                    "type": "string"
-                },
-                "percentage": {
-                    "type": "number"
-                },
-                "success_rate": {
-                    "type": "number"
-                }
-            }
-        },
-        "dto.FailureReason": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "percentage": {
-                    "type": "number"
-                },
-                "reason": {
-                    "type": "string"
-                },
-                "retry_success_rate": {
-                    "type": "number"
-                }
-            }
-        },
-        "dto.FieldDefinition": {
-            "type": "object",
-            "properties": {
-                "default_value": {
-                    "description": "Default value"
-                },
-                "description": {
-                    "description": "Field description",
-                    "type": "string",
-                    "example": "支付网关的API接口地址"
-                },
-                "display_name": {
-                    "description": "Display name for UI",
-                    "type": "string",
-                    "example": "API接口地址"
-                },
-                "name": {
-                    "description": "Field name",
-                    "type": "string",
-                    "example": "url"
-                },
-                "options": {
-                    "description": "Options for select fields",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "production",
-                        "sandbox"
-                    ]
-                },
-                "placeholder": {
-                    "description": "Input placeholder",
-                    "type": "string",
-                    "example": "https://pay.example.com"
-                },
-                "required": {
-                    "description": "Whether field is required",
-                    "type": "boolean",
-                    "example": true
-                },
-                "sensitive": {
-                    "description": "Whether field contains sensitive data",
-                    "type": "boolean",
-                    "example": true
-                },
-                "type": {
-                    "description": "Field type: string, number, boolean, url, email",
-                    "type": "string",
-                    "example": "string"
-                },
-                "validation": {
-                    "description": "Validation rule",
-                    "type": "string",
-                    "example": "url"
-                }
-            }
-        },
-        "dto.GatewayHealthMetric": {
-            "type": "object",
-            "properties": {
-                "active_retries": {
-                    "type": "integer"
-                },
-                "average_attempts": {
-                    "type": "number"
-                },
-                "gateway": {
-                    "type": "string"
-                },
-                "health_status": {
-                    "description": "healthy, degraded, critical",
-                    "type": "string"
-                },
-                "processing_rate": {
-                    "type": "number"
-                },
-                "queue_depth": {
-                    "type": "integer"
-                },
-                "success_rate": {
-                    "type": "number"
                 }
             }
         },
@@ -22879,63 +21381,6 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.PaymentMethodConfigSchema": {
-            "type": "object",
-            "properties": {
-                "default_config": {
-                    "description": "Default configuration values",
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "description": {
-                    "description": "Method description",
-                    "type": "string",
-                    "example": "EPay支付网关，支持支付宝、微信等多种支付方式"
-                },
-                "display_name": {
-                    "description": "Display name for UI",
-                    "type": "string",
-                    "example": "EPay支付"
-                },
-                "method": {
-                    "description": "Payment method",
-                    "type": "string",
-                    "example": "epay"
-                },
-                "optional_fields": {
-                    "description": "Optional configuration fields",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.FieldDefinition"
-                    }
-                },
-                "required_fields": {
-                    "description": "Required configuration fields",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.FieldDefinition"
-                    }
-                },
-                "supported_currencies": {
-                    "description": "Supported currencies",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "CNY",
-                        "USD"
-                    ]
-                },
-                "validation_rules": {
-                    "description": "Field validation rules",
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
         "dto.PaymentMethodListResponse": {
             "type": "object",
             "properties": {
@@ -23077,26 +21522,6 @@ const docTemplate = `{
                     "description": "User ID",
                     "type": "integer",
                     "example": 1
-                }
-            }
-        },
-        "dto.PaymentMethodStats": {
-            "type": "object",
-            "properties": {
-                "average_attempts": {
-                    "type": "number"
-                },
-                "payment_method": {
-                    "type": "string"
-                },
-                "success_rate": {
-                    "type": "number"
-                },
-                "successful_retries": {
-                    "type": "integer"
-                },
-                "total_retries": {
-                    "type": "integer"
                 }
             }
         },
@@ -23290,123 +21715,6 @@ const docTemplate = `{
                     "description": "User ID",
                     "type": "integer",
                     "example": 1
-                }
-            }
-        },
-        "dto.PaymentRetryHistoryResponse": {
-            "type": "object",
-            "properties": {
-                "attempt_number": {
-                    "type": "integer"
-                },
-                "attempted_at": {
-                    "type": "string",
-                    "format": "date-time",
-                    "example": "2024-01-01T12:00:00Z"
-                },
-                "created_at": {
-                    "type": "string",
-                    "format": "date-time",
-                    "example": "2024-01-01T12:00:00Z"
-                },
-                "delay_from_previous": {
-                    "type": "integer"
-                },
-                "duration": {
-                    "type": "integer"
-                },
-                "error_type": {
-                    "type": "string"
-                },
-                "failure_reason": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "next_retry_at": {
-                    "type": "string",
-                    "format": "date-time",
-                    "example": "2024-01-01T13:00:00Z"
-                },
-                "response_code": {
-                    "type": "string"
-                },
-                "response_message": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.PaymentRetryResponse": {
-            "type": "object",
-            "properties": {
-                "attempt_number": {
-                    "type": "integer"
-                },
-                "cancelled_at": {
-                    "type": "string",
-                    "format": "date-time",
-                    "example": "2024-01-01T12:30:00Z"
-                },
-                "completed_at": {
-                    "type": "string",
-                    "format": "date-time",
-                    "example": "2024-01-01T13:00:00Z"
-                },
-                "created_at": {
-                    "type": "string",
-                    "format": "date-time",
-                    "example": "2024-01-01T10:00:00Z"
-                },
-                "failure_type": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "last_attempt_at": {
-                    "type": "string",
-                    "format": "date-time",
-                    "example": "2024-01-01T11:00:00Z"
-                },
-                "last_failure_code": {
-                    "type": "string"
-                },
-                "max_attempts": {
-                    "type": "integer"
-                },
-                "next_retry_at": {
-                    "type": "string",
-                    "format": "date-time",
-                    "example": "2024-01-01T12:00:00Z"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "payment_record_id": {
-                    "type": "integer"
-                },
-                "retry_strategy": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "successful_at": {
-                    "type": "string",
-                    "format": "date-time",
-                    "example": "2024-01-01T12:15:00Z"
-                },
-                "total_delay_time": {
-                    "type": "integer"
-                },
-                "updated_at": {
-                    "type": "string",
-                    "format": "date-time",
-                    "example": "2024-01-01T10:00:00Z"
                 }
             }
         },
@@ -23952,134 +22260,6 @@ const docTemplate = `{
                 "reason": {
                     "type": "string",
                     "example": "Invalid referral"
-                }
-            }
-        },
-        "dto.RetryHealthMetrics": {
-            "type": "object",
-            "properties": {
-                "alerts_triggered": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "average_retry_delay": {
-                    "type": "number"
-                },
-                "gateway_health": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.GatewayHealthMetric"
-                    }
-                },
-                "overdue_retries": {
-                    "type": "integer"
-                },
-                "success_rate_24h": {
-                    "type": "number"
-                },
-                "success_rate_7d": {
-                    "type": "number"
-                },
-                "system_recommendations": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "total_active_retries": {
-                    "type": "integer"
-                }
-            }
-        },
-        "dto.RetryStatistics": {
-            "type": "object",
-            "properties": {
-                "average_attempts": {
-                    "type": "number"
-                },
-                "average_delay_time": {
-                    "type": "number"
-                },
-                "average_retry_delay": {
-                    "type": "number"
-                },
-                "cancelled_retries": {
-                    "type": "integer"
-                },
-                "date_range": {
-                    "type": "string"
-                },
-                "failed_retries": {
-                    "type": "integer"
-                },
-                "failure_analysis": {
-                    "$ref": "#/definitions/dto.FailureAnalysis"
-                },
-                "from_date": {
-                    "type": "string"
-                },
-                "gateway": {
-                    "type": "string"
-                },
-                "payment_method": {
-                    "type": "string"
-                },
-                "payment_method_stats": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.PaymentMethodStats"
-                    }
-                },
-                "success_rate": {
-                    "type": "number"
-                },
-                "successful_retries": {
-                    "type": "integer"
-                },
-                "to_date": {
-                    "type": "string"
-                },
-                "total_retries": {
-                    "type": "integer"
-                },
-                "trend_data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.RetryTrendData"
-                    }
-                }
-            }
-        },
-        "dto.RetryTrendData": {
-            "type": "object",
-            "properties": {
-                "date": {
-                    "type": "string"
-                },
-                "failure_rate": {
-                    "type": "number"
-                },
-                "success_rate": {
-                    "type": "number"
-                },
-                "total_retries": {
-                    "type": "integer"
-                }
-            }
-        },
-        "dto.RetryWithHistory": {
-            "type": "object",
-            "properties": {
-                "history": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.PaymentRetryHistoryResponse"
-                    }
-                },
-                "retry": {
-                    "$ref": "#/definitions/dto.PaymentRetryResponse"
                 }
             }
         },
@@ -26714,24 +24894,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.BulkRetryActionRequest": {
-            "type": "object",
-            "required": [
-                "retry_ids"
-            ],
-            "properties": {
-                "reason": {
-                    "type": "string",
-                    "example": "Bulk operation by admin"
-                },
-                "retry_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                }
-            }
-        },
         "handlers.BulkSecurityActionRequest": {
             "type": "object",
             "required": [
@@ -26838,18 +25000,6 @@ const docTemplate = `{
                 "updates": {
                     "type": "object",
                     "additionalProperties": {}
-                }
-            }
-        },
-        "handlers.CancelRetryRequest": {
-            "type": "object",
-            "required": [
-                "reason"
-            ],
-            "properties": {
-                "reason": {
-                    "type": "string",
-                    "example": "Manual cancellation by admin"
                 }
             }
         },

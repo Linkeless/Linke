@@ -36,7 +36,7 @@ type Referral struct {
 	// Reward Tracking
 	RewardStatus   string     `json:"reward_status" gorm:"size:20;not null;default:'pending';index"` // pending, earned, paid, cancelled
 	RewardAmount   float64    `json:"reward_amount" gorm:"type:decimal(10,2);default:0"`             // Reward amount for referrer
-	RewardCurrency string     `json:"reward_currency" gorm:"size:10;default:'USD'"`                  // Reward currency
+	RewardCurrency string     `json:"reward_currency" gorm:"size:10;default:'CNY'"`                  // Reward currency
 	RefereeReward  float64    `json:"referee_reward" gorm:"type:decimal(10,2);default:0"`            // Reward for referee
 	RewardedAt     *time.Time `json:"rewarded_at,omitempty" gorm:"index"`                            // When reward was paid
 

@@ -10,17 +10,7 @@ import (
 	"linke/internal/shared/dto"
 )
 
-// Package dto provides data transfer objects for the payment domain.
-//
-// This package is organized into functional sections:
-// 1. Payment Record DTOs - Payment transactions and records
-// 2. Payment Method DTOs - Payment method management
-// 3. Payment Config DTOs - Payment gateway configurations
-// 4. Helper & Conversion Functions - Utilities and entity conversions
-
-// =====================================================================
-// PAYMENT RECORD DTOs - Payment transactions and records
-// =====================================================================
+// ==================== Payment Record DTOs ====================
 
 // PaymentRecordResponse represents the payment record data structure for API responses
 type PaymentRecordResponse struct {
@@ -108,9 +98,7 @@ type NotifyData struct {
 	PaidAt        string  `json:"paid_at,omitempty"`
 }
 
-// =====================================================================
-// PAYMENT METHOD DTOs - Payment method management
-// =====================================================================
+// ==================== Payment Method DTOs ====================
 
 // PaymentMethodResponse represents the payment method data structure for API responses
 type PaymentMethodResponse struct {
@@ -204,9 +192,7 @@ type PaymentMethodValidationResult struct {
 	LastValidated string `json:"last_validated"`
 }
 
-// =====================================================================
-// PAYMENT CONFIG DTOs - Payment gateway configurations
-// =====================================================================
+// ==================== Payment Config DTOs ====================
 
 // PaymentConfigResponse represents the payment config data structure for API responses
 type PaymentConfigResponse struct {
@@ -230,6 +216,9 @@ type PaymentConfigResponse struct {
 	UpdatedAt           time.Time            `json:"updated_at" example:"2024-01-01T00:00:00Z"` // Update time
 }
 
+
+
+
 // CreatePaymentConfigRequest represents the request to create a payment config
 type CreatePaymentConfigRequest struct {
 	Method              string            `json:"method" binding:"required" example:"epay"`
@@ -249,6 +238,7 @@ type CreatePaymentConfigRequest struct {
 	PercentageFee       float64           `json:"percentage_fee,omitempty" example:"0.6"`
 }
 
+
 // UpdatePaymentConfigRequest represents the request to update a payment config
 type UpdatePaymentConfigRequest struct {
 	Name                *string           `json:"name,omitempty" example:"EPay Payment Method"`
@@ -267,6 +257,7 @@ type UpdatePaymentConfigRequest struct {
 	PercentageFee       *float64          `json:"percentage_fee,omitempty" example:"0.6"`
 }
 
+
 // GetPaymentConfigsRequest represents the request to get payment configs
 type GetPaymentConfigsRequest struct {
 	Method    string `form:"method,omitempty" example:"epay"`
@@ -275,11 +266,314 @@ type GetPaymentConfigsRequest struct {
 	Offset    int    `form:"offset,omitempty" example:"0"`
 }
 
-// =====================================================================
-// HELPER & CONVERSION FUNCTIONS - Utilities and entity conversions
-// =====================================================================
+// ==================== Payment Retry DTOs ====================
 
-// ------- Validation Functions -------
+// PaymentRetryResponse represents the payment retry data structure for API responses
+type PaymentRetryResponse struct {
+	ID              uint       `json:"id"`
+	PaymentRecordID uint       `json:"payment_record_id"`
+	AttemptNumber   int        `json:"attempt_number"`
+	MaxAttempts     int        `json:"max_attempts"`
+	NextRetryAt     time.Time  `json:"next_retry_at" swaggertype:"string" format:"date-time" example:"2024-01-01T12:00:00Z"`
+	LastAttemptAt   time.Time  `json:"last_attempt_at" swaggertype:"string" format:"date-time" example:"2024-01-01T11:00:00Z"`
+	RetryStrategy   string     `json:"retry_strategy"`
+	Status          string     `json:"status"`
+	FailureType     string     `json:"failure_type,omitempty"`
+	LastFailureCode string     `json:"last_failure_code,omitempty"`
+	TotalDelayTime  int        `json:"total_delay_time"`
+	CompletedAt     *time.Time `json:"completed_at,omitempty" swaggertype:"string" format:"date-time" example:"2024-01-01T13:00:00Z"`
+	CancelledAt     *time.Time `json:"cancelled_at,omitempty" swaggertype:"string" format:"date-time" example:"2024-01-01T12:30:00Z"`
+	SuccessfulAt    *time.Time `json:"successful_at,omitempty" swaggertype:"string" format:"date-time" example:"2024-01-01T12:15:00Z"`
+	Notes           string     `json:"notes,omitempty"`
+	CreatedAt       time.Time  `json:"created_at" swaggertype:"string" format:"date-time" example:"2024-01-01T10:00:00Z"`
+	UpdatedAt       time.Time  `json:"updated_at" swaggertype:"string" format:"date-time" example:"2024-01-01T10:00:00Z"`
+}
+
+// PaymentRetryHistoryResponse represents the retry history response
+type PaymentRetryHistoryResponse struct {
+	ID                uint       `json:"id"`
+	AttemptNumber     int        `json:"attempt_number"`
+	AttemptedAt       time.Time  `json:"attempted_at" swaggertype:"string" format:"date-time" example:"2024-01-01T12:00:00Z"`
+	Duration          int        `json:"duration"`
+	Status            string     `json:"status"`
+	ResponseCode      string     `json:"response_code,omitempty"`
+	ResponseMessage   string     `json:"response_message,omitempty"`
+	ErrorType         string     `json:"error_type,omitempty"`
+	FailureReason     string     `json:"failure_reason,omitempty"`
+	NextRetryAt       *time.Time `json:"next_retry_at,omitempty" swaggertype:"string" format:"date-time" example:"2024-01-01T13:00:00Z"`
+	DelayFromPrevious int        `json:"delay_from_previous"`
+	CreatedAt         time.Time  `json:"created_at" swaggertype:"string" format:"date-time" example:"2024-01-01T12:00:00Z"`
+}
+
+// RetryResult represents the result of a retry attempt
+type RetryResult struct {
+	Success       bool                        `json:"success"`
+	RetryID       uint                        `json:"retry_id"`
+	AttemptNumber int                         `json:"attempt_number"`
+	Status        string                      `json:"status"`
+	NextRetryAt   *time.Time                  `json:"next_retry_at,omitempty"`
+	CompletedAt   *time.Time                  `json:"completed_at,omitempty"`
+	ErrorMessage  string                      `json:"error_message,omitempty"`
+	PaymentResult *PaymentProcessResult       `json:"payment_result,omitempty"`
+	History       *PaymentRetryHistoryResponse `json:"history,omitempty"`
+}
+
+// PaymentProcessResult represents the result of payment processing
+type PaymentProcessResult struct {
+	PaymentRecordID uint       `json:"payment_record_id"`
+	Status          string     `json:"status"`
+	TransactionID   string     `json:"transaction_id,omitempty"`
+	PaidAt          *time.Time `json:"paid_at,omitempty"`
+	ErrorCode       string     `json:"error_code,omitempty"`
+	ErrorMessage    string     `json:"error_message,omitempty"`
+}
+
+// RetryWithHistory represents a retry with its complete history
+type RetryWithHistory struct {
+	Retry   *PaymentRetryResponse           `json:"retry"`
+	History []*PaymentRetryHistoryResponse  `json:"history"`
+}
+
+// RetryFilters represents filters for retry queries
+type RetryFilters struct {
+	UserID        *uint      `json:"user_id,omitempty"`
+	Gateway       *string    `json:"gateway,omitempty"`
+	PaymentMethod *string    `json:"payment_method,omitempty"`
+	Status        *string    `json:"status,omitempty"`
+	FailureType   *string    `json:"failure_type,omitempty"`
+	FromDate      *time.Time `json:"from_date,omitempty"`
+	ToDate        *time.Time `json:"to_date,omitempty"`
+	MinAttempts   *int       `json:"min_attempts,omitempty"`
+	MaxAttempts   *int       `json:"max_attempts,omitempty"`
+}
+
+// FailureAnalysis represents analysis of payment failures
+type FailureAnalysis struct {
+	Gateway             string            `json:"gateway"`
+	TotalFailures       int64             `json:"total_failures"`
+	TemporaryFailures   int64             `json:"temporary_failures"`
+	PermanentFailures   int64             `json:"permanent_failures"`
+	NetworkFailures     int64             `json:"network_failures"`
+	GatewayFailures     int64             `json:"gateway_failures"`
+	BusinessFailures    int64             `json:"business_failures"`
+	TopFailureReasons   []*FailureReason  `json:"top_failure_reasons"`
+	FailurePatterns     []*FailurePattern `json:"failure_patterns"`
+	RecoveryRate        float64           `json:"recovery_rate"`
+	AverageRecoveryTime float64           `json:"average_recovery_time"`
+	RecommendedActions  []string          `json:"recommended_actions"`
+}
+
+// FailureReason represents a common failure reason
+type FailureReason struct {
+	Reason           string  `json:"reason"`
+	Count            int64   `json:"count"`
+	Percentage       float64 `json:"percentage"`
+	RetrySuccessRate float64 `json:"retry_success_rate"`
+}
+
+// FailurePattern represents a failure pattern
+type FailurePattern struct {
+	Pattern         string  `json:"pattern"`
+	Occurrences     int64   `json:"occurrences"`
+	Percentage      float64 `json:"percentage"`
+	// Additional fields for compatibility
+	ErrorType       string  `json:"error_type"`
+	FailureReason   string  `json:"failure_reason"`
+	Count           int64   `json:"count"`
+	SuccessRate     float64 `json:"success_rate"`
+	AverageAttempts float64 `json:"average_attempts"`
+}
+
+// RetryStatistics represents retry statistics for admin interface
+type RetryStatistics struct {
+	Gateway                 string                   `json:"gateway"`
+	PaymentMethod           string                   `json:"payment_method,omitempty"`
+	DateRange              string                   `json:"date_range"`
+	TotalRetries           int64                    `json:"total_retries"`
+	SuccessfulRetries      int64                    `json:"successful_retries"`
+	FailedRetries          int64                    `json:"failed_retries"`
+	CancelledRetries       int64                    `json:"cancelled_retries"`
+	SuccessRate            float64                  `json:"success_rate"`
+	AverageAttempts        float64                  `json:"average_attempts"`
+	AverageRetryDelay      float64                  `json:"average_retry_delay"`
+	AverageDelayTime       float64                  `json:"average_delay_time"`
+	FromDate               time.Time                `json:"from_date"`
+	ToDate                 time.Time                `json:"to_date"`
+	PaymentMethodStats     []*PaymentMethodStats    `json:"payment_method_stats"`
+	FailureAnalysis        *FailureAnalysis         `json:"failure_analysis"`
+	TrendData              []*RetryTrendData        `json:"trend_data"`
+}
+
+// PaymentMethodStats represents statistics for a specific payment method
+type PaymentMethodStats struct {
+	PaymentMethod   string  `json:"payment_method"`
+	TotalRetries    int64   `json:"total_retries"`
+	SuccessfulRetries int64 `json:"successful_retries"`
+	SuccessRate     float64 `json:"success_rate"`
+	AverageAttempts float64 `json:"average_attempts"`
+}
+
+// RetryTrendData represents trend data for a specific time period
+type RetryTrendData struct {
+	Date          string  `json:"date"`
+	TotalRetries  int64   `json:"total_retries"`
+	SuccessRate   float64 `json:"success_rate"`
+	FailureRate   float64 `json:"failure_rate"`
+}
+
+// RetryHealthMetrics represents overall retry system health
+type RetryHealthMetrics struct {
+	TotalActiveRetries    int64                  `json:"total_active_retries"`
+	OverdueRetries        int64                  `json:"overdue_retries"`
+	SuccessRate24h        float64                `json:"success_rate_24h"`
+	SuccessRate7d         float64                `json:"success_rate_7d"`
+	AverageRetryDelay     float64                `json:"average_retry_delay"`
+	GatewayHealth         []*GatewayHealthMetric `json:"gateway_health"`
+	AlertsTriggered       []string               `json:"alerts_triggered"`
+	SystemRecommendations []string               `json:"system_recommendations"`
+}
+
+// GatewayHealthMetric represents health metrics for a specific gateway
+type GatewayHealthMetric struct {
+	Gateway         string  `json:"gateway"`
+	ActiveRetries   int64   `json:"active_retries"`
+	SuccessRate     float64 `json:"success_rate"`
+	AverageAttempts float64 `json:"average_attempts"`
+	QueueDepth      int64   `json:"queue_depth"`
+	ProcessingRate  float64 `json:"processing_rate"`
+	HealthStatus    string  `json:"health_status"` // healthy, degraded, critical
+}
+
+// AdminRetryFilters represents filters for admin retry queries
+type AdminRetryFilters struct {
+	*RetryFilters
+	IncludeHistory   bool     `json:"include_history,omitempty"`
+	SortBy           string   `json:"sort_by,omitempty"`    // created_at, next_retry_at, attempt_number
+	SortOrder        string   `json:"sort_order,omitempty"` // asc, desc
+	PaymentRecordIDs []uint   `json:"payment_record_ids,omitempty"`
+	UserIDs          []uint   `json:"user_ids,omitempty"`
+	RetryStatuses    []string `json:"retry_statuses,omitempty"`
+	FailureTypes     []string `json:"failure_types,omitempty"`
+	Gateways         []string `json:"gateways,omitempty"`
+	PaymentMethods   []string `json:"payment_methods,omitempty"`
+	Limit            int      `json:"limit,omitempty"`
+	Offset           int      `json:"offset,omitempty"`
+}
+
+// AdminRetryResponse represents response for admin retry queries
+type AdminRetryResponse struct {
+	Retries    []*PaymentRetryResponse `json:"retries"`
+	TotalCount int64                   `json:"total_count"`
+	Page       int                     `json:"page"`
+	PageSize   int                     `json:"page_size"`
+	TotalPages int                     `json:"total_pages"`
+	Statistics *AdminRetryStatistics   `json:"statistics,omitempty"`
+}
+
+// AdminRetryStatistics represents statistics for admin interface
+type AdminRetryStatistics struct {
+	TotalRetries       int64   `json:"total_retries"`
+	PendingRetries     int64   `json:"pending_retries"`
+	InProgressRetries  int64   `json:"in_progress_retries"`
+	CompletedRetries   int64   `json:"completed_retries"`
+	FailedRetries      int64   `json:"failed_retries"`
+	CancelledRetries   int64   `json:"cancelled_retries"`
+	OverallSuccessRate float64 `json:"overall_success_rate"`
+	AverageAttempts    float64 `json:"average_attempts"`
+	AverageDelayTime   float64 `json:"average_delay_time"`
+}
+
+// ==================== Handler-specific Request DTOs ====================
+
+// CancelRetryRequest represents the request to cancel a retry
+type CancelRetryRequest struct {
+	Reason string `json:"reason" binding:"required" example:"Manual cancellation by admin"`
+}
+
+// BulkRetryActionRequest represents the request for bulk retry actions
+type BulkRetryActionRequest struct {
+	RetryIDs []uint `json:"retry_ids" binding:"required"`
+	Reason   string `json:"reason,omitempty" example:"Bulk operation by admin"`
+}
+
+// ==================== Retry Configuration DTOs ====================
+
+// RetryConfiguration represents system-wide retry configuration
+type RetryConfiguration struct {
+	Enabled                    bool                                     `json:"enabled"`
+	MaxConcurrentRetries       int                                      `json:"max_concurrent_retries"`
+	ProcessingInterval         string                                   `json:"processing_interval" swaggertype:"string"`
+	HealthCheckInterval        string                                   `json:"health_check_interval" swaggertype:"string"`
+	DefaultStrategy            *entities.RetryStrategyConfig            `json:"default_strategy"`
+	GatewayStrategies          map[string]*entities.RetryStrategyConfig `json:"gateway_strategies"`
+	FailureClassificationRules map[string]*FailureClassificationRule    `json:"failure_classification_rules"`
+	NotificationSettings       *RetryNotificationSettings               `json:"notification_settings"`
+	MonitoringSettings         *RetryMonitoringSettings                 `json:"monitoring_settings"`
+}
+
+// FailureClassificationRule represents rules for classifying payment failures
+type FailureClassificationRule struct {
+	Gateway       string   `json:"gateway"`
+	PaymentMethod string   `json:"payment_method,omitempty"`
+	ErrorCodes    []string `json:"error_codes"`
+	ErrorPatterns []string `json:"error_patterns"`
+	FailureType   string   `json:"failure_type"`
+	ShouldRetry   bool     `json:"should_retry"`
+	Priority      int      `json:"priority"`
+}
+
+// RetryNotificationSettings represents notification settings for retries
+type RetryNotificationSettings struct {
+	Enabled             bool     `json:"enabled"`
+	NotifyOnFailure     bool     `json:"notify_on_failure"`
+	NotifyOnSuccess     bool     `json:"notify_on_success"`
+	NotifyOnMaxAttempts bool     `json:"notify_on_max_attempts"`
+	EmailTemplates      []string `json:"email_templates"`
+	SMSTemplates        []string `json:"sms_templates"`
+	WebhookURLs         []string `json:"webhook_urls"`
+}
+
+// RetryMonitoringSettings represents monitoring settings for retry system
+type RetryMonitoringSettings struct {
+	MetricsEnabled     bool             `json:"metrics_enabled"`
+	AlertsEnabled      bool             `json:"alerts_enabled"`
+	HealthCheckEnabled bool             `json:"health_check_enabled"`
+	LogLevel           string           `json:"log_level"`
+	RetentionPeriod    string           `json:"retention_period" swaggertype:"string"`
+	AlertThresholds    *AlertThresholds `json:"alert_thresholds"`
+}
+
+// AlertThresholds represents alert thresholds for retry monitoring
+type AlertThresholds struct {
+	MaxPendingRetries  int     `json:"max_pending_retries"`
+	MaxOverdueRetries  int     `json:"max_overdue_retries"`
+	MinSuccessRate     float64 `json:"min_success_rate"`
+	MaxAverageAttempts float64 `json:"max_average_attempts"`
+	MaxProcessingDelay int     `json:"max_processing_delay"` // seconds
+}
+
+// DailyRetryStats represents daily retry statistics
+type DailyRetryStats struct {
+	Date              time.Time `json:"date"`
+	TotalRetries      int64     `json:"total_retries"`
+	SuccessfulRetries int64     `json:"successful_retries"`
+	FailedRetries     int64     `json:"failed_retries"`
+	SuccessRate       float64   `json:"success_rate"`
+}
+
+// AttemptStatistics represents statistics for retry attempts
+type AttemptStatistics struct {
+	RetryID         uint    `json:"retry_id"`
+	TotalAttempts   int     `json:"total_attempts"`
+	SuccessfulCount int     `json:"successful_count"`
+	FailedCount     int     `json:"failed_count"`
+	TimeoutCount    int     `json:"timeout_count"`
+	ErrorCount      int     `json:"error_count"`
+	AverageDuration float64 `json:"average_duration"`
+	TotalDuration   int     `json:"total_duration"`
+}
+
+// ==================== Helper Functions ====================
 
 // ValidateEpayConfig validates epay configuration fields
 func ValidateEpayConfig(req *CreatePaymentConfigRequest) []string {
@@ -342,8 +636,6 @@ func isValidURL(str string) bool {
 	return strings.HasPrefix(str, "http://") || strings.HasPrefix(str, "https://")
 }
 
-// ------- Security Functions -------
-
 // maskTransactionID partially masks the transaction ID for security
 func maskTransactionID(transactionID string) string {
 	if transactionID == "" {
@@ -379,35 +671,7 @@ func getSecureQRCodeURL(pr *entities.PaymentRecord) string {
 	return ""
 }
 
-// maskSensitiveKey masks sensitive key for API responses
-func maskSensitiveKey(key string) string {
-	if key == "" {
-		return ""
-	}
-	if len(key) <= 8 {
-		return strings.Repeat("*", len(key))
-	}
-	return key[:4] + strings.Repeat("*", len(key)-8) + key[len(key)-4:]
-}
-
-// ------- Parsing Functions -------
-
-// parseSupportedMethods parses the SupportedMethods JSON string to []entities.Method
-func parseSupportedMethods(supportedMethods string) []entities.Method {
-	if supportedMethods == "" {
-		return nil
-	}
-	
-	var methods []entities.Method
-	if err := json.Unmarshal([]byte(supportedMethods), &methods); err != nil {
-		// If parsing fails, return empty slice
-		return nil
-	}
-	
-	return methods
-}
-
-// ------- Conversion Functions -------
+// ==================== Conversion Functions ====================
 
 // ToPaymentRecordUserResponse converts a PaymentRecord entity to PaymentRecordResponse for user-facing APIs
 func ToPaymentRecordUserResponse(pr *entities.PaymentRecord) *PaymentRecordResponse {
@@ -440,41 +704,6 @@ func ToPaymentRecordUserResponse(pr *entities.PaymentRecord) *PaymentRecordRespo
 		IsExpired:       pr.IsExpired(),
 		CanRefund:       pr.CanBeRefunded(),
 		RefundableAmount: pr.GetRefundableAmount(),
-	}
-}
-
-// ToPaymentRecordSecureResponse converts a PaymentRecord entity to a secure response for tests
-func ToPaymentRecordSecureResponse(pr *entities.PaymentRecord) *PaymentRecordResponse {
-	// This is essentially the same as ToPaymentRecordUserResponse but can be extended
-	// with additional security measures if needed
-	return ToPaymentRecordUserResponse(pr)
-}
-
-// ToPaymentMethodResponse converts a PaymentMethod entity to PaymentMethodResponse
-func ToPaymentMethodResponse(pm *entities.PaymentMethod) *PaymentMethodResponse {
-	return &PaymentMethodResponse{
-		ID:               pm.ID,
-		UserID:           pm.UserID,
-		Type:             pm.Type,
-		Method:           pm.Method,
-		DisplayName:      pm.DisplayName,
-		MaskedInfo:       pm.MaskedInfo,
-		Brand:            pm.Brand,
-		ExpiryMonth:      pm.ExpiryMonth,
-		ExpiryYear:       pm.ExpiryYear,
-		Status:           pm.Status,
-		IsDefault:        pm.IsDefault,
-		SuccessfulUses:   pm.SuccessfulUses,
-		FailedUses:       pm.FailedUses,
-		LastUsedAt:       pm.LastUsedAt,
-		BillingCountry:  pm.BillingCountry,
-		BillingPostcode: pm.BillingPostcode,
-		CreatedAt:        pm.CreatedAt,
-		UpdatedAt:        pm.UpdatedAt,
-		IsActive:         pm.IsActive(),
-		CanBeUsed:       pm.CanBeUsedForPayment(),
-		FailureRate:      pm.GetFailureRate(),
-		NeedsValidation:  pm.NeedsRevalidation(),
 	}
 }
 
@@ -515,4 +744,105 @@ func ToPaymentConfigPublicResponse(pc *entities.PaymentConfig) *PaymentConfigRes
 		CreatedAt:          pc.CreatedAt,
 		UpdatedAt:          pc.UpdatedAt,
 	}
+}
+
+// ToPaymentMethodResponse converts a PaymentMethod entity to PaymentMethodResponse
+func ToPaymentMethodResponse(pm *entities.PaymentMethod) *PaymentMethodResponse {
+	return &PaymentMethodResponse{
+		ID:               pm.ID,
+		UserID:           pm.UserID,
+		Type:             pm.Type,
+		Method:           pm.Method,
+		DisplayName:      pm.DisplayName,
+		MaskedInfo:       pm.MaskedInfo,
+		Brand:            pm.Brand,
+		ExpiryMonth:      pm.ExpiryMonth,
+		ExpiryYear:       pm.ExpiryYear,
+		Status:           pm.Status,
+		IsDefault:        pm.IsDefault,
+		SuccessfulUses:   pm.SuccessfulUses,
+		FailedUses:       pm.FailedUses,
+		LastUsedAt:       pm.LastUsedAt,
+		BillingCountry:  pm.BillingCountry,
+		BillingPostcode: pm.BillingPostcode,
+		CreatedAt:        pm.CreatedAt,
+		UpdatedAt:        pm.UpdatedAt,
+		IsActive:         pm.IsActive(),
+		CanBeUsed:       pm.CanBeUsedForPayment(),
+		FailureRate:      pm.GetFailureRate(),
+		NeedsValidation:  pm.NeedsRevalidation(),
+	}
+}
+
+// maskSensitiveKey masks sensitive key for API responses
+func maskSensitiveKey(key string) string {
+	if key == "" {
+		return ""
+	}
+	if len(key) <= 8 {
+		return strings.Repeat("*", len(key))
+	}
+	return key[:4] + strings.Repeat("*", len(key)-8) + key[len(key)-4:]
+}
+
+// parseSupportedMethods parses the SupportedMethods JSON string to []entities.Method
+func parseSupportedMethods(supportedMethods string) []entities.Method {
+	if supportedMethods == "" {
+		return nil
+	}
+	
+	var methods []entities.Method
+	if err := json.Unmarshal([]byte(supportedMethods), &methods); err != nil {
+		// If parsing fails, return empty slice
+		return nil
+	}
+	
+	return methods
+}
+
+// ToPaymentRetryResponse converts a PaymentRetry entity to PaymentRetryResponse
+func ToPaymentRetryResponse(pr *entities.PaymentRetry) *PaymentRetryResponse {
+	return &PaymentRetryResponse{
+		ID:                pr.ID,
+		PaymentRecordID:   pr.PaymentRecordID,
+		AttemptNumber:     pr.AttemptNumber,
+		MaxAttempts:       pr.MaxAttempts,
+		NextRetryAt:       pr.NextRetryAt,
+		LastAttemptAt:     pr.LastAttemptAt,
+		RetryStrategy:     pr.RetryStrategy,
+		Status:            pr.Status,
+		FailureType:       pr.FailureType,
+		LastFailureCode:   pr.LastFailureCode,
+		TotalDelayTime:    pr.TotalDelayTime,
+		CompletedAt:       pr.CompletedAt,
+		CancelledAt:       pr.CancelledAt,
+		SuccessfulAt:      pr.SuccessfulAt,
+		Notes:             pr.Notes,
+		CreatedAt:         pr.CreatedAt,
+		UpdatedAt:         pr.UpdatedAt,
+	}
+}
+
+// ToPaymentRetryHistoryResponse converts a PaymentRetryHistory entity to PaymentRetryHistoryResponse
+func ToPaymentRetryHistoryResponse(prh *entities.PaymentRetryHistory) *PaymentRetryHistoryResponse {
+	return &PaymentRetryHistoryResponse{
+		ID:                prh.ID,
+		AttemptNumber:     prh.AttemptNumber,
+		Status:            prh.Status,
+		ResponseCode:      prh.ResponseCode,
+		ResponseMessage:   prh.ResponseMessage,
+		ErrorType:         prh.ErrorType,
+		FailureReason:     prh.FailureReason,
+		Duration:          prh.Duration,
+		AttemptedAt:       prh.AttemptedAt,
+		DelayFromPrevious: prh.DelayFromPrevious,
+		CreatedAt:         prh.CreatedAt,
+	}
+}
+
+// ToPaymentRecordSecureResponse converts a PaymentRecord entity to a secure response for tests
+func ToPaymentRecordSecureResponse(pr *entities.PaymentRecord) *PaymentRecordResponse {
+	// This is essentially the same as ToPaymentRecordUserResponse but can be extended
+	// with additional security measures if needed
+	return ToPaymentRecordUserResponse(pr)
 }

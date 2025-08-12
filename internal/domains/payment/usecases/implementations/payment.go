@@ -14,6 +14,7 @@ import (
 	"linke/internal/domains/payment/constants"
 	"linke/internal/domains/payment/dto"
 	"linke/internal/domains/payment/entities"
+	"linke/internal/domains/payment/gateways"
 	"linke/internal/domains/payment/usecases/interfaces"
 	"linke/internal/shared/logger"
 
@@ -23,37 +24,36 @@ import (
 // PaymentService represents the unified payment service
 type PaymentService struct {
 	db                       *gorm.DB
-	gateways                 map[string]interfaces.PaymentGateway
+	gatewayFactory           *gateways.GatewayFactory
 	subscriptionOrderService interfaces.SubscriptionOrderServiceInterface
 	invoiceService           invoiceInterfaces.InvoiceService
 }
 
 // NewPaymentService creates a new payment service instance
-func NewPaymentService(db *gorm.DB) *PaymentService {
+func NewPaymentService(db *gorm.DB, paymentConfigService interfaces.PaymentConfigService) *PaymentService {
+	// Create gateway factory
+	gatewayFactory := gateways.NewGatewayFactory(paymentConfigService)
+	
+	// Load gateways from configuration during initialization
+	if err := gatewayFactory.LoadGatewaysFromConfig(); err != nil {
+		logger.Warn("Failed to load payment gateways from config during initialization", logger.ErrorField(err))
+		// Don't fail initialization, as gateways can be registered later
+	}
+
 	return &PaymentService{
-		db:       db,
-		gateways: make(map[string]interfaces.PaymentGateway),
+		db:             db,
+		gatewayFactory: gatewayFactory,
 	}
 }
 
 // RegisterGateway registers a payment gateway
 func (ps *PaymentService) RegisterGateway(name string, gateway interfaces.PaymentGateway) error {
-	if err := gateway.ValidateConfig(); err != nil {
-		return fmt.Errorf("gateway config validation failed: %w", err)
-	}
-
-	ps.gateways[name] = gateway
-	logger.Info("Payment gateway registered", logger.String("gateway", name))
-	return nil
+	return ps.gatewayFactory.RegisterGateway(name, gateway)
 }
 
 // GetGateway gets a payment gateway by name
 func (ps *PaymentService) GetGateway(name string) (interfaces.PaymentGateway, error) {
-	gateway, exists := ps.gateways[name]
-	if !exists {
-		return nil, fmt.Errorf("payment gateway '%s' not found", name)
-	}
-	return gateway, nil
+	return ps.gatewayFactory.GetGateway(name)
 }
 
 // GeneratePaymentNo generates a unique payment number
@@ -464,14 +464,7 @@ func (ps *PaymentService) GetUserPaymentRecords(ctx context.Context, userID uint
 
 // GetAvailablePaymentMethods gets available payment methods from registered gateways
 func (ps *PaymentService) GetAvailablePaymentMethods(ctx context.Context) (map[string][]string, error) {
-	methods := make(map[string][]string)
-
-	// Get methods from registered gateways (epay only)
-	for gatewayName, gateway := range ps.gateways {
-		methods[gatewayName] = gateway.GetSupportedPaymentMethods()
-	}
-
-	return methods, nil
+	return ps.gatewayFactory.GetSupportedPaymentMethods(), nil
 }
 
 // generateNotificationHash generates a hash for notification data to detect duplicates

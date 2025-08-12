@@ -19,7 +19,7 @@ type CreateCouponRequest struct {
 	MaxUses         int        `json:"max_uses,omitempty" binding:"min=0" example:"100"`
 	MaxUsesPerUser  int        `json:"max_uses_per_user,omitempty" binding:"min=1" example:"1"`
 	MinOrderAmount  float64    `json:"min_order_amount,omitempty" binding:"min=0" example:"10"`
-	Currency        string     `json:"currency,omitempty" binding:"omitempty,len=3" example:"USD"`
+	Currency        string     `json:"currency,omitempty" binding:"omitempty,len=3" example:"CNY"`
 	ValidFrom       *time.Time `json:"valid_from,omitempty" example:"2024-01-01T00:00:00Z"`
 	ValidUntil      *time.Time `json:"valid_until,omitempty" example:"2024-12-31T23:59:59Z"`
 	ApplicablePlans string     `json:"applicable_plans,omitempty" example:"[1,2,3]"`
@@ -57,7 +57,7 @@ type ValidateCouponRequest struct {
 	UserID      uint64  `json:"user_id" binding:"required" example:"1"`
 	OrderAmount float64 `json:"order_amount" binding:"required,min=0" example:"29.99"`
 	PlanID      uint64  `json:"plan_id" binding:"required" example:"1"`
-	Currency    string  `json:"currency" binding:"required,len=3" example:"USD"`
+	Currency    string  `json:"currency" binding:"required,len=3" example:"CNY"`
 }
 
 // ToggleStatusRequest represents the request for toggling coupon status
@@ -83,7 +83,7 @@ type BulkCreateCouponRequest struct {
 	MaxUses         int        `json:"max_uses,omitempty" binding:"min=0" example:"1"`
 	MaxUsesPerUser  int        `json:"max_uses_per_user,omitempty" binding:"min=1" example:"1"`
 	MinOrderAmount  float64    `json:"min_order_amount,omitempty" binding:"min=0" example:"10"`
-	Currency        string     `json:"currency,omitempty" binding:"omitempty,len=3" example:"USD"`
+	Currency        string     `json:"currency,omitempty" binding:"omitempty,len=3" example:"CNY"`
 	ValidFrom       *time.Time `json:"valid_from,omitempty" example:"2024-01-01T00:00:00Z"`
 	ValidUntil      *time.Time `json:"valid_until,omitempty" example:"2024-12-31T23:59:59Z"`
 	ApplicablePlans string     `json:"applicable_plans,omitempty" example:"[1,2,3]"`
@@ -137,7 +137,7 @@ type CouponResponse struct {
 	UsedCount       int        `json:"used_count" example:"15"`                              // Used count
 	MaxUsesPerUser  int        `json:"max_uses_per_user" example:"1"`                        // Max uses per user
 	MinOrderAmount  float64    `json:"min_order_amount" example:"10"`                        // Minimum order amount
-	Currency        string     `json:"currency" example:"USD"`                               // Currency
+	Currency        string     `json:"currency" example:"CNY"`                               // Currency
 	ValidFrom       *time.Time `json:"valid_from,omitempty" example:"2024-01-01T00:00:00Z"`  // Valid from
 	ValidUntil      *time.Time `json:"valid_until,omitempty" example:"2024-12-31T23:59:59Z"` // Valid until
 	ApplicablePlans string     `json:"applicable_plans,omitempty"`                           // Applicable plans
@@ -155,7 +155,7 @@ type CouponUsageResponse struct {
 	SubscriptionOrderID uint64    `json:"subscription_order_id" example:"1"`         // Order ID
 	DiscountAmount      float64   `json:"discount_amount" example:"5.99"`            // Discount amount
 	OrderAmount         float64   `json:"order_amount" example:"29.99"`              // Original order amount
-	Currency            string    `json:"currency" example:"USD"`                    // Currency
+	Currency            string    `json:"currency" example:"CNY"`                    // Currency
 	CreatedAt           time.Time `json:"created_at" example:"2024-01-01T00:00:00Z"` // Creation time
 	UpdatedAt           time.Time `json:"updated_at" example:"2024-01-01T00:00:00Z"` // Update time
 

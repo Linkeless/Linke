@@ -106,7 +106,7 @@ type CreateReferralCampaignRequest struct {
 	EndDate              *time.Time `json:"end_date,omitempty" example:"2024-08-31T23:59:59Z"`
 	ReferrerRewardAmount float64    `json:"referrer_reward_amount" binding:"required,min=0" example:"10.00"`
 	RefereeRewardAmount  float64    `json:"referee_reward_amount,omitempty" example:"5.00"`
-	RewardCurrency       string     `json:"reward_currency,omitempty" example:"USD"`
+	RewardCurrency       string     `json:"reward_currency,omitempty" example:"CNY"`
 	MaxRewards           int        `json:"max_rewards,omitempty" example:"1000"`
 	MinReferrals         int        `json:"min_referrals,omitempty" example:"1"`
 	MaxReferrals         int        `json:"max_referrals,omitempty" example:"10"`
@@ -183,7 +183,7 @@ type ReferralResponse struct {
 	ConversionType  string     `json:"conversion_type" example:"subscription"`
 	RewardStatus    string     `json:"reward_status" example:"earned"`
 	RewardAmount    float64    `json:"reward_amount" example:"5.00"`
-	RewardCurrency  string     `json:"reward_currency" example:"USD"`
+	RewardCurrency  string     `json:"reward_currency" example:"CNY"`
 	RefereeReward   float64    `json:"referee_reward" example:"2.50"`
 	RewardedAt      *time.Time `json:"rewarded_at,omitempty" example:"2024-01-01T00:00:00Z"`
 	FirstClickAt    *time.Time `json:"first_click_at,omitempty" example:"2024-01-01T00:00:00Z"`
@@ -216,11 +216,11 @@ type ReferralCampaignResponse struct {
 	EndDate                *time.Time `json:"end_date,omitempty" example:"2024-08-31T23:59:59Z"`
 	ReferrerRewardType     string     `json:"referrer_reward_type" example:"fixed"`
 	ReferrerRewardAmount   float64    `json:"referrer_reward_amount" example:"10.00"`
-	ReferrerRewardCurrency string     `json:"referrer_reward_currency" example:"USD"`
+	ReferrerRewardCurrency string     `json:"referrer_reward_currency" example:"CNY"`
 	ReferrerRewardCap      float64    `json:"referrer_reward_cap" example:"100.00"`
 	RefereeRewardType      string     `json:"referee_reward_type" example:"discount"`
 	RefereeRewardAmount    float64    `json:"referee_reward_amount" example:"20.00"`
-	RefereeRewardCurrency  string     `json:"referee_reward_currency" example:"USD"`
+	RefereeRewardCurrency  string     `json:"referee_reward_currency" example:"CNY"`
 	MinimumPurchaseAmount  float64    `json:"minimum_purchase_amount" example:"25.00"`
 	RewardTrigger          string     `json:"reward_trigger" example:"first_purchase"`
 	RewardDelay            int        `json:"reward_delay" example:"7"`
@@ -255,7 +255,7 @@ type InviteCodeResponse struct {
 	// Referral Integration Fields
 	ReferralCampaignID     *uint   `json:"referral_campaign_id,omitempty" example:"1"`
 	ReferralRewardAmount   float64 `json:"referral_reward_amount" example:"5.00"`
-	ReferralRewardCurrency string  `json:"referral_reward_currency" example:"USD"`
+	ReferralRewardCurrency string  `json:"referral_reward_currency" example:"CNY"`
 }
 
 // InviteCodeUsageResponse represents the invite code usage data structure for API responses
@@ -291,7 +291,7 @@ type ReferralEventResponse struct {
 	UTMTerm          string     `json:"utm_term" example:"referral"`
 	UTMContent       string     `json:"utm_content" example:"banner"`
 	EventValue       float64    `json:"event_value" example:"29.99"`
-	EventCurrency    string     `json:"event_currency" example:"USD"`
+	EventCurrency    string     `json:"event_currency" example:"CNY"`
 	ProcessedAt      *time.Time `json:"processed_at,omitempty" example:"2024-01-01T00:00:00Z"`
 	CreatedAt        time.Time  `json:"created_at" example:"2024-01-01T00:00:00Z"`
 	UpdatedAt        time.Time  `json:"updated_at" example:"2024-01-01T00:00:00Z"`
@@ -309,7 +309,7 @@ type ReferralRewardResponse struct {
 	CampaignID        *uint      `json:"campaign_id,omitempty" example:"1"`
 	RewardType        string     `json:"reward_type" example:"cash"`
 	RewardAmount      float64    `json:"reward_amount" example:"10.00"`
-	RewardCurrency    string     `json:"reward_currency" example:"USD"`
+	RewardCurrency    string     `json:"reward_currency" example:"CNY"`
 	RewardDescription string     `json:"reward_description" example:"Referral bonus for new subscriber"`
 	Status            string     `json:"status" example:"earned"`
 	EarnedAt          *time.Time `json:"earned_at,omitempty" example:"2024-01-01T00:00:00Z"`

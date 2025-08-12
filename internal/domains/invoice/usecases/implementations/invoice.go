@@ -52,7 +52,7 @@ func (is *InvoiceService) CreateInvoice(ctx context.Context, req *dto.CreateInvo
 
 	currency := req.Currency
 	if currency == "" {
-		currency = "USD" // Default currency
+		currency = "CNY" // Default currency
 	}
 
 	template := req.Template
