@@ -472,7 +472,7 @@ func (mlc *MultiLevelCache) setWriteBehind(ctx context.Context, key string, valu
 			if err := mlc.l2Cache.Set(ctx, key, value, l2TTL); err != nil {
 				mlc.logger.Warn("Write-behind queue full, synchronous L2 write failed",
 					logger.String("key", key),
-					logger.Error2("error", err))
+					logger.ErrorField(err))
 			}
 		}
 	}
@@ -535,7 +535,7 @@ func (mlc *MultiLevelCache) promoteToL1(ctx context.Context, key string, value [
 	if err := mlc.l1Cache.Set(ctx, key, value, l1TTL); err != nil {
 		mlc.logger.Debug("Failed to promote key to L1",
 			logger.String("key", key),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 	} else {
 		atomic.AddInt64(&mlc.metrics.promotions, 1)
 		mlc.logger.Debug("Promoted key to L1", logger.String("key", key))
@@ -549,7 +549,7 @@ func (mlc *MultiLevelCache) replicateToL1(ctx context.Context, key string, value
 	if err := mlc.l1Cache.Set(ctx, key, value, l1TTL); err != nil {
 		mlc.logger.Debug("Failed to replicate key to L1",
 			logger.String("key", key),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 	} else {
 		mlc.logger.Debug("Replicated key to L1", logger.String("key", key))
 	}
@@ -564,7 +564,7 @@ func (mlc *MultiLevelCache) startWriteBehindWorker() {
 				if err := mlc.l2Cache.Set(ctx, op.key, op.value, op.ttl); err != nil {
 					mlc.logger.Error("Write-behind operation failed",
 						logger.String("key", op.key),
-						logger.Error2("error", err))
+						logger.ErrorField(err))
 				}
 
 			case <-mlc.stopWriter:

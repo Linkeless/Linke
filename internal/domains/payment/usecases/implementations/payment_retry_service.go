@@ -71,7 +71,7 @@ func (s *paymentRetryService) InitiateRetry(ctx context.Context, paymentRecord *
 		if existingRetry.ShouldRetry() {
 			if err := s.scheduleRetryTask(ctx, existingRetry); err != nil {
 				logger.Error("Failed to schedule retry task",
-					logger.Error2("error", err),
+					logger.ErrorField(err),
 					logger.Uint("retry_id", existingRetry.ID),
 				)
 			}
@@ -84,7 +84,7 @@ func (s *paymentRetryService) InitiateRetry(ctx context.Context, paymentRecord *
 	strategy, err := s.GetRetryStrategy(ctx, paymentRecord.Gateway, paymentRecord.PaymentMethod)
 	if err != nil {
 		logger.Warn("Failed to get retry strategy, using default",
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 			logger.String("gateway", paymentRecord.Gateway),
 		)
 		strategy = s.getDefaultStrategyForGateway(paymentRecord.Gateway)
@@ -109,7 +109,7 @@ func (s *paymentRetryService) InitiateRetry(ctx context.Context, paymentRecord *
 	// Set gateway-specific configuration
 	if err := retry.SetGatewayConfig(strategy); err != nil {
 		logger.Warn("Failed to set gateway config",
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 	}
 
@@ -125,7 +125,7 @@ func (s *paymentRetryService) InitiateRetry(ctx context.Context, paymentRecord *
 	if retry.ShouldRetry() {
 		if err := s.scheduleRetryTask(ctx, retry); err != nil {
 			logger.Error("Failed to schedule retry task",
-				logger.Error2("error", err),
+				logger.ErrorField(err),
 				logger.Uint("retry_id", retry.ID),
 			)
 		}
@@ -158,7 +158,7 @@ func (s *paymentRetryService) ProcessPendingRetries(ctx context.Context, batchSi
 		result, err := s.ProcessRetry(ctx, retry.ID)
 		if err != nil {
 			logger.Error("Failed to process retry",
-				logger.Error2("error", err),
+				logger.ErrorField(err),
 				logger.Uint("retry_id", retry.ID),
 			)
 			continue
@@ -257,7 +257,7 @@ func (s *paymentRetryService) ProcessRetry(ctx context.Context, retryID uint) (*
 			// Schedule next retry
 			if scheduleErr := s.scheduleRetryTask(ctx, retry); scheduleErr != nil {
 				logger.Error("Failed to schedule next retry",
-					logger.Error2("error", scheduleErr),
+					logger.ErrorField(scheduleErr),
 					logger.Uint("retry_id", retry.ID),
 				)
 			}
@@ -284,7 +284,7 @@ func (s *paymentRetryService) ProcessRetry(ctx context.Context, retryID uint) (*
 	// Save retry update
 	if err := s.retryRepo.Update(ctx, retry); err != nil {
 		logger.Error("Failed to update retry record",
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 			logger.Uint("retry_id", retry.ID),
 		)
 	}
@@ -292,7 +292,7 @@ func (s *paymentRetryService) ProcessRetry(ctx context.Context, retryID uint) (*
 	// Save attempt history
 	if err := s.retryHistoryRepo.Create(ctx, attemptHistory); err != nil {
 		logger.Error("Failed to create retry history",
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 			logger.Uint("retry_id", retry.ID),
 		)
 	}
@@ -302,7 +302,7 @@ func (s *paymentRetryService) ProcessRetry(ctx context.Context, retryID uint) (*
 	// Send notification
 	if err := s.NotifyRetryAttempt(ctx, retry, attemptHistory); err != nil {
 		logger.Warn("Failed to send retry notification",
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 			logger.Uint("retry_id", retry.ID),
 		)
 	}
@@ -498,7 +498,7 @@ func (s *paymentRetryService) BulkCancelRetries(ctx context.Context, retryIDs []
 	for _, id := range retryIDs {
 		if err := s.CancelRetry(ctx, id, reason); err != nil {
 			logger.Error("Failed to cancel retry in bulk operation",
-				logger.Error2("error", err),
+				logger.ErrorField(err),
 				logger.Uint("retry_id", id),
 			)
 		}
@@ -510,7 +510,7 @@ func (s *paymentRetryService) BulkResetRetries(ctx context.Context, retryIDs []u
 	for _, id := range retryIDs {
 		if err := s.ResetRetry(ctx, id); err != nil {
 			logger.Error("Failed to reset retry in bulk operation",
-				logger.Error2("error", err),
+				logger.ErrorField(err),
 				logger.Uint("retry_id", id),
 			)
 		}

@@ -63,7 +63,7 @@ func RegisterBot(lc fx.Lifecycle, bot *BotEnhanced) {
 			go func() {
 				logger.Info("Starting Enhanced Telegram bot")
 				if err := bot.Start(context.Background()); err != nil {
-					logger.Error("Enhanced Telegram bot stopped with error", logger.Error2("error", err))
+					logger.Error("Enhanced Telegram bot stopped with error", logger.ErrorField(err))
 				}
 			}()
 			return nil
@@ -93,7 +93,7 @@ func RegisterTicketEventHandler(
 			if err := eventBus.Subscribe(handler.EventTypes(), handler); err != nil {
 				logger.Error("Failed to subscribe to ticket events",
 					logger.Any("event_types", handler.EventTypes()),
-					logger.Error2("error", err))
+					logger.ErrorField(err))
 				return err
 			}
 			logger.Info("Subscribed to ticket events",
@@ -106,7 +106,7 @@ func RegisterTicketEventHandler(
 			if err := eventBus.Unsubscribe(handler.EventTypes(), handler); err != nil {
 				logger.Error("Failed to unsubscribe from ticket events",
 					logger.Any("event_types", handler.EventTypes()),
-					logger.Error2("error", err))
+					logger.ErrorField(err))
 			}
 			return nil
 		},

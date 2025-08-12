@@ -71,7 +71,7 @@ func (s *InviteCodeService) CreateInviteCode(ctx context.Context, createdByID ui
 	if err := s.db.WithContext(ctx).Create(inviteCode).Error; err != nil {
 		logger.Error("Failed to create invite code",
 			logger.Uint("created_by_id", createdByID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to create invite code: %w", err)
 	}
@@ -177,7 +177,7 @@ func (s *InviteCodeService) UseInviteCode(ctx context.Context, code string, user
 		logger.Error("Failed to update invite code usage",
 			logger.Uint("invite_code_id", inviteCode.ID),
 			logger.Uint("user_id", userID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to update invite code: %w", err)
 	}
@@ -196,7 +196,7 @@ func (s *InviteCodeService) UseInviteCode(ctx context.Context, code string, user
 		logger.Error("Failed to create invite code usage record",
 			logger.Uint("invite_code_id", inviteCode.ID),
 			logger.Uint("user_id", userID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to create usage record: %w", err)
 	}
@@ -209,7 +209,7 @@ func (s *InviteCodeService) UseInviteCode(ctx context.Context, code string, user
 		logger.Error("Failed to commit invite code usage transaction",
 			logger.Uint("invite_code_id", inviteCode.ID),
 			logger.Uint("user_id", userID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
@@ -285,7 +285,7 @@ func (s *InviteCodeService) UpdateInviteCodeStatus(ctx context.Context, id uint,
 		logger.Error("Failed to update invite code status",
 			logger.Uint("invite_code_id", id),
 			logger.String("status", status),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to update invite code status: %w", err)
 	}
@@ -304,7 +304,7 @@ func (s *InviteCodeService) DeleteInviteCode(ctx context.Context, id uint) error
 	if result.Error != nil {
 		logger.Error("Failed to delete invite code",
 			logger.Uint("invite_code_id", id),
-			logger.Error2("error", result.Error),
+			logger.ErrorField(result.Error),
 		)
 		return fmt.Errorf("failed to delete invite code: %w", result.Error)
 	}
@@ -398,7 +398,7 @@ func (s *InviteCodeService) UpdateInviteCode(ctx context.Context, inviteCodeID u
 
 	// Update the invite code
 	if err := s.db.WithContext(ctx).Model(inviteCode).Updates(updates).Error; err != nil {
-		logger.Error("Failed to update invite code", logger.Error2("error", err), logger.Uint("invite_code_id", inviteCodeID))
+		logger.Error("Failed to update invite code", logger.Uint("inviteCodeID", uint(inviteCodeID)))
 		return nil, fmt.Errorf("failed to update invite code: %w", err)
 	}
 
@@ -433,7 +433,7 @@ func (s *InviteCodeService) GetInviteCodes(ctx context.Context, req *dto.GetInvi
 	// Get total count
 	var totalCount int64
 	if err := query.Count(&totalCount).Error; err != nil {
-		logger.Error("Failed to count invite codes", logger.Error2("error", err))
+		logger.Error("Failed to count invite codes", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to count invite codes: %w", err)
 	}
 
@@ -450,7 +450,7 @@ func (s *InviteCodeService) GetInviteCodes(ctx context.Context, req *dto.GetInvi
 
 	var inviteCodes []*entities.InviteCode
 	if err := query.Find(&inviteCodes).Error; err != nil {
-		logger.Error("Failed to get invite codes", logger.Error2("error", err))
+		logger.Error("Failed to get invite codes", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to get invite codes: %w", err)
 	}
 

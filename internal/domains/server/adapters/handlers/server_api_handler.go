@@ -149,7 +149,7 @@ func (h *ServerAPIHandler) UniProxyConfig(c *gin.Context) {
 		logger.Error("Failed to get shadowsocks server",
 			logger.Int("node_id", nodeID),
 			logger.String("remote_addr", c.ClientIP()),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.NotFound(c, "shadowsocks server not found")
 		return
@@ -273,7 +273,7 @@ func (h *ServerAPIHandler) UniProxyUsers(c *gin.Context) {
 		logger.Error("Failed to get shadowsocks server",
 			logger.Int("node_id", nodeID),
 			logger.String("remote_addr", c.ClientIP()),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.NotFound(c, "shadowsocks server not found")
 		return
@@ -295,7 +295,7 @@ func (h *ServerAPIHandler) UniProxyUsers(c *gin.Context) {
 		logger.Error("Failed to get users for server",
 			logger.Int("node_id", nodeID),
 			logger.String("remote_addr", c.ClientIP()),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "failed to get users")
 		return
@@ -327,7 +327,7 @@ func (h *ServerAPIHandler) getUsersForServer(ctx context.Context, server *server
 		Where("traffic_suspended = ?", false).
 		Where("trial_end_date IS NULL OR trial_end_date > NOW()"). // Check trial period
 		Find(&userSubscriptions).Error; err != nil {
-		logger.Error("Failed to query user subscriptions", logger.Error2("error", err))
+		logger.Error("Failed to query user subscriptions", logger.ErrorField(err))
 		return nil, err
 	}
 
@@ -411,7 +411,7 @@ func (h *ServerAPIHandler) getUsersForServer(ctx context.Context, server *server
 		Select("id").
 		Where("id IN ? AND status = ? AND deleted_at IS NULL", validUserIDs, userConstants.UserStatusActive).
 		Find(&activeUsers).Error; err != nil {
-		logger.Error("Failed to query active users", logger.Error2("error", err))
+		logger.Error("Failed to query active users", logger.ErrorField(err))
 		return nil, err
 	}
 
@@ -500,7 +500,7 @@ func (h *ServerAPIHandler) hasAccessToServerGroup(subscription *subscriptionEnti
 		logger.Error("Failed to parse server group IDs",
 			logger.Uint("subscription_id", subscription.ID),
 			logger.String("server_group_ids", subscription.ServerGroupIDs),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return false
 	}
@@ -576,7 +576,7 @@ func (h *ServerAPIHandler) UniProxyPush(c *gin.Context) {
 	if err := c.ShouldBindQuery(&req); err != nil {
 		logger.Warn("Invalid UniProxy push parameters",
 			logger.String("client_ip", c.ClientIP()),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.BadRequest(c, "Invalid parameters", err.Error())
 		return
@@ -589,7 +589,7 @@ func (h *ServerAPIHandler) UniProxyPush(c *gin.Context) {
 			logger.String("client_ip", c.ClientIP()),
 			logger.Uint("node_id", req.NodeID),
 			logger.String("node_type", req.NodeType),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to read request body")
 		return

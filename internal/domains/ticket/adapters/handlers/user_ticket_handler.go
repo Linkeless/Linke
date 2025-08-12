@@ -79,7 +79,7 @@ func (h *UserTicketHandler) CreateTicket(c *gin.Context) {
 		logger.Error("User failed to create ticket",
 			logger.Uint("user_id", user.ID),
 			logger.String("category", req.Category),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to create ticket")
 		return
 	}
@@ -142,7 +142,7 @@ func (h *UserTicketHandler) GetMyTickets(c *gin.Context) {
 	if err != nil {
 		logger.Error("User failed to get tickets",
 			logger.Uint("user_id", user.ID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get tickets")
 		return
 	}
@@ -189,7 +189,7 @@ func (h *UserTicketHandler) GetTicket(c *gin.Context) {
 		logger.Error("User failed to get ticket",
 			logger.Uint("ticket_id", ticketID),
 			logger.Uint("user_id", user.ID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.NotFound(c, "Ticket not found")
 		return
 	}
@@ -247,7 +247,7 @@ func (h *UserTicketHandler) CloseTicket(c *gin.Context) {
 		logger.Error("User failed to get ticket for closure",
 			logger.Uint("ticket_id", ticketID),
 			logger.Uint("user_id", user.ID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.NotFound(c, "Ticket not found")
 		return
 	}
@@ -280,7 +280,7 @@ func (h *UserTicketHandler) CloseTicket(c *gin.Context) {
 		logger.Error("User failed to close ticket",
 			logger.Uint("ticket_id", ticketID),
 			logger.Uint("user_id", user.ID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		
 		if strings.Contains(err.Error(), "not found") {
 			response.NotFound(c, "Ticket not found")
@@ -343,7 +343,7 @@ func (h *UserTicketHandler) GetTicketMessages(c *gin.Context) {
 		logger.Error("User failed to verify ticket for messages",
 			logger.Uint("ticket_id", ticketID),
 			logger.Uint("user_id", user.ID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.NotFound(c, "Ticket not found")
 		return
 	}
@@ -371,7 +371,7 @@ func (h *UserTicketHandler) GetTicketMessages(c *gin.Context) {
 		logger.Error("User failed to get ticket messages",
 			logger.Uint("ticket_id", ticketID),
 			logger.Uint("user_id", user.ID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get messages")
 		return
 	}
@@ -425,7 +425,7 @@ func (h *UserTicketHandler) AddMessage(c *gin.Context) {
 		logger.Error("User failed to verify ticket for message creation",
 			logger.Uint("ticket_id", ticketID),
 			logger.Uint("user_id", user.ID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.NotFound(c, "Ticket not found")
 		return
 	}
@@ -461,7 +461,7 @@ func (h *UserTicketHandler) AddMessage(c *gin.Context) {
 		logger.Error("User failed to create ticket message",
 			logger.Uint("ticket_id", ticketID),
 			logger.Uint("user_id", user.ID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to create message")
 		return
 	}

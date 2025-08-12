@@ -35,7 +35,7 @@ func (s *InviteCodeUsageService) CreateUsageRecord(ctx context.Context, inviteCo
 		logger.Error("Failed to create invite code usage record",
 			logger.Uint("invite_code_id", inviteCodeID),
 			logger.Uint("user_id", userID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to create usage record: %w", err)
 	}

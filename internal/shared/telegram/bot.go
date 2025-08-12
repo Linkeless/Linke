@@ -146,7 +146,7 @@ func (b *Bot) handleSubscription(msg *tgbotapi.Message) {
 	if err != nil {
 		logger.Error("Failed to get user subscriptions",
 			logger.Uint("user_id", user.ID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		b.sendMessage(msg.Chat.ID, "❌ 获取订阅信息失败，请稍后重试。")
 		return
 	}
@@ -168,7 +168,7 @@ func (b *Bot) handleSubscription(msg *tgbotapi.Message) {
 		if err != nil {
 			logger.Error("Failed to get subscription plan",
 				logger.Uint("plan_id", sub.SubscriptionPlanID),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 			continue
 		}
 
@@ -229,7 +229,7 @@ func (b *Bot) handleUsage(msg *tgbotapi.Message) {
 	if err != nil {
 		logger.Error("Failed to get user subscriptions",
 			logger.Uint("user_id", user.ID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		b.sendMessage(msg.Chat.ID, "❌ 获取使用情况失败，请稍后重试。")
 		return
 	}
@@ -293,7 +293,7 @@ func (b *Bot) handlePlans(msg *tgbotapi.Message) {
 		Limit:  20,
 	})
 	if err != nil {
-		logger.Error("Failed to get subscription plans", logger.Error2("error", err))
+		logger.Error("Failed to get subscription plans", logger.ErrorField(err))
 		b.sendMessage(msg.Chat.ID, "❌ 获取套餐信息失败，请稍后重试。")
 		return
 	}
@@ -362,7 +362,7 @@ func (b *Bot) sendMessage(chatID int64, text string) {
 	if _, err := b.api.Send(msg); err != nil {
 		logger.Error("Failed to send telegram message",
 			logger.Int64("chat_id", chatID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 	}
 }
 
@@ -372,7 +372,7 @@ func (b *Bot) sendMarkdownMessage(chatID int64, text string) {
 	if _, err := b.api.Send(msg); err != nil {
 		logger.Error("Failed to send telegram markdown message",
 			logger.Int64("chat_id", chatID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 	}
 }
 

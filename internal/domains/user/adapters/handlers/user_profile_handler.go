@@ -50,7 +50,7 @@ func (h *UserProfileHandler) GetProfile(c *gin.Context) {
 	if err != nil {
 		logger.Error("Failed to get active user profile",
 			logger.Uint("user_id", user.ID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.Unauthorized(c, "User account is not active")
 		return
@@ -103,7 +103,7 @@ func (h *UserProfileHandler) UpdateProfile(c *gin.Context) {
 	if err != nil {
 		logger.Error("Failed to get active user for profile update",
 			logger.Uint("user_id", currentUser.ID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.Unauthorized(c, "User account is not active")
 		return
@@ -124,7 +124,7 @@ func (h *UserProfileHandler) UpdateProfile(c *gin.Context) {
 	if err := h.userService.UpdateUser(c.Request.Context(), user); err != nil {
 		logger.Error("Failed to update user profile",
 			logger.Uint("user_id", currentUser.ID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to update profile")
 		return

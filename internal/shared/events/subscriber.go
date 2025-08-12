@@ -220,7 +220,7 @@ func (es *EventSubscriber) HandleEvent(ctx context.Context, event Event) error {
 				logger.String("event_id", event.EventID()),
 				logger.Int("attempt", attempt+1),
 				logger.Int("max_retries", es.Config.MaxRetries),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 
 			// Wait before retry
 			select {
@@ -241,7 +241,7 @@ func (es *EventSubscriber) HandleEvent(ctx context.Context, event Event) error {
 		logger.String("event_type", event.EventType()),
 		logger.String("event_id", event.EventID()),
 		logger.Int("max_retries", es.Config.MaxRetries),
-		logger.Error2("error", err))
+		logger.ErrorField(err))
 
 	return err
 }

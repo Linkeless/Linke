@@ -59,7 +59,7 @@ func (s *CachedUserSubscriptionService) CreateUserSubscription(ctx context.Conte
 		if err := s.subscriptionCache.Set(ctx, subscription); err != nil {
 			logger.Error("Failed to cache new subscription",
 				logger.Uint("subscription_id", subscription.ID),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 		}
 
 		// Invalidate user-related caches
@@ -239,7 +239,7 @@ func (s *CachedUserSubscriptionService) UpdateUserSubscription(ctx context.Conte
 		if err := s.subscriptionCache.Set(ctx, subscription); err != nil {
 			logger.Error("Failed to cache updated subscription",
 				logger.Uint("subscription_id", subscription.ID),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 		}
 	}
 
@@ -316,7 +316,7 @@ func (s *CachedUserSubscriptionService) UpdateLastUsed(ctx context.Context, subs
 	if err := s.subscriptionCache.Invalidate(ctx, cacheKey); err != nil {
 		logger.Error("Failed to invalidate subscription cache after last used update",
 			logger.Uint("subscription_id", subscriptionID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 	}
 
 	return nil
@@ -334,7 +334,7 @@ func (s *CachedUserSubscriptionService) UpdateTrafficUsage(ctx context.Context, 
 	if err := s.subscriptionCache.Invalidate(ctx, cacheKey); err != nil {
 		logger.Error("Failed to invalidate subscription cache after traffic update",
 			logger.Uint("subscription_id", subscriptionID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 	}
 
 	return nil
@@ -356,7 +356,7 @@ func (s *CachedUserSubscriptionService) ResetTrafficUsage(ctx context.Context, s
 	if err := s.subscriptionCache.Set(ctx, subscription); err != nil {
 		logger.Error("Failed to cache reset subscription",
 			logger.Uint("subscription_id", subscription.ID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 	}
 
 	return subscription, nil
@@ -558,7 +558,7 @@ func (s *CachedUserSubscriptionService) invalidateSubscriptionCaches(ctx context
 		if err := s.subscriptionCache.Invalidate(ctx, key); err != nil {
 			logger.Error("Failed to invalidate subscription cache",
 				logger.String("key", key),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 		}
 	}
 
@@ -577,7 +577,7 @@ func (s *CachedUserSubscriptionService) invalidateUserCaches(ctx context.Context
 		if err := s.cacheManager.GetCache().Delete(ctx, key); err != nil {
 			logger.Error("Failed to invalidate user subscription cache",
 				logger.String("key", key),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 		}
 	}
 
@@ -592,7 +592,7 @@ func (s *CachedUserSubscriptionService) invalidateUserCaches(ctx context.Context
 		if err := s.cacheManager.GetCache().DeleteByPattern(ctx, fullPattern); err != nil {
 			logger.Error("Failed to invalidate subscription cache pattern",
 				logger.String("pattern", fullPattern),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 		}
 	}
 }
@@ -607,7 +607,7 @@ func (s *CachedUserSubscriptionService) invalidateAllUserSubscriptionCaches(ctx 
 		if err := s.cacheManager.GetCache().DeleteByPattern(ctx, pattern); err != nil {
 			logger.Error("Failed to invalidate all subscription caches",
 				logger.String("pattern", pattern),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 		}
 	}
 }
@@ -718,7 +718,7 @@ func (s *CachedUserSubscriptionService) UpgradeUserSubscription(ctx context.Cont
 	if err := s.subscriptionCache.Set(ctx, subscription); err != nil {
 		logger.Error("Failed to cache upgraded subscription",
 			logger.Uint("subscription_id", subscription.ID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 	}
 
 	logger.Info("Subscription upgraded and cache invalidated",
@@ -743,7 +743,7 @@ func (s *CachedUserSubscriptionService) DowngradeUserSubscription(ctx context.Co
 	if err := s.subscriptionCache.Set(ctx, subscription); err != nil {
 		logger.Error("Failed to cache downgraded subscription",
 			logger.Uint("subscription_id", subscription.ID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 	}
 
 	logger.Info("Subscription downgraded and cache invalidated",
@@ -768,7 +768,7 @@ func (s *CachedUserSubscriptionService) ProcessSubscriptionChange(ctx context.Co
 	if err := s.subscriptionCache.Set(ctx, subscription); err != nil {
 		logger.Error("Failed to cache changed subscription",
 			logger.Uint("subscription_id", subscription.ID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 	}
 
 	logger.Info("Subscription change processed and cache invalidated",

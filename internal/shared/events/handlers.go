@@ -1656,7 +1656,7 @@ func (h *NotificationHandler) handlePaymentCompleted(ctx context.Context, event 
 	if err != nil {
 		h.logger.Error("Failed to send payment completed notification",
 			logger.String("event_id", event.EventID()),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		return err
 	}
 

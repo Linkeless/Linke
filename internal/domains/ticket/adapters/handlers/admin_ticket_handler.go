@@ -64,7 +64,7 @@ func (h *AdminTicketHandler) CreateTicket(c *gin.Context) {
 	if err != nil {
 		logger.Error("Failed to verify user for ticket creation",
 			logger.Uint("user_id", req.UserID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.NotFound(c, "User not found")
 		return
 	}
@@ -75,7 +75,7 @@ func (h *AdminTicketHandler) CreateTicket(c *gin.Context) {
 		if err != nil {
 			logger.Error("Failed to verify assigned user for ticket creation",
 				logger.Uint("assigned_to_id", *req.AssignedToID),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 			response.NotFound(c, "Assigned user not found")
 			return
 		}
@@ -103,7 +103,7 @@ func (h *AdminTicketHandler) CreateTicket(c *gin.Context) {
 		logger.Error("Admin failed to create ticket",
 			logger.Uint("user_id", req.UserID),
 			logger.String("category", req.Category),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to create ticket")
 		return
 	}
@@ -118,7 +118,7 @@ func (h *AdminTicketHandler) CreateTicket(c *gin.Context) {
 			logger.Error("Failed to assign ticket during creation",
 				logger.Uint("ticket_id", ticket.ID),
 				logger.Uint("assigned_to_id", *req.AssignedToID),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 			// Continue with unassigned ticket rather than failing
 		}
 	}
@@ -208,7 +208,7 @@ func (h *AdminTicketHandler) ListTickets(c *gin.Context) {
 
 	tickets, total, err := h.ticketService.GetTickets(c.Request.Context(), req)
 	if err != nil {
-		logger.Error("Admin failed to list tickets", logger.Error2("error", err))
+		logger.Error("Admin failed to list tickets", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to list tickets")
 		return
 	}
@@ -294,7 +294,7 @@ func (h *AdminTicketHandler) GetTicket(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to get ticket",
 			logger.Uint("ticket_id", uint(id)),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.NotFound(c, "Ticket not found")
 		return
 	}
@@ -412,7 +412,7 @@ func (h *AdminTicketHandler) UpdateTicket(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to update ticket",
 			logger.Uint("ticket_id", uint(id)),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 
 		if strings.Contains(err.Error(), "not found") {
 			response.NotFound(c, "Ticket not found")
@@ -478,7 +478,7 @@ func (h *AdminTicketHandler) AssignTicket(c *gin.Context) {
 	if err != nil {
 		logger.Error("Failed to verify assigned user",
 			logger.Uint("assigned_to_id", req.AssignedToID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.NotFound(c, "Assigned user not found")
 		return
 	}
@@ -498,7 +498,7 @@ func (h *AdminTicketHandler) AssignTicket(c *gin.Context) {
 		logger.Error("Admin failed to assign ticket",
 			logger.Uint("ticket_id", uint(id)),
 			logger.Uint("assigned_to_id", req.AssignedToID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 
 		if strings.Contains(err.Error(), "not found") {
 			response.NotFound(c, "Ticket not found")
@@ -521,7 +521,7 @@ func (h *AdminTicketHandler) AssignTicket(c *gin.Context) {
 		if err != nil {
 			logger.Error("Failed to create assignment note",
 				logger.Uint("ticket_id", ticket.ID),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 			// Continue without failing the assignment
 		}
 	}
@@ -594,7 +594,7 @@ func (h *AdminTicketHandler) EscalateTicket(c *gin.Context) {
 	if err != nil {
 		logger.Error("Failed to verify escalated user",
 			logger.Uint("escalated_to_id", req.EscalatedToID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.NotFound(c, "Escalated user not found")
 		return
 	}
@@ -609,7 +609,7 @@ func (h *AdminTicketHandler) EscalateTicket(c *gin.Context) {
 	if err != nil {
 		logger.Error("Failed to get ticket for escalation",
 			logger.Uint("ticket_id", uint(id)),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.NotFound(c, "Ticket not found")
 		return
 	}
@@ -626,7 +626,7 @@ func (h *AdminTicketHandler) EscalateTicket(c *gin.Context) {
 		if err != nil {
 			logger.Error("Failed to update ticket priority during escalation",
 				logger.Uint("ticket_id", uint(id)),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 			response.InternalServerError(c, "Failed to escalate ticket")
 			return
 		}
@@ -642,7 +642,7 @@ func (h *AdminTicketHandler) EscalateTicket(c *gin.Context) {
 		logger.Error("Failed to reassign ticket during escalation",
 			logger.Uint("ticket_id", uint(id)),
 			logger.Uint("escalated_to_id", req.EscalatedToID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to escalate ticket")
 		return
 	}
@@ -659,7 +659,7 @@ func (h *AdminTicketHandler) EscalateTicket(c *gin.Context) {
 	if err != nil {
 		logger.Error("Failed to create escalation note",
 			logger.Uint("ticket_id", ticket.ID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		// Continue without failing the escalation
 	}
 
@@ -723,7 +723,7 @@ func (h *AdminTicketHandler) CloseTicket(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to close ticket",
 			logger.Uint("ticket_id", uint(id)),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 
 		if strings.Contains(err.Error(), "not found") {
 			response.NotFound(c, "Ticket not found")
@@ -781,7 +781,7 @@ func (h *AdminTicketHandler) ReopenTicket(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to reopen ticket",
 			logger.Uint("ticket_id", uint(id)),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 
 		if strings.Contains(err.Error(), "not found") {
 			response.NotFound(c, "Ticket not found")
@@ -855,7 +855,7 @@ func (h *AdminTicketHandler) GetTicketMessages(c *gin.Context) {
 	if err != nil {
 		logger.Error("Failed to verify ticket for messages",
 			logger.Uint("ticket_id", uint(ticketID)),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.NotFound(c, "Ticket not found")
 		return
 	}
@@ -871,7 +871,7 @@ func (h *AdminTicketHandler) GetTicketMessages(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to get ticket messages",
 			logger.Uint("ticket_id", uint(ticketID)),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get messages")
 		return
 	}
@@ -934,7 +934,7 @@ func (h *AdminTicketHandler) AddMessage(c *gin.Context) {
 	if err != nil {
 		logger.Error("Failed to verify ticket for message creation",
 			logger.Uint("ticket_id", uint(ticketID)),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.NotFound(c, "Ticket not found")
 		return
 	}
@@ -961,7 +961,7 @@ func (h *AdminTicketHandler) AddMessage(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to create ticket message",
 			logger.Uint("ticket_id", uint(ticketID)),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to create message")
 		return
 	}
@@ -1015,7 +1015,7 @@ func (h *AdminTicketHandler) GetMessage(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to get message",
 			logger.Uint("message_id", uint(msgID)),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.NotFound(c, "Message not found")
 		return
 	}
@@ -1073,7 +1073,7 @@ func (h *AdminTicketHandler) UpdateMessage(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to update message",
 			logger.Uint("message_id", uint(msgID)),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 
 		if strings.Contains(err.Error(), "not found") {
 			response.NotFound(c, "Message not found")
@@ -1132,7 +1132,7 @@ func (h *AdminTicketHandler) DeleteMessage(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to delete message",
 			logger.Uint("message_id", uint(msgID)),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 
 		if strings.Contains(err.Error(), "not found") {
 			response.NotFound(c, "Message not found")
@@ -1183,7 +1183,7 @@ func (h *AdminTicketHandler) AddInternalNote(c *gin.Context) {
 	if err != nil {
 		logger.Error("Failed to verify ticket for internal note",
 			logger.Uint("ticket_id", uint(ticketID)),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.NotFound(c, "Ticket not found")
 		return
 	}
@@ -1196,7 +1196,7 @@ func (h *AdminTicketHandler) AddInternalNote(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to create internal note",
 			logger.Uint("ticket_id", uint(ticketID)),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to create internal note")
 		return
 	}
@@ -1278,7 +1278,7 @@ func (h *AdminTicketHandler) SearchTickets(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to search tickets",
 			logger.String("query", req.Query),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to search tickets")
 		return
 	}
@@ -1346,7 +1346,7 @@ func (h *AdminTicketHandler) SearchTickets(c *gin.Context) {
 func (h *AdminTicketHandler) GetStatistics(c *gin.Context) {
 	stats, err := h.ticketService.GetTicketStatistics(c.Request.Context(), "", "")
 	if err != nil {
-		logger.Error("Admin failed to get ticket statistics", logger.Error2("error", err))
+		logger.Error("Admin failed to get ticket statistics", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get ticket statistics")
 		return
 	}
@@ -1391,7 +1391,7 @@ func (h *AdminTicketHandler) GetAnalytics(c *gin.Context) {
 	// Get basic statistics for the period
 	stats, err := h.ticketService.GetTicketStatistics(c.Request.Context(), req.StartDate, req.EndDate)
 	if err != nil {
-		logger.Error("Admin failed to get ticket analytics", logger.Error2("error", err))
+		logger.Error("Admin failed to get ticket analytics", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get ticket analytics")
 		return
 	}
@@ -1453,7 +1453,7 @@ func (h *AdminTicketHandler) GetAgents(c *gin.Context) {
 	// TODO: Add a method to get users by role to the user service interface
 	users, _, err := h.userService.ListUsers(c.Request.Context(), limit, offset)
 	if err != nil {
-		logger.Error("Admin failed to get agent list", logger.Error2("error", err))
+		logger.Error("Admin failed to get agent list", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get agents")
 		return
 	}
@@ -1527,7 +1527,7 @@ func (h *AdminTicketHandler) BulkAssignTickets(c *gin.Context) {
 		logger.Error("Admin failed to bulk assign tickets",
 			logger.Any("ticket_ids", req.TicketIDs),
 			logger.Uint("assigned_to_id", *req.AssignedToID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to bulk assign tickets")
 		return
 	}
@@ -1580,7 +1580,7 @@ func (h *AdminTicketHandler) BulkUpdateStatus(c *gin.Context) {
 		logger.Error("Admin failed to bulk update ticket status",
 			logger.Any("ticket_ids", req.TicketIDs),
 			logger.String("status", *req.Status),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to bulk update status")
 		return
 	}
@@ -1627,7 +1627,7 @@ func (h *AdminTicketHandler) BulkCloseTickets(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to bulk close tickets",
 			logger.Any("ticket_ids", req.TicketIDs),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to bulk close tickets")
 		return
 	}
@@ -1668,7 +1668,7 @@ func (h *AdminTicketHandler) DeleteTicket(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to delete ticket",
 			logger.Uint("ticket_id", uint(id)),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 
 		if strings.Contains(err.Error(), "not found") {
 			response.NotFound(c, "Ticket not found")

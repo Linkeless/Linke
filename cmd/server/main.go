@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 
 	"linke/internal/application/bootstrap"
@@ -31,8 +32,10 @@ func main() {
 	}
 	
 	if err := logger.InitLogger(logConfig); err != nil {
-		// Fall back to standard output if logger init fails
-		logger.Error("Failed to initialize logger", logger.Error2("error", err))
+		// Use fmt.Printf for pre-logger errors since logger isn't initialized yet
+		fmt.Printf("❌ Failed to initialize logger: %v\n", err)
+		fmt.Printf("   Falling back to default logger configuration\n")
+		os.Exit(1)
 	}
 	
 	// Parse command line flags
@@ -65,7 +68,7 @@ func main() {
 	// Check for application initialization errors
 	if err := app.Err(); err != nil {
 		logger.Fatal("Application startup failed",
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 			logger.String("troubleshooting_hint", "Common causes: database connection failure, Redis connection failure, invalid JWT_SECRET, missing environment variables, configuration validation errors"),
 			logger.String("troubleshooting_command", "make security-check"),
 		)

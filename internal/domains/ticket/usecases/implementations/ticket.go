@@ -62,7 +62,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, userID uint, req *dto.
 	}
 
 	if err := s.db.WithContext(ctx).Create(ticket).Error; err != nil {
-		logger.Error("Failed to create ticket", logger.Error2("error", err))
+		logger.Error("Failed to create ticket", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to create ticket: %w", err)
 	}
 
@@ -79,7 +79,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, userID uint, req *dto.
 			logger.Warn("Auto-assignment failed for new ticket",
 				logger.Uint("ticket_id", ticket.ID),
 				logger.String("ticket_no", ticket.TicketNo),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 		}
 	}()
 
@@ -98,7 +98,7 @@ func (s *TicketService) GetTicket(ctx context.Context, ticketID uint) (*entities
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("ticket not found")
 		}
-		logger.Error("Failed to get ticket", logger.Error2("error", err), logger.Uint("ticket_id", ticketID))
+		logger.Error("Failed to get ticket", logger.Uint("ticketID", uint(ticketID)))
 		return nil, fmt.Errorf("failed to get ticket: %w", err)
 	}
 
@@ -118,7 +118,7 @@ func (s *TicketService) GetTicketByNumber(ctx context.Context, ticketNo string) 
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("ticket not found")
 		}
-		logger.Error("Failed to get ticket by number", logger.Error2("error", err), logger.String("ticket_no", ticketNo))
+		logger.Error("Failed to get ticket by number", logger.String("ticket_no", ticketNo), logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to get ticket: %w", err)
 	}
 
@@ -158,7 +158,7 @@ func (s *TicketService) GetTickets(ctx context.Context, req *dto.GetTicketsReque
 	// Get total count
 	var totalCount int64
 	if err := query.Count(&totalCount).Error; err != nil {
-		logger.Error("Failed to count tickets", logger.Error2("error", err))
+		logger.Error("Failed to count tickets", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to count tickets: %w", err)
 	}
 
@@ -175,7 +175,7 @@ func (s *TicketService) GetTickets(ctx context.Context, req *dto.GetTicketsReque
 
 	var tickets []*entities.Ticket
 	if err := query.Find(&tickets).Error; err != nil {
-		logger.Error("Failed to get tickets", logger.Error2("error", err))
+		logger.Error("Failed to get tickets", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to get tickets: %w", err)
 	}
 
@@ -232,7 +232,7 @@ func (s *TicketService) UpdateTicket(ctx context.Context, ticketID uint, req *dt
 
 	// Update the ticket
 	if err := s.db.WithContext(ctx).Model(ticket).Updates(updates).Error; err != nil {
-		logger.Error("Failed to update ticket", logger.Error2("error", err), logger.Uint("ticket_id", ticketID))
+		logger.Error("Failed to update ticket", logger.Uint("ticketID", uint(ticketID)))
 		return nil, fmt.Errorf("failed to update ticket: %w", err)
 	}
 
@@ -274,7 +274,7 @@ func (s *TicketService) AssignTicket(ctx context.Context, ticketID uint, req *dt
 	}
 
 	if err := s.db.WithContext(ctx).Model(ticket).Updates(updates).Error; err != nil {
-		logger.Error("Failed to assign ticket", logger.Error2("error", err), logger.Uint("ticket_id", ticketID))
+		logger.Error("Failed to assign ticket", logger.Uint("ticketID", uint(ticketID)))
 		return nil, fmt.Errorf("failed to assign ticket: %w", err)
 	}
 
@@ -309,7 +309,7 @@ func (s *TicketService) ResolveTicket(ctx context.Context, ticketID uint, resolv
 	}
 
 	if err := s.db.WithContext(ctx).Model(ticket).Updates(updates).Error; err != nil {
-		logger.Error("Failed to resolve ticket", logger.Error2("error", err), logger.Uint("ticket_id", ticketID))
+		logger.Error("Failed to resolve ticket", logger.Uint("ticketID", uint(ticketID)))
 		return nil, fmt.Errorf("failed to resolve ticket: %w", err)
 	}
 
@@ -342,7 +342,7 @@ func (s *TicketService) CloseTicket(ctx context.Context, ticketID uint, reason s
 	}
 
 	if err := s.db.WithContext(ctx).Model(ticket).Updates(updates).Error; err != nil {
-		logger.Error("Failed to close ticket", logger.Error2("error", err), logger.Uint("ticket_id", ticketID))
+		logger.Error("Failed to close ticket", logger.Uint("ticketID", uint(ticketID)))
 		return nil, fmt.Errorf("failed to close ticket: %w", err)
 	}
 
@@ -370,7 +370,7 @@ func (s *TicketService) DeleteTicket(ctx context.Context, ticketID uint) error {
 
 	// Soft delete the ticket
 	if err := s.db.WithContext(ctx).Delete(&ticket).Error; err != nil {
-		logger.Error("Failed to delete ticket", logger.Error2("error", err), logger.Uint("ticket_id", ticketID))
+		logger.Error("Failed to delete ticket", logger.Uint("ticketID", uint(ticketID)))
 		return fmt.Errorf("failed to delete ticket: %w", err)
 	}
 
@@ -420,7 +420,7 @@ func (s *TicketService) UnassignTicket(ctx context.Context, ticketID uint) (*ent
 	}
 
 	if err := s.db.WithContext(ctx).Model(ticket).Updates(updates).Error; err != nil {
-		logger.Error("Failed to unassign ticket", logger.Error2("error", err), logger.Uint("ticket_id", ticketID))
+		logger.Error("Failed to unassign ticket", logger.Uint("ticketID", uint(ticketID)))
 		return nil, fmt.Errorf("failed to unassign ticket: %w", err)
 	}
 
@@ -469,7 +469,7 @@ func (s *TicketService) ReopenTicket(ctx context.Context, ticketID uint, reason 
 	}
 
 	if err := s.db.WithContext(ctx).Model(ticket).Updates(updates).Error; err != nil {
-		logger.Error("Failed to reopen ticket", logger.Error2("error", err), logger.Uint("ticket_id", ticketID))
+		logger.Error("Failed to reopen ticket", logger.Uint("ticketID", uint(ticketID)))
 		return nil, fmt.Errorf("failed to reopen ticket: %w", err)
 	}
 
@@ -662,7 +662,7 @@ func (s *TicketService) BulkAssignTickets(ctx context.Context, ticketIDs []uint,
 	if err := s.db.WithContext(ctx).Model(&entities.Ticket{}).
 		Where("id IN ? AND status = ?", ticketIDs, constants.TicketStatusOpen).
 		Update("status", constants.TicketStatusInProgress).Error; err != nil {
-		logger.Error("Failed to update ticket status during bulk assignment", logger.Error2("error", err))
+		logger.Error("Failed to update ticket status during bulk assignment", logger.ErrorField(err))
 		return fmt.Errorf("failed to update ticket status: %w", err)
 	}
 
@@ -670,7 +670,7 @@ func (s *TicketService) BulkAssignTickets(ctx context.Context, ticketIDs []uint,
 	if err := s.db.WithContext(ctx).Model(&entities.Ticket{}).
 		Where("id IN ?", ticketIDs).
 		Updates(updates).Error; err != nil {
-		logger.Error("Failed to bulk assign tickets", logger.Error2("error", err))
+		logger.Error("Failed to bulk assign tickets", logger.ErrorField(err))
 		return fmt.Errorf("failed to bulk assign tickets: %w", err)
 	}
 
@@ -703,7 +703,7 @@ func (s *TicketService) BulkUpdateTicketStatus(ctx context.Context, ticketIDs []
 	if err := s.db.WithContext(ctx).Model(&entities.Ticket{}).
 		Where("id IN ?", ticketIDs).
 		Updates(updates).Error; err != nil {
-		logger.Error("Failed to bulk update ticket status", logger.Error2("error", err))
+		logger.Error("Failed to bulk update ticket status", logger.ErrorField(err))
 		return fmt.Errorf("failed to bulk update ticket status: %w", err)
 	}
 
@@ -751,7 +751,7 @@ func (s *TicketService) AutoAssignTicket(ctx context.Context, ticketID uint) (*e
 	if err != nil {
 		logger.Error("Failed to find best agent for auto-assignment",
 			logger.Uint("ticket_id", ticketID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		return &ticket, nil // Return original ticket without assignment
 	}
 
@@ -773,7 +773,7 @@ func (s *TicketService) AutoAssignTicket(ctx context.Context, ticketID uint) (*e
 		logger.Error("Failed to auto-assign ticket",
 			logger.Uint("ticket_id", ticketID),
 			logger.Uint("agent_id", bestAgentID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to auto-assign ticket: %w", err)
 	}
 
@@ -830,7 +830,7 @@ func (s *TicketService) GetAvailableAgents(ctx context.Context, category string)
 		if err != nil {
 			logger.Warn("Failed to get workload for agent",
 				logger.Uint("agent_id", agent.ID),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 			workload = 0
 		}
 

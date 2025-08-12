@@ -7,17 +7,19 @@ import (
 	"gorm.io/gorm"
 )
 
-// PaymentConfig represents payment gateway configuration
+// PaymentConfig represents payment configuration with simplified url+pid+key structure
 type PaymentConfig struct {
 	// Primary Key
 	ID uint `json:"id" gorm:"primaryKey"`
 
-	// Gateway Information
-	Gateway string `json:"gateway" gorm:"unique;size:50;not null"` // Payment gateway (epay, epusdt)
-	Name    string `json:"name" gorm:"size:100;not null"`          // Display name
+	// Basic Information
+	Name        string `json:"name" gorm:"size:100;not null"`          // Display name
+	Method      string `json:"method" gorm:"unique;size:50;not null"`  // Payment method identifier
 
-	// Configuration
-	Config string `json:"config" gorm:"type:json;not null"` // JSON configuration
+	// Simplified Configuration (url + pid + key)
+	URL string `json:"url" gorm:"size:255;not null"`    // API endpoint URL
+	PID string `json:"pid" gorm:"size:100;not null"`    // Partner/Merchant ID
+	Key string `json:"key" gorm:"size:255;not null"`    // API key/secret
 
 	// Status and Settings
 	IsEnabled bool `json:"is_enabled" gorm:"not null;default:true;index"` // Whether enabled
@@ -35,6 +37,10 @@ type PaymentConfig struct {
 	FixedFee      float64 `json:"fixed_fee" gorm:"type:decimal(10,2);default:0.00"`       // Fixed fee amount
 	PercentageFee float64 `json:"percentage_fee" gorm:"type:decimal(5,4);default:0.0000"` // Percentage fee (0.0000-99.9999)
 
+	// Additional Settings (optional)
+	NotifyURL   string `json:"notify_url" gorm:"size:255"`     // Callback/webhook URL
+	ReturnURL   string `json:"return_url" gorm:"size:255"`     // Return URL after payment
+
 	// Timestamp Fields
 	CreatedAt time.Time      `json:"created_at" gorm:"not null;index"`
 	UpdatedAt time.Time      `json:"updated_at" gorm:"not null"`
@@ -43,7 +49,7 @@ type PaymentConfig struct {
 
 // Method represents a payment method within a gateway
 type Method struct {
-	Code        string  `json:"code"`                  // Method code (alipay, wechat, usdt, etc.)
+	Code        string  `json:"code"`                  // Method code (trc_usdt, polygon_usdt, usdt, btc, eth, etc.)
 	Name        string  `json:"name"`                  // Display name
 	Description string  `json:"description,omitempty"` // Description
 	Icon        string  `json:"icon,omitempty"`        // Icon URL
@@ -53,7 +59,6 @@ type Method struct {
 	FeeValue    float64 `json:"fee_value"`             // Fee value
 	FeeMin      float64 `json:"fee_min"`               // Minimum fee
 	FeeMax      float64 `json:"fee_max"`               // Maximum fee
-	Environment string  `json:"environment"`           // constants.EnvironmentProduction, constants.EnvironmentSandbox, constants.EnvironmentTest
 }
 
 // TableName returns the table name for PaymentConfig model
@@ -123,6 +128,41 @@ func (pc *PaymentConfig) SupportsCurrency(currency string) bool {
 	return pc.SupportedCurrencies == currency ||
 		pc.SupportedCurrencies == "ALL" ||
 		pc.SupportedCurrencies == "*"
+}
+
+// GetConfig returns configuration as a map for compatibility
+func (pc *PaymentConfig) GetConfig() map[string]interface{} {
+	return map[string]interface{}{
+		"url": pc.URL,
+		"pid": pc.PID,
+		"key": pc.Key,
+		"notify_url": pc.NotifyURL,
+		"return_url": pc.ReturnURL,
+	}
+}
+
+// SetConfig sets configuration from a map
+func (pc *PaymentConfig) SetConfig(config map[string]interface{}) {
+	if url, ok := config["url"].(string); ok {
+		pc.URL = url
+	}
+	if pid, ok := config["pid"].(string); ok {
+		pc.PID = pid
+	}
+	if key, ok := config["key"].(string); ok {
+		pc.Key = key
+	}
+	if notifyURL, ok := config["notify_url"].(string); ok {
+		pc.NotifyURL = notifyURL
+	}
+	if returnURL, ok := config["return_url"].(string); ok {
+		pc.ReturnURL = returnURL
+	}
+}
+
+// IsConfigValid checks if the basic configuration is valid
+func (pc *PaymentConfig) IsConfigValid() bool {
+	return pc.URL != "" && pc.PID != "" && pc.Key != ""
 }
 
 // CalculateFixedFee returns the fixed fee

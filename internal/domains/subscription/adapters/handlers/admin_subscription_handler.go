@@ -212,7 +212,7 @@ func (h *AdminSubscriptionHandler) CreateSubscriptionPlan(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to create subscription plan",
 			logger.String("code", createReq.Code),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		if strings.Contains(err.Error(), "duplicate") || strings.Contains(err.Error(), "unique") {
@@ -259,7 +259,7 @@ func (h *AdminSubscriptionHandler) GetSubscriptionPlan(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to get subscription plan",
 			logger.Uint("plan_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.NotFound(c, "Subscription plan not found")
 		return
@@ -306,7 +306,7 @@ func (h *AdminSubscriptionHandler) ListSubscriptionPlans(c *gin.Context) {
 
 	plans, total, err := h.subscriptionPlanService.GetSubscriptionPlans(c.Request.Context(), req)
 	if err != nil {
-		logger.Error("Admin failed to list subscription plans", logger.Error2("error", err))
+		logger.Error("Admin failed to list subscription plans", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to list subscription plans")
 		return
 	}
@@ -375,7 +375,7 @@ func (h *AdminSubscriptionHandler) UpdateSubscriptionPlan(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to update subscription plan",
 			logger.Uint("plan_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to update subscription plan")
 		return
@@ -414,7 +414,7 @@ func (h *AdminSubscriptionHandler) DeleteSubscriptionPlan(c *gin.Context) {
 	if err := h.subscriptionPlanService.DeleteSubscriptionPlan(c.Request.Context(), uint(id)); err != nil {
 		logger.Error("Admin failed to delete subscription plan",
 			logger.Uint("plan_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.NotFound(c, "Subscription plan not found")
 		return
@@ -454,7 +454,7 @@ func (h *AdminSubscriptionHandler) ToggleSubscriptionPlanStatus(c *gin.Context) 
 	if err != nil {
 		logger.Error("Admin failed to toggle subscription plan status",
 			logger.Uint("plan_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.NotFound(c, "Subscription plan not found")
 		return
@@ -513,7 +513,7 @@ func (h *AdminSubscriptionHandler) CreateUserSubscription(c *gin.Context) {
 			logger.Uint("user_id", createReq.UserID),
 			logger.Uint("plan_id", createReq.SubscriptionPlanID),
 			logger.String("reason", createReq.Reason),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		if strings.Contains(err.Error(), "not found") {
@@ -563,7 +563,7 @@ func (h *AdminSubscriptionHandler) GetUserSubscription(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to get user subscription",
 			logger.Uint("subscription_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.NotFound(c, "User subscription not found")
 		return
@@ -607,7 +607,7 @@ func (h *AdminSubscriptionHandler) ListUserSubscriptions(c *gin.Context) {
 
 	subscriptionResponses, total, err := h.userSubscriptionService.GetUserSubscriptionsWithUserDataForAdmin(c.Request.Context(), req)
 	if err != nil {
-		logger.Error("Admin failed to list user subscriptions", logger.Error2("error", err))
+		logger.Error("Admin failed to list user subscriptions", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to list user subscriptions")
 		return
 	}
@@ -652,7 +652,7 @@ func (h *AdminSubscriptionHandler) UpdateUserSubscription(c *gin.Context) {
 		if _, err := h.userSubscriptionService.ResetTrafficUsage(c.Request.Context(), uint(id), 0); err != nil {
 			logger.Error("Admin failed to reset traffic usage",
 				logger.Uint("subscription_id", uint(id)),
-				logger.Error2("error", err),
+				logger.ErrorField(err),
 			)
 		}
 	}
@@ -672,7 +672,7 @@ func (h *AdminSubscriptionHandler) UpdateUserSubscription(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to update user subscription",
 			logger.Uint("subscription_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to update user subscription")
 		return
@@ -721,7 +721,7 @@ func (h *AdminSubscriptionHandler) PauseUserSubscription(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to pause user subscription",
 			logger.Uint("subscription_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		if strings.Contains(err.Error(), "not found") {
@@ -778,7 +778,7 @@ func (h *AdminSubscriptionHandler) ResumeUserSubscription(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to resume user subscription",
 			logger.Uint("subscription_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		if strings.Contains(err.Error(), "not found") {
@@ -833,7 +833,7 @@ func (h *AdminSubscriptionHandler) ExtendUserSubscription(c *gin.Context) {
 		logger.Error("Admin failed to extend user subscription",
 			logger.Uint("subscription_id", uint(id)),
 			logger.Int("extend_by_days", extendReq.ExtendByDays),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		if strings.Contains(err.Error(), "not found") {
@@ -849,7 +849,7 @@ func (h *AdminSubscriptionHandler) ExtendUserSubscription(c *gin.Context) {
 	if err != nil {
 		logger.Error("Failed to retrieve extended subscription",
 			logger.Uint("subscription_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Subscription extended but failed to retrieve updated data")
 		return
@@ -901,7 +901,7 @@ func (h *AdminSubscriptionHandler) CancelUserSubscription(c *gin.Context) {
 	if err := h.userSubscriptionService.CancelUserSubscription(c.Request.Context(), uint(id), cancelData.Reason, cancelData.CancelAtPeriodEnd); err != nil {
 		logger.Error("Admin failed to cancel user subscription",
 			logger.Uint("subscription_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		if strings.Contains(err.Error(), "not found") {
@@ -957,7 +957,7 @@ func (h *AdminSubscriptionHandler) ResetTrafficUsage(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to reset traffic usage",
 			logger.Uint("subscription_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		if strings.Contains(err.Error(), "not found") {
@@ -1015,7 +1015,7 @@ func (h *AdminSubscriptionHandler) UpgradeSubscription(c *gin.Context) {
 		logger.Error("Admin failed to upgrade subscription",
 			logger.Uint("subscription_id", uint(id)),
 			logger.Uint("new_plan_id", req.NewSubscriptionPlanID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		if strings.Contains(err.Error(), "not found") {
@@ -1079,7 +1079,7 @@ func (h *AdminSubscriptionHandler) DowngradeSubscription(c *gin.Context) {
 		logger.Error("Admin failed to downgrade subscription",
 			logger.Uint("subscription_id", uint(id)),
 			logger.Uint("new_plan_id", req.NewSubscriptionPlanID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		if strings.Contains(err.Error(), "not found") {
@@ -1120,7 +1120,7 @@ func (h *AdminSubscriptionHandler) DowngradeSubscription(c *gin.Context) {
 func (h *AdminSubscriptionHandler) GetSubscriptionStatistics(c *gin.Context) {
 	stats, err := h.userSubscriptionService.GetSubscriptionStatistics(c.Request.Context())
 	if err != nil {
-		logger.Error("Admin failed to get subscription statistics", logger.Error2("error", err))
+		logger.Error("Admin failed to get subscription statistics", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get subscription statistics")
 		return
 	}
@@ -1156,7 +1156,7 @@ func (h *AdminSubscriptionHandler) GetSubscriptionOrder(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to get subscription order",
 			logger.Uint("order_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.NotFound(c, "Subscription order not found")
 		return
@@ -1203,7 +1203,7 @@ func (h *AdminSubscriptionHandler) ListSubscriptionOrders(c *gin.Context) {
 
 	orders, total, err := h.subscriptionOrderService.GetSubscriptionOrders(c.Request.Context(), req)
 	if err != nil {
-		logger.Error("Admin failed to list subscription orders", logger.Error2("error", err))
+		logger.Error("Admin failed to list subscription orders", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to list subscription orders")
 		return
 	}
@@ -1253,7 +1253,7 @@ func (h *AdminSubscriptionHandler) CancelSubscriptionOrder(c *gin.Context) {
 	if err := h.subscriptionOrderService.CancelSubscriptionOrder(c.Request.Context(), uint(id), cancelData.Reason); err != nil {
 		logger.Error("Admin failed to cancel subscription order",
 			logger.Uint("order_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		if strings.Contains(err.Error(), "not found") {
@@ -1318,7 +1318,7 @@ func (h *AdminSubscriptionHandler) GetOrderStatistics(c *gin.Context) {
 
 	stats, err := h.subscriptionOrderService.GetOrderStatistics(c.Request.Context(), fromDate, toDate)
 	if err != nil {
-		logger.Error("Admin failed to get order statistics", logger.Error2("error", err))
+		logger.Error("Admin failed to get order statistics", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get order statistics")
 		return
 	}
@@ -1355,7 +1355,7 @@ func (h *AdminSubscriptionHandler) GetUsageStatistics(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to get usage statistics",
 			logger.Uint("subscription_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		if strings.Contains(err.Error(), "not found") {
@@ -1403,7 +1403,7 @@ func (h *AdminSubscriptionHandler) GetCurrentUsage(c *gin.Context) {
 		logger.Error("Admin failed to get current usage",
 			logger.Uint("subscription_id", uint(id)),
 			logger.String("usage_type", usageType),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		if strings.Contains(err.Error(), "not found") {
@@ -1559,7 +1559,7 @@ func (h *AdminSubscriptionHandler) GetUsageAlerts(c *gin.Context) {
 
 	alertsResponse, err := h.usageAlertService.GetUsageAlerts(c.Request.Context(), req)
 	if err != nil {
-		logger.Error("Admin failed to get usage alerts", logger.Error2("error", err))
+		logger.Error("Admin failed to get usage alerts", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get usage alerts")
 		return
 	}
@@ -1596,7 +1596,7 @@ func (h *AdminSubscriptionHandler) GetAlertStatistics(c *gin.Context) {
 
 	stats, err := h.usageAlertService.GetAlertStatistics(c.Request.Context(), req)
 	if err != nil {
-		logger.Error("Admin failed to get alert statistics", logger.Error2("error", err))
+		logger.Error("Admin failed to get alert statistics", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get alert statistics")
 		return
 	}
@@ -1629,7 +1629,7 @@ func (h *AdminSubscriptionHandler) BulkResolveAlerts(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to bulk resolve alerts",
 			logger.Any("alert_ids", bulkReq.AlertIDs),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to resolve alerts")
 		return

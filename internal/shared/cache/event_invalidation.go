@@ -411,7 +411,7 @@ func (edi *EventDrivenInvalidator) handleInvalidationError(err error, invalidati
 	edi.logger.Error("Cache invalidation failed",
 		logger.String("type", invalidationType),
 		logger.String("key", key),
-		logger.Error2("error", err))
+		logger.ErrorField(err))
 }
 
 func (edi *EventDrivenInvalidator) updateMetrics(updateFunc func()) {
@@ -471,7 +471,7 @@ func (si *SmartInvalidator) InvalidateIntelligently(ctx context.Context, pattern
 		if err := si.cache.Delete(ctx, key); err != nil {
 			si.logger.Error("Smart invalidation failed",
 				logger.String("key", key),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 		}
 	}
 

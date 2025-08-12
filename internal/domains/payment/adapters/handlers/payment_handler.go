@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"linke/internal/domains/payment/constants"
 	"linke/internal/domains/payment/dto"
+	"linke/internal/domains/payment/entities"
 	"linke/internal/domains/payment/usecases/interfaces"
 	userEntities "linke/internal/domains/user/entities"
 	"linke/internal/shared/logger"
@@ -34,12 +36,12 @@ func NewPaymentHandler(paymentService interfaces.PaymentService, paymentConfigSe
 
 // CreatePaymentOrder godoc
 // @Summary [User] Create payment order
-// @Description Create a new payment order
+// @Description Create a new payment order. Supports method-based payments (epay, crypto, etc.)
 // @Tags User-Payment
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param payment_order body dto.CreatePaymentOrderRequest true "Payment order data"
+// @Param payment_order body dto.CreatePaymentOrderRequest true "Payment order data with method field"
 // @Success 201 {object} response.StandardResponse{data=dto.PaymentRecordResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -98,7 +100,7 @@ func (h *PaymentHandler) CreatePaymentOrder(c *gin.Context) {
 	// Create payment order
 	paymentRecord, err := h.paymentService.CreatePaymentOrder(c.Request.Context(), paymentReq)
 	if err != nil {
-		logger.Error("Failed to create payment order", logger.Error2("error", err), logger.Uint("user_id", user.ID))
+		logger.Error("Failed to create payment order", logger.ErrorField(err), logger.Uint("user_id", user.ID))
 		response.InternalServerError(c, "Failed to create payment order", err.Error())
 		return
 	}
@@ -149,7 +151,7 @@ func (h *PaymentHandler) GetPaymentOrder(c *gin.Context) {
 			response.NotFound(c, "Payment order not found")
 			return
 		}
-		logger.Error("Failed to get payment order", logger.Error2("error", err), logger.String("payment_no", paymentNo))
+		logger.Error("Failed to get payment order", logger.String("payment_no", paymentNo), logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get payment order", err.Error())
 		return
 	}
@@ -207,7 +209,7 @@ func (h *PaymentHandler) GetMyPaymentOrders(c *gin.Context) {
 	// Get user payment records
 	records, totalCount, err := h.paymentService.GetUserPaymentRecords(c.Request.Context(), user.ID, limit, offset)
 	if err != nil {
-		logger.Error("Failed to get user payment orders", logger.Error2("error", err), logger.Uint("user_id", user.ID))
+		logger.Error("Failed to get user payment orders", logger.ErrorField(err), logger.Uint("user_id", user.ID))
 		response.InternalServerError(c, "Failed to get payment orders", err.Error())
 		return
 	}
@@ -223,7 +225,7 @@ func (h *PaymentHandler) GetMyPaymentOrders(c *gin.Context) {
 
 // GetAvailablePaymentMethods godoc
 // @Summary [Public] Get available payment methods
-// @Description Get available payment methods grouped by gateway
+// @Description Get available payment methods organized by payment method type (epay, crypto, etc.)
 // @Tags User-Payment
 // @Accept json
 // @Produce json
@@ -234,7 +236,7 @@ func (h *PaymentHandler) GetAvailablePaymentMethods(c *gin.Context) {
 	// Get available payment methods
 	methods, err := h.paymentService.GetAvailablePaymentMethods(c.Request.Context())
 	if err != nil {
-		logger.Error("Failed to get available payment methods", logger.Error2("error", err))
+		logger.Error("Failed to get available payment methods", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get payment methods", err.Error())
 		return
 	}
@@ -244,7 +246,7 @@ func (h *PaymentHandler) GetAvailablePaymentMethods(c *gin.Context) {
 
 // GetActivePaymentConfigs godoc
 // @Summary [Public] Get active payment configs
-// @Description Get active payment configurations for public display
+// @Description Get active payment configurations for public display. Returns simplified method-based configs
 // @Tags User-Payment
 // @Accept json
 // @Produce json
@@ -258,7 +260,7 @@ func (h *PaymentHandler) GetActivePaymentConfigs(c *gin.Context) {
 	// Get active payment configs
 	configs, err := h.paymentConfigService.GetActivePaymentConfigs(c.Request.Context(), currency)
 	if err != nil {
-		logger.Error("Failed to get active payment configs", logger.Error2("error", err))
+		logger.Error("Failed to get active payment configs", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get payment configs", err.Error())
 		return
 	}
@@ -274,15 +276,15 @@ func (h *PaymentHandler) GetActivePaymentConfigs(c *gin.Context) {
 
 // PaymentNotify godoc
 // @Summary [Webhook] Payment notification
-// @Description Handle payment notification from gateway
+// @Description Handle payment notification from payment method. Supports EPay and crypto payment methods
 // @Tags User-Payment
 // @Accept json
 // @Produce json
-// @Param gateway path string true "Payment gateway" Enums(epay, epusdt)
+// @Param method path string true "Payment method" Enums(epay, epusdt, crypto_btc, crypto_usdt)
 // @Success 200 {string} string "success"
 // @Failure 400 {string} string "fail"
 // @Failure 500 {string} string "fail"
-// @Router /payment/notify/{gateway} [post]
+// @Router /payment/notify/{method} [post]
 func (h *PaymentHandler) PaymentNotify(c *gin.Context) {
 	gateway := c.Param("gateway")
 	if gateway == "" {
@@ -321,7 +323,7 @@ func (h *PaymentHandler) PaymentNotify(c *gin.Context) {
 		notifyData, err = h.parseNotificationData(c, gateway)
 		if err != nil {
 			logger.Error("Failed to parse notification data",
-				logger.Error2("error", err),
+				logger.ErrorField(err),
 				logger.String("gateway", gateway),
 				logger.String("client_ip", c.ClientIP()))
 			c.String(400, "fail")
@@ -335,7 +337,7 @@ func (h *PaymentHandler) PaymentNotify(c *gin.Context) {
 	// Process notification
 	if err := h.paymentService.ProcessNotification(ctx, gateway, notifyData); err != nil {
 		logger.Error("Failed to process payment notification",
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 			logger.String("gateway", gateway))
 		c.String(500, "fail")
 		return
@@ -410,12 +412,12 @@ func (h *PaymentHandler) parseNotificationData(c *gin.Context, gateway string) (
 
 // CreatePaymentConfig godoc
 // @Summary [Admin] Create payment config
-// @Description Create a new payment configuration
+// @Description Create a new payment configuration with simplified structure (method + url + pid + key)
 // @Tags Admin-Payment-Management
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param config body dto.CreatePaymentConfigRequest true "Payment config data"
+// @Param config body dto.CreatePaymentConfigRequest true "Payment config data with method (epay/crypto), URL, PID, and Key"
 // @Success 201 {object} response.StandardResponse{data=dto.PaymentConfigResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -452,7 +454,7 @@ func (h *PaymentHandler) CreatePaymentConfig(c *gin.Context) {
 	// Create payment config
 	config, err := h.paymentConfigService.CreatePaymentConfig(c.Request.Context(), &req)
 	if err != nil {
-		logger.Error("Failed to create payment config", logger.Error2("error", err), logger.Uint("admin_id", user.ID))
+		logger.Error("Failed to create payment config", logger.ErrorField(err), logger.Uint("admin_id", user.ID))
 		response.InternalServerError(c, "Failed to create payment config", err.Error())
 		return
 	}
@@ -462,15 +464,13 @@ func (h *PaymentHandler) CreatePaymentConfig(c *gin.Context) {
 
 // GetPaymentConfigs godoc
 // @Summary [Admin] Get payment configs
-// @Description Get payment configurations with filtering and pagination
+// @Description Get payment configurations with filtering and pagination. Configs use method-based structure (epay, crypto_btc, etc.)
 // @Tags Admin-Payment-Management
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param gateway query string false "Filter by gateway" example("epay")
-// @Param method query string false "Filter by method" example("alipay")
+// @Param method query string false "Filter by payment method" example("epay")
 // @Param is_enabled query bool false "Filter by enabled status" example(true)
-// @Param environment query string false "Filter by environment" example("production")
 // @Param limit query int false "Limit results" minimum(1) maximum(100) example(10)
 // @Param offset query int false "Offset results" minimum(0) example(0)
 // @Success 200 {object} response.PaginatedResponse{data=[]dto.PaymentConfigResponse}
@@ -509,7 +509,7 @@ func (h *PaymentHandler) GetPaymentConfigs(c *gin.Context) {
 	// Get payment configs
 	configs, totalCount, err := h.paymentConfigService.GetPaymentConfigs(c.Request.Context(), &req)
 	if err != nil {
-		logger.Error("Failed to get payment configs", logger.Error2("error", err))
+		logger.Error("Failed to get payment configs", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get payment configs", err.Error())
 		return
 	}
@@ -525,13 +525,13 @@ func (h *PaymentHandler) GetPaymentConfigs(c *gin.Context) {
 
 // UpdatePaymentConfig godoc
 // @Summary [Admin] Update payment config
-// @Description Update a payment configuration
+// @Description Update a payment configuration. Supports method-based structure with URL, PID, Key fields
 // @Tags Admin-Payment-Management
 // @Accept json
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Payment config ID"
-// @Param config body dto.UpdatePaymentConfigRequest true "Updated payment config data"
+// @Param config body dto.UpdatePaymentConfigRequest true "Updated payment config data (URL, PID, Key, etc.)"
 // @Success 200 {object} response.StandardResponse{data=dto.PaymentConfigResponse}
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
@@ -581,7 +581,7 @@ func (h *PaymentHandler) UpdatePaymentConfig(c *gin.Context) {
 			response.NotFound(c, "Payment config not found")
 			return
 		}
-		logger.Error("Failed to update payment config", logger.Error2("error", err), logger.Uint("config_id", uint(configID)), logger.Uint("admin_id", user.ID))
+		logger.Error("Failed to update payment config", logger.ErrorField(err), logger.Uint("config_id", uint(configID)), logger.Uint("admin_id", user.ID))
 		response.InternalServerError(c, "Failed to update payment config", err.Error())
 		return
 	}
@@ -638,12 +638,489 @@ func (h *PaymentHandler) DeletePaymentConfig(c *gin.Context) {
 			response.NotFound(c, "Payment config not found")
 			return
 		}
-		logger.Error("Failed to delete payment config", logger.Error2("error", err), logger.Uint("config_id", uint(configID)), logger.Uint("admin_id", user.ID))
+		logger.Error("Failed to delete payment config", logger.ErrorField(err), logger.Uint("config_id", uint(configID)), logger.Uint("admin_id", user.ID))
 		response.InternalServerError(c, "Failed to delete payment config", err.Error())
 		return
 	}
 
 	response.OK(c, "Payment config deleted successfully", nil)
+}
+
+// Dynamic Configuration Endpoints
+
+// GetPaymentMethodSchemas godoc
+// @Summary [Admin] Get payment method schemas
+// @Description Get configuration schemas for all supported payment methods
+// @Tags Admin-Payment-Management
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} response.StandardResponse{data=map[string]dto.PaymentMethodConfigSchema}
+// @Failure 401 {object} response.UnauthorizedResponse
+// @Failure 403 {object} response.ForbiddenResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
+// @Router /admin/payment/schemas [get]
+func (h *PaymentHandler) GetPaymentMethodSchemas(c *gin.Context) {
+	// Get current user from context
+	userValue, exists := c.Get(middleware.AuthContextKey)
+	if !exists {
+		response.Unauthorized(c, "Authentication required")
+		return
+	}
+
+	user, ok := userValue.(*userEntities.User)
+	if !ok {
+		response.Unauthorized(c, "Invalid user context")
+		return
+	}
+
+	// Check if user is admin
+	if !user.IsAdmin() {
+		response.Forbidden(c, "Admin access required")
+		return
+	}
+
+	// Get all payment method schemas
+	schemas := dto.GetAllPaymentMethodSchemas()
+	
+	response.OK(c, "Payment method schemas retrieved successfully", schemas)
+}
+
+// GetPaymentMethodSchema godoc
+// @Summary [Admin] Get payment method schema
+// @Description Get configuration schema for a specific payment method
+// @Tags Admin-Payment-Management
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param method path string true "Payment method" example("epay")
+// @Success 200 {object} response.StandardResponse{data=dto.PaymentMethodConfigSchema}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 401 {object} response.UnauthorizedResponse
+// @Failure 403 {object} response.ForbiddenResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
+// @Router /admin/payment/schemas/{method} [get]
+func (h *PaymentHandler) GetPaymentMethodSchema(c *gin.Context) {
+	// Get current user from context
+	userValue, exists := c.Get(middleware.AuthContextKey)
+	if !exists {
+		response.Unauthorized(c, "Authentication required")
+		return
+	}
+
+	user, ok := userValue.(*userEntities.User)
+	if !ok {
+		response.Unauthorized(c, "Invalid user context")
+		return
+	}
+
+	// Check if user is admin
+	if !user.IsAdmin() {
+		response.Forbidden(c, "Admin access required")
+		return
+	}
+
+	// Get method from path
+	method := c.Param("method")
+	if method == "" {
+		response.BadRequest(c, "Payment method is required")
+		return
+	}
+
+	// Get payment method schema
+	schema, exists := dto.GetPaymentMethodSchema(method)
+	if !exists {
+		response.NotFound(c, fmt.Sprintf("Payment method schema not found for: %s", method))
+		return
+	}
+	
+	response.OK(c, "Payment method schema retrieved successfully", schema)
+}
+
+// CreateDynamicPaymentConfig godoc
+// @Summary [Admin] Create dynamic payment config
+// @Description Create a new payment configuration using dynamic field structure based on payment method
+// @Tags Admin-Payment-Management
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param config body dto.DynamicCreatePaymentConfigRequest true "Dynamic payment config data"
+// @Success 201 {object} response.StandardResponse{data=dto.DynamicPaymentConfigResponse}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 401 {object} response.UnauthorizedResponse
+// @Failure 403 {object} response.ForbiddenResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
+// @Router /admin/payment/configs/dynamic [post]
+func (h *PaymentHandler) CreateDynamicPaymentConfig(c *gin.Context) {
+	// Get current user from context
+	userValue, exists := c.Get(middleware.AuthContextKey)
+	if !exists {
+		response.Unauthorized(c, "Authentication required")
+		return
+	}
+
+	user, ok := userValue.(*userEntities.User)
+	if !ok {
+		response.Unauthorized(c, "Invalid user context")
+		return
+	}
+
+	// Check if user is admin
+	if !user.IsAdmin() {
+		response.Forbidden(c, "Admin access required")
+		return
+	}
+
+	// Bind request
+	var req dto.DynamicCreatePaymentConfigRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request data", err.Error())
+		return
+	}
+
+	// Validate payment method
+	schema, exists := dto.GetPaymentMethodSchema(req.Method)
+	if !exists {
+		response.BadRequest(c, fmt.Sprintf("Unsupported payment method: %s", req.Method))
+		return
+	}
+
+	// Validate configuration against schema
+	if validationErrors, err := dto.ValidatePaymentMethodConfig(req.Method, req.Config); err != nil {
+		response.InternalServerError(c, "Validation error", err.Error())
+		return
+	} else if len(validationErrors) > 0 {
+		response.BadRequest(c, "Configuration validation failed", strings.Join(validationErrors, "; "))
+		return
+	}
+
+	// Convert to standard create request
+	standardReq := h.convertDynamicToStandard(req)
+
+	// Create payment config
+	config, err := h.paymentConfigService.CreatePaymentConfig(c.Request.Context(), standardReq)
+	if err != nil {
+		logger.Error("Failed to create dynamic payment config", logger.ErrorField(err), logger.Uint("admin_id", user.ID))
+		response.InternalServerError(c, "Failed to create payment config", err.Error())
+		return
+	}
+
+	// Convert to dynamic response
+	dynamicResp := h.convertToDynamicResponse(config, schema)
+
+	response.CreatedWithMessage(c, "Dynamic payment config created successfully", dynamicResp)
+}
+
+// UpdateDynamicPaymentConfig godoc
+// @Summary [Admin] Update dynamic payment config
+// @Description Update a payment configuration using dynamic field structure
+// @Tags Admin-Payment-Management
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path uint true "Config ID"
+// @Param config body dto.DynamicUpdatePaymentConfigRequest true "Dynamic payment config update data"
+// @Success 200 {object} response.StandardResponse{data=dto.DynamicPaymentConfigResponse}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 401 {object} response.UnauthorizedResponse
+// @Failure 403 {object} response.ForbiddenResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
+// @Router /admin/payment/configs/dynamic/{id} [put]
+func (h *PaymentHandler) UpdateDynamicPaymentConfig(c *gin.Context) {
+	// Get current user from context
+	userValue, exists := c.Get(middleware.AuthContextKey)
+	if !exists {
+		response.Unauthorized(c, "Authentication required")
+		return
+	}
+
+	user, ok := userValue.(*userEntities.User)
+	if !ok {
+		response.Unauthorized(c, "Invalid user context")
+		return
+	}
+
+	// Check if user is admin
+	if !user.IsAdmin() {
+		response.Forbidden(c, "Admin access required")
+		return
+	}
+
+	// Parse config ID
+	configIDStr := c.Param("id")
+	configID, err := strconv.ParseUint(configIDStr, 10, 32)
+	if err != nil {
+		response.BadRequest(c, "Invalid config ID", "Config ID must be a valid number")
+		return
+	}
+
+	// Bind request
+	var req dto.DynamicUpdatePaymentConfigRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request data", err.Error())
+		return
+	}
+
+	// Get existing config to determine payment method
+	existingConfig, err := h.paymentConfigService.GetPaymentConfig(c.Request.Context(), uint(configID))
+	if err != nil {
+		if err.Error() == "payment config not found" {
+			response.NotFound(c, "Payment config not found")
+			return
+		}
+		logger.Error("Failed to get payment config", logger.ErrorField(err))
+		response.InternalServerError(c, "Failed to get payment config", err.Error())
+		return
+	}
+
+	// Get schema for validation
+	schema, exists := dto.GetPaymentMethodSchema(existingConfig.Method)
+	if !exists {
+		response.InternalServerError(c, "Payment method schema not found", fmt.Sprintf("Schema not found for method: %s", existingConfig.Method))
+		return
+	}
+
+	// Validate configuration if provided
+	if req.Config != nil && len(req.Config) > 0 {
+		if validationErrors, err := dto.ValidatePaymentMethodConfig(existingConfig.Method, req.Config); err != nil {
+			response.InternalServerError(c, "Validation error", err.Error())
+			return
+		} else if len(validationErrors) > 0 {
+			response.BadRequest(c, "Configuration validation failed", strings.Join(validationErrors, "; "))
+			return
+		}
+	}
+
+	// Convert to standard update request
+	standardReq := h.convertDynamicUpdateToStandard(req)
+
+	// Update payment config
+	updatedConfig, err := h.paymentConfigService.UpdatePaymentConfig(c.Request.Context(), uint(configID), standardReq)
+	if err != nil {
+		if err.Error() == "payment config not found" {
+			response.NotFound(c, "Payment config not found")
+			return
+		}
+		logger.Error("Failed to update dynamic payment config", logger.ErrorField(err), logger.Uint("config_id", uint(configID)), logger.Uint("admin_id", user.ID))
+		response.InternalServerError(c, "Failed to update payment config", err.Error())
+		return
+	}
+
+	// Convert to dynamic response
+	dynamicResp := h.convertToDynamicResponse(updatedConfig, schema)
+
+	response.OK(c, "Dynamic payment config updated successfully", dynamicResp)
+}
+
+// GetDynamicPaymentConfigs godoc
+// @Summary [Admin] Get dynamic payment configs
+// @Description Get payment configurations with dynamic field structure
+// @Tags Admin-Payment-Management
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param method query string false "Filter by payment method" example("epay")
+// @Param is_enabled query bool false "Filter by enabled status" example(true)
+// @Param limit query int false "Limit results" minimum(1) maximum(100) example(10)
+// @Param offset query int false "Offset results" minimum(0) example(0)
+// @Success 200 {object} response.PaginatedResponse{data=[]dto.DynamicPaymentConfigResponse}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 401 {object} response.UnauthorizedResponse
+// @Failure 403 {object} response.ForbiddenResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
+// @Router /admin/payment/configs/dynamic [get]
+func (h *PaymentHandler) GetDynamicPaymentConfigs(c *gin.Context) {
+	// Get current user from context
+	userValue, exists := c.Get(middleware.AuthContextKey)
+	if !exists {
+		response.Unauthorized(c, "Authentication required")
+		return
+	}
+
+	user, ok := userValue.(*userEntities.User)
+	if !ok {
+		response.Unauthorized(c, "Invalid user context")
+		return
+	}
+
+	// Check if user is admin
+	if !user.IsAdmin() {
+		response.Forbidden(c, "Admin access required")
+		return
+	}
+
+	// Parse query parameters
+	var req dto.GetPaymentConfigsRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		response.BadRequest(c, "Invalid query parameters", err.Error())
+		return
+	}
+
+	// Set default limit if not provided
+	if req.Limit == 0 {
+		req.Limit = 10
+	}
+	if req.Limit > 100 {
+		req.Limit = 100
+	}
+
+	// Get payment configs
+	configs, total, err := h.paymentConfigService.GetPaymentConfigs(c.Request.Context(), &req)
+	if err != nil {
+		logger.Error("Failed to get dynamic payment configs", logger.ErrorField(err))
+		response.InternalServerError(c, "Failed to get payment configs", err.Error())
+		return
+	}
+
+	// Convert to dynamic responses
+	var dynamicConfigs []*dto.DynamicPaymentConfigResponse
+	for _, config := range configs {
+		if schema, exists := dto.GetPaymentMethodSchema(config.Method); exists {
+			dynamicResp := h.convertToDynamicResponse(config, schema)
+			dynamicConfigs = append(dynamicConfigs, dynamicResp)
+		}
+	}
+
+	// Calculate pagination info
+	currentPage := (req.Offset / req.Limit) + 1
+
+	response.SuccessListWithMessage(c, "Dynamic payment configs retrieved successfully", dynamicConfigs, currentPage, req.Limit, total)
+}
+
+// Helper functions for dynamic configuration conversion
+
+// convertDynamicToStandard converts a dynamic create request to standard format
+func (h *PaymentHandler) convertDynamicToStandard(req dto.DynamicCreatePaymentConfigRequest) *dto.CreatePaymentConfigRequest {
+	// Extract standard fields from config
+	url := h.getStringFromConfig(req.Config, "url")
+	pid := h.getStringFromConfig(req.Config, "pid")
+	key := h.getStringFromConfig(req.Config, "key")
+	notifyURL := h.getStringFromConfig(req.Config, "notify_url")
+	returnURL := h.getStringFromConfig(req.Config, "return_url")
+	
+	// Build supported currencies from config if available
+	supportedCurrencies := "CNY" // default
+	if schema, exists := dto.GetPaymentMethodSchema(req.Method); exists {
+		if len(schema.SupportedCurrencies) > 0 {
+			supportedCurrencies = strings.Join(schema.SupportedCurrencies, ",")
+		}
+	}
+
+	return &dto.CreatePaymentConfigRequest{
+		Method:              req.Method,
+		Name:                req.Name,
+		URL:                 url,
+		PID:                 pid,
+		Key:                 key,
+		NotifyURL:           notifyURL,
+		ReturnURL:           returnURL,
+		IsEnabled:           req.IsEnabled,
+		SortOrder:           req.SortOrder,
+		SupportedCurrencies: supportedCurrencies,
+		MinAmount:           req.MinAmount,
+		MaxAmount:           req.MaxAmount,
+		FixedFee:            req.FixedFee,
+		PercentageFee:       req.PercentageFee,
+	}
+}
+
+// convertDynamicUpdateToStandard converts a dynamic update request to standard format
+func (h *PaymentHandler) convertDynamicUpdateToStandard(req dto.DynamicUpdatePaymentConfigRequest) *dto.UpdatePaymentConfigRequest {
+	standardReq := &dto.UpdatePaymentConfigRequest{
+		Name:          req.Name,
+		IsEnabled:     req.IsEnabled,
+		SortOrder:     req.SortOrder,
+		MinAmount:     req.MinAmount,
+		MaxAmount:     req.MaxAmount,
+		FixedFee:      req.FixedFee,
+		PercentageFee: req.PercentageFee,
+	}
+
+	// Extract standard fields from config if provided
+	if req.Config != nil {
+		if url := h.getStringFromConfig(req.Config, "url"); url != "" {
+			standardReq.URL = &url
+		}
+		if pid := h.getStringFromConfig(req.Config, "pid"); pid != "" {
+			standardReq.PID = &pid
+		}
+		if key := h.getStringFromConfig(req.Config, "key"); key != "" {
+			standardReq.Key = &key
+		}
+		if notifyURL := h.getStringFromConfig(req.Config, "notify_url"); notifyURL != "" {
+			standardReq.NotifyURL = &notifyURL
+		}
+		if returnURL := h.getStringFromConfig(req.Config, "return_url"); returnURL != "" {
+			standardReq.ReturnURL = &returnURL
+		}
+	}
+
+	return standardReq
+}
+
+// convertToDynamicResponse converts a standard config to dynamic response
+func (h *PaymentHandler) convertToDynamicResponse(config *entities.PaymentConfig, schema dto.PaymentMethodConfigSchema) *dto.DynamicPaymentConfigResponse {
+	// Build config map from standard fields
+	configMap := make(map[string]interface{})
+	
+	// Add standard fields to config map
+	configMap["url"] = config.URL
+	configMap["pid"] = config.PID
+	configMap["key"] = config.Key
+	if config.NotifyURL != "" {
+		configMap["notify_url"] = config.NotifyURL
+	}
+	if config.ReturnURL != "" {
+		configMap["return_url"] = config.ReturnURL
+	}
+
+	// Build required and optional field lists
+	var requiredFields []string
+	var optionalFields []string
+	fieldDescriptions := make(map[string]string)
+	
+	for _, field := range schema.RequiredFields {
+		requiredFields = append(requiredFields, field.Name)
+		fieldDescriptions[field.Name] = field.Description
+	}
+	
+	for _, field := range schema.OptionalFields {
+		optionalFields = append(optionalFields, field.Name)
+		fieldDescriptions[field.Name] = field.Description
+	}
+
+	return &dto.DynamicPaymentConfigResponse{
+		ID:               config.ID,
+		Method:           config.Method,
+		Name:             config.Name,
+		IsEnabled:        config.IsEnabled,
+		SortOrder:        config.SortOrder,
+		MinAmount:        config.MinAmount,
+		MaxAmount:        config.MaxAmount,
+		FixedFee:         config.FixedFee,
+		PercentageFee:    config.PercentageFee,
+		CreatedAt:        config.CreatedAt,
+		UpdatedAt:        config.UpdatedAt,
+		Config:           configMap,
+		RequiredFields:   requiredFields,
+		OptionalFields:   optionalFields,
+		FieldDescriptions: fieldDescriptions,
+	}
+}
+
+// getStringFromConfig safely extracts a string value from config map
+func (h *PaymentHandler) getStringFromConfig(config map[string]interface{}, key string) string {
+	if config == nil {
+		return ""
+	}
+	if value, exists := config[key]; exists {
+		if strValue, ok := value.(string); ok {
+			return strValue
+		}
+	}
+	return ""
 }
 
 // Retry Management Endpoints
@@ -656,8 +1133,8 @@ func (h *PaymentHandler) DeletePaymentConfig(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param user_id query int false "Filter by user ID" example(1)
-// @Param gateway query string false "Filter by gateway" example("epay")
-// @Param payment_method query string false "Filter by payment method" example("alipay")
+// @Param method query string false "Filter by payment method" example("epay")
+// @Param payment_method query string false "Filter by specific payment method" example("alipay")
 // @Param status query string false "Filter by retry status" Enums(pending, in_progress, completed, failed, cancelled) example("pending")
 // @Param failure_type query string false "Filter by failure type" Enums(temporary, permanent, network, gateway, business) example("temporary")
 // @Param from_date query string false "Filter from date (RFC3339)" example("2024-01-01T00:00:00Z")
@@ -779,7 +1256,7 @@ func (h *PaymentHandler) GetPaymentRetries(c *gin.Context) {
 	// Get retries
 	result, err := h.paymentRetryService.GetRetriesForAdmin(c.Request.Context(), filters)
 	if err != nil {
-		logger.Error("Failed to get payment retries", logger.Error2("error", err))
+		logger.Error("Failed to get payment retries", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get payment retries", err.Error())
 		return
 	}
@@ -837,7 +1314,7 @@ func (h *PaymentHandler) GetPaymentRetry(c *gin.Context) {
 			response.NotFound(c, "Payment retry not found")
 			return
 		}
-		logger.Error("Failed to get payment retry", logger.Error2("error", err), logger.Uint("retry_id", uint(retryID)))
+		logger.Error("Failed to get payment retry", logger.ErrorField(err), logger.Uint("retry_id", uint(retryID)))
 		response.InternalServerError(c, "Failed to get payment retry", err.Error())
 		return
 	}
@@ -898,7 +1375,7 @@ func (h *PaymentHandler) CancelPaymentRetry(c *gin.Context) {
 
 	// Cancel retry
 	if err := h.paymentRetryService.CancelRetry(c.Request.Context(), uint(retryID), req.Reason); err != nil {
-		logger.Error("Failed to cancel payment retry", logger.Error2("error", err), logger.Uint("retry_id", uint(retryID)), logger.Uint("admin_id", user.ID))
+		logger.Error("Failed to cancel payment retry", logger.ErrorField(err), logger.Uint("retry_id", uint(retryID)), logger.Uint("admin_id", user.ID))
 		response.InternalServerError(c, "Failed to cancel payment retry", err.Error())
 		return
 	}
@@ -951,7 +1428,7 @@ func (h *PaymentHandler) ResetPaymentRetry(c *gin.Context) {
 
 	// Reset retry
 	if err := h.paymentRetryService.ResetRetry(c.Request.Context(), uint(retryID)); err != nil {
-		logger.Error("Failed to reset payment retry", logger.Error2("error", err), logger.Uint("retry_id", uint(retryID)), logger.Uint("admin_id", user.ID))
+		logger.Error("Failed to reset payment retry", logger.ErrorField(err), logger.Uint("retry_id", uint(retryID)), logger.Uint("admin_id", user.ID))
 		response.InternalServerError(c, "Failed to reset payment retry", err.Error())
 		return
 	}
@@ -1013,7 +1490,7 @@ func (h *PaymentHandler) BulkCancelPaymentRetries(c *gin.Context) {
 
 	// Bulk cancel retries
 	if err := h.paymentRetryService.BulkCancelRetries(c.Request.Context(), req.RetryIDs, req.Reason); err != nil {
-		logger.Error("Failed to bulk cancel payment retries", logger.Error2("error", err), logger.Int("count", len(req.RetryIDs)), logger.Uint("admin_id", user.ID))
+		logger.Error("Failed to bulk cancel payment retries", logger.ErrorField(err), logger.Int("count", len(req.RetryIDs)), logger.Uint("admin_id", user.ID))
 		response.InternalServerError(c, "Failed to bulk cancel payment retries", err.Error())
 		return
 	}
@@ -1075,7 +1552,7 @@ func (h *PaymentHandler) BulkResetPaymentRetries(c *gin.Context) {
 
 	// Bulk reset retries
 	if err := h.paymentRetryService.BulkResetRetries(c.Request.Context(), req.RetryIDs); err != nil {
-		logger.Error("Failed to bulk reset payment retries", logger.Error2("error", err), logger.Int("count", len(req.RetryIDs)), logger.Uint("admin_id", user.ID))
+		logger.Error("Failed to bulk reset payment retries", logger.ErrorField(err), logger.Int("count", len(req.RetryIDs)), logger.Uint("admin_id", user.ID))
 		response.InternalServerError(c, "Failed to bulk reset payment retries", err.Error())
 		return
 	}
@@ -1085,12 +1562,12 @@ func (h *PaymentHandler) BulkResetPaymentRetries(c *gin.Context) {
 
 // GetRetryStatistics godoc
 // @Summary [Admin] Get retry statistics
-// @Description Get payment retry statistics for a specific gateway
+// @Description Get payment retry statistics for a specific payment method
 // @Tags Admin-Payment-Management
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param gateway query string true "Gateway name" example("epay")
+// @Param method query string true "Payment method name" example("epay")
 // @Param days query int false "Number of days to analyze" minimum(1) maximum(365) example(30)
 // @Success 200 {object} response.StandardResponse{data=dto.RetryStatistics}
 // @Failure 400 {object} response.BadRequestResponse
@@ -1134,7 +1611,7 @@ func (h *PaymentHandler) GetRetryStatistics(c *gin.Context) {
 	// Get statistics
 	stats, err := h.paymentRetryService.GetRetryStatistics(c.Request.Context(), gateway, days)
 	if err != nil {
-		logger.Error("Failed to get retry statistics", logger.Error2("error", err), logger.String("gateway", gateway))
+		logger.Error("Failed to get retry statistics", logger.String("gateway", gateway), logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get retry statistics", err.Error())
 		return
 	}
@@ -1177,7 +1654,7 @@ func (h *PaymentHandler) GetRetryHealthMetrics(c *gin.Context) {
 	// Get health metrics
 	metrics, err := h.paymentRetryService.GetRetryHealthMetrics(c.Request.Context())
 	if err != nil {
-		logger.Error("Failed to get retry health metrics", logger.Error2("error", err))
+		logger.Error("Failed to get retry health metrics", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get retry health metrics", err.Error())
 		return
 	}

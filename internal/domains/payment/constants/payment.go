@@ -14,17 +14,17 @@ const (
 const (
 	PaymentGatewayEpay   = "epay"
 	PaymentGatewayEPUSDT = "epusdt"
+	PaymentGatewayCrypto = "crypto" // 加密货币直接收款网关
 )
 
 // Payment Method Constants
 const (
-	PaymentMethodAlipay   = "alipay"
-	PaymentMethodWechat   = "wechat"
-	PaymentMethodQQ       = "qqpay"
-	PaymentMethodUnionPay = "unionpay"
-	PaymentMethodUSDT     = "usdt"
-	PaymentMethodBTC      = "btc"
-	PaymentMethodETH      = "eth"
+	// 加密货币支付方式
+	PaymentMethodTRCUSDT     = "trc_usdt"      // TRC链的USDT
+	PaymentMethodPolygonUSDT = "polygon_usdt"  // Polygon链的USDT
+	PaymentMethodUSDT        = "usdt"          // 通用USDT
+	PaymentMethodBTC         = "btc"           // 比特币
+	PaymentMethodETH         = "eth"           // 以太坊
 )
 
 // Refund Status Constants
@@ -65,12 +65,6 @@ const (
 	FeeTypePercentage = "percentage"
 )
 
-// Environment Constants
-const (
-	EnvironmentProduction = "production"
-	EnvironmentSandbox    = "sandbox"
-	EnvironmentTest       = "test"
-)
 
 // Payment Retry Status Constants
 const (

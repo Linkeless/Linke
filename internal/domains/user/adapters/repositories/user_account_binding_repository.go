@@ -29,7 +29,7 @@ func (r *userAccountBindingRepository) Create(ctx context.Context, binding *enti
 		logger.Error("Failed to create user account binding",
 			logger.Uint("user_id", binding.UserID),
 			logger.String("provider", binding.Provider),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		return fmt.Errorf("failed to create user account binding: %w", err)
 	}
 
@@ -50,7 +50,7 @@ func (r *userAccountBindingRepository) GetByID(ctx context.Context, id uint) (*e
 		}
 		logger.Error("Failed to get user account binding by ID",
 			logger.Uint("binding_id", id),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to get user account binding: %w", err)
 	}
 
@@ -63,7 +63,7 @@ func (r *userAccountBindingRepository) Update(ctx context.Context, binding *enti
 		logger.Error("Failed to update user account binding",
 			logger.Uint("binding_id", binding.ID),
 			logger.Uint("user_id", binding.UserID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		return fmt.Errorf("failed to update user account binding: %w", err)
 	}
 
@@ -80,7 +80,7 @@ func (r *userAccountBindingRepository) Delete(ctx context.Context, id uint) erro
 	if err := r.db.WithContext(ctx).Delete(&entities.UserAccountBinding{}, id).Error; err != nil {
 		logger.Error("Failed to delete user account binding",
 			logger.Uint("binding_id", id),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		return fmt.Errorf("failed to delete user account binding: %w", err)
 	}
 
@@ -99,7 +99,7 @@ func (r *userAccountBindingRepository) GetByUserID(ctx context.Context, userID u
 		Find(&bindings).Error; err != nil {
 		logger.Error("Failed to get user account bindings by user ID",
 			logger.Uint("user_id", userID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to get user account bindings: %w", err)
 	}
 
@@ -118,7 +118,7 @@ func (r *userAccountBindingRepository) GetByProviderAndProviderUserID(ctx contex
 		logger.Error("Failed to get user account binding by provider and provider user ID",
 			logger.String("provider", provider),
 			logger.String("provider_user_id", providerUserID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to get user account binding: %w", err)
 	}
 
@@ -159,7 +159,7 @@ func (r *userAccountBindingRepository) UpdateLastUsed(ctx context.Context, id ui
 		Update("last_used_at", now).Error; err != nil {
 		logger.Error("Failed to update last used timestamp",
 			logger.Uint("binding_id", id),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		return fmt.Errorf("failed to update last used: %w", err)
 	}
 

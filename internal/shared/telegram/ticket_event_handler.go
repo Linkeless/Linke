@@ -50,7 +50,7 @@ func (h *TicketEventHandler) Handle(ctx context.Context, event events.Event) err
 	if err != nil {
 		logger.Error("Failed to parse ticket event",
 			logger.String("event_type", event.EventType()),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		return err
 	}
 	
@@ -60,7 +60,7 @@ func (h *TicketEventHandler) Handle(ctx context.Context, event events.Event) err
 		// Notify admins about new ticket
 		if err := h.bot.SendTicketNotificationToAdmins(notification); err != nil {
 			logger.Error("Failed to send ticket created notification to admins",
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 		}
 		
 		// Notify user about ticket creation
@@ -68,7 +68,7 @@ func (h *TicketEventHandler) Handle(ctx context.Context, event events.Event) err
 			if err := h.bot.SendTicketNotificationToUser(userTelegramID, notification); err != nil {
 				logger.Error("Failed to send ticket created notification to user",
 					logger.String("telegram_id", userTelegramID),
-					logger.Error2("error", err))
+					logger.ErrorField(err))
 			}
 		}
 		
@@ -80,7 +80,7 @@ func (h *TicketEventHandler) Handle(ctx context.Context, event events.Event) err
 				if err := h.bot.SendTicketNotification(chatID, notification); err != nil {
 					logger.Error("Failed to send ticket assigned notification",
 						logger.Int64("chat_id", chatID),
-						logger.Error2("error", err))
+						logger.ErrorField(err))
 				}
 			}
 		}
@@ -93,14 +93,14 @@ func (h *TicketEventHandler) Handle(ctx context.Context, event events.Event) err
 				if err := h.bot.SendTicketNotificationToUser(userTelegramID, notification); err != nil {
 					logger.Error("Failed to send reply notification to user",
 						logger.String("telegram_id", userTelegramID),
-						logger.Error2("error", err))
+						logger.ErrorField(err))
 				}
 			}
 		} else {
 			// Notify admins about user reply
 			if err := h.bot.SendTicketNotificationToAdmins(notification); err != nil {
 				logger.Error("Failed to send reply notification to admins",
-					logger.Error2("error", err))
+					logger.ErrorField(err))
 			}
 			
 			// Also notify assigned agent if exists
@@ -110,7 +110,7 @@ func (h *TicketEventHandler) Handle(ctx context.Context, event events.Event) err
 					if err := h.bot.SendTicketNotification(chatID, notification); err != nil {
 						logger.Error("Failed to send reply notification to assigned agent",
 							logger.Int64("chat_id", chatID),
-							logger.Error2("error", err))
+							logger.ErrorField(err))
 					}
 				}
 			}
@@ -122,7 +122,7 @@ func (h *TicketEventHandler) Handle(ctx context.Context, event events.Event) err
 			if err := h.bot.SendTicketNotificationToUser(userTelegramID, notification); err != nil {
 				logger.Error("Failed to send resolution/closure notification to user",
 					logger.String("telegram_id", userTelegramID),
-					logger.Error2("error", err))
+					logger.ErrorField(err))
 			}
 		}
 		
@@ -131,7 +131,7 @@ func (h *TicketEventHandler) Handle(ctx context.Context, event events.Event) err
 		notification.Priority = "urgent" // Override priority for escalated tickets
 		if err := h.bot.SendTicketNotificationToAdmins(notification); err != nil {
 			logger.Error("Failed to send escalation notification to admins",
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 		}
 		
 	case "ticket.status_changed":
@@ -142,7 +142,7 @@ func (h *TicketEventHandler) Handle(ctx context.Context, event events.Event) err
 				if err := h.bot.SendTicketNotification(chatID, notification); err != nil {
 					logger.Error("Failed to send status change notification",
 						logger.Int64("chat_id", chatID),
-						logger.Error2("error", err))
+						logger.ErrorField(err))
 				}
 			}
 		}

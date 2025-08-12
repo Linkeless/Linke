@@ -513,7 +513,7 @@ func TestPaymentRetryService_InitiateRetry(t *testing.T) {
 	paymentRecord := &entities.PaymentRecord{
 		ID:            1,
 		Gateway:       constants.PaymentGatewayEpay,
-		PaymentMethod: constants.PaymentMethodAlipay,
+		PaymentMethod: constants.PaymentMethodTRCUSDT,
 		Amount:        100.0,
 		Currency:      constants.CurrencyCNY,
 	}
@@ -565,7 +565,7 @@ func TestPaymentRetryService_ClassifyFailure(t *testing.T) {
 		{
 			name:          "Permanent failure - invalid card",
 			gateway:       constants.PaymentGatewayEpay,
-			paymentMethod: constants.PaymentMethodAlipay,
+			paymentMethod: constants.PaymentMethodTRCUSDT,
 			errorCode:     "INVALID_CARD",
 			errorMessage:  "Invalid card number",
 			expected:      constants.FailureTypePermanent,
@@ -573,7 +573,7 @@ func TestPaymentRetryService_ClassifyFailure(t *testing.T) {
 		{
 			name:          "Network failure",
 			gateway:       constants.PaymentGatewayEpay,
-			paymentMethod: constants.PaymentMethodAlipay,
+			paymentMethod: constants.PaymentMethodTRCUSDT,
 			errorCode:     "NETWORK_ERROR",
 			errorMessage:  "Connection timeout",
 			expected:      constants.FailureTypeNetwork,
@@ -581,7 +581,7 @@ func TestPaymentRetryService_ClassifyFailure(t *testing.T) {
 		{
 			name:          "Gateway failure",
 			gateway:       constants.PaymentGatewayEpay,
-			paymentMethod: constants.PaymentMethodAlipay,
+			paymentMethod: constants.PaymentMethodTRCUSDT,
 			errorCode:     "GATEWAY_ERROR",
 			errorMessage:  "Gateway temporarily unavailable",
 			expected:      constants.FailureTypeGateway,
@@ -589,7 +589,7 @@ func TestPaymentRetryService_ClassifyFailure(t *testing.T) {
 		{
 			name:          "Temporary failure",
 			gateway:       constants.PaymentGatewayEpay,
-			paymentMethod: constants.PaymentMethodAlipay,
+			paymentMethod: constants.PaymentMethodTRCUSDT,
 			errorCode:     "UNKNOWN_ERROR",
 			errorMessage:  "Unknown error occurred",
 			expected:      constants.FailureTypeTemporary,
@@ -622,7 +622,7 @@ func TestPaymentRetryService_GetRetryStrategy(t *testing.T) {
 	ctx := context.Background()
 
 	// Test getting default strategy for known gateway
-	strategy, err := service.GetRetryStrategy(ctx, constants.PaymentGatewayEpay, constants.PaymentMethodAlipay)
+	strategy, err := service.GetRetryStrategy(ctx, constants.PaymentGatewayEpay, constants.PaymentMethodTRCUSDT)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, strategy)

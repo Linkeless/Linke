@@ -188,7 +188,7 @@ func (h *AdminInvoiceHandler) CreateInvoice(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to find user for invoice creation",
 			logger.Uint("user_id", createReq.UserID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.BadRequest(c, "User not found")
 		return
@@ -228,7 +228,7 @@ func (h *AdminInvoiceHandler) CreateInvoice(c *gin.Context) {
 		logger.Error("Admin failed to create invoice",
 			logger.Uint("user_id", createReq.UserID),
 			logger.Uint("subscription_order_id", createReq.SubscriptionOrderID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		if strings.Contains(err.Error(), "duplicate") || strings.Contains(err.Error(), "unique") {
@@ -276,7 +276,7 @@ func (h *AdminInvoiceHandler) GetInvoice(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to get invoice",
 			logger.Uint("invoice_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.NotFound(c, "Invoice not found")
 		return
@@ -343,7 +343,7 @@ func (h *AdminInvoiceHandler) ListInvoices(c *gin.Context) {
 
 	invoices, total, err := h.invoiceService.GetInvoices(c.Request.Context(), filterReq)
 	if err != nil {
-		logger.Error("Admin failed to list invoices", logger.Error2("error", err))
+		logger.Error("Admin failed to list invoices", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to list invoices")
 		return
 	}
@@ -415,7 +415,7 @@ func (h *AdminInvoiceHandler) UpdateInvoice(c *gin.Context) {
 		logger.Error("Admin failed to update invoice",
 			logger.Uint("invoice_id", uint(id)),
 			logger.Any("update_request", updateReq),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		if strings.Contains(err.Error(), "not found") {
@@ -466,7 +466,7 @@ func (h *AdminInvoiceHandler) DeleteInvoice(c *gin.Context) {
 	if err := h.invoiceService.DeleteInvoice(c.Request.Context(), uint(id)); err != nil {
 		logger.Error("Admin failed to delete invoice",
 			logger.Uint("invoice_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		if strings.Contains(err.Error(), "not found") {
@@ -525,7 +525,7 @@ func (h *AdminInvoiceHandler) VoidInvoice(c *gin.Context) {
 		logger.Error("Admin failed to void invoice",
 			logger.Uint("invoice_id", uint(id)),
 			logger.String("reason", voidReq.Reason),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		if strings.Contains(err.Error(), "not found") {
@@ -545,7 +545,7 @@ func (h *AdminInvoiceHandler) VoidInvoice(c *gin.Context) {
 	// Get updated invoice
 	invoice, err := h.invoiceService.GetInvoice(c.Request.Context(), uint(id))
 	if err != nil {
-		logger.Error("Failed to get invoice after voiding", logger.Error2("error", err))
+		logger.Error("Failed to get invoice after voiding", logger.ErrorField(err))
 		response.InternalServerError(c, "Invoice voided but failed to retrieve updated data")
 		return
 	}
@@ -602,7 +602,7 @@ func (h *AdminInvoiceHandler) MarkInvoiceAsPaid(c *gin.Context) {
 		logger.Error("Admin failed to mark invoice as paid",
 			logger.Uint("invoice_id", uint(id)),
 			logger.String("payment_date", paymentDate),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		if strings.Contains(err.Error(), "not found") {
@@ -622,7 +622,7 @@ func (h *AdminInvoiceHandler) MarkInvoiceAsPaid(c *gin.Context) {
 	// Get updated invoice to return payment information
 	invoice, err := h.invoiceService.GetInvoice(c.Request.Context(), uint(id))
 	if err != nil {
-		logger.Error("Failed to get invoice after marking as paid", logger.Error2("error", err))
+		logger.Error("Failed to get invoice after marking as paid", logger.ErrorField(err))
 		response.InternalServerError(c, "Invoice marked as paid but failed to retrieve updated data")
 		return
 	}
@@ -691,7 +691,7 @@ func (h *AdminInvoiceHandler) RegenerateInvoicePDF(c *gin.Context) {
 		logger.Error("Admin failed to regenerate invoice PDF",
 			logger.Uint("invoice_id", uint(id)),
 			logger.Any("pdf_options", pdfOptions),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		if strings.Contains(err.Error(), "not found") {
@@ -749,7 +749,7 @@ func (h *AdminInvoiceHandler) ResendInvoice(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to get invoice for resend",
 			logger.Uint("invoice_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.NotFound(c, "Invoice not found")
 		return
@@ -778,7 +778,7 @@ func (h *AdminInvoiceHandler) ResendInvoice(c *gin.Context) {
 		logger.Error("Admin failed to resend invoice",
 			logger.Uint("invoice_id", uint(id)),
 			logger.String("to_email", emailReq.ToEmail),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		response.InternalServerError(c, "Failed to resend invoice")
@@ -861,7 +861,7 @@ func (h *AdminInvoiceHandler) SearchInvoices(c *gin.Context) {
 		logger.Error("Admin failed to search invoices",
 			logger.String("query", searchReq.Query),
 			logger.Any("search_params", searchReq),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to search invoices")
 		return
@@ -984,7 +984,7 @@ func (h *AdminInvoiceHandler) GetInvoiceStatistics(c *gin.Context) {
 		logger.Error("Admin failed to get invoice statistics", 
 			logger.String("date_from", fromDate),
 			logger.String("date_to", toDate),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to get invoice statistics")
 		return
@@ -1036,7 +1036,7 @@ func (h *AdminInvoiceHandler) GetInvoiceAnalytics(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to get invoice analytics", 
 			logger.Any("analytics_params", analyticsReq),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to get invoice analytics")
 		return
@@ -1096,7 +1096,7 @@ func (h *AdminInvoiceHandler) GetOverdueInvoices(c *gin.Context) {
 
 	invoices, _, err := h.invoiceService.GetInvoices(c.Request.Context(), filterReq)
 	if err != nil {
-		logger.Error("Admin failed to get overdue invoices", logger.Error2("error", err))
+		logger.Error("Admin failed to get overdue invoices", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get overdue invoices")
 		return
 	}
@@ -1172,7 +1172,7 @@ func (h *AdminInvoiceHandler) BulkVoidInvoices(c *gin.Context) {
 			errors = append(errors, fmt.Sprintf("Invoice %d: %s", invoiceID, err.Error()))
 			logger.Error("Bulk void failed for invoice",
 				logger.Uint("invoice_id", invoiceID),
-				logger.Error2("error", err),
+				logger.ErrorField(err),
 			)
 		} else {
 			successCount++
@@ -1233,7 +1233,7 @@ func (h *AdminInvoiceHandler) BulkMarkPaid(c *gin.Context) {
 			errors = append(errors, fmt.Sprintf("Invoice %d: %s", invoiceID, err.Error()))
 			logger.Error("Bulk mark paid failed for invoice",
 				logger.Uint("invoice_id", invoiceID),
-				logger.Error2("error", err),
+				logger.ErrorField(err),
 			)
 		} else {
 			successCount++
@@ -1294,7 +1294,7 @@ func (h *AdminInvoiceHandler) BulkResendInvoices(c *gin.Context) {
 			errors = append(errors, fmt.Sprintf("Invoice %d: %s", invoiceID, err.Error()))
 			logger.Error("Bulk resend failed for invoice",
 				logger.Uint("invoice_id", invoiceID),
-				logger.Error2("error", err),
+				logger.ErrorField(err),
 			)
 		} else {
 			successCount++
@@ -1351,7 +1351,7 @@ func (h *AdminInvoiceHandler) BulkRegeneratePDF(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin bulk PDF generation failed",
 			logger.Any("invoice_ids", bulkReq.InvoiceIDs),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to generate bulk PDFs")
 		return
@@ -1387,7 +1387,7 @@ func (h *AdminInvoiceHandler) BulkRegeneratePDF(c *gin.Context) {
 func (h *AdminInvoiceHandler) GetAvailableTemplates(c *gin.Context) {
 	templates, err := h.invoiceService.GetAvailableTemplates(c.Request.Context())
 	if err != nil {
-		logger.Error("Admin failed to get available templates", logger.Error2("error", err))
+		logger.Error("Admin failed to get available templates", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get available templates")
 		return
 	}
@@ -1413,7 +1413,7 @@ func (h *AdminInvoiceHandler) GetAvailableTemplates(c *gin.Context) {
 func (h *AdminInvoiceHandler) GetAvailableLanguages(c *gin.Context) {
 	languages, err := h.invoiceService.GetAvailableLanguages(c.Request.Context())
 	if err != nil {
-		logger.Error("Admin failed to get available languages", logger.Error2("error", err))
+		logger.Error("Admin failed to get available languages", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get available languages")
 		return
 	}

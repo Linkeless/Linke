@@ -170,7 +170,7 @@ func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context
 
 		validateResp, err := sos.couponService.ValidateCoupon(ctx, validateReq)
 		if err != nil {
-			logger.Error("Failed to validate coupon", logger.Error2("error", err), logger.String("coupon_code", req.CouponCode))
+			logger.Error("Failed to validate coupon", logger.ErrorField(err), logger.String("coupon_code", req.CouponCode))
 			return nil, fmt.Errorf("failed to validate coupon: %w", err)
 		}
 
@@ -234,7 +234,7 @@ func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context
 	// Save order to database
 	if err := tx.Create(order).Error; err != nil {
 		tx.Rollback()
-		logger.Error("Failed to create subscription order", logger.Error2("error", err))
+		logger.Error("Failed to create subscription order", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to create subscription order: %w", err)
 	}
 
@@ -253,7 +253,7 @@ func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context
 	invoice, err := sos.invoiceService.CreateInvoice(ctx, invoiceReq)
 	if err != nil {
 		tx.Rollback()
-		logger.Error("Failed to create invoice", logger.Error2("error", err))
+		logger.Error("Failed to create invoice", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to create invoice: %w", err)
 	}
 
@@ -276,13 +276,13 @@ func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context
 	if err != nil {
 		// SECURITY: Rollback transaction if payment creation fails
 		tx.Rollback()
-		logger.Error("Failed to create payment order", logger.Error2("error", err))
+		logger.Error("Failed to create payment order", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to create payment order: %w", err)
 	}
 
 	// Commit transaction only after both order and payment are successfully created
 	if err := tx.Commit().Error; err != nil {
-		logger.Error("Failed to commit subscription order transaction", logger.Error2("error", err))
+		logger.Error("Failed to commit subscription order transaction", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to commit subscription order transaction: %w", err)
 	}
 
@@ -293,7 +293,7 @@ func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context
 		_, err := sos.couponService.UseCoupon(ctx, appliedCouponID, uint64(req.UserID), couponDiscountAmount, &orderIDUint64)
 		if err != nil {
 			logger.Error("Failed to record coupon usage",
-				logger.Error2("error", err),
+				logger.ErrorField(err),
 				logger.Any("coupon_id", appliedCouponID),
 				logger.Uint("order_id", order.ID))
 			// Don't fail the entire order creation, just log the error
@@ -305,7 +305,7 @@ func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context
 		"transaction_id": paymentRecord.PaymentNo,
 		"updated_at":     time.Now(),
 	}).Error; err != nil {
-		logger.Error("Failed to update order with payment info", logger.Error2("error", err))
+		logger.Error("Failed to update order with payment info", logger.ErrorField(err))
 		// Don't fail the entire process, just log the error
 	}
 
@@ -552,7 +552,7 @@ func (sos *SubscriptionOrderService) GetSubscriptionOrder(ctx context.Context, o
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("subscription order not found")
 		}
-		logger.Error("Failed to get subscription order", logger.Error2("error", err), logger.Uint("order_id", orderID))
+		logger.Error("Failed to get subscription order", logger.Uint("orderID", uint(orderID)))
 		return nil, fmt.Errorf("failed to get subscription order: %w", err)
 	}
 	return &order, nil
@@ -565,7 +565,7 @@ func (sos *SubscriptionOrderService) GetSubscriptionOrderByNumber(ctx context.Co
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("subscription order not found")
 		}
-		logger.Error("Failed to get subscription order by number", logger.Error2("error", err), logger.String("order_number", orderNumber))
+		logger.Error("Failed to get subscription order by number", logger.String("order_number", orderNumber), logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to get subscription order: %w", err)
 	}
 	return &order, nil
@@ -1027,7 +1027,7 @@ func (sos *SubscriptionOrderService) UpdateOrderStatusWithEvidence(ctx context.C
 	if req.Status == constants.OrderStatusPaid && order.Status != constants.OrderStatusPaid {
 		if err := sos.ProcessOrderPaymentSuccess(ctx, orderID); err != nil {
 			logger.Error("Failed to process order after status update",
-				logger.Error2("error", err),
+				logger.ErrorField(err),
 				logger.Uint("order_id", orderID))
 			// Don't fail the status update, but log the error
 		}
@@ -1605,7 +1605,7 @@ func (sos *SubscriptionOrderService) QuickPurchase(ctx context.Context, req *int
 
 		validateResp, err := sos.couponService.ValidateCoupon(ctx, validateReq)
 		if err != nil {
-			logger.Error("Failed to validate coupon", logger.Error2("error", err), logger.String("coupon_code", req.CouponCode))
+			logger.Error("Failed to validate coupon", logger.ErrorField(err), logger.String("coupon_code", req.CouponCode))
 			return nil, fmt.Errorf("failed to validate coupon: %w", err)
 		}
 
@@ -1661,7 +1661,7 @@ func (sos *SubscriptionOrderService) QuickPurchase(ctx context.Context, req *int
 
 	paymentRecord, err := sos.paymentService.CreatePaymentOrder(ctx, paymentReq)
 	if err != nil {
-		logger.Error("Failed to create payment order for quick purchase", logger.Error2("error", err))
+		logger.Error("Failed to create payment order for quick purchase", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to create payment order: %w", err)
 	}
 

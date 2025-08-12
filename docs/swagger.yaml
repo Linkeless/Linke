@@ -859,23 +859,112 @@ definitions:
     - type
     - value
     type: object
-  dto.CreatePaymentConfigRequest:
+  dto.CreateCryptoWalletConfigRequest:
     properties:
-      config:
-        example: '{"api_url":"..."}'
+      api_endpoint:
+        description: API endpoint
+        example: https://api.trongrid.io
+        type: string
+      api_key:
+        description: API key
+        example: api-key
+        type: string
+      contract_address:
+        description: Contract address
+        example: TR7NHqjeKQxGTCI...
+        type: string
+      currency:
+        description: Currency
+        example: USDT
+        type: string
+      decimals:
+        description: Decimals
+        example: 6
+        type: integer
+      description:
+        description: Description
+        example: USDT on TRON network
+        type: string
+      display_name:
+        description: Display name
+        example: TRC-USDT
         type: string
       fixed_fee:
+        description: Fixed fee
         example: 0
         type: number
-      gateway:
-        example: epay
+      icon:
+        description: Icon URL
+        example: https://example.com/usdt-icon.png
         type: string
       is_enabled:
+        description: Is enabled
         example: true
         type: boolean
       max_amount:
+        description: Max amount
+        example: 100000
+        type: number
+      min_amount:
+        description: Min amount
+        example: 1
+        type: number
+      min_confirmations:
+        description: Min confirmations
+        example: 1
+        type: integer
+      network:
+        description: Network
+        example: trc
+        type: string
+      network_fee:
+        description: Network fee
+        example: 1
+        type: number
+      processing_fee:
+        description: Processing fee rate
+        example: 0.5
+        type: number
+      sort_order:
+        description: Sort order
+        example: 1
+        type: integer
+      symbol:
+        description: Symbol
+        example: USDT
+        type: string
+      wallet_address:
+        description: Wallet address
+        example: TXXXxxxXXXxxxXXXxxx
+        type: string
+      wallet_name:
+        description: Wallet name
+        example: Main TRC-USDT Wallet
+        type: string
+    required:
+    - currency
+    - display_name
+    - network
+    - symbol
+    - wallet_address
+    type: object
+  dto.CreatePaymentConfigRequest:
+    properties:
+      fixed_fee:
+        example: 0
+        type: number
+      is_enabled:
+        example: true
+        type: boolean
+      key:
+        example: secret123
+        type: string
+      max_amount:
         example: 99999.99
         type: number
+      method:
+        example: epay
+        type: string
       methods:
         items:
           $ref: '#/definitions/entities.Method'
@@ -884,21 +973,35 @@ definitions:
         example: 0.01
         type: number
       name:
-        example: EPay Gateway
+        example: EPay Payment Method
+        type: string
+      notify_url:
+        example: https://example.com/webhook
         type: string
       percentage_fee:
         example: 0.6
         type: number
+      pid:
+        example: partner123
+        type: string
+      return_url:
+        example: https://example.com/return
+        type: string
       sort_order:
         example: 1
         type: integer
       supported_currencies:
         example: CNY
         type: string
+      url:
+        example: https://api.example.com
+        type: string
     required:
-    - config
-    - gateway
+    - key
+    - method
     - name
+    - pid
+    - url
     type: object
   dto.CreatePaymentMethodRequest:
     properties:
@@ -932,7 +1035,7 @@ definitions:
         maxLength: 100
         type: string
       method:
-        example: alipay
+        example: trc_usdt
         type: string
       payment_token:
         example: tok_1234567890
@@ -985,7 +1088,7 @@ definitions:
         description: Async notification URL
         type: string
       payment_method:
-        example: alipay
+        example: trc_usdt
         type: string
       return_url:
         example: https://example.com/payment/return
@@ -1186,6 +1289,146 @@ definitions:
     - rate
     - server_port
     type: object
+  dto.CryptoWalletConfigListResponse:
+    properties:
+      configs:
+        items:
+          $ref: '#/definitions/dto.CryptoWalletConfigResponse'
+        type: array
+      total:
+        example: 2
+        type: integer
+    type: object
+  dto.CryptoWalletConfigResponse:
+    properties:
+      address_validated:
+        description: Address validated
+        example: true
+        type: boolean
+      balance:
+        description: Wallet balance
+        example: 1000.5
+        type: number
+      can_accept_payment:
+        description: Computed fields
+        type: boolean
+      contract_address:
+        description: Contract address
+        example: TR7NHqjeKQxGTCI...
+        type: string
+      created_at:
+        description: Creation time
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      currency:
+        description: Currency
+        example: USDT
+        type: string
+      decimals:
+        description: Decimals
+        example: 6
+        type: integer
+      description:
+        description: Description
+        example: USDT on TRON network
+        type: string
+      display_info:
+        additionalProperties: true
+        description: Display information
+        type: object
+      display_name:
+        description: Display name
+        example: TRC-USDT
+        type: string
+      fixed_fee:
+        description: Fixed fee
+        example: 0
+        type: number
+      gateway_type:
+        description: Gateway type
+        type: string
+      health_status:
+        description: Health status
+        example: healthy
+        type: string
+      icon:
+        description: Icon URL
+        example: https://example.com/usdt-icon.png
+        type: string
+      id:
+        description: Config ID
+        example: 1
+        type: integer
+      is_active:
+        description: Is active
+        example: true
+        type: boolean
+      is_enabled:
+        description: Is enabled
+        example: true
+        type: boolean
+      is_healthy:
+        description: Is healthy
+        type: boolean
+      last_check_at:
+        description: Last check time
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      max_amount:
+        description: Max amount
+        example: 100000
+        type: number
+      min_amount:
+        description: Min amount
+        example: 1
+        type: number
+      min_confirmations:
+        description: Min confirmations
+        example: 1
+        type: integer
+      needs_validation:
+        description: Needs validation
+        type: boolean
+      network:
+        description: Network
+        example: trc
+        type: string
+      network_fee:
+        description: Network fee
+        example: 1
+        type: number
+      payment_method:
+        description: Corresponding payment method
+        type: string
+      processing_fee:
+        description: Processing fee rate
+        example: 0.5
+        type: number
+      sort_order:
+        description: Sort order
+        example: 1
+        type: integer
+      symbol:
+        description: Symbol
+        example: USDT
+        type: string
+      updated_at:
+        description: Update time
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      validated_at:
+        description: Validated time
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      wallet_address:
+        description: Wallet address
+        example: TXXXxxxXXXxxxXXXxxxXXXxxxXXX
+        type: string
+      wallet_name:
+        description: Wallet name
+        example: Main TRC-USDT Wallet
+        type: string
+    type: object
   dto.DatabaseHealthResponse:
     properties:
       mysql:
@@ -1194,6 +1437,150 @@ definitions:
       redis:
         example: true
         type: boolean
+    type: object
+  dto.DynamicCreatePaymentConfigRequest:
+    properties:
+      config:
+        additionalProperties: true
+        description: Dynamic configuration
+        type: object
+      fixed_fee:
+        description: Fixed fee
+        example: 0
+        type: number
+      is_enabled:
+        description: Is enabled
+        example: true
+        type: boolean
+      max_amount:
+        description: Max amount
+        example: 99999.99
+        type: number
+      method:
+        description: Payment method
+        example: epay
+        type: string
+      min_amount:
+        description: Min amount
+        example: 0.01
+        type: number
+      name:
+        description: Display name
+        example: EPay Payment Method
+        type: string
+      percentage_fee:
+        description: Percentage fee
+        example: 0.6
+        type: number
+      sort_order:
+        description: Sort order
+        example: 1
+        type: integer
+    required:
+    - config
+    - method
+    - name
+    type: object
+  dto.DynamicPaymentConfigResponse:
+    properties:
+      config:
+        additionalProperties: true
+        description: Dynamic fields based on payment method
+        type: object
+      created_at:
+        description: Creation time
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      field_descriptions:
+        additionalProperties:
+          type: string
+        description: Field descriptions for UI
+        type: object
+      fixed_fee:
+        description: Fixed fee
+        example: 0
+        type: number
+      id:
+        description: Config ID
+        example: 1
+        type: integer
+      is_enabled:
+        description: Enabled status
+        example: true
+        type: boolean
+      max_amount:
+        description: Maximum amount
+        example: 99999.99
+        type: number
+      method:
+        description: Payment method identifier
+        example: epay
+        type: string
+      min_amount:
+        description: Minimum amount
+        example: 0.01
+        type: number
+      name:
+        description: Display name
+        example: EPay Payment Method
+        type: string
+      optional_fields:
+        description: Optional fields for this method
+        items:
+          type: string
+        type: array
+      percentage_fee:
+        description: Percentage fee
+        example: 0.6
+        type: number
+      required_fields:
+        description: Required fields for this method
+        items:
+          type: string
+        type: array
+      sort_order:
+        description: Sort order
+        example: 1
+        type: integer
+      updated_at:
+        description: Update time
+        example: "2024-01-01T00:00:00Z"
+        type: string
+    type: object
+  dto.DynamicUpdatePaymentConfigRequest:
+    properties:
+      config:
+        additionalProperties: true
+        description: Dynamic configuration
+        type: object
+      fixed_fee:
+        description: Fixed fee
+        example: 0
+        type: number
+      is_enabled:
+        description: Is enabled
+        example: true
+        type: boolean
+      max_amount:
+        description: Max amount
+        example: 99999.99
+        type: number
+      min_amount:
+        description: Min amount
+        example: 0.01
+        type: number
+      name:
+        description: Display name
+        example: EPay Payment Method
+        type: string
+      percentage_fee:
+        description: Percentage fee
+        example: 0.6
+        type: number
+      sort_order:
+        description: Sort order
+        example: 1
+        type: integer
     type: object
   dto.EscalateTicketRequest:
     properties:
@@ -1297,6 +1684,51 @@ definitions:
         type: string
       retry_success_rate:
         type: number
+    type: object
+  dto.FieldDefinition:
+    properties:
+      default_value:
+        description: Default value
+      description:
+        description: Field description
+        example: 支付网关的API接口地址
+        type: string
+      display_name:
+        description: Display name for UI
+        example: API接口地址
+        type: string
+      name:
+        description: Field name
+        example: url
+        type: string
+      options:
+        description: Options for select fields
+        example:
+        - production
+        - sandbox
+        items:
+          type: string
+        type: array
+      placeholder:
+        description: Input placeholder
+        example: https://pay.example.com
+        type: string
+      required:
+        description: Whether field is required
+        example: true
+        type: boolean
+      sensitive:
+        description: Whether field contains sensitive data
+        example: true
+        type: boolean
+      type:
+        description: 'Field type: string, number, boolean, url, email'
+        example: string
+        type: string
+      validation:
+        description: Validation rule
+        example: url
+        type: string
     type: object
   dto.GatewayHealthMetric:
     properties:
@@ -1572,10 +2004,6 @@ definitions:
         description: Fixed fee
         example: 0
         type: number
-      gateway:
-        description: Payment gateway
-        example: epay
-        type: string
       id:
         description: Config ID
         example: 1
@@ -1584,10 +2012,18 @@ definitions:
         description: Enabled status
         example: true
         type: boolean
+      key:
+        description: API key/secret
+        example: secret123
+        type: string
       max_amount:
         description: Maximum amount
         example: 99999.99
         type: number
+      method:
+        description: Payment method identifier
+        example: epay
+        type: string
       methods:
         description: Payment methods
         items:
@@ -1599,12 +2035,24 @@ definitions:
         type: number
       name:
         description: Display name
-        example: EPay Gateway
+        example: EPay Payment Method
+        type: string
+      notify_url:
+        description: Callback URL
+        example: https://example.com/webhook
         type: string
       percentage_fee:
         description: Percentage fee
         example: 0.6
         type: number
+      pid:
+        description: Partner/Merchant ID
+        example: partner123
+        type: string
+      return_url:
+        description: Return URL
+        example: https://example.com/return
+        type: string
       sort_order:
         description: Sort order
         example: 1
@@ -1617,6 +2065,52 @@ definitions:
         description: Update time
         example: "2024-01-01T00:00:00Z"
         type: string
+      url:
+        description: API endpoint URL
+        example: https://api.example.com
+        type: string
+    type: object
+  dto.PaymentMethodConfigSchema:
+    properties:
+      default_config:
+        additionalProperties: true
+        description: Default configuration values
+        type: object
+      description:
+        description: Method description
+        example: EPay支付网关，支持支付宝、微信等多种支付方式
+        type: string
+      display_name:
+        description: Display name for UI
+        example: EPay支付
+        type: string
+      method:
+        description: Payment method
+        example: epay
+        type: string
+      optional_fields:
+        description: Optional configuration fields
+        items:
+          $ref: '#/definitions/dto.FieldDefinition'
+        type: array
+      required_fields:
+        description: Required configuration fields
+        items:
+          $ref: '#/definitions/dto.FieldDefinition'
+        type: array
+      supported_currencies:
+        description: Supported currencies
+        example:
+        - CNY
+        - USD
+        items:
+          type: string
+        type: array
+      validation_rules:
+        additionalProperties:
+          type: string
+        description: Field validation rules
+        type: object
     type: object
   dto.PaymentMethodListResponse:
     properties:
@@ -1703,7 +2197,7 @@ definitions:
         type: string
       method:
         description: Payment method
-        example: alipay
+        example: trc_usdt
         type: string
       needs_validation:
         description: Validation requirement
@@ -1815,7 +2309,7 @@ definitions:
         type: string
       payment_method:
         description: Payment method
-        example: alipay
+        example: trc_usdt
         type: string
       payment_no:
         description: Payment number
@@ -2609,17 +3103,92 @@ definitions:
         minimum: 0
         type: number
     type: object
+  dto.UpdateCryptoWalletConfigRequest:
+    properties:
+      api_endpoint:
+        description: API endpoint
+        example: https://api.trongrid.io
+        type: string
+      api_key:
+        description: API key
+        example: api-key
+        type: string
+      contract_address:
+        description: Contract address
+        example: TR7NHqjeKQxGTCI...
+        type: string
+      decimals:
+        description: Decimals
+        example: 6
+        type: integer
+      description:
+        description: Description
+        example: USDT on TRON network
+        type: string
+      display_name:
+        description: Display name
+        example: TRC-USDT
+        type: string
+      fixed_fee:
+        description: Fixed fee
+        example: 0
+        type: number
+      health_status:
+        description: Health status
+        example: healthy
+        type: string
+      icon:
+        description: Icon URL
+        example: https://example.com/usdt-icon.png
+        type: string
+      is_active:
+        description: Is active
+        example: true
+        type: boolean
+      is_enabled:
+        description: Is enabled
+        example: true
+        type: boolean
+      max_amount:
+        description: Max amount
+        example: 100000
+        type: number
+      min_amount:
+        description: Min amount
+        example: 1
+        type: number
+      min_confirmations:
+        description: Min confirmations
+        example: 1
+        type: integer
+      network_fee:
+        description: Network fee
+        example: 1
+        type: number
+      processing_fee:
+        description: Processing fee rate
+        example: 0.5
+        type: number
+      sort_order:
+        description: Sort order
+        example: 1
+        type: integer
+      wallet_name:
+        description: Wallet name
+        example: Updated TRC-USDT Wallet
+        type: string
+    type: object
   dto.UpdatePaymentConfigRequest:
     properties:
-      config:
-        example: '{"api_url":"..."}'
-        type: string
       fixed_fee:
         example: 0
         type: number
       is_enabled:
         example: true
         type: boolean
+      key:
+        example: secret123
+        type: string
       max_amount:
         example: 99999.99
         type: number
@@ -2631,16 +3200,28 @@ definitions:
         example: 0.01
         type: number
       name:
-        example: EPay Gateway
+        example: EPay Payment Method
+        type: string
+      notify_url:
+        example: https://example.com/webhook
         type: string
       percentage_fee:
         example: 0.6
         type: number
+      pid:
+        example: partner123
+        type: string
+      return_url:
+        example: https://example.com/return
+        type: string
       sort_order:
         example: 1
         type: integer
       supported_currencies:
         example: CNY
+        type: string
+      url:
+        example: https://api.example.com
         type: string
     type: object
   dto.UpdatePaymentMethodRequest:
@@ -2918,6 +3499,39 @@ definitions:
         example: true
         type: boolean
     type: object
+  dto.ValidateCryptoWalletAddressRequest:
+    properties:
+      address:
+        description: Wallet address
+        example: TXXXxxxXXXxxxXXXxxxXXXxxxXXX
+        type: string
+      network:
+        description: Network
+        example: trc
+        type: string
+    required:
+    - address
+    - network
+    type: object
+  dto.ValidateCryptoWalletAddressResponse:
+    properties:
+      address_type:
+        description: Address type
+        example: wallet
+        type: string
+      error_message:
+        description: Error message if invalid
+        example: Invalid format
+        type: string
+      is_valid:
+        description: Is address valid
+        example: true
+        type: boolean
+      network:
+        description: Network
+        example: trc
+        type: string
+    type: object
   entities.AlertConfigurationResponse:
     properties:
       cooldown_minutes:
@@ -3062,14 +3676,10 @@ definitions:
   entities.Method:
     properties:
       code:
-        description: Method code (alipay, wechat, usdt, etc.)
+        description: Method code (trc_usdt, polygon_usdt, usdt, btc, eth, etc.)
         type: string
       description:
         description: Description
-        type: string
-      environment:
-        description: constants.EnvironmentProduction, constants.EnvironmentSandbox,
-          constants.EnvironmentTest
         type: string
       fee_max:
         description: Maximum fee
@@ -8969,15 +9579,11 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get payment configurations with filtering and pagination
+      description: Get payment configurations with filtering and pagination. Configs
+        use method-based structure (epay, crypto_btc, etc.)
       parameters:
-      - description: Filter by gateway
+      - description: Filter by payment method
         example: '"epay"'
-        in: query
-        name: gateway
-        type: string
-      - description: Filter by method
-        example: '"alipay"'
         in: query
         name: method
         type: string
@@ -8986,11 +9592,6 @@ paths:
         in: query
         name: is_enabled
         type: boolean
-      - description: Filter by environment
-        example: '"production"'
-        in: query
-        name: environment
-        type: string
       - description: Limit results
         example: 10
         in: query
@@ -9042,9 +9643,11 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create a new payment configuration
+      description: Create a new payment configuration with simplified structure (method
+        + url + pid + key)
       parameters:
-      - description: Payment config data
+      - description: Payment config data with method (epay/crypto), URL, PID, and
+          Key
         in: body
         name: config
         required: true
@@ -9129,14 +9732,15 @@ paths:
     put:
       consumes:
       - application/json
-      description: Update a payment configuration
+      description: Update a payment configuration. Supports method-based structure
+        with URL, PID, Key fields
       parameters:
       - description: Payment config ID
         in: path
         name: id
         required: true
         type: integer
-      - description: Updated payment config data
+      - description: Updated payment config data (URL, PID, Key, etc.)
         in: body
         name: config
         required: true
@@ -9179,6 +9783,515 @@ paths:
       summary: '[Admin] Update payment config'
       tags:
       - Admin-Payment-Management
+  /admin/payment/configs/dynamic:
+    get:
+      consumes:
+      - application/json
+      description: Get payment configurations with dynamic field structure
+      parameters:
+      - description: Filter by payment method
+        example: '"epay"'
+        in: query
+        name: method
+        type: string
+      - description: Filter by enabled status
+        example: true
+        in: query
+        name: is_enabled
+        type: boolean
+      - description: Limit results
+        example: 10
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - description: Offset results
+        example: 0
+        in: query
+        minimum: 0
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.PaginatedResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.DynamicPaymentConfigResponse'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Get dynamic payment configs'
+      tags:
+      - Admin-Payment-Management
+    post:
+      consumes:
+      - application/json
+      description: Create a new payment configuration using dynamic field structure
+        based on payment method
+      parameters:
+      - description: Dynamic payment config data
+        in: body
+        name: config
+        required: true
+        schema:
+          $ref: '#/definitions/dto.DynamicCreatePaymentConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.DynamicPaymentConfigResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Create dynamic payment config'
+      tags:
+      - Admin-Payment-Management
+  /admin/payment/configs/dynamic/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Update a payment configuration using dynamic field structure
+      parameters:
+      - description: Config ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Dynamic payment config update data
+        in: body
+        name: config
+        required: true
+        schema:
+          $ref: '#/definitions/dto.DynamicUpdatePaymentConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.DynamicPaymentConfigResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Update dynamic payment config'
+      tags:
+      - Admin-Payment-Management
+  /admin/payment/crypto-wallets:
+    get:
+      description: Get list of cryptocurrency wallet configurations with optional
+        filtering
+      parameters:
+      - description: Filter by network
+        example: '"trc"'
+        in: query
+        name: network
+        type: string
+      - description: Filter by currency
+        example: '"USDT"'
+        in: query
+        name: currency
+        type: string
+      - description: Filter by enabled status
+        example: true
+        in: query
+        name: is_enabled
+        type: boolean
+      - description: Filter by active status
+        example: true
+        in: query
+        name: is_active
+        type: boolean
+      - description: Limit results
+        example: 10
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - description: Offset results
+        example: 0
+        in: query
+        minimum: 0
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.PaginatedResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CryptoWalletConfigListResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] List crypto wallet configs'
+      tags:
+      - Admin-Payment-Management
+    post:
+      consumes:
+      - application/json
+      description: Create a new cryptocurrency wallet configuration for receiving
+        payments
+      parameters:
+      - description: Crypto wallet config creation request
+        in: body
+        name: config
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateCryptoWalletConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CryptoWalletConfigResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Create crypto wallet config'
+      tags:
+      - Admin-Payment-Management
+  /admin/payment/crypto-wallets/{id}:
+    delete:
+      description: Soft delete cryptocurrency wallet configuration
+      parameters:
+      - description: Crypto wallet config ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Delete crypto wallet config'
+      tags:
+      - Admin-Payment-Management
+    get:
+      description: Get cryptocurrency wallet configuration by ID
+      parameters:
+      - description: Crypto wallet config ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CryptoWalletConfigResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Get crypto wallet config'
+      tags:
+      - Admin-Payment-Management
+    put:
+      consumes:
+      - application/json
+      description: Update cryptocurrency wallet configuration
+      parameters:
+      - description: Crypto wallet config ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Crypto wallet config update request
+        in: body
+        name: config
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateCryptoWalletConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CryptoWalletConfigResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Update crypto wallet config'
+      tags:
+      - Admin-Payment-Management
+  /admin/payment/crypto-wallets/{id}/toggle:
+    post:
+      description: Toggle enabled status of cryptocurrency wallet configuration
+      parameters:
+      - description: Crypto wallet config ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CryptoWalletConfigResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Toggle crypto wallet config'
+      tags:
+      - Admin-Payment-Management
+  /admin/payment/crypto-wallets/validate-address:
+    post:
+      consumes:
+      - application/json
+      description: Validate cryptocurrency wallet address format
+      parameters:
+      - description: Wallet address validation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ValidateCryptoWalletAddressRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ValidateCryptoWalletAddressResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Validate wallet address'
+      tags:
+      - Admin-Payment-Management
   /admin/payment/retries:
     get:
       consumes:
@@ -9190,12 +10303,12 @@ paths:
         in: query
         name: user_id
         type: integer
-      - description: Filter by gateway
+      - description: Filter by payment method
         example: '"epay"'
         in: query
-        name: gateway
+        name: method
         type: string
-      - description: Filter by payment method
+      - description: Filter by specific payment method
         example: '"alipay"'
         in: query
         name: payment_method
@@ -9568,12 +10681,12 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get payment retry statistics for a specific gateway
+      description: Get payment retry statistics for a specific payment method
       parameters:
-      - description: Gateway name
+      - description: Payment method name
         example: '"epay"'
         in: query
-        name: gateway
+        name: method
         required: true
         type: string
       - description: Number of days to analyze
@@ -9614,6 +10727,91 @@ paths:
       security:
       - BearerAuth: []
       summary: '[Admin] Get retry statistics'
+      tags:
+      - Admin-Payment-Management
+  /admin/payment/schemas:
+    get:
+      consumes:
+      - application/json
+      description: Get configuration schemas for all supported payment methods
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  additionalProperties:
+                    $ref: '#/definitions/dto.PaymentMethodConfigSchema'
+                  type: object
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Get payment method schemas'
+      tags:
+      - Admin-Payment-Management
+  /admin/payment/schemas/{method}:
+    get:
+      consumes:
+      - application/json
+      description: Get configuration schema for a specific payment method
+      parameters:
+      - description: Payment method
+        example: '"epay"'
+        in: path
+        name: method
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.PaymentMethodConfigSchema'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[Admin] Get payment method schema'
       tags:
       - Admin-Payment-Management
   /admin/referrals:
@@ -10790,6 +11988,25 @@ paths:
       - description: Filter by server name (substring match)
         in: query
         name: name
+        type: string
+      - default: sort
+        description: Sort by field
+        enum:
+        - sort
+        - created_at
+        - updated_at
+        - name
+        - rate
+        in: query
+        name: sort_by
+        type: string
+      - default: asc
+        description: Sort order
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_order
         type: string
       produces:
       - application/json
@@ -15914,7 +17131,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get active payment configurations for public display
+      description: Get active payment configurations for public display. Returns simplified
+        method-based configs
       parameters:
       - description: Filter by currency
         example: '"CNY"'
@@ -15942,11 +17160,55 @@ paths:
       summary: '[Public] Get active payment configs'
       tags:
       - User-Payment
+  /payment/crypto-wallets:
+    get:
+      description: Get enabled cryptocurrency wallet configurations for public payment
+        selection
+      parameters:
+      - description: Filter by network
+        example: '"trc"'
+        in: query
+        name: network
+        type: string
+      - description: Filter by currency
+        example: '"USDT"'
+        in: query
+        name: currency
+        type: string
+      - description: Filter by supported amount
+        example: 100.5
+        in: query
+        name: amount
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CryptoWalletConfigListResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      summary: '[Public] Get available crypto wallet configs'
+      tags:
+      - User-Payment
   /payment/methods:
     get:
       consumes:
       - application/json
-      description: Get available payment methods grouped by gateway
+      description: Get available payment methods organized by payment method type
+        (epay, crypto, etc.)
       produces:
       - application/json
       responses:
@@ -15970,18 +17232,21 @@ paths:
       summary: '[Public] Get available payment methods'
       tags:
       - User-Payment
-  /payment/notify/{gateway}:
+  /payment/notify/{method}:
     post:
       consumes:
       - application/json
-      description: Handle payment notification from gateway
+      description: Handle payment notification from payment method. Supports EPay
+        and crypto payment methods
       parameters:
-      - description: Payment gateway
+      - description: Payment method
         enum:
         - epay
         - epusdt
+        - crypto_btc
+        - crypto_usdt
         in: path
-        name: gateway
+        name: method
         required: true
         type: string
       produces:
@@ -16006,9 +17271,10 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create a new payment order
+      description: Create a new payment order. Supports method-based payments (epay,
+        crypto, etc.)
       parameters:
-      - description: Payment order data
+      - description: Payment order data with method field
         in: body
         name: payment_order
         required: true
@@ -16659,6 +17925,38 @@ paths:
       security:
       - BearerAuth: []
       summary: '[User] Get subscription traffic statistics'
+      tags:
+      - User-Subscription
+  /subscriptions/clash:
+    get:
+      description: Return Clash-compatible YAML built from user's accessible servers
+      parameters:
+      - description: Subscription token (Bearer token also supported)
+        in: query
+        name: token
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: YAML
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Clash subscription YAML
       tags:
       - User-Subscription
   /subscriptions/my:

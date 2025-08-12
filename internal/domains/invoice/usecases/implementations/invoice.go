@@ -116,7 +116,7 @@ func (is *InvoiceService) CreateInvoice(ctx context.Context, req *dto.CreateInvo
 
 	// Save invoice
 	if err := is.db.WithContext(ctx).Create(invoice).Error; err != nil {
-		logger.Error("Failed to create invoice", logger.Error2("error", err))
+		logger.Error("Failed to create invoice", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to create invoice: %w", err)
 	}
 
@@ -129,7 +129,7 @@ func (is *InvoiceService) CreateInvoice(ctx context.Context, req *dto.CreateInvo
 		}
 		if err := is.SendInvoice(ctx, invoice.ID, emailRequest); err != nil {
 			logger.Error("Failed to auto-send invoice",
-				logger.Error2("error", err),
+				logger.ErrorField(err),
 				logger.Uint("invoice_id", invoice.ID))
 			// Don't fail the creation, just log the error
 		}

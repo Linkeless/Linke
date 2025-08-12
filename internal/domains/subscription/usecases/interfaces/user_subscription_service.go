@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"context"
+	serverEntities "linke/internal/domains/server/entities"
 	"linke/internal/domains/subscription/entities"
 	"time"
 )
@@ -36,6 +37,9 @@ type UserSubscriptionService interface {
 	// ResetTrafficUsage resets traffic usage for a subscription - unified signature
 	ResetTrafficUsage(ctx context.Context, subscriptionID uint, adminUserID uint) (*entities.UserSubscription, error)
 	GetSubscriptionTrafficStats(ctx context.Context, subscriptionID uint) (map[string]any, error)
+
+	// Access control helpers
+	GetUserAccessibleServers(ctx context.Context, userID uint) ([]*serverEntities.ShadowsocksServer, error)
 
 	// Subscription expiry management
 	CheckAndProcessExpiredSubscriptions(ctx context.Context) error

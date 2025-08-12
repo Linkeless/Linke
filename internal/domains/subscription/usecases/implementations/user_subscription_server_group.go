@@ -151,7 +151,7 @@ func (s *UserSubscriptionService) UpdateSubscriptionServerGroups(ctx context.Con
 		tx.Rollback()
 		logger.Error("Failed to update subscription server groups",
 			logger.Uint("subscription_id", req.SubscriptionID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to update subscription server groups: %w", err)
 	}
 
@@ -334,7 +334,7 @@ func (s *UserSubscriptionService) GetServerGroupUsageStats(ctx context.Context, 
 			Model(&serverEntities.ShadowsocksServer{}).
 			Where("group_id = ? AND `show` = ?", groupID, 1).
 			Count(&serverCount).Error; err != nil {
-			logger.Error("Failed to count servers in group", logger.Uint("group_id", groupID), logger.Error2("error", err))
+			logger.Error("Failed to count servers in group", logger.Uint("group_id", groupID), logger.ErrorField(err))
 			continue
 		}
 

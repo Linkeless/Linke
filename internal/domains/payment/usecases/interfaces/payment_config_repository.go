@@ -10,7 +10,7 @@ type PaymentConfigRepository interface {
 	// Basic CRUD operations
 	Create(ctx context.Context, config *entities.PaymentConfig) error
 	GetByID(ctx context.Context, id uint) (*entities.PaymentConfig, error)
-	GetByGateway(ctx context.Context, gateway string) (*entities.PaymentConfig, error)
+	GetByMethod(ctx context.Context, method string) (*entities.PaymentConfig, error)
 	Update(ctx context.Context, config *entities.PaymentConfig) error
 	Delete(ctx context.Context, id uint) error
 
@@ -69,10 +69,10 @@ type PaymentConfigRepository interface {
 	CountTotal(ctx context.Context) (int64, error)
 	CountEnabled(ctx context.Context) (int64, error)
 	CountDisabled(ctx context.Context) (int64, error)
-	CountByGateway(ctx context.Context, gateway string) (int64, error)
+	CountByMethod(ctx context.Context, method string) (int64, error)
 
 	// Existence checks
-	ExistsByGateway(ctx context.Context, gateway string) (bool, error)
+	ExistsByMethod(ctx context.Context, method string) (bool, error)
 	ExistsByID(ctx context.Context, id uint) (bool, error)
 
 	// Public operations (for frontend)
@@ -109,9 +109,4 @@ type PaymentConfigRepository interface {
 	// Configuration backup and restore
 	ExportConfigs(ctx context.Context) ([]*entities.PaymentConfig, error)
 	ImportConfigs(ctx context.Context, configs []*entities.PaymentConfig) error
-
-	// Environment-specific operations
-	ListByEnvironment(ctx context.Context, environment string, limit, offset int) ([]*entities.PaymentConfig, int64, error)
-	GetProductionConfigs(ctx context.Context) ([]*entities.PaymentConfig, error)
-	GetTestConfigs(ctx context.Context) ([]*entities.PaymentConfig, error)
 }

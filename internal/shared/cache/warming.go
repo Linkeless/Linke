@@ -247,7 +247,7 @@ func (cw *CacheWarmer) warmEager(ctx context.Context) error {
 			if err := cw.WarmPrefix(ctx, prefix); err != nil {
 				cw.logger.Error("Failed to warm prefix",
 					logger.String("prefix", prefix),
-					logger.Error2("error", err))
+					logger.ErrorField(err))
 			}
 		}
 	}
@@ -275,7 +275,7 @@ func (cw *CacheWarmer) startScheduledWarming(ctx context.Context) error {
 			select {
 			case <-ticker.C:
 				if err := cw.warmEager(ctx); err != nil {
-					cw.logger.Error("Scheduled warming failed", logger.Error2("error", err))
+					cw.logger.Error("Scheduled warming failed", logger.ErrorField(err))
 				}
 			case <-cw.stopChan:
 				return
@@ -303,7 +303,7 @@ func (cw *CacheWarmer) startPredictiveWarming(ctx context.Context) error {
 			case <-ticker.C:
 				// Warm popular data based on recent usage patterns
 				if err := cw.WarmPopularData(ctx, cw.config.MaxItems/2); err != nil {
-					cw.logger.Error("Predictive warming failed", logger.Error2("error", err))
+					cw.logger.Error("Predictive warming failed", logger.ErrorField(err))
 				}
 			case <-cw.stopChan:
 				return
@@ -351,7 +351,7 @@ func (cw *CacheWarmer) warmDataBatch(ctx context.Context, data map[string][]byte
 				errorCount++
 				cw.logger.Debug("Failed to warm cache key",
 					logger.String("key", result.key),
-					logger.Error2("error", result.err))
+					logger.ErrorField(result.err))
 			} else {
 				successCount++
 			}

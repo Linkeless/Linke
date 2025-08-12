@@ -431,7 +431,7 @@ func (s *ReferralService) createReferralEvent(ctx context.Context, referralID, u
 			logger.Uint("referral_id", referralID),
 			logger.Uint("user_id", userID),
 			logger.String("event_type", eventType),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 	}
 }
@@ -523,7 +523,7 @@ func (s *ReferralService) UpdateReferral(ctx context.Context, referralID uint, r
 
 	// Update the referral
 	if err := s.db.DB.WithContext(ctx).Model(referral).Updates(updates).Error; err != nil {
-		logger.Error("Failed to update referral", logger.Error2("error", err), logger.Uint("referral_id", referralID))
+		logger.Error("Failed to update referral", logger.Uint("referralID", uint(referralID)))
 		return nil, fmt.Errorf("failed to update referral: %w", err)
 	}
 
@@ -574,7 +574,7 @@ func (s *ReferralService) GetReferrals(ctx context.Context, req *dto.GetReferral
 	// Get total count
 	var totalCount int64
 	if err := query.Count(&totalCount).Error; err != nil {
-		logger.Error("Failed to count referrals", logger.Error2("error", err))
+		logger.Error("Failed to count referrals", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to count referrals: %w", err)
 	}
 
@@ -591,7 +591,7 @@ func (s *ReferralService) GetReferrals(ctx context.Context, req *dto.GetReferral
 
 	var referrals []*entities.Referral
 	if err := query.Find(&referrals).Error; err != nil {
-		logger.Error("Failed to get referrals", logger.Error2("error", err))
+		logger.Error("Failed to get referrals", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to get referrals: %w", err)
 	}
 
@@ -624,7 +624,7 @@ func (s *ReferralService) ProcessReferralReward(ctx context.Context, referralID 
 	}
 
 	if err := s.db.DB.WithContext(ctx).Model(referral).Updates(updates).Error; err != nil {
-		logger.Error("Failed to process referral reward", logger.Error2("error", err), logger.Uint("referral_id", referralID))
+		logger.Error("Failed to process referral reward", logger.Uint("referralID", uint(referralID)))
 		return fmt.Errorf("failed to process referral reward: %w", err)
 	}
 
@@ -644,7 +644,7 @@ func (s *ReferralService) MarkReferralAsPaid(ctx context.Context, referralID uin
 	}
 
 	if err := s.db.DB.WithContext(ctx).Model(&entities.Referral{}).Where("id = ?", referralID).Updates(updates).Error; err != nil {
-		logger.Error("Failed to mark referral as paid", logger.Error2("error", err), logger.Uint("referral_id", referralID))
+		logger.Error("Failed to mark referral as paid", logger.Uint("referralID", uint(referralID)))
 		return fmt.Errorf("failed to mark referral as paid: %w", err)
 	}
 

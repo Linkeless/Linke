@@ -4261,7 +4261,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get payment configurations with filtering and pagination",
+                "description": "Get payment configurations with filtering and pagination. Configs use method-based structure (epay, crypto_btc, etc.)",
                 "consumes": [
                     "application/json"
                 ],
@@ -4276,14 +4276,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "example": "\"epay\"",
-                        "description": "Filter by gateway",
-                        "name": "gateway",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "example": "\"alipay\"",
-                        "description": "Filter by method",
+                        "description": "Filter by payment method",
                         "name": "method",
                         "in": "query"
                     },
@@ -4292,13 +4285,6 @@ const docTemplate = `{
                         "example": true,
                         "description": "Filter by enabled status",
                         "name": "is_enabled",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "example": "\"production\"",
-                        "description": "Filter by environment",
-                        "name": "environment",
                         "in": "query"
                     },
                     {
@@ -4373,7 +4359,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Create a new payment configuration",
+                "description": "Create a new payment configuration with simplified structure (method + url + pid + key)",
                 "consumes": [
                     "application/json"
                 ],
@@ -4386,7 +4372,7 @@ const docTemplate = `{
                 "summary": "[Admin] Create payment config",
                 "parameters": [
                     {
-                        "description": "Payment config data",
+                        "description": "Payment config data with method (epay/crypto), URL, PID, and Key",
                         "name": "config",
                         "in": "body",
                         "required": true,
@@ -4441,6 +4427,267 @@ const docTemplate = `{
                 }
             }
         },
+        "/admin/payment/configs/dynamic": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get payment configurations with dynamic field structure",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Payment-Management"
+                ],
+                "summary": "[Admin] Get dynamic payment configs",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "\"epay\"",
+                        "description": "Filter by payment method",
+                        "name": "method",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "example": true,
+                        "description": "Filter by enabled status",
+                        "name": "is_enabled",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "example": 10,
+                        "description": "Limit results",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "example": 0,
+                        "description": "Offset results",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.PaginatedResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.DynamicPaymentConfigResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new payment configuration using dynamic field structure based on payment method",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Payment-Management"
+                ],
+                "summary": "[Admin] Create dynamic payment config",
+                "parameters": [
+                    {
+                        "description": "Dynamic payment config data",
+                        "name": "config",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.DynamicCreatePaymentConfigRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.DynamicPaymentConfigResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/payment/configs/dynamic/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a payment configuration using dynamic field structure",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Payment-Management"
+                ],
+                "summary": "[Admin] Update dynamic payment config",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Config ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Dynamic payment config update data",
+                        "name": "config",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.DynamicUpdatePaymentConfigRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.DynamicPaymentConfigResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/admin/payment/configs/{id}": {
             "put": {
                 "security": [
@@ -4448,7 +4695,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Update a payment configuration",
+                "description": "Update a payment configuration. Supports method-based structure with URL, PID, Key fields",
                 "consumes": [
                     "application/json"
                 ],
@@ -4468,7 +4715,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Updated payment config data",
+                        "description": "Updated payment config data (URL, PID, Key, etc.)",
                         "name": "config",
                         "in": "body",
                         "required": true,
@@ -4594,6 +4841,562 @@ const docTemplate = `{
                 }
             }
         },
+        "/admin/payment/crypto-wallets": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get list of cryptocurrency wallet configurations with optional filtering",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Payment-Management"
+                ],
+                "summary": "[Admin] List crypto wallet configs",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "\"trc\"",
+                        "description": "Filter by network",
+                        "name": "network",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "\"USDT\"",
+                        "description": "Filter by currency",
+                        "name": "currency",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "example": true,
+                        "description": "Filter by enabled status",
+                        "name": "is_enabled",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "example": true,
+                        "description": "Filter by active status",
+                        "name": "is_active",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "example": 10,
+                        "description": "Limit results",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "example": 0,
+                        "description": "Offset results",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.PaginatedResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CryptoWalletConfigListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new cryptocurrency wallet configuration for receiving payments",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Payment-Management"
+                ],
+                "summary": "[Admin] Create crypto wallet config",
+                "parameters": [
+                    {
+                        "description": "Crypto wallet config creation request",
+                        "name": "config",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateCryptoWalletConfigRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CryptoWalletConfigResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/payment/crypto-wallets/validate-address": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Validate cryptocurrency wallet address format",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Payment-Management"
+                ],
+                "summary": "[Admin] Validate wallet address",
+                "parameters": [
+                    {
+                        "description": "Wallet address validation request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ValidateCryptoWalletAddressRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ValidateCryptoWalletAddressResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/payment/crypto-wallets/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get cryptocurrency wallet configuration by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Payment-Management"
+                ],
+                "summary": "[Admin] Get crypto wallet config",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Crypto wallet config ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CryptoWalletConfigResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update cryptocurrency wallet configuration",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Payment-Management"
+                ],
+                "summary": "[Admin] Update crypto wallet config",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Crypto wallet config ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Crypto wallet config update request",
+                        "name": "config",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateCryptoWalletConfigRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CryptoWalletConfigResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Soft delete cryptocurrency wallet configuration",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Payment-Management"
+                ],
+                "summary": "[Admin] Delete crypto wallet config",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Crypto wallet config ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/payment/crypto-wallets/{id}/toggle": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Toggle enabled status of cryptocurrency wallet configuration",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Payment-Management"
+                ],
+                "summary": "[Admin] Toggle crypto wallet config",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Crypto wallet config ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CryptoWalletConfigResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/admin/payment/retries": {
             "get": {
                 "security": [
@@ -4623,14 +5426,14 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "example": "\"epay\"",
-                        "description": "Filter by gateway",
-                        "name": "gateway",
+                        "description": "Filter by payment method",
+                        "name": "method",
                         "in": "query"
                     },
                     {
                         "type": "string",
                         "example": "\"alipay\"",
-                        "description": "Filter by payment method",
+                        "description": "Filter by specific payment method",
                         "name": "payment_method",
                         "in": "query"
                     },
@@ -4975,7 +5778,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get payment retry statistics for a specific gateway",
+                "description": "Get payment retry statistics for a specific payment method",
                 "consumes": [
                     "application/json"
                 ],
@@ -4990,8 +5793,8 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "example": "\"epay\"",
-                        "description": "Gateway name",
-                        "name": "gateway",
+                        "description": "Payment method name",
+                        "name": "method",
                         "in": "query",
                         "required": true
                     },
@@ -5238,6 +6041,147 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/response.StandardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/payment/schemas": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get configuration schemas for all supported payment methods",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Payment-Management"
+                ],
+                "summary": "[Admin] Get payment method schemas",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "$ref": "#/definitions/dto.PaymentMethodConfigSchema"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/payment/schemas/{method}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get configuration schema for a specific payment method",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Payment-Management"
+                ],
+                "summary": "[Admin] Get payment method schema",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "\"epay\"",
+                        "description": "Payment method",
+                        "name": "method",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.PaymentMethodConfigSchema"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -7135,6 +8079,31 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Filter by server name (substring match)",
                         "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "sort",
+                            "created_at",
+                            "updated_at",
+                            "name",
+                            "rate"
+                        ],
+                        "type": "string",
+                        "default": "sort",
+                        "description": "Sort by field",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "default": "asc",
+                        "description": "Sort order",
+                        "name": "sort_order",
                         "in": "query"
                     }
                 ],
@@ -15229,7 +16198,7 @@ const docTemplate = `{
         },
         "/payment/configs": {
             "get": {
-                "description": "Get active payment configurations for public display",
+                "description": "Get active payment configurations for public display. Returns simplified method-based configs",
                 "consumes": [
                     "application/json"
                 ],
@@ -15280,9 +16249,76 @@ const docTemplate = `{
                 }
             }
         },
+        "/payment/crypto-wallets": {
+            "get": {
+                "description": "Get enabled cryptocurrency wallet configurations for public payment selection",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Payment"
+                ],
+                "summary": "[Public] Get available crypto wallet configs",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "\"trc\"",
+                        "description": "Filter by network",
+                        "name": "network",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "\"USDT\"",
+                        "description": "Filter by currency",
+                        "name": "currency",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "example": 100.5,
+                        "description": "Filter by supported amount",
+                        "name": "amount",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CryptoWalletConfigListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/payment/methods": {
             "get": {
-                "description": "Get available payment methods grouped by gateway",
+                "description": "Get available payment methods organized by payment method type (epay, crypto, etc.)",
                 "consumes": [
                     "application/json"
                 ],
@@ -15327,9 +16363,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/payment/notify/{gateway}": {
+        "/payment/notify/{method}": {
             "post": {
-                "description": "Handle payment notification from gateway",
+                "description": "Handle payment notification from payment method. Supports EPay and crypto payment methods",
                 "consumes": [
                     "application/json"
                 ],
@@ -15344,11 +16380,13 @@ const docTemplate = `{
                     {
                         "enum": [
                             "epay",
-                            "epusdt"
+                            "epusdt",
+                            "crypto_btc",
+                            "crypto_usdt"
                         ],
                         "type": "string",
-                        "description": "Payment gateway",
-                        "name": "gateway",
+                        "description": "Payment method",
+                        "name": "method",
                         "in": "path",
                         "required": true
                     }
@@ -15382,7 +16420,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Create a new payment order",
+                "description": "Create a new payment order. Supports method-based payments (epay, crypto, etc.)",
                 "consumes": [
                     "application/json"
                 ],
@@ -15395,7 +16433,7 @@ const docTemplate = `{
                 "summary": "[User] Create payment order",
                 "parameters": [
                     {
-                        "description": "Payment order data",
+                        "description": "Payment order data with method field",
                         "name": "payment_order",
                         "in": "body",
                         "required": true,
@@ -16177,6 +17215,57 @@ const docTemplate = `{
                         "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/subscriptions/clash": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Return Clash-compatible YAML built from user's accessible servers",
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "Get Clash subscription YAML",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Subscription token (Bearer token also supported)",
+                        "name": "token",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "YAML",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
                         }
                     },
                     "500": {
@@ -21098,33 +22187,147 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CreatePaymentConfigRequest": {
+        "dto.CreateCryptoWalletConfigRequest": {
             "type": "object",
             "required": [
-                "config",
-                "gateway",
-                "name"
+                "currency",
+                "display_name",
+                "network",
+                "symbol",
+                "wallet_address"
             ],
             "properties": {
-                "config": {
+                "api_endpoint": {
+                    "description": "API endpoint",
                     "type": "string",
-                    "example": "{\"api_url\":\"...\"}"
+                    "example": "https://api.trongrid.io"
+                },
+                "api_key": {
+                    "description": "API key",
+                    "type": "string",
+                    "example": "api-key"
+                },
+                "contract_address": {
+                    "description": "Contract address",
+                    "type": "string",
+                    "example": "TR7NHqjeKQxGTCI..."
+                },
+                "currency": {
+                    "description": "Currency",
+                    "type": "string",
+                    "example": "USDT"
+                },
+                "decimals": {
+                    "description": "Decimals",
+                    "type": "integer",
+                    "example": 6
+                },
+                "description": {
+                    "description": "Description",
+                    "type": "string",
+                    "example": "USDT on TRON network"
+                },
+                "display_name": {
+                    "description": "Display name",
+                    "type": "string",
+                    "example": "TRC-USDT"
                 },
                 "fixed_fee": {
+                    "description": "Fixed fee",
                     "type": "number",
                     "example": 0
                 },
-                "gateway": {
+                "icon": {
+                    "description": "Icon URL",
                     "type": "string",
-                    "example": "epay"
+                    "example": "https://example.com/usdt-icon.png"
+                },
+                "is_enabled": {
+                    "description": "Is enabled",
+                    "type": "boolean",
+                    "example": true
+                },
+                "max_amount": {
+                    "description": "Max amount",
+                    "type": "number",
+                    "example": 100000
+                },
+                "min_amount": {
+                    "description": "Min amount",
+                    "type": "number",
+                    "example": 1
+                },
+                "min_confirmations": {
+                    "description": "Min confirmations",
+                    "type": "integer",
+                    "example": 1
+                },
+                "network": {
+                    "description": "Network",
+                    "type": "string",
+                    "example": "trc"
+                },
+                "network_fee": {
+                    "description": "Network fee",
+                    "type": "number",
+                    "example": 1
+                },
+                "processing_fee": {
+                    "description": "Processing fee rate",
+                    "type": "number",
+                    "example": 0.5
+                },
+                "sort_order": {
+                    "description": "Sort order",
+                    "type": "integer",
+                    "example": 1
+                },
+                "symbol": {
+                    "description": "Symbol",
+                    "type": "string",
+                    "example": "USDT"
+                },
+                "wallet_address": {
+                    "description": "Wallet address",
+                    "type": "string",
+                    "example": "TXXXxxxXXXxxxXXXxxx"
+                },
+                "wallet_name": {
+                    "description": "Wallet name",
+                    "type": "string",
+                    "example": "Main TRC-USDT Wallet"
+                }
+            }
+        },
+        "dto.CreatePaymentConfigRequest": {
+            "type": "object",
+            "required": [
+                "key",
+                "method",
+                "name",
+                "pid",
+                "url"
+            ],
+            "properties": {
+                "fixed_fee": {
+                    "type": "number",
+                    "example": 0
                 },
                 "is_enabled": {
                     "type": "boolean",
                     "example": true
                 },
+                "key": {
+                    "type": "string",
+                    "example": "secret123"
+                },
                 "max_amount": {
                     "type": "number",
                     "example": 99999.99
+                },
+                "method": {
+                    "type": "string",
+                    "example": "epay"
                 },
                 "methods": {
                     "type": "array",
@@ -21138,11 +22341,23 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string",
-                    "example": "EPay Gateway"
+                    "example": "EPay Payment Method"
+                },
+                "notify_url": {
+                    "type": "string",
+                    "example": "https://example.com/webhook"
                 },
                 "percentage_fee": {
                     "type": "number",
                     "example": 0.6
+                },
+                "pid": {
+                    "type": "string",
+                    "example": "partner123"
+                },
+                "return_url": {
+                    "type": "string",
+                    "example": "https://example.com/return"
                 },
                 "sort_order": {
                     "type": "integer",
@@ -21151,6 +22366,10 @@ const docTemplate = `{
                 "supported_currencies": {
                     "type": "string",
                     "example": "CNY"
+                },
+                "url": {
+                    "type": "string",
+                    "example": "https://api.example.com"
                 }
             }
         },
@@ -21204,7 +22423,7 @@ const docTemplate = `{
                 },
                 "method": {
                     "type": "string",
-                    "example": "alipay"
+                    "example": "trc_usdt"
                 },
                 "payment_token": {
                     "type": "string",
@@ -21274,7 +22493,7 @@ const docTemplate = `{
                 },
                 "payment_method": {
                     "type": "string",
-                    "example": "alipay"
+                    "example": "trc_usdt"
                 },
                 "return_url": {
                     "type": "string",
@@ -21529,6 +22748,186 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.CryptoWalletConfigListResponse": {
+            "type": "object",
+            "properties": {
+                "configs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CryptoWalletConfigResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 2
+                }
+            }
+        },
+        "dto.CryptoWalletConfigResponse": {
+            "type": "object",
+            "properties": {
+                "address_validated": {
+                    "description": "Address validated",
+                    "type": "boolean",
+                    "example": true
+                },
+                "balance": {
+                    "description": "Wallet balance",
+                    "type": "number",
+                    "example": 1000.5
+                },
+                "can_accept_payment": {
+                    "description": "Computed fields",
+                    "type": "boolean"
+                },
+                "contract_address": {
+                    "description": "Contract address",
+                    "type": "string",
+                    "example": "TR7NHqjeKQxGTCI..."
+                },
+                "created_at": {
+                    "description": "Creation time",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "currency": {
+                    "description": "Currency",
+                    "type": "string",
+                    "example": "USDT"
+                },
+                "decimals": {
+                    "description": "Decimals",
+                    "type": "integer",
+                    "example": 6
+                },
+                "description": {
+                    "description": "Description",
+                    "type": "string",
+                    "example": "USDT on TRON network"
+                },
+                "display_info": {
+                    "description": "Display information",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "display_name": {
+                    "description": "Display name",
+                    "type": "string",
+                    "example": "TRC-USDT"
+                },
+                "fixed_fee": {
+                    "description": "Fixed fee",
+                    "type": "number",
+                    "example": 0
+                },
+                "gateway_type": {
+                    "description": "Gateway type",
+                    "type": "string"
+                },
+                "health_status": {
+                    "description": "Health status",
+                    "type": "string",
+                    "example": "healthy"
+                },
+                "icon": {
+                    "description": "Icon URL",
+                    "type": "string",
+                    "example": "https://example.com/usdt-icon.png"
+                },
+                "id": {
+                    "description": "Config ID",
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_active": {
+                    "description": "Is active",
+                    "type": "boolean",
+                    "example": true
+                },
+                "is_enabled": {
+                    "description": "Is enabled",
+                    "type": "boolean",
+                    "example": true
+                },
+                "is_healthy": {
+                    "description": "Is healthy",
+                    "type": "boolean"
+                },
+                "last_check_at": {
+                    "description": "Last check time",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "max_amount": {
+                    "description": "Max amount",
+                    "type": "number",
+                    "example": 100000
+                },
+                "min_amount": {
+                    "description": "Min amount",
+                    "type": "number",
+                    "example": 1
+                },
+                "min_confirmations": {
+                    "description": "Min confirmations",
+                    "type": "integer",
+                    "example": 1
+                },
+                "needs_validation": {
+                    "description": "Needs validation",
+                    "type": "boolean"
+                },
+                "network": {
+                    "description": "Network",
+                    "type": "string",
+                    "example": "trc"
+                },
+                "network_fee": {
+                    "description": "Network fee",
+                    "type": "number",
+                    "example": 1
+                },
+                "payment_method": {
+                    "description": "Corresponding payment method",
+                    "type": "string"
+                },
+                "processing_fee": {
+                    "description": "Processing fee rate",
+                    "type": "number",
+                    "example": 0.5
+                },
+                "sort_order": {
+                    "description": "Sort order",
+                    "type": "integer",
+                    "example": 1
+                },
+                "symbol": {
+                    "description": "Symbol",
+                    "type": "string",
+                    "example": "USDT"
+                },
+                "updated_at": {
+                    "description": "Update time",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "validated_at": {
+                    "description": "Validated time",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "wallet_address": {
+                    "description": "Wallet address",
+                    "type": "string",
+                    "example": "TXXXxxxXXXxxxXXXxxxXXXxxxXXX"
+                },
+                "wallet_name": {
+                    "description": "Wallet name",
+                    "type": "string",
+                    "example": "Main TRC-USDT Wallet"
+                }
+            }
+        },
         "dto.DatabaseHealthResponse": {
             "type": "object",
             "properties": {
@@ -21539,6 +22938,192 @@ const docTemplate = `{
                 "redis": {
                     "type": "boolean",
                     "example": true
+                }
+            }
+        },
+        "dto.DynamicCreatePaymentConfigRequest": {
+            "type": "object",
+            "required": [
+                "config",
+                "method",
+                "name"
+            ],
+            "properties": {
+                "config": {
+                    "description": "Dynamic configuration",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "fixed_fee": {
+                    "description": "Fixed fee",
+                    "type": "number",
+                    "example": 0
+                },
+                "is_enabled": {
+                    "description": "Is enabled",
+                    "type": "boolean",
+                    "example": true
+                },
+                "max_amount": {
+                    "description": "Max amount",
+                    "type": "number",
+                    "example": 99999.99
+                },
+                "method": {
+                    "description": "Payment method",
+                    "type": "string",
+                    "example": "epay"
+                },
+                "min_amount": {
+                    "description": "Min amount",
+                    "type": "number",
+                    "example": 0.01
+                },
+                "name": {
+                    "description": "Display name",
+                    "type": "string",
+                    "example": "EPay Payment Method"
+                },
+                "percentage_fee": {
+                    "description": "Percentage fee",
+                    "type": "number",
+                    "example": 0.6
+                },
+                "sort_order": {
+                    "description": "Sort order",
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "dto.DynamicPaymentConfigResponse": {
+            "type": "object",
+            "properties": {
+                "config": {
+                    "description": "Dynamic fields based on payment method",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "created_at": {
+                    "description": "Creation time",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "field_descriptions": {
+                    "description": "Field descriptions for UI",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "fixed_fee": {
+                    "description": "Fixed fee",
+                    "type": "number",
+                    "example": 0
+                },
+                "id": {
+                    "description": "Config ID",
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_enabled": {
+                    "description": "Enabled status",
+                    "type": "boolean",
+                    "example": true
+                },
+                "max_amount": {
+                    "description": "Maximum amount",
+                    "type": "number",
+                    "example": 99999.99
+                },
+                "method": {
+                    "description": "Payment method identifier",
+                    "type": "string",
+                    "example": "epay"
+                },
+                "min_amount": {
+                    "description": "Minimum amount",
+                    "type": "number",
+                    "example": 0.01
+                },
+                "name": {
+                    "description": "Display name",
+                    "type": "string",
+                    "example": "EPay Payment Method"
+                },
+                "optional_fields": {
+                    "description": "Optional fields for this method",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "percentage_fee": {
+                    "description": "Percentage fee",
+                    "type": "number",
+                    "example": 0.6
+                },
+                "required_fields": {
+                    "description": "Required fields for this method",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "sort_order": {
+                    "description": "Sort order",
+                    "type": "integer",
+                    "example": 1
+                },
+                "updated_at": {
+                    "description": "Update time",
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                }
+            }
+        },
+        "dto.DynamicUpdatePaymentConfigRequest": {
+            "type": "object",
+            "properties": {
+                "config": {
+                    "description": "Dynamic configuration",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "fixed_fee": {
+                    "description": "Fixed fee",
+                    "type": "number",
+                    "example": 0
+                },
+                "is_enabled": {
+                    "description": "Is enabled",
+                    "type": "boolean",
+                    "example": true
+                },
+                "max_amount": {
+                    "description": "Max amount",
+                    "type": "number",
+                    "example": 99999.99
+                },
+                "min_amount": {
+                    "description": "Min amount",
+                    "type": "number",
+                    "example": 0.01
+                },
+                "name": {
+                    "description": "Display name",
+                    "type": "string",
+                    "example": "EPay Payment Method"
+                },
+                "percentage_fee": {
+                    "description": "Percentage fee",
+                    "type": "number",
+                    "example": 0.6
+                },
+                "sort_order": {
+                    "description": "Sort order",
+                    "type": "integer",
+                    "example": 1
                 }
             }
         },
@@ -21689,6 +23274,65 @@ const docTemplate = `{
                 },
                 "retry_success_rate": {
                     "type": "number"
+                }
+            }
+        },
+        "dto.FieldDefinition": {
+            "type": "object",
+            "properties": {
+                "default_value": {
+                    "description": "Default value"
+                },
+                "description": {
+                    "description": "Field description",
+                    "type": "string",
+                    "example": "支付网关的API接口地址"
+                },
+                "display_name": {
+                    "description": "Display name for UI",
+                    "type": "string",
+                    "example": "API接口地址"
+                },
+                "name": {
+                    "description": "Field name",
+                    "type": "string",
+                    "example": "url"
+                },
+                "options": {
+                    "description": "Options for select fields",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "production",
+                        "sandbox"
+                    ]
+                },
+                "placeholder": {
+                    "description": "Input placeholder",
+                    "type": "string",
+                    "example": "https://pay.example.com"
+                },
+                "required": {
+                    "description": "Whether field is required",
+                    "type": "boolean",
+                    "example": true
+                },
+                "sensitive": {
+                    "description": "Whether field contains sensitive data",
+                    "type": "boolean",
+                    "example": true
+                },
+                "type": {
+                    "description": "Field type: string, number, boolean, url, email",
+                    "type": "string",
+                    "example": "string"
+                },
+                "validation": {
+                    "description": "Validation rule",
+                    "type": "string",
+                    "example": "url"
                 }
             }
         },
@@ -22067,11 +23711,6 @@ const docTemplate = `{
                     "type": "number",
                     "example": 0
                 },
-                "gateway": {
-                    "description": "Payment gateway",
-                    "type": "string",
-                    "example": "epay"
-                },
                 "id": {
                     "description": "Config ID",
                     "type": "integer",
@@ -22082,10 +23721,20 @@ const docTemplate = `{
                     "type": "boolean",
                     "example": true
                 },
+                "key": {
+                    "description": "API key/secret",
+                    "type": "string",
+                    "example": "secret123"
+                },
                 "max_amount": {
                     "description": "Maximum amount",
                     "type": "number",
                     "example": 99999.99
+                },
+                "method": {
+                    "description": "Payment method identifier",
+                    "type": "string",
+                    "example": "epay"
                 },
                 "methods": {
                     "description": "Payment methods",
@@ -22102,12 +23751,27 @@ const docTemplate = `{
                 "name": {
                     "description": "Display name",
                     "type": "string",
-                    "example": "EPay Gateway"
+                    "example": "EPay Payment Method"
+                },
+                "notify_url": {
+                    "description": "Callback URL",
+                    "type": "string",
+                    "example": "https://example.com/webhook"
                 },
                 "percentage_fee": {
                     "description": "Percentage fee",
                     "type": "number",
                     "example": 0.6
+                },
+                "pid": {
+                    "description": "Partner/Merchant ID",
+                    "type": "string",
+                    "example": "partner123"
+                },
+                "return_url": {
+                    "description": "Return URL",
+                    "type": "string",
+                    "example": "https://example.com/return"
                 },
                 "sort_order": {
                     "description": "Sort order",
@@ -22123,6 +23787,68 @@ const docTemplate = `{
                     "description": "Update time",
                     "type": "string",
                     "example": "2024-01-01T00:00:00Z"
+                },
+                "url": {
+                    "description": "API endpoint URL",
+                    "type": "string",
+                    "example": "https://api.example.com"
+                }
+            }
+        },
+        "dto.PaymentMethodConfigSchema": {
+            "type": "object",
+            "properties": {
+                "default_config": {
+                    "description": "Default configuration values",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "description": {
+                    "description": "Method description",
+                    "type": "string",
+                    "example": "EPay支付网关，支持支付宝、微信等多种支付方式"
+                },
+                "display_name": {
+                    "description": "Display name for UI",
+                    "type": "string",
+                    "example": "EPay支付"
+                },
+                "method": {
+                    "description": "Payment method",
+                    "type": "string",
+                    "example": "epay"
+                },
+                "optional_fields": {
+                    "description": "Optional configuration fields",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.FieldDefinition"
+                    }
+                },
+                "required_fields": {
+                    "description": "Required configuration fields",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.FieldDefinition"
+                    }
+                },
+                "supported_currencies": {
+                    "description": "Supported currencies",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "CNY",
+                        "USD"
+                    ]
+                },
+                "validation_rules": {
+                    "description": "Field validation rules",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -22237,7 +23963,7 @@ const docTemplate = `{
                 "method": {
                     "description": "Payment method",
                     "type": "string",
-                    "example": "alipay"
+                    "example": "trc_usdt"
                 },
                 "needs_validation": {
                     "description": "Validation requirement",
@@ -22389,7 +24115,7 @@ const docTemplate = `{
                 "payment_method": {
                     "description": "Payment method",
                     "type": "string",
-                    "example": "alipay"
+                    "example": "trc_usdt"
                 },
                 "payment_no": {
                     "description": "Payment number",
@@ -23494,13 +25220,104 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.UpdateCryptoWalletConfigRequest": {
+            "type": "object",
+            "properties": {
+                "api_endpoint": {
+                    "description": "API endpoint",
+                    "type": "string",
+                    "example": "https://api.trongrid.io"
+                },
+                "api_key": {
+                    "description": "API key",
+                    "type": "string",
+                    "example": "api-key"
+                },
+                "contract_address": {
+                    "description": "Contract address",
+                    "type": "string",
+                    "example": "TR7NHqjeKQxGTCI..."
+                },
+                "decimals": {
+                    "description": "Decimals",
+                    "type": "integer",
+                    "example": 6
+                },
+                "description": {
+                    "description": "Description",
+                    "type": "string",
+                    "example": "USDT on TRON network"
+                },
+                "display_name": {
+                    "description": "Display name",
+                    "type": "string",
+                    "example": "TRC-USDT"
+                },
+                "fixed_fee": {
+                    "description": "Fixed fee",
+                    "type": "number",
+                    "example": 0
+                },
+                "health_status": {
+                    "description": "Health status",
+                    "type": "string",
+                    "example": "healthy"
+                },
+                "icon": {
+                    "description": "Icon URL",
+                    "type": "string",
+                    "example": "https://example.com/usdt-icon.png"
+                },
+                "is_active": {
+                    "description": "Is active",
+                    "type": "boolean",
+                    "example": true
+                },
+                "is_enabled": {
+                    "description": "Is enabled",
+                    "type": "boolean",
+                    "example": true
+                },
+                "max_amount": {
+                    "description": "Max amount",
+                    "type": "number",
+                    "example": 100000
+                },
+                "min_amount": {
+                    "description": "Min amount",
+                    "type": "number",
+                    "example": 1
+                },
+                "min_confirmations": {
+                    "description": "Min confirmations",
+                    "type": "integer",
+                    "example": 1
+                },
+                "network_fee": {
+                    "description": "Network fee",
+                    "type": "number",
+                    "example": 1
+                },
+                "processing_fee": {
+                    "description": "Processing fee rate",
+                    "type": "number",
+                    "example": 0.5
+                },
+                "sort_order": {
+                    "description": "Sort order",
+                    "type": "integer",
+                    "example": 1
+                },
+                "wallet_name": {
+                    "description": "Wallet name",
+                    "type": "string",
+                    "example": "Updated TRC-USDT Wallet"
+                }
+            }
+        },
         "dto.UpdatePaymentConfigRequest": {
             "type": "object",
             "properties": {
-                "config": {
-                    "type": "string",
-                    "example": "{\"api_url\":\"...\"}"
-                },
                 "fixed_fee": {
                     "type": "number",
                     "example": 0
@@ -23508,6 +25325,10 @@ const docTemplate = `{
                 "is_enabled": {
                     "type": "boolean",
                     "example": true
+                },
+                "key": {
+                    "type": "string",
+                    "example": "secret123"
                 },
                 "max_amount": {
                     "type": "number",
@@ -23525,11 +25346,23 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string",
-                    "example": "EPay Gateway"
+                    "example": "EPay Payment Method"
+                },
+                "notify_url": {
+                    "type": "string",
+                    "example": "https://example.com/webhook"
                 },
                 "percentage_fee": {
                     "type": "number",
                     "example": 0.6
+                },
+                "pid": {
+                    "type": "string",
+                    "example": "partner123"
+                },
+                "return_url": {
+                    "type": "string",
+                    "example": "https://example.com/return"
                 },
                 "sort_order": {
                     "type": "integer",
@@ -23538,6 +25371,10 @@ const docTemplate = `{
                 "supported_currencies": {
                     "type": "string",
                     "example": "CNY"
+                },
+                "url": {
+                    "type": "string",
+                    "example": "https://api.example.com"
                 }
             }
         },
@@ -23903,6 +25740,50 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.ValidateCryptoWalletAddressRequest": {
+            "type": "object",
+            "required": [
+                "address",
+                "network"
+            ],
+            "properties": {
+                "address": {
+                    "description": "Wallet address",
+                    "type": "string",
+                    "example": "TXXXxxxXXXxxxXXXxxxXXXxxxXXX"
+                },
+                "network": {
+                    "description": "Network",
+                    "type": "string",
+                    "example": "trc"
+                }
+            }
+        },
+        "dto.ValidateCryptoWalletAddressResponse": {
+            "type": "object",
+            "properties": {
+                "address_type": {
+                    "description": "Address type",
+                    "type": "string",
+                    "example": "wallet"
+                },
+                "error_message": {
+                    "description": "Error message if invalid",
+                    "type": "string",
+                    "example": "Invalid format"
+                },
+                "is_valid": {
+                    "description": "Is address valid",
+                    "type": "boolean",
+                    "example": true
+                },
+                "network": {
+                    "description": "Network",
+                    "type": "string",
+                    "example": "trc"
+                }
+            }
+        },
         "entities.AlertConfigurationResponse": {
             "type": "object",
             "properties": {
@@ -24092,15 +25973,11 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "code": {
-                    "description": "Method code (alipay, wechat, usdt, etc.)",
+                    "description": "Method code (trc_usdt, polygon_usdt, usdt, btc, eth, etc.)",
                     "type": "string"
                 },
                 "description": {
                     "description": "Description",
-                    "type": "string"
-                },
-                "environment": {
-                    "description": "constants.EnvironmentProduction, constants.EnvironmentSandbox, constants.EnvironmentTest",
                     "type": "string"
                 },
                 "fee_max": {

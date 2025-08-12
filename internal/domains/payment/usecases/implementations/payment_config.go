@@ -26,10 +26,10 @@ func NewPaymentConfigService(db *gorm.DB) *PaymentConfigService {
 func (pcs *PaymentConfigService) CreatePaymentConfig(ctx context.Context, req *dto.CreatePaymentConfigRequest) (*entities.PaymentConfig, error) {
 	// Check if config already exists
 	var existingConfig entities.PaymentConfig
-	if err := pcs.db.WithContext(ctx).Where("gateway = ?", req.Gateway).First(&existingConfig).Error; err == nil {
-		return nil, fmt.Errorf("payment config for gateway '%s' already exists", req.Gateway)
+	if err := pcs.db.WithContext(ctx).Where("method = ?", req.Method).First(&existingConfig).Error; err == nil {
+		return nil, fmt.Errorf("payment config for method '%s' already exists", req.Method)
 	} else if err != gorm.ErrRecordNotFound {
-		logger.Error("Failed to check existing payment config", logger.Error2("error", err))
+		logger.Error("Failed to check existing payment config", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to check existing payment config: %w", err)
 	}
 
@@ -56,9 +56,13 @@ func (pcs *PaymentConfigService) CreatePaymentConfig(ctx context.Context, req *d
 
 	// Create the config
 	config := &entities.PaymentConfig{
-		Gateway:             req.Gateway,
+		Method:              req.Method,
 		Name:                req.Name,
-		Config:              req.Config,
+		URL:                 req.URL,
+		PID:                 req.PID,
+		Key:                 req.Key,
+		NotifyURL:           req.NotifyURL,
+		ReturnURL:           req.ReturnURL,
 		IsEnabled:           isEnabled,
 		SortOrder:           req.SortOrder,
 		SupportedCurrencies: supportedCurrencies,
@@ -71,19 +75,19 @@ func (pcs *PaymentConfigService) CreatePaymentConfig(ctx context.Context, req *d
 	// Set methods if provided
 	if len(req.Methods) > 0 {
 		if err := config.SetMethods(req.Methods); err != nil {
-			logger.Error("Failed to set methods for payment config", logger.Error2("error", err))
+			logger.Error("Failed to set methods for payment config", logger.ErrorField(err))
 			return nil, fmt.Errorf("failed to set methods: %w", err)
 		}
 	}
 
 	if err := pcs.db.WithContext(ctx).Create(config).Error; err != nil {
-		logger.Error("Failed to create payment config", logger.Error2("error", err))
+		logger.Error("Failed to create payment config", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to create payment config: %w", err)
 	}
 
 	logger.Info("Payment config created successfully",
 		logger.Uint("config_id", config.ID),
-		logger.String("gateway", config.Gateway))
+		logger.String("method", config.Method))
 
 	return config, nil
 }
@@ -95,21 +99,21 @@ func (pcs *PaymentConfigService) GetPaymentConfig(ctx context.Context, configID 
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("payment config not found")
 		}
-		logger.Error("Failed to get payment config", logger.Error2("error", err), logger.Uint("config_id", configID))
+		logger.Error("Failed to get payment config", logger.Uint("configID", uint(configID)))
 		return nil, fmt.Errorf("failed to get payment config: %w", err)
 	}
 
 	return &config, nil
 }
 
-// GetPaymentConfigByGateway gets a payment config by gateway
-func (pcs *PaymentConfigService) GetPaymentConfigByGateway(ctx context.Context, gateway string) (*entities.PaymentConfig, error) {
+// GetPaymentConfigByMethod gets a payment config by method
+func (pcs *PaymentConfigService) GetPaymentConfigByMethod(ctx context.Context, method string) (*entities.PaymentConfig, error) {
 	var config entities.PaymentConfig
-	if err := pcs.db.WithContext(ctx).Where("gateway = ?", gateway).First(&config).Error; err != nil {
+	if err := pcs.db.WithContext(ctx).Where("method = ?", method).First(&config).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("payment config not found")
 		}
-		logger.Error("Failed to get payment config by gateway", logger.Error2("error", err))
+		logger.Error("Failed to get payment config by method", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to get payment config: %w", err)
 	}
 
@@ -121,8 +125,8 @@ func (pcs *PaymentConfigService) GetPaymentConfigs(ctx context.Context, req *dto
 	query := pcs.db.WithContext(ctx).Model(&entities.PaymentConfig{})
 
 	// Apply filters
-	if req.Gateway != "" {
-		query = query.Where("gateway = ?", req.Gateway)
+	if req.Method != "" {
+		query = query.Where("method = ?", req.Method)
 	}
 
 	if req.IsEnabled != nil {
@@ -132,7 +136,7 @@ func (pcs *PaymentConfigService) GetPaymentConfigs(ctx context.Context, req *dto
 	// Get total count
 	var totalCount int64
 	if err := query.Count(&totalCount).Error; err != nil {
-		logger.Error("Failed to count payment configs", logger.Error2("error", err))
+		logger.Error("Failed to count payment configs", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to count payment configs: %w", err)
 	}
 
@@ -149,7 +153,7 @@ func (pcs *PaymentConfigService) GetPaymentConfigs(ctx context.Context, req *dto
 
 	var configs []*entities.PaymentConfig
 	if err := query.Find(&configs).Error; err != nil {
-		logger.Error("Failed to get payment configs", logger.Error2("error", err))
+		logger.Error("Failed to get payment configs", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to get payment configs: %w", err)
 	}
 
@@ -168,7 +172,7 @@ func (pcs *PaymentConfigService) GetActivePaymentConfigs(ctx context.Context, cu
 
 	var configs []*entities.PaymentConfig
 	if err := query.Order("sort_order ASC, created_at ASC").Find(&configs).Error; err != nil {
-		logger.Error("Failed to get active payment configs", logger.Error2("error", err))
+		logger.Error("Failed to get active payment configs", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to get active payment configs: %w", err)
 	}
 
@@ -190,9 +194,26 @@ func (pcs *PaymentConfigService) UpdatePaymentConfig(ctx context.Context, config
 		updates["name"] = *req.Name
 	}
 
-	if req.Config != nil {
-		updates["config"] = *req.Config
+	if req.URL != nil {
+		updates["url"] = *req.URL
 	}
+
+	if req.PID != nil {
+		updates["pid"] = *req.PID
+	}
+
+	if req.Key != nil {
+		updates["key"] = *req.Key
+	}
+
+	if req.NotifyURL != nil {
+		updates["notify_url"] = *req.NotifyURL
+	}
+
+	if req.ReturnURL != nil {
+		updates["return_url"] = *req.ReturnURL
+	}
+
 
 	if req.IsEnabled != nil {
 		updates["is_enabled"] = *req.IsEnabled
@@ -225,7 +246,7 @@ func (pcs *PaymentConfigService) UpdatePaymentConfig(ctx context.Context, config
 	// Handle methods update
 	if len(req.Methods) > 0 {
 		if err := config.SetMethods(req.Methods); err != nil {
-			logger.Error("Failed to set methods for payment config", logger.Error2("error", err))
+			logger.Error("Failed to set methods for payment config", logger.ErrorField(err))
 			return nil, fmt.Errorf("failed to set methods: %w", err)
 		}
 		updates["supported_methods"] = config.SupportedMethods
@@ -234,14 +255,14 @@ func (pcs *PaymentConfigService) UpdatePaymentConfig(ctx context.Context, config
 	// Update the config
 	if len(updates) > 0 {
 		if err := pcs.db.WithContext(ctx).Model(config).Updates(updates).Error; err != nil {
-			logger.Error("Failed to update payment config", logger.Error2("error", err), logger.Uint("config_id", configID))
+			logger.Error("Failed to update payment config", logger.Uint("configID", uint(configID)))
 			return nil, fmt.Errorf("failed to update payment config: %w", err)
 		}
 	}
 
 	// Reload the config
 	if err := pcs.db.WithContext(ctx).First(config, configID).Error; err != nil {
-		logger.Error("Failed to reload updated payment config", logger.Error2("error", err), logger.Uint("config_id", configID))
+		logger.Error("Failed to reload updated payment config", logger.Uint("configID", uint(configID)))
 		return nil, fmt.Errorf("failed to reload updated payment config: %w", err)
 	}
 
@@ -260,7 +281,7 @@ func (pcs *PaymentConfigService) DeletePaymentConfig(ctx context.Context, config
 
 	// Soft delete the config
 	if err := pcs.db.WithContext(ctx).Delete(config).Error; err != nil {
-		logger.Error("Failed to delete payment config", logger.Error2("error", err), logger.Uint("config_id", configID))
+		logger.Error("Failed to delete payment config", logger.Uint("configID", uint(configID)))
 		return fmt.Errorf("failed to delete payment config: %w", err)
 	}
 
@@ -280,7 +301,7 @@ func (pcs *PaymentConfigService) TogglePaymentConfig(ctx context.Context, config
 	// Toggle enabled status
 	newStatus := !config.IsEnabled
 	if err := pcs.db.WithContext(ctx).Model(config).Update("is_enabled", newStatus).Error; err != nil {
-		logger.Error("Failed to toggle payment config status", logger.Error2("error", err), logger.Uint("config_id", configID))
+		logger.Error("Failed to toggle payment config status", logger.Uint("configID", uint(configID)))
 		return nil, fmt.Errorf("failed to toggle payment config status: %w", err)
 	}
 
@@ -292,13 +313,13 @@ func (pcs *PaymentConfigService) TogglePaymentConfig(ctx context.Context, config
 	return config, nil
 }
 
-// GetPaymentConfigsByGateway gets all configs for a specific gateway
-func (pcs *PaymentConfigService) GetPaymentConfigsByGateway(ctx context.Context, gateway string) ([]*entities.PaymentConfig, error) {
+// GetPaymentConfigsByMethod gets all configs for a specific method
+func (pcs *PaymentConfigService) GetPaymentConfigsByMethod(ctx context.Context, method string) ([]*entities.PaymentConfig, error) {
 	var configs []*entities.PaymentConfig
-	if err := pcs.db.WithContext(ctx).Where("gateway = ?", gateway).
+	if err := pcs.db.WithContext(ctx).Where("method = ?", method).
 		Order("sort_order ASC, created_at ASC").Find(&configs).Error; err != nil {
-		logger.Error("Failed to get payment configs by gateway", logger.Error2("error", err))
-		return nil, fmt.Errorf("failed to get payment configs by gateway: %w", err)
+		logger.Error("Failed to get payment configs by method", logger.ErrorField(err))
+		return nil, fmt.Errorf("failed to get payment configs by method: %w", err)
 	}
 
 	return configs, nil

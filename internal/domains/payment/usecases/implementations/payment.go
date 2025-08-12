@@ -166,7 +166,7 @@ func (ps *PaymentService) CreatePaymentOrder(ctx context.Context, req *dto.Creat
 
 	// Save to database
 	if err := ps.db.WithContext(ctx).Create(paymentRecord).Error; err != nil {
-		logger.Error("Failed to create payment record", logger.Error2("error", err))
+		logger.Error("Failed to create payment record", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to create payment record: %w", err)
 	}
 
@@ -186,7 +186,7 @@ func (ps *PaymentService) GetPaymentRecord(ctx context.Context, paymentNo string
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("payment record not found")
 		}
-		logger.Error("Failed to get payment record", logger.Error2("error", err))
+		logger.Error("Failed to get payment record", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to get payment record: %w", err)
 	}
 	return &record, nil
@@ -199,7 +199,7 @@ func (ps *PaymentService) GetPaymentRecordByOutTradeNo(ctx context.Context, outT
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("payment record not found")
 		}
-		logger.Error("Failed to get payment record by out trade no", logger.Error2("error", err))
+		logger.Error("Failed to get payment record by out trade no", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to get payment record: %w", err)
 	}
 	return &record, nil
@@ -224,7 +224,7 @@ func (ps *PaymentService) UpdatePaymentStatus(ctx context.Context, paymentNo str
 	if err := ps.db.WithContext(ctx).Model(&entities.PaymentRecord{}).
 		Where("payment_no = ?", paymentNo).
 		Updates(updates).Error; err != nil {
-		logger.Error("Failed to update payment status", logger.Error2("error", err))
+		logger.Error("Failed to update payment status", logger.ErrorField(err))
 		return fmt.Errorf("failed to update payment status: %w", err)
 	}
 
@@ -342,7 +342,7 @@ func (ps *PaymentService) ProcessNotification(ctx context.Context, gateway strin
 
 		// Process order completion (integrate with subscription system)
 		if err := ps.processOrderCompletion(ctx, paymentRecord); err != nil {
-			logger.Error("Failed to process order completion", logger.Error2("error", err))
+			logger.Error("Failed to process order completion", logger.ErrorField(err))
 			// Don't return error here as payment is already processed
 		}
 	} else {
@@ -466,9 +466,21 @@ func (ps *PaymentService) GetUserPaymentRecords(ctx context.Context, userID uint
 func (ps *PaymentService) GetAvailablePaymentMethods(ctx context.Context) (map[string][]string, error) {
 	methods := make(map[string][]string)
 
+	// Get methods from registered gateways
 	for gatewayName, gateway := range ps.gateways {
 		methods[gatewayName] = gateway.GetSupportedPaymentMethods()
 	}
+
+	// Add new crypto payment methods to crypto gateway
+	if _, exists := methods[constants.PaymentGatewayCrypto]; !exists {
+		methods[constants.PaymentGatewayCrypto] = []string{}
+	}
+	
+	// Add the new TRC-USDT and Polygon-USDT payment methods
+	methods[constants.PaymentGatewayCrypto] = append(methods[constants.PaymentGatewayCrypto], 
+		constants.PaymentMethodTRCUSDT,
+		constants.PaymentMethodPolygonUSDT,
+	)
 
 	return methods, nil
 }

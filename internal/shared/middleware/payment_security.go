@@ -189,7 +189,7 @@ func (psm *PaymentSecurityMiddleware) validateReplayProtection(c *gin.Context, g
 	key := fmt.Sprintf("payment_notify:%s:%s", gateway, requestID)
 	exists, err := psm.redis.Exists(c.Request.Context(), key).Result()
 	if err != nil {
-		logger.Error("Failed to check replay protection", logger.Error2("error", err))
+		logger.Error("Failed to check replay protection", logger.ErrorField(err))
 		return false // Fail safe: reject request if we can't check
 	}
 
@@ -201,7 +201,7 @@ func (psm *PaymentSecurityMiddleware) validateReplayProtection(c *gin.Context, g
 	expiration := time.Duration(psm.config.ReplayTimeWindowMinutes) * time.Minute
 	err = psm.redis.Set(c.Request.Context(), key, time.Now().Unix(), expiration).Err()
 	if err != nil {
-		logger.Error("Failed to store replay protection key", logger.Error2("error", err))
+		logger.Error("Failed to store replay protection key", logger.ErrorField(err))
 		return false // Fail safe: reject request if we can't store
 	}
 

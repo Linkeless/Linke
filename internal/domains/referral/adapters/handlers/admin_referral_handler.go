@@ -75,7 +75,7 @@ func (h *AdminReferralHandler) CreateReferral(c *gin.Context) {
 		logger.Error("Admin failed to create referral",
 			logger.Uint("referrer_id", createReq.ReferrerID),
 			logger.Uint("referee_id", createReq.RefereeID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		if strings.Contains(err.Error(), "duplicate") || strings.Contains(err.Error(), "already exists") {
@@ -153,7 +153,7 @@ func (h *AdminReferralHandler) ListReferrals(c *gin.Context) {
 
 	referrals, total, err := h.referralService.GetReferrals(c.Request.Context(), serviceReq)
 	if err != nil {
-		logger.Error("Admin failed to list referrals", logger.Error2("error", err))
+		logger.Error("Admin failed to list referrals", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to list referrals")
 		return
 	}
@@ -193,7 +193,7 @@ func (h *AdminReferralHandler) GetReferral(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to get referral",
 			logger.Uint("referral_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.NotFound(c, "Referral not found")
 		return
@@ -246,7 +246,7 @@ func (h *AdminReferralHandler) UpdateReferral(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to update referral",
 			logger.Uint("referral_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to update referral")
 		return
@@ -293,7 +293,7 @@ func (h *AdminReferralHandler) ApproveReferral(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to approve referral",
 			logger.Uint("referral_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.NotFound(c, "Referral not found")
 		return
@@ -306,7 +306,7 @@ func (h *AdminReferralHandler) ApproveReferral(c *gin.Context) {
 			logger.Error("Admin failed to process referral reward after approval",
 				logger.Uint("referral_id", uint(id)),
 				logger.Float64("reward_amount", *approveReq.RewardAmount),
-				logger.Error2("error", err),
+				logger.ErrorField(err),
 			)
 		}
 	}
@@ -369,7 +369,7 @@ func (h *AdminReferralHandler) RejectReferral(c *gin.Context) {
 		logger.Error("Admin failed to reject referral",
 			logger.Uint("referral_id", uint(id)),
 			logger.String("reason", rejectReq.Reason),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.NotFound(c, "Referral not found")
 		return
@@ -420,7 +420,7 @@ func (h *AdminReferralHandler) ProcessReferralPayout(c *gin.Context) {
 		logger.Error("Admin failed to process referral payout",
 			logger.Uint("referral_id", uint(id)),
 			logger.Float64("amount", payoutReq.Amount),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.NotFound(c, "Referral not found or not eligible for payout")
 		return
@@ -504,7 +504,7 @@ func (h *AdminReferralHandler) SearchReferrals(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to search referrals",
 			logger.String("query", searchReq.Query),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to search referrals")
 		return
@@ -536,7 +536,7 @@ func (h *AdminReferralHandler) SearchReferrals(c *gin.Context) {
 func (h *AdminReferralHandler) GetReferralStatistics(c *gin.Context) {
 	stats, err := h.referralService.GetSystemReferralStatistics(c.Request.Context())
 	if err != nil {
-		logger.Error("Admin failed to get referral statistics", logger.Error2("error", err))
+		logger.Error("Admin failed to get referral statistics", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get referral statistics")
 		return
 	}
@@ -621,7 +621,7 @@ func (h *AdminReferralHandler) BulkApproveReferrals(c *gin.Context) {
 		if err != nil {
 			logger.Error("Failed to approve referral in bulk operation",
 				logger.Uint("referral_id", id),
-				logger.Error2("error", err),
+				logger.ErrorField(err),
 			)
 			failedIDs = append(failedIDs, id)
 			continue
@@ -634,7 +634,7 @@ func (h *AdminReferralHandler) BulkApproveReferrals(c *gin.Context) {
 				logger.Error("Failed to process reward in bulk approval",
 					logger.Uint("referral_id", id),
 					logger.Float64("amount", bulkReq.Amount),
-					logger.Error2("error", err),
+					logger.ErrorField(err),
 				)
 			}
 		}
@@ -691,7 +691,7 @@ func (h *AdminReferralHandler) BulkProcessPayouts(c *gin.Context) {
 		if err != nil {
 			logger.Error("Failed to process payout in bulk operation",
 				logger.Uint("referral_id", id),
-				logger.Error2("error", err),
+				logger.ErrorField(err),
 			)
 			failedIDs = append(failedIDs, id)
 			continue
@@ -752,7 +752,7 @@ func (h *AdminReferralHandler) ListCampaigns(c *gin.Context) {
 
 	campaigns, total, err := h.referralCampaignService.GetReferralCampaigns(c.Request.Context(), serviceReq)
 	if err != nil {
-		logger.Error("Admin failed to list referral campaigns", logger.Error2("error", err))
+		logger.Error("Admin failed to list referral campaigns", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to list referral campaigns")
 		return
 	}
@@ -791,7 +791,7 @@ func (h *AdminReferralHandler) CreateCampaign(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to create referral campaign",
 			logger.String("name", createReq.Name),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to create referral campaign")
 		return

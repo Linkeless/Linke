@@ -241,7 +241,7 @@ func RetryMiddleware(maxRetries int) EventMiddleware {
 			logger.String("event_type", event.EventType()),
 			logger.String("event_id", event.EventID()),
 			logger.Int("max_retries", maxRetries),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 
 		return err
 	})

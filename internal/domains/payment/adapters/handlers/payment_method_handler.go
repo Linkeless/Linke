@@ -67,7 +67,7 @@ func (h *PaymentMethodHandler) CreatePaymentMethod(c *gin.Context) {
 
 	result, err := h.paymentMethodService.CreatePaymentMethod(c.Request.Context(), userID, &req)
 	if err != nil {
-		h.logger.Error("Failed to create payment method", logger.ErrorField(err), logger.Uint("user_id", userID))
+		h.logger.Error("Failed to create payment method", logger.Uint("userID", uint(userID)))
 
 		// Handle specific error cases
 		if isLimitReachedError(err) {
@@ -119,7 +119,7 @@ func (h *PaymentMethodHandler) GetPaymentMethod(c *gin.Context) {
 
 	result, err := h.paymentMethodService.GetPaymentMethod(c.Request.Context(), userID, paymentMethodID)
 	if err != nil {
-		h.logger.Error("Failed to get payment method", logger.ErrorField(err), logger.Uint("user_id", userID), logger.Uint("payment_method_id", paymentMethodID))
+		h.logger.Error("Failed to get payment method", logger.Uint("paymentMethodID", uint(paymentMethodID)))
 
 		if isNotFoundError(err) {
 			response.NotFound(c, "Payment method not found")
@@ -185,7 +185,7 @@ func (h *PaymentMethodHandler) ListPaymentMethods(c *gin.Context) {
 	}
 
 	if err != nil {
-		h.logger.Error("Failed to list payment methods", logger.ErrorField(err), logger.Uint("user_id", userID))
+		h.logger.Error("Failed to list payment methods", logger.Uint("userID", uint(userID)))
 		response.InternalServerError(c, "Failed to list payment methods")
 		return
 	}
@@ -230,7 +230,7 @@ func (h *PaymentMethodHandler) UpdatePaymentMethod(c *gin.Context) {
 
 	result, err := h.paymentMethodService.UpdatePaymentMethod(c.Request.Context(), userID, paymentMethodID, &req)
 	if err != nil {
-		h.logger.Error("Failed to update payment method", logger.ErrorField(err), logger.Uint("user_id", userID), logger.Uint("payment_method_id", paymentMethodID))
+		h.logger.Error("Failed to update payment method", logger.Uint("paymentMethodID", uint(paymentMethodID)))
 
 		if isNotFoundError(err) {
 			response.NotFound(c, "Payment method not found")
@@ -274,7 +274,7 @@ func (h *PaymentMethodHandler) SetDefaultPaymentMethod(c *gin.Context) {
 
 	result, err := h.paymentMethodService.SetDefaultPaymentMethod(c.Request.Context(), userID, paymentMethodID)
 	if err != nil {
-		h.logger.Error("Failed to set default payment method", logger.ErrorField(err), logger.Uint("user_id", userID), logger.Uint("payment_method_id", paymentMethodID))
+		h.logger.Error("Failed to set default payment method", logger.Uint("paymentMethodID", uint(paymentMethodID)))
 
 		if isNotFoundError(err) {
 			response.NotFound(c, "Payment method not found")
@@ -320,7 +320,7 @@ func (h *PaymentMethodHandler) DeletePaymentMethod(c *gin.Context) {
 	}
 
 	if err := h.paymentMethodService.DeletePaymentMethod(c.Request.Context(), userID, paymentMethodID); err != nil {
-		h.logger.Error("Failed to delete payment method", logger.ErrorField(err), logger.Uint("user_id", userID), logger.Uint("payment_method_id", paymentMethodID))
+		h.logger.Error("Failed to delete payment method", logger.Uint("paymentMethodID", uint(paymentMethodID)))
 
 		if isNotFoundError(err) {
 			response.NotFound(c, "Payment method not found")
@@ -370,7 +370,7 @@ func (h *PaymentMethodHandler) ValidatePaymentMethod(c *gin.Context) {
 
 	result, err := h.paymentMethodService.ValidatePaymentMethod(c.Request.Context(), userID, paymentMethodID)
 	if err != nil {
-		h.logger.Error("Failed to validate payment method", logger.ErrorField(err), logger.Uint("user_id", userID), logger.Uint("payment_method_id", paymentMethodID))
+		h.logger.Error("Failed to validate payment method", logger.Uint("paymentMethodID", uint(paymentMethodID)))
 
 		if isNotFoundError(err) {
 			response.NotFound(c, "Payment method not found")
@@ -420,7 +420,7 @@ func (h *PaymentMethodHandler) GetDefaultPaymentMethod(c *gin.Context) {
 	}
 
 	if err != nil {
-		h.logger.Error("Failed to get default payment method", logger.ErrorField(err), logger.Uint("user_id", userID), logger.String("gateway", gateway))
+		h.logger.Error("Failed to get default payment method", logger.String("gateway", gateway), logger.ErrorField(err))
 
 		if isNotFoundError(err) {
 			response.NotFound(c, "No default payment method found")
@@ -462,7 +462,7 @@ func (h *PaymentMethodHandler) GetPaymentMethodUsageStats(c *gin.Context) {
 
 	result, err := h.paymentMethodService.GetPaymentMethodUsageStats(c.Request.Context(), userID, paymentMethodID)
 	if err != nil {
-		h.logger.Error("Failed to get payment method usage stats", logger.ErrorField(err), logger.Uint("user_id", userID), logger.Uint("payment_method_id", paymentMethodID))
+		h.logger.Error("Failed to get payment method usage stats", logger.Uint("paymentMethodID", uint(paymentMethodID)))
 
 		if isNotFoundError(err) {
 			response.NotFound(c, "Payment method not found")

@@ -370,7 +370,7 @@ func (sos *SubscriptionOrderService) generateOrderNumber() string {...}
 // 错误包装提供上下文
 if err := tx.Create(order).Error; err != nil {
     tx.Rollback()
-    logger.Error("Failed to create subscription order", logger.Error2("error", err))
+    logger.Error("Failed to create subscription order", logger.ErrorField(err))
     return nil, fmt.Errorf("failed to create subscription order: %w", err)
 }
 ```
@@ -451,7 +451,7 @@ logger.Info("Subscription order created successfully",
     logger.Uint("plan_id", req.SubscriptionPlanID))
 
 logger.Error("Failed to create subscription order", 
-    logger.Error2("error", err),
+    logger.ErrorField(err),
     logger.String("component", "subscription_order"),
     logger.String("action", "create"))
 ```

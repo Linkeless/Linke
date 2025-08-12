@@ -29,7 +29,7 @@ func (s *ServerGroupService) CreateServerGroup(ctx context.Context, req *dto.Cre
 	if err := s.db.DB.WithContext(ctx).Where("name = ?", req.Name).First(&existingGroup).Error; err == nil {
 		return nil, fmt.Errorf("server group with name '%s' already exists", req.Name)
 	} else if err != gorm.ErrRecordNotFound {
-		logger.Error("Failed to check existing server group", logger.Error2("error", err))
+		logger.Error("Failed to check existing server group", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to check existing server group: %w", err)
 	}
 
@@ -40,7 +40,7 @@ func (s *ServerGroupService) CreateServerGroup(ctx context.Context, req *dto.Cre
 	if err := s.db.DB.WithContext(ctx).Create(group).Error; err != nil {
 		logger.Error("Failed to create server group",
 			logger.String("name", req.Name),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to create server group: %w", err)
 	}
 
@@ -58,7 +58,7 @@ func (s *ServerGroupService) GetServerGroup(ctx context.Context, id uint) (*enti
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("server group not found")
 		}
-		logger.Error("Failed to get server group", logger.Error2("error", err), logger.Uint("group_id", id))
+		logger.Error("Failed to get server group", logger.Uint("id", id), logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to get server group: %w", err)
 	}
 
@@ -74,7 +74,7 @@ func (s *ServerGroupService) GetServerGroups(ctx context.Context, req *dto.GetSe
 
 	// Get total count
 	if err := query.Count(&total).Error; err != nil {
-		logger.Error("Failed to count server groups", logger.Error2("error", err))
+		logger.Error("Failed to count server groups", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to count server groups: %w", err)
 	}
 
@@ -90,7 +90,7 @@ func (s *ServerGroupService) GetServerGroups(ctx context.Context, req *dto.GetSe
 	}
 
 	if err := query.Find(&groups).Error; err != nil {
-		logger.Error("Failed to get server groups", logger.Error2("error", err))
+		logger.Error("Failed to get server groups", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to get server groups: %w", err)
 	}
 
@@ -114,7 +114,7 @@ func (s *ServerGroupService) UpdateServerGroup(ctx context.Context, id uint, req
 		if err := s.db.DB.WithContext(ctx).Where("name = ? AND id != ?", *req.Name, id).First(&existingGroup).Error; err == nil {
 			return nil, fmt.Errorf("server group with name '%s' already exists", *req.Name)
 		} else if err != gorm.ErrRecordNotFound {
-			logger.Error("Failed to check existing server group", logger.Error2("error", err))
+			logger.Error("Failed to check existing server group", logger.ErrorField(err))
 			return nil, fmt.Errorf("failed to check existing server group: %w", err)
 		}
 		updates["name"] = *req.Name
@@ -126,13 +126,13 @@ func (s *ServerGroupService) UpdateServerGroup(ctx context.Context, id uint, req
 
 	// Update the group
 	if err := s.db.DB.WithContext(ctx).Model(group).Updates(updates).Error; err != nil {
-		logger.Error("Failed to update server group", logger.Error2("error", err), logger.Uint("group_id", id))
+		logger.Error("Failed to update server group", logger.Uint("id", id), logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to update server group: %w", err)
 	}
 
 	// Reload the group
 	if err := s.db.DB.WithContext(ctx).First(group, id).Error; err != nil {
-		logger.Error("Failed to reload updated server group", logger.Error2("error", err), logger.Uint("group_id", id))
+		logger.Error("Failed to reload updated server group", logger.Uint("id", id), logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to reload updated server group: %w", err)
 	}
 
@@ -149,7 +149,7 @@ func (s *ServerGroupService) DeleteServerGroup(ctx context.Context, id uint) err
 	}
 
 	if err := s.db.DB.WithContext(ctx).Delete(group).Error; err != nil {
-		logger.Error("Failed to delete server group", logger.Error2("error", err), logger.Uint("group_id", id))
+		logger.Error("Failed to delete server group", logger.Uint("id", id), logger.ErrorField(err))
 		return fmt.Errorf("failed to delete server group: %w", err)
 	}
 
@@ -163,7 +163,7 @@ func (s *ServerGroupService) GetAllServerGroups(ctx context.Context) ([]*entitie
 	var groups []*entities.ServerGroup
 
 	if err := s.db.DB.WithContext(ctx).Order("name ASC").Find(&groups).Error; err != nil {
-		logger.Error("Failed to get all server groups", logger.Error2("error", err))
+		logger.Error("Failed to get all server groups", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to get all server groups: %w", err)
 	}
 
@@ -175,7 +175,7 @@ func (s *ServerGroupService) GetGroupServers(ctx context.Context, groupID uint) 
 	var servers []*entities.ShadowsocksServer
 
 	if err := s.db.DB.WithContext(ctx).Where("server_group_id = ?", groupID).Find(&servers).Error; err != nil {
-		logger.Error("Failed to get group servers", logger.Error2("error", err), logger.Uint("group_id", groupID))
+		logger.Error("Failed to get group servers", logger.Uint("groupID", uint(groupID)))
 		return nil, fmt.Errorf("failed to get group servers: %w", err)
 	}
 
@@ -187,7 +187,7 @@ func (s *ServerGroupService) GetGroupServerCount(ctx context.Context, groupID ui
 	var count int64
 
 	if err := s.db.DB.WithContext(ctx).Model(&entities.ShadowsocksServer{}).Where("server_group_id = ?", groupID).Count(&count).Error; err != nil {
-		logger.Error("Failed to count group servers", logger.Error2("error", err), logger.Uint("group_id", groupID))
+		logger.Error("Failed to count group servers", logger.Uint("groupID", uint(groupID)))
 		return 0, fmt.Errorf("failed to count group servers: %w", err)
 	}
 
@@ -210,7 +210,7 @@ func (s *ServerGroupService) GetGroupStatistics(ctx context.Context, groupID uin
 	if err := s.db.DB.WithContext(ctx).Model(&entities.ShadowsocksServer{}).
 		Where("server_group_id = ? AND is_enabled = ?", groupID, true).
 		Count(&activeCount).Error; err != nil {
-		logger.Error("Failed to count active group servers", logger.Error2("error", err), logger.Uint("group_id", groupID))
+		logger.Error("Failed to count active group servers", logger.Uint("groupID", uint(groupID)))
 		return nil, fmt.Errorf("failed to count active group servers: %w", err)
 	}
 	stats["active_server_count"] = activeCount
@@ -221,7 +221,7 @@ func (s *ServerGroupService) GetGroupStatistics(ctx context.Context, groupID uin
 		Where("server_group_id = ?", groupID).
 		Select("COALESCE(SUM(total_transfer), 0)").
 		Scan(&totalBandwidth).Error; err != nil {
-		logger.Error("Failed to calculate total bandwidth", logger.Error2("error", err), logger.Uint("group_id", groupID))
+		logger.Error("Failed to calculate total bandwidth", logger.Uint("groupID", uint(groupID)))
 		// Don't fail for bandwidth calculation error
 		totalBandwidth = 0
 	}

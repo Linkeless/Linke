@@ -66,6 +66,7 @@ func SetupRoutes(
 	userTicketHandler *ticketHandlers.UserTicketHandler,
 	paymentHandler *paymentHandlers.PaymentHandler,
 	paymentMethodHandler *paymentHandlers.PaymentMethodHandler,
+	cryptoWalletConfigHandler *paymentHandlers.CryptoWalletConfigHandler,
 	serverHandler *serverHandlers.ServerAPIHandler,
 	// Admin server handlers
 	adminServerHandler *serverHandlers.AdminServerHandler,
@@ -274,6 +275,13 @@ func SetupRoutes(
 		adminPaymentGroup.GET("/configs", paymentHandler.GetPaymentConfigs)
 		adminPaymentGroup.PUT("/configs/:id", paymentHandler.UpdatePaymentConfig)
 		adminPaymentGroup.DELETE("/configs/:id", paymentHandler.DeletePaymentConfig)
+		
+		// Dynamic payment configuration routes
+		adminPaymentGroup.GET("/schemas", paymentHandler.GetPaymentMethodSchemas)
+		adminPaymentGroup.GET("/schemas/:method", paymentHandler.GetPaymentMethodSchema)
+		adminPaymentGroup.POST("/configs/dynamic", paymentHandler.CreateDynamicPaymentConfig)
+		adminPaymentGroup.GET("/configs/dynamic", paymentHandler.GetDynamicPaymentConfigs)
+		adminPaymentGroup.PUT("/configs/dynamic/:id", paymentHandler.UpdateDynamicPaymentConfig)
 
 		// Payment retry management routes
 		adminPaymentGroup.GET("/retries", paymentHandler.GetPaymentRetries)
@@ -284,6 +292,15 @@ func SetupRoutes(
 		adminPaymentGroup.POST("/retries/bulk/reset", paymentHandler.BulkResetPaymentRetries)
 		adminPaymentGroup.GET("/retries/statistics", paymentHandler.GetRetryStatistics)
 		adminPaymentGroup.GET("/retries/health", paymentHandler.GetRetryHealthMetrics)
+
+		// Crypto wallet configuration management routes
+		adminPaymentGroup.POST("/crypto-wallets", cryptoWalletConfigHandler.CreateCryptoWalletConfig)
+		adminPaymentGroup.GET("/crypto-wallets", cryptoWalletConfigHandler.GetCryptoWalletConfigs)
+		adminPaymentGroup.GET("/crypto-wallets/:id", cryptoWalletConfigHandler.GetCryptoWalletConfig)
+		adminPaymentGroup.PUT("/crypto-wallets/:id", cryptoWalletConfigHandler.UpdateCryptoWalletConfig)
+		adminPaymentGroup.DELETE("/crypto-wallets/:id", cryptoWalletConfigHandler.DeleteCryptoWalletConfig)
+		adminPaymentGroup.POST("/crypto-wallets/:id/toggle", cryptoWalletConfigHandler.ToggleCryptoWalletConfig)
+		adminPaymentGroup.POST("/crypto-wallets/validate-address", cryptoWalletConfigHandler.ValidateWalletAddress)
 	}
 	logger.Debug("Registered admin payment routes", zap.String("prefix", "/api/v1/admin/payment"))
 
@@ -642,6 +659,7 @@ func SetupRoutes(
 		// Public endpoint - no auth needed
 		paymentGroup.GET("/methods", paymentHandler.GetAvailablePaymentMethods)
 		paymentGroup.GET("/configs", paymentHandler.GetActivePaymentConfigs)
+		paymentGroup.GET("/crypto-wallets", cryptoWalletConfigHandler.GetPublicCryptoWalletConfigs)
 		// Webhook endpoint - no auth needed (uses signature validation)
 		paymentGroup.POST("/notify/:gateway", paymentHandler.PaymentNotify)
 	}

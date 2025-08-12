@@ -52,7 +52,7 @@ func (r *paymentRecordRepository) GetByPaymentNo(ctx context.Context, paymentNo 
 		}
 		logger.Error("Failed to get payment record by payment number",
 			logger.String("payment_no", paymentNo),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to get payment record: %w", err)
 	}
@@ -68,7 +68,7 @@ func (r *paymentRecordRepository) GetByOutTradeNo(ctx context.Context, outTradeN
 		}
 		logger.Error("Failed to get payment record by out trade number",
 			logger.String("out_trade_no", outTradeNo),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to get payment record: %w", err)
 	}
@@ -84,7 +84,7 @@ func (r *paymentRecordRepository) GetByTransactionID(ctx context.Context, transa
 		}
 		logger.Error("Failed to get payment record by transaction ID",
 			logger.String("transaction_id", transactionID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to get payment record: %w", err)
 	}
@@ -109,7 +109,7 @@ func (r *paymentRecordRepository) GetUserCompletedPayments(ctx context.Context, 
 		Where(condition, args...).Count(&total).Error; err != nil {
 		logger.Error("Failed to count completed payment records by user",
 			logger.Uint("user_id", userID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to count completed payment records by user: %w", err)
 	}
@@ -119,7 +119,7 @@ func (r *paymentRecordRepository) GetUserCompletedPayments(ctx context.Context, 
 		Order("paid_at DESC").Limit(limit).Offset(offset).Find(&payments).Error; err != nil {
 		logger.Error("Failed to list completed payment records by user",
 			logger.Uint("user_id", userID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to list completed payment records by user: %w", err)
 	}
@@ -136,7 +136,7 @@ func (r *paymentRecordRepository) GetUserTotalPaid(ctx context.Context, userID u
 		logger.Error("Failed to get user total paid",
 			logger.Uint("user_id", userID),
 			logger.String("currency", currency),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return 0, fmt.Errorf("failed to get user total paid: %w", err)
 	}
@@ -169,14 +169,14 @@ func (r *paymentRecordRepository) ListExpiredPayments(ctx context.Context, limit
 	// Count total expired payments
 	if err := r.GetDB().WithContext(ctx).Model(&entities.PaymentRecord{}).
 		Where(condition, args...).Count(&total).Error; err != nil {
-		logger.Error("Failed to count expired payment records", logger.Error2("error", err))
+		logger.Error("Failed to count expired payment records", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to count expired payment records: %w", err)
 	}
 
 	// Get expired payments with pagination
 	if err := r.GetDB().WithContext(ctx).Where(condition, args...).
 		Order("expired_at DESC").Limit(limit).Offset(offset).Find(&payments).Error; err != nil {
-		logger.Error("Failed to list expired payment records", logger.Error2("error", err))
+		logger.Error("Failed to list expired payment records", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to list expired payment records: %w", err)
 	}
 
@@ -193,7 +193,7 @@ func (r *paymentRecordRepository) ListByGateway(ctx context.Context, gateway str
 		Where("gateway = ?", gateway).Count(&total).Error; err != nil {
 		logger.Error("Failed to count payment records by gateway",
 			logger.String("gateway", gateway),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to count payment records by gateway: %w", err)
 	}
@@ -203,7 +203,7 @@ func (r *paymentRecordRepository) ListByGateway(ctx context.Context, gateway str
 		Order("created_at DESC").Limit(limit).Offset(offset).Find(&payments).Error; err != nil {
 		logger.Error("Failed to list payment records by gateway",
 			logger.String("gateway", gateway),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to list payment records by gateway: %w", err)
 	}
@@ -221,7 +221,7 @@ func (r *paymentRecordRepository) ListByPaymentMethod(ctx context.Context, payme
 		Where("payment_method = ?", paymentMethod).Count(&total).Error; err != nil {
 		logger.Error("Failed to count payment records by payment method",
 			logger.String("payment_method", paymentMethod),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to count payment records by payment method: %w", err)
 	}
@@ -231,7 +231,7 @@ func (r *paymentRecordRepository) ListByPaymentMethod(ctx context.Context, payme
 		Order("created_at DESC").Limit(limit).Offset(offset).Find(&payments).Error; err != nil {
 		logger.Error("Failed to list payment records by payment method",
 			logger.String("payment_method", paymentMethod),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to list payment records by payment method: %w", err)
 	}
@@ -253,7 +253,7 @@ func (r *paymentRecordRepository) ListByGatewayAndMethod(ctx context.Context, ga
 		logger.Error("Failed to count payment records by gateway and method",
 			logger.String("gateway", gateway),
 			logger.String("payment_method", paymentMethod),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to count payment records by gateway and method: %w", err)
 	}
@@ -264,7 +264,7 @@ func (r *paymentRecordRepository) ListByGatewayAndMethod(ctx context.Context, ga
 		logger.Error("Failed to list payment records by gateway and method",
 			logger.String("gateway", gateway),
 			logger.String("payment_method", paymentMethod),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to list payment records by gateway and method: %w", err)
 	}
@@ -282,7 +282,7 @@ func (r *paymentRecordRepository) ListRecentPayments(ctx context.Context, since 
 		Where("created_at >= ?", since).Count(&total).Error; err != nil {
 		logger.Error("Failed to count recent payment records",
 			logger.String("since", since.Format(time.RFC3339)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to count recent payment records: %w", err)
 	}
@@ -292,7 +292,7 @@ func (r *paymentRecordRepository) ListRecentPayments(ctx context.Context, since 
 		Order("created_at DESC").Limit(limit).Offset(offset).Find(&payments).Error; err != nil {
 		logger.Error("Failed to list recent payment records",
 			logger.String("since", since.Format(time.RFC3339)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to list recent payment records: %w", err)
 	}
@@ -314,7 +314,7 @@ func (r *paymentRecordRepository) MarkAsCompleted(ctx context.Context, id uint, 
 		logger.Error("Failed to mark payment as completed",
 			logger.Uint("payment_id", id),
 			logger.String("transaction_id", transactionID),
-			logger.Error2("error", result.Error),
+			logger.ErrorField(result.Error),
 		)
 		return fmt.Errorf("failed to mark payment as completed: %w", result.Error)
 	}
@@ -343,7 +343,7 @@ func (r *paymentRecordRepository) MarkAsFailed(ctx context.Context, id uint, rea
 		logger.Error("Failed to mark payment as failed",
 			logger.Uint("payment_id", id),
 			logger.String("reason", reason),
-			logger.Error2("error", result.Error),
+			logger.ErrorField(result.Error),
 		)
 		return fmt.Errorf("failed to mark payment as failed: %w", result.Error)
 	}
@@ -368,7 +368,7 @@ func (r *paymentRecordRepository) GetTotalRevenue(ctx context.Context, currency 
 		logger.Error("Failed to get total revenue",
 			logger.String("currency", currency),
 			logger.String("since", since.Format(time.RFC3339)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return 0, fmt.Errorf("failed to get total revenue: %w", err)
 	}
@@ -683,7 +683,7 @@ func (r *paymentRecordRepository) CountCompletedPayments(ctx context.Context, si
 	if err := r.GetDB().WithContext(ctx).Model(&entities.PaymentRecord{}).Where("status = ? AND paid_at >= ?", constants.PaymentRecordStatusCompleted, since).Count(&count).Error; err != nil {
 		logger.Error("Failed to count completed payment records",
 			logger.String("since", since.Format(time.RFC3339)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return 0, fmt.Errorf("failed to count completed payment records: %w", err)
 	}
@@ -696,7 +696,7 @@ func (r *paymentRecordRepository) CountFailedPayments(ctx context.Context, since
 	if err := r.GetDB().WithContext(ctx).Model(&entities.PaymentRecord{}).Where("status = ? AND created_at >= ?", constants.PaymentRecordStatusFailed, since).Count(&count).Error; err != nil {
 		logger.Error("Failed to count failed payment records",
 			logger.String("since", since.Format(time.RFC3339)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return 0, fmt.Errorf("failed to count failed payment records: %w", err)
 	}
@@ -712,7 +712,7 @@ func (r *paymentRecordRepository) GetAveragePaymentAmount(ctx context.Context, c
 		logger.Error("Failed to get average payment amount",
 			logger.String("currency", currency),
 			logger.String("since", since.Format(time.RFC3339)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return 0, fmt.Errorf("failed to get average payment amount: %w", err)
 	}
@@ -743,15 +743,15 @@ func (r *paymentRecordRepository) ListPaymentsByPeriod(ctx context.Context, fiel
 func (r *paymentConfigRepository) Create(ctx context.Context, config *entities.PaymentConfig) error {
 	if err := r.db.WithContext(ctx).Create(config).Error; err != nil {
 		logger.Error("Failed to create payment config",
-			logger.String("gateway", config.Gateway),
-			logger.Error2("error", err),
+			logger.String("method", config.Method),
+			logger.ErrorField(err),
 		)
 		return fmt.Errorf("failed to create payment config: %w", err)
 	}
 
 	logger.Debug("Payment config created successfully",
 		logger.Uint("config_id", config.ID),
-		logger.String("gateway", config.Gateway),
+		logger.String("method", config.Method),
 	)
 	return nil
 }
@@ -765,23 +765,23 @@ func (r *paymentConfigRepository) GetByID(ctx context.Context, id uint) (*entiti
 		}
 		logger.Error("Failed to get payment config by ID",
 			logger.Uint("config_id", id),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to get payment config: %w", err)
 	}
 	return &config, nil
 }
 
-// GetByGateway retrieves a payment config by gateway
-func (r *paymentConfigRepository) GetByGateway(ctx context.Context, gateway string) (*entities.PaymentConfig, error) {
+// GetByMethod retrieves a payment config by method
+func (r *paymentConfigRepository) GetByMethod(ctx context.Context, method string) (*entities.PaymentConfig, error) {
 	var config entities.PaymentConfig
-	if err := r.db.WithContext(ctx).Where("gateway = ?", gateway).First(&config).Error; err != nil {
+	if err := r.db.WithContext(ctx).Where("method = ?", method).First(&config).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("payment config not found")
 		}
-		logger.Error("Failed to get payment config by gateway",
-			logger.String("gateway", gateway),
-			logger.Error2("error", err),
+		logger.Error("Failed to get payment config by method",
+			logger.String("method", method),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to get payment config: %w", err)
 	}
@@ -796,7 +796,7 @@ func (r *paymentConfigRepository) ListActive(ctx context.Context, limit, offset 
 	// Count total active configs
 	if err := r.db.WithContext(ctx).Model(&entities.PaymentConfig{}).
 		Where("is_enabled = ?", true).Count(&total).Error; err != nil {
-		logger.Error("Failed to count active payment configs", logger.Error2("error", err))
+		logger.Error("Failed to count active payment configs", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to count active payment configs: %w", err)
 	}
 
@@ -804,7 +804,7 @@ func (r *paymentConfigRepository) ListActive(ctx context.Context, limit, offset 
 	if err := r.db.WithContext(ctx).Where("is_enabled = ?", true).
 		Order("sort_order ASC, created_at ASC").
 		Limit(limit).Offset(offset).Find(&configs).Error; err != nil {
-		logger.Error("Failed to list active payment configs", logger.Error2("error", err))
+		logger.Error("Failed to list active payment configs", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to list active payment configs: %w", err)
 	}
 
@@ -820,7 +820,7 @@ func (r *paymentConfigRepository) GetEnabledByCurrency(ctx context.Context, curr
 		Order("sort_order ASC").Find(&configs).Error; err != nil {
 		logger.Error("Failed to get enabled payment configs by currency",
 			logger.String("currency", currency),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to get enabled payment configs by currency: %w", err)
 	}
@@ -837,7 +837,7 @@ func (r *paymentConfigRepository) GetAvailableForPayment(ctx context.Context, cu
 		logger.Error("Failed to get available payment configs",
 			logger.String("currency", currency),
 			logger.String("amount", fmt.Sprintf("%.2f", amount)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to get available payment configs: %w", err)
 	}
@@ -851,7 +851,7 @@ func (r *paymentConfigRepository) UpdateStatus(ctx context.Context, id uint, isE
 		logger.Error("Failed to update payment config status",
 			logger.Uint("config_id", id),
 			logger.String("is_enabled", fmt.Sprintf("%t", isEnabled)),
-			logger.Error2("error", result.Error),
+			logger.ErrorField(result.Error),
 		)
 		return fmt.Errorf("failed to update payment config status: %w", result.Error)
 	}
@@ -873,7 +873,7 @@ func (r *paymentConfigRepository) Delete(ctx context.Context, id uint) error {
 	if result.Error != nil {
 		logger.Error("Failed to delete payment config",
 			logger.Uint("config_id", id),
-			logger.Error2("error", result.Error),
+			logger.ErrorField(result.Error),
 		)
 		return fmt.Errorf("failed to delete payment config: %w", result.Error)
 	}
@@ -888,11 +888,11 @@ func (r *paymentConfigRepository) Delete(ctx context.Context, id uint) error {
 	return nil
 }
 
-// ExistsByGateway checks if a payment config with the given gateway exists
-func (r *paymentConfigRepository) ExistsByGateway(ctx context.Context, gateway string) (bool, error) {
+// ExistsByMethod checks if a payment config with the given method exists
+func (r *paymentConfigRepository) ExistsByMethod(ctx context.Context, method string) (bool, error) {
 	var count int64
-	if err := r.db.WithContext(ctx).Model(&entities.PaymentConfig{}).Where("gateway = ?", gateway).Count(&count).Error; err != nil {
-		return false, fmt.Errorf("failed to check payment config existence by gateway: %w", err)
+	if err := r.db.WithContext(ctx).Model(&entities.PaymentConfig{}).Where("method = ?", method).Count(&count).Error; err != nil {
+		return false, fmt.Errorf("failed to check payment config existence by method: %w", err)
 	}
 	return count > 0, nil
 }
@@ -1059,8 +1059,12 @@ func (r *paymentConfigRepository) CountDisabled(ctx context.Context) (int64, err
 	return 0, fmt.Errorf("CountDisabled method not implemented")
 }
 
-func (r *paymentConfigRepository) CountByGateway(ctx context.Context, gateway string) (int64, error) {
-	return 0, fmt.Errorf("CountByGateway method not implemented")
+func (r *paymentConfigRepository) CountByMethod(ctx context.Context, method string) (int64, error) {
+	var count int64
+	if err := r.db.WithContext(ctx).Model(&entities.PaymentConfig{}).Where("method = ?", method).Count(&count).Error; err != nil {
+		return 0, fmt.Errorf("failed to count payment configs by method: %w", err)
+	}
+	return count, nil
 }
 
 func (r *paymentConfigRepository) ListPublic(ctx context.Context, limit, offset int) ([]*entities.PaymentConfig, int64, error) {
@@ -1139,9 +1143,6 @@ func (r *paymentConfigRepository) ImportConfigs(ctx context.Context, configs []*
 	return fmt.Errorf("ImportConfigs method not implemented")
 }
 
-func (r *paymentConfigRepository) ListByEnvironment(ctx context.Context, environment string, limit, offset int) ([]*entities.PaymentConfig, int64, error) {
-	return nil, 0, fmt.Errorf("ListByEnvironment method not implemented")
-}
 
 func (r *paymentConfigRepository) GetProductionConfigs(ctx context.Context) ([]*entities.PaymentConfig, error) {
 	return nil, fmt.Errorf("GetProductionConfigs method not implemented")

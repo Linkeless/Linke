@@ -284,7 +284,7 @@ cached, err := cs.cache.Get(ctx, cacheKey)
 if err != nil {
     // 记录错误但继续进行数据库获取
     cs.logger.Warn("Cache read failed", 
-        logger.Error2("error", err),
+        logger.ErrorField(err),
         logger.String("key", cacheKey))
 }
 ```

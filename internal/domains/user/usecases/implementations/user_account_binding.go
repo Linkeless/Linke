@@ -83,7 +83,7 @@ func (s *userAccountBindingService) CreateBinding(ctx context.Context, userID ui
 			logger.Error("Failed to set primary binding", 
 				logger.Uint("user_id", userID),
 				logger.Uint("binding_id", binding.ID),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 			// Don't fail the operation, just log the error
 		}
 	}
@@ -195,7 +195,7 @@ func (s *userAccountBindingService) DeleteBinding(ctx context.Context, userID ui
 						logger.Error("Failed to set new primary binding during deletion",
 							logger.Uint("user_id", userID),
 							logger.Uint("new_primary_id", b.ID),
-							logger.Error2("error", err))
+							logger.ErrorField(err))
 					}
 					break
 				}
@@ -229,7 +229,7 @@ func (s *userAccountBindingService) FindUserByProviderAccount(ctx context.Contex
 	if err := s.bindingRepo.UpdateLastUsed(ctx, binding.ID); err != nil {
 		logger.Error("Failed to update last used timestamp",
 			logger.Uint("binding_id", binding.ID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		// Don't fail the operation
 	}
 

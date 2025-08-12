@@ -54,7 +54,7 @@ func (h *UserCouponHandler) GetPublicCoupons(c *gin.Context) {
 	// Get public coupons
 	coupons, err := h.couponService.GetPublicCoupons(c.Request.Context(), limit)
 	if err != nil {
-		logger.Error("Failed to get public coupons", logger.Error2("error", err))
+		logger.Error("Failed to get public coupons", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get public coupons", err.Error())
 		return
 	}
@@ -112,7 +112,7 @@ func (h *UserCouponHandler) ValidateCoupon(c *gin.Context) {
 		logger.Error("Failed to validate coupon",
 			logger.String("code", req.Code),
 			logger.Uint("user_id", uint(user.ID)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		// Check for coupon not found
@@ -180,7 +180,7 @@ func (h *UserCouponHandler) GetMyCouponUsage(c *gin.Context) {
 	if err != nil {
 		logger.Error("Failed to get user coupon usage",
 			logger.Uint("user_id", uint(user.ID)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to get coupon usage history", err.Error())
 		return

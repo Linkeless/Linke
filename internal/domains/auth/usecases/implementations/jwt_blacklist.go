@@ -39,7 +39,7 @@ func (j *JWTBlacklistService) BlacklistToken(ctx context.Context, token string, 
 		logger.Error("Failed to blacklist token",
 			logger.String("reason", reason),
 			logger.String("token_hash", tokenHash[:8]+"..."),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		return fmt.Errorf("failed to blacklist token: %w", err)
 	}
 
@@ -64,7 +64,7 @@ func (j *JWTBlacklistService) IsTokenBlacklisted(ctx context.Context, token stri
 		}
 		logger.Error("Failed to check token blacklist",
 			logger.String("token_hash", tokenHash[:8]+"..."),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		return false, fmt.Errorf("failed to check token blacklist: %w", err)
 	}
 
@@ -89,7 +89,7 @@ func (j *JWTBlacklistService) BlacklistAllUserTokens(ctx context.Context, userID
 		logger.Error("Failed to blacklist all user tokens",
 			logger.Uint("user_id", userID),
 			logger.String("reason", reason),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		return fmt.Errorf("failed to blacklist all user tokens: %w", err)
 	}
 
@@ -111,7 +111,7 @@ func (j *JWTBlacklistService) IsUserTokensBlacklisted(ctx context.Context, userI
 	if err != nil {
 		logger.Error("Failed to check user token blacklist",
 			logger.Uint("user_id", userID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		return false, fmt.Errorf("failed to check user token blacklist: %w", err)
 	}
 
@@ -124,7 +124,7 @@ func (j *JWTBlacklistService) CleanupExpiredEntries(ctx context.Context) error {
 
 	if result.Error != nil {
 		logger.Error("Failed to cleanup expired blacklist entries",
-			logger.Error2("error", result.Error))
+			logger.ErrorField(result.Error))
 		return fmt.Errorf("failed to cleanup expired blacklist entries: %w", result.Error)
 	}
 

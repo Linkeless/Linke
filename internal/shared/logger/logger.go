@@ -130,6 +130,10 @@ func Uint(key string, val uint) zap.Field {
 	return zap.Uint(key, val)
 }
 
+func Uint64(key string, val uint64) zap.Field {
+	return zap.Uint64(key, val)
+}
+
 func Duration(key string, val time.Duration) zap.Field {
 	return zap.Duration(key, val)
 }
@@ -154,10 +158,7 @@ func Strings(key string, val []string) zap.Field {
 	return zap.Strings(key, val)
 }
 
-func Error2(key string, err error) zap.Field {
-	return zap.Error(err)
-}
-
+// ErrorField returns a zap.Field for error values
 func ErrorField(err error) zap.Field {
 	return zap.Error(err)
 }

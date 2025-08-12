@@ -57,7 +57,7 @@ func (s *CachedSubscriptionPlanService) CreateSubscriptionPlan(ctx context.Conte
 		if err := s.planCache.Set(ctx, plan); err != nil {
 			logger.Error("Failed to cache new plan",
 				logger.Uint("plan_id", plan.ID),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 		}
 
 		// Invalidate list caches
@@ -206,7 +206,7 @@ func (s *CachedSubscriptionPlanService) UpdateSubscriptionPlan(ctx context.Conte
 		if err := s.planCache.Set(ctx, plan); err != nil {
 			logger.Error("Failed to cache updated plan",
 				logger.Uint("plan_id", plan.ID),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 		}
 	}
 
@@ -241,7 +241,7 @@ func (s *CachedSubscriptionPlanService) ToggleSubscriptionPlanStatus(ctx context
 		if err := s.planCache.Set(ctx, plan); err != nil {
 			logger.Error("Failed to cache plan after status toggle",
 				logger.Uint("plan_id", plan.ID),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 		}
 	}
 
@@ -269,7 +269,7 @@ func (s *CachedSubscriptionPlanService) invalidatePlanCaches(ctx context.Context
 	if err := s.planCache.Invalidate(ctx, planByIDKey); err != nil {
 		logger.Error("Failed to invalidate plan by ID cache",
 			logger.Uint("plan_id", planID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 	}
 
 	// Also try to get the plan's code to invalidate code cache
@@ -278,7 +278,7 @@ func (s *CachedSubscriptionPlanService) invalidatePlanCaches(ctx context.Context
 		if err := s.planCache.Invalidate(ctx, codeKey); err != nil {
 			logger.Error("Failed to invalidate plan by code cache",
 				logger.String("code", plan.Code),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 		}
 	}
 
@@ -300,7 +300,7 @@ func (s *CachedSubscriptionPlanService) invalidateListCaches(ctx context.Context
 		if err := s.cacheManager.GetCache().DeleteByPattern(ctx, fullPattern); err != nil {
 			logger.Error("Failed to invalidate plan list cache pattern",
 				logger.String("pattern", fullPattern),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 		}
 	}
 }

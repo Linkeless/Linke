@@ -99,16 +99,10 @@ func NewApplication() *fx.App {
 			return db.GetDB()
 		}),
 
-		// 日志系统
-		fx.Provide(func(cfg *config.Config) (loggerPkg.Logger, error) {
-			if err := loggerPkg.InitLogger(loggerPkg.LogConfig{
-				Level:  cfg.Log.Level,
-				Format: cfg.Log.Format,
-				Output: cfg.Log.Output,
-			}); err != nil {
-				return nil, fmt.Errorf("logger initialization failed - level: %s, format: %s, output: %s, error: %w",
-					cfg.Log.Level, cfg.Log.Format, cfg.Log.Output, err)
-			}
+		// 日志系统 - use already initialized logger from main.go
+		fx.Provide(func() (loggerPkg.Logger, error) {
+			// Logger should already be initialized by main.go
+			// Just return the global instance wrapped in our interface
 			return loggerPkg.GetGlobalLogger(), nil
 		}),
 

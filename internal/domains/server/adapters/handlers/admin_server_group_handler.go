@@ -60,7 +60,7 @@ func (h *AdminServerGroupHandler) CreateGroup(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to create server group",
 			logger.String("name", createReq.Name),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		// Check if it's a duplicate key error
@@ -117,7 +117,7 @@ func (h *AdminServerGroupHandler) ListGroups(c *gin.Context) {
 
 	groups, total, err := h.serverGroupService.GetServerGroups(c.Request.Context(), serviceReq)
 	if err != nil {
-		logger.Error("Admin failed to list server groups", logger.Error2("error", err))
+		logger.Error("Admin failed to list server groups", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to list server groups")
 		return
 	}
@@ -157,7 +157,7 @@ func (h *AdminServerGroupHandler) GetGroup(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to get server group",
 			logger.Uint("group_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.NotFound(c, "Server group not found")
 		return
@@ -205,7 +205,7 @@ func (h *AdminServerGroupHandler) UpdateGroup(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to update server group",
 			logger.Uint("group_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		if strings.Contains(err.Error(), "not found") {
@@ -260,7 +260,7 @@ func (h *AdminServerGroupHandler) PatchGroup(c *gin.Context) {
 		logger.Error("Admin failed to patch server group",
 			logger.Uint("group_id", uint(id)),
 			logger.Any("patch_request", patchReq),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		if strings.Contains(err.Error(), "not found") {
@@ -303,7 +303,7 @@ func (h *AdminServerGroupHandler) DeleteGroup(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to check server count for group deletion",
 			logger.Uint("group_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to verify group status")
 		return
@@ -317,7 +317,7 @@ func (h *AdminServerGroupHandler) DeleteGroup(c *gin.Context) {
 	if err := h.serverGroupService.DeleteServerGroup(c.Request.Context(), uint(id)); err != nil {
 		logger.Error("Admin failed to delete server group",
 			logger.Uint("group_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		if strings.Contains(err.Error(), "not found") {
@@ -359,7 +359,7 @@ func (h *AdminServerGroupHandler) GetGroupServers(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to get group servers",
 			logger.Uint("group_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		if strings.Contains(err.Error(), "not found") {
@@ -407,7 +407,7 @@ func (h *AdminServerGroupHandler) GetGroupStatistics(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to get group statistics",
 			logger.Uint("group_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		if strings.Contains(err.Error(), "not found") {
@@ -437,7 +437,7 @@ func (h *AdminServerGroupHandler) GetGroupStatistics(c *gin.Context) {
 func (h *AdminServerGroupHandler) GetAllGroupStatistics(c *gin.Context) {
 	groups, err := h.serverGroupService.GetAllServerGroups(c.Request.Context())
 	if err != nil {
-		logger.Error("Admin failed to get all server groups for statistics", logger.Error2("error", err))
+		logger.Error("Admin failed to get all server groups for statistics", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get group statistics")
 		return
 	}
@@ -449,7 +449,7 @@ func (h *AdminServerGroupHandler) GetAllGroupStatistics(c *gin.Context) {
 			logger.Warn("Failed to get statistics for group",
 				logger.Uint("group_id", group.ID),
 				logger.String("group_name", group.Name),
-				logger.Error2("error", err),
+				logger.ErrorField(err),
 			)
 			continue
 		}

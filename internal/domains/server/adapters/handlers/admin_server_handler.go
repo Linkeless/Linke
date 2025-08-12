@@ -91,7 +91,7 @@ func (h *AdminServerHandler) CreateServer(c *gin.Context) {
 		logger.Error("Admin failed to create server",
 			logger.String("name", createReq.Name),
 			logger.String("host", createReq.Host),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		// Check if it's a duplicate key error
@@ -126,6 +126,8 @@ func (h *AdminServerHandler) CreateServer(c *gin.Context) {
 // @Param group_id query int false "Filter by server group ID"
 // @Param show query int false "Filter by visibility (0 or 1)"
 // @Param name query string false "Filter by server name (substring match)"
+// @Param sort_by query string false "Sort by field" Enums(sort,created_at,updated_at,name,rate) default(sort)
+// @Param sort_order query string false "Sort order" Enums(asc,desc) default(asc)
 // @Success 200 {object} response.StandardListResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -161,19 +163,26 @@ func (h *AdminServerHandler) ListServers(c *gin.Context) {
 	}
 
 	name := c.Query("name")
+	sortBy := c.DefaultQuery("sort_by", "sort")
+	sortOrder := strings.ToLower(c.DefaultQuery("sort_order", "asc"))
+	if sortOrder != "asc" && sortOrder != "desc" {
+		sortOrder = "asc"
+	}
 
 	// Create service request
 	serviceReq := &dto.GetShadowsocksServersRequest{
-		GroupID: groupID,
-		Show:    show,
-		Name:    name,
-		Limit:   limit,
-		Offset:  offset,
+		GroupID:   groupID,
+		Show:      show,
+		Name:      name,
+		SortBy:    sortBy,
+		SortOrder: sortOrder,
+		Limit:     limit,
+		Offset:    offset,
 	}
 
 	servers, total, err := h.shadowsocksService.GetShadowsocksServers(c.Request.Context(), serviceReq)
 	if err != nil {
-		logger.Error("Admin failed to list servers", logger.Error2("error", err))
+		logger.Error("Admin failed to list servers", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to list servers")
 		return
 	}
@@ -213,7 +222,7 @@ func (h *AdminServerHandler) GetServer(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to get server",
 			logger.Int("server_id", id),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.NotFound(c, "Server not found")
 		return
@@ -276,7 +285,7 @@ func (h *AdminServerHandler) UpdateServer(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to update server",
 			logger.Uint("server_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to update server")
 		return
@@ -340,7 +349,7 @@ func (h *AdminServerHandler) PatchServer(c *gin.Context) {
 		logger.Error("Admin failed to patch server",
 			logger.Uint("server_id", uint(id)),
 			logger.Any("patch_request", patchReq),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to update server")
 		return
@@ -374,7 +383,7 @@ func (h *AdminServerHandler) DeleteServer(c *gin.Context) {
 	if err := h.shadowsocksService.DeleteShadowsocksServer(c.Request.Context(), uint(id)); err != nil {
 		logger.Error("Admin failed to delete server",
 			logger.Uint("server_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.NotFound(c, "Server not found")
 		return
@@ -416,7 +425,7 @@ func (h *AdminServerHandler) UpdateServerStatus(c *gin.Context) {
 		logger.Error("Admin failed to update server status",
 			logger.Uint("server_id", uint(id)),
 			logger.String("status", statusData.Status),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.NotFound(c, "Server not found")
 		return
@@ -452,7 +461,7 @@ func (h *AdminServerHandler) GetServerStatistics(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to get server statistics",
 			logger.Uint("server_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to get server statistics")
 		return
@@ -486,7 +495,7 @@ func (h *AdminServerHandler) BulkUpdateServers(c *gin.Context) {
 		logger.Error("Admin failed to bulk update servers",
 			logger.Any("server_ids", requestData.IDs),
 			logger.Any("updates", requestData.Updates),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to update servers")
 		return
@@ -525,7 +534,7 @@ func (h *AdminServerHandler) CheckServerHealth(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to check server health",
 			logger.Uint("server_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to check server health")
 		return
@@ -561,7 +570,7 @@ func (h *AdminServerHandler) GetServersByGroup(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to get servers by group",
 			logger.Uint("group_id", uint(groupID)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to get servers")
 		return

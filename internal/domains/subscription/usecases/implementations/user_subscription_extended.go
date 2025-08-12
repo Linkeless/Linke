@@ -101,7 +101,7 @@ func (s *UserSubscriptionService) GetUserSubscriptionStats(ctx context.Context, 
 		Select("COALESCE(SUM(final_amount), 0)").
 		Where("user_id = ? AND status = ?", userID, "completed").
 		Scan(&totalSpent).Error; err != nil {
-		logger.Error("Failed to calculate total spent", logger.Error2("error", err))
+		logger.Error("Failed to calculate total spent", logger.ErrorField(err))
 		// Don't fail the whole operation
 	}
 	stats.TotalSpent = totalSpent
@@ -113,7 +113,7 @@ func (s *UserSubscriptionService) GetUserSubscriptionStats(ctx context.Context, 
 		Select("COALESCE(SUM(CASE WHEN billing_cycle = 'monthly' THEN price WHEN billing_cycle = 'yearly' THEN price/12 ELSE 0 END), 0)").
 		Where("user_id = ? AND status = ?", userID, constants.UserSubscriptionStatusActive).
 		Scan(&monthlyCost).Error; err != nil {
-		logger.Error("Failed to calculate current monthly cost", logger.Error2("error", err))
+		logger.Error("Failed to calculate current monthly cost", logger.ErrorField(err))
 	}
 	stats.CurrentMonthlyCost = monthlyCost
 
@@ -130,7 +130,7 @@ func (s *UserSubscriptionService) GetUserSubscriptionStats(ctx context.Context, 
 	// Get usage statistics
 	usageStats, err := s.getUserUsageStats(ctx, userID)
 	if err != nil {
-		logger.Error("Failed to get usage stats", logger.Error2("error", err))
+		logger.Error("Failed to get usage stats", logger.ErrorField(err))
 		// Don't fail the whole operation
 	} else {
 		stats.UsageStats = usageStats
@@ -301,7 +301,7 @@ func (s *UserSubscriptionService) PauseUserSubscription(ctx context.Context, sub
 		tx.Rollback()
 		logger.Error("Failed to pause subscription",
 			logger.Uint("subscription_id", subscriptionID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to pause subscription: %w", err)
 	}
 
@@ -410,7 +410,7 @@ func (s *UserSubscriptionService) ResumeUserSubscription(ctx context.Context, su
 		tx.Rollback()
 		logger.Error("Failed to resume subscription",
 			logger.Uint("subscription_id", subscriptionID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to resume subscription: %w", err)
 	}
 
@@ -470,7 +470,7 @@ func (s *UserSubscriptionService) CheckAndProcessAutoResume(ctx context.Context)
 				logger.Error("Failed to auto-resume subscription",
 					logger.Uint("subscription_id", subscription.ID),
 					logger.Uint("user_id", subscription.UserID),
-					logger.Error2("error", err))
+					logger.ErrorField(err))
 				continue
 			}
 

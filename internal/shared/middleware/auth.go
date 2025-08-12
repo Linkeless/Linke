@@ -46,7 +46,7 @@ func AuthMiddleware(authService AuthService) gin.HandlerFunc {
 		if err != nil {
 			logger.Warn("Invalid token",
 				logger.String("path", c.Request.URL.Path),
-				logger.Error2("error", err),
+				logger.ErrorField(err),
 			)
 			response.Unauthorized(c, "Invalid or expired token")
 			c.Abort()

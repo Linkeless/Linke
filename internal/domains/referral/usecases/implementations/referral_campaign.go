@@ -278,7 +278,7 @@ func (s *ReferralCampaignService) ActivateCampaign(ctx context.Context, campaign
 	}
 
 	if err := s.db.DB.WithContext(ctx).Model(&entities.ReferralCampaign{}).Where("id = ?", campaignID).Updates(updates).Error; err != nil {
-		logger.Error("Failed to activate campaign", logger.Error2("error", err), logger.Uint("campaign_id", campaignID))
+		logger.Error("Failed to activate campaign", logger.Uint("campaignID", uint(campaignID)))
 		return fmt.Errorf("failed to activate campaign: %w", err)
 	}
 
@@ -294,7 +294,7 @@ func (s *ReferralCampaignService) DeactivateCampaign(ctx context.Context, campai
 	}
 
 	if err := s.db.DB.WithContext(ctx).Model(&entities.ReferralCampaign{}).Where("id = ?", campaignID).Updates(updates).Error; err != nil {
-		logger.Error("Failed to deactivate campaign", logger.Error2("error", err), logger.Uint("campaign_id", campaignID))
+		logger.Error("Failed to deactivate campaign", logger.Uint("campaignID", uint(campaignID)))
 		return fmt.Errorf("failed to deactivate campaign: %w", err)
 	}
 
@@ -310,7 +310,7 @@ func (s *ReferralCampaignService) ExpireCampaign(ctx context.Context, campaignID
 	}
 
 	if err := s.db.DB.WithContext(ctx).Model(&entities.ReferralCampaign{}).Where("id = ?", campaignID).Updates(updates).Error; err != nil {
-		logger.Error("Failed to expire campaign", logger.Error2("error", err), logger.Uint("campaign_id", campaignID))
+		logger.Error("Failed to expire campaign", logger.Uint("campaignID", uint(campaignID)))
 		return fmt.Errorf("failed to expire campaign: %w", err)
 	}
 

@@ -94,12 +94,14 @@ type PatchShadowsocksServerRequest struct {
 
 // GetShadowsocksServersRequest 获取Shadowsocks服务器列表请求
 type GetShadowsocksServersRequest struct {
-	GroupID *uint  `json:"group_id,omitempty" form:"group_id" example:"1"`
-	Show    *int   `json:"show,omitempty" form:"show" binding:"omitempty,min=0,max=1" example:"1"`
-	Name    string `json:"name,omitempty" form:"name" example:"US"`
-	Tags    string `json:"tags,omitempty" form:"tags" example:"premium"`
-	Limit   int    `json:"limit,omitempty" form:"limit" binding:"omitempty,min=1,max=100" example:"10"`
-	Offset  int    `json:"offset,omitempty" form:"offset" binding:"omitempty,min=0" example:"0"`
+	GroupID   *uint  `json:"group_id,omitempty" form:"group_id" example:"1"`
+	Show      *int   `json:"show,omitempty" form:"show" binding:"omitempty,min=0,max=1" example:"1"`
+	Name      string `json:"name,omitempty" form:"name" example:"US"`
+	Tags      string `json:"tags,omitempty" form:"tags" example:"premium"`
+	SortBy    string `json:"sort_by,omitempty" form:"sort_by" example:"sort"`
+	SortOrder string `json:"sort_order,omitempty" form:"sort_order" example:"asc"`
+	Limit     int    `json:"limit,omitempty" form:"limit" binding:"omitempty,min=1,max=100" example:"10"`
+	Offset    int    `json:"offset,omitempty" form:"offset" binding:"omitempty,min=0" example:"0"`
 }
 
 // BatchShadowsocksServerIDsRequest 批量操作Shadowsocks服务器ID请求

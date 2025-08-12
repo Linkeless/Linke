@@ -54,7 +54,7 @@ func (a *AuthService) Register(ctx context.Context, req *interfaces.RegisterRequ
 			logger.Warn("Invalid invite code used during registration",
 				logger.String("email", req.Email),
 				logger.String("invite_code", req.InviteCode),
-				logger.Error2("error", err),
+				logger.ErrorField(err),
 			)
 			return nil, fmt.Errorf("invalid invite code: %s", err.Error())
 		}
@@ -70,7 +70,7 @@ func (a *AuthService) Register(ctx context.Context, req *interfaces.RegisterRequ
 	// Hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		logger.Error("Failed to hash password", logger.Error2("error", err))
+		logger.Error("Failed to hash password", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to process password")
 	}
 
@@ -106,7 +106,7 @@ func (a *AuthService) Register(ctx context.Context, req *interfaces.RegisterRequ
 	if err := a.userService.CreateUser(ctx, user); err != nil {
 		logger.Error("Failed to create user during registration",
 			logger.String("email", req.Email),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to create user account")
 	}
@@ -123,7 +123,7 @@ func (a *AuthService) Register(ctx context.Context, req *interfaces.RegisterRequ
 				logger.String("email", req.Email),
 				logger.String("invite_code", inviteCode.Code),
 				logger.Uint("user_id", user.ID),
-				logger.Error2("error", err),
+				logger.ErrorField(err),
 			)
 			// Note: We don't return error here to avoid failing registration
 			// if invite code usage fails after user creation
@@ -142,7 +142,7 @@ func (a *AuthService) Register(ctx context.Context, req *interfaces.RegisterRequ
 	if err != nil {
 		logger.Error("Failed to generate token for new user",
 			logger.Uint("user_id", user.ID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to generate authentication token")
 	}
@@ -176,7 +176,7 @@ func (a *AuthService) Login(ctx context.Context, req *interfaces.LoginRequest) (
 		if err != nil {
 			logger.Error("Failed to check account lockout status",
 				logger.String("email", req.Email),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 			// Continue with login attempt despite error
 		} else if isLocked {
 			logger.Warn("Login attempt on locked account",
@@ -259,7 +259,7 @@ func (a *AuthService) Login(ctx context.Context, req *interfaces.LoginRequest) (
 	if err != nil {
 		logger.Error("Failed to generate token during login",
 			logger.Uint("user_id", user.ID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to generate authentication token")
 	}
@@ -303,7 +303,7 @@ func (a *AuthService) ChangePassword(ctx context.Context, userID uint, oldPasswo
 	if err != nil {
 		logger.Error("Failed to hash new password",
 			logger.Uint("user_id", userID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return fmt.Errorf("failed to process new password")
 	}
@@ -313,7 +313,7 @@ func (a *AuthService) ChangePassword(ctx context.Context, userID uint, oldPasswo
 	if err := a.userService.UpdateUser(ctx, user); err != nil {
 		logger.Error("Failed to update password",
 			logger.Uint("user_id", userID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return fmt.Errorf("failed to update password")
 	}
@@ -322,7 +322,7 @@ func (a *AuthService) ChangePassword(ctx context.Context, userID uint, oldPasswo
 	if err := a.jwtService.RevokeAllUserTokens(userID, authEntities.BlacklistReasonPasswordChange); err != nil {
 		logger.Warn("Failed to revoke tokens after password change",
 			logger.Uint("user_id", userID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		// Don't fail the password change if token revocation fails
 	}
 
@@ -362,7 +362,7 @@ func (a *AuthService) AdminResetPassword(ctx context.Context, adminUserID, targe
 		logger.Error("Failed to hash new password for admin reset",
 			logger.Uint("admin_id", adminUserID),
 			logger.Uint("target_user_id", targetUserID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return fmt.Errorf("failed to process new password")
 	}
@@ -373,7 +373,7 @@ func (a *AuthService) AdminResetPassword(ctx context.Context, adminUserID, targe
 		logger.Error("Failed to update password during admin reset",
 			logger.Uint("admin_id", adminUserID),
 			logger.Uint("target_user_id", targetUserID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return fmt.Errorf("failed to update password")
 	}
@@ -383,7 +383,7 @@ func (a *AuthService) AdminResetPassword(ctx context.Context, adminUserID, targe
 		logger.Warn("Failed to revoke tokens after admin password reset",
 			logger.Uint("admin_id", adminUserID),
 			logger.Uint("target_user_id", targetUserID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		// Don't fail the password reset if token revocation fails
 	}
 
@@ -460,7 +460,7 @@ func (a *AuthService) usernameExists(ctx context.Context, username string) bool 
 		// If there's an error, assume username exists to be safe
 		logger.Error("Error checking username existence",
 			logger.String("username", username),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return true
 	}
@@ -478,7 +478,7 @@ func (a *AuthService) recordLoginAttempt(ctx context.Context, email, ip, userAge
 			logger.String("email", email),
 			logger.String("ip", ip),
 			logger.String("success", fmt.Sprintf("%t", success)),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 	}
 }
 
@@ -487,7 +487,7 @@ func (a *AuthService) Logout(ctx context.Context, tokenString string, userID uin
 	if err := a.jwtService.RevokeToken(tokenString, &userID, authEntities.BlacklistReasonLogout); err != nil {
 		logger.Error("Failed to revoke token during logout",
 			logger.Uint("user_id", userID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		return fmt.Errorf("failed to logout securely")
 	}
 
@@ -524,7 +524,7 @@ func (a *AuthService) CreateOrUpdateOAuthUser(ctx context.Context, userInfo *int
 			logger.Error("Failed to update binding from OAuth",
 				logger.String("provider", userInfo.Provider),
 				logger.String("provider_id", userInfo.ID),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 			// Don't fail the login, just log the error
 		}
 
@@ -567,7 +567,7 @@ func (a *AuthService) CreateOrUpdateOAuthUser(ctx context.Context, userInfo *int
 				logger.String("provider", userInfo.Provider),
 				logger.String("provider_id", userInfo.ID),
 				logger.Uint("user_id", user.ID),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 			// Continue without failing
 		} else {
 			logger.Info("Legacy user migrated to binding system",
@@ -591,7 +591,7 @@ func (a *AuthService) CreateOrUpdateOAuthUser(ctx context.Context, userInfo *int
 			if err := a.userRepository.Update(ctx, user); err != nil {
 				logger.Error("Failed to update user profile",
 					logger.Uint("user_id", user.ID),
-					logger.Error2("error", err))
+					logger.ErrorField(err))
 			}
 		}
 
@@ -647,7 +647,7 @@ func (a *AuthService) CreateOrUpdateOAuthUser(ctx context.Context, userInfo *int
 				logger.String("provider", userInfo.Provider),
 				logger.String("provider_id", userInfo.ID),
 				logger.Uint("user_id", newUser.ID),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 			// Continue without failing the user creation
 		}
 

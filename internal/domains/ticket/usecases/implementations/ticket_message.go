@@ -67,7 +67,7 @@ func (s *TicketMessageService) CreateTicketMessage(ctx context.Context, ticketID
 	// Create the message
 	if err := tx.Create(message).Error; err != nil {
 		tx.Rollback()
-		logger.Error("Failed to create ticket message", logger.Error2("error", err))
+		logger.Error("Failed to create ticket message", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to create ticket message: %w", err)
 	}
 
@@ -84,13 +84,13 @@ func (s *TicketMessageService) CreateTicketMessage(ctx context.Context, ticketID
 
 	if err := tx.Model(&ticket).Updates(updates).Error; err != nil {
 		tx.Rollback()
-		logger.Error("Failed to update ticket timestamps", logger.Error2("error", err))
+		logger.Error("Failed to update ticket timestamps", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to update ticket timestamps: %w", err)
 	}
 
 	// Commit transaction
 	if err := tx.Commit().Error; err != nil {
-		logger.Error("Failed to commit ticket message transaction", logger.Error2("error", err))
+		logger.Error("Failed to commit ticket message transaction", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
@@ -118,7 +118,7 @@ func (s *TicketMessageService) GetTicketMessage(ctx context.Context, messageID u
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("ticket message not found")
 		}
-		logger.Error("Failed to get ticket message", logger.Error2("error", err), logger.Uint("message_id", messageID))
+		logger.Error("Failed to get ticket message", logger.Uint("messageID", uint(messageID)))
 		return nil, fmt.Errorf("failed to get ticket message: %w", err)
 	}
 
@@ -142,7 +142,7 @@ func (s *TicketMessageService) GetTicketMessages(ctx context.Context, req *dto.G
 	// Get total count
 	var totalCount int64
 	if err := query.Count(&totalCount).Error; err != nil {
-		logger.Error("Failed to count ticket messages", logger.Error2("error", err))
+		logger.Error("Failed to count ticket messages", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to count ticket messages: %w", err)
 	}
 
@@ -159,7 +159,7 @@ func (s *TicketMessageService) GetTicketMessages(ctx context.Context, req *dto.G
 
 	var messages []*entities.TicketMessage
 	if err := query.Find(&messages).Error; err != nil {
-		logger.Error("Failed to get ticket messages", logger.Error2("error", err))
+		logger.Error("Failed to get ticket messages", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to get ticket messages: %w", err)
 	}
 
@@ -195,7 +195,7 @@ func (s *TicketMessageService) UpdateTicketMessage(ctx context.Context, messageI
 
 	// Update the message
 	if err := s.db.WithContext(ctx).Model(message).Updates(updates).Error; err != nil {
-		logger.Error("Failed to update ticket message", logger.Error2("error", err), logger.Uint("message_id", messageID))
+		logger.Error("Failed to update ticket message", logger.Uint("messageID", uint(messageID)))
 		return nil, fmt.Errorf("failed to update ticket message: %w", err)
 	}
 
@@ -223,7 +223,7 @@ func (s *TicketMessageService) DeleteTicketMessage(ctx context.Context, messageI
 
 	// Soft delete the message
 	if err := s.db.WithContext(ctx).Delete(&message).Error; err != nil {
-		logger.Error("Failed to delete ticket message", logger.Error2("error", err), logger.Uint("message_id", messageID))
+		logger.Error("Failed to delete ticket message", logger.Uint("messageID", uint(messageID)))
 		return fmt.Errorf("failed to delete ticket message: %w", err)
 	}
 
@@ -302,7 +302,7 @@ func (s *TicketMessageService) GetLatestTicketMessages(ctx context.Context, tick
 	}
 
 	if err := query.Find(&messages).Error; err != nil {
-		logger.Error("Failed to get latest ticket messages", logger.Error2("error", err))
+		logger.Error("Failed to get latest ticket messages", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to get latest ticket messages: %w", err)
 	}
 
@@ -347,7 +347,7 @@ func (s *TicketMessageService) GetInternalMessages(ctx context.Context, ticketID
 		Where("ticket_id = ? AND is_internal = ?", ticketID, true).
 		Order("created_at ASC").
 		Find(&messages).Error; err != nil {
-		logger.Error("Failed to get internal messages", logger.Error2("error", err))
+		logger.Error("Failed to get internal messages", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to get internal messages: %w", err)
 	}
 

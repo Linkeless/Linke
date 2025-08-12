@@ -62,11 +62,11 @@ func TestCreatePaymentMethodRequest(t *testing.T) {
 	req := &dto.CreatePaymentMethodRequest{
 		Type:            constants.PaymentMethodTypeCard,
 		Gateway:         constants.PaymentGatewayEpay,
-		Method:          constants.PaymentMethodAlipay,
-		DisplayName:     "My Alipay Account",
+		Method:          constants.PaymentMethodTRCUSDT,
+		DisplayName:     "My USDT Wallet",
 		PaymentToken:    "epay_test_token_12345",
-		MaskedInfo:      "ali***@example.com",
-		Brand:           "Alipay",
+		MaskedInfo:      "TR***...ABC123",
+		Brand:           "USDT",
 		BillingCountry:  "CN",
 		BillingPostcode: "100000",
 		SetAsDefault:    false,
@@ -74,8 +74,8 @@ func TestCreatePaymentMethodRequest(t *testing.T) {
 
 	assert.Equal(t, constants.PaymentMethodTypeCard, req.Type)
 	assert.Equal(t, constants.PaymentGatewayEpay, req.Gateway)
-	assert.Equal(t, constants.PaymentMethodAlipay, req.Method)
-	assert.Equal(t, "My Alipay Account", req.DisplayName)
+	assert.Equal(t, constants.PaymentMethodTRCUSDT, req.Method)
+	assert.Equal(t, "My USDT Wallet", req.DisplayName)
 	assert.Equal(t, "epay_test_token_12345", req.PaymentToken)
 	assert.False(t, req.SetAsDefault)
 }
@@ -88,7 +88,7 @@ func TestPaymentMethodListResponse(t *testing.T) {
 			UserID:      100,
 			Type:        constants.PaymentMethodTypeCard,
 			Gateway:     constants.PaymentGatewayEpay,
-			Method:      constants.PaymentMethodAlipay,
+			Method:      constants.PaymentMethodTRCUSDT,
 			DisplayName: "Method 1",
 			IsDefault:   true,
 		},
@@ -97,7 +97,7 @@ func TestPaymentMethodListResponse(t *testing.T) {
 			UserID:      100,
 			Type:        constants.PaymentMethodTypeCard,
 			Gateway:     constants.PaymentGatewayEpay,
-			Method:      constants.PaymentMethodWechat,
+			Method:      constants.PaymentMethodPolygonUSDT,
 			DisplayName: "Method 2",
 			IsDefault:   false,
 		},

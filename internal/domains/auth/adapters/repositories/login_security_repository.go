@@ -45,7 +45,7 @@ func (r *loginAttemptRepository) Create(ctx context.Context, attempt *entities.L
 			logger.String("email", attempt.Email),
 			logger.String("ip", attempt.IP),
 			logger.String("success", fmt.Sprintf("%t", attempt.Success)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return fmt.Errorf("failed to create login attempt: %w", err)
 	}
@@ -67,7 +67,7 @@ func (r *loginAttemptRepository) GetByID(ctx context.Context, id uint) (*entitie
 		}
 		logger.Error("Failed to get login attempt by ID",
 			logger.Uint("attempt_id", id),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to get login attempt: %w", err)
 	}
@@ -80,7 +80,7 @@ func (r *loginAttemptRepository) Delete(ctx context.Context, id uint) error {
 	if result.Error != nil {
 		logger.Error("Failed to delete login attempt",
 			logger.Uint("attempt_id", id),
-			logger.Error2("error", result.Error),
+			logger.ErrorField(result.Error),
 		)
 		return fmt.Errorf("failed to delete login attempt: %w", result.Error)
 	}
@@ -105,7 +105,7 @@ func (r *loginAttemptRepository) GetByEmail(ctx context.Context, email string, l
 		Where("email = ?", email).Count(&total).Error; err != nil {
 		logger.Error("Failed to count login attempts by email",
 			logger.String("email", email),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to count login attempts by email: %w", err)
 	}
@@ -115,7 +115,7 @@ func (r *loginAttemptRepository) GetByEmail(ctx context.Context, email string, l
 		Limit(limit).Offset(offset).Order("created_at DESC").Find(&attempts).Error; err != nil {
 		logger.Error("Failed to get login attempts by email",
 			logger.String("email", email),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to get login attempts by email: %w", err)
 	}
@@ -133,7 +133,7 @@ func (r *loginAttemptRepository) GetByUser(ctx context.Context, userID uint, lim
 		Where("user_id = ?", userID).Count(&total).Error; err != nil {
 		logger.Error("Failed to count login attempts by user",
 			logger.Uint("user_id", userID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to count login attempts by user: %w", err)
 	}
@@ -143,7 +143,7 @@ func (r *loginAttemptRepository) GetByUser(ctx context.Context, userID uint, lim
 		Limit(limit).Offset(offset).Order("created_at DESC").Find(&attempts).Error; err != nil {
 		logger.Error("Failed to get login attempts by user",
 			logger.Uint("user_id", userID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to get login attempts by user: %w", err)
 	}
@@ -161,7 +161,7 @@ func (r *loginAttemptRepository) GetByIP(ctx context.Context, ip string, limit, 
 		Where("ip = ?", ip).Count(&total).Error; err != nil {
 		logger.Error("Failed to count login attempts by IP",
 			logger.String("ip", ip),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to count login attempts by IP: %w", err)
 	}
@@ -171,7 +171,7 @@ func (r *loginAttemptRepository) GetByIP(ctx context.Context, ip string, limit, 
 		Limit(limit).Offset(offset).Order("created_at DESC").Find(&attempts).Error; err != nil {
 		logger.Error("Failed to get login attempts by IP",
 			logger.String("ip", ip),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to get login attempts by IP: %w", err)
 	}
@@ -189,7 +189,7 @@ func (r *loginAttemptRepository) GetSuccessfulAttempts(ctx context.Context, emai
 		Where("email = ? AND success = ?", email, true).Count(&total).Error; err != nil {
 		logger.Error("Failed to count successful login attempts by email",
 			logger.String("email", email),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to count successful login attempts by email: %w", err)
 	}
@@ -199,7 +199,7 @@ func (r *loginAttemptRepository) GetSuccessfulAttempts(ctx context.Context, emai
 		Limit(limit).Offset(offset).Order("created_at DESC").Find(&attempts).Error; err != nil {
 		logger.Error("Failed to get successful login attempts by email",
 			logger.String("email", email),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to get successful login attempts by email: %w", err)
 	}
@@ -217,7 +217,7 @@ func (r *loginAttemptRepository) GetFailedAttempts(ctx context.Context, email st
 		Where("email = ? AND success = ?", email, false).Count(&total).Error; err != nil {
 		logger.Error("Failed to count failed login attempts by email",
 			logger.String("email", email),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to count failed login attempts by email: %w", err)
 	}
@@ -227,7 +227,7 @@ func (r *loginAttemptRepository) GetFailedAttempts(ctx context.Context, email st
 		Limit(limit).Offset(offset).Order("created_at DESC").Find(&attempts).Error; err != nil {
 		logger.Error("Failed to get failed login attempts by email",
 			logger.String("email", email),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to get failed login attempts by email: %w", err)
 	}
@@ -243,7 +243,7 @@ func (r *loginAttemptRepository) GetRecentAttempts(ctx context.Context, email st
 		logger.Error("Failed to get recent login attempts",
 			logger.String("email", email),
 			logger.String("since", since.Format(time.RFC3339)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to get recent login attempts: %w", err)
 	}
@@ -258,7 +258,7 @@ func (r *loginAttemptRepository) GetRecentFailedAttempts(ctx context.Context, em
 		logger.Error("Failed to get recent failed login attempts",
 			logger.String("email", email),
 			logger.String("since", since.Format(time.RFC3339)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to get recent failed login attempts: %w", err)
 	}
@@ -274,7 +274,7 @@ func (r *loginAttemptRepository) GetAttemptsInTimeRange(ctx context.Context, ema
 			logger.String("email", email),
 			logger.String("start", start.Format(time.RFC3339)),
 			logger.String("end", end.Format(time.RFC3339)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to get login attempts in time range: %w", err)
 	}
@@ -346,7 +346,7 @@ func (r *loginAttemptRepository) DeleteOlderThan(ctx context.Context, before tim
 	if result.Error != nil {
 		logger.Error("Failed to delete old login attempts",
 			logger.String("before", before.Format(time.RFC3339)),
-			logger.Error2("error", result.Error),
+			logger.ErrorField(result.Error),
 		)
 		return 0, fmt.Errorf("failed to delete old login attempts: %w", result.Error)
 	}
@@ -364,7 +364,7 @@ func (r *loginAttemptRepository) DeleteByEmail(ctx context.Context, email string
 	if result.Error != nil {
 		logger.Error("Failed to delete login attempts by email",
 			logger.String("email", email),
-			logger.Error2("error", result.Error),
+			logger.ErrorField(result.Error),
 		)
 		return 0, fmt.Errorf("failed to delete login attempts by email: %w", result.Error)
 	}
@@ -383,14 +383,14 @@ func (r *loginAttemptRepository) List(ctx context.Context, limit, offset int) ([
 
 	// Count total attempts
 	if err := r.db.WithContext(ctx).Model(&entities.LoginAttempt{}).Count(&total).Error; err != nil {
-		logger.Error("Failed to count login attempts", logger.Error2("error", err))
+		logger.Error("Failed to count login attempts", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to count login attempts: %w", err)
 	}
 
 	// Get attempts with pagination
 	if err := r.db.WithContext(ctx).Limit(limit).Offset(offset).
 		Order("created_at DESC").Find(&attempts).Error; err != nil {
-		logger.Error("Failed to list login attempts", logger.Error2("error", err))
+		logger.Error("Failed to list login attempts", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to list login attempts: %w", err)
 	}
 
@@ -407,7 +407,7 @@ func (r *loginAttemptRepository) ListBySuccess(ctx context.Context, success bool
 		Where("success = ?", success).Count(&total).Error; err != nil {
 		logger.Error("Failed to count login attempts by success",
 			logger.String("success", fmt.Sprintf("%t", success)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to count login attempts by success: %w", err)
 	}
@@ -417,7 +417,7 @@ func (r *loginAttemptRepository) ListBySuccess(ctx context.Context, success bool
 		Limit(limit).Offset(offset).Order("created_at DESC").Find(&attempts).Error; err != nil {
 		logger.Error("Failed to list login attempts by success",
 			logger.String("success", fmt.Sprintf("%t", success)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to list login attempts by success: %w", err)
 	}
@@ -435,7 +435,7 @@ func (r *loginAttemptRepository) ListRecent(ctx context.Context, since time.Time
 		Where("created_at >= ?", since).Count(&total).Error; err != nil {
 		logger.Error("Failed to count recent login attempts",
 			logger.String("since", since.Format(time.RFC3339)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to count recent login attempts: %w", err)
 	}
@@ -445,7 +445,7 @@ func (r *loginAttemptRepository) ListRecent(ctx context.Context, since time.Time
 		Limit(limit).Offset(offset).Order("created_at DESC").Find(&attempts).Error; err != nil {
 		logger.Error("Failed to list recent login attempts",
 			logger.String("since", since.Format(time.RFC3339)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to list recent login attempts: %w", err)
 	}
@@ -461,7 +461,7 @@ func (r *accountLockoutRepository) Create(ctx context.Context, lockout *entities
 		logger.Error("Failed to create account lockout",
 			logger.String("email", lockout.Email),
 			logger.String("reason", lockout.LockReason),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return fmt.Errorf("failed to create account lockout: %w", err)
 	}
@@ -482,7 +482,7 @@ func (r *accountLockoutRepository) GetByID(ctx context.Context, id uint) (*entit
 		}
 		logger.Error("Failed to get account lockout by ID",
 			logger.Uint("lockout_id", id),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to get account lockout: %w", err)
 	}
@@ -498,7 +498,7 @@ func (r *accountLockoutRepository) GetByEmail(ctx context.Context, email string)
 		}
 		logger.Error("Failed to get account lockout by email",
 			logger.String("email", email),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to get account lockout: %w", err)
 	}
@@ -510,7 +510,7 @@ func (r *accountLockoutRepository) Update(ctx context.Context, lockout *entities
 	if err := r.db.WithContext(ctx).Save(lockout).Error; err != nil {
 		logger.Error("Failed to update account lockout",
 			logger.Uint("lockout_id", lockout.ID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return fmt.Errorf("failed to update account lockout: %w", err)
 	}
@@ -527,7 +527,7 @@ func (r *accountLockoutRepository) Delete(ctx context.Context, id uint) error {
 	if result.Error != nil {
 		logger.Error("Failed to delete account lockout",
 			logger.Uint("lockout_id", id),
-			logger.Error2("error", result.Error),
+			logger.ErrorField(result.Error),
 		)
 		return fmt.Errorf("failed to delete account lockout: %w", result.Error)
 	}
@@ -655,7 +655,7 @@ func (r *accountLockoutRepository) UnlockAccount(ctx context.Context, email stri
 	if result.Error != nil {
 		logger.Error("Failed to unlock account",
 			logger.String("email", email),
-			logger.Error2("error", result.Error),
+			logger.ErrorField(result.Error),
 		)
 		return fmt.Errorf("failed to unlock account: %w", result.Error)
 	}
@@ -683,7 +683,7 @@ func (r *accountLockoutRepository) ResetFailureCount(ctx context.Context, email 
 	if result.Error != nil {
 		logger.Error("Failed to reset failure count",
 			logger.String("email", email),
-			logger.Error2("error", result.Error),
+			logger.ErrorField(result.Error),
 		)
 		return fmt.Errorf("failed to reset failure count: %w", result.Error)
 	}
@@ -705,14 +705,14 @@ func (r *accountLockoutRepository) GetLockedAccounts(ctx context.Context, limit,
 	// Count total locked accounts
 	if err := r.db.WithContext(ctx).Model(&entities.AccountLockout{}).
 		Where(condition, now).Count(&total).Error; err != nil {
-		logger.Error("Failed to count locked accounts", logger.Error2("error", err))
+		logger.Error("Failed to count locked accounts", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to count locked accounts: %w", err)
 	}
 
 	// Get locked accounts with pagination
 	if err := r.db.WithContext(ctx).Where(condition, now).
 		Limit(limit).Offset(offset).Order("locked_until DESC").Find(&lockouts).Error; err != nil {
-		logger.Error("Failed to list locked accounts", logger.Error2("error", err))
+		logger.Error("Failed to list locked accounts", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to list locked accounts: %w", err)
 	}
 
@@ -729,7 +729,7 @@ func (r *accountLockoutRepository) GetAccountsWithFailures(ctx context.Context, 
 		Where("failed_count >= ?", minFailures).Count(&total).Error; err != nil {
 		logger.Error("Failed to count accounts with failures",
 			logger.Int("min_failures", minFailures),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to count accounts with failures: %w", err)
 	}
@@ -739,7 +739,7 @@ func (r *accountLockoutRepository) GetAccountsWithFailures(ctx context.Context, 
 		Limit(limit).Offset(offset).Order("failed_count DESC").Find(&lockouts).Error; err != nil {
 		logger.Error("Failed to list accounts with failures",
 			logger.Int("min_failures", minFailures),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to list accounts with failures: %w", err)
 	}
@@ -756,7 +756,7 @@ func (r *accountLockoutRepository) GetByUser(ctx context.Context, userID uint) (
 		}
 		logger.Error("Failed to get account lockout by user",
 			logger.Uint("user_id", userID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to get account lockout: %w", err)
 	}
@@ -831,7 +831,7 @@ func (r *accountLockoutRepository) CleanupExpiredLockouts(ctx context.Context) (
 		})
 
 	if result.Error != nil {
-		logger.Error("Failed to cleanup expired lockouts", logger.Error2("error", result.Error))
+		logger.Error("Failed to cleanup expired lockouts", logger.ErrorField(result.Error))
 		return 0, fmt.Errorf("failed to cleanup expired lockouts: %w", result.Error)
 	}
 
@@ -847,7 +847,7 @@ func (r *accountLockoutRepository) DeleteOlderThan(ctx context.Context, before t
 	if result.Error != nil {
 		logger.Error("Failed to delete old lockout records",
 			logger.String("before", before.Format(time.RFC3339)),
-			logger.Error2("error", result.Error),
+			logger.ErrorField(result.Error),
 		)
 		return 0, fmt.Errorf("failed to delete old lockout records: %w", result.Error)
 	}
@@ -866,14 +866,14 @@ func (r *accountLockoutRepository) List(ctx context.Context, limit, offset int) 
 
 	// Count total lockouts
 	if err := r.db.WithContext(ctx).Model(&entities.AccountLockout{}).Count(&total).Error; err != nil {
-		logger.Error("Failed to count account lockouts", logger.Error2("error", err))
+		logger.Error("Failed to count account lockouts", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to count account lockouts: %w", err)
 	}
 
 	// Get lockouts with pagination
 	if err := r.db.WithContext(ctx).Limit(limit).Offset(offset).
 		Order("updated_at DESC").Find(&lockouts).Error; err != nil {
-		logger.Error("Failed to list account lockouts", logger.Error2("error", err))
+		logger.Error("Failed to list account lockouts", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to list account lockouts: %w", err)
 	}
 
@@ -890,7 +890,7 @@ func (r *accountLockoutRepository) ListByReason(ctx context.Context, reason stri
 		Where("lock_reason = ?", reason).Count(&total).Error; err != nil {
 		logger.Error("Failed to count account lockouts by reason",
 			logger.String("reason", reason),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to count account lockouts by reason: %w", err)
 	}
@@ -900,7 +900,7 @@ func (r *accountLockoutRepository) ListByReason(ctx context.Context, reason stri
 		Limit(limit).Offset(offset).Order("updated_at DESC").Find(&lockouts).Error; err != nil {
 		logger.Error("Failed to list account lockouts by reason",
 			logger.String("reason", reason),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to list account lockouts by reason: %w", err)
 	}
@@ -918,7 +918,7 @@ func (r *accountLockoutRepository) ListRecent(ctx context.Context, since time.Ti
 		Where("created_at >= ?", since).Count(&total).Error; err != nil {
 		logger.Error("Failed to count recent account lockouts",
 			logger.String("since", since.Format(time.RFC3339)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to count recent account lockouts: %w", err)
 	}
@@ -928,7 +928,7 @@ func (r *accountLockoutRepository) ListRecent(ctx context.Context, since time.Ti
 		Limit(limit).Offset(offset).Order("created_at DESC").Find(&lockouts).Error; err != nil {
 		logger.Error("Failed to list recent account lockouts",
 			logger.String("since", since.Format(time.RFC3339)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to list recent account lockouts: %w", err)
 	}

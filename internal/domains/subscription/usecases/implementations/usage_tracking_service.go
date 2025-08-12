@@ -11,6 +11,9 @@ import (
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/domains/subscription/usecases/interfaces"
 	subscriptionInterfaces "linke/internal/domains/subscription/usecases/interfaces"
+	"linke/internal/shared/logger"
+
+	"go.uber.org/zap"
 )
 
 // usageTrackingService implements the UsageTrackingService interface
@@ -19,6 +22,7 @@ type usageTrackingService struct {
 	alertRepo       interfaces.AlertRepository
 	subscriptionSvc subscriptionInterfaces.UserSubscriptionService
 	alertSvc        interfaces.UsageAlertService
+	logger          *zap.Logger
 }
 
 // NewUsageTrackingService creates a new usage tracking service instance
@@ -33,6 +37,7 @@ func NewUsageTrackingService(
 		alertRepo:       alertRepo,
 		subscriptionSvc: subscriptionSvc,
 		alertSvc:        alertSvc,
+		logger:          logger.GetLogger(),
 	}
 }
 
@@ -90,13 +95,13 @@ func (s *usageTrackingService) RecordUsage(ctx context.Context, req *interfaces.
 		if err := s.UpdateSubscriptionUsage(asyncCtx, req.UserSubscriptionID); err != nil {
 			// Log error but don't fail the main operation
 			// In production, this should use proper logging
-			fmt.Printf("Failed to update subscription usage: %v\n", err)
+			s.logger.Error("Failed to update subscription usage", zap.Error(err))
 		}
 
 		// Process usage alerts
 		if err := s.alertSvc.ProcessUsageUpdate(asyncCtx, req.UserSubscriptionID, req.UsageType, req.Amount); err != nil {
 			// Log error but don't fail the main operation
-			fmt.Printf("Failed to process usage alerts: %v\n", err)
+			s.logger.Error("Failed to process usage alerts", zap.Error(err))
 		}
 	}()
 
@@ -166,7 +171,9 @@ func (s *usageTrackingService) RecordUsageBatch(ctx context.Context, requests []
 		for subscriptionID := range subscriptionUpdates {
 			// Update subscription usage
 			if err := s.UpdateSubscriptionUsage(asyncCtx, subscriptionID); err != nil {
-				fmt.Printf("Failed to update subscription %d usage: %v\n", subscriptionID, err)
+				s.logger.Error("Failed to update subscription usage", 
+				zap.Uint("subscription_id", subscriptionID),
+				zap.Error(err))
 			}
 
 			// Get unique usage types for this subscription in the batch
@@ -181,12 +188,18 @@ func (s *usageTrackingService) RecordUsageBatch(ctx context.Context, requests []
 			for usageType := range usageTypes {
 				currentUsage, err := s.usageRepo.GetCurrentUsage(asyncCtx, subscriptionID, usageType)
 				if err != nil {
-					fmt.Printf("Failed to get current usage for subscription %d, type %s: %v\n", subscriptionID, usageType, err)
+					s.logger.Error("Failed to get current usage for subscription",
+					zap.Uint("subscription_id", subscriptionID),
+					zap.String("usage_type", usageType),
+					zap.Error(err))
 					continue
 				}
 
 				if err := s.alertSvc.ProcessUsageUpdate(asyncCtx, subscriptionID, usageType, currentUsage); err != nil {
-					fmt.Printf("Failed to process alerts for subscription %d, type %s: %v\n", subscriptionID, usageType, err)
+					s.logger.Error("Failed to process alerts for subscription",
+					zap.Uint("subscription_id", subscriptionID),
+					zap.String("usage_type", usageType),
+					zap.Error(err))
 				}
 			}
 		}

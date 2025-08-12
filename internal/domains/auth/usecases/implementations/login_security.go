@@ -66,7 +66,7 @@ func (l *LoginSecurityService) RecordLoginAttempt(ctx context.Context, email, ip
 			logger.String("email", email),
 			logger.String("ip", ip),
 			logger.String("success", fmt.Sprintf("%t", success)),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		return fmt.Errorf("failed to record login attempt: %w", err)
 	}
 
@@ -75,7 +75,7 @@ func (l *LoginSecurityService) RecordLoginAttempt(ctx context.Context, email, ip
 		if err := l.updateFailureTracking(ctx, email, userID); err != nil {
 			logger.Error("Failed to update failure tracking",
 				logger.String("email", email),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 			// Don't return error here as the login attempt was recorded
 		}
 	} else {
@@ -83,7 +83,7 @@ func (l *LoginSecurityService) RecordLoginAttempt(ctx context.Context, email, ip
 		if err := l.resetFailureTracking(ctx, email); err != nil {
 			logger.Warn("Failed to reset failure tracking after successful login",
 				logger.String("email", email),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 		}
 	}
 

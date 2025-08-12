@@ -61,7 +61,7 @@ func (h *SubscriptionPlanHandler) GetSubscriptionPlans(c *gin.Context) {
 	// Get subscription plans
 	plans, totalCount, err := h.subscriptionPlanService.GetSubscriptionPlans(c.Request.Context(), &req)
 	if err != nil {
-		logger.Error("Failed to get subscription plans", logger.Error2("error", err))
+		logger.Error("Failed to get subscription plans", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get subscription plans", err.Error())
 		return
 	}
@@ -97,7 +97,7 @@ func (h *SubscriptionPlanHandler) GetPopularSubscriptionPlans(c *gin.Context) {
 	// Get popular subscription plans
 	plans, err := h.subscriptionPlanService.GetPopularSubscriptionPlans(c.Request.Context(), limit)
 	if err != nil {
-		logger.Error("Failed to get popular subscription plans", logger.Error2("error", err))
+		logger.Error("Failed to get popular subscription plans", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get popular subscription plans", err.Error())
 		return
 	}
@@ -139,7 +139,7 @@ func (h *SubscriptionPlanHandler) GetSubscriptionPlan(c *gin.Context) {
 			response.NotFound(c, "Subscription plan not found")
 			return
 		}
-		logger.Error("Failed to get subscription plan", logger.Error2("error", err), logger.Uint("plan_id", uint(planID)))
+		logger.Error("Failed to get subscription plan", logger.ErrorField(err), logger.Uint("plan_id", uint(planID)))
 		response.InternalServerError(c, "Failed to get subscription plan", err.Error())
 		return
 	}
@@ -181,7 +181,7 @@ func (h *SubscriptionPlanHandler) GetSubscriptionPlanByCode(c *gin.Context) {
 			response.NotFound(c, "Subscription plan not found")
 			return
 		}
-		logger.Error("Failed to get subscription plan by code", logger.Error2("error", err), logger.String("plan_code", planCode))
+		logger.Error("Failed to get subscription plan by code", logger.String("plan_code", planCode), logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get subscription plan", err.Error())
 		return
 	}

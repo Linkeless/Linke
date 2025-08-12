@@ -37,7 +37,7 @@ func (s *CouponService) CreateCoupon(ctx context.Context, creatorID uint64, req 
 	if err := s.db.Where("code = ?", code).First(&existingCoupon).Error; err == nil {
 		return nil, fmt.Errorf("coupon with code '%s' already exists", code)
 	} else if err != gorm.ErrRecordNotFound {
-		logger.Error("Failed to check existing coupon", logger.Error2("error", err))
+		logger.Error("Failed to check existing coupon", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to check existing coupon: %w", err)
 	}
 
@@ -82,7 +82,7 @@ func (s *CouponService) CreateCoupon(ctx context.Context, creatorID uint64, req 
 	}
 
 	if err := s.db.WithContext(ctx).Create(coupon).Error; err != nil {
-		logger.Error("Failed to create coupon", logger.Error2("error", err))
+		logger.Error("Failed to create coupon", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to create coupon: %w", err)
 	}
 
@@ -101,7 +101,7 @@ func (s *CouponService) GetCoupon(ctx context.Context, couponID uint64) (*entiti
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("coupon not found")
 		}
-		logger.Error("Failed to get coupon", logger.Error2("error", err), logger.Any("coupon_id", couponID))
+		logger.Error("Failed to get coupon", logger.Uint64("couponID", couponID))
 		return nil, fmt.Errorf("failed to get coupon: %w", err)
 	}
 
@@ -115,7 +115,7 @@ func (s *CouponService) GetCouponByCode(ctx context.Context, code string) (*enti
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("coupon not found")
 		}
-		logger.Error("Failed to get coupon by code", logger.Error2("error", err), logger.String("code", code))
+		logger.Error("Failed to get coupon by code", logger.String("code", code), logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to get coupon: %w", err)
 	}
 
@@ -142,7 +142,7 @@ func (s *CouponService) GetCoupons(ctx context.Context, req *dto.GetCouponsReque
 	// Get total count
 	var totalCount int64
 	if err := query.Count(&totalCount).Error; err != nil {
-		logger.Error("Failed to count coupons", logger.Error2("error", err))
+		logger.Error("Failed to count coupons", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to count coupons: %w", err)
 	}
 
@@ -159,7 +159,7 @@ func (s *CouponService) GetCoupons(ctx context.Context, req *dto.GetCouponsReque
 
 	var coupons []*entities.Coupon
 	if err := query.Find(&coupons).Error; err != nil {
-		logger.Error("Failed to get coupons", logger.Error2("error", err))
+		logger.Error("Failed to get coupons", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to get coupons: %w", err)
 	}
 
@@ -182,7 +182,7 @@ func (s *CouponService) GetPublicCoupons(ctx context.Context, limit int) ([]*ent
 
 	var coupons []*entities.Coupon
 	if err := query.Find(&coupons).Error; err != nil {
-		logger.Error("Failed to get public coupons", logger.Error2("error", err))
+		logger.Error("Failed to get public coupons", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to get public coupons: %w", err)
 	}
 
@@ -257,13 +257,13 @@ func (s *CouponService) UpdateCoupon(ctx context.Context, couponID uint64, req *
 
 	// Update the coupon
 	if err := s.db.WithContext(ctx).Model(coupon).Updates(updates).Error; err != nil {
-		logger.Error("Failed to update coupon", logger.Error2("error", err), logger.Any("coupon_id", couponID))
+		logger.Error("Failed to update coupon", logger.Uint64("couponID", couponID))
 		return nil, fmt.Errorf("failed to update coupon: %w", err)
 	}
 
 	// Reload the coupon
 	if err := s.db.WithContext(ctx).First(coupon, couponID).Error; err != nil {
-		logger.Error("Failed to reload updated coupon", logger.Error2("error", err), logger.Any("coupon_id", couponID))
+		logger.Error("Failed to reload updated coupon", logger.Uint64("couponID", couponID))
 		return nil, fmt.Errorf("failed to reload updated coupon: %w", err)
 	}
 
@@ -282,7 +282,7 @@ func (s *CouponService) DeleteCoupon(ctx context.Context, couponID uint64) error
 
 	// Soft delete the coupon
 	if err := s.db.WithContext(ctx).Delete(coupon).Error; err != nil {
-		logger.Error("Failed to delete coupon", logger.Error2("error", err), logger.Any("coupon_id", couponID))
+		logger.Error("Failed to delete coupon", logger.Uint64("couponID", couponID))
 		return fmt.Errorf("failed to delete coupon: %w", err)
 	}
 
@@ -406,14 +406,14 @@ func (s *CouponService) useCouponInternal(ctx context.Context, couponID, userID,
 
 	if err := tx.Create(usage).Error; err != nil {
 		tx.Rollback()
-		logger.Error("Failed to create coupon usage record", logger.Error2("error", err))
+		logger.Error("Failed to create coupon usage record", logger.ErrorField(err))
 		return fmt.Errorf("failed to create coupon usage record: %w", err)
 	}
 
 	// Increment used count
 	if err := tx.Model(&coupon).Update("used_count", coupon.UsedCount+1).Error; err != nil {
 		tx.Rollback()
-		logger.Error("Failed to update coupon used count", logger.Error2("error", err))
+		logger.Error("Failed to update coupon used count", logger.ErrorField(err))
 		return fmt.Errorf("failed to update coupon used count: %w", err)
 	}
 
@@ -447,7 +447,7 @@ func (s *CouponService) GetCouponUsages(ctx context.Context, couponID *uint64, u
 	// Get total count
 	var totalCount int64
 	if err := query.Count(&totalCount).Error; err != nil {
-		logger.Error("Failed to count coupon usages", logger.Error2("error", err))
+		logger.Error("Failed to count coupon usages", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to count coupon usages: %w", err)
 	}
 
@@ -464,7 +464,7 @@ func (s *CouponService) GetCouponUsages(ctx context.Context, couponID *uint64, u
 
 	var usages []*entities.CouponUsage
 	if err := query.Find(&usages).Error; err != nil {
-		logger.Error("Failed to get coupon usages", logger.Error2("error", err))
+		logger.Error("Failed to get coupon usages", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to get coupon usages: %w", err)
 	}
 
@@ -478,7 +478,7 @@ func (s *CouponService) GetActiveCoupons(ctx context.Context) ([]*entities.Coupo
 		Where("status = ?", constants.CouponStatusActive).
 		Order("created_at DESC").
 		Find(&coupons).Error; err != nil {
-		logger.Error("Failed to get active coupons", logger.Error2("error", err))
+		logger.Error("Failed to get active coupons", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to get active coupons: %w", err)
 	}
 
@@ -490,7 +490,7 @@ func (s *CouponService) ActivateCoupon(ctx context.Context, couponID uint64) err
 	if err := s.db.WithContext(ctx).Model(&entities.Coupon{}).
 		Where("id = ?", couponID).
 		Update("status", constants.CouponStatusActive).Error; err != nil {
-		logger.Error("Failed to activate coupon", logger.Error2("error", err), logger.Any("coupon_id", couponID))
+		logger.Error("Failed to activate coupon", logger.Uint64("couponID", couponID))
 		return fmt.Errorf("failed to activate coupon: %w", err)
 	}
 
@@ -503,7 +503,7 @@ func (s *CouponService) DeactivateCoupon(ctx context.Context, couponID uint64) e
 	if err := s.db.WithContext(ctx).Model(&entities.Coupon{}).
 		Where("id = ?", couponID).
 		Update("status", constants.CouponStatusInactive).Error; err != nil {
-		logger.Error("Failed to deactivate coupon", logger.Error2("error", err), logger.Any("coupon_id", couponID))
+		logger.Error("Failed to deactivate coupon", logger.Uint64("couponID", couponID))
 		return fmt.Errorf("failed to deactivate coupon: %w", err)
 	}
 
@@ -516,7 +516,7 @@ func (s *CouponService) ExpireCoupon(ctx context.Context, couponID uint64) error
 	if err := s.db.WithContext(ctx).Model(&entities.Coupon{}).
 		Where("id = ?", couponID).
 		Update("status", constants.CouponStatusExpired).Error; err != nil {
-		logger.Error("Failed to expire coupon", logger.Error2("error", err), logger.Any("coupon_id", couponID))
+		logger.Error("Failed to expire coupon", logger.Uint64("couponID", couponID))
 		return fmt.Errorf("failed to expire coupon: %w", err)
 	}
 

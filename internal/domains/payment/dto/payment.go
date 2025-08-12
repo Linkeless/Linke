@@ -20,7 +20,7 @@ type PaymentRecordResponse struct {
 	OutTradeNo          string     `json:"out_trade_no" example:"ORDER202401010001"`                // Merchant order number
 	TransactionID       string     `json:"transaction_id,omitempty" example:"TXN123456789"`         // Transaction ID
 	Gateway             string     `json:"gateway" example:"epay"`                                  // Payment gateway
-	PaymentMethod       string     `json:"payment_method" example:"alipay"`                         // Payment method
+	PaymentMethod       string     `json:"payment_method" example:"trc_usdt"`                         // Payment method
 	Amount              float64    `json:"amount" example:"29.99"`                                  // Payment amount
 	Currency            string     `json:"currency" example:"CNY"`                                  // Currency
 	ExchangeRate        float64    `json:"exchange_rate" example:"1.0000"`                          // Exchange rate
@@ -55,7 +55,7 @@ type CreatePaymentOrderRequest struct {
 	SubscriptionOrderID *uint   `json:"subscription_order_id,omitempty" example:"1"`
 	InvoiceID           *uint   `json:"invoice_id,omitempty" example:"1"`
 	Gateway             string  `json:"gateway" binding:"required" example:"epay"`
-	PaymentMethod       string  `json:"payment_method" binding:"required" example:"alipay"`
+	PaymentMethod       string  `json:"payment_method" binding:"required" example:"trc_usdt"`
 	Amount              float64 `json:"amount" binding:"required,gt=0" example:"29.99"`
 	Currency            string  `json:"currency" binding:"required" example:"CNY"`
 	Subject             string  `json:"subject" binding:"required" example:"Premium Subscription"`
@@ -105,7 +105,7 @@ type PaymentMethodResponse struct {
 	UserID          uint       `json:"user_id" example:"1"`                                        // User ID
 	Type            string     `json:"type" example:"card"`                                        // Payment method type
 	Gateway         string     `json:"gateway" example:"epay"`                                     // Payment gateway
-	Method          string     `json:"method" example:"alipay"`                                    // Payment method
+	Method          string     `json:"method" example:"trc_usdt"`                                    // Payment method
 	DisplayName     string     `json:"display_name" example:"My Alipay Account"`                   // User-friendly name
 	MaskedInfo      string     `json:"masked_info" example:"ali***@example.com"`                   // Masked payment info
 	Brand           string     `json:"brand,omitempty" example:"Alipay"`                           // Brand/provider
@@ -134,7 +134,7 @@ type PaymentMethodResponse struct {
 type CreatePaymentMethodRequest struct {
 	Type              string `json:"type" binding:"required,oneof=card bank_account digital_wallet crypto" example:"card"`
 	Gateway           string `json:"gateway" binding:"required" example:"epay"`
-	Method            string `json:"method" binding:"required" example:"alipay"`
+	Method            string `json:"method" binding:"required" example:"trc_usdt"}`
 	DisplayName       string `json:"display_name" binding:"required,max=100" example:"My Alipay Account"`
 	PaymentToken      string `json:"payment_token" binding:"required" example:"tok_1234567890"`
 	GatewayCustomerID string `json:"gateway_customer_id,omitempty" example:"cus_1234567890"`
@@ -196,8 +196,13 @@ type PaymentMethodValidationResult struct {
 // PaymentConfigResponse represents the payment config data structure for API responses
 type PaymentConfigResponse struct {
 	ID                  uint                 `json:"id" example:"1"`                            // Config ID
-	Gateway             string               `json:"gateway" example:"epay"`                    // Payment gateway
-	Name                string               `json:"name" example:"EPay Gateway"`               // Display name
+	Method              string               `json:"method" example:"epay"`                     // Payment method identifier
+	Name                string               `json:"name" example:"EPay Payment Method"`        // Display name
+	URL                 string               `json:"url" example:"https://api.example.com"`    // API endpoint URL
+	PID                 string               `json:"pid" example:"partner123"`                  // Partner/Merchant ID
+	Key                 string               `json:"key" example:"secret123"`                   // API key/secret
+	NotifyURL           string               `json:"notify_url,omitempty" example:"https://example.com/webhook"` // Callback URL
+	ReturnURL           string               `json:"return_url,omitempty" example:"https://example.com/return"`  // Return URL
 	IsEnabled           bool                 `json:"is_enabled" example:"true"`                 // Enabled status
 	SortOrder           int                  `json:"sort_order" example:"1"`                    // Sort order
 	SupportedCurrencies string               `json:"supported_currencies" example:"CNY"`        // Supported currencies
@@ -210,11 +215,62 @@ type PaymentConfigResponse struct {
 	UpdatedAt           time.Time            `json:"updated_at" example:"2024-01-01T00:00:00Z"` // Update time
 }
 
+// DynamicPaymentConfigResponse represents the payment config with dynamic fields based on method
+type DynamicPaymentConfigResponse struct {
+	ID               uint                   `json:"id" example:"1"`                            // Config ID
+	Method           string                 `json:"method" example:"epay"`                     // Payment method identifier
+	Name             string                 `json:"name" example:"EPay Payment Method"`        // Display name
+	IsEnabled        bool                   `json:"is_enabled" example:"true"`                 // Enabled status
+	SortOrder        int                    `json:"sort_order" example:"1"`                    // Sort order
+	MinAmount        float64                `json:"min_amount" example:"0.01"`                 // Minimum amount
+	MaxAmount        float64                `json:"max_amount" example:"99999.99"`             // Maximum amount
+	FixedFee         float64                `json:"fixed_fee" example:"0.00"`                  // Fixed fee
+	PercentageFee    float64                `json:"percentage_fee" example:"0.6"`              // Percentage fee
+	CreatedAt        time.Time              `json:"created_at" example:"2024-01-01T00:00:00Z"` // Creation time
+	UpdatedAt        time.Time              `json:"updated_at" example:"2024-01-01T00:00:00Z"` // Update time
+	
+	// Dynamic fields based on payment method
+	Config           map[string]interface{} `json:"config"`                                     // Dynamic configuration
+	RequiredFields   []string               `json:"required_fields"`                           // Required fields for this method
+	OptionalFields   []string               `json:"optional_fields"`                           // Optional fields for this method
+	FieldDescriptions map[string]string     `json:"field_descriptions"`                        // Field descriptions for UI
+}
+
+// PaymentMethodConfigSchema represents the configuration schema for a payment method
+type PaymentMethodConfigSchema struct {
+	Method           string                 `json:"method" example:"epay"`                     // Payment method
+	DisplayName      string                 `json:"display_name" example:"EPay支付"`             // Display name for UI
+	Description      string                 `json:"description" example:"EPay支付网关，支持支付宝、微信等多种支付方式"` // Method description
+	RequiredFields   []FieldDefinition      `json:"required_fields"`                           // Required configuration fields
+	OptionalFields   []FieldDefinition      `json:"optional_fields"`                           // Optional configuration fields
+	SupportedCurrencies []string            `json:"supported_currencies" example:"CNY,USD"`   // Supported currencies
+	DefaultConfig    map[string]interface{} `json:"default_config"`                            // Default configuration values
+	ValidationRules  map[string]string      `json:"validation_rules"`                          // Field validation rules
+}
+
+// FieldDefinition represents the definition of a configuration field
+type FieldDefinition struct {
+	Name         string      `json:"name" example:"url"`                                   // Field name
+	DisplayName  string      `json:"display_name" example:"API接口地址"`                    // Display name for UI  
+	Type         string      `json:"type" example:"string"`                               // Field type: string, number, boolean, url, email
+	Required     bool        `json:"required" example:"true"`                             // Whether field is required
+	Description  string      `json:"description" example:"支付网关的API接口地址"`             // Field description
+	Placeholder  string      `json:"placeholder" example:"https://pay.example.com"`      // Input placeholder
+	Validation   string      `json:"validation,omitempty" example:"url"`                 // Validation rule
+	DefaultValue interface{} `json:"default_value,omitempty"`                           // Default value
+	Options      []string    `json:"options,omitempty" example:"production,sandbox"`    // Options for select fields
+	Sensitive    bool        `json:"sensitive,omitempty" example:"true"`                // Whether field contains sensitive data
+}
+
 // CreatePaymentConfigRequest represents the request to create a payment config
 type CreatePaymentConfigRequest struct {
-	Gateway             string            `json:"gateway" binding:"required" example:"epay"`
-	Name                string            `json:"name" binding:"required" example:"EPay Gateway"`
-	Config              string            `json:"config" binding:"required" example:"{\"api_url\":\"...\"}"`
+	Method              string            `json:"method" binding:"required" example:"epay"`
+	Name                string            `json:"name" binding:"required" example:"EPay Payment Method"`
+	URL                 string            `json:"url" binding:"required" example:"https://api.example.com"`
+	PID                 string            `json:"pid" binding:"required" example:"partner123"`
+	Key                 string            `json:"key" binding:"required" example:"secret123"`
+	NotifyURL           string            `json:"notify_url,omitempty" example:"https://example.com/webhook"`
+	ReturnURL           string            `json:"return_url,omitempty" example:"https://example.com/return"`
 	IsEnabled           *bool             `json:"is_enabled,omitempty" example:"true"`
 	SortOrder           int               `json:"sort_order,omitempty" example:"1"`
 	SupportedCurrencies string            `json:"supported_currencies,omitempty" example:"CNY"`
@@ -225,10 +281,27 @@ type CreatePaymentConfigRequest struct {
 	PercentageFee       float64           `json:"percentage_fee,omitempty" example:"0.6"`
 }
 
+// DynamicCreatePaymentConfigRequest represents the request to create a payment config with dynamic fields
+type DynamicCreatePaymentConfigRequest struct {
+	Method           string                 `json:"method" binding:"required" example:"epay"`        // Payment method
+	Name             string                 `json:"name" binding:"required" example:"EPay Payment Method"` // Display name
+	Config           map[string]interface{} `json:"config" binding:"required"`                      // Dynamic configuration
+	IsEnabled        *bool                  `json:"is_enabled,omitempty" example:"true"`            // Is enabled
+	SortOrder        int                    `json:"sort_order,omitempty" example:"1"`               // Sort order
+	MinAmount        float64                `json:"min_amount,omitempty" example:"0.01"`            // Min amount
+	MaxAmount        float64                `json:"max_amount,omitempty" example:"99999.99"`        // Max amount
+	FixedFee         float64                `json:"fixed_fee,omitempty" example:"0.00"`             // Fixed fee
+	PercentageFee    float64                `json:"percentage_fee,omitempty" example:"0.6"`         // Percentage fee
+}
+
 // UpdatePaymentConfigRequest represents the request to update a payment config
 type UpdatePaymentConfigRequest struct {
-	Name                *string           `json:"name,omitempty" example:"EPay Gateway"`
-	Config              *string           `json:"config,omitempty" example:"{\"api_url\":\"...\"}"`
+	Name                *string           `json:"name,omitempty" example:"EPay Payment Method"`
+	URL                 *string           `json:"url,omitempty" example:"https://api.example.com"`
+	PID                 *string           `json:"pid,omitempty" example:"partner123"`
+	Key                 *string           `json:"key,omitempty" example:"secret123"`
+	NotifyURL           *string           `json:"notify_url,omitempty" example:"https://example.com/webhook"`
+	ReturnURL           *string           `json:"return_url,omitempty" example:"https://example.com/return"`
 	IsEnabled           *bool             `json:"is_enabled,omitempty" example:"true"`
 	SortOrder           *int              `json:"sort_order,omitempty" example:"1"`
 	SupportedCurrencies *string           `json:"supported_currencies,omitempty" example:"CNY"`
@@ -239,9 +312,21 @@ type UpdatePaymentConfigRequest struct {
 	PercentageFee       *float64          `json:"percentage_fee,omitempty" example:"0.6"`
 }
 
+// DynamicUpdatePaymentConfigRequest represents the request to update a payment config with dynamic fields
+type DynamicUpdatePaymentConfigRequest struct {
+	Name          *string                `json:"name,omitempty" example:"EPay Payment Method"`   // Display name
+	Config        map[string]interface{} `json:"config,omitempty"`                              // Dynamic configuration
+	IsEnabled     *bool                  `json:"is_enabled,omitempty" example:"true"`           // Is enabled
+	SortOrder     *int                   `json:"sort_order,omitempty" example:"1"`              // Sort order
+	MinAmount     *float64               `json:"min_amount,omitempty" example:"0.01"`           // Min amount
+	MaxAmount     *float64               `json:"max_amount,omitempty" example:"99999.99"`       // Max amount
+	FixedFee      *float64               `json:"fixed_fee,omitempty" example:"0.00"`            // Fixed fee
+	PercentageFee *float64               `json:"percentage_fee,omitempty" example:"0.6"`        // Percentage fee
+}
+
 // GetPaymentConfigsRequest represents the request to get payment configs
 type GetPaymentConfigsRequest struct {
-	Gateway   string `form:"gateway,omitempty" example:"epay"`
+	Method    string `form:"method,omitempty" example:"epay"`
 	IsEnabled *bool  `form:"is_enabled,omitempty" example:"true"`
 	Limit     int    `form:"limit,omitempty" example:"10"`
 	Offset    int    `form:"offset,omitempty" example:"0"`
@@ -554,6 +639,143 @@ type AttemptStatistics struct {
 	TotalDuration   int     `json:"total_duration"`
 }
 
+// ==================== Crypto Wallet Config DTOs ====================
+
+// CryptoWalletConfigResponse represents the crypto wallet config data structure for API responses
+type CryptoWalletConfigResponse struct {
+	ID               uint       `json:"id" example:"1"`                                             // Config ID
+	Network          string     `json:"network" example:"trc"`                                      // Network
+	Currency         string     `json:"currency" example:"USDT"`                                    // Currency
+	Symbol           string     `json:"symbol" example:"USDT"`                                      // Symbol
+	WalletAddress    string     `json:"wallet_address" example:"TXXXxxxXXXxxxXXXxxxXXXxxxXXX"`     // Wallet address
+	WalletName       string     `json:"wallet_name" example:"Main TRC-USDT Wallet"`                // Wallet name
+	ContractAddress  string     `json:"contract_address,omitempty" example:"TR7NHqjeKQxGTCI..."`   // Contract address
+	Decimals         int        `json:"decimals" example:"6"`                                       // Decimals
+	MinConfirmations int        `json:"min_confirmations" example:"1"`                              // Min confirmations
+	DisplayName      string     `json:"display_name" example:"TRC-USDT"`                           // Display name
+	Description      string     `json:"description" example:"USDT on TRON network"`                // Description
+	Icon             string     `json:"icon,omitempty" example:"https://example.com/usdt-icon.png"` // Icon URL
+	IsEnabled        bool       `json:"is_enabled" example:"true"`                                  // Is enabled
+	SortOrder        int        `json:"sort_order" example:"1"`                                     // Sort order
+	MinAmount        float64    `json:"min_amount" example:"1.00"`                                  // Min amount
+	MaxAmount        float64    `json:"max_amount" example:"100000.00"`                             // Max amount
+	NetworkFee       float64    `json:"network_fee" example:"1.00"`                                 // Network fee
+	ProcessingFee    float64    `json:"processing_fee" example:"0.5"`                               // Processing fee rate
+	FixedFee         float64    `json:"fixed_fee" example:"0.00"`                                   // Fixed fee
+	LastCheckAt      *time.Time `json:"last_check_at,omitempty" example:"2024-01-01T00:00:00Z"`    // Last check time
+	Balance          float64    `json:"balance" example:"1000.50"`                                  // Wallet balance
+	IsActive         bool       `json:"is_active" example:"true"`                                   // Is active
+	HealthStatus     string     `json:"health_status" example:"healthy"`                            // Health status
+	AddressValidated bool       `json:"address_validated" example:"true"`                           // Address validated
+	ValidatedAt      *time.Time `json:"validated_at,omitempty" example:"2024-01-01T00:00:00Z"`     // Validated time
+	CreatedAt        time.Time  `json:"created_at" example:"2024-01-01T00:00:00Z"`                  // Creation time
+	UpdatedAt        time.Time  `json:"updated_at" example:"2024-01-01T00:00:00Z"`                  // Update time
+
+	// Computed fields
+	CanAcceptPayment bool    `json:"can_accept_payment"` // Can accept payment
+	IsHealthy        bool    `json:"is_healthy"`         // Is healthy
+	NeedsValidation  bool    `json:"needs_validation"`   // Needs validation
+	PaymentMethod    string  `json:"payment_method"`     // Corresponding payment method
+	GatewayType      string  `json:"gateway_type"`       // Gateway type
+	DisplayInfo      map[string]interface{} `json:"display_info"` // Display information
+}
+
+// CreateCryptoWalletConfigRequest represents the request to create a crypto wallet config
+type CreateCryptoWalletConfigRequest struct {
+	Network          string  `json:"network" binding:"required" example:"trc"`                          // Network
+	Currency         string  `json:"currency" binding:"required" example:"USDT"`                       // Currency
+	Symbol           string  `json:"symbol" binding:"required" example:"USDT"`                         // Symbol
+	WalletAddress    string  `json:"wallet_address" binding:"required" example:"TXXXxxxXXXxxxXXXxxx"` // Wallet address
+	WalletName       string  `json:"wallet_name,omitempty" example:"Main TRC-USDT Wallet"`             // Wallet name
+	ContractAddress  string  `json:"contract_address,omitempty" example:"TR7NHqjeKQxGTCI..."`          // Contract address
+	Decimals         int     `json:"decimals,omitempty" example:"6"`                                    // Decimals
+	MinConfirmations int     `json:"min_confirmations,omitempty" example:"1"`                           // Min confirmations
+	DisplayName      string  `json:"display_name" binding:"required" example:"TRC-USDT"`               // Display name
+	Description      string  `json:"description,omitempty" example:"USDT on TRON network"`             // Description
+	Icon             string  `json:"icon,omitempty" example:"https://example.com/usdt-icon.png"`       // Icon URL
+	IsEnabled        *bool   `json:"is_enabled,omitempty" example:"true"`                              // Is enabled
+	SortOrder        int     `json:"sort_order,omitempty" example:"1"`                                 // Sort order
+	MinAmount        float64 `json:"min_amount,omitempty" example:"1.00"`                              // Min amount
+	MaxAmount        float64 `json:"max_amount,omitempty" example:"100000.00"`                         // Max amount
+	NetworkFee       float64 `json:"network_fee,omitempty" example:"1.00"`                             // Network fee
+	ProcessingFee    float64 `json:"processing_fee,omitempty" example:"0.5"`                           // Processing fee rate
+	FixedFee         float64 `json:"fixed_fee,omitempty" example:"0.00"`                               // Fixed fee
+	APIEndpoint      string  `json:"api_endpoint,omitempty" example:"https://api.trongrid.io"`         // API endpoint
+	APIKey           string  `json:"api_key,omitempty" example:"api-key"`                              // API key
+}
+
+// UpdateCryptoWalletConfigRequest represents the request to update a crypto wallet config
+type UpdateCryptoWalletConfigRequest struct {
+	WalletName       *string  `json:"wallet_name,omitempty" example:"Updated TRC-USDT Wallet"`        // Wallet name
+	ContractAddress  *string  `json:"contract_address,omitempty" example:"TR7NHqjeKQxGTCI..."`        // Contract address
+	Decimals         *int     `json:"decimals,omitempty" example:"6"`                                  // Decimals
+	MinConfirmations *int     `json:"min_confirmations,omitempty" example:"1"`                         // Min confirmations
+	DisplayName      *string  `json:"display_name,omitempty" example:"TRC-USDT"`                      // Display name
+	Description      *string  `json:"description,omitempty" example:"USDT on TRON network"`           // Description
+	Icon             *string  `json:"icon,omitempty" example:"https://example.com/usdt-icon.png"`     // Icon URL
+	IsEnabled        *bool    `json:"is_enabled,omitempty" example:"true"`                            // Is enabled
+	SortOrder        *int     `json:"sort_order,omitempty" example:"1"`                               // Sort order
+	MinAmount        *float64 `json:"min_amount,omitempty" example:"1.00"`                            // Min amount
+	MaxAmount        *float64 `json:"max_amount,omitempty" example:"100000.00"`                       // Max amount
+	NetworkFee       *float64 `json:"network_fee,omitempty" example:"1.00"`                           // Network fee
+	ProcessingFee    *float64 `json:"processing_fee,omitempty" example:"0.5"`                         // Processing fee rate
+	FixedFee         *float64 `json:"fixed_fee,omitempty" example:"0.00"`                             // Fixed fee
+	APIEndpoint      *string  `json:"api_endpoint,omitempty" example:"https://api.trongrid.io"`       // API endpoint
+	APIKey           *string  `json:"api_key,omitempty" example:"api-key"`                            // API key
+	IsActive         *bool    `json:"is_active,omitempty" example:"true"`                             // Is active
+	HealthStatus     *string  `json:"health_status,omitempty" example:"healthy"`                      // Health status
+}
+
+// CryptoWalletConfigListResponse represents the response for listing crypto wallet configs
+type CryptoWalletConfigListResponse struct {
+	Configs []CryptoWalletConfigResponse `json:"configs"`
+	Total   int                          `json:"total" example:"2"`
+}
+
+// GetCryptoWalletConfigsRequest represents the request to get crypto wallet configs
+type GetCryptoWalletConfigsRequest struct {
+	Network   string `form:"network,omitempty" example:"trc"`     // Filter by network
+	Currency  string `form:"currency,omitempty" example:"USDT"`   // Filter by currency
+	IsEnabled *bool  `form:"is_enabled,omitempty" example:"true"` // Filter by enabled status
+	IsActive  *bool  `form:"is_active,omitempty" example:"true"`  // Filter by active status
+	Limit     int    `form:"limit,omitempty" example:"10"`        // Limit results
+	Offset    int    `form:"offset,omitempty" example:"0"`        // Offset results
+}
+
+// ValidateCryptoWalletAddressRequest represents the request to validate a crypto wallet address
+type ValidateCryptoWalletAddressRequest struct {
+	Network string `json:"network" binding:"required" example:"trc"`                          // Network
+	Address string `json:"address" binding:"required" example:"TXXXxxxXXXxxxXXXxxxXXXxxxXXX"` // Wallet address
+}
+
+// ValidateCryptoWalletAddressResponse represents the response for wallet address validation
+type ValidateCryptoWalletAddressResponse struct {
+	IsValid      bool   `json:"is_valid" example:"true"`                        // Is address valid
+	Network      string `json:"network" example:"trc"`                          // Network
+	AddressType  string `json:"address_type,omitempty" example:"wallet"`        // Address type
+	ErrorMessage string `json:"error_message,omitempty" example:"Invalid format"` // Error message if invalid
+}
+
+// CryptoPaymentQRCodeRequest represents the request to generate QR code for crypto payment
+type CryptoPaymentQRCodeRequest struct {
+	WalletAddress string  `json:"wallet_address" binding:"required" example:"TXXXxxxXXXxxxXXXxxxXXXxxxXXX"` // Wallet address
+	Amount        float64 `json:"amount" binding:"required,gt=0" example:"100.50"`                          // Amount
+	Currency      string  `json:"currency" binding:"required" example:"USDT"`                              // Currency
+	Network       string  `json:"network" binding:"required" example:"trc"`                                // Network
+	Memo          string  `json:"memo,omitempty" example:"Payment for order #12345"`                       // Transaction memo
+}
+
+// CryptoPaymentQRCodeResponse represents the response for crypto payment QR code generation
+type CryptoPaymentQRCodeResponse struct {
+	QRCodeURL     string  `json:"qr_code_url" example:"https://example.com/qr/abc123.png"`   // QR code image URL
+	PaymentURI    string  `json:"payment_uri" example:"tron:TXXXxxxXXXxxxXXXxxxXXXxxxXXX?amount=100.50"` // Payment URI
+	WalletAddress string  `json:"wallet_address" example:"TXXXxxxXXXxxxXXXxxxXXXxxxXXX"`     // Wallet address
+	Amount        float64 `json:"amount" example:"100.50"`                                   // Amount
+	Currency      string  `json:"currency" example:"USDT"`                                   // Currency
+	Network       string  `json:"network" example:"trc"`                                     // Network
+	ExpiresAt     *time.Time `json:"expires_at,omitempty" example:"2024-01-01T01:00:00Z"`   // QR code expiration
+}
+
 // ==================== Conversion Functions ====================
 
 // ToPaymentRecordResponse converts PaymentRecord entity to PaymentRecordResponse DTO
@@ -703,8 +925,13 @@ func ToPaymentConfigResponse(pc *entities.PaymentConfig) *PaymentConfigResponse 
 
 	response := &PaymentConfigResponse{
 		ID:                  pc.ID,
-		Gateway:             pc.Gateway,
+		Method:              pc.Method,
 		Name:                pc.Name,
+		URL:                 pc.URL,
+		PID:                 pc.PID,
+		Key:                 pc.Key,
+		NotifyURL:           pc.NotifyURL,
+		ReturnURL:           pc.ReturnURL,
 		IsEnabled:           pc.IsEnabled,
 		SortOrder:           pc.SortOrder,
 		SupportedCurrencies: pc.SupportedCurrencies,
@@ -732,8 +959,12 @@ func ToPaymentConfigPublicResponse(pc *entities.PaymentConfig) *PaymentConfigRes
 
 	response := &PaymentConfigResponse{
 		ID:                  pc.ID,
-		Gateway:             pc.Gateway,
+		Method:              pc.Method,
 		Name:                pc.Name,
+		// Hide sensitive data from public API
+		URL:                 "", // Hidden for security
+		PID:                 "", // Hidden for security
+		Key:                 "", // Hidden for security
 		SupportedCurrencies: pc.SupportedCurrencies,
 		MinAmount:           pc.MinAmount,
 		MaxAmount:           pc.MaxAmount,
@@ -838,4 +1069,62 @@ func getSecureQRCodeURL(pr *entities.PaymentRecord) string {
 		return pr.QRCodeURL
 	}
 	return ""
+}
+
+// ToCryptoWalletConfigResponse converts CryptoWalletConfig entity to CryptoWalletConfigResponse DTO
+func ToCryptoWalletConfigResponse(cwc *entities.CryptoWalletConfig) *CryptoWalletConfigResponse {
+	if cwc == nil {
+		return nil
+	}
+
+	return &CryptoWalletConfigResponse{
+		ID:               cwc.ID,
+		Network:          cwc.Network,
+		Currency:         cwc.Currency,
+		Symbol:           cwc.Symbol,
+		WalletAddress:    cwc.WalletAddress,
+		WalletName:       cwc.WalletName,
+		ContractAddress:  cwc.ContractAddress,
+		Decimals:         cwc.Decimals,
+		MinConfirmations: cwc.MinConfirmations,
+		DisplayName:      cwc.DisplayName,
+		Description:      cwc.Description,
+		Icon:             cwc.Icon,
+		IsEnabled:        cwc.IsEnabled,
+		SortOrder:        cwc.SortOrder,
+		MinAmount:        cwc.MinAmount,
+		MaxAmount:        cwc.MaxAmount,
+		NetworkFee:       cwc.NetworkFee,
+		ProcessingFee:    cwc.ProcessingFee,
+		FixedFee:         cwc.FixedFee,
+		LastCheckAt:      cwc.LastCheckAt,
+		Balance:          cwc.Balance,
+		IsActive:         cwc.Active,
+		HealthStatus:     cwc.HealthStatus,
+		AddressValidated: cwc.AddressValidated,
+		ValidatedAt:      cwc.ValidatedAt,
+		CreatedAt:        cwc.CreatedAt,
+		UpdatedAt:        cwc.UpdatedAt,
+
+		// Computed fields
+		CanAcceptPayment: cwc.CanAcceptPayment(0), // Use 0 as test amount
+		IsHealthy:        cwc.IsHealthy(),
+		NeedsValidation:  cwc.NeedsValidation(),
+		PaymentMethod:    cwc.GetPaymentMethod(),
+		GatewayType:      cwc.GetGatewayType(),
+		DisplayInfo:      cwc.GetDisplayInfo(),
+	}
+}
+
+// ToCryptoWalletConfigPublicResponse converts CryptoWalletConfig entity to public response (hide sensitive data)
+func ToCryptoWalletConfigPublicResponse(cwc *entities.CryptoWalletConfig) *CryptoWalletConfigResponse {
+	if cwc == nil {
+		return nil
+	}
+
+	resp := ToCryptoWalletConfigResponse(cwc)
+	// Hide sensitive information from public API
+	resp.Balance = 0 // Hide balance
+	resp.LastCheckAt = nil // Hide monitoring data
+	return resp
 }

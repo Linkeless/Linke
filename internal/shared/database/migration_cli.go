@@ -36,7 +36,9 @@ func (cli *MigrationCLI) HandleMigrationCommand(runMigration bool, migrateComman
 		Format: cfg.Log.Format,
 		Output: cfg.Log.Output,
 	}); err != nil {
-		panic("Failed to initialize logger: " + err.Error())
+		fmt.Printf("❌ Failed to initialize logger for migration: %v\n", err)
+		fmt.Printf("   Using fallback logging for migration operations\n")
+		// Continue with migration but with fallback logging
 	}
 	defer logger.Sync()
 

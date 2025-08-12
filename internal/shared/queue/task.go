@@ -143,7 +143,7 @@ func (tp *TaskProcessor) Start(ctx context.Context) error {
 			if err != nil {
 				logger.Error("Task failed",
 					logger.String("task_type", task.Type()),
-					logger.Error2("error", err),
+					logger.ErrorField(err),
 				)
 				return err
 			}

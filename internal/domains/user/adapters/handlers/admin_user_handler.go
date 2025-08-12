@@ -91,7 +91,7 @@ func (h *AdminUserHandler) CreateUser(c *gin.Context) {
 		if err != nil {
 			logger.Error("Failed to hash password during user creation",
 				logger.String("email", createReq.Email),
-				logger.Error2("error", err),
+				logger.ErrorField(err),
 			)
 			response.InternalServerError(c, "Failed to process password")
 			return
@@ -111,7 +111,7 @@ func (h *AdminUserHandler) CreateUser(c *gin.Context) {
 	if err := h.userService.CreateUser(c.Request.Context(), user); err != nil {
 		logger.Error("Admin failed to create user",
 			logger.String("email", createReq.Email),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		// Check if it's a duplicate key error
@@ -159,7 +159,7 @@ func (h *AdminUserHandler) GetUser(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to get user",
 			logger.Uint("user_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.NotFound(c, "User not found")
 		return
@@ -216,7 +216,7 @@ func (h *AdminUserHandler) ListUsers(c *gin.Context) {
 
 	users, total, err := h.userService.ListUsersFiltered(c.Request.Context(), req)
 	if err != nil {
-		logger.Error("Admin failed to list users", logger.Error2("error", err))
+		logger.Error("Admin failed to list users", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to list users")
 		return
 	}
@@ -258,7 +258,7 @@ func (h *AdminUserHandler) UpdateUser(c *gin.Context) {
 	if err := h.userService.UpdateUser(c.Request.Context(), &user); err != nil {
 		logger.Error("Admin failed to update user",
 			logger.Uint("user_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to update user")
 		return
@@ -302,7 +302,7 @@ func (h *AdminUserHandler) UpdateUserRole(c *gin.Context) {
 		logger.Error("Admin failed to update user role",
 			logger.Uint("user_id", uint(id)),
 			logger.String("role", roleData.Role),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.NotFound(c, "User not found")
 		return
@@ -346,7 +346,7 @@ func (h *AdminUserHandler) UpdateUserStatus(c *gin.Context) {
 		logger.Error("Admin failed to update user status",
 			logger.Uint("user_id", uint(id)),
 			logger.String("status", statusData.Status),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.NotFound(c, "User not found")
 		return
@@ -380,7 +380,7 @@ func (h *AdminUserHandler) SoftDeleteUser(c *gin.Context) {
 	if err := h.userService.SoftDeleteUser(c.Request.Context(), uint(id)); err != nil {
 		logger.Error("Admin failed to soft delete user",
 			logger.Uint("user_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.NotFound(c, "User not found")
 		return
@@ -414,7 +414,7 @@ func (h *AdminUserHandler) RestoreUser(c *gin.Context) {
 	if err := h.userService.RestoreUser(c.Request.Context(), uint(id)); err != nil {
 		logger.Error("Admin failed to restore user",
 			logger.Uint("user_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.NotFound(c, "User not found")
 		return
@@ -448,7 +448,7 @@ func (h *AdminUserHandler) HardDeleteUser(c *gin.Context) {
 	if err := h.userService.HardDeleteUser(c.Request.Context(), uint(id)); err != nil {
 		logger.Error("Admin failed to hard delete user",
 			logger.Uint("user_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.NotFound(c, "User not found")
 		return
@@ -486,7 +486,7 @@ func (h *AdminUserHandler) ListDeletedUsers(c *gin.Context) {
 
 	users, total, err := h.userService.ListDeletedUsers(c.Request.Context(), limit, offset)
 	if err != nil {
-		logger.Error("Admin failed to list deleted users", logger.Error2("error", err))
+		logger.Error("Admin failed to list deleted users", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to list deleted users")
 		return
 	}
@@ -533,7 +533,7 @@ func (h *AdminUserHandler) SearchUsers(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to search users",
 			logger.String("query", query),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to search users")
 		return
@@ -594,7 +594,7 @@ func (h *AdminUserHandler) ListUsersByProvider(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to list users by provider",
 			logger.String("provider", provider),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to list users")
 		return
@@ -620,7 +620,7 @@ func (h *AdminUserHandler) ListUsersByProvider(c *gin.Context) {
 func (h *AdminUserHandler) GetUserStats(c *gin.Context) {
 	stats, err := h.userService.GetUserStats(c.Request.Context())
 	if err != nil {
-		logger.Error("Admin failed to get user stats", logger.Error2("error", err))
+		logger.Error("Admin failed to get user stats", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get user statistics")
 		return
 	}
@@ -654,7 +654,7 @@ func (h *AdminUserHandler) BatchDeleteUsers(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to batch delete users",
 			logger.Any("user_ids", requestData.IDs),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to delete users")
 		return
@@ -695,7 +695,7 @@ func (h *AdminUserHandler) PatchUser(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to get user for patch",
 			logger.Uint("user_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.NotFound(c, "User not found")
 		return
@@ -745,7 +745,7 @@ func (h *AdminUserHandler) PatchUser(c *gin.Context) {
 		logger.Error("Admin failed to patch user",
 			logger.Uint("user_id", uint(id)),
 			logger.Any("patch_request", patchReq),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to update user")
 		return
@@ -780,7 +780,7 @@ func (h *AdminUserHandler) BatchRestoreUsers(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to batch restore users",
 			logger.Any("user_ids", requestData.IDs),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to restore users")
 		return
@@ -843,7 +843,7 @@ func (h *AdminUserHandler) ResetUserPassword(c *gin.Context) {
 			logger.Uint("admin_id", admin.ID),
 			logger.String("admin_email", admin.Email),
 			logger.Uint("target_user_id", uint(userID)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		// Check specific error types for appropriate HTTP responses

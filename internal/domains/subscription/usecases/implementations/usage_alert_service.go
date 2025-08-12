@@ -10,7 +10,10 @@ import (
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/domains/subscription/usecases/interfaces"
 	subscriptionInterfaces "linke/internal/domains/subscription/usecases/interfaces"
+	"linke/internal/shared/logger"
 	"linke/internal/shared/notification"
+
+	"go.uber.org/zap"
 )
 
 // usageAlertService implements the UsageAlertService interface
@@ -19,6 +22,7 @@ type usageAlertService struct {
 	usageRepo       interfaces.UsageRepository
 	subscriptionSvc subscriptionInterfaces.UserSubscriptionService
 	notificationSvc notification.NotificationService
+	logger          *zap.Logger
 }
 
 // NewUsageAlertService creates a new usage alert service instance
@@ -33,6 +37,7 @@ func NewUsageAlertService(
 		usageRepo:       usageRepo,
 		subscriptionSvc: subscriptionSvc,
 		notificationSvc: notificationSvc,
+		logger:          logger.GetLogger(),
 	}
 }
 
@@ -322,8 +327,9 @@ func (s *usageAlertService) ProcessUsageUpdate(ctx context.Context, subscription
 				defer cancel()
 
 				if err := s.SendNotification(notifyCtx, alert, channels); err != nil {
-					// Log error in production
-					fmt.Printf("Failed to send notification for alert %d: %v\n", alert.ID, err)
+					s.logger.Error("Failed to send notification for alert", 
+						zap.Uint("alert_id", alert.ID),
+						zap.Error(err))
 				}
 			}(alert, channels)
 		}
@@ -920,8 +926,9 @@ func (s *usageAlertService) CreateDefaultAlertConfigurations(ctx context.Context
 	for _, configReq := range defaultConfigs {
 		_, err := s.CreateAlertConfiguration(ctx, &configReq)
 		if err != nil {
-			// Log error but continue with other configurations
-			fmt.Printf("Failed to create default alert configuration '%s': %v\n", configReq.Name, err)
+			s.logger.Error("Failed to create default alert configuration", 
+				zap.String("config_name", configReq.Name),
+				zap.Error(err))
 		}
 	}
 

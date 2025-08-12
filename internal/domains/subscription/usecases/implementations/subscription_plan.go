@@ -36,7 +36,7 @@ func (s *SubscriptionPlanService) CreateSubscriptionPlan(ctx context.Context, cr
 	if err := s.db.Where("code = ?", code).First(&existingPlan).Error; err == nil {
 		return nil, fmt.Errorf("plan with code '%s' already exists", code)
 	} else if err != gorm.ErrRecordNotFound {
-		logger.Error("Failed to check existing plan", logger.Error2("error", err))
+		logger.Error("Failed to check existing plan", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to check existing plan: %w", err)
 	}
 
@@ -92,7 +92,7 @@ func (s *SubscriptionPlanService) CreateSubscriptionPlan(ctx context.Context, cr
 	}
 
 	if err := s.db.WithContext(ctx).Create(plan).Error; err != nil {
-		logger.Error("Failed to create subscription plan", logger.Error2("error", err))
+		logger.Error("Failed to create subscription plan", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to create subscription plan: %w", err)
 	}
 
@@ -111,7 +111,7 @@ func (s *SubscriptionPlanService) GetSubscriptionPlan(ctx context.Context, planI
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("subscription plan not found")
 		}
-		logger.Error("Failed to get subscription plan", logger.Error2("error", err), logger.Uint("plan_id", planID))
+		logger.Error("Failed to get subscription plan", logger.Uint("planID", uint(planID)))
 		return nil, fmt.Errorf("failed to get subscription plan: %w", err)
 	}
 
@@ -138,7 +138,7 @@ func (s *SubscriptionPlanService) GetSubscriptionPlanByCode(ctx context.Context,
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("subscription plan not found")
 		}
-		logger.Error("Failed to get subscription plan by code", logger.Error2("error", err), logger.String("code", code))
+		logger.Error("Failed to get subscription plan by code", logger.String("code", code), logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to get subscription plan: %w", err)
 	}
 
@@ -186,7 +186,7 @@ func (s *SubscriptionPlanService) GetSubscriptionPlans(ctx context.Context, req 
 	// Get total count
 	var totalCount int64
 	if err := query.Count(&totalCount).Error; err != nil {
-		logger.Error("Failed to count subscription plans", logger.Error2("error", err))
+		logger.Error("Failed to count subscription plans", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to count subscription plans: %w", err)
 	}
 
@@ -203,7 +203,7 @@ func (s *SubscriptionPlanService) GetSubscriptionPlans(ctx context.Context, req 
 
 	var plans []*entities.SubscriptionPlan
 	if err := query.Find(&plans).Error; err != nil {
-		logger.Error("Failed to get subscription plans", logger.Error2("error", err))
+		logger.Error("Failed to get subscription plans", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to get subscription plans: %w", err)
 	}
 
@@ -236,7 +236,7 @@ func (s *SubscriptionPlanService) GetVisibleSubscriptionPlans(ctx context.Contex
 
 	var plans []*entities.SubscriptionPlan
 	if err := query.Order("sort_order ASC, created_at ASC").Find(&plans).Error; err != nil {
-		logger.Error("Failed to get public subscription plans", logger.Error2("error", err))
+		logger.Error("Failed to get public subscription plans", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to get public subscription plans: %w", err)
 	}
 
@@ -269,7 +269,7 @@ func (s *SubscriptionPlanService) GetPopularSubscriptionPlans(ctx context.Contex
 
 	var plans []*entities.SubscriptionPlan
 	if err := query.Order("sort_order ASC, created_at ASC").Find(&plans).Error; err != nil {
-		logger.Error("Failed to get popular subscription plans", logger.Error2("error", err))
+		logger.Error("Failed to get popular subscription plans", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to get popular subscription plans: %w", err)
 	}
 
@@ -376,13 +376,13 @@ func (s *SubscriptionPlanService) UpdateSubscriptionPlan(ctx context.Context, pl
 
 	// Update the plan
 	if err := s.db.WithContext(ctx).Model(plan).Updates(updates).Error; err != nil {
-		logger.Error("Failed to update subscription plan", logger.Error2("error", err), logger.Uint("plan_id", planID))
+		logger.Error("Failed to update subscription plan", logger.Uint("planID", uint(planID)))
 		return nil, fmt.Errorf("failed to update subscription plan: %w", err)
 	}
 
 	// Reload the plan
 	if err := s.db.WithContext(ctx).First(plan, planID).Error; err != nil {
-		logger.Error("Failed to reload updated subscription plan", logger.Error2("error", err), logger.Uint("plan_id", planID))
+		logger.Error("Failed to reload updated subscription plan", logger.Uint("planID", uint(planID)))
 		return nil, fmt.Errorf("failed to reload updated subscription plan: %w", err)
 	}
 
@@ -417,7 +417,7 @@ func (s *SubscriptionPlanService) DeleteSubscriptionPlan(ctx context.Context, pl
 	if err := s.db.WithContext(ctx).Model(&entities.UserSubscription{}).
 		Where("subscription_plan_id = ? AND status = ?", planID, constants.UserSubscriptionStatusActive).
 		Count(&activeSubscriptionCount).Error; err != nil {
-		logger.Error("Failed to check active subscriptions", logger.Error2("error", err), logger.Uint("plan_id", planID))
+		logger.Error("Failed to check active subscriptions", logger.Uint("planID", uint(planID)))
 		return fmt.Errorf("failed to check active subscriptions: %w", err)
 	}
 
@@ -427,7 +427,7 @@ func (s *SubscriptionPlanService) DeleteSubscriptionPlan(ctx context.Context, pl
 
 	// Soft delete the plan
 	if err := s.db.WithContext(ctx).Delete(plan).Error; err != nil {
-		logger.Error("Failed to delete subscription plan", logger.Error2("error", err), logger.Uint("plan_id", planID))
+		logger.Error("Failed to delete subscription plan", logger.Uint("planID", uint(planID)))
 		return fmt.Errorf("failed to delete subscription plan: %w", err)
 	}
 
@@ -457,13 +457,13 @@ func (s *SubscriptionPlanService) ToggleSubscriptionPlanStatus(ctx context.Conte
 
 	// Update the plan
 	if err := s.db.WithContext(ctx).Model(plan).Update("status", newStatus).Error; err != nil {
-		logger.Error("Failed to toggle subscription plan status", logger.Error2("error", err), logger.Uint("plan_id", planID))
+		logger.Error("Failed to toggle subscription plan status", logger.Uint("planID", uint(planID)))
 		return nil, fmt.Errorf("failed to toggle subscription plan status: %w", err)
 	}
 
 	// Reload the plan
 	if err := s.db.WithContext(ctx).First(plan, planID).Error; err != nil {
-		logger.Error("Failed to reload toggled subscription plan", logger.Error2("error", err), logger.Uint("plan_id", planID))
+		logger.Error("Failed to reload toggled subscription plan", logger.Uint("planID", uint(planID)))
 		return nil, fmt.Errorf("failed to reload toggled subscription plan: %w", err)
 	}
 
@@ -500,7 +500,7 @@ func (s *SubscriptionPlanService) ArchiveSubscriptionPlan(ctx context.Context, p
 	if err := s.db.WithContext(ctx).Model(&entities.UserSubscription{}).
 		Where("subscription_plan_id = ? AND status = ?", planID, constants.UserSubscriptionStatusActive).
 		Count(&activeSubscriptionCount).Error; err != nil {
-		logger.Error("Failed to check active subscriptions for archiving", logger.Error2("error", err), logger.Uint("plan_id", planID))
+		logger.Error("Failed to check active subscriptions for archiving", logger.Uint("planID", uint(planID)))
 		return fmt.Errorf("failed to check active subscriptions: %w", err)
 	}
 
@@ -513,7 +513,7 @@ func (s *SubscriptionPlanService) ArchiveSubscriptionPlan(ctx context.Context, p
 		"status":     constants.SubscriptionPlanStatusArchived,
 		"is_visible": false,
 	}).Error; err != nil {
-		logger.Error("Failed to archive subscription plan", logger.Error2("error", err), logger.Uint("plan_id", planID))
+		logger.Error("Failed to archive subscription plan", logger.Uint("planID", uint(planID)))
 		return fmt.Errorf("failed to archive subscription plan: %w", err)
 	}
 

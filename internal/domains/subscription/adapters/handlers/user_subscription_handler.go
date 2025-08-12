@@ -3,14 +3,18 @@ package handlers
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	authInterfaces "linke/internal/domains/auth/usecases/interfaces"
+	serverEntities "linke/internal/domains/server/entities"
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/domains/subscription/usecases/interfaces"
 	userEntities "linke/internal/domains/user/entities"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/middleware"
 	"linke/internal/shared/response"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/gin-gonic/gin"
 )
@@ -73,7 +77,7 @@ func (h *UserSubscriptionHandler) GetMySubscriptions(c *gin.Context) {
 	// Get user subscriptions
 	subscriptions, totalCount, err := h.userSubscriptionService.GetUserSubscriptions(c.Request.Context(), &req)
 	if err != nil {
-		logger.Error("Failed to get user subscriptions", logger.Error2("error", err), logger.Uint("user_id", user.ID))
+		logger.Error("Failed to get user subscriptions", logger.ErrorField(err), logger.Uint("user_id", user.ID))
 		response.InternalServerError(c, "Failed to get subscriptions", err.Error())
 		return
 	}
@@ -115,7 +119,7 @@ func (h *UserSubscriptionHandler) GetMyActiveSubscriptions(c *gin.Context) {
 	// Get active subscriptions
 	subscriptions, err := h.userSubscriptionService.GetUserActiveSubscriptions(c.Request.Context(), user.ID)
 	if err != nil {
-		logger.Error("Failed to get active subscriptions", logger.Error2("error", err), logger.Uint("user_id", user.ID))
+		logger.Error("Failed to get active subscriptions", logger.ErrorField(err), logger.Uint("user_id", user.ID))
 		response.InternalServerError(c, "Failed to get active subscriptions", err.Error())
 		return
 	}
@@ -173,7 +177,7 @@ func (h *UserSubscriptionHandler) GetSubscription(c *gin.Context) {
 			response.NotFound(c, "Subscription not found")
 			return
 		}
-		logger.Error("Failed to get subscription", logger.Error2("error", err), logger.Uint("subscription_id", uint(subscriptionID)))
+		logger.Error("Failed to get subscription", logger.ErrorField(err), logger.Uint("subscription_id", uint(subscriptionID)))
 		response.InternalServerError(c, "Failed to get subscription", err.Error())
 		return
 	}
@@ -239,7 +243,7 @@ func (h *UserSubscriptionHandler) CancelSubscription(c *gin.Context) {
 			response.NotFound(c, "Subscription not found")
 			return
 		}
-		logger.Error("Failed to get subscription", logger.Error2("error", err), logger.Uint("subscription_id", uint(subscriptionID)))
+		logger.Error("Failed to get subscription", logger.ErrorField(err), logger.Uint("subscription_id", uint(subscriptionID)))
 		response.InternalServerError(c, "Failed to get subscription", err.Error())
 		return
 	}
@@ -252,7 +256,7 @@ func (h *UserSubscriptionHandler) CancelSubscription(c *gin.Context) {
 
 	// Cancel subscription
 	if err := h.userSubscriptionService.CancelUserSubscription(c.Request.Context(), uint(subscriptionID), req.Reason, req.CancelAtPeriodEnd); err != nil {
-		logger.Error("Failed to cancel subscription", logger.Error2("error", err), logger.Uint("subscription_id", uint(subscriptionID)))
+		logger.Error("Failed to cancel subscription", logger.ErrorField(err), logger.Uint("subscription_id", uint(subscriptionID)))
 		response.InternalServerError(c, "Failed to cancel subscription", err.Error())
 		return
 	}
@@ -260,7 +264,7 @@ func (h *UserSubscriptionHandler) CancelSubscription(c *gin.Context) {
 	// Get updated subscription
 	updatedSubscription, err := h.userSubscriptionService.GetUserSubscription(c.Request.Context(), uint(subscriptionID))
 	if err != nil {
-		logger.Error("Failed to get updated subscription", logger.Error2("error", err), logger.Uint("subscription_id", uint(subscriptionID)))
+		logger.Error("Failed to get updated subscription", logger.ErrorField(err), logger.Uint("subscription_id", uint(subscriptionID)))
 		response.InternalServerError(c, "Subscription cancelled but failed to get updated details", err.Error())
 		return
 	}
@@ -312,7 +316,7 @@ func (h *UserSubscriptionHandler) GetSubscriptionTrafficStats(c *gin.Context) {
 			response.NotFound(c, "Subscription not found")
 			return
 		}
-		logger.Error("Failed to get subscription", logger.Error2("error", err), logger.Uint("subscription_id", uint(subscriptionID)))
+		logger.Error("Failed to get subscription", logger.ErrorField(err), logger.Uint("subscription_id", uint(subscriptionID)))
 		response.InternalServerError(c, "Failed to get subscription", err.Error())
 		return
 	}
@@ -326,7 +330,7 @@ func (h *UserSubscriptionHandler) GetSubscriptionTrafficStats(c *gin.Context) {
 	// Get traffic statistics
 	stats, err := h.userSubscriptionService.GetSubscriptionTrafficStats(c.Request.Context(), uint(subscriptionID))
 	if err != nil {
-		logger.Error("Failed to get traffic stats", logger.Error2("error", err), logger.Uint("subscription_id", uint(subscriptionID)))
+		logger.Error("Failed to get traffic stats", logger.ErrorField(err), logger.Uint("subscription_id", uint(subscriptionID)))
 		response.InternalServerError(c, "Failed to get traffic statistics", err.Error())
 		return
 	}
@@ -395,7 +399,7 @@ func (h *UserSubscriptionHandler) PauseUserSubscription(c *gin.Context) {
 	subscription, err := h.userSubscriptionService.PauseUserSubscription(c.Request.Context(), uint(subscriptionID), &req, user.ID)
 	if err != nil {
 		logger.Error("Failed to pause subscription",
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 			logger.Uint("subscription_id", uint(subscriptionID)),
 			logger.Uint("admin_user_id", user.ID))
 
@@ -474,7 +478,7 @@ func (h *UserSubscriptionHandler) ResumeUserSubscription(c *gin.Context) {
 	subscription, err := h.userSubscriptionService.ResumeUserSubscription(c.Request.Context(), uint(subscriptionID), &req, user.ID)
 	if err != nil {
 		logger.Error("Failed to resume subscription",
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 			logger.Uint("subscription_id", uint(subscriptionID)),
 			logger.Uint("admin_user_id", user.ID))
 
@@ -528,6 +532,9 @@ func (h *UserSubscriptionHandler) RegisterRoutes(router *gin.RouterGroup) {
 		subscriptionGroup.GET("/:id", middleware.AuthMiddleware(authAdapter), h.GetSubscription)
 		subscriptionGroup.POST("/:id/cancel", middleware.AuthMiddleware(authAdapter), h.CancelSubscription)
 		subscriptionGroup.GET("/:id/traffic-stats", middleware.AuthMiddleware(authAdapter), h.GetSubscriptionTrafficStats)
+
+		// Subscription config export (Clash-compatible YAML)
+		subscriptionGroup.GET("/clash", h.GetClashConfig)
 	}
 
 	// Admin subscription management routes
@@ -536,4 +543,131 @@ func (h *UserSubscriptionHandler) RegisterRoutes(router *gin.RouterGroup) {
 		adminGroup.POST("/:id/pause", h.PauseUserSubscription)
 		adminGroup.POST("/:id/resume", h.ResumeUserSubscription)
 	}
+}
+
+// GetClashConfig godoc
+// @Summary Get Clash subscription YAML
+// @Description Return Clash-compatible YAML built from user's accessible servers
+// @Tags User-Subscription
+// @Produce text/plain
+// @Security BearerAuth
+// @Param token query string false "Subscription token (Bearer token also supported)"
+// @Success 200 {string} string "YAML"
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 401 {object} response.UnauthorizedResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
+// @Router /subscriptions/clash [get]
+func (h *UserSubscriptionHandler) GetClashConfig(c *gin.Context) {
+	// Auth: prefer Bearer; fallback to token query
+	var user *userEntities.User
+	if authz := c.GetHeader("Authorization"); strings.HasPrefix(strings.ToLower(authz), "bearer ") {
+		// Validate token via auth service
+		u, err := h.authService.ValidateToken(strings.TrimSpace(authz[7:]))
+		if err == nil {
+			user = u
+		}
+	}
+	// Fallback: token query param as JWT
+	if user == nil {
+		if qToken := strings.TrimSpace(c.Query("token")); qToken != "" {
+			if u, err := h.authService.ValidateToken(qToken); err == nil {
+				user = u
+			}
+		}
+	}
+	if user == nil {
+		response.Unauthorized(c, "Authentication required")
+		return
+	}
+
+	// Fetch user's active subscriptions to get subscription UUID
+	activeSubs, err := h.userSubscriptionService.GetUserActiveSubscriptions(c.Request.Context(), user.ID)
+	if err != nil || len(activeSubs) == 0 {
+		response.Unauthorized(c, "No active subscription found")
+		return
+	}
+	sub := activeSubs[0]
+
+	// Fetch accessible servers by user's active subscriptions
+	servers, err := h.userSubscriptionService.GetUserAccessibleServers(c.Request.Context(), user.ID)
+	if err != nil {
+		response.InternalServerError(c, "Failed to fetch accessible servers", err.Error())
+		return
+	}
+
+	// Build minimal Clash YAML
+	yamlStr, err := BuildMinimalClashYAML(user, sub.UUID, servers)
+	if err != nil {
+		response.InternalServerError(c, "Failed to build YAML", err.Error())
+		return
+	}
+
+	c.Header("Content-Type", "text/yaml")
+	// subscription-userinfo header (upload, download, total, expire)
+	var expire int64 = 0
+	if sub.EndDate != nil {
+		expire = sub.EndDate.Unix()
+	}
+	// Note: upload/download values are placeholders as we track aggregate usage
+	c.Header("subscription-userinfo",
+		"upload="+strconv.FormatInt(sub.TrafficUsed, 10)+"; download="+strconv.FormatInt(0, 10)+"; total="+strconv.FormatInt(sub.TrafficLimit, 10)+"; expire="+strconv.FormatInt(expire, 10))
+	c.Header("profile-update-interval", "24")
+	c.String(200, yamlStr)
+}
+
+// BuildMinimalClashYAML builds a minimal Clash YAML from servers
+func BuildMinimalClashYAML(user *userEntities.User, subscriptionUUID string, servers []*serverEntities.ShadowsocksServer) (string, error) {
+	type proxy struct {
+		Name     string `yaml:"name"`
+		Type     string `yaml:"type"`
+		Server   string `yaml:"server"`
+		Port     int    `yaml:"port"`
+		Cipher   string `yaml:"cipher"`
+		Password string `yaml:"password"`
+		UDP      bool   `yaml:"udp"`
+	}
+	cfg := map[string]any{
+		"port":       7890,
+		"socks-port": 7891,
+		"allow-lan":  true,
+		"mode":       "Rule",
+		"log-level":  "info",
+		"proxies":    []proxy{},
+		"proxy-groups": []map[string]any{
+			{
+				"name":     "Auto",
+				"type":     "url-test",
+				"proxies":  []string{},
+				"url":      "http://www.gstatic.com/generate_204",
+				"interval": 300,
+			},
+		},
+		"rules": []string{"MATCH,Auto"},
+	}
+	var proxies []proxy
+	var names []string
+	for _, s := range servers {
+		// Only shadowsocks supported here
+		p := proxy{
+			Name:     s.Name,
+			Type:     "ss",
+			Server:   s.Host,
+			Port:     s.Port,
+			Cipher:   s.Cipher,
+			Password: subscriptionUUID,
+			UDP:      true,
+		}
+		proxies = append(proxies, p)
+		names = append(names, s.Name)
+	}
+	cfg["proxies"] = proxies
+	// fill group proxies
+	groups := cfg["proxy-groups"].([]map[string]any)
+	groups[0]["proxies"] = names
+	cfg["proxy-groups"] = groups
+	out, err := yaml.Marshal(cfg)
+	if err != nil {
+		return "", err
+	}
+	return string(out), nil
 }

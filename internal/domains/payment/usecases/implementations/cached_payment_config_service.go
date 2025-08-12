@@ -58,7 +58,7 @@ func (ccs *CachedPaymentConfigService) GetPaymentConfig(ctx context.Context, con
 		// If unmarshal fails, continue to fetch from database
 		logger.Warn("Failed to unmarshal cached payment config",
 			logger.Uint("config_id", configID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 	}
 
 	// Fetch from database
@@ -73,9 +73,9 @@ func (ccs *CachedPaymentConfigService) GetPaymentConfig(ctx context.Context, con
 	return config, nil
 }
 
-// GetPaymentConfigByGateway gets a payment config by gateway with caching
-func (ccs *CachedPaymentConfigService) GetPaymentConfigByGateway(ctx context.Context, gateway string) (*entities.PaymentConfig, error) {
-	cacheKey := ccs.buildConfigCacheKey("gateway", gateway)
+// GetPaymentConfigByMethod gets a payment config by method with caching
+func (ccs *CachedPaymentConfigService) GetPaymentConfigByMethod(ctx context.Context, method string) (*entities.PaymentConfig, error) {
+	cacheKey := ccs.buildConfigCacheKey("method", method)
 
 	// Try to get from cache first
 	cached, err := ccs.cacheManager.GetCache().Get(ctx, cacheKey)
@@ -86,12 +86,12 @@ func (ccs *CachedPaymentConfigService) GetPaymentConfigByGateway(ctx context.Con
 		}
 		// If unmarshal fails, continue to fetch from database
 		logger.Warn("Failed to unmarshal cached payment config",
-			logger.String("gateway", gateway),
-			logger.Error2("error", err))
+			logger.String("method", method),
+			logger.ErrorField(err))
 	}
 
 	// Fetch from database
-	config, err := ccs.base.GetPaymentConfigByGateway(ctx, gateway)
+	config, err := ccs.base.GetPaymentConfigByMethod(ctx, method)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +122,7 @@ func (ccs *CachedPaymentConfigService) GetActivePaymentConfigs(ctx context.Conte
 		// If unmarshal fails, continue to fetch from database
 		logger.Warn("Failed to unmarshal cached active payment configs",
 			logger.String("currency", currency),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 	}
 
 	// Fetch from database
@@ -148,7 +148,7 @@ func (ccs *CachedPaymentConfigService) UpdatePaymentConfig(ctx context.Context, 
 
 	// Invalidate caches for this config and related queries
 	ccs.invalidatePaymentConfigCaches(ctx)
-	ccs.invalidateConfigCache(ctx, configID, config.Gateway)
+	ccs.invalidateConfigCache(ctx, configID, config.Method)
 
 	return config, nil
 }
@@ -168,7 +168,7 @@ func (ccs *CachedPaymentConfigService) DeletePaymentConfig(ctx context.Context, 
 
 	// Invalidate caches
 	ccs.invalidatePaymentConfigCaches(ctx)
-	ccs.invalidateConfigCache(ctx, configID, config.Gateway)
+	ccs.invalidateConfigCache(ctx, configID, config.Method)
 
 	return nil
 }
@@ -182,14 +182,14 @@ func (ccs *CachedPaymentConfigService) TogglePaymentConfig(ctx context.Context, 
 
 	// Invalidate caches since enabled status changed
 	ccs.invalidatePaymentConfigCaches(ctx)
-	ccs.invalidateConfigCache(ctx, configID, config.Gateway)
+	ccs.invalidateConfigCache(ctx, configID, config.Method)
 
 	return config, nil
 }
 
-// GetPaymentConfigsByGateway gets configs for a specific gateway with caching
-func (ccs *CachedPaymentConfigService) GetPaymentConfigsByGateway(ctx context.Context, gateway string) ([]*entities.PaymentConfig, error) {
-	cacheKey := ccs.buildConfigCacheKey("gateway_all", gateway)
+// GetPaymentConfigsByMethod gets configs for a specific method with caching
+func (ccs *CachedPaymentConfigService) GetPaymentConfigsByMethod(ctx context.Context, method string) ([]*entities.PaymentConfig, error) {
+	cacheKey := ccs.buildConfigCacheKey("method_all", method)
 
 	// Try to get from cache first
 	cached, err := ccs.cacheManager.GetCache().Get(ctx, cacheKey)
@@ -199,13 +199,13 @@ func (ccs *CachedPaymentConfigService) GetPaymentConfigsByGateway(ctx context.Co
 			return configs, nil
 		}
 		// If unmarshal fails, continue to fetch from database
-		logger.Warn("Failed to unmarshal cached payment configs by gateway",
-			logger.String("gateway", gateway),
-			logger.Error2("error", err))
+		logger.Warn("Failed to unmarshal cached payment configs by method",
+			logger.String("method", method),
+			logger.ErrorField(err))
 	}
 
 	// Fetch from database
-	configs, err := ccs.base.GetPaymentConfigsByGateway(ctx, gateway)
+	configs, err := ccs.base.GetPaymentConfigsByMethod(ctx, method)
 	if err != nil {
 		return nil, err
 	}
@@ -231,11 +231,15 @@ func (ccs *CachedPaymentConfigService) cachePaymentConfig(ctx context.Context, c
 		return
 	}
 
-	// Create a sanitized version for caching (remove sensitive config data)
+	// Create a sanitized version for caching (remove sensitive data)
 	cachedConfig := &entities.PaymentConfig{
 		ID:                  config.ID,
-		Gateway:             config.Gateway,
+		Method:              config.Method,
 		Name:                config.Name,
+		URL:                 config.URL,
+		PID:                 config.PID,
+		NotifyURL:           config.NotifyURL,
+		ReturnURL:           config.ReturnURL,
 		IsEnabled:           config.IsEnabled,
 		SortOrder:           config.SortOrder,
 		SupportedCurrencies: config.SupportedCurrencies,
@@ -246,7 +250,7 @@ func (ccs *CachedPaymentConfigService) cachePaymentConfig(ctx context.Context, c
 		PercentageFee:       config.PercentageFee,
 		CreatedAt:           config.CreatedAt,
 		UpdatedAt:           config.UpdatedAt,
-		// Deliberately exclude sensitive Config field which may contain API keys
+		// Deliberately exclude sensitive Key field
 	}
 
 	if data, err := json.Marshal(cachedConfig); err == nil {
@@ -256,15 +260,15 @@ func (ccs *CachedPaymentConfigService) cachePaymentConfig(ctx context.Context, c
 }
 
 // invalidateConfigCache invalidates cache entries for a specific config
-func (ccs *CachedPaymentConfigService) invalidateConfigCache(ctx context.Context, configID uint, gateway string) {
+func (ccs *CachedPaymentConfigService) invalidateConfigCache(ctx context.Context, configID uint, method string) {
 	// Invalidate specific config caches
 	idCacheKey := ccs.buildConfigCacheKey("id", fmt.Sprintf("%d", configID))
-	gatewayCacheKey := ccs.buildConfigCacheKey("gateway", gateway)
-	gatewayAllCacheKey := ccs.buildConfigCacheKey("gateway_all", gateway)
+	methodCacheKey := ccs.buildConfigCacheKey("method", method)
+	methodAllCacheKey := ccs.buildConfigCacheKey("method_all", method)
 
 	_ = ccs.cacheManager.GetCache().Delete(ctx, idCacheKey)
-	_ = ccs.cacheManager.GetCache().Delete(ctx, gatewayCacheKey)
-	_ = ccs.cacheManager.GetCache().Delete(ctx, gatewayAllCacheKey)
+	_ = ccs.cacheManager.GetCache().Delete(ctx, methodCacheKey)
+	_ = ccs.cacheManager.GetCache().Delete(ctx, methodAllCacheKey)
 }
 
 // invalidatePaymentConfigCaches invalidates general payment config caches

@@ -120,8 +120,8 @@ func (m *MockPaymentConfigService) GetPaymentConfig(ctx context.Context, configI
 	return args.Get(0).(*entities.PaymentConfig), args.Error(1)
 }
 
-func (m *MockPaymentConfigService) GetPaymentConfigByGateway(ctx context.Context, gateway string) (*entities.PaymentConfig, error) {
-	args := m.Called(ctx, gateway)
+func (m *MockPaymentConfigService) GetPaymentConfigByMethod(ctx context.Context, method string) (*entities.PaymentConfig, error) {
+	args := m.Called(ctx, method)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -157,8 +157,8 @@ func (m *MockPaymentConfigService) GetActivePaymentConfigs(ctx context.Context, 
 	return args.Get(0).([]*entities.PaymentConfig), args.Error(1)
 }
 
-func (m *MockPaymentConfigService) GetPaymentConfigsByGateway(ctx context.Context, gateway string) ([]*entities.PaymentConfig, error) {
-	args := m.Called(ctx, gateway)
+func (m *MockPaymentConfigService) GetPaymentConfigsByMethod(ctx context.Context, method string) ([]*entities.PaymentConfig, error) {
+	args := m.Called(ctx, method)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -632,7 +632,7 @@ func createTestPaymentRecord() *entities.PaymentRecord {
 		OutTradeNo:    "ORDER001",
 		TransactionID: "TXN123456789",
 		Gateway:       "epay",
-		PaymentMethod: "alipay",
+		PaymentMethod: "trc_usdt",
 		Amount:        99.99,
 		Currency:      "CNY",
 		Status:        constants.PaymentRecordStatusPending,

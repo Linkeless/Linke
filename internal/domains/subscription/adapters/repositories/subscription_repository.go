@@ -62,7 +62,7 @@ func (r *subscriptionPlanRepository) GetByCode(ctx context.Context, code string)
 		}
 		logger.Error("Failed to get subscription plan by code",
 			logger.String("plan_code", code),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to get subscription plan: %w", err)
 	}
@@ -80,7 +80,7 @@ func (r *subscriptionPlanRepository) ListActive(ctx context.Context, limit, offs
 	// Count total active plans
 	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
 		Where(condition, args...).Count(&total).Error; err != nil {
-		logger.Error("Failed to count active subscription plans", logger.Error2("error", err))
+		logger.Error("Failed to count active subscription plans", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to count active subscription plans: %w", err)
 	}
 
@@ -88,7 +88,7 @@ func (r *subscriptionPlanRepository) ListActive(ctx context.Context, limit, offs
 	if err := r.GetDB().WithContext(ctx).Where(condition, args...).
 		Order("sort_order ASC, created_at DESC").
 		Limit(limit).Offset(offset).Find(&plans).Error; err != nil {
-		logger.Error("Failed to list active subscription plans", logger.Error2("error", err))
+		logger.Error("Failed to list active subscription plans", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to list active subscription plans: %w", err)
 	}
 
@@ -106,7 +106,7 @@ func (r *subscriptionPlanRepository) ListVisible(ctx context.Context, limit, off
 	// Count total visible plans
 	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
 		Where(condition, args...).Count(&total).Error; err != nil {
-		logger.Error("Failed to count visible subscription plans", logger.Error2("error", err))
+		logger.Error("Failed to count visible subscription plans", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to count visible subscription plans: %w", err)
 	}
 
@@ -114,7 +114,7 @@ func (r *subscriptionPlanRepository) ListVisible(ctx context.Context, limit, off
 	if err := r.GetDB().WithContext(ctx).Where(condition, args...).
 		Order("sort_order ASC, created_at DESC").
 		Limit(limit).Offset(offset).Find(&plans).Error; err != nil {
-		logger.Error("Failed to list visible subscription plans", logger.Error2("error", err))
+		logger.Error("Failed to list visible subscription plans", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to list visible subscription plans: %w", err)
 	}
 
@@ -131,7 +131,7 @@ func (r *subscriptionPlanRepository) ListByCurrency(ctx context.Context, currenc
 		Where("currency = ?", currency).Count(&total).Error; err != nil {
 		logger.Error("Failed to count subscription plans by currency",
 			logger.String("currency", currency),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to count subscription plans by currency: %w", err)
 	}
@@ -142,7 +142,7 @@ func (r *subscriptionPlanRepository) ListByCurrency(ctx context.Context, currenc
 		Limit(limit).Offset(offset).Find(&plans).Error; err != nil {
 		logger.Error("Failed to list subscription plans by currency",
 			logger.String("currency", currency),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to list subscription plans by currency: %w", err)
 	}
@@ -160,7 +160,7 @@ func (r *subscriptionPlanRepository) ListByBillingCycle(ctx context.Context, bil
 		Where("billing_cycle = ?", billingCycle).Count(&total).Error; err != nil {
 		logger.Error("Failed to count subscription plans by billing cycle",
 			logger.String("billing_cycle", billingCycle),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to count subscription plans by billing cycle: %w", err)
 	}
@@ -171,7 +171,7 @@ func (r *subscriptionPlanRepository) ListByBillingCycle(ctx context.Context, bil
 		Limit(limit).Offset(offset).Find(&plans).Error; err != nil {
 		logger.Error("Failed to list subscription plans by billing cycle",
 			logger.String("billing_cycle", billingCycle),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to list subscription plans by billing cycle: %w", err)
 	}
@@ -190,7 +190,7 @@ func (r *subscriptionPlanRepository) ListPopular(ctx context.Context, limit, off
 	// Count total popular plans
 	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
 		Where(condition, args...).Count(&total).Error; err != nil {
-		logger.Error("Failed to count popular subscription plans", logger.Error2("error", err))
+		logger.Error("Failed to count popular subscription plans", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to count popular subscription plans: %w", err)
 	}
 
@@ -198,7 +198,7 @@ func (r *subscriptionPlanRepository) ListPopular(ctx context.Context, limit, off
 	if err := r.GetDB().WithContext(ctx).Where(condition, args...).
 		Order("sort_order ASC, price ASC").
 		Limit(limit).Offset(offset).Find(&plans).Error; err != nil {
-		logger.Error("Failed to list popular subscription plans", logger.Error2("error", err))
+		logger.Error("Failed to list popular subscription plans", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to list popular subscription plans: %w", err)
 	}
 
@@ -216,7 +216,7 @@ func (r *subscriptionPlanRepository) ListRecommended(ctx context.Context, limit,
 	// Count total recommended plans
 	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
 		Where(condition, args...).Count(&total).Error; err != nil {
-		logger.Error("Failed to count recommended subscription plans", logger.Error2("error", err))
+		logger.Error("Failed to count recommended subscription plans", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to count recommended subscription plans: %w", err)
 	}
 
@@ -224,7 +224,7 @@ func (r *subscriptionPlanRepository) ListRecommended(ctx context.Context, limit,
 	if err := r.GetDB().WithContext(ctx).Where(condition, args...).
 		Order("sort_order ASC, price ASC").
 		Limit(limit).Offset(offset).Find(&plans).Error; err != nil {
-		logger.Error("Failed to list recommended subscription plans", logger.Error2("error", err))
+		logger.Error("Failed to list recommended subscription plans", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to list recommended subscription plans: %w", err)
 	}
 
@@ -242,7 +242,7 @@ func (r *subscriptionPlanRepository) ListPublic(ctx context.Context, limit, offs
 	// Count total public plans
 	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).
 		Where(condition, args...).Count(&total).Error; err != nil {
-		logger.Error("Failed to count public subscription plans", logger.Error2("error", err))
+		logger.Error("Failed to count public subscription plans", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to count public subscription plans: %w", err)
 	}
 
@@ -250,7 +250,7 @@ func (r *subscriptionPlanRepository) ListPublic(ctx context.Context, limit, offs
 	if err := r.GetDB().WithContext(ctx).Where(condition, args...).
 		Order("sort_order ASC, price ASC").
 		Limit(limit).Offset(offset).Find(&plans).Error; err != nil {
-		logger.Error("Failed to list public subscription plans", logger.Error2("error", err))
+		logger.Error("Failed to list public subscription plans", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to list public subscription plans: %w", err)
 	}
 
@@ -270,7 +270,7 @@ func (r *subscriptionPlanRepository) ListPublicByCurrency(ctx context.Context, c
 		Where(condition, args...).Count(&total).Error; err != nil {
 		logger.Error("Failed to count public subscription plans by currency",
 			logger.String("currency", currency),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to count public subscription plans by currency: %w", err)
 	}
@@ -281,7 +281,7 @@ func (r *subscriptionPlanRepository) ListPublicByCurrency(ctx context.Context, c
 		Limit(limit).Offset(offset).Find(&plans).Error; err != nil {
 		logger.Error("Failed to list public subscription plans by currency",
 			logger.String("currency", currency),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to list public subscription plans by currency: %w", err)
 	}
@@ -304,7 +304,7 @@ func (r *subscriptionPlanRepository) ListByPriceRange(ctx context.Context, minPr
 			logger.String("min_price", fmt.Sprintf("%.2f", minPrice)),
 			logger.String("max_price", fmt.Sprintf("%.2f", maxPrice)),
 			logger.String("currency", currency),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to count subscription plans by price range: %w", err)
 	}
@@ -317,7 +317,7 @@ func (r *subscriptionPlanRepository) ListByPriceRange(ctx context.Context, minPr
 			logger.String("min_price", fmt.Sprintf("%.2f", minPrice)),
 			logger.String("max_price", fmt.Sprintf("%.2f", maxPrice)),
 			logger.String("currency", currency),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to list subscription plans by price range: %w", err)
 	}
@@ -335,7 +335,7 @@ func (r *subscriptionPlanRepository) GetCheapest(ctx context.Context, currency s
 		}
 		logger.Error("Failed to get cheapest subscription plan",
 			logger.String("currency", currency),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to get cheapest subscription plan: %w", err)
 	}
@@ -352,7 +352,7 @@ func (r *subscriptionPlanRepository) GetMostExpensive(ctx context.Context, curre
 		}
 		logger.Error("Failed to get most expensive subscription plan",
 			logger.String("currency", currency),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to get most expensive subscription plan: %w", err)
 	}
@@ -366,7 +366,7 @@ func (r *subscriptionPlanRepository) UpdateVisibility(ctx context.Context, id ui
 		logger.Error("Failed to update subscription plan visibility",
 			logger.Uint("plan_id", id),
 			logger.String("is_visible", fmt.Sprintf("%t", isVisible)),
-			logger.Error2("error", result.Error),
+			logger.ErrorField(result.Error),
 		)
 		return fmt.Errorf("failed to update subscription plan visibility: %w", result.Error)
 	}
@@ -389,7 +389,7 @@ func (r *subscriptionPlanRepository) UpdateSortOrder(ctx context.Context, id uin
 		logger.Error("Failed to update subscription plan sort order",
 			logger.Uint("plan_id", id),
 			logger.Int("sort_order", sortOrder),
-			logger.Error2("error", result.Error),
+			logger.ErrorField(result.Error),
 		)
 		return fmt.Errorf("failed to update subscription plan sort order: %w", result.Error)
 	}
@@ -412,7 +412,7 @@ func (r *subscriptionPlanRepository) UpdatePopularFlag(ctx context.Context, id u
 		logger.Error("Failed to update subscription plan popular flag",
 			logger.Uint("plan_id", id),
 			logger.String("is_popular", fmt.Sprintf("%t", isPopular)),
-			logger.Error2("error", result.Error),
+			logger.ErrorField(result.Error),
 		)
 		return fmt.Errorf("failed to update subscription plan popular flag: %w", result.Error)
 	}
@@ -435,7 +435,7 @@ func (r *subscriptionPlanRepository) UpdateRecommendedFlag(ctx context.Context, 
 		logger.Error("Failed to update subscription plan recommended flag",
 			logger.Uint("plan_id", id),
 			logger.String("is_recommended", fmt.Sprintf("%t", isRecommended)),
-			logger.Error2("error", result.Error),
+			logger.ErrorField(result.Error),
 		)
 		return fmt.Errorf("failed to update subscription plan recommended flag: %w", result.Error)
 	}
@@ -526,7 +526,7 @@ func (r *subscriptionPlanRepository) GetOrderedPlans(ctx context.Context, orderB
 
 	// Count total plans
 	if err := r.GetDB().WithContext(ctx).Model(&entities.SubscriptionPlan{}).Count(&total).Error; err != nil {
-		logger.Error("Failed to count ordered subscription plans", logger.Error2("error", err))
+		logger.Error("Failed to count ordered subscription plans", logger.ErrorField(err))
 		return nil, 0, fmt.Errorf("failed to count ordered subscription plans: %w", err)
 	}
 
@@ -536,7 +536,7 @@ func (r *subscriptionPlanRepository) GetOrderedPlans(ctx context.Context, orderB
 		logger.Error("Failed to list ordered subscription plans",
 			logger.String("order_by", orderBy),
 			logger.String("ascending", fmt.Sprintf("%t", ascending)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to list ordered subscription plans: %w", err)
 	}
@@ -561,7 +561,7 @@ func (r *subscriptionPlanRepository) GetPlansSortedByPrice(ctx context.Context, 
 		Where("currency = ?", currency).Count(&total).Error; err != nil {
 		logger.Error("Failed to count subscription plans sorted by price",
 			logger.String("currency", currency),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to count subscription plans sorted by price: %w", err)
 	}
@@ -572,7 +572,7 @@ func (r *subscriptionPlanRepository) GetPlansSortedByPrice(ctx context.Context, 
 		logger.Error("Failed to list subscription plans sorted by price",
 			logger.String("currency", currency),
 			logger.String("ascending", fmt.Sprintf("%t", ascending)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, 0, fmt.Errorf("failed to list subscription plans sorted by price: %w", err)
 	}
@@ -799,7 +799,7 @@ func (r *userSubscriptionRepository) AddTrafficUsage(ctx context.Context, id uin
 		logger.Error("Failed to add traffic usage",
 			logger.Uint("subscription_id", id),
 			logger.Int64("additional_bytes", additionalBytes),
-			logger.Error2("error", result.Error),
+			logger.ErrorField(result.Error),
 		)
 		return fmt.Errorf("failed to add traffic usage: %w", result.Error)
 	}

@@ -61,7 +61,7 @@ func (w *PaymentRetryWorker) handleProcessPaymentRetry(ctx context.Context, task
 
 	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
 		logger.Error("Failed to unmarshal retry task payload",
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 			logger.String("task_type", task.Type()),
 		)
 		return fmt.Errorf("invalid task payload: %w", err)
@@ -76,7 +76,7 @@ func (w *PaymentRetryWorker) handleProcessPaymentRetry(ctx context.Context, task
 	result, err := w.retryService.ProcessRetry(ctx, payload.RetryID)
 	if err != nil {
 		logger.Error("Failed to process payment retry",
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 			logger.Uint("retry_id", payload.RetryID),
 		)
 		return err
@@ -102,7 +102,7 @@ func (w *PaymentRetryWorker) handleProcessPendingRetries(ctx context.Context, ta
 
 	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
 		logger.Warn("Failed to unmarshal pending retries task payload, using defaults",
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 	}
 
@@ -113,7 +113,7 @@ func (w *PaymentRetryWorker) handleProcessPendingRetries(ctx context.Context, ta
 	processed, err := w.retryService.ProcessPendingRetries(ctx, payload.BatchSize)
 	if err != nil {
 		logger.Error("Failed to process pending retries batch",
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 			logger.Int("batch_size", payload.BatchSize),
 		)
 		return err
@@ -139,7 +139,7 @@ func (w *PaymentRetryWorker) handleRetryNotification(ctx context.Context, task *
 
 	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
 		logger.Error("Failed to unmarshal notification task payload",
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return fmt.Errorf("invalid notification payload: %w", err)
 	}
@@ -186,7 +186,7 @@ func (w *PaymentRetryWorker) handleRetryHealthCheck(ctx context.Context, task *a
 	healthMetrics, err := w.retryService.GetRetryHealthMetrics(ctx)
 	if err != nil {
 		logger.Error("Failed to get retry health metrics",
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return err
 	}
@@ -230,7 +230,7 @@ func (w *PaymentRetryWorker) handleRetryCleanup(ctx context.Context, task *asynq
 
 	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
 		logger.Warn("Failed to unmarshal cleanup task payload, using defaults",
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 	}
 
@@ -285,21 +285,21 @@ func (w *PaymentRetryWorker) ScheduleRetryWorkerTasks(taskQueue *queue.TaskQueue
 
 	if err := taskQueue.Enqueue(ctx, "payment_retries", pendingRetriesTask); err != nil {
 		logger.Error("Failed to schedule pending retries task",
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return err
 	}
 
 	if err := taskQueue.Enqueue(ctx, "system", healthCheckTask); err != nil {
 		logger.Error("Failed to schedule health check task",
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return err
 	}
 
 	if err := taskQueue.Enqueue(ctx, "maintenance", cleanupTask); err != nil {
 		logger.Error("Failed to schedule cleanup task",
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return err
 	}

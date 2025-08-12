@@ -89,7 +89,7 @@ func (h *QuickPurchaseHandler) QuickPurchase(c *gin.Context) {
 	purchaseResponse, err := h.subscriptionOrderService.QuickPurchase(c.Request.Context(), &req)
 	if err != nil {
 		logger.Error("Failed to create quick purchase",
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 			logger.Uint("user_id", user.ID),
 			logger.Uint("plan_id", req.PlanID))
 		response.InternalServerError(c, "Failed to create quick purchase", err.Error())

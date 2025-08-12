@@ -124,7 +124,7 @@ func (s *EventAwareTicketMessageService) CreateTicketMessage(ctx context.Context
 			logger.Error("Failed to publish ticket replied event",
 				logger.Uint("message_id", message.ID),
 				logger.Uint("ticket_id", ticketID),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 		}
 	}
 

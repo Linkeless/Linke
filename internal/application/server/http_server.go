@@ -90,6 +90,7 @@ func NewHTTPServer(
 	userTicketHandler *ticketHandlers.UserTicketHandler,
 	paymentHandler *paymentHandlers.PaymentHandler,
 	paymentMethodHandler *paymentHandlers.PaymentMethodHandler,
+	cryptoWalletConfigHandler *paymentHandlers.CryptoWalletConfigHandler,
 	serverHandler *serverHandlers.ServerAPIHandler,
 	// Admin server handlers
 	adminServerHandler *serverHandlers.AdminServerHandler,
@@ -143,6 +144,7 @@ func NewHTTPServer(
 		userTicketHandler,
 		paymentHandler,
 		paymentMethodHandler,
+		cryptoWalletConfigHandler,
 		serverHandler,
 		adminServerHandler,
 		adminServerGroupHandler,

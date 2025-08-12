@@ -34,7 +34,7 @@ func (s *SubscriptionExpiryService) ProcessExpiredSubscriptions(ctx context.Cont
 		Where("status IN (?) AND end_date IS NOT NULL AND end_date <= ?",
 			[]string{constants.UserSubscriptionStatusActive, constants.UserSubscriptionStatusTrial}, now).
 		Find(&expiredSubscriptions).Error; err != nil {
-		logger.Error("Failed to find expired subscriptions", logger.Error2("error", err))
+		logger.Error("Failed to find expired subscriptions", logger.ErrorField(err))
 		return 0, fmt.Errorf("failed to find expired subscriptions: %w", err)
 	}
 
@@ -43,7 +43,7 @@ func (s *SubscriptionExpiryService) ProcessExpiredSubscriptions(ctx context.Cont
 		if err := s.ExpireSubscription(ctx, subscription.ID); err != nil {
 			logger.Error("Failed to expire subscription",
 				logger.Uint("subscription_id", subscription.ID),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 			continue
 		}
 		processedCount++
@@ -63,7 +63,7 @@ func (s *SubscriptionExpiryService) ProcessCancelledSubscriptions(ctx context.Co
 		Where("cancel_at_period_end = ? AND status IN (?) AND current_period_end IS NOT NULL AND current_period_end <= ?",
 			true, []string{constants.UserSubscriptionStatusActive, constants.UserSubscriptionStatusTrial}, now).
 		Find(&subscriptions).Error; err != nil {
-		logger.Error("Failed to find subscriptions to cancel", logger.Error2("error", err))
+		logger.Error("Failed to find subscriptions to cancel", logger.ErrorField(err))
 		return 0, fmt.Errorf("failed to find subscriptions to cancel: %w", err)
 	}
 
@@ -72,7 +72,7 @@ func (s *SubscriptionExpiryService) ProcessCancelledSubscriptions(ctx context.Co
 		if err := s.CancelSubscriptionAtPeriodEnd(ctx, subscription.ID); err != nil {
 			logger.Error("Failed to cancel subscription at period end",
 				logger.Uint("subscription_id", subscription.ID),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 			continue
 		}
 		processedCount++
@@ -92,7 +92,7 @@ func (s *SubscriptionExpiryService) ProcessOverdueSubscriptions(ctx context.Cont
 		Where("status IN (?) AND next_billing_date IS NOT NULL AND next_billing_date <= ? AND auto_renew = ?",
 			[]string{constants.UserSubscriptionStatusActive, constants.UserSubscriptionStatusTrial}, overdueThreshold, false).
 		Find(&overdueSubscriptions).Error; err != nil {
-		logger.Error("Failed to find overdue subscriptions", logger.Error2("error", err))
+		logger.Error("Failed to find overdue subscriptions", logger.ErrorField(err))
 		return 0, fmt.Errorf("failed to find overdue subscriptions: %w", err)
 	}
 
@@ -101,7 +101,7 @@ func (s *SubscriptionExpiryService) ProcessOverdueSubscriptions(ctx context.Cont
 		if err := s.SuspendOverdueSubscription(ctx, subscription.ID); err != nil {
 			logger.Error("Failed to suspend overdue subscription",
 				logger.Uint("subscription_id", subscription.ID),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 			continue
 		}
 		processedCount++
@@ -146,7 +146,7 @@ func (s *SubscriptionExpiryService) ExpireSubscription(ctx context.Context, subs
 		tx.Rollback()
 		logger.Error("Failed to update expired subscription",
 			logger.Uint("subscription_id", subscriptionID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		return fmt.Errorf("failed to update expired subscription: %w", err)
 	}
 
@@ -214,7 +214,7 @@ func (s *SubscriptionExpiryService) CancelSubscriptionAtPeriodEnd(ctx context.Co
 		tx.Rollback()
 		logger.Error("Failed to cancel subscription at period end",
 			logger.Uint("subscription_id", subscriptionID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		return fmt.Errorf("failed to cancel subscription at period end: %w", err)
 	}
 
@@ -271,7 +271,7 @@ func (s *SubscriptionExpiryService) SuspendOverdueSubscription(ctx context.Conte
 		tx.Rollback()
 		logger.Error("Failed to suspend overdue subscription",
 			logger.Uint("subscription_id", subscriptionID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		return fmt.Errorf("failed to suspend overdue subscription: %w", err)
 	}
 

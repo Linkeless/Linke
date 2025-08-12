@@ -76,7 +76,7 @@ func (cs *CachedPaymentService) GetPaymentRecord(ctx context.Context, paymentNo 
 		// If unmarshal fails, continue to fetch from database
 		logger.Warn("Failed to unmarshal cached payment record",
 			logger.String("payment_no", paymentNo),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 	}
 
 	// Fetch from database

@@ -73,7 +73,7 @@ func (h *SubscriptionOrderHandler) GetSubscriptionOrderSummary(c *gin.Context) {
 
 	summary, err := h.subscriptionOrderService.GetSubscriptionOrderSummary(c.Request.Context(), orderID)
 	if err != nil {
-		logger.Error("Failed to get order summary", logger.Error2("error", err), logger.Uint("order_id", orderID))
+		logger.Error("Failed to get order summary", logger.Uint("orderID", uint(orderID)))
 		response.InternalServerError(c, "Failed to get order summary", err.Error())
 		return
 	}
@@ -111,7 +111,7 @@ func (h *SubscriptionOrderHandler) CreateSubscriptionOrder(c *gin.Context) {
 	// Create subscription order
 	orderResponse, err := h.subscriptionOrderService.CreateSubscriptionOrder(c.Request.Context(), &req)
 	if err != nil {
-		logger.Error("Failed to create subscription order", logger.Error2("error", err), logger.Uint("user_id", user.ID))
+		logger.Error("Failed to create subscription order", logger.ErrorField(err), logger.Uint("user_id", user.ID))
 		response.InternalServerError(c, "Failed to create subscription order", err.Error())
 		return
 	}
@@ -163,7 +163,7 @@ func (h *SubscriptionOrderHandler) GetSubscriptionOrder(c *gin.Context) {
 			response.NotFound(c, "Subscription order not found")
 			return
 		}
-		logger.Error("Failed to get subscription order", logger.Error2("error", err), logger.Uint("order_id", uint(orderID)))
+		logger.Error("Failed to get subscription order", logger.ErrorField(err), logger.Uint("order_id", uint(orderID)))
 		response.InternalServerError(c, "Failed to get subscription order", err.Error())
 		return
 	}
@@ -221,7 +221,7 @@ func (h *SubscriptionOrderHandler) GetMySubscriptionOrders(c *gin.Context) {
 	// Get user subscription orders
 	orders, totalCount, err := h.subscriptionOrderService.GetUserSubscriptionOrders(c.Request.Context(), user.ID, limit, offset)
 	if err != nil {
-		logger.Error("Failed to get user subscription orders", logger.Error2("error", err), logger.Uint("user_id", user.ID))
+		logger.Error("Failed to get user subscription orders", logger.ErrorField(err), logger.Uint("user_id", user.ID))
 		response.InternalServerError(c, "Failed to get subscription orders", err.Error())
 		return
 	}

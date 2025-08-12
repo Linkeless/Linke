@@ -71,7 +71,7 @@ func (h *UserAccountBindingHandler) CreateBinding(c *gin.Context) {
 		logger.Error("Failed to create account binding",
 			logger.Uint("user_id", u.ID),
 			logger.String("provider", provider),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 
 		// Check if it's a conflict error (already bound)
 		if err.Error() == "user already has a binding for provider: "+provider ||
@@ -120,7 +120,7 @@ func (h *UserAccountBindingHandler) GetBindings(c *gin.Context) {
 	if err != nil {
 		logger.Error("Failed to get user bindings",
 			logger.Uint("user_id", u.ID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get account bindings", err.Error())
 		return
 	}
@@ -177,7 +177,7 @@ func (h *UserAccountBindingHandler) GetBinding(c *gin.Context) {
 		logger.Error("Failed to get user bindings",
 			logger.Uint("user_id", u.ID),
 			logger.String("provider", provider),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.NotFound(c, "Account binding not found")
 		return
 	}
@@ -243,7 +243,7 @@ func (h *UserAccountBindingHandler) UpdateBinding(c *gin.Context) {
 		logger.Error("Failed to update account binding",
 			logger.Uint("user_id", u.ID),
 			logger.String("provider", provider),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 
 		if err.Error() == "failed to get user binding: failed to get user binding by user ID and provider" ||
 			err.Error() == "binding not found" {
@@ -300,7 +300,7 @@ func (h *UserAccountBindingHandler) DeleteBinding(c *gin.Context) {
 		logger.Error("Failed to delete account binding",
 			logger.Uint("user_id", u.ID),
 			logger.String("provider", provider),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 
 		if err.Error() == "failed to get user binding: failed to get user binding by user ID and provider" ||
 			err.Error() == "binding not found" {
@@ -357,7 +357,7 @@ func (h *UserAccountBindingHandler) SetPrimaryBinding(c *gin.Context) {
 		logger.Error("Failed to set primary binding",
 			logger.Uint("user_id", u.ID),
 			logger.String("provider", provider),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 
 		if err.Error() == "failed to get binding: failed to get user binding by user ID and provider" ||
 			err.Error() == "binding not found" {
@@ -410,7 +410,7 @@ func (h *UserAccountBindingHandler) GetBindingStats(c *gin.Context) {
 	stats, err := h.bindingService.GetBindingStats(c.Request.Context())
 	if err != nil {
 		logger.Error("Failed to get binding stats",
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get binding statistics", err.Error())
 		return
 	}
@@ -467,7 +467,7 @@ func (h *UserAccountBindingHandler) CleanupInactiveBindings(c *gin.Context) {
 	if err != nil {
 		logger.Error("Failed to cleanup inactive bindings",
 			logger.Int("days", days),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to cleanup inactive bindings", err.Error())
 		return
 	}

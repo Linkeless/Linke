@@ -94,7 +94,7 @@ func (sos *CachedSubscriptionOrderService) CreateSubscriptionOrder(ctx context.C
 		if err := sos.orderCache.Set(ctx, order); err != nil {
 			logger.Error("Failed to cache new order",
 				logger.Uint("order_id", order.ID),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 		}
 
 		// Cache order by number
@@ -306,14 +306,14 @@ func (sos *CachedSubscriptionOrderService) invalidateOrderCaches(ctx context.Con
 	if err := sos.orderCache.Invalidate(ctx, orderByIDKey); err != nil {
 		logger.Error("Failed to invalidate order by ID cache",
 			logger.Uint("order_id", orderID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 	}
 
 	orderByNumberKey := sos.cacheKeys.Subscription.OrderByNumber(orderNumber)
 	if err := sos.cacheManager.GetCache().Delete(ctx, orderByNumberKey); err != nil {
 		logger.Error("Failed to invalidate order by number cache",
 			logger.String("order_number", orderNumber),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 	}
 
 	// Invalidate user order caches
@@ -329,7 +329,7 @@ func (sos *CachedSubscriptionOrderService) invalidateUserOrderCaches(ctx context
 	if err := sos.cacheManager.GetCache().Delete(ctx, userOrdersKey); err != nil {
 		logger.Error("Failed to invalidate user orders cache",
 			logger.Uint("user_id", userID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 	}
 
 	// Invalidate list caches for this user
@@ -342,7 +342,7 @@ func (sos *CachedSubscriptionOrderService) invalidateUserOrderCaches(ctx context
 		if err := sos.cacheManager.GetCache().DeleteByPattern(ctx, pattern); err != nil {
 			logger.Error("Failed to invalidate user order list cache",
 				logger.String("pattern", pattern),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 		}
 	}
 }
@@ -358,7 +358,7 @@ func (sos *CachedSubscriptionOrderService) invalidateOrderListCaches(ctx context
 		if err := sos.cacheManager.GetCache().DeleteByPattern(ctx, pattern); err != nil {
 			logger.Error("Failed to invalidate order list cache pattern",
 				logger.String("pattern", pattern),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 		}
 	}
 }
@@ -375,7 +375,7 @@ func (sos *CachedSubscriptionOrderService) invalidateAllOrderCaches(ctx context.
 		if err := sos.cacheManager.GetCache().DeleteByPattern(ctx, pattern); err != nil {
 			logger.Error("Failed to invalidate all order caches",
 				logger.String("pattern", pattern),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 		}
 	}
 }

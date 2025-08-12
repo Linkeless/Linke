@@ -3,6 +3,7 @@ package implementations
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"linke/internal/domains/server/dto"
@@ -57,7 +58,7 @@ func (s *ShadowsocksServerService) CreateShadowsocksServer(ctx context.Context, 
 			logger.String("name", req.Name),
 			logger.String("host", req.Host),
 			logger.Uint("group_id", req.GroupID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to create shadowsocks server: %w", err)
 	}
@@ -95,11 +96,36 @@ func (s *ShadowsocksServerService) GetShadowsocksServers(ctx context.Context, re
 	if req.GroupID != nil {
 		query = query.Where("group_id = ?", *req.GroupID)
 	}
-    if req.Show != nil {
-        query = query.Where("`show` = ?", *req.Show)
+	if req.Show != nil {
+		query = query.Where("`show` = ?", *req.Show)
 	}
 	if req.Name != "" {
 		query = query.Where("name LIKE ?", "%"+req.Name+"%")
+	}
+
+	// Determine sort field safely
+	orderClause := "sort ASC, created_at DESC"
+	if req.SortBy != "" {
+		// allowlist
+		field := strings.ToLower(req.SortBy)
+		direction := "ASC"
+		if strings.ToLower(req.SortOrder) == "desc" {
+			direction = "DESC"
+		}
+		switch field {
+		case "sort":
+			orderClause = "sort " + direction + ", created_at DESC"
+		case "created_at":
+			orderClause = "created_at " + direction
+		case "updated_at":
+			orderClause = "updated_at " + direction
+		case "name":
+			orderClause = "name " + direction + ", sort ASC"
+		case "rate":
+			orderClause = "rate " + direction + ", sort ASC"
+		default:
+			orderClause = "sort ASC, created_at DESC"
+		}
 	}
 
 	// Count total
@@ -116,7 +142,7 @@ func (s *ShadowsocksServerService) GetShadowsocksServers(ctx context.Context, re
 	}
 
 	// Get servers
-	if err := query.Order("sort ASC, created_at DESC").Find(&servers).Error; err != nil {
+	if err := query.Order(orderClause).Find(&servers).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to get shadowsocks servers: %w", err)
 	}
 
@@ -126,8 +152,8 @@ func (s *ShadowsocksServerService) GetShadowsocksServers(ctx context.Context, re
 // GetActiveShadowsocksServers retrieves all active shadowsocks servers
 func (s *ShadowsocksServerService) GetActiveShadowsocksServers(ctx context.Context) ([]*entities.ShadowsocksServer, error) {
 	var servers []*entities.ShadowsocksServer
-    if err := s.db.DB.WithContext(ctx).
-        Where("`show` = ?", 1).
+	if err := s.db.DB.WithContext(ctx).
+		Where("`show` = ?", 1).
 		Order("sort ASC, created_at DESC").
 		Find(&servers).Error; err != nil {
 		return nil, fmt.Errorf("failed to get active shadowsocks servers: %w", err)
@@ -138,8 +164,8 @@ func (s *ShadowsocksServerService) GetActiveShadowsocksServers(ctx context.Conte
 // GetShadowsocksServersByGroupID retrieves shadowsocks servers by group ID
 func (s *ShadowsocksServerService) GetShadowsocksServersByGroupID(ctx context.Context, groupID uint) ([]*entities.ShadowsocksServer, error) {
 	var servers []*entities.ShadowsocksServer
-    if err := s.db.DB.WithContext(ctx).
-        Where("group_id = ? AND `show` = ?", groupID, 1).
+	if err := s.db.DB.WithContext(ctx).
+		Where("group_id = ? AND `show` = ?", groupID, 1).
 		Order("sort ASC, created_at DESC").
 		Preload("ServerGroup"). // Load the server group relationship
 		Find(&servers).Error; err != nil {
@@ -226,7 +252,7 @@ func (s *ShadowsocksServerService) UpdateShadowsocksServer(ctx context.Context, 
 	if err := s.db.DB.WithContext(ctx).Model(&server).Updates(updates).Error; err != nil {
 		logger.Error("Failed to update shadowsocks server",
 			logger.Uint("server_id", serverID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		return nil, fmt.Errorf("failed to update shadowsocks server: %w", err)
 	}
@@ -245,7 +271,7 @@ func (s *ShadowsocksServerService) DeleteShadowsocksServer(ctx context.Context, 
 	if result.Error != nil {
 		logger.Error("Failed to delete shadowsocks server",
 			logger.Uint("server_id", serverID),
-			logger.Error2("error", result.Error),
+			logger.ErrorField(result.Error),
 		)
 		return fmt.Errorf("failed to delete shadowsocks server: %w", result.Error)
 	}
@@ -268,7 +294,7 @@ func (s *ShadowsocksServerService) GetServersByGroup(ctx context.Context, groupI
 
 // GetVisibleServers retrieves visible shadowsocks servers with optional group filter
 func (s *ShadowsocksServerService) GetVisibleServers(ctx context.Context, groupID *uint) ([]*entities.ShadowsocksServer, error) {
-    query := s.db.DB.WithContext(ctx).Where("`show` = ?", 1)
+	query := s.db.DB.WithContext(ctx).Where("`show` = ?", 1)
 
 	if groupID != nil {
 		query = query.Where("group_id = ?", *groupID)

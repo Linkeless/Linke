@@ -35,17 +35,11 @@ var Module = fx.Module("shared",
 	// 数据库连接
 	fx.Provide(database.NewDatabase),
 
-	// 日志系统
+	// 日志系统 - use already initialized logger from main.go
 	fx.Provide(
-		func(cfg *config.Config) logger.Logger {
-			// 初始化日志
-			if err := logger.InitLogger(logger.LogConfig{
-				Level:  cfg.Log.Level,
-				Format: cfg.Log.Format,
-				Output: cfg.Log.Output,
-			}); err != nil {
-				panic("Failed to initialize logger: " + err.Error())
-			}
+		func() logger.Logger {
+			// Logger should already be initialized by main.go
+			// Just return the global instance wrapped in our interface
 			return logger.GetGlobalLogger()
 		},
 		fx.Annotate(

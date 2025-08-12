@@ -68,7 +68,7 @@ func (s *EventAwareTicketService) CreateTicket(ctx context.Context, userID uint,
 	if err := s.eventBus.Publish(ctx, event); err != nil {
 		logger.Error("Failed to publish ticket created event",
 			logger.Uint("ticket_id", ticket.ID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 	}
 	
 	return ticket, nil
@@ -127,7 +127,7 @@ func (s *EventAwareTicketService) AssignTicket(ctx context.Context, ticketID uin
 	if err := s.eventBus.Publish(ctx, event); err != nil {
 		logger.Error("Failed to publish ticket assigned event",
 			logger.Uint("ticket_id", ticket.ID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 	}
 	
 	return ticket, nil
@@ -186,7 +186,7 @@ func (s *EventAwareTicketService) UpdateTicketStatus(ctx context.Context, ticket
 	if err := s.eventBus.Publish(ctx, event); err != nil {
 		logger.Error("Failed to publish ticket status changed event",
 			logger.Uint("ticket_id", ticket.ID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 	}
 	
 	return ticket, nil
@@ -237,7 +237,7 @@ func (s *EventAwareTicketService) ResolveTicket(ctx context.Context, ticketID ui
 	if err := s.eventBus.Publish(ctx, event); err != nil {
 		logger.Error("Failed to publish ticket resolved event",
 			logger.Uint("ticket_id", ticket.ID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 	}
 	
 	return ticket, nil
@@ -276,7 +276,7 @@ func (s *EventAwareTicketService) CloseTicket(ctx context.Context, ticketID uint
 	if err := s.eventBus.Publish(ctx, event); err != nil {
 		logger.Error("Failed to publish ticket closed event",
 			logger.Uint("ticket_id", ticket.ID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 	}
 	
 	return ticket, nil
@@ -327,7 +327,7 @@ func (s *EventAwareTicketService) UpdateTicketPriority(ctx context.Context, tick
 		if err := s.eventBus.Publish(ctx, event); err != nil {
 			logger.Error("Failed to publish ticket escalated event",
 				logger.Uint("ticket_id", ticket.ID),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 		}
 	}
 	

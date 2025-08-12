@@ -96,7 +96,7 @@ func (r *userRepository) UpdateRole(ctx context.Context, id uint, role string) e
 		logger.Error("Failed to update user role",
 			logger.Uint("user_id", id),
 			logger.String("role", role),
-			logger.Error2("error", result.Error),
+			logger.ErrorField(result.Error),
 		)
 		return fmt.Errorf("failed to update user role: %w", result.Error)
 	}

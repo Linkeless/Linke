@@ -71,7 +71,7 @@ func (b *BotEnhanced) Start(ctx context.Context) error {
 
 	// Configure bot settings on startup
 	if err := b.configureBotSettings(); err != nil {
-		logger.Error("Failed to configure bot settings", logger.Error2("error", err))
+		logger.Error("Failed to configure bot settings", logger.ErrorField(err))
 		// Continue anyway, don't fail startup
 	}
 
@@ -302,7 +302,7 @@ func (b *BotEnhanced) handleCallbackQuery(query *tgbotapi.CallbackQuery) {
 			if err != nil {
 				logger.Error("Failed to parse ticket ID from add_reply callback",
 					logger.String("callback_data", data),
-					logger.Error2("parse_error", err))
+					logger.ErrorField(err))
 				b.showError(query.Message.Chat.ID, query.Message.MessageID, "无效的工单ID")
 				return
 			}
@@ -1370,7 +1370,7 @@ func (b *BotEnhanced) configureBotSettings() error {
 	// Set commands
 	setCommandsConfig := tgbotapi.NewSetMyCommands(commands...)
 	if _, err := b.api.Request(setCommandsConfig); err != nil {
-		logger.Error("Failed to set bot commands", logger.Error2("error", err))
+		logger.Error("Failed to set bot commands", logger.ErrorField(err))
 		return fmt.Errorf("failed to set commands: %w", err)
 	}
 	logger.Info("Bot commands configured successfully", logger.Int("count", len(commands)))
@@ -1430,7 +1430,7 @@ func (b *BotEnhanced) SendTicketNotificationToAdmins(notification *TicketNotific
 		if err := b.SendTicketNotification(chatID, notification); err != nil {
 			logger.Error("Failed to send ticket notification to admin",
 				logger.Int64("chat_id", chatID),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 			errors = append(errors, err)
 		}
 	}
@@ -2286,7 +2286,7 @@ func (b *BotEnhanced) handleTicketReply(chatID int64, ticketID uint, content str
 		logger.Error("Failed to get user by telegram ID for ticket reply",
 			logger.Int64("chat_id", chatID),
 			logger.Uint("ticket_id", ticketID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		b.sendErrorMessage(chatID, "账号未绑定", "请先在网站上使用 Telegram 登录绑定账号")
 		return
 	}
@@ -2309,7 +2309,7 @@ func (b *BotEnhanced) handleTicketReply(chatID int64, ticketID uint, content str
 	if err != nil {
 		logger.Error("Failed to get ticket for validation",
 			logger.Uint("ticket_id", ticketID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		b.sendErrorMessage(chatID, "工单不存在", "无法找到指定的工单")
 		return
 	}
@@ -2350,7 +2350,7 @@ func (b *BotEnhanced) handleTicketReply(chatID int64, ticketID uint, content str
 		logger.Error("Failed to create ticket message via telegram",
 			logger.Uint("ticket_id", ticketID),
 			logger.Uint("user_id", user.ID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		b.sendErrorMessage(chatID, "回复失败", "系统错误，请稍后重试")
 		return
 	}
@@ -2426,7 +2426,7 @@ func (b *BotEnhanced) handleTicketReply(chatID int64, ticketID uint, content str
 	if sendErr != nil {
 		logger.Error("Failed to send confirmation message",
 			logger.Int64("chat_id", chatID),
-			logger.Error2("error", sendErr))
+			logger.ErrorField(sendErr))
 	}
 	
 	logger.Info("Ticket reply processed successfully via telegram",
@@ -2446,7 +2446,7 @@ func (b *BotEnhanced) handleStatusChange(chatID int64, messageID int, ticketID u
 		logger.Error("Failed to update ticket status via telegram",
 			logger.Uint("ticket_id", ticketID),
 			logger.String("new_status", newStatus),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		b.showError(chatID, messageID, "状态更新失败")
 		return
 	}
@@ -2859,7 +2859,7 @@ func (b *BotEnhanced) handleInternalNote(chatID int64, ticketID uint, content st
 		logger.Error("Failed to create internal note via telegram",
 			logger.Uint("ticket_id", ticketID),
 			logger.Uint("user_id", user.ID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		b.sendMessage(chatID, "❌ 创建内部注释失败，请稍后重试")
 		return
 	}
@@ -3458,7 +3458,7 @@ func (b *BotEnhanced) handleTicketEscalation(chatID int64, messageID int, ticket
 		logger.Error("Failed to create escalation note",
 			logger.Uint("ticket_id", ticketID),
 			logger.String("escalation_level", level),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		// Continue anyway, don't fail the escalation
 	}
 	
@@ -3789,7 +3789,7 @@ func (b *BotEnhanced) sendBatchNotification(userTelegramIDs []string, title stri
 		if err := b.sendNotificationToUser(telegramID, title, message, nil); err != nil {
 			logger.Error("Failed to send batch notification to user",
 				logger.String("telegram_id", telegramID),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 			errors = append(errors, err)
 		} else {
 			successCount++

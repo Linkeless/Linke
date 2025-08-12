@@ -72,7 +72,7 @@ func (h *AdminCouponHandler) CreateCoupon(c *gin.Context) {
 		logger.Error("Admin failed to create coupon",
 			logger.String("code", createReq.Code),
 			logger.String("name", createReq.Name),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		if strings.Contains(err.Error(), "duplicate") || strings.Contains(err.Error(), "unique") {
@@ -144,7 +144,7 @@ func (h *AdminCouponHandler) ListCoupons(c *gin.Context) {
 
 	coupons, total, err := h.couponService.GetCoupons(c.Request.Context(), serviceReq)
 	if err != nil {
-		logger.Error("Admin failed to list coupons", logger.Error2("error", err))
+		logger.Error("Admin failed to list coupons", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to list coupons")
 		return
 	}
@@ -184,7 +184,7 @@ func (h *AdminCouponHandler) GetCoupon(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to get coupon",
 			logger.Uint("coupon_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.NotFound(c, "Coupon not found")
 		return
@@ -227,7 +227,7 @@ func (h *AdminCouponHandler) UpdateCoupon(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to update coupon",
 			logger.Uint("coupon_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to update coupon")
 		return
@@ -266,7 +266,7 @@ func (h *AdminCouponHandler) DeleteCoupon(c *gin.Context) {
 	if err := h.couponService.DeleteCoupon(c.Request.Context(), id); err != nil {
 		logger.Error("Admin failed to delete coupon",
 			logger.Uint("coupon_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.NotFound(c, "Coupon not found")
 		return
@@ -324,7 +324,7 @@ func (h *AdminCouponHandler) ToggleCouponStatus(c *gin.Context) {
 		logger.Error("Admin failed to toggle coupon status",
 			logger.Uint("coupon_id", uint(id)),
 			logger.String("status", statusReq.Status),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.NotFound(c, "Coupon not found")
 		return
@@ -408,7 +408,7 @@ func (h *AdminCouponHandler) ExtendCouponExpiry(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to extend coupon expiry",
 			logger.Uint("coupon_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to extend coupon expiry")
 		return
@@ -463,7 +463,7 @@ func (h *AdminCouponHandler) GetCouponUsage(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to get coupon usage",
 			logger.Uint("coupon_id", uint(id)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to get coupon usage")
 		return
@@ -539,7 +539,7 @@ func (h *AdminCouponHandler) SearchCoupons(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to search coupons",
 			logger.String("query", searchReq.Query),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to search coupons")
 		return
@@ -582,7 +582,7 @@ func (h *AdminCouponHandler) SearchCoupons(c *gin.Context) {
 func (h *AdminCouponHandler) GetCouponStatistics(c *gin.Context) {
 	stats, err := h.couponService.GetCouponSystemStatistics(c.Request.Context())
 	if err != nil {
-		logger.Error("Admin failed to get coupon statistics", logger.Error2("error", err))
+		logger.Error("Admin failed to get coupon statistics", logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get coupon statistics")
 		return
 	}
@@ -690,7 +690,7 @@ func (h *AdminCouponHandler) BulkCreateCoupons(c *gin.Context) {
 		if err != nil {
 			logger.Error("Failed to create bulk coupon",
 				logger.String("code", code),
-				logger.Error2("error", err),
+				logger.ErrorField(err),
 			)
 			failedCodes = append(failedCodes, code)
 			continue
@@ -754,7 +754,7 @@ func (h *AdminCouponHandler) BulkUpdateCoupons(c *gin.Context) {
 		if err != nil {
 			logger.Error("Failed to update coupon in bulk operation",
 				logger.Uint("coupon_id", uint(id)),
-				logger.Error2("error", err),
+				logger.ErrorField(err),
 			)
 			failedIDs = append(failedIDs, id)
 			continue
@@ -806,7 +806,7 @@ func (h *AdminCouponHandler) BulkDeactivateCoupons(c *gin.Context) {
 		if err != nil {
 			logger.Error("Failed to deactivate coupon in bulk operation",
 				logger.Uint("coupon_id", uint(id)),
-				logger.Error2("error", err),
+				logger.ErrorField(err),
 			)
 			failedIDs = append(failedIDs, id)
 			continue

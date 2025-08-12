@@ -117,7 +117,7 @@ func (h *AuthHandler) Callback(c *gin.Context) {
 	if err != nil {
 		logger.Error("Failed to get user info",
 			logger.String("provider", provider),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get user info: "+err.Error())
 		return
 	}
@@ -132,7 +132,7 @@ func (h *AuthHandler) Callback(c *gin.Context) {
 		logger.Error("Failed to create or update user",
 			logger.String("provider", provider),
 			logger.String("user_id", userInfo.ID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to create or update user: "+err.Error())
 		return
 	}
@@ -284,7 +284,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	if err != nil {
 		logger.Error("Registration failed",
 			logger.String("email", req.Email),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.Conflict(c, err.Error())
 		return
@@ -320,7 +320,7 @@ func (h *AuthHandler) LoginLocal(c *gin.Context) {
 		logger.Warn("Login failed",
 			logger.String("email", req.Email),
 			logger.String("ip", c.ClientIP()),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.Unauthorized(c, err.Error())
 		return
@@ -374,7 +374,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	if err := h.authService.Logout(ctx, token, u.ID); err != nil {
 		logger.Error("Logout failed",
 			logger.Uint("user_id", u.ID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to logout securely")
 		return
 	}
@@ -409,7 +409,7 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	newToken, err := h.jwtService.RefreshToken(token)
 	if err != nil {
 		logger.Warn("Token refresh failed",
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.Unauthorized(c, err.Error())
 		return
@@ -453,7 +453,7 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	if err := h.authService.ChangePassword(c.Request.Context(), u.ID, req.OldPassword, req.NewPassword); err != nil {
 		logger.Error("Password change failed",
 			logger.Uint("user_id", u.ID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.BadRequest(c, err.Error())
 		return
@@ -583,7 +583,7 @@ func (h *AuthHandler) ExchangeToken(c *gin.Context) {
 			logger.Error("Invalid state parameter",
 				logger.String("provider", req.Provider),
 				logger.String("state", req.State),
-				logger.Error2("error", err))
+				logger.ErrorField(err))
 			response.Unauthorized(c, "Invalid or expired state parameter")
 			return
 		}
@@ -604,7 +604,7 @@ func (h *AuthHandler) ExchangeToken(c *gin.Context) {
 		logger.Error("Failed to exchange code for token",
 			logger.String("provider", req.Provider),
 			logger.String("code", req.Code[:10]+"..."),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.Unauthorized(c, "Failed to exchange authorization code")
 		return
 	}
@@ -614,7 +614,7 @@ func (h *AuthHandler) ExchangeToken(c *gin.Context) {
 	if err != nil {
 		logger.Error("Failed to get user info",
 			logger.String("provider", req.Provider),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get user information", err.Error())
 		return
 	}
@@ -625,7 +625,7 @@ func (h *AuthHandler) ExchangeToken(c *gin.Context) {
 		logger.Error("Failed to create or update user",
 			logger.String("provider", req.Provider),
 			logger.String("provider_user_id", userInfo.ID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to process user information", err.Error())
 		return
 	}
@@ -635,7 +635,7 @@ func (h *AuthHandler) ExchangeToken(c *gin.Context) {
 	if err != nil {
 		logger.Error("Failed to generate JWT token",
 			logger.Uint("user_id", user.ID),
-			logger.Error2("error", err))
+			logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to generate authentication tokens", err.Error())
 		return
 	}

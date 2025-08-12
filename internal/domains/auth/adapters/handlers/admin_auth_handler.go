@@ -143,7 +143,7 @@ func (h *AdminAuthHandler) ListActiveTokens(c *gin.Context) {
 	stats, err := h.jwtBlacklistService.GetBlacklistStats(c.Request.Context())
 	if err != nil {
 		logger.Error("Admin failed to get JWT stats",
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to get JWT token statistics")
 		return
@@ -191,7 +191,7 @@ func (h *AdminAuthHandler) ListJWTBlacklist(c *gin.Context) {
 	stats, err := h.jwtBlacklistService.GetBlacklistStats(c.Request.Context())
 	if err != nil {
 		logger.Error("Admin failed to get JWT blacklist",
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to get JWT blacklist")
 		return
@@ -257,7 +257,7 @@ func (h *AdminAuthHandler) GetJWTAnalytics(c *gin.Context) {
 	stats, err := h.jwtBlacklistService.GetBlacklistStats(c.Request.Context())
 	if err != nil {
 		logger.Error("Admin failed to get JWT analytics",
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to get JWT analytics")
 		return
@@ -328,7 +328,7 @@ func (h *AdminAuthHandler) ListLoginAttempts(c *gin.Context) {
 		logger.Error("Admin failed to get login attempts",
 			logger.String("email", filter.Email),
 			logger.String("ip", filter.IP),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to get login attempts")
 		return
@@ -377,7 +377,7 @@ func (h *AdminAuthHandler) GetFailedLoginAnalysis(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to get failed login analysis",
 			logger.Int("days", days),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to get failed login analysis")
 		return
@@ -430,7 +430,7 @@ func (h *AdminAuthHandler) UnlockAccount(c *gin.Context) {
 		logger.Error("Admin failed to unlock account",
 			logger.String("email", req.Email),
 			logger.String("reason", req.Reason),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		if strings.Contains(err.Error(), "not found") {
@@ -491,7 +491,7 @@ func (h *AdminAuthHandler) ForcePasswordReset(c *gin.Context) {
 			logger.Uint("admin_id", admin.ID),
 			logger.String("admin_email", admin.Email),
 			logger.Uint("target_user_id", req.UserID),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 
 		if strings.Contains(err.Error(), "user not found") {
@@ -543,7 +543,7 @@ func (h *AdminAuthHandler) GetAccountSecurityStatus(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to get user for security status",
 			logger.Uint("user_id", uint(userID)),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.NotFound(c, "User not found")
 		return
@@ -560,7 +560,7 @@ func (h *AdminAuthHandler) GetAccountSecurityStatus(c *gin.Context) {
 		logger.Error("Admin failed to check account lock status",
 			logger.Uint("user_id", uint(userID)),
 			logger.String("email", user.Email),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to get security status")
 		return
@@ -573,7 +573,7 @@ func (h *AdminAuthHandler) GetAccountSecurityStatus(c *gin.Context) {
 		logger.Error("Admin failed to get failure count",
 			logger.Uint("user_id", uint(userID)),
 			logger.String("email", user.Email),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		failureCount = 0 // Default to 0 on error
 	}
@@ -625,7 +625,7 @@ func (h *AdminAuthHandler) GetSecurityStatistics(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to get login stats for security statistics",
 			logger.Int("days", days),
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		loginStats = make(map[string]any)
 	}
@@ -634,7 +634,7 @@ func (h *AdminAuthHandler) GetSecurityStatistics(c *gin.Context) {
 	jwtStats, err := h.jwtBlacklistService.GetBlacklistStats(c.Request.Context())
 	if err != nil {
 		logger.Error("Admin failed to get JWT stats for security statistics",
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		jwtStats = make(map[string]any)
 	}
@@ -750,7 +750,7 @@ func (h *AdminAuthHandler) BulkUnlockAccounts(c *gin.Context) {
 		if err != nil {
 			logger.Error("Failed to get user for bulk unlock",
 				logger.Uint("user_id", userID),
-				logger.Error2("error", err),
+				logger.ErrorField(err),
 			)
 			failedIDs = append(failedIDs, userID)
 			continue
@@ -760,7 +760,7 @@ func (h *AdminAuthHandler) BulkUnlockAccounts(c *gin.Context) {
 			logger.Error("Failed to unlock account in bulk operation",
 				logger.Uint("user_id", userID),
 				logger.String("email", user.Email),
-				logger.Error2("error", err),
+				logger.ErrorField(err),
 			)
 			failedIDs = append(failedIDs, userID)
 			continue
@@ -807,7 +807,7 @@ func (h *AdminAuthHandler) GetOAuthProviderStats(c *gin.Context) {
 	stats, err := h.userService.GetUserStats(c.Request.Context())
 	if err != nil {
 		logger.Error("Admin failed to get OAuth provider stats",
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		response.InternalServerError(c, "Failed to get OAuth provider statistics")
 		return
@@ -934,7 +934,7 @@ func (h *AdminAuthHandler) GetSecurityPatterns(c *gin.Context) {
 		stats, err := h.loginSecurityService.GetLoginAttemptStats(c.Request.Context(), since)
 		if err != nil {
 			logger.Error("Failed to get login patterns",
-				logger.Error2("error", err),
+				logger.ErrorField(err),
 			)
 			response.InternalServerError(c, "Failed to get login patterns")
 			return
@@ -1003,7 +1003,7 @@ func (h *AdminAuthHandler) GetSecurityScore(c *gin.Context) {
 	loginStats, err := h.loginSecurityService.GetLoginAttemptStats(c.Request.Context(), since)
 	if err != nil {
 		logger.Error("Failed to get login stats for security score",
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		loginStats = make(map[string]any)
 	}
@@ -1011,7 +1011,7 @@ func (h *AdminAuthHandler) GetSecurityScore(c *gin.Context) {
 	jwtStats, err := h.jwtBlacklistService.GetBlacklistStats(c.Request.Context())
 	if err != nil {
 		logger.Error("Failed to get JWT stats for security score",
-			logger.Error2("error", err),
+			logger.ErrorField(err),
 		)
 		jwtStats = make(map[string]any)
 	}
@@ -1100,7 +1100,7 @@ func (h *AdminAuthHandler) BulkResetPasswords(c *gin.Context) {
 			logger.Error("Failed to reset password in bulk operation",
 				logger.Uint("admin_id", admin.ID),
 				logger.Uint("target_user_id", userID),
-				logger.Error2("error", err),
+				logger.ErrorField(err),
 			)
 			failedIDs = append(failedIDs, userID)
 			continue
