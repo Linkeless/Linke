@@ -134,18 +134,6 @@ var DefaultRetryStrategies = map[string]RetryStrategyConfig{
 		EnableAfterHours: true,
 		MaxConcurrent:    5,
 	},
-	constants.PaymentGatewayEPUSDT: {
-		Gateway:          constants.PaymentGatewayEPUSDT,
-		MaxAttempts:      3,
-		InitialDelay:     3600,  // 1 hour
-		MaxDelay:         86400, // 24 hours
-		BackoffFactor:    2.0,
-		Strategy:         constants.RetryStrategyExponential,
-		FailureTypes:     []string{constants.FailureTypeTemporary, constants.FailureTypeNetwork, constants.FailureTypeGateway},
-		TimeoutSeconds:   30,
-		EnableAfterHours: true,
-		MaxConcurrent:    5,
-	},
 }
 
 // Business methods for PaymentRetry

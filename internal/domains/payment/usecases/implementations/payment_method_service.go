@@ -608,10 +608,6 @@ func (s *paymentMethodService) validatePaymentTokenWithGateway(gateway, token st
 		if !strings.HasPrefix(token, "epay_") {
 			return fmt.Errorf("invalid epay token format")
 		}
-	case constants.PaymentGatewayEPUSDT:
-		if !strings.HasPrefix(token, "epusdt_") {
-			return fmt.Errorf("invalid epusdt token format")
-		}
 	default:
 		return fmt.Errorf("unsupported gateway: %s", gateway)
 	}

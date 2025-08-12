@@ -60,22 +60,22 @@ func TestPaymentMethodValidation(t *testing.T) {
 // Test payment method request validation
 func TestCreatePaymentMethodRequest(t *testing.T) {
 	req := &dto.CreatePaymentMethodRequest{
-		Type:            constants.PaymentMethodTypeCard,
+		Type:            constants.PaymentMethodTypeDigitalWallet,
 		Gateway:         constants.PaymentGatewayEpay,
-		Method:          constants.PaymentMethodTRCUSDT,
-		DisplayName:     "My USDT Wallet",
+		Method:          constants.PaymentMethodAlipay,
+		DisplayName:     "My Alipay Account",
 		PaymentToken:    "epay_test_token_12345",
-		MaskedInfo:      "TR***...ABC123",
-		Brand:           "USDT",
+		MaskedInfo:      "ali***...ABC123",
+		Brand:           "Alipay",
 		BillingCountry:  "CN",
 		BillingPostcode: "100000",
 		SetAsDefault:    false,
 	}
 
-	assert.Equal(t, constants.PaymentMethodTypeCard, req.Type)
+	assert.Equal(t, constants.PaymentMethodTypeDigitalWallet, req.Type)
 	assert.Equal(t, constants.PaymentGatewayEpay, req.Gateway)
-	assert.Equal(t, constants.PaymentMethodTRCUSDT, req.Method)
-	assert.Equal(t, "My USDT Wallet", req.DisplayName)
+	assert.Equal(t, constants.PaymentMethodAlipay, req.Method)
+	assert.Equal(t, "My Alipay Account", req.DisplayName)
 	assert.Equal(t, "epay_test_token_12345", req.PaymentToken)
 	assert.False(t, req.SetAsDefault)
 }
@@ -86,18 +86,18 @@ func TestPaymentMethodListResponse(t *testing.T) {
 		{
 			ID:          1,
 			UserID:      100,
-			Type:        constants.PaymentMethodTypeCard,
+			Type:        constants.PaymentMethodTypeDigitalWallet,
 			Gateway:     constants.PaymentGatewayEpay,
-			Method:      constants.PaymentMethodTRCUSDT,
+			Method:      constants.PaymentMethodAlipay,
 			DisplayName: "Method 1",
 			IsDefault:   true,
 		},
 		{
 			ID:          2,
 			UserID:      100,
-			Type:        constants.PaymentMethodTypeCard,
+			Type:        constants.PaymentMethodTypeDigitalWallet,
 			Gateway:     constants.PaymentGatewayEpay,
-			Method:      constants.PaymentMethodPolygonUSDT,
+			Method:      constants.PaymentMethodWechat,
 			DisplayName: "Method 2",
 			IsDefault:   false,
 		},

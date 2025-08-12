@@ -293,7 +293,7 @@ func (h *PaymentHandler) PaymentNotify(c *gin.Context) {
 	}
 
 	// SECURITY: Validate gateway parameter
-	validGateways := []string{constants.PaymentGatewayEpay, constants.PaymentGatewayEPUSDT}
+	validGateways := []string{constants.PaymentGatewayEpay}
 	isValidGateway := false
 	for _, validGateway := range validGateways {
 		if gateway == validGateway {
@@ -347,8 +347,6 @@ func (h *PaymentHandler) PaymentNotify(c *gin.Context) {
 	switch gateway {
 	case constants.PaymentGatewayEpay:
 		c.String(200, "success")
-	case constants.PaymentGatewayEPUSDT:
-		c.JSON(200, gin.H{"code": 1, "message": "success"})
 	default:
 		c.String(200, "success")
 	}

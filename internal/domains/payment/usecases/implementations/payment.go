@@ -462,25 +462,14 @@ func (ps *PaymentService) GetUserPaymentRecords(ctx context.Context, userID uint
 	return records, totalCount, nil
 }
 
-// GetAvailablePaymentMethods gets available payment methods
+// GetAvailablePaymentMethods gets available payment methods from registered gateways
 func (ps *PaymentService) GetAvailablePaymentMethods(ctx context.Context) (map[string][]string, error) {
 	methods := make(map[string][]string)
 
-	// Get methods from registered gateways
+	// Get methods from registered gateways (epay only)
 	for gatewayName, gateway := range ps.gateways {
 		methods[gatewayName] = gateway.GetSupportedPaymentMethods()
 	}
-
-	// Add new crypto payment methods to crypto gateway
-	if _, exists := methods[constants.PaymentGatewayCrypto]; !exists {
-		methods[constants.PaymentGatewayCrypto] = []string{}
-	}
-	
-	// Add the new TRC-USDT and Polygon-USDT payment methods
-	methods[constants.PaymentGatewayCrypto] = append(methods[constants.PaymentGatewayCrypto], 
-		constants.PaymentMethodTRCUSDT,
-		constants.PaymentMethodPolygonUSDT,
-	)
 
 	return methods, nil
 }

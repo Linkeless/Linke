@@ -632,7 +632,7 @@ func createTestPaymentRecord() *entities.PaymentRecord {
 		OutTradeNo:    "ORDER001",
 		TransactionID: "TXN123456789",
 		Gateway:       "epay",
-		PaymentMethod: "trc_usdt",
+		PaymentMethod: constants.PaymentMethodAlipay,
 		Amount:        99.99,
 		Currency:      "CNY",
 		Status:        constants.PaymentRecordStatusPending,

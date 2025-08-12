@@ -12,19 +12,14 @@ const (
 
 // Payment Gateway Constants
 const (
-	PaymentGatewayEpay   = "epay"
-	PaymentGatewayEPUSDT = "epusdt"
-	PaymentGatewayCrypto = "crypto" // 加密货币直接收款网关
+	PaymentGatewayEpay = "epay" // 易支付网关
 )
 
-// Payment Method Constants
+// Payment Method Constants - 支持的epay支付方式
 const (
-	// 加密货币支付方式
-	PaymentMethodTRCUSDT     = "trc_usdt"      // TRC链的USDT
-	PaymentMethodPolygonUSDT = "polygon_usdt"  // Polygon链的USDT
-	PaymentMethodUSDT        = "usdt"          // 通用USDT
-	PaymentMethodBTC         = "btc"           // 比特币
-	PaymentMethodETH         = "eth"           // 以太坊
+	PaymentMethodAlipay = "alipay" // 支付宝
+	PaymentMethodWechat = "wechat" // 微信支付
+	PaymentMethodQQ     = "qqpay"  // QQ钱包
 )
 
 // Refund Status Constants
@@ -37,9 +32,8 @@ const (
 
 // Currency Constants
 const (
-	CurrencyCNY  = "CNY"
-	CurrencyUSD  = "USD"
-	CurrencyUSDT = "USDT"
+	CurrencyCNY = "CNY"
+	CurrencyUSD = "USD"
 )
 
 // Payment Method Type Constants
@@ -47,7 +41,6 @@ const (
 	PaymentMethodTypeCard          = "card"
 	PaymentMethodTypeBankAccount   = "bank_account"
 	PaymentMethodTypeDigitalWallet = "digital_wallet"
-	PaymentMethodTypeCrypto        = "crypto"
 )
 
 // Payment Method Status Constants

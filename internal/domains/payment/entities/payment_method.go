@@ -22,8 +22,8 @@ type PaymentMethod struct {
 
 	// Basic Information
 	Type        string `json:"type" gorm:"size:50;not null;index"`    // card, bank_account, digital_wallet
-	Gateway     string `json:"gateway" gorm:"size:50;not null;index"` // epay, epusdt
-	Method      string `json:"method" gorm:"size:50;not null;index"`  // trc_usdt, polygon_usdt, usdt, btc, eth, etc.
+	Gateway     string `json:"gateway" gorm:"size:50;not null;index"` // epay
+	Method      string `json:"method" gorm:"size:50;not null;index"`  // alipay, wechat, qqpay
 	DisplayName string `json:"display_name" gorm:"size:100;not null"` // User-friendly name
 
 	// Tokenized Payment Data (PCI Compliant)

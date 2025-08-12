@@ -22,8 +22,8 @@ type PaymentRecord struct {
 	PaymentNo     string `json:"payment_no" gorm:"uniqueIndex;size:100;not null"`   // 支付单号（系统生成）
 	OutTradeNo    string `json:"out_trade_no" gorm:"uniqueIndex;size:100;not null"` // 商户订单号
 	TransactionID string `json:"transaction_id" gorm:"size:100;index"`              // 第三方交易号
-	Gateway       string `json:"gateway" gorm:"size:50;not null;index"`             // 支付网关 (epay, epusdt)
-	PaymentMethod string `json:"payment_method" gorm:"size:50;not null;index"`      // 支付方式 (trc_usdt, polygon_usdt, usdt, btc, eth, etc.)
+	Gateway       string `json:"gateway" gorm:"size:50;not null;index"`             // 支付网关 (epay)
+	PaymentMethod string `json:"payment_method" gorm:"size:50;not null;index"`      // 支付方式 (alipay, wechat, qqpay)
 
 	// Amount Information
 	Amount       float64 `json:"amount" gorm:"type:decimal(10,2);not null"`         // 支付金额

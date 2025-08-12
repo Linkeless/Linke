@@ -5,41 +5,42 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+	"linke/internal/domains/payment/constants"
 )
 
-// PaymentConfig represents payment configuration with simplified url+pid+key structure
+// PaymentConfig represents epay payment gateway configuration
 type PaymentConfig struct {
 	// Primary Key
 	ID uint `json:"id" gorm:"primaryKey"`
 
 	// Basic Information
-	Name        string `json:"name" gorm:"size:100;not null"`          // Display name
-	Method      string `json:"method" gorm:"unique;size:50;not null"`  // Payment method identifier
+	Name   string `json:"name" gorm:"size:100;not null"`         // Display name
+	Method string `json:"method" gorm:"unique;size:50;not null"` // Payment method identifier
 
-	// Simplified Configuration (url + pid + key)
-	URL string `json:"url" gorm:"size:255;not null"`    // API endpoint URL
-	PID string `json:"pid" gorm:"size:100;not null"`    // Partner/Merchant ID
-	Key string `json:"key" gorm:"size:255;not null"`    // API key/secret
+	// Epay Configuration (url + pid + key)
+	URL string `json:"url" gorm:"column:url;size:255;not null"` // Epay API endpoint URL
+	PID string `json:"pid" gorm:"column:pid;size:100;not null"` // Epay Partner/Merchant ID
+	Key string `json:"key" gorm:"column:key;size:255;not null"` // Epay API key/secret
 
 	// Status and Settings
-	IsEnabled bool `json:"is_enabled" gorm:"not null;default:true;index"` // Whether enabled
-	SortOrder int  `json:"sort_order" gorm:"default:0;index"`             // Sort order
+	IsEnabled bool `json:"is_enabled" gorm:"column:is_enabled;not null;default:true;index"` // Whether enabled
+	SortOrder int  `json:"sort_order" gorm:"column:sort_order;default:0;index"`             // Sort order
 
 	// Currency and Methods
-	SupportedCurrencies string `json:"supported_currencies" gorm:"type:text"` // Supported currencies
-	SupportedMethods    string `json:"supported_methods" gorm:"type:text"`    // Supported methods (JSON)
+	SupportedCurrencies string `json:"supported_currencies" gorm:"column:supported_currencies;type:text"` // Supported currencies
+	SupportedMethods    string `json:"supported_methods" gorm:"column:supported_methods;type:text"`       // Supported epay methods (JSON)
 
 	// Limits
-	MinAmount float64 `json:"min_amount" gorm:"type:decimal(10,2);default:0.01"`     // Minimum amount
-	MaxAmount float64 `json:"max_amount" gorm:"type:decimal(10,2);default:99999.99"` // Maximum amount
+	MinAmount float64 `json:"min_amount" gorm:"column:min_amount;type:decimal(10,2);default:0.01"`     // Minimum amount
+	MaxAmount float64 `json:"max_amount" gorm:"column:max_amount;type:decimal(10,2);default:99999.99"` // Maximum amount
 
 	// Fee Information
-	FixedFee      float64 `json:"fixed_fee" gorm:"type:decimal(10,2);default:0.00"`       // Fixed fee amount
-	PercentageFee float64 `json:"percentage_fee" gorm:"type:decimal(5,4);default:0.0000"` // Percentage fee (0.0000-99.9999)
+	FixedFee      float64 `json:"fixed_fee" gorm:"column:fixed_fee;type:decimal(10,2);default:0.00"`           // Fixed fee amount
+	PercentageFee float64 `json:"percentage_fee" gorm:"column:percentage_fee;type:decimal(5,4);default:0.0000"` // Percentage fee (0.0000-99.9999)
 
 	// Additional Settings (optional)
-	NotifyURL   string `json:"notify_url" gorm:"size:255"`     // Callback/webhook URL
-	ReturnURL   string `json:"return_url" gorm:"size:255"`     // Return URL after payment
+	NotifyURL string `json:"notify_url" gorm:"column:notify_url;size:255"` // Callback/webhook URL
+	ReturnURL string `json:"return_url" gorm:"column:return_url;size:255"` // Return URL after payment
 
 	// Timestamp Fields
 	CreatedAt time.Time      `json:"created_at" gorm:"not null;index"`
@@ -47,9 +48,9 @@ type PaymentConfig struct {
 	DeletedAt gorm.DeletedAt `json:"deleted_at,omitempty" gorm:"index"`
 }
 
-// Method represents a payment method within a gateway
+// Method represents an epay payment method
 type Method struct {
-	Code        string  `json:"code"`                  // Method code (trc_usdt, polygon_usdt, usdt, btc, eth, etc.)
+	Code        string  `json:"code"`                  // Method code (alipay, wechat, qqpay)
 	Name        string  `json:"name"`                  // Display name
 	Description string  `json:"description,omitempty"` // Description
 	Icon        string  `json:"icon,omitempty"`        // Icon URL
@@ -66,8 +67,7 @@ func (PaymentConfig) TableName() string {
 	return "payment_configs"
 }
 
-
-// GetMethods returns the parsed methods from SupportedMethods JSON
+// GetMethods returns the parsed epay methods from SupportedMethods JSON
 func (pc *PaymentConfig) GetMethods() ([]Method, error) {
 	if pc.SupportedMethods == "" {
 		return nil, nil
@@ -92,7 +92,7 @@ func (pc *PaymentConfig) SetMethods(methods []Method) error {
 	return nil
 }
 
-// GetMethodByCode returns a specific method by its code
+// GetMethodByCode returns a specific epay method by its code
 func (pc *PaymentConfig) GetMethodByCode(code string) (*Method, error) {
 	methods, err := pc.GetMethods()
 	if err != nil {
@@ -130,18 +130,19 @@ func (pc *PaymentConfig) SupportsCurrency(currency string) bool {
 		pc.SupportedCurrencies == "*"
 }
 
-// GetConfig returns configuration as a map for compatibility
+// GetConfig returns epay configuration as a map for compatibility
 func (pc *PaymentConfig) GetConfig() map[string]interface{} {
 	return map[string]interface{}{
-		"url": pc.URL,
-		"pid": pc.PID,
-		"key": pc.Key,
+		"url":        pc.URL,
+		"pid":        pc.PID,
+		"key":        pc.Key,
 		"notify_url": pc.NotifyURL,
 		"return_url": pc.ReturnURL,
+		"gateway":    constants.PaymentGatewayEpay,
 	}
 }
 
-// SetConfig sets configuration from a map
+// SetConfig sets epay configuration from a map
 func (pc *PaymentConfig) SetConfig(config map[string]interface{}) {
 	if url, ok := config["url"].(string); ok {
 		pc.URL = url
@@ -160,7 +161,7 @@ func (pc *PaymentConfig) SetConfig(config map[string]interface{}) {
 	}
 }
 
-// IsConfigValid checks if the basic configuration is valid
+// IsConfigValid checks if the epay configuration is valid
 func (pc *PaymentConfig) IsConfigValid() bool {
 	return pc.URL != "" && pc.PID != "" && pc.Key != ""
 }
@@ -178,5 +179,30 @@ func (pc *PaymentConfig) CalculatePercentageFee(amount float64) float64 {
 // IsAmountValid checks if the amount is within the valid range
 func (pc *PaymentConfig) IsAmountValid(amount float64) bool {
 	return amount >= pc.MinAmount && amount <= pc.MaxAmount
+}
+
+// IsEpayMethod checks if the method is a supported epay method
+func (pc *PaymentConfig) IsEpayMethod(method string) bool {
+	supportedMethods := []string{
+		constants.PaymentMethodAlipay,
+		constants.PaymentMethodWechat,
+		constants.PaymentMethodQQ,
+	}
+
+	for _, supportedMethod := range supportedMethods {
+		if method == supportedMethod {
+			return true
+		}
+	}
+	return false
+}
+
+// GetSupportedEpayMethods returns all supported epay payment methods
+func (pc *PaymentConfig) GetSupportedEpayMethods() []string {
+	return []string{
+		constants.PaymentMethodAlipay,
+		constants.PaymentMethodWechat,
+		constants.PaymentMethodQQ,
+	}
 }
 

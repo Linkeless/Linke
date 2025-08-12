@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"encoding/json"
 	"strings"
 	"time"
 
@@ -20,7 +21,7 @@ type PaymentRecordResponse struct {
 	OutTradeNo          string     `json:"out_trade_no" example:"ORDER202401010001"`                // Merchant order number
 	TransactionID       string     `json:"transaction_id,omitempty" example:"TXN123456789"`         // Transaction ID
 	Gateway             string     `json:"gateway" example:"epay"`                                  // Payment gateway
-	PaymentMethod       string     `json:"payment_method" example:"trc_usdt"`                         // Payment method
+	PaymentMethod       string     `json:"payment_method" example:"alipay"`                         // Payment method
 	Amount              float64    `json:"amount" example:"29.99"`                                  // Payment amount
 	Currency            string     `json:"currency" example:"CNY"`                                  // Currency
 	ExchangeRate        float64    `json:"exchange_rate" example:"1.0000"`                          // Exchange rate
@@ -55,7 +56,7 @@ type CreatePaymentOrderRequest struct {
 	SubscriptionOrderID *uint   `json:"subscription_order_id,omitempty" example:"1"`
 	InvoiceID           *uint   `json:"invoice_id,omitempty" example:"1"`
 	Gateway             string  `json:"gateway" binding:"required" example:"epay"`
-	PaymentMethod       string  `json:"payment_method" binding:"required" example:"trc_usdt"`
+	PaymentMethod       string  `json:"payment_method" binding:"required" example:"alipay"`
 	Amount              float64 `json:"amount" binding:"required,gt=0" example:"29.99"`
 	Currency            string  `json:"currency" binding:"required" example:"CNY"`
 	Subject             string  `json:"subject" binding:"required" example:"Premium Subscription"`
@@ -105,7 +106,7 @@ type PaymentMethodResponse struct {
 	UserID          uint       `json:"user_id" example:"1"`                                        // User ID
 	Type            string     `json:"type" example:"card"`                                        // Payment method type
 	Gateway         string     `json:"gateway" example:"epay"`                                     // Payment gateway
-	Method          string     `json:"method" example:"trc_usdt"`                                    // Payment method
+	Method          string     `json:"method" example:"alipay"`                                    // Payment method
 	DisplayName     string     `json:"display_name" example:"My Alipay Account"`                   // User-friendly name
 	MaskedInfo      string     `json:"masked_info" example:"ali***@example.com"`                   // Masked payment info
 	Brand           string     `json:"brand,omitempty" example:"Alipay"`                           // Brand/provider
@@ -132,9 +133,9 @@ type PaymentMethodResponse struct {
 
 // CreatePaymentMethodRequest represents the request to create a new payment method
 type CreatePaymentMethodRequest struct {
-	Type              string `json:"type" binding:"required,oneof=card bank_account digital_wallet crypto" example:"card"`
+	Type              string `json:"type" binding:"required,oneof=card bank_account digital_wallet" example:"card"`
 	Gateway           string `json:"gateway" binding:"required" example:"epay"`
-	Method            string `json:"method" binding:"required" example:"trc_usdt"}`
+	Method            string `json:"method" binding:"required" example:"alipay"}`
 	DisplayName       string `json:"display_name" binding:"required,max=100" example:"My Alipay Account"`
 	PaymentToken      string `json:"payment_token" binding:"required" example:"tok_1234567890"`
 	GatewayCustomerID string `json:"gateway_customer_id,omitempty" example:"cus_1234567890"`
@@ -639,401 +640,6 @@ type AttemptStatistics struct {
 	TotalDuration   int     `json:"total_duration"`
 }
 
-// ==================== Crypto Wallet Config DTOs ====================
-
-// CryptoWalletConfigResponse represents the crypto wallet config data structure for API responses
-type CryptoWalletConfigResponse struct {
-	ID               uint       `json:"id" example:"1"`                                             // Config ID
-	Network          string     `json:"network" example:"trc"`                                      // Network
-	Currency         string     `json:"currency" example:"USDT"`                                    // Currency
-	Symbol           string     `json:"symbol" example:"USDT"`                                      // Symbol
-	WalletAddress    string     `json:"wallet_address" example:"TXXXxxxXXXxxxXXXxxxXXXxxxXXX"`     // Wallet address
-	WalletName       string     `json:"wallet_name" example:"Main TRC-USDT Wallet"`                // Wallet name
-	ContractAddress  string     `json:"contract_address,omitempty" example:"TR7NHqjeKQxGTCI..."`   // Contract address
-	Decimals         int        `json:"decimals" example:"6"`                                       // Decimals
-	MinConfirmations int        `json:"min_confirmations" example:"1"`                              // Min confirmations
-	DisplayName      string     `json:"display_name" example:"TRC-USDT"`                           // Display name
-	Description      string     `json:"description" example:"USDT on TRON network"`                // Description
-	Icon             string     `json:"icon,omitempty" example:"https://example.com/usdt-icon.png"` // Icon URL
-	IsEnabled        bool       `json:"is_enabled" example:"true"`                                  // Is enabled
-	SortOrder        int        `json:"sort_order" example:"1"`                                     // Sort order
-	MinAmount        float64    `json:"min_amount" example:"1.00"`                                  // Min amount
-	MaxAmount        float64    `json:"max_amount" example:"100000.00"`                             // Max amount
-	NetworkFee       float64    `json:"network_fee" example:"1.00"`                                 // Network fee
-	ProcessingFee    float64    `json:"processing_fee" example:"0.5"`                               // Processing fee rate
-	FixedFee         float64    `json:"fixed_fee" example:"0.00"`                                   // Fixed fee
-	LastCheckAt      *time.Time `json:"last_check_at,omitempty" example:"2024-01-01T00:00:00Z"`    // Last check time
-	Balance          float64    `json:"balance" example:"1000.50"`                                  // Wallet balance
-	IsActive         bool       `json:"is_active" example:"true"`                                   // Is active
-	HealthStatus     string     `json:"health_status" example:"healthy"`                            // Health status
-	AddressValidated bool       `json:"address_validated" example:"true"`                           // Address validated
-	ValidatedAt      *time.Time `json:"validated_at,omitempty" example:"2024-01-01T00:00:00Z"`     // Validated time
-	CreatedAt        time.Time  `json:"created_at" example:"2024-01-01T00:00:00Z"`                  // Creation time
-	UpdatedAt        time.Time  `json:"updated_at" example:"2024-01-01T00:00:00Z"`                  // Update time
-
-	// Computed fields
-	CanAcceptPayment bool    `json:"can_accept_payment"` // Can accept payment
-	IsHealthy        bool    `json:"is_healthy"`         // Is healthy
-	NeedsValidation  bool    `json:"needs_validation"`   // Needs validation
-	PaymentMethod    string  `json:"payment_method"`     // Corresponding payment method
-	GatewayType      string  `json:"gateway_type"`       // Gateway type
-	DisplayInfo      map[string]interface{} `json:"display_info"` // Display information
-}
-
-// CreateCryptoWalletConfigRequest represents the request to create a crypto wallet config
-type CreateCryptoWalletConfigRequest struct {
-	Network          string  `json:"network" binding:"required" example:"trc"`                          // Network
-	Currency         string  `json:"currency" binding:"required" example:"USDT"`                       // Currency
-	Symbol           string  `json:"symbol" binding:"required" example:"USDT"`                         // Symbol
-	WalletAddress    string  `json:"wallet_address" binding:"required" example:"TXXXxxxXXXxxxXXXxxx"` // Wallet address
-	WalletName       string  `json:"wallet_name,omitempty" example:"Main TRC-USDT Wallet"`             // Wallet name
-	ContractAddress  string  `json:"contract_address,omitempty" example:"TR7NHqjeKQxGTCI..."`          // Contract address
-	Decimals         int     `json:"decimals,omitempty" example:"6"`                                    // Decimals
-	MinConfirmations int     `json:"min_confirmations,omitempty" example:"1"`                           // Min confirmations
-	DisplayName      string  `json:"display_name" binding:"required" example:"TRC-USDT"`               // Display name
-	Description      string  `json:"description,omitempty" example:"USDT on TRON network"`             // Description
-	Icon             string  `json:"icon,omitempty" example:"https://example.com/usdt-icon.png"`       // Icon URL
-	IsEnabled        *bool   `json:"is_enabled,omitempty" example:"true"`                              // Is enabled
-	SortOrder        int     `json:"sort_order,omitempty" example:"1"`                                 // Sort order
-	MinAmount        float64 `json:"min_amount,omitempty" example:"1.00"`                              // Min amount
-	MaxAmount        float64 `json:"max_amount,omitempty" example:"100000.00"`                         // Max amount
-	NetworkFee       float64 `json:"network_fee,omitempty" example:"1.00"`                             // Network fee
-	ProcessingFee    float64 `json:"processing_fee,omitempty" example:"0.5"`                           // Processing fee rate
-	FixedFee         float64 `json:"fixed_fee,omitempty" example:"0.00"`                               // Fixed fee
-	APIEndpoint      string  `json:"api_endpoint,omitempty" example:"https://api.trongrid.io"`         // API endpoint
-	APIKey           string  `json:"api_key,omitempty" example:"api-key"`                              // API key
-}
-
-// UpdateCryptoWalletConfigRequest represents the request to update a crypto wallet config
-type UpdateCryptoWalletConfigRequest struct {
-	WalletName       *string  `json:"wallet_name,omitempty" example:"Updated TRC-USDT Wallet"`        // Wallet name
-	ContractAddress  *string  `json:"contract_address,omitempty" example:"TR7NHqjeKQxGTCI..."`        // Contract address
-	Decimals         *int     `json:"decimals,omitempty" example:"6"`                                  // Decimals
-	MinConfirmations *int     `json:"min_confirmations,omitempty" example:"1"`                         // Min confirmations
-	DisplayName      *string  `json:"display_name,omitempty" example:"TRC-USDT"`                      // Display name
-	Description      *string  `json:"description,omitempty" example:"USDT on TRON network"`           // Description
-	Icon             *string  `json:"icon,omitempty" example:"https://example.com/usdt-icon.png"`     // Icon URL
-	IsEnabled        *bool    `json:"is_enabled,omitempty" example:"true"`                            // Is enabled
-	SortOrder        *int     `json:"sort_order,omitempty" example:"1"`                               // Sort order
-	MinAmount        *float64 `json:"min_amount,omitempty" example:"1.00"`                            // Min amount
-	MaxAmount        *float64 `json:"max_amount,omitempty" example:"100000.00"`                       // Max amount
-	NetworkFee       *float64 `json:"network_fee,omitempty" example:"1.00"`                           // Network fee
-	ProcessingFee    *float64 `json:"processing_fee,omitempty" example:"0.5"`                         // Processing fee rate
-	FixedFee         *float64 `json:"fixed_fee,omitempty" example:"0.00"`                             // Fixed fee
-	APIEndpoint      *string  `json:"api_endpoint,omitempty" example:"https://api.trongrid.io"`       // API endpoint
-	APIKey           *string  `json:"api_key,omitempty" example:"api-key"`                            // API key
-	IsActive         *bool    `json:"is_active,omitempty" example:"true"`                             // Is active
-	HealthStatus     *string  `json:"health_status,omitempty" example:"healthy"`                      // Health status
-}
-
-// CryptoWalletConfigListResponse represents the response for listing crypto wallet configs
-type CryptoWalletConfigListResponse struct {
-	Configs []CryptoWalletConfigResponse `json:"configs"`
-	Total   int                          `json:"total" example:"2"`
-}
-
-// GetCryptoWalletConfigsRequest represents the request to get crypto wallet configs
-type GetCryptoWalletConfigsRequest struct {
-	Network   string `form:"network,omitempty" example:"trc"`     // Filter by network
-	Currency  string `form:"currency,omitempty" example:"USDT"`   // Filter by currency
-	IsEnabled *bool  `form:"is_enabled,omitempty" example:"true"` // Filter by enabled status
-	IsActive  *bool  `form:"is_active,omitempty" example:"true"`  // Filter by active status
-	Limit     int    `form:"limit,omitempty" example:"10"`        // Limit results
-	Offset    int    `form:"offset,omitempty" example:"0"`        // Offset results
-}
-
-// ValidateCryptoWalletAddressRequest represents the request to validate a crypto wallet address
-type ValidateCryptoWalletAddressRequest struct {
-	Network string `json:"network" binding:"required" example:"trc"`                          // Network
-	Address string `json:"address" binding:"required" example:"TXXXxxxXXXxxxXXXxxxXXXxxxXXX"` // Wallet address
-}
-
-// ValidateCryptoWalletAddressResponse represents the response for wallet address validation
-type ValidateCryptoWalletAddressResponse struct {
-	IsValid      bool   `json:"is_valid" example:"true"`                        // Is address valid
-	Network      string `json:"network" example:"trc"`                          // Network
-	AddressType  string `json:"address_type,omitempty" example:"wallet"`        // Address type
-	ErrorMessage string `json:"error_message,omitempty" example:"Invalid format"` // Error message if invalid
-}
-
-// CryptoPaymentQRCodeRequest represents the request to generate QR code for crypto payment
-type CryptoPaymentQRCodeRequest struct {
-	WalletAddress string  `json:"wallet_address" binding:"required" example:"TXXXxxxXXXxxxXXXxxxXXXxxxXXX"` // Wallet address
-	Amount        float64 `json:"amount" binding:"required,gt=0" example:"100.50"`                          // Amount
-	Currency      string  `json:"currency" binding:"required" example:"USDT"`                              // Currency
-	Network       string  `json:"network" binding:"required" example:"trc"`                                // Network
-	Memo          string  `json:"memo,omitempty" example:"Payment for order #12345"`                       // Transaction memo
-}
-
-// CryptoPaymentQRCodeResponse represents the response for crypto payment QR code generation
-type CryptoPaymentQRCodeResponse struct {
-	QRCodeURL     string  `json:"qr_code_url" example:"https://example.com/qr/abc123.png"`   // QR code image URL
-	PaymentURI    string  `json:"payment_uri" example:"tron:TXXXxxxXXXxxxXXXxxxXXXxxxXXX?amount=100.50"` // Payment URI
-	WalletAddress string  `json:"wallet_address" example:"TXXXxxxXXXxxxXXXxxxXXXxxxXXX"`     // Wallet address
-	Amount        float64 `json:"amount" example:"100.50"`                                   // Amount
-	Currency      string  `json:"currency" example:"USDT"`                                   // Currency
-	Network       string  `json:"network" example:"trc"`                                     // Network
-	ExpiresAt     *time.Time `json:"expires_at,omitempty" example:"2024-01-01T01:00:00Z"`   // QR code expiration
-}
-
-// ==================== Conversion Functions ====================
-
-// ToPaymentRecordResponse converts PaymentRecord entity to PaymentRecordResponse DTO
-func ToPaymentRecordResponse(pr *entities.PaymentRecord) *PaymentRecordResponse {
-	if pr == nil {
-		return nil
-	}
-
-	return &PaymentRecordResponse{
-		ID:                  pr.ID,
-		UserID:              pr.UserID,
-		SubscriptionOrderID: pr.SubscriptionOrderID,
-		PaymentNo:           pr.PaymentNo,
-		OutTradeNo:          pr.OutTradeNo,
-		TransactionID:       pr.TransactionID,
-		Gateway:             pr.Gateway,
-		PaymentMethod:       pr.PaymentMethod,
-		Amount:              pr.Amount,
-		Currency:            pr.Currency,
-		ExchangeRate:        pr.ExchangeRate,
-		Status:              pr.Status,
-		PaymentStatus:       pr.PaymentStatus,
-		PaymentURL:          pr.PaymentURL,
-		QRCodeURL:           pr.QRCodeURL,
-		ExpiredAt:           pr.ExpiredAt,
-		PaidAt:              pr.PaidAt,
-		NotifiedAt:          pr.NotifiedAt,
-		RefundAmount:        pr.RefundAmount,
-		RefundStatus:        pr.RefundStatus,
-		RefundedAt:          pr.RefundedAt,
-		RefundReason:        pr.RefundReason,
-		Remark:              pr.Remark,
-		CreatedAt:           pr.CreatedAt,
-		UpdatedAt:           pr.UpdatedAt,
-
-		// Computed fields
-		IsExpired:        pr.IsExpired(),
-		CanRefund:        pr.CanBeRefunded(),
-		RefundableAmount: pr.GetRefundableAmount(),
-	}
-}
-
-// ToPaymentRecordUserResponse converts PaymentRecord entity to user-safe PaymentRecordResponse DTO
-func ToPaymentRecordUserResponse(pr *entities.PaymentRecord) *PaymentRecordResponse {
-	if pr == nil {
-		return nil
-	}
-
-	resp := ToPaymentRecordResponse(pr)
-	// Remove sensitive information for user
-	resp.User = nil
-	resp.NotifiedAt = nil
-	return resp
-}
-
-// ToPaymentRecordSecureResponse converts PaymentRecord entity to secure PaymentRecordResponse DTO
-func ToPaymentRecordSecureResponse(pr *entities.PaymentRecord) *PaymentRecordResponse {
-	if pr == nil {
-		return nil
-	}
-
-	resp := &PaymentRecordResponse{
-		ID:                  pr.ID,
-		UserID:              pr.UserID,
-		SubscriptionOrderID: pr.SubscriptionOrderID,
-		PaymentNo:           pr.PaymentNo,
-		TransactionID:       maskTransactionID(pr.TransactionID),
-		Gateway:             pr.Gateway,
-		PaymentMethod:       pr.PaymentMethod,
-		Amount:              pr.Amount,
-		Currency:            pr.Currency,
-		Status:              pr.Status,
-		PaymentURL:          getSecurePaymentURL(pr),
-		QRCodeURL:           getSecureQRCodeURL(pr),
-		ExpiredAt:           pr.ExpiredAt,
-		PaidAt:              pr.PaidAt,
-		RefundAmount:        pr.RefundAmount,
-		RefundStatus:        pr.RefundStatus,
-		RefundedAt:          pr.RefundedAt,
-		RefundReason:        pr.RefundReason,
-		CreatedAt:           pr.CreatedAt,
-		UpdatedAt:           pr.UpdatedAt,
-
-		// Computed fields
-		IsExpired:        pr.IsExpired(),
-		CanRefund:        pr.CanBeRefunded(),
-		RefundableAmount: pr.GetRefundableAmount(),
-	}
-
-	return resp
-}
-
-// ToPaymentMethodResponse converts PaymentMethod entity to PaymentMethodResponse DTO
-func ToPaymentMethodResponse(pm *entities.PaymentMethod) *PaymentMethodResponse {
-	if pm == nil {
-		return nil
-	}
-
-	return &PaymentMethodResponse{
-		ID:              pm.ID,
-		UserID:          pm.UserID,
-		Type:            pm.Type,
-		Gateway:         pm.Gateway,
-		Method:          pm.Method,
-		DisplayName:     pm.DisplayName,
-		MaskedInfo:      pm.MaskedInfo,
-		Brand:           pm.Brand,
-		ExpiryMonth:     pm.ExpiryMonth,
-		ExpiryYear:      pm.ExpiryYear,
-		IsDefault:       pm.IsDefault,
-		IsActive:        pm.Active,
-		Status:          pm.Status,
-		LastValidatedAt: pm.LastValidatedAt,
-		BillingCountry:  pm.BillingCountry,
-		BillingPostcode: pm.BillingPostcode,
-		LastUsedAt:      pm.LastUsedAt,
-		SuccessfulUses:  pm.SuccessfulUses,
-		FailedUses:      pm.FailedUses,
-		CreatedAt:       pm.CreatedAt,
-		UpdatedAt:       pm.UpdatedAt,
-
-		// Computed fields
-		IsExpired:       pm.IsExpired(),
-		CanBeUsed:       pm.CanBeUsedForPayment(),
-		FailureRate:     pm.GetFailureRate(),
-		NeedsValidation: pm.NeedsRevalidation(),
-	}
-}
-
-// ToPaymentMethodSecureResponse converts PaymentMethod entity to secure PaymentMethodResponse DTO
-func ToPaymentMethodSecureResponse(pm *entities.PaymentMethod) *PaymentMethodResponse {
-	if pm == nil {
-		return nil
-	}
-
-	resp := ToPaymentMethodResponse(pm)
-	// Remove sensitive information
-	resp.UserID = 0 // Remove user ID for external APIs
-	return resp
-}
-
-// ToPaymentConfigResponse converts PaymentConfig entity to PaymentConfigResponse DTO
-func ToPaymentConfigResponse(pc *entities.PaymentConfig) *PaymentConfigResponse {
-	if pc == nil {
-		return nil
-	}
-
-	response := &PaymentConfigResponse{
-		ID:                  pc.ID,
-		Method:              pc.Method,
-		Name:                pc.Name,
-		URL:                 pc.URL,
-		PID:                 pc.PID,
-		Key:                 pc.Key,
-		NotifyURL:           pc.NotifyURL,
-		ReturnURL:           pc.ReturnURL,
-		IsEnabled:           pc.IsEnabled,
-		SortOrder:           pc.SortOrder,
-		SupportedCurrencies: pc.SupportedCurrencies,
-		MinAmount:           pc.MinAmount,
-		MaxAmount:           pc.MaxAmount,
-		FixedFee:            pc.FixedFee,
-		PercentageFee:       pc.PercentageFee,
-		CreatedAt:           pc.CreatedAt,
-		UpdatedAt:           pc.UpdatedAt,
-	}
-
-	// Parse methods if available
-	if methods, err := pc.GetMethods(); err == nil {
-		response.Methods = methods
-	}
-
-	return response
-}
-
-// ToPaymentConfigPublicResponse converts PaymentConfig entity to public PaymentConfigResponse DTO
-func ToPaymentConfigPublicResponse(pc *entities.PaymentConfig) *PaymentConfigResponse {
-	if pc == nil {
-		return nil
-	}
-
-	response := &PaymentConfigResponse{
-		ID:                  pc.ID,
-		Method:              pc.Method,
-		Name:                pc.Name,
-		// Hide sensitive data from public API
-		URL:                 "", // Hidden for security
-		PID:                 "", // Hidden for security
-		Key:                 "", // Hidden for security
-		SupportedCurrencies: pc.SupportedCurrencies,
-		MinAmount:           pc.MinAmount,
-		MaxAmount:           pc.MaxAmount,
-		SortOrder:           pc.SortOrder,
-	}
-
-	// Parse methods if available and filter for public display
-	if methods, err := pc.GetMethods(); err == nil {
-		var publicMethods []entities.Method
-		for _, method := range methods {
-			if method.IsEnabled {
-				publicMethods = append(publicMethods, method)
-			}
-		}
-		response.Methods = publicMethods
-	}
-
-	return response
-}
-
-// ToPaymentRetryResponse converts PaymentRetry entity to PaymentRetryResponse DTO
-func ToPaymentRetryResponse(pr *entities.PaymentRetry) *PaymentRetryResponse {
-	if pr == nil {
-		return nil
-	}
-
-	return &PaymentRetryResponse{
-		ID:              pr.ID,
-		PaymentRecordID: pr.PaymentRecordID,
-		AttemptNumber:   pr.AttemptNumber,
-		MaxAttempts:     pr.MaxAttempts,
-		NextRetryAt:     pr.NextRetryAt,
-		LastAttemptAt:   pr.LastAttemptAt,
-		RetryStrategy:   pr.RetryStrategy,
-		Status:          pr.Status,
-		FailureType:     pr.FailureType,
-		LastFailureCode: pr.LastFailureCode,
-		TotalDelayTime:  pr.TotalDelayTime,
-		CompletedAt:     pr.CompletedAt,
-		CancelledAt:     pr.CancelledAt,
-		SuccessfulAt:    pr.SuccessfulAt,
-		Notes:           pr.Notes,
-		CreatedAt:       pr.CreatedAt,
-		UpdatedAt:       pr.UpdatedAt,
-	}
-}
-
-// ToPaymentRetryHistoryResponse converts PaymentRetryHistory entity to PaymentRetryHistoryResponse DTO
-func ToPaymentRetryHistoryResponse(prh *entities.PaymentRetryHistory) *PaymentRetryHistoryResponse {
-	if prh == nil {
-		return nil
-	}
-
-	return &PaymentRetryHistoryResponse{
-		ID:                prh.ID,
-		AttemptNumber:     prh.AttemptNumber,
-		AttemptedAt:       prh.AttemptedAt,
-		Duration:          prh.Duration,
-		Status:            prh.Status,
-		ResponseCode:      prh.ResponseCode,
-		ResponseMessage:   prh.ResponseMessage,
-		ErrorType:         prh.ErrorType,
-		FailureReason:     prh.FailureReason,
-		NextRetryAt:       prh.NextRetryAt,
-		DelayFromPrevious: prh.DelayFromPrevious,
-		CreatedAt:         prh.CreatedAt,
-	}
-}
-
 // ==================== Helper Functions ====================
 
 // maskTransactionID partially masks the transaction ID for security
@@ -1071,60 +677,178 @@ func getSecureQRCodeURL(pr *entities.PaymentRecord) string {
 	return ""
 }
 
-// ToCryptoWalletConfigResponse converts CryptoWalletConfig entity to CryptoWalletConfigResponse DTO
-func ToCryptoWalletConfigResponse(cwc *entities.CryptoWalletConfig) *CryptoWalletConfigResponse {
-	if cwc == nil {
-		return nil
-	}
+// ==================== Conversion Functions ====================
 
-	return &CryptoWalletConfigResponse{
-		ID:               cwc.ID,
-		Network:          cwc.Network,
-		Currency:         cwc.Currency,
-		Symbol:           cwc.Symbol,
-		WalletAddress:    cwc.WalletAddress,
-		WalletName:       cwc.WalletName,
-		ContractAddress:  cwc.ContractAddress,
-		Decimals:         cwc.Decimals,
-		MinConfirmations: cwc.MinConfirmations,
-		DisplayName:      cwc.DisplayName,
-		Description:      cwc.Description,
-		Icon:             cwc.Icon,
-		IsEnabled:        cwc.IsEnabled,
-		SortOrder:        cwc.SortOrder,
-		MinAmount:        cwc.MinAmount,
-		MaxAmount:        cwc.MaxAmount,
-		NetworkFee:       cwc.NetworkFee,
-		ProcessingFee:    cwc.ProcessingFee,
-		FixedFee:         cwc.FixedFee,
-		LastCheckAt:      cwc.LastCheckAt,
-		Balance:          cwc.Balance,
-		IsActive:         cwc.Active,
-		HealthStatus:     cwc.HealthStatus,
-		AddressValidated: cwc.AddressValidated,
-		ValidatedAt:      cwc.ValidatedAt,
-		CreatedAt:        cwc.CreatedAt,
-		UpdatedAt:        cwc.UpdatedAt,
-
-		// Computed fields
-		CanAcceptPayment: cwc.CanAcceptPayment(0), // Use 0 as test amount
-		IsHealthy:        cwc.IsHealthy(),
-		NeedsValidation:  cwc.NeedsValidation(),
-		PaymentMethod:    cwc.GetPaymentMethod(),
-		GatewayType:      cwc.GetGatewayType(),
-		DisplayInfo:      cwc.GetDisplayInfo(),
+// ToPaymentRecordUserResponse converts a PaymentRecord entity to PaymentRecordResponse for user-facing APIs
+func ToPaymentRecordUserResponse(pr *entities.PaymentRecord) *PaymentRecordResponse {
+	return &PaymentRecordResponse{
+		ID:              pr.ID,
+		UserID:          pr.UserID,
+		SubscriptionOrderID: pr.SubscriptionOrderID,
+		PaymentNo:       pr.PaymentNo,
+		OutTradeNo:      pr.OutTradeNo,
+		TransactionID:   maskTransactionID(pr.TransactionID),
+		Gateway:         pr.Gateway,
+		PaymentMethod:   pr.PaymentMethod,
+		Amount:          pr.Amount,
+		Currency:        pr.Currency,
+		ExchangeRate:    pr.ExchangeRate,
+		Status:          pr.Status,
+		PaymentStatus:   pr.PaymentStatus,
+		PaymentURL:      getSecurePaymentURL(pr),
+		QRCodeURL:       getSecureQRCodeURL(pr),
+		ExpiredAt:       pr.ExpiredAt,
+		PaidAt:          pr.PaidAt,
+		NotifiedAt:      pr.NotifiedAt,
+		RefundAmount:    pr.RefundAmount,
+		RefundStatus:    pr.RefundStatus,
+		RefundedAt:      pr.RefundedAt,
+		RefundReason:    pr.RefundReason,
+		Remark:          pr.Remark,
+		CreatedAt:       pr.CreatedAt,
+		UpdatedAt:       pr.UpdatedAt,
+		IsExpired:       pr.IsExpired(),
+		CanRefund:       pr.CanBeRefunded(),
+		RefundableAmount: pr.GetRefundableAmount(),
 	}
 }
 
-// ToCryptoWalletConfigPublicResponse converts CryptoWalletConfig entity to public response (hide sensitive data)
-func ToCryptoWalletConfigPublicResponse(cwc *entities.CryptoWalletConfig) *CryptoWalletConfigResponse {
-	if cwc == nil {
+// ToPaymentConfigResponse converts a PaymentConfig entity to PaymentConfigResponse for admin APIs
+func ToPaymentConfigResponse(pc *entities.PaymentConfig) *PaymentConfigResponse {
+	return &PaymentConfigResponse{
+		ID:                  pc.ID,
+		Method:              pc.Method,
+		Name:                pc.Name,
+		URL:                 pc.URL,
+		PID:                 pc.PID,
+		Key:                 maskSensitiveKey(pc.Key),
+		NotifyURL:          pc.NotifyURL,
+		ReturnURL:          pc.ReturnURL,
+		SupportedCurrencies: pc.SupportedCurrencies,
+		Methods:            parseSupportedMethods(pc.SupportedMethods),
+		MinAmount:          pc.MinAmount,
+		MaxAmount:          pc.MaxAmount,
+		IsEnabled:          pc.IsEnabled,
+		SortOrder:          pc.SortOrder,
+		CreatedAt:          pc.CreatedAt,
+		UpdatedAt:          pc.UpdatedAt,
+	}
+}
+
+// ToPaymentConfigPublicResponse converts a PaymentConfig entity to public response (without sensitive data)
+func ToPaymentConfigPublicResponse(pc *entities.PaymentConfig) *PaymentConfigResponse {
+	return &PaymentConfigResponse{
+		ID:                  pc.ID,
+		Method:              pc.Method,
+		Name:                pc.Name,
+		SupportedCurrencies: pc.SupportedCurrencies,
+		Methods:            parseSupportedMethods(pc.SupportedMethods),
+		MinAmount:          pc.MinAmount,
+		MaxAmount:          pc.MaxAmount,
+		IsEnabled:          pc.IsEnabled,
+		SortOrder:          pc.SortOrder,
+		CreatedAt:          pc.CreatedAt,
+		UpdatedAt:          pc.UpdatedAt,
+	}
+}
+
+// ToPaymentMethodResponse converts a PaymentMethod entity to PaymentMethodResponse
+func ToPaymentMethodResponse(pm *entities.PaymentMethod) *PaymentMethodResponse {
+	return &PaymentMethodResponse{
+		ID:               pm.ID,
+		UserID:           pm.UserID,
+		Type:             pm.Type,
+		Method:           pm.Method,
+		DisplayName:      pm.DisplayName,
+		MaskedInfo:       pm.MaskedInfo,
+		Brand:            pm.Brand,
+		ExpiryMonth:      pm.ExpiryMonth,
+		ExpiryYear:       pm.ExpiryYear,
+		Status:           pm.Status,
+		IsDefault:        pm.IsDefault,
+		SuccessfulUses:   pm.SuccessfulUses,
+		FailedUses:       pm.FailedUses,
+		LastUsedAt:       pm.LastUsedAt,
+		BillingCountry:  pm.BillingCountry,
+		BillingPostcode: pm.BillingPostcode,
+		CreatedAt:        pm.CreatedAt,
+		UpdatedAt:        pm.UpdatedAt,
+		IsActive:         pm.IsActive(),
+		CanBeUsed:       pm.CanBeUsedForPayment(),
+		FailureRate:      pm.GetFailureRate(),
+		NeedsValidation:  pm.NeedsRevalidation(),
+	}
+}
+
+// maskSensitiveKey masks sensitive key for API responses
+func maskSensitiveKey(key string) string {
+	if key == "" {
+		return ""
+	}
+	if len(key) <= 8 {
+		return strings.Repeat("*", len(key))
+	}
+	return key[:4] + strings.Repeat("*", len(key)-8) + key[len(key)-4:]
+}
+
+// parseSupportedMethods parses the SupportedMethods JSON string to []entities.Method
+func parseSupportedMethods(supportedMethods string) []entities.Method {
+	if supportedMethods == "" {
 		return nil
 	}
+	
+	var methods []entities.Method
+	if err := json.Unmarshal([]byte(supportedMethods), &methods); err != nil {
+		// If parsing fails, return empty slice
+		return nil
+	}
+	
+	return methods
+}
 
-	resp := ToCryptoWalletConfigResponse(cwc)
-	// Hide sensitive information from public API
-	resp.Balance = 0 // Hide balance
-	resp.LastCheckAt = nil // Hide monitoring data
-	return resp
+// ToPaymentRetryResponse converts a PaymentRetry entity to PaymentRetryResponse
+func ToPaymentRetryResponse(pr *entities.PaymentRetry) *PaymentRetryResponse {
+	return &PaymentRetryResponse{
+		ID:                pr.ID,
+		PaymentRecordID:   pr.PaymentRecordID,
+		AttemptNumber:     pr.AttemptNumber,
+		MaxAttempts:       pr.MaxAttempts,
+		NextRetryAt:       pr.NextRetryAt,
+		LastAttemptAt:     pr.LastAttemptAt,
+		RetryStrategy:     pr.RetryStrategy,
+		Status:            pr.Status,
+		FailureType:       pr.FailureType,
+		LastFailureCode:   pr.LastFailureCode,
+		TotalDelayTime:    pr.TotalDelayTime,
+		CompletedAt:       pr.CompletedAt,
+		CancelledAt:       pr.CancelledAt,
+		SuccessfulAt:      pr.SuccessfulAt,
+		Notes:             pr.Notes,
+		CreatedAt:         pr.CreatedAt,
+		UpdatedAt:         pr.UpdatedAt,
+	}
+}
+
+// ToPaymentRetryHistoryResponse converts a PaymentRetryHistory entity to PaymentRetryHistoryResponse
+func ToPaymentRetryHistoryResponse(prh *entities.PaymentRetryHistory) *PaymentRetryHistoryResponse {
+	return &PaymentRetryHistoryResponse{
+		ID:                prh.ID,
+		AttemptNumber:     prh.AttemptNumber,
+		Status:            prh.Status,
+		ResponseCode:      prh.ResponseCode,
+		ResponseMessage:   prh.ResponseMessage,
+		ErrorType:         prh.ErrorType,
+		FailureReason:     prh.FailureReason,
+		Duration:          prh.Duration,
+		AttemptedAt:       prh.AttemptedAt,
+		DelayFromPrevious: prh.DelayFromPrevious,
+		CreatedAt:         prh.CreatedAt,
+	}
+}
+
+// ToPaymentRecordSecureResponse converts a PaymentRecord entity to a secure response for tests
+func ToPaymentRecordSecureResponse(pr *entities.PaymentRecord) *PaymentRecordResponse {
+	// This is essentially the same as ToPaymentRecordUserResponse but can be extended
+	// with additional security measures if needed
+	return ToPaymentRecordUserResponse(pr)
 }

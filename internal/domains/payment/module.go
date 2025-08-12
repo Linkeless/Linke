@@ -15,7 +15,7 @@ import (
 )
 
 // Module Payment 领域模块
-// 提供支付处理、多网关集成、支付记录管理等功能
+// 提供epay支付处理、支付记录管理等功能
 var Module = fx.Module("payment",
 	// 提供 Repository 实现
 	fx.Provide(
@@ -39,10 +39,6 @@ var Module = fx.Module("payment",
 			repositories.NewPaymentMethodRepository,
 			fx.As(new(interfaces.PaymentMethodRepository)),
 		),
-		fx.Annotate(
-			repositories.NewCryptoWalletConfigRepository,
-			fx.As(new(interfaces.CryptoWalletConfigRepository)),
-		),
 	),
 
 	// 提供 Service 实现
@@ -55,12 +51,6 @@ var Module = fx.Module("payment",
 		fx.Annotate(
 			implementations.NewPaymentMethodService,
 			fx.As(new(interfaces.PaymentMethodService)),
-		),
-
-		// Crypto wallet config service implementation
-		fx.Annotate(
-			implementations.NewCryptoWalletConfigService,
-			fx.As(new(interfaces.CryptoWalletConfigService)),
 		),
 
 		// Task queue for retry service
@@ -93,13 +83,12 @@ var Module = fx.Module("payment",
 	fx.Provide(
 		handlers.NewPaymentHandler,
 		handlers.NewPaymentMethodHandler,
-		handlers.NewCryptoWalletConfigHandler,
 	),
 
 	// 模块初始化钩子
 	fx.Invoke(func(db *gorm.DB) {
 		// 确保支付相关表存在并且结构正确
-		// 可以添加默认支付网关配置的初始化逻辑
+		// 可以添加默认epay网关配置的初始化逻辑
 	}),
 )
 
