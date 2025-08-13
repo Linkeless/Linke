@@ -4254,7 +4254,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/orders/{order_id}/invoice": {
+        "/admin/orders/{id}/generate-invoice": {
             "post": {
                 "security": [
                     {

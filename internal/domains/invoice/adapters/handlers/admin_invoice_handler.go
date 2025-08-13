@@ -176,9 +176,9 @@ type RegeneratePDFRequest struct {
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 409 {object} response.ConflictResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /admin/orders/{order_id}/invoice [post]
+// @Router /admin/orders/{id}/generate-invoice [post]
 func (h *AdminInvoiceHandler) CreateInvoiceFromOrder(c *gin.Context) {
-	orderIDStr := c.Param("order_id")
+	orderIDStr := c.Param("id")
 	orderID, err := strconv.ParseUint(orderIDStr, 10, 32)
 	if err != nil {
 		response.BadRequest(c, "Invalid order ID")

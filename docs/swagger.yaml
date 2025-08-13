@@ -8719,7 +8719,7 @@ paths:
       summary: Get available invoice templates
       tags:
       - Admin-Invoice-Management
-  /admin/orders/{order_id}/invoice:
+  /admin/orders/{id}/generate-invoice:
     post:
       consumes:
       - application/json
