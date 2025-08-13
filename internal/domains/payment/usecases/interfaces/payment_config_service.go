@@ -24,13 +24,12 @@ type PaymentConfigService interface {
 
 	// Config management
 	TogglePaymentConfig(ctx context.Context, configID uint) (*entities.PaymentConfig, error)
-	
+
 	// Factory methods (for gateway initialization)
 	GetEnabledConfigs() ([]*entities.PaymentConfig, error)
 	GetConfigByMethod(method string) (*entities.PaymentConfig, error)
-	
+
 	// Validation - consolidated validation logic
 	ValidateCreatePaymentConfig(ctx context.Context, req *dto.CreatePaymentConfigRequest) []string
 	ValidateUpdatePaymentConfig(ctx context.Context, configID uint, req *dto.UpdatePaymentConfigRequest) []string
 }
-

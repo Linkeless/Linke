@@ -39,4 +39,3 @@ type PaymentMethodService interface {
 	RefreshExpiredMethods(ctx context.Context) error
 	RevalidatePaymentMethods(ctx context.Context) error
 }
-

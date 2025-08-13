@@ -73,7 +73,6 @@ func (PaymentMethod) TableName() string {
 	return "payment_methods"
 }
 
-
 // IsActive checks if the payment method is active and can be used
 func (pm *PaymentMethod) IsActive() bool {
 	return pm.Active && pm.Status == constants.PaymentMethodStatusActive && !pm.IsExpired()
@@ -144,4 +143,3 @@ func (pm *PaymentMethod) GetFailureRate() float64 {
 	}
 	return float64(pm.FailedUses) / float64(total)
 }
-

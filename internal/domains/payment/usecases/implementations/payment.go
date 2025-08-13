@@ -35,7 +35,7 @@ type PaymentService struct {
 func NewPaymentService(db *gorm.DB, paymentConfigService interfaces.PaymentConfigService, eventBus events.EventBus) *PaymentService {
 	// Create gateway factory
 	gatewayFactory := gateways.NewGatewayFactory(paymentConfigService)
-	
+
 	// Load gateways from configuration during initialization
 	if err := gatewayFactory.LoadGatewaysFromConfig(); err != nil {
 		logger.Warn("Failed to load payment gateways from config during initialization", logger.ErrorField(err))
@@ -184,32 +184,51 @@ func (ps *PaymentService) CreatePaymentOrder(ctx context.Context, req *dto.Creat
 
 // GetPaymentRecord gets a payment record by payment number
 func (ps *PaymentService) GetPaymentRecord(ctx context.Context, paymentNo string) (*entities.PaymentRecord, error) {
+	if paymentNo == "" {
+		return nil, fmt.Errorf("payment number cannot be empty")
+	}
+
 	var record entities.PaymentRecord
 	if err := ps.db.WithContext(ctx).Where("payment_no = ?", paymentNo).First(&record).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, fmt.Errorf("payment record not found")
+			return nil, fmt.Errorf("payment record with number %s not found", paymentNo)
 		}
-		logger.Error("Failed to get payment record", logger.ErrorField(err))
-		return nil, fmt.Errorf("failed to get payment record: %w", err)
+		logger.Error("Failed to get payment record",
+			logger.ErrorField(err),
+			logger.String("payment_no", paymentNo))
+		return nil, fmt.Errorf("failed to get payment record %s: %w", paymentNo, err)
 	}
 	return &record, nil
 }
 
 // GetPaymentRecordByOutTradeNo gets a payment record by out trade number
 func (ps *PaymentService) GetPaymentRecordByOutTradeNo(ctx context.Context, outTradeNo string) (*entities.PaymentRecord, error) {
+	if outTradeNo == "" {
+		return nil, fmt.Errorf("out trade number cannot be empty")
+	}
+
 	var record entities.PaymentRecord
 	if err := ps.db.WithContext(ctx).Where("out_trade_no = ?", outTradeNo).First(&record).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, fmt.Errorf("payment record not found")
+			return nil, fmt.Errorf("payment record with out trade number %s not found", outTradeNo)
 		}
-		logger.Error("Failed to get payment record by out trade no", logger.ErrorField(err))
-		return nil, fmt.Errorf("failed to get payment record: %w", err)
+		logger.Error("Failed to get payment record by out trade no",
+			logger.ErrorField(err),
+			logger.String("out_trade_no", outTradeNo))
+		return nil, fmt.Errorf("failed to get payment record by out trade no %s: %w", outTradeNo, err)
 	}
 	return &record, nil
 }
 
 // UpdatePaymentStatus updates payment record status
 func (ps *PaymentService) UpdatePaymentStatus(ctx context.Context, paymentNo string, status string, transactionID string, paidAt *time.Time) error {
+	if paymentNo == "" {
+		return fmt.Errorf("payment number cannot be empty")
+	}
+	if status == "" {
+		return fmt.Errorf("payment status cannot be empty")
+	}
+
 	updates := map[string]any{
 		"status":      status,
 		"updated_at":  time.Now(),
@@ -224,11 +243,20 @@ func (ps *PaymentService) UpdatePaymentStatus(ctx context.Context, paymentNo str
 		updates["paid_at"] = paidAt
 	}
 
-	if err := ps.db.WithContext(ctx).Model(&entities.PaymentRecord{}).
+	result := ps.db.WithContext(ctx).Model(&entities.PaymentRecord{}).
 		Where("payment_no = ?", paymentNo).
-		Updates(updates).Error; err != nil {
-		logger.Error("Failed to update payment status", logger.ErrorField(err))
-		return fmt.Errorf("failed to update payment status: %w", err)
+		Updates(updates)
+
+	if result.Error != nil {
+		logger.Error("Failed to update payment status",
+			logger.ErrorField(result.Error),
+			logger.String("payment_no", paymentNo),
+			logger.String("status", status))
+		return fmt.Errorf("failed to update payment status for %s: %w", paymentNo, result.Error)
+	}
+
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("payment record with number %s not found for status update", paymentNo)
 	}
 
 	logger.Info("Payment status updated",
@@ -240,16 +268,33 @@ func (ps *PaymentService) UpdatePaymentStatus(ctx context.Context, paymentNo str
 
 // ProcessNotification processes payment notification from gateway
 func (ps *PaymentService) ProcessNotification(ctx context.Context, gateway string, data map[string]any) error {
+	if gateway == "" {
+		return fmt.Errorf("gateway name cannot be empty")
+	}
+	if len(data) == 0 {
+		return fmt.Errorf("notification data cannot be empty")
+	}
+
 	// Get gateway instance
 	gatewayInstance, err := ps.GetGateway(gateway)
 	if err != nil {
-		return err
+		logger.Error("Failed to get gateway instance",
+			logger.ErrorField(err),
+			logger.String("gateway", gateway))
+		return fmt.Errorf("failed to get gateway %s: %w", gateway, err)
 	}
 
 	// Verify notification
 	isValid, notifyData := gatewayInstance.VerifyPaymentNotify(data)
 	if !isValid {
-		return fmt.Errorf("notification signature verification failed")
+		logger.Warn("Payment notification signature verification failed",
+			logger.String("gateway", gateway),
+			logger.Any("data_keys", getMapKeys(data)))
+		return fmt.Errorf("notification signature verification failed for gateway %s", gateway)
+	}
+
+	if notifyData == nil {
+		return fmt.Errorf("notification verification returned nil data for gateway %s", gateway)
 	}
 
 	// Get payment record with row lock to prevent race conditions
@@ -315,11 +360,12 @@ func (ps *PaymentService) ProcessNotification(ctx context.Context, gateway strin
 		return nil
 	}
 
-	// Update notification tracking with enhanced security fields
+	// Update notification tracking with enhanced security fields using atomic operations
 	now := time.Now()
+	newNotifyCount := paymentRecord.IncrementNotifyCount() // Atomic increment
 	updateFields := map[string]any{
 		"last_notify_hash": notifyHash,
-		"notify_count":     paymentRecord.NotifyCount + 1,
+		"notify_count":     newNotifyCount,
 		"notified_at":      &now,
 		"last_notify_time": &now,
 		"notify_source":    clientIP,
@@ -541,4 +587,13 @@ func (ps *PaymentService) publishPaymentCompletedEvent(ctx context.Context, paym
 		logger.Uint("user_id", paymentRecord.UserID))
 
 	return nil
+}
+
+// getMapKeys extracts keys from a map for logging purposes
+func getMapKeys(data map[string]any) []string {
+	keys := make([]string, 0, len(data))
+	for k := range data {
+		keys = append(keys, k)
+	}
+	return keys
 }

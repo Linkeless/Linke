@@ -384,7 +384,7 @@ func TestEpayGateway_CreatePaymentOrder(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, response)
-				
+
 				// Verify response fields
 				assert.NotEmpty(t, response.PaymentNo)
 				assert.NotEmpty(t, response.PaymentURL)
@@ -392,12 +392,12 @@ func TestEpayGateway_CreatePaymentOrder(t *testing.T) {
 				assert.Equal(t, tt.request.Amount, response.Amount)
 				assert.Equal(t, tt.request.Currency, response.Currency)
 				assert.WithinDuration(t, time.Now().Add(30*time.Minute), response.ExpiredAt, time.Minute)
-				
+
 				// Verify payment URL contains required parameters
 				parsedURL, err := url.Parse(response.PaymentURL)
 				require.NoError(t, err)
 				assert.Equal(t, config.URL, parsedURL.Scheme+"://"+parsedURL.Host+parsedURL.Path)
-				
+
 				query := parsedURL.Query()
 				assert.Equal(t, config.PID, query.Get("pid"))
 				assert.Equal(t, tt.request.Subject, query.Get("name"))
@@ -516,7 +516,7 @@ func TestEpayGateway_QueryPaymentOrder(t *testing.T) {
 		// Verify query parameters
 		outTradeNo := r.URL.Query().Get("out_trade_no")
 		assert.Equal(t, "EPAY123456789", outTradeNo)
-		
+
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("success"))
 	}))

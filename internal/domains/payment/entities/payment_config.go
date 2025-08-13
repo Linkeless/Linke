@@ -35,7 +35,7 @@ type PaymentConfig struct {
 	MaxAmount float64 `json:"max_amount" gorm:"column:max_amount;type:decimal(10,2);default:99999.99"` // Maximum amount
 
 	// Fee Information
-	FixedFee      float64 `json:"fixed_fee" gorm:"column:fixed_fee;type:decimal(10,2);default:0.00"`           // Fixed fee amount
+	FixedFee      float64 `json:"fixed_fee" gorm:"column:fixed_fee;type:decimal(10,2);default:0.00"`            // Fixed fee amount
 	PercentageFee float64 `json:"percentage_fee" gorm:"column:percentage_fee;type:decimal(5,4);default:0.0000"` // Percentage fee (0.0000-99.9999)
 
 	// Additional Settings (optional)
@@ -205,4 +205,3 @@ func (pc *PaymentConfig) GetSupportedEpayMethods() []string {
 		constants.PaymentMethodQQ,
 	}
 }
-

@@ -4,8 +4,8 @@ import (
 	"go.uber.org/fx"
 	"gorm.io/gorm"
 
-	"linke/internal/domains/payment/adapters/repositories"
 	"linke/internal/domains/payment/adapters/handlers"
+	"linke/internal/domains/payment/adapters/repositories"
 	"linke/internal/domains/payment/gateways"
 	"linke/internal/domains/payment/usecases/implementations"
 	"linke/internal/domains/payment/usecases/interfaces"

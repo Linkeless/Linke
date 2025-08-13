@@ -461,7 +461,7 @@ func TestGatewayFactory_TestAllGatewayConnections(t *testing.T) {
 
 	brokenGateway := &MockPaymentGateway{}
 	brokenGateway.On("ValidateConfig").Return(nil)
-	brokenGateway.On("TestConnection").Return(nil).Once() // Called during registration
+	brokenGateway.On("TestConnection").Return(nil).Once()            // Called during registration
 	brokenGateway.On("TestConnection").Return(assert.AnError).Once() // Called during testing
 
 	err := factory.RegisterGateway("working_gateway", workingGateway)
@@ -530,7 +530,7 @@ func TestGatewayFactory_CreateDefaultEpayGateway(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Reset factory for each test
 			factory = NewGatewayFactory(mockConfigService)
-			
+
 			err := factory.CreateDefaultEpayGateway(tt.url, tt.pid, tt.key)
 
 			if tt.wantErr {

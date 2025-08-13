@@ -308,7 +308,6 @@ func (pcs *PaymentConfigService) UpdatePaymentConfig(ctx context.Context, config
 		updates["return_url"] = *req.ReturnURL
 	}
 
-
 	if req.IsEnabled != nil {
 		updates["is_enabled"] = *req.IsEnabled
 	}

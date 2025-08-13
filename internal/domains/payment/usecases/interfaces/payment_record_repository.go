@@ -9,16 +9,16 @@ import (
 
 // PaymentRecordFilter provides flexible filtering options for payment records
 type PaymentRecordFilter struct {
-	UserID        *uint
-	Status        string
-	Gateway       string
-	Method        string
-	Currency      string
-	MinAmount     *float64
-	MaxAmount     *float64
-	StartDate     *time.Time
-	EndDate       *time.Time
-	OrderID       *uint
+	UserID    *uint
+	Status    string
+	Gateway   string
+	Method    string
+	Currency  string
+	MinAmount *float64
+	MaxAmount *float64
+	StartDate *time.Time
+	EndDate   *time.Time
+	OrderID   *uint
 }
 
 // PaymentRecordRepository defines a simplified interface for payment record data access
@@ -30,7 +30,7 @@ type PaymentRecordRepository interface {
 	GetByPaymentNo(ctx context.Context, paymentNo string) (*entities.PaymentRecord, error)
 	GetByOutTradeNo(ctx context.Context, outTradeNo string) (*entities.PaymentRecord, error)
 	GetByTransactionID(ctx context.Context, transactionID string) (*entities.PaymentRecord, error)
-	
+
 	// Flexible filtering - replaces many specific list methods
 	ListWithFilter(ctx context.Context, filter PaymentRecordFilter, limit, offset int) ([]*entities.PaymentRecord, int64, error)
 
@@ -39,11 +39,11 @@ type PaymentRecordRepository interface {
 
 	// Statistics (consolidated)
 	GetRevenueStats(ctx context.Context, currency string, startDate, endDate *time.Time) (*RevenueStats, error)
-	
+
 	// Existence checks for business logic
 	ExistsByPaymentNo(ctx context.Context, paymentNo string) (bool, error)
 	ExistsByOutTradeNo(ctx context.Context, outTradeNo string) (bool, error)
-	
+
 	// Duplicate prevention
 	HasRecentPayment(ctx context.Context, userID uint, amount float64, currency string, within time.Duration) (bool, error)
 }

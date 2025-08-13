@@ -6,8 +6,8 @@ import (
 
 func TestValidateEpayConfig(t *testing.T) {
 	tests := []struct {
-		name          string
-		req           *CreatePaymentConfigRequest
+		name           string
+		req            *CreatePaymentConfigRequest
 		expectedErrors int
 	}{
 		{

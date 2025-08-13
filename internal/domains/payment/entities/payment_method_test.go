@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"linke/internal/domains/payment/constants"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
+	"linke/internal/domains/payment/constants"
 )
 
 func TestPaymentMethod_IsActive(t *testing.T) {
@@ -288,7 +288,6 @@ func TestPaymentMethod_UpdateLastUsed(t *testing.T) {
 	assert.Equal(t, 6, paymentMethod.SuccessfulUses)
 	assert.Equal(t, 3, paymentMethod.FailedUses)
 }
-
 
 // Helper functions
 func intPtr(i int) *int {

@@ -8,12 +8,12 @@ import (
 
 // PaymentConfigFilter provides flexible filtering options for payment configs
 type PaymentConfigFilter struct {
-	Enabled    *bool
-	Currency   string
-	Method     string
-	Gateway    string
-	MinAmount  *float64
-	MaxAmount  *float64
+	Enabled     *bool
+	Currency    string
+	Method      string
+	Gateway     string
+	MinAmount   *float64
+	MaxAmount   *float64
 	SearchQuery string
 }
 

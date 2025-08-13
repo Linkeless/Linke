@@ -46,4 +46,3 @@ type PaymentGateway interface {
 type SubscriptionOrderServiceInterface interface {
 	ProcessOrderPaymentSuccess(ctx context.Context, orderID uint) error
 }
-

@@ -12,6 +12,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"linke/internal/domains/payment/constants"
@@ -22,7 +23,33 @@ import (
 
 // EpayGateway implements the PaymentGateway interface for epay payment system
 type EpayGateway struct {
-	config *entities.PaymentConfig
+	config     *entities.PaymentConfig
+	httpClient *http.Client
+}
+
+// Optimized HTTP client with connection pooling (singleton pattern)
+var (
+	optimizedHTTPClient *http.Client
+	httpClientOnce      sync.Once
+)
+
+// getOptimizedHTTPClient returns a singleton HTTP client with optimal connection pooling
+func getOptimizedHTTPClient() *http.Client {
+	httpClientOnce.Do(func() {
+		transport := &http.Transport{
+			MaxIdleConns:        100,              // Total idle connections across all hosts
+			MaxIdleConnsPerHost: 10,               // Idle connections per host
+			IdleConnTimeout:     90 * time.Second, // Idle connection timeout
+			TLSHandshakeTimeout: 10 * time.Second, // TLS handshake timeout
+			DisableCompression:  false,            // Enable compression
+		}
+
+		optimizedHTTPClient = &http.Client{
+			Transport: transport,
+			Timeout:   30 * time.Second, // Overall request timeout
+		}
+	})
+	return optimizedHTTPClient
 }
 
 // EpayResponse represents the response structure from epay gateway
@@ -38,7 +65,8 @@ type EpayResponse struct {
 // NewEpayGateway creates a new epay gateway instance
 func NewEpayGateway(config *entities.PaymentConfig) *EpayGateway {
 	return &EpayGateway{
-		config: config,
+		config:     config,
+		httpClient: getOptimizedHTTPClient(),
 	}
 }
 
@@ -57,7 +85,7 @@ func (e *EpayGateway) CreatePaymentOrder(req *dto.CreatePaymentOrderRequest) (*d
 
 	// Validate amount
 	if !e.config.IsAmountValid(req.Amount) {
-		return nil, fmt.Errorf("amount %.2f is outside valid range [%.2f, %.2f]", 
+		return nil, fmt.Errorf("amount %.2f is outside valid range [%.2f, %.2f]",
 			req.Amount, e.config.MinAmount, e.config.MaxAmount)
 	}
 
@@ -75,7 +103,7 @@ func (e *EpayGateway) CreatePaymentOrder(req *dto.CreatePaymentOrderRequest) (*d
 
 	// Generate signature (before adding sign)
 	signature := e.generateSignature(params)
-	
+
 	// Add sign after signature generation (不添加sign_type)
 	params["sign"] = signature
 
@@ -95,12 +123,12 @@ func (e *EpayGateway) CreatePaymentOrder(req *dto.CreatePaymentOrderRequest) (*d
 		logger.String("payment_url", paymentURL))
 
 	return &dto.CreatePaymentOrderResponse{
-		PaymentNo:  outTradeNo, // Use out trade number as payment number
-		PaymentURL: paymentURL,
-		QRCodeURL:  qrCodeURL,
-		Amount:     req.Amount,
-		Currency:   req.Currency,
-		ExpiredAt:  expiredAt,
+		PaymentNo:   outTradeNo, // Use out trade number as payment number
+		PaymentURL:  paymentURL,
+		QRCodeURL:   qrCodeURL,
+		Amount:      req.Amount,
+		Currency:    req.Currency,
+		ExpiredAt:   expiredAt,
 		GatewayData: e.serializeGatewayData(params),
 	}, nil
 }
@@ -123,9 +151,7 @@ func (e *EpayGateway) QueryPaymentOrder(outTradeNo string) (*dto.QueryPaymentOrd
 	queryURL := e.buildQueryURL(params)
 
 	// Make HTTP request to epay
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
+	client := e.httpClient
 
 	resp, err := client.Get(queryURL)
 	if err != nil {
@@ -301,8 +327,10 @@ func (e *EpayGateway) TestConnection() error {
 	logger.Info("Testing epay gateway connection", logger.String("url", e.config.URL))
 
 	// Create a test request to check if the gateway is reachable
+	// Use optimized HTTP client with shorter timeout for connection tests
 	client := &http.Client{
-		Timeout: 10 * time.Second,
+		Transport: e.httpClient.Transport,
+		Timeout:   10 * time.Second,
 	}
 
 	resp, err := client.Head(e.config.URL)
@@ -421,7 +449,7 @@ func (e *EpayGateway) generateSignature(params map[string]string) string {
 		parts = append(parts, key+"="+params[key])
 	}
 	queryString := strings.Join(parts, "&")
-	
+
 	// 3. 拼接商户密钥KEY进行MD5加密：sign = md5(a=b&c=d&e=f + KEY)
 	signString := queryString + e.config.Key
 
@@ -433,10 +461,10 @@ func (e *EpayGateway) generateSignature(params map[string]string) string {
 	// 4. MD5加密，结果为小写
 	hash := md5.Sum([]byte(signString))
 	signature := hex.EncodeToString(hash[:]) // hex.EncodeToString已经返回小写
-	
-	logger.Debug("Generated signature", 
+
+	logger.Debug("Generated signature",
 		logger.String("signature", signature))
-	
+
 	return signature
 }
 
@@ -454,11 +482,9 @@ func (e *EpayGateway) submitPaymentOrder(params map[string]string) (string, erro
 	apiURL := e.config.URL
 
 	// Create POST request
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
+	client := e.httpClient
 
-	// Log request details for debugging  
+	// Log request details for debugging
 	logger.Info("Sending epay payment request",
 		logger.String("url", apiURL),
 		logger.String("pid", e.config.PID),
@@ -517,14 +543,14 @@ func (e *EpayGateway) submitPaymentOrder(params map[string]string) (string, erro
 		// If JSON parsing fails, treat response as HTML redirect page
 		logger.Debug("Response is not JSON, treating as HTML redirect page",
 			logger.String("response_preview", string(body)[:min(500, len(body))]))
-		
+
 		// For HTML responses, extract payment URL from meta refresh or form action
 		paymentURL := e.extractPaymentURLFromHTML(string(body))
 		if paymentURL != "" {
 			logger.Debug("Extracted payment URL from HTML", logger.String("payment_url", paymentURL))
 			return paymentURL, nil
 		}
-		
+
 		// If we can't extract URL, return the original URL for redirect
 		// This means the user should be redirected to the epay page directly
 		return apiURL + "?" + e.buildPaymentQueryString(params), nil
@@ -561,19 +587,19 @@ func (e *EpayGateway) extractPaymentURLFromHTML(html string) string {
 	if matches := metaRefreshPattern.FindStringSubmatch(html); len(matches) > 1 {
 		return matches[1]
 	}
-	
+
 	// Try to find form action URL
 	formActionPattern := regexp.MustCompile(`<form[^>]*action=["']([^"']+)["'][^>]*>`)
 	if matches := formActionPattern.FindStringSubmatch(html); len(matches) > 1 {
 		return matches[1]
 	}
-	
+
 	// Try to find direct redirect URL in JavaScript
 	jsRedirectPattern := regexp.MustCompile(`location\.href\s*=\s*["']([^"']+)["']`)
 	if matches := jsRedirectPattern.FindStringSubmatch(html); len(matches) > 1 {
 		return matches[1]
 	}
-	
+
 	return ""
 }
 

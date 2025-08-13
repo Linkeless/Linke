@@ -3,6 +3,7 @@ package dto
 import (
 	"encoding/json"
 	"strings"
+	"sync"
 	"time"
 
 	"linke/internal/domains/payment/constants"
@@ -71,8 +72,8 @@ type CreatePaymentOrderRequest struct {
 	Currency            string  `json:"currency" binding:"required" example:"CNY"`
 	Subject             string  `json:"subject" binding:"required" example:"Premium Subscription"`
 	Body                string  `json:"body,omitempty" example:"Monthly premium subscription payment"`
-	ClientIP            string  `json:"client_ip"`           // Client IP
-	NotifyURL           string  `json:"notify_url"`          // Async notification URL
+	ClientIP            string  `json:"client_ip"`  // Client IP
+	NotifyURL           string  `json:"notify_url"` // Async notification URL
 	ReturnURL           string  `json:"return_url,omitempty" example:"https://example.com/payment/return"`
 	ExpiredMinutes      int     `json:"expired_minutes,omitempty" example:"30"`
 	Metadata            string  `json:"metadata,omitempty"` // Additional metadata
@@ -210,24 +211,24 @@ type PaymentMethodValidationResult struct {
 
 // PaymentConfigResponse represents the payment config data structure for API responses
 type PaymentConfigResponse struct {
-	ID                  uint                 `json:"id" example:"1"`                            // Config ID
-	Method              string               `json:"method" example:"epay"`                     // Payment method identifier
-	Name                string               `json:"name" example:"EPay Payment Method"`        // Display name
-	URL                 string               `json:"url" example:"https://api.example.com"`    // API endpoint URL
-	PID                 string               `json:"pid" example:"partner123"`                  // Partner/Merchant ID
-	Key                 string               `json:"key" example:"secret123"`                   // API key/secret
-	NotifyURL           string               `json:"notify_url,omitempty" example:"https://example.com/webhook"` // Callback URL
-	ReturnURL           string               `json:"return_url,omitempty" example:"https://example.com/return"`  // Return URL
-	IsEnabled           bool                 `json:"is_enabled" example:"true"`                 // Enabled status
-	SortOrder           int                  `json:"sort_order" example:"1"`                    // Sort order
-	SupportedCurrencies string               `json:"supported_currencies" example:"CNY"`        // Supported currencies
-	Methods             []entities.Method    `json:"methods,omitempty"`                         // Payment methods
-	MinAmount           float64              `json:"min_amount" example:"0.01"`                 // Minimum amount
-	MaxAmount           float64              `json:"max_amount" example:"99999.99"`             // Maximum amount
-	FixedFee            float64              `json:"fixed_fee" example:"0.00"`                  // Fixed fee
-	PercentageFee       float64              `json:"percentage_fee" example:"0.6"`              // Percentage fee
-	CreatedAt           time.Time            `json:"created_at" example:"2024-01-01T00:00:00Z"` // Creation time
-	UpdatedAt           time.Time            `json:"updated_at" example:"2024-01-01T00:00:00Z"` // Update time
+	ID                  uint              `json:"id" example:"1"`                                             // Config ID
+	Method              string            `json:"method" example:"epay"`                                      // Payment method identifier
+	Name                string            `json:"name" example:"EPay Payment Method"`                         // Display name
+	URL                 string            `json:"url" example:"https://api.example.com"`                      // API endpoint URL
+	PID                 string            `json:"pid" example:"partner123"`                                   // Partner/Merchant ID
+	Key                 string            `json:"key" example:"secret123"`                                    // API key/secret
+	NotifyURL           string            `json:"notify_url,omitempty" example:"https://example.com/webhook"` // Callback URL
+	ReturnURL           string            `json:"return_url,omitempty" example:"https://example.com/return"`  // Return URL
+	IsEnabled           bool              `json:"is_enabled" example:"true"`                                  // Enabled status
+	SortOrder           int               `json:"sort_order" example:"1"`                                     // Sort order
+	SupportedCurrencies string            `json:"supported_currencies" example:"CNY"`                         // Supported currencies
+	Methods             []entities.Method `json:"methods,omitempty"`                                          // Payment methods
+	MinAmount           float64           `json:"min_amount" example:"0.01"`                                  // Minimum amount
+	MaxAmount           float64           `json:"max_amount" example:"99999.99"`                              // Maximum amount
+	FixedFee            float64           `json:"fixed_fee" example:"0.00"`                                   // Fixed fee
+	PercentageFee       float64           `json:"percentage_fee" example:"0.6"`                               // Percentage fee
+	CreatedAt           time.Time         `json:"created_at" example:"2024-01-01T00:00:00Z"`                  // Creation time
+	UpdatedAt           time.Time         `json:"updated_at" example:"2024-01-01T00:00:00Z"`                  // Update time
 }
 
 // CreatePaymentConfigRequest represents the request to create a payment config
@@ -284,7 +285,7 @@ type GetPaymentConfigsRequest struct {
 // ValidateEpayConfig validates epay configuration fields
 func ValidateEpayConfig(req *CreatePaymentConfigRequest) []string {
 	var errors []string
-	
+
 	// Validate required fields for epay
 	if req.Method == "epay" {
 		if req.URL == "" {
@@ -296,44 +297,44 @@ func ValidateEpayConfig(req *CreatePaymentConfigRequest) []string {
 		if req.Key == "" {
 			errors = append(errors, "Key is required for epay method")
 		}
-		
+
 		// Basic URL validation
 		if req.URL != "" && !isValidURL(req.URL) {
 			errors = append(errors, "Invalid URL format")
 		}
-		
+
 		if req.NotifyURL != "" && !isValidURL(req.NotifyURL) {
 			errors = append(errors, "Invalid notify URL format")
 		}
-		
+
 		if req.ReturnURL != "" && !isValidURL(req.ReturnURL) {
 			errors = append(errors, "Invalid return URL format")
 		}
 	}
-	
+
 	return errors
 }
 
 // ValidateEpayUpdateConfig validates epay update configuration fields
 func ValidateEpayUpdateConfig(req *UpdatePaymentConfigRequest, existingMethod string) []string {
 	var errors []string
-	
+
 	// Only validate if this is an epay configuration
 	if existingMethod == "epay" {
 		// Validate URLs if provided
 		if req.URL != nil && *req.URL != "" && !isValidURL(*req.URL) {
 			errors = append(errors, "Invalid URL format")
 		}
-		
+
 		if req.NotifyURL != nil && *req.NotifyURL != "" && !isValidURL(*req.NotifyURL) {
 			errors = append(errors, "Invalid notify URL format")
 		}
-		
+
 		if req.ReturnURL != nil && *req.ReturnURL != "" && !isValidURL(*req.ReturnURL) {
 			errors = append(errors, "Invalid return URL format")
 		}
 	}
-	
+
 	return errors
 }
 
@@ -397,13 +398,13 @@ func parseSupportedMethods(supportedMethods string) []entities.Method {
 	if supportedMethods == "" {
 		return nil
 	}
-	
+
 	var methods []entities.Method
 	if err := json.Unmarshal([]byte(supportedMethods), &methods); err != nil {
 		// If parsing fails, return empty slice
 		return nil
 	}
-	
+
 	return methods
 }
 
@@ -412,34 +413,34 @@ func parseSupportedMethods(supportedMethods string) []entities.Method {
 // ToPaymentRecordUserResponse converts a PaymentRecord entity to PaymentRecordResponse for user-facing APIs
 func ToPaymentRecordUserResponse(pr *entities.PaymentRecord) *PaymentRecordResponse {
 	return &PaymentRecordResponse{
-		ID:              pr.ID,
-		UserID:          pr.UserID,
+		ID:                  pr.ID,
+		UserID:              pr.UserID,
 		SubscriptionOrderID: pr.SubscriptionOrderID,
-		PaymentNo:       pr.PaymentNo,
-		OutTradeNo:      pr.OutTradeNo,
-		TransactionID:   maskTransactionID(pr.TransactionID),
-		Gateway:         pr.Gateway,
-		PaymentMethod:   pr.PaymentMethod,
-		Amount:          pr.Amount,
-		Currency:        pr.Currency,
-		ExchangeRate:    pr.ExchangeRate,
-		Status:          pr.Status,
-		PaymentStatus:   pr.PaymentStatus,
-		PaymentURL:      getSecurePaymentURL(pr),
-		QRCodeURL:       getSecureQRCodeURL(pr),
-		ExpiredAt:       pr.ExpiredAt,
-		PaidAt:          pr.PaidAt,
-		NotifiedAt:      pr.NotifiedAt,
-		RefundAmount:    pr.RefundAmount,
-		RefundStatus:    pr.RefundStatus,
-		RefundedAt:      pr.RefundedAt,
-		RefundReason:    pr.RefundReason,
-		Remark:          pr.Remark,
-		CreatedAt:       pr.CreatedAt,
-		UpdatedAt:       pr.UpdatedAt,
-		IsExpired:       pr.IsExpired(),
-		CanRefund:       pr.CanBeRefunded(),
-		RefundableAmount: pr.GetRefundableAmount(),
+		PaymentNo:           pr.PaymentNo,
+		OutTradeNo:          pr.OutTradeNo,
+		TransactionID:       maskTransactionID(pr.TransactionID),
+		Gateway:             pr.Gateway,
+		PaymentMethod:       pr.PaymentMethod,
+		Amount:              pr.Amount,
+		Currency:            pr.Currency,
+		ExchangeRate:        pr.ExchangeRate,
+		Status:              pr.Status,
+		PaymentStatus:       pr.PaymentStatus,
+		PaymentURL:          getSecurePaymentURL(pr),
+		QRCodeURL:           getSecureQRCodeURL(pr),
+		ExpiredAt:           pr.ExpiredAt,
+		PaidAt:              pr.PaidAt,
+		NotifiedAt:          pr.NotifiedAt,
+		RefundAmount:        pr.RefundAmount,
+		RefundStatus:        pr.RefundStatus,
+		RefundedAt:          pr.RefundedAt,
+		RefundReason:        pr.RefundReason,
+		Remark:              pr.Remark,
+		CreatedAt:           pr.CreatedAt,
+		UpdatedAt:           pr.UpdatedAt,
+		IsExpired:           pr.IsExpired(),
+		CanRefund:           pr.CanBeRefunded(),
+		RefundableAmount:    pr.GetRefundableAmount(),
 	}
 }
 
@@ -453,28 +454,28 @@ func ToPaymentRecordSecureResponse(pr *entities.PaymentRecord) *PaymentRecordRes
 // ToPaymentMethodResponse converts a PaymentMethod entity to PaymentMethodResponse
 func ToPaymentMethodResponse(pm *entities.PaymentMethod) *PaymentMethodResponse {
 	return &PaymentMethodResponse{
-		ID:               pm.ID,
-		UserID:           pm.UserID,
-		Type:             pm.Type,
-		Method:           pm.Method,
-		DisplayName:      pm.DisplayName,
-		MaskedInfo:       pm.MaskedInfo,
-		Brand:            pm.Brand,
-		ExpiryMonth:      pm.ExpiryMonth,
-		ExpiryYear:       pm.ExpiryYear,
-		Status:           pm.Status,
-		IsDefault:        pm.IsDefault,
-		SuccessfulUses:   pm.SuccessfulUses,
-		FailedUses:       pm.FailedUses,
-		LastUsedAt:       pm.LastUsedAt,
+		ID:              pm.ID,
+		UserID:          pm.UserID,
+		Type:            pm.Type,
+		Method:          pm.Method,
+		DisplayName:     pm.DisplayName,
+		MaskedInfo:      pm.MaskedInfo,
+		Brand:           pm.Brand,
+		ExpiryMonth:     pm.ExpiryMonth,
+		ExpiryYear:      pm.ExpiryYear,
+		Status:          pm.Status,
+		IsDefault:       pm.IsDefault,
+		SuccessfulUses:  pm.SuccessfulUses,
+		FailedUses:      pm.FailedUses,
+		LastUsedAt:      pm.LastUsedAt,
 		BillingCountry:  pm.BillingCountry,
 		BillingPostcode: pm.BillingPostcode,
-		CreatedAt:        pm.CreatedAt,
-		UpdatedAt:        pm.UpdatedAt,
-		IsActive:         pm.IsActive(),
+		CreatedAt:       pm.CreatedAt,
+		UpdatedAt:       pm.UpdatedAt,
+		IsActive:        pm.IsActive(),
 		CanBeUsed:       pm.CanBeUsedForPayment(),
-		FailureRate:      pm.GetFailureRate(),
-		NeedsValidation:  pm.NeedsRevalidation(),
+		FailureRate:     pm.GetFailureRate(),
+		NeedsValidation: pm.NeedsRevalidation(),
 	}
 }
 
@@ -487,16 +488,16 @@ func ToPaymentConfigResponse(pc *entities.PaymentConfig) *PaymentConfigResponse 
 		URL:                 pc.URL,
 		PID:                 pc.PID,
 		Key:                 maskSensitiveKey(pc.Key),
-		NotifyURL:          pc.NotifyURL,
-		ReturnURL:          pc.ReturnURL,
+		NotifyURL:           pc.NotifyURL,
+		ReturnURL:           pc.ReturnURL,
 		SupportedCurrencies: pc.SupportedCurrencies,
-		Methods:            parseSupportedMethods(pc.SupportedMethods),
-		MinAmount:          pc.MinAmount,
-		MaxAmount:          pc.MaxAmount,
-		IsEnabled:          pc.IsEnabled,
-		SortOrder:          pc.SortOrder,
-		CreatedAt:          pc.CreatedAt,
-		UpdatedAt:          pc.UpdatedAt,
+		Methods:             parseSupportedMethods(pc.SupportedMethods),
+		MinAmount:           pc.MinAmount,
+		MaxAmount:           pc.MaxAmount,
+		IsEnabled:           pc.IsEnabled,
+		SortOrder:           pc.SortOrder,
+		CreatedAt:           pc.CreatedAt,
+		UpdatedAt:           pc.UpdatedAt,
 	}
 }
 
@@ -509,16 +510,16 @@ func ToPaymentConfigResponseWithFullKey(pc *entities.PaymentConfig) *PaymentConf
 		URL:                 pc.URL,
 		PID:                 pc.PID,
 		Key:                 pc.Key, // 不掩码，显示完整key
-		NotifyURL:          pc.NotifyURL,
-		ReturnURL:          pc.ReturnURL,
+		NotifyURL:           pc.NotifyURL,
+		ReturnURL:           pc.ReturnURL,
 		SupportedCurrencies: pc.SupportedCurrencies,
-		Methods:            parseSupportedMethods(pc.SupportedMethods),
-		MinAmount:          pc.MinAmount,
-		MaxAmount:          pc.MaxAmount,
-		IsEnabled:          pc.IsEnabled,
-		SortOrder:          pc.SortOrder,
-		CreatedAt:          pc.CreatedAt,
-		UpdatedAt:          pc.UpdatedAt,
+		Methods:             parseSupportedMethods(pc.SupportedMethods),
+		MinAmount:           pc.MinAmount,
+		MaxAmount:           pc.MaxAmount,
+		IsEnabled:           pc.IsEnabled,
+		SortOrder:           pc.SortOrder,
+		CreatedAt:           pc.CreatedAt,
+		UpdatedAt:           pc.UpdatedAt,
 	}
 }
 
@@ -529,12 +530,75 @@ func ToPaymentConfigPublicResponse(pc *entities.PaymentConfig) *PaymentConfigRes
 		Method:              pc.Method,
 		Name:                pc.Name,
 		SupportedCurrencies: pc.SupportedCurrencies,
-		Methods:            parseSupportedMethods(pc.SupportedMethods),
-		MinAmount:          pc.MinAmount,
-		MaxAmount:          pc.MaxAmount,
-		IsEnabled:          pc.IsEnabled,
-		SortOrder:          pc.SortOrder,
-		CreatedAt:          pc.CreatedAt,
-		UpdatedAt:          pc.UpdatedAt,
+		Methods:             parseSupportedMethods(pc.SupportedMethods),
+		MinAmount:           pc.MinAmount,
+		MaxAmount:           pc.MaxAmount,
+		IsEnabled:           pc.IsEnabled,
+		SortOrder:           pc.SortOrder,
+		CreatedAt:           pc.CreatedAt,
+		UpdatedAt:           pc.UpdatedAt,
 	}
+}
+
+// =====================================================================
+// OBJECT POOLS - Memory optimization for frequently used DTOs
+// =====================================================================
+
+var (
+	// Pool for PaymentRecordResponse objects
+	paymentRecordResponsePool = sync.Pool{
+		New: func() interface{} {
+			return &PaymentRecordResponse{}
+		},
+	}
+
+	// Pool for CreatePaymentOrderRequest objects
+	createPaymentOrderRequestPool = sync.Pool{
+		New: func() interface{} {
+			return &CreatePaymentOrderRequest{}
+		},
+	}
+
+	// Pool for NotifyData objects
+	notifyDataPool = sync.Pool{
+		New: func() interface{} {
+			return &NotifyData{}
+		},
+	}
+)
+
+// GetPaymentRecordResponse gets a PaymentRecordResponse from the pool
+func GetPaymentRecordResponse() *PaymentRecordResponse {
+	return paymentRecordResponsePool.Get().(*PaymentRecordResponse)
+}
+
+// PutPaymentRecordResponse returns a PaymentRecordResponse to the pool
+func PutPaymentRecordResponse(resp *PaymentRecordResponse) {
+	// Reset all fields to avoid memory leaks
+	*resp = PaymentRecordResponse{}
+	paymentRecordResponsePool.Put(resp)
+}
+
+// GetCreatePaymentOrderRequest gets a CreatePaymentOrderRequest from the pool
+func GetCreatePaymentOrderRequest() *CreatePaymentOrderRequest {
+	return createPaymentOrderRequestPool.Get().(*CreatePaymentOrderRequest)
+}
+
+// PutCreatePaymentOrderRequest returns a CreatePaymentOrderRequest to the pool
+func PutCreatePaymentOrderRequest(req *CreatePaymentOrderRequest) {
+	// Reset all fields to avoid memory leaks
+	*req = CreatePaymentOrderRequest{}
+	createPaymentOrderRequestPool.Put(req)
+}
+
+// GetNotifyData gets a NotifyData from the pool
+func GetNotifyData() *NotifyData {
+	return notifyDataPool.Get().(*NotifyData)
+}
+
+// PutNotifyData returns a NotifyData to the pool
+func PutNotifyData(data *NotifyData) {
+	// Reset all fields to avoid memory leaks
+	*data = NotifyData{}
+	notifyDataPool.Put(data)
 }
