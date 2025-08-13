@@ -35,7 +35,7 @@ func NewPaymentOrderHandler(paymentService interfaces.PaymentService) *PaymentOr
 // @Produce json
 // @Security BearerAuth
 // @Param payment_order body dto.CreatePaymentOrderRequest true "Payment order data with gateway (epay), method (alipay/wechat/qqpay), amount, and either invoice_id or subscription_order_id"
-// @Success 201 {object} response.StandardResponse{data=dto.PaymentRecordResponse} "Returns payment record with payment URL, QR code, and expiration time"
+// @Success 201 {object} dto.PaymentRecordResponse "Returns payment record with payment URL, QR code, and expiration time"
 // @Failure 400 {object} response.BadRequestResponse "Invalid request data, unsupported payment method, or missing required fields"
 // @Failure 401 {object} response.UnauthorizedResponse "Authentication required"
 // @Failure 422 {object} response.BadRequestResponse "Amount outside valid range or gateway configuration error"
@@ -58,7 +58,7 @@ func (h *PaymentOrderHandler) CreatePaymentOrder(c *gin.Context) {
 	// Bind request
 	var req dto.CreatePaymentOrderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "Invalid request data", err.Error())
+		response.BadRequest(c, "Invalid request")
 		return
 	}
 
@@ -95,11 +95,11 @@ func (h *PaymentOrderHandler) CreatePaymentOrder(c *gin.Context) {
 	paymentRecord, err := h.paymentService.CreatePaymentOrder(c.Request.Context(), paymentReq)
 	if err != nil {
 		logger.Error("Failed to create payment order", logger.ErrorField(err), logger.Uint("user_id", user.ID))
-		response.InternalServerError(c, "Failed to create payment order", err.Error())
+		response.InternalServerError(c, "Failed to create payment order")
 		return
 	}
 
-	response.CreatedWithMessage(c, "Payment order created successfully", dto.ToPaymentRecordUserResponse(paymentRecord))
+	response.Created(c, dto.ToPaymentRecordUserResponse(paymentRecord))
 }
 
 // GetPaymentOrder godoc
@@ -110,7 +110,7 @@ func (h *PaymentOrderHandler) CreatePaymentOrder(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param payment_no path string true "Payment number"
-// @Success 200 {object} response.StandardResponse{data=dto.PaymentRecordResponse}
+// @Success 200 {object} dto.PaymentRecordResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -146,7 +146,7 @@ func (h *PaymentOrderHandler) GetPaymentOrder(c *gin.Context) {
 			return
 		}
 		logger.Error("Failed to get payment order", logger.String("payment_no", paymentNo), logger.ErrorField(err))
-		response.InternalServerError(c, "Failed to get payment order", err.Error())
+		response.InternalServerError(c, "Failed to get payment order")
 		return
 	}
 
@@ -156,7 +156,7 @@ func (h *PaymentOrderHandler) GetPaymentOrder(c *gin.Context) {
 		return
 	}
 
-	response.OK(c, "Payment order retrieved successfully", dto.ToPaymentRecordUserResponse(paymentRecord))
+	response.OK(c, dto.ToPaymentRecordUserResponse(paymentRecord))
 }
 
 // PaymentNotify godoc

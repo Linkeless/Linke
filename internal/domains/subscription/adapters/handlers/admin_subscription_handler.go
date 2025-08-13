@@ -170,7 +170,7 @@ type AdminCreateUserSubscriptionRequest struct {
 // @Produce json
 // @Security BearerAuth
 // @Param plan body CreatePlanRequest true "Plan creation data" example({"name":"Premium Plan","code":"premium-monthly","description":"Premium features with monthly billing","price":29.99,"currency":"USD","billing_cycle":"monthly","billing_interval":1,"trial_period_days":7,"features":"{\"max_projects\": 10, \"storage_gb\": 100}","limits":"{\"api_calls_per_month\": 10000}","is_visible":true,"sort_order":1,"is_popular":false,"is_recommended":true,"setup_fee":0,"cancellation_fee":0,"traffic_limit":107374182400,"traffic_reset_cycle":"monthly","default_server_group_ids":[1]})
-// @Success 201 {object} response.StandardResponse{data=entities.SubscriptionPlanResponse}
+// @Success 201 {object} entities.SubscriptionPlanResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -242,7 +242,7 @@ func (h *AdminSubscriptionHandler) CreateSubscriptionPlan(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Plan ID"
-// @Success 200 {object} response.StandardResponse{data=entities.SubscriptionPlanResponse}
+// @Success 200 {object} entities.SubscriptionPlanResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -266,7 +266,7 @@ func (h *AdminSubscriptionHandler) GetSubscriptionPlan(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, plan.ToResponse())
+	response.OK(c, plan.ToResponse())
 }
 
 // ListSubscriptionPlans godoc
@@ -283,7 +283,7 @@ func (h *AdminSubscriptionHandler) GetSubscriptionPlan(c *gin.Context) {
 // @Param recommended query bool false "Filter by recommended flag"
 // @Param limit query int false "Items per page" default(10)
 // @Param offset query int false "Offset" default(0)
-// @Success 200 {object} response.StandardListResponse
+// @Success 200 {object} response.HALCollectionResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -318,8 +318,8 @@ func (h *AdminSubscriptionHandler) ListSubscriptionPlans(c *gin.Context) {
 		planResponses[i] = plan.ToResponse()
 	}
 
-	page := (req.Offset / req.Limit) + 1
-	response.SuccessList(c, planResponses, page, req.Limit, total)
+	_ = (req.Offset / req.Limit) + 1 // page calculation for future use
+	response.SendPaginatedResponse(c, planResponses, total)
 }
 
 // UpdateSubscriptionPlan godoc
@@ -331,7 +331,7 @@ func (h *AdminSubscriptionHandler) ListSubscriptionPlans(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Plan ID"
 // @Param plan body UpdatePlanRequest true "Plan update data"
-// @Success 200 {object} response.StandardResponse{data=entities.SubscriptionPlanResponse}
+// @Success 200 {object} entities.SubscriptionPlanResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -387,7 +387,7 @@ func (h *AdminSubscriptionHandler) UpdateSubscriptionPlan(c *gin.Context) {
 		logger.String("admin_action", "update_plan"),
 	)
 
-	response.Success(c, plan.ToResponse())
+	response.OK(c, plan.ToResponse())
 }
 
 // DeleteSubscriptionPlan godoc
@@ -398,7 +398,7 @@ func (h *AdminSubscriptionHandler) UpdateSubscriptionPlan(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Plan ID"
-// @Success 200 {object} response.MessageOnlyResponse
+// @Success 200 {object} string
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -426,7 +426,7 @@ func (h *AdminSubscriptionHandler) DeleteSubscriptionPlan(c *gin.Context) {
 		logger.String("admin_action", "delete_plan"),
 	)
 
-	response.SuccessWithMessage(c, "Subscription plan deleted successfully", nil)
+	response.NoContent(c)
 }
 
 // ToggleSubscriptionPlanStatus godoc
@@ -437,7 +437,7 @@ func (h *AdminSubscriptionHandler) DeleteSubscriptionPlan(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Plan ID"
-// @Success 200 {object} response.StandardResponse{data=entities.SubscriptionPlanResponse}
+// @Success 200 {object} entities.SubscriptionPlanResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -467,7 +467,7 @@ func (h *AdminSubscriptionHandler) ToggleSubscriptionPlanStatus(c *gin.Context) 
 		logger.String("admin_action", "toggle_plan_status"),
 	)
 
-	response.Success(c, plan.ToResponse())
+	response.OK(c, plan.ToResponse())
 }
 
 // USER SUBSCRIPTIONS MANAGEMENT
@@ -480,7 +480,7 @@ func (h *AdminSubscriptionHandler) ToggleSubscriptionPlanStatus(c *gin.Context) 
 // @Produce json
 // @Security BearerAuth
 // @Param subscription body AdminCreateUserSubscriptionRequest true "Subscription creation data"
-// @Success 201 {object} response.StandardResponse{data=entities.UserSubscriptionResponse}
+// @Success 201 {object} entities.UserSubscriptionResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -546,7 +546,7 @@ func (h *AdminSubscriptionHandler) CreateUserSubscription(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Subscription ID"
-// @Success 200 {object} response.StandardResponse{data=entities.UserSubscriptionResponse}
+// @Success 200 {object} entities.UserSubscriptionResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -570,7 +570,7 @@ func (h *AdminSubscriptionHandler) GetUserSubscription(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, subscription.ToResponse())
+	response.OK(c, subscription.ToResponse())
 }
 
 // ListUserSubscriptions godoc
@@ -584,7 +584,7 @@ func (h *AdminSubscriptionHandler) GetUserSubscription(c *gin.Context) {
 // @Param status query string false "Filter by status" Enums(active,paused,cancelled,expired,trial)
 // @Param limit query int false "Items per page" default(10)
 // @Param offset query int false "Offset" default(0)
-// @Success 200 {object} response.StandardListResponse
+// @Success 200 {object} response.HALCollectionResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -613,8 +613,8 @@ func (h *AdminSubscriptionHandler) ListUserSubscriptions(c *gin.Context) {
 		return
 	}
 
-	page := (req.Offset / req.Limit) + 1
-	response.SuccessList(c, subscriptionResponses, page, req.Limit, total)
+	_ = (req.Offset / req.Limit) + 1 // page calculation for future use
+	response.SendPaginatedResponse(c, subscriptionResponses, total)
 }
 
 // UpdateUserSubscription godoc
@@ -626,7 +626,7 @@ func (h *AdminSubscriptionHandler) ListUserSubscriptions(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Subscription ID"
 // @Param subscription body AdminUpdateUserSubscriptionRequest true "Subscription update data"
-// @Success 200 {object} response.StandardResponse{data=entities.UserSubscriptionResponse}
+// @Success 200 {object} entities.UserSubscriptionResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -684,7 +684,7 @@ func (h *AdminSubscriptionHandler) UpdateUserSubscription(c *gin.Context) {
 		logger.String("admin_action", "update_subscription"),
 	)
 
-	response.Success(c, subscription.ToResponse())
+	response.OK(c, subscription.ToResponse())
 }
 
 // PauseUserSubscription godoc
@@ -696,7 +696,7 @@ func (h *AdminSubscriptionHandler) UpdateUserSubscription(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Subscription ID"
 // @Param pause body interfaces.PauseSubscriptionRequest true "Pause request data"
-// @Success 200 {object} response.StandardResponse{data=entities.UserSubscriptionResponse}
+// @Success 200 {object} entities.UserSubscriptionResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -741,7 +741,7 @@ func (h *AdminSubscriptionHandler) PauseUserSubscription(c *gin.Context) {
 		logger.String("admin_action", "pause_subscription"),
 	)
 
-	response.Success(c, subscription.ToResponse())
+	response.OK(c, subscription.ToResponse())
 }
 
 // ResumeUserSubscription godoc
@@ -753,7 +753,7 @@ func (h *AdminSubscriptionHandler) PauseUserSubscription(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Subscription ID"
 // @Param resume body interfaces.ResumeSubscriptionRequest true "Resume request data"
-// @Success 200 {object} response.StandardResponse{data=entities.UserSubscriptionResponse}
+// @Success 200 {object} entities.UserSubscriptionResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -797,7 +797,7 @@ func (h *AdminSubscriptionHandler) ResumeUserSubscription(c *gin.Context) {
 		logger.String("admin_action", "resume_subscription"),
 	)
 
-	response.Success(c, subscription.ToResponse())
+	response.OK(c, subscription.ToResponse())
 }
 
 // ExtendUserSubscription godoc
@@ -809,7 +809,7 @@ func (h *AdminSubscriptionHandler) ResumeUserSubscription(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Subscription ID"
 // @Param extend body ExtendSubscriptionRequest true "Extension data"
-// @Success 200 {object} response.StandardResponse{data=entities.UserSubscriptionResponse}
+// @Success 200 {object} entities.UserSubscriptionResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -863,7 +863,7 @@ func (h *AdminSubscriptionHandler) ExtendUserSubscription(c *gin.Context) {
 		logger.String("admin_action", "extend_subscription"),
 	)
 
-	response.Success(c, subscription.ToResponse())
+	response.OK(c, subscription.ToResponse())
 }
 
 // CancelUserSubscription godoc
@@ -875,7 +875,7 @@ func (h *AdminSubscriptionHandler) ExtendUserSubscription(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Subscription ID"
 // @Param cancel body object{reason=string,cancel_at_period_end=bool} true "Cancel data"
-// @Success 200 {object} response.MessageOnlyResponse
+// @Success 200 {object} string
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -920,7 +920,7 @@ func (h *AdminSubscriptionHandler) CancelUserSubscription(c *gin.Context) {
 		logger.String("admin_action", "cancel_subscription"),
 	)
 
-	response.SuccessWithMessage(c, "Subscription cancelled successfully", nil)
+	response.NoContent(c)
 }
 
 // ResetTrafficUsage godoc
@@ -932,7 +932,7 @@ func (h *AdminSubscriptionHandler) CancelUserSubscription(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Subscription ID"
 // @Param reset body AdminUsageResetRequest true "Reset data"
-// @Success 200 {object} response.StandardResponse{data=entities.UserSubscriptionResponse}
+// @Success 200 {object} entities.UserSubscriptionResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -975,7 +975,7 @@ func (h *AdminSubscriptionHandler) ResetTrafficUsage(c *gin.Context) {
 		logger.String("admin_action", "reset_traffic"),
 	)
 
-	response.Success(c, subscription.ToResponse())
+	response.OK(c, subscription.ToResponse())
 }
 
 // UpgradeSubscription godoc
@@ -987,7 +987,7 @@ func (h *AdminSubscriptionHandler) ResetTrafficUsage(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Subscription ID"
 // @Param upgrade body interfaces.UpgradeSubscriptionRequest true "Upgrade request"
-// @Success 200 {object} response.StandardResponse{data=entities.UserSubscriptionResponse}
+// @Success 200 {object} entities.UserSubscriptionResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -1039,7 +1039,7 @@ func (h *AdminSubscriptionHandler) UpgradeSubscription(c *gin.Context) {
 		logger.String("admin_action", "upgrade_subscription"),
 	)
 
-	response.Success(c, subscription.ToResponse())
+	response.OK(c, subscription.ToResponse())
 }
 
 // DowngradeSubscription godoc
@@ -1051,7 +1051,7 @@ func (h *AdminSubscriptionHandler) UpgradeSubscription(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Subscription ID"
 // @Param downgrade body interfaces.DowngradeSubscriptionRequest true "Downgrade request"
-// @Success 200 {object} response.StandardResponse{data=entities.UserSubscriptionResponse}
+// @Success 200 {object} entities.UserSubscriptionResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -1103,7 +1103,7 @@ func (h *AdminSubscriptionHandler) DowngradeSubscription(c *gin.Context) {
 		logger.String("admin_action", "downgrade_subscription"),
 	)
 
-	response.Success(c, subscription.ToResponse())
+	response.OK(c, subscription.ToResponse())
 }
 
 // GetSubscriptionStatistics godoc
@@ -1126,7 +1126,7 @@ func (h *AdminSubscriptionHandler) GetSubscriptionStatistics(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, stats)
+	response.OK(c, stats)
 }
 
 // SUBSCRIPTION ORDERS MANAGEMENT
@@ -1139,7 +1139,7 @@ func (h *AdminSubscriptionHandler) GetSubscriptionStatistics(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Order ID"
-// @Success 200 {object} response.StandardResponse{data=entities.SubscriptionOrderResponse}
+// @Success 200 {object} entities.SubscriptionOrderResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -1163,7 +1163,7 @@ func (h *AdminSubscriptionHandler) GetSubscriptionOrder(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, order.ToResponse())
+	response.OK(c, order.ToResponse())
 }
 
 // ListSubscriptionOrders godoc
@@ -1180,7 +1180,7 @@ func (h *AdminSubscriptionHandler) GetSubscriptionOrder(c *gin.Context) {
 // @Param date_to query string false "Filter to date (YYYY-MM-DD)"
 // @Param limit query int false "Items per page" default(10)
 // @Param offset query int false "Offset" default(0)
-// @Success 200 {object} response.StandardListResponse
+// @Success 200 {object} response.HALCollectionResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -1215,8 +1215,8 @@ func (h *AdminSubscriptionHandler) ListSubscriptionOrders(c *gin.Context) {
 		orderResponses[i] = order.ToResponse()
 	}
 
-	page := (req.Offset / req.Limit) + 1
-	response.SuccessList(c, orderResponses, page, req.Limit, total)
+	_ = (req.Offset / req.Limit) + 1 // page calculation for future use
+	response.SendPaginatedResponse(c, orderResponses, total)
 }
 
 // CancelSubscriptionOrder godoc
@@ -1228,7 +1228,7 @@ func (h *AdminSubscriptionHandler) ListSubscriptionOrders(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Order ID"
 // @Param cancel body object{reason=string} true "Cancel data"
-// @Success 200 {object} response.MessageOnlyResponse
+// @Success 200 {object} string
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -1271,7 +1271,7 @@ func (h *AdminSubscriptionHandler) CancelSubscriptionOrder(c *gin.Context) {
 		logger.String("admin_action", "cancel_order"),
 	)
 
-	response.SuccessWithMessage(c, "Order cancelled successfully", nil)
+	response.OK(c, gin.H{"message": "Order cancelled successfully"})
 }
 
 // GetOrderStatistics godoc
@@ -1324,7 +1324,7 @@ func (h *AdminSubscriptionHandler) GetOrderStatistics(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, stats)
+	response.OK(c, stats)
 }
 
 // USAGE MANAGEMENT
@@ -1367,7 +1367,7 @@ func (h *AdminSubscriptionHandler) GetUsageStatistics(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, stats)
+	response.OK(c, stats)
 }
 
 // GetCurrentUsage godoc
@@ -1415,7 +1415,7 @@ func (h *AdminSubscriptionHandler) GetCurrentUsage(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, usage)
+	response.OK(c, usage)
 }
 
 // BULK OPERATIONS
@@ -1515,9 +1515,9 @@ func (h *AdminSubscriptionHandler) BulkSubscriptionAction(c *gin.Context) {
 	}
 
 	if len(failedIDs) > 0 {
-		response.SuccessWithMessage(c, fmt.Sprintf("Bulk action completed with %d successes and %d failures", successCount, len(failedIDs)), result)
+		response.OK(c, gin.H{"message": fmt.Sprintf("Bulk action completed with %d successes and %d failures", successCount, len(failedIDs)), "data": result})
 	} else {
-		response.SuccessWithMessage(c, fmt.Sprintf("Bulk action completed successfully for all %d subscriptions", successCount), result)
+		response.OK(c, gin.H{"message": fmt.Sprintf("Bulk action completed successfully for all %d subscriptions", successCount), "data": result})
 	}
 }
 
@@ -1537,7 +1537,7 @@ func (h *AdminSubscriptionHandler) BulkSubscriptionAction(c *gin.Context) {
 // @Param is_active query bool false "Filter by active status"
 // @Param limit query int false "Items per page" default(50)
 // @Param offset query int false "Offset" default(0)
-// @Success 200 {object} response.StandardListResponse
+// @Success 200 {object} response.HALCollectionResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -1565,8 +1565,8 @@ func (h *AdminSubscriptionHandler) GetUsageAlerts(c *gin.Context) {
 		return
 	}
 
-	page := (req.Offset / req.Limit) + 1
-	response.SuccessList(c, alertsResponse.UsageAlerts, page, req.Limit, alertsResponse.TotalCount)
+	_ = (req.Offset / req.Limit) + 1 // page calculation for future use
+	response.SendPaginatedResponse(c, alertsResponse.UsageAlerts, alertsResponse.TotalCount)
 }
 
 // GetAlertStatistics godoc
@@ -1602,7 +1602,7 @@ func (h *AdminSubscriptionHandler) GetAlertStatistics(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, stats)
+	response.OK(c, stats)
 }
 
 // BulkResolveAlerts godoc
@@ -1642,5 +1642,5 @@ func (h *AdminSubscriptionHandler) BulkResolveAlerts(c *gin.Context) {
 		logger.String("admin_action", "bulk_resolve_alerts"),
 	)
 
-	response.Success(c, result)
+	response.OK(c, result)
 }

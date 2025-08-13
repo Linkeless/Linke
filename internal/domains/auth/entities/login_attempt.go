@@ -23,19 +23,6 @@ func (LoginAttempt) TableName() string {
 	return "login_attempts"
 }
 
-// Login attempt failure reasons
-const (
-	LoginFailureInvalidCredentials = "invalid_credentials"
-	LoginFailureAccountLocked      = "account_locked"
-	LoginFailureAccountInactive    = "account_inactive"
-	LoginFailureAccountBanned      = "account_banned"
-	LoginFailureUserNotFound       = "user_not_found"
-	LoginFailureOAuthMismatch      = "oauth_mismatch"
-	LoginFailureRateLimit          = "rate_limit"
-	LoginSuccessLocal              = "local_login"
-	LoginSuccessOAuth              = "oauth_login"
-)
-
 // BeforeCreate hook to set creation time
 func (la *LoginAttempt) BeforeCreate(tx *gorm.DB) error {
 	if la.CreatedAt.IsZero() {
@@ -61,14 +48,6 @@ type AccountLockout struct {
 func (AccountLockout) TableName() string {
 	return "account_lockouts"
 }
-
-// Account lockout reasons
-const (
-	LockReasonMultipleFailures   = "multiple_failed_attempts"
-	LockReasonSuspiciousActivity = "suspicious_activity"
-	LockReasonAdminAction        = "admin_action"
-	LockReasonSecurityBreach     = "security_breach"
-)
 
 // IsLocked checks if the account is currently locked
 func (al *AccountLockout) IsLocked() bool {

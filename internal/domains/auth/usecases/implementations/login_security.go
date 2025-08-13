@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"linke/internal/domains/auth/constants"
 	"linke/internal/domains/auth/entities"
 	"linke/internal/shared/logger"
 
@@ -169,7 +170,7 @@ func (l *LoginSecurityService) updateFailureTracking(ctx context.Context, email 
 		lockDuration := l.calculateLockoutDuration(&lockout)
 		lockedUntil := now.Add(lockDuration)
 		lockout.LockedUntil = &lockedUntil
-		lockout.LockReason = entities.LockReasonMultipleFailures
+		lockout.LockReason = constants.LockReasonMultipleFailures
 
 		logger.Warn("Account locked due to multiple failed attempts",
 			logger.String("email", email),
@@ -207,7 +208,7 @@ func (l *LoginSecurityService) calculateLockoutDuration(lockout *entities.Accoun
 	var lockCount int64
 	l.db.Model(&entities.LoginAttempt{}).
 		Where("email = ? AND reason = ? AND created_at > ?",
-			lockout.Email, entities.LoginFailureAccountLocked, time.Now().Add(-24*time.Hour)).
+			lockout.Email, constants.LoginFailureAccountLocked, time.Now().Add(-24*time.Hour)).
 		Count(&lockCount)
 
 	// Progressive lockout: base duration * (2 ^ lock_count)

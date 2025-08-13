@@ -138,7 +138,7 @@ func (pcs *PaymentConfigService) CreatePaymentConfig(ctx context.Context, req *d
 	}
 
 	// 调试日志：检查入库的原始key
-	logger.Info("Creating payment config - original key",
+	logger.Debug("Creating payment config - original key",
 		logger.String("method", req.Method),
 		logger.String("key", req.Key),
 		logger.String("key_length", fmt.Sprintf("%d", len(req.Key))))
@@ -293,7 +293,7 @@ func (pcs *PaymentConfigService) UpdatePaymentConfig(ctx context.Context, config
 
 	if req.Key != nil {
 		// 调试日志：检查更新的原始key
-		logger.Info("Updating payment config - original key",
+		logger.Debug("Updating payment config - original key",
 			logger.Uint("config_id", configID),
 			logger.String("key", *req.Key),
 			logger.String("key_length", fmt.Sprintf("%d", len(*req.Key))))
@@ -431,7 +431,7 @@ func (pcs *PaymentConfigService) GetEnabledConfigs() ([]*entities.PaymentConfig,
 	// 调试日志：检查从数据库读取的原始key
 	for _, config := range configs {
 		if config.Method == "epay" {
-			logger.Info("Retrieved epay config from database",
+			logger.Debug("Retrieved epay config from database",
 				logger.Uint("config_id", config.ID),
 				logger.String("method", config.Method),
 				logger.String("key", config.Key),

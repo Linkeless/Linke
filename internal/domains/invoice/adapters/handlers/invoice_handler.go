@@ -42,7 +42,7 @@ func NewInvoiceHandler(invoiceService interfaces.InvoiceService, logger logger.L
 // @Produce json
 // @Security BearerAuth
 // @Param id path uint true "Invoice ID"
-// @Success 200 {object} response.StandardResponse{data=dto.InvoiceResponse}
+// @Success 200 {object} dto.InvoiceResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 404 {object} response.NotFoundResponse
@@ -69,7 +69,7 @@ func (h *InvoiceHandler) GetInvoice(c *gin.Context) {
 		return
 	}
 
-	response.SuccessWithMessage(c, "Invoice retrieved successfully", dto.ToResponse(invoice))
+	response.OK(c, dto.ToResponse(invoice))
 }
 
 // Removed GetInvoiceByNumber to keep surface minimal
@@ -88,7 +88,7 @@ func (h *InvoiceHandler) GetInvoice(c *gin.Context) {
 // @Security BearerAuth
 // @Param limit query int false "Limit" default(10)
 // @Param offset query int false "Offset" default(0)
-// @Success 200 {object} response.PaginatedResponse{data=[]dto.InvoiceResponse}
+// @Success 200 {object} response.HALCollectionResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -136,7 +136,9 @@ func (h *InvoiceHandler) GetUserInvoices(c *gin.Context) {
 		invoiceResponses[i] = dto.ToResponse(invoice)
 	}
 
-	response.OKPaginated(c, "User invoices retrieved successfully", invoiceResponses, total, limit, offset)
+	// Convert offset to page number
+	page := (offset / limit) + 1
+	response.Paginated(c, "User invoices retrieved successfully", invoiceResponses, page, limit, total, "/api/v1/invoices/my")
 }
 
 // Admin mark-as-paid endpoint removed

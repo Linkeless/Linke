@@ -9,7 +9,8 @@ import (
 	"strings"
 	"time"
 
-	authEntities "linke/internal/domains/auth/entities"
+	"linke/internal/domains/auth/constants"
+	"linke/internal/domains/auth/dto"
 	"linke/internal/domains/auth/usecases/interfaces"
 	referralEntities "linke/internal/domains/referral/entities"
 	referralInterfaces "linke/internal/domains/referral/usecases/interfaces"
@@ -45,7 +46,7 @@ func NewAuthService(db *gorm.DB, userService userInterfaces.UserService, userRep
 }
 
 // Register creates a new user account with email and password
-func (a *AuthService) Register(ctx context.Context, req *interfaces.RegisterRequest) (*interfaces.AuthResponse, error) {
+func (a *AuthService) Register(ctx context.Context, req *dto.RegisterRequest) (*dto.AuthResponse, error) {
 	// Validate invite code if provided
 	var inviteCode *referralEntities.InviteCode
 	if req.InviteCode != "" {
@@ -152,14 +153,14 @@ func (a *AuthService) Register(ctx context.Context, req *interfaces.RegisterRequ
 		logger.String("email", user.Email),
 	)
 
-	return &interfaces.AuthResponse{
-		User:  user.ToResponse(),
+	return &dto.AuthResponse{
+		User:  dto.ConvertUserResponse(user.ToResponse()),
 		Token: token,
 	}, nil
 }
 
 // Login authenticates a user with email and password
-func (a *AuthService) Login(ctx context.Context, req *interfaces.LoginRequest) (*interfaces.AuthResponse, error) {
+func (a *AuthService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.AuthResponse, error) {
 	// Extract IP and User-Agent from context (set by middleware)
 	ip, _ := ctx.Value("client_ip").(string)
 	userAgent, _ := ctx.Value("user_agent").(string)
@@ -185,7 +186,7 @@ func (a *AuthService) Login(ctx context.Context, req *interfaces.LoginRequest) (
 				logger.Duration("remaining_lock_time", lockout.GetRemainingLockTime()))
 
 			// Record the failed attempt
-			a.recordLoginAttempt(ctx, req.Email, ip, userAgent, authEntities.LoginFailureAccountLocked, false, nil)
+			a.recordLoginAttempt(ctx, req.Email, ip, userAgent, constants.LoginFailureAccountLocked, false, nil)
 
 			return nil, fmt.Errorf("account is temporarily locked due to multiple failed login attempts. Please try again in %v",
 				lockout.GetRemainingLockTime().Round(time.Minute))
@@ -200,7 +201,7 @@ func (a *AuthService) Login(ctx context.Context, req *interfaces.LoginRequest) (
 			logger.String("ip", ip))
 
 		// Record failed attempt
-		a.recordLoginAttempt(ctx, req.Email, ip, userAgent, authEntities.LoginFailureUserNotFound, false, nil)
+		a.recordLoginAttempt(ctx, req.Email, ip, userAgent, constants.LoginFailureUserNotFound, false, nil)
 
 		return nil, fmt.Errorf("invalid email or password")
 	}
@@ -213,7 +214,7 @@ func (a *AuthService) Login(ctx context.Context, req *interfaces.LoginRequest) (
 			logger.String("ip", ip))
 
 		// Record failed attempt
-		a.recordLoginAttempt(ctx, req.Email, ip, userAgent, authEntities.LoginFailureOAuthMismatch, false, &user.ID)
+		a.recordLoginAttempt(ctx, req.Email, ip, userAgent, constants.LoginFailureOAuthMismatch, false, &user.ID)
 
 		return nil, fmt.Errorf("this account uses %s authentication. Please use the appropriate login method", user.Provider)
 	}
@@ -223,11 +224,11 @@ func (a *AuthService) Login(ctx context.Context, req *interfaces.LoginRequest) (
 		var reason string
 		switch user.Status {
 		case userConstants.UserStatusInactive:
-			reason = authEntities.LoginFailureAccountInactive
+			reason = constants.LoginFailureAccountInactive
 		case userConstants.UserStatusBanned:
-			reason = authEntities.LoginFailureAccountBanned
+			reason = constants.LoginFailureAccountBanned
 		default:
-			reason = authEntities.LoginFailureAccountInactive
+			reason = constants.LoginFailureAccountInactive
 		}
 
 		logger.Warn("Login attempt for inactive user",
@@ -249,7 +250,7 @@ func (a *AuthService) Login(ctx context.Context, req *interfaces.LoginRequest) (
 			logger.Uint("user_id", user.ID))
 
 		// Record failed attempt
-		a.recordLoginAttempt(ctx, req.Email, ip, userAgent, authEntities.LoginFailureInvalidCredentials, false, &user.ID)
+		a.recordLoginAttempt(ctx, req.Email, ip, userAgent, constants.LoginFailureInvalidCredentials, false, &user.ID)
 
 		return nil, fmt.Errorf("invalid email or password")
 	}
@@ -265,15 +266,15 @@ func (a *AuthService) Login(ctx context.Context, req *interfaces.LoginRequest) (
 	}
 
 	// Record successful login attempt
-	a.recordLoginAttempt(ctx, req.Email, ip, userAgent, authEntities.LoginSuccessLocal, true, &user.ID)
+	a.recordLoginAttempt(ctx, req.Email, ip, userAgent, constants.LoginSuccessLocal, true, &user.ID)
 
 	logger.Info("User logged in successfully",
 		logger.Uint("user_id", user.ID),
 		logger.String("email", user.Email),
 		logger.String("ip", ip))
 
-	return &interfaces.AuthResponse{
-		User:  user.ToResponse(),
+	return &dto.AuthResponse{
+		User:  dto.ConvertUserResponse(user.ToResponse()),
 		Token: token,
 	}, nil
 }
@@ -319,7 +320,7 @@ func (a *AuthService) ChangePassword(ctx context.Context, userID uint, oldPasswo
 	}
 
 	// Revoke all existing tokens for security
-	if err := a.jwtService.RevokeAllUserTokens(userID, authEntities.BlacklistReasonPasswordChange); err != nil {
+	if err := a.jwtService.RevokeAllUserTokens(userID, constants.BlacklistReasonPasswordChange); err != nil {
 		logger.Warn("Failed to revoke tokens after password change",
 			logger.Uint("user_id", userID),
 			logger.ErrorField(err))
@@ -379,7 +380,7 @@ func (a *AuthService) AdminResetPassword(ctx context.Context, adminUserID, targe
 	}
 
 	// Revoke all existing tokens for security
-	if err := a.jwtService.RevokeAllUserTokens(targetUserID, authEntities.BlacklistReasonPasswordChange); err != nil {
+	if err := a.jwtService.RevokeAllUserTokens(targetUserID, constants.BlacklistReasonPasswordChange); err != nil {
 		logger.Warn("Failed to revoke tokens after admin password reset",
 			logger.Uint("admin_id", adminUserID),
 			logger.Uint("target_user_id", targetUserID),
@@ -484,7 +485,7 @@ func (a *AuthService) recordLoginAttempt(ctx context.Context, email, ip, userAge
 
 // Logout revokes the current JWT token
 func (a *AuthService) Logout(ctx context.Context, tokenString string, userID uint) error {
-	if err := a.jwtService.RevokeToken(tokenString, &userID, authEntities.BlacklistReasonLogout); err != nil {
+	if err := a.jwtService.RevokeToken(tokenString, &userID, constants.BlacklistReasonLogout); err != nil {
 		logger.Error("Failed to revoke token during logout",
 			logger.Uint("user_id", userID),
 			logger.ErrorField(err))
@@ -498,7 +499,7 @@ func (a *AuthService) Logout(ctx context.Context, tokenString string, userID uin
 }
 
 // CreateOrUpdateOAuthUser creates a new user or finds existing user through account bindings
-func (a *AuthService) CreateOrUpdateOAuthUser(ctx context.Context, userInfo *interfaces.UserInfo) (*userEntities.User, error) {
+func (a *AuthService) CreateOrUpdateOAuthUser(ctx context.Context, userInfo *dto.UserInfo) (*userEntities.User, error) {
 	var user *userEntities.User
 	var err error
 

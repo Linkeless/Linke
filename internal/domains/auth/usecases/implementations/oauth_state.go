@@ -5,19 +5,19 @@ import (
 	"sync"
 	"time"
 
-	"linke/internal/domains/auth/usecases/interfaces"
+	"linke/internal/domains/auth/dto"
 )
 
 // OAuthStateStore manages OAuth state parameters to prevent CSRF attacks
 type OAuthStateStore struct {
-	states map[string]*interfaces.OAuthStateInfo
+	states map[string]*dto.OAuthStateInfo
 	mutex  sync.RWMutex
 }
 
 // NewOAuthStateStore creates a new OAuth state store
 func NewOAuthStateStore() *OAuthStateStore {
 	store := &OAuthStateStore{
-		states: make(map[string]*interfaces.OAuthStateInfo),
+		states: make(map[string]*dto.OAuthStateInfo),
 	}
 
 	// Start cleanup goroutine
@@ -27,7 +27,7 @@ func NewOAuthStateStore() *OAuthStateStore {
 }
 
 // StoreState stores OAuth state information
-func (s *OAuthStateStore) StoreState(state string, info *interfaces.OAuthStateInfo) {
+func (s *OAuthStateStore) StoreState(state string, info *dto.OAuthStateInfo) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -44,7 +44,7 @@ func (s *OAuthStateStore) StoreState(state string, info *interfaces.OAuthStateIn
 }
 
 // GetState retrieves and removes OAuth state information
-func (s *OAuthStateStore) GetState(state string) (*interfaces.OAuthStateInfo, error) {
+func (s *OAuthStateStore) GetState(state string) (*dto.OAuthStateInfo, error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 

@@ -955,9 +955,13 @@ func (b *BotEnhanced) showPlanDetails(chatID int64, messageID int, planID uint) 
 
 // Helper functions
 
-func (b *BotEnhanced) getUserByTelegramID(ctx context.Context, telegramID int64) (*entities.User, error) {
+func (b *BotEnhanced) getUserByTelegramID(ctx context.Context, telegramID int64) (*entities.UserResponse, error) {
 	telegramIDStr := fmt.Sprintf("%d", telegramID)
-	return b.userService.GetUserByTelegramID(ctx, telegramIDStr)
+	user, err := b.userService.GetUserByTelegramID(ctx, telegramIDStr)
+	if err != nil {
+		return nil, err
+	}
+	return user.ToResponse(), nil
 }
 
 func (b *BotEnhanced) showUnboundAccount(chatID int64, messageID int) {
@@ -4379,7 +4383,7 @@ func (b *BotEnhanced) sendUnboundAccountMessage(chatID int64) {
 }
 
 // isUserAdmin checks if a user has admin privileges
-func (b *BotEnhanced) isUserAdmin(user *entities.User) bool {
+func (b *BotEnhanced) isUserAdmin(user *entities.UserResponse) bool {
 	// Check if user role is admin
 	if user.Role == "admin" || user.Role == "super_admin" {
 		return true

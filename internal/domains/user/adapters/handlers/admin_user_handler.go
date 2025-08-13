@@ -61,12 +61,12 @@ func NewAdminUserHandler(userService userInterfaces.UserService, authService aut
 // @Produce json
 // @Security BearerAuth
 // @Param user body entities.CreateUserRequest true "User creation data"
-// @Success 201 {object} response.StandardResponse{data=entities.UserResponse}
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 409 {object} response.ConflictResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 201 {object} entities.UserResponse
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 409 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/users [post]
 func (h *AdminUserHandler) CreateUser(c *gin.Context) {
 	var createReq entities.CreateUserRequest
@@ -141,11 +141,11 @@ func (h *AdminUserHandler) CreateUser(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "User ID"
-// @Success 200 {object} response.StandardResponse{data=entities.UserResponse}
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 404 {object} response.NotFoundResponse
+// @Success 200 {object} entities.UserResponse
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 404 {object} response.ProblemJSONResponse
 // @Router /admin/users/{id} [get]
 func (h *AdminUserHandler) GetUser(c *gin.Context) {
 	idStr := c.Param("id")
@@ -165,7 +165,7 @@ func (h *AdminUserHandler) GetUser(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, user)
+	response.OK(c, user)
 }
 
 // ListUsers godoc
@@ -181,10 +181,10 @@ func (h *AdminUserHandler) GetUser(c *gin.Context) {
 // @Param status query string false "Filter by status" Enums(active,inactive,banned)
 // @Param role query string false "Filter by role" Enums(user,admin)
 // @Param provider query string false "Filter by provider" Enums(local,google,github,telegram)
-// @Success 200 {object} response.StandardListResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} response.HALCollectionResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/users [get]
 func (h *AdminUserHandler) ListUsers(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
@@ -221,7 +221,7 @@ func (h *AdminUserHandler) ListUsers(c *gin.Context) {
 		return
 	}
 
-	response.SuccessList(c, users, page, limit, total)
+	response.SendPaginatedResponse(c, users, total)
 }
 
 // UpdateUser godoc
@@ -233,12 +233,12 @@ func (h *AdminUserHandler) ListUsers(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "User ID"
 // @Param user body entities.UserResponse true "User data"
-// @Success 200 {object} response.StandardResponse{data=entities.UserResponse}
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 404 {object} response.NotFoundResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} entities.UserResponse
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 404 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/users/{id} [put]
 func (h *AdminUserHandler) UpdateUser(c *gin.Context) {
 	idStr := c.Param("id")
@@ -248,14 +248,34 @@ func (h *AdminUserHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	var user entities.User
-	if err := c.ShouldBindJSON(&user); err != nil {
+	// Get the existing user first
+	existingUser, err := h.userService.GetUserByID(c.Request.Context(), uint(id))
+	if err != nil {
+		logger.Error("Failed to get user for update",
+			logger.Uint("user_id", uint(id)),
+			logger.ErrorField(err),
+		)
+		response.NotFound(c, "User not found")
+		return
+	}
+
+	// Bind update data to UserResponse (for safe API binding)
+	var updateData entities.UserResponse
+	if err := c.ShouldBindJSON(&updateData); err != nil {
 		response.BadRequest(c, err.Error())
 		return
 	}
 
-	user.ID = uint(id)
-	if err := h.userService.UpdateUser(c.Request.Context(), &user); err != nil {
+	// Update the existing user with new data
+	existingUser.Email = updateData.Email
+	existingUser.Username = updateData.Username
+	existingUser.Name = updateData.Name
+	existingUser.Avatar = updateData.Avatar
+	existingUser.Status = updateData.Status
+	existingUser.Role = updateData.Role
+	existingUser.Provider = updateData.Provider
+
+	if err := h.userService.UpdateUser(c.Request.Context(), existingUser); err != nil {
 		logger.Error("Admin failed to update user",
 			logger.Uint("user_id", uint(id)),
 			logger.ErrorField(err),
@@ -264,7 +284,7 @@ func (h *AdminUserHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, user)
+	response.OK(c, existingUser.ToResponse())
 }
 
 // UpdateUserRole godoc
@@ -276,11 +296,11 @@ func (h *AdminUserHandler) UpdateUser(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "User ID"
 // @Param role body UpdateUserRoleRequest true "Role data"
-// @Success 200 {object} response.StandardResponse{data=entities.UserResponse}
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 404 {object} response.NotFoundResponse
+// @Success 200 {object} entities.UserResponse
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 404 {object} response.ProblemJSONResponse
 // @Router /admin/users/{id}/role [put]
 func (h *AdminUserHandler) UpdateUserRole(c *gin.Context) {
 	idStr := c.Param("id")
@@ -308,7 +328,7 @@ func (h *AdminUserHandler) UpdateUserRole(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, user)
+	response.OK(c, user)
 }
 
 // UpdateUserStatus godoc
@@ -320,11 +340,11 @@ func (h *AdminUserHandler) UpdateUserRole(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "User ID"
 // @Param status body UpdateUserStatusRequest true "Status data"
-// @Success 200 {object} response.StandardResponse{data=entities.UserResponse}
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 404 {object} response.NotFoundResponse
+// @Success 200 {object} entities.UserResponse
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 404 {object} response.ProblemJSONResponse
 // @Router /admin/users/{id}/status [put]
 func (h *AdminUserHandler) UpdateUserStatus(c *gin.Context) {
 	idStr := c.Param("id")
@@ -352,7 +372,7 @@ func (h *AdminUserHandler) UpdateUserStatus(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, user)
+	response.OK(c, user)
 }
 
 // SoftDeleteUser godoc
@@ -363,11 +383,11 @@ func (h *AdminUserHandler) UpdateUserStatus(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "User ID"
-// @Success 200 {object} response.MessageOnlyResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 404 {object} response.NotFoundResponse
+// @Success 200 {string} string "message"
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 404 {object} response.ProblemJSONResponse
 // @Router /admin/users/{id} [delete]
 func (h *AdminUserHandler) SoftDeleteUser(c *gin.Context) {
 	idStr := c.Param("id")
@@ -386,7 +406,7 @@ func (h *AdminUserHandler) SoftDeleteUser(c *gin.Context) {
 		return
 	}
 
-	response.SuccessWithMessage(c, "User deleted successfully", nil)
+	response.OK(c, gin.H{"message": "User deleted successfully"})
 }
 
 // RestoreUser godoc
@@ -397,11 +417,11 @@ func (h *AdminUserHandler) SoftDeleteUser(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "User ID"
-// @Success 200 {object} response.MessageOnlyResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 404 {object} response.NotFoundResponse
+// @Success 200 {string} string "message"
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 404 {object} response.ProblemJSONResponse
 // @Router /admin/users/{id}/restore [post]
 func (h *AdminUserHandler) RestoreUser(c *gin.Context) {
 	idStr := c.Param("id")
@@ -420,7 +440,7 @@ func (h *AdminUserHandler) RestoreUser(c *gin.Context) {
 		return
 	}
 
-	response.SuccessWithMessage(c, "User restored successfully", nil)
+	response.OK(c, gin.H{"message": "User restored successfully"})
 }
 
 // HardDeleteUser godoc
@@ -431,11 +451,11 @@ func (h *AdminUserHandler) RestoreUser(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "User ID"
-// @Success 200 {object} response.MessageOnlyResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 404 {object} response.NotFoundResponse
+// @Success 200 {string} string "message"
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 404 {object} response.ProblemJSONResponse
 // @Router /admin/users/{id}/hard-delete [delete]
 func (h *AdminUserHandler) HardDeleteUser(c *gin.Context) {
 	idStr := c.Param("id")
@@ -454,7 +474,7 @@ func (h *AdminUserHandler) HardDeleteUser(c *gin.Context) {
 		return
 	}
 
-	response.SuccessWithMessage(c, "User permanently deleted", nil)
+	response.OK(c, gin.H{"message": "User permanently deleted"})
 }
 
 // ListDeletedUsers godoc
@@ -466,10 +486,10 @@ func (h *AdminUserHandler) HardDeleteUser(c *gin.Context) {
 // @Security BearerAuth
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
-// @Success 200 {object} response.StandardListResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} response.HALCollectionResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/users/deleted [get]
 func (h *AdminUserHandler) ListDeletedUsers(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
@@ -491,7 +511,7 @@ func (h *AdminUserHandler) ListDeletedUsers(c *gin.Context) {
 		return
 	}
 
-	response.SuccessList(c, users, page, limit, total)
+	response.SendPaginatedResponse(c, users, total)
 }
 
 // SearchUsers godoc
@@ -504,11 +524,11 @@ func (h *AdminUserHandler) ListDeletedUsers(c *gin.Context) {
 // @Param q query string true "Search query"
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
-// @Success 200 {object} response.SearchResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} response.HALCollectionResponse
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/users/search [get]
 func (h *AdminUserHandler) SearchUsers(c *gin.Context) {
 	query := strings.TrimSpace(c.Query("q"))
@@ -539,9 +559,7 @@ func (h *AdminUserHandler) SearchUsers(c *gin.Context) {
 		return
 	}
 
-	response.SuccessListWithExtra(c, "Search completed", users, page, limit, total, gin.H{
-		"query": query,
-	})
+	response.SendFilteredCollection(c, users, total, map[string]string{"query": query})
 }
 
 // ListUsersByProvider godoc
@@ -554,11 +572,11 @@ func (h *AdminUserHandler) SearchUsers(c *gin.Context) {
 // @Param provider query string true "Provider (google, github, telegram)"
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
-// @Success 200 {object} response.ProviderFilterResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} response.HALCollectionResponse
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/users/provider [get]
 func (h *AdminUserHandler) ListUsersByProvider(c *gin.Context) {
 	provider := c.Query("provider")
@@ -600,9 +618,7 @@ func (h *AdminUserHandler) ListUsersByProvider(c *gin.Context) {
 		return
 	}
 
-	response.SuccessListWithExtra(c, "Users retrieved successfully", users, page, limit, total, gin.H{
-		"provider": provider,
-	})
+	response.SendFilteredCollection(c, users, total, map[string]string{"provider": provider})
 }
 
 // GetUserStats godoc
@@ -612,10 +628,10 @@ func (h *AdminUserHandler) ListUsersByProvider(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} response.StandardResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/users/statistics [get]
 func (h *AdminUserHandler) GetUserStats(c *gin.Context) {
 	stats, err := h.userService.GetUserStats(c.Request.Context())
@@ -625,7 +641,7 @@ func (h *AdminUserHandler) GetUserStats(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, stats)
+	response.OK(c, stats)
 }
 
 // BatchDeleteUsers godoc
@@ -636,11 +652,11 @@ func (h *AdminUserHandler) GetUserStats(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param ids body BatchUserIDsRequest true "User IDs"
-// @Success 200 {object} response.StandardResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/users/bulk/delete [post]
 func (h *AdminUserHandler) BatchDeleteUsers(c *gin.Context) {
 	var requestData BatchUserIDsRequest
@@ -660,7 +676,7 @@ func (h *AdminUserHandler) BatchDeleteUsers(c *gin.Context) {
 		return
 	}
 
-	response.SuccessWithMessage(c, "Users deleted successfully", gin.H{
+	response.OK(c, gin.H{
 		"deleted_count": result.DeletedCount,
 		"failed_ids":    result.FailedIDs,
 	})
@@ -675,12 +691,12 @@ func (h *AdminUserHandler) BatchDeleteUsers(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "User ID"
 // @Param user body PatchUserRequest true "Partial user data"
-// @Success 200 {object} response.StandardResponse{data=entities.UserResponse}
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 404 {object} response.NotFoundResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} entities.UserResponse
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 404 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/users/{id} [patch]
 func (h *AdminUserHandler) PatchUser(c *gin.Context) {
 	idStr := c.Param("id")
@@ -751,7 +767,7 @@ func (h *AdminUserHandler) PatchUser(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, user)
+	response.OK(c, user)
 }
 
 // BatchRestoreUsers godoc
@@ -762,11 +778,11 @@ func (h *AdminUserHandler) PatchUser(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param ids body BatchUserIDsRequest true "User IDs"
-// @Success 200 {object} response.StandardResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/users/bulk/restore [post]
 func (h *AdminUserHandler) BatchRestoreUsers(c *gin.Context) {
 	var requestData BatchUserIDsRequest
@@ -786,7 +802,7 @@ func (h *AdminUserHandler) BatchRestoreUsers(c *gin.Context) {
 		return
 	}
 
-	response.SuccessWithMessage(c, "Users restored successfully", gin.H{
+	response.OK(c, gin.H{
 		"restored_count": result.RestoredCount,
 		"failed_ids":     result.FailedIDs,
 	})
@@ -801,12 +817,12 @@ func (h *AdminUserHandler) BatchRestoreUsers(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path uint true "User ID"
 // @Param password body ResetPasswordRequest true "New password data"
-// @Success 200 {object} response.MessageOnlyResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 404 {object} response.NotFoundResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {string} string "message"
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 404 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/users/{id}/reset-password [post]
 func (h *AdminUserHandler) ResetUserPassword(c *gin.Context) {
 	// Get admin user from context
@@ -816,7 +832,7 @@ func (h *AdminUserHandler) ResetUserPassword(c *gin.Context) {
 		return
 	}
 
-	admin, ok := adminUser.(*entities.User)
+	admin, ok := adminUser.(*entities.UserResponse)
 	if !ok {
 		response.InternalServerError(c, "Invalid admin user context")
 		return
@@ -859,7 +875,7 @@ func (h *AdminUserHandler) ResetUserPassword(c *gin.Context) {
 		return
 	}
 
-	response.SuccessWithMessage(c, "User password reset successfully. All existing tokens have been revoked.", nil)
+	response.OK(c, gin.H{"message": "User password reset successfully. All existing tokens have been revoked."})
 }
 
 // ResetPasswordRequest represents the request structure for admin password reset

@@ -1,131 +1,147 @@
 package response
 
-// StandardResponse represents the standard API response structure for Swagger documentation
-// @Description Standard API response format
-type StandardResponse struct {
-	Code    int         `json:"code" example:"0"`                    // Response code (0 for success, non-zero for errors)
-	Message string      `json:"message" example:"success"`           // Response message
-	Data    any `json:"data,omitempty" swaggertype:"object"` // Response data (optional)
+// RESTful API response structures for Swagger documentation
+
+// HALCollectionResponse represents a HAL-style collection response for Swagger documentation
+// @Description HAL-style collection response format
+type HALCollectionResponse struct {
+	Embedded map[string]any `json:"_embedded" swaggertype:"object"`  // Embedded resources
+	Links    HALLinksSwagger `json:"_links"`                                                              // Navigation links
+	Page     PageInfoSwagger `json:"page,omitempty"`                                                      // Page information
+	Total    int64          `json:"total,omitempty" example:"100"`                                      // Total number of items
 }
 
-// StandardErrorResponse represents error response structure for Swagger documentation
-// @Description Standard API error response format
+// HALResourceResponse represents a HAL-style resource response for Swagger documentation
+// @Description HAL-style resource response format
+type HALResourceResponse struct {
+	ID    int             `json:"id" example:"1"`          // Resource ID
+	Name  string          `json:"name" example:"example"`  // Resource name
+	Links HALLinksSwagger `json:"_links,omitempty"`        // Navigation links
+}
+
+// HALLinksSwagger represents HAL navigation links for Swagger documentation
+// @Description HAL navigation links structure
+type HALLinksSwagger struct {
+	Self  *HALLinkSwagger `json:"self,omitempty"`  // Self link
+	First *HALLinkSwagger `json:"first,omitempty"` // First page link
+	Prev  *HALLinkSwagger `json:"prev,omitempty"`  // Previous page link
+	Next  *HALLinkSwagger `json:"next,omitempty"`  // Next page link
+	Last  *HALLinkSwagger `json:"last,omitempty"`  // Last page link
+}
+
+// HALLinkSwagger represents a single HAL link for Swagger documentation
+// @Description HAL link structure
+type HALLinkSwagger struct {
+	Href      string `json:"href" example:"/api/v1/users/1"`           // Link URL
+	Templated bool   `json:"templated,omitempty" example:"false"`      // Whether the link is templated
+	Type      string `json:"type,omitempty" example:"application/json"` // Media type hint
+	Title     string `json:"title,omitempty" example:"User Profile"`   // Human-readable title
+}
+
+// PageInfoSwagger represents pagination metadata for Swagger documentation
+// @Description Pagination metadata structure
+type PageInfoSwagger struct {
+	Size          int   `json:"size" example:"10"`           // Items per page
+	TotalElements int64 `json:"totalElements" example:"100"` // Total number of elements
+	TotalPages    int   `json:"totalPages" example:"10"`     // Total number of pages
+	Number        int   `json:"number" example:"0"`          // Current page number (0-based)
+}
+
+// ProblemJSONResponse represents RFC 9457 Problem Details for Swagger documentation
+// @Description RFC 9457 Problem Details for HTTP APIs
+type ProblemJSONResponse struct {
+	Type     string `json:"type" example:"/problems/not-found"`                         // Problem type URI
+	Title    string `json:"title" example:"Not Found"`                                 // Short summary
+	Status   int    `json:"status" example:"404"`                                      // HTTP status code
+	Detail   string `json:"detail,omitempty" example:"The user with id 123 was not found"` // Detailed explanation
+	Instance string `json:"instance,omitempty" example:"/api/v1/users/123"`              // Problem instance URI
+}
+
+// BadRequestResponse represents a 400 Bad Request problem response
+// @Description Bad Request problem response format
+type BadRequestResponse struct {
+	Type     string            `json:"type" example:"/problems/bad-request"`
+	Title    string            `json:"title" example:"Bad Request"`
+	Status   int               `json:"status" example:"400"`
+	Detail   string            `json:"detail" example:"Invalid request parameters"`
+	Instance string            `json:"instance,omitempty" example:"/api/v1/users"`
+	Errors   map[string]string `json:"errors,omitempty" example:"{\"email\":\"Invalid email format\"}"`
+}
+
+// UnauthorizedResponse represents a 401 Unauthorized problem response
+// @Description Unauthorized problem response format
+type UnauthorizedResponse struct {
+	Type     string `json:"type" example:"/problems/unauthorized"`
+	Title    string `json:"title" example:"Unauthorized"`
+	Status   int    `json:"status" example:"401"`
+	Detail   string `json:"detail" example:"Authentication credentials are required"`
+	Instance string `json:"instance,omitempty" example:"/api/v1/users"`
+}
+
+// ForbiddenResponse represents a 403 Forbidden problem response
+// @Description Forbidden problem response format
+type ForbiddenResponse struct {
+	Type     string `json:"type" example:"/problems/forbidden"`
+	Title    string `json:"title" example:"Forbidden"`
+	Status   int    `json:"status" example:"403"`
+	Detail   string `json:"detail" example:"Access to this resource is denied"`
+	Instance string `json:"instance,omitempty" example:"/api/v1/admin/users"`
+}
+
+// NotFoundResponse represents a 404 Not Found problem response
+// @Description Not Found problem response format
+type NotFoundResponse struct {
+	Type     string `json:"type" example:"/problems/not-found"`
+	Title    string `json:"title" example:"Not Found"`
+	Status   int    `json:"status" example:"404"`
+	Detail   string `json:"detail" example:"The requested resource was not found"`
+	Instance string `json:"instance,omitempty" example:"/api/v1/users/123"`
+}
+
+// ConflictResponse represents a 409 Conflict problem response
+// @Description Conflict problem response format
+type ConflictResponse struct {
+	Type     string `json:"type" example:"/problems/conflict"`
+	Title    string `json:"title" example:"Conflict"`
+	Status   int    `json:"status" example:"409"`
+	Detail   string `json:"detail" example:"A user with this email already exists"`
+	Instance string `json:"instance,omitempty" example:"/api/v1/users"`
+}
+
+// UnprocessableEntityResponse represents a 422 Unprocessable Entity problem response
+// @Description Unprocessable Entity problem response format
+type UnprocessableEntityResponse struct {
+	Type     string            `json:"type" example:"/problems/unprocessable-entity"`
+	Title    string            `json:"title" example:"Unprocessable Entity"`
+	Status   int               `json:"status" example:"422"`
+	Detail   string            `json:"detail" example:"The request was well-formed but contains semantic errors"`
+	Instance string            `json:"instance,omitempty" example:"/api/v1/users"`
+	Errors   map[string]string `json:"errors,omitempty" example:"{\"email\":\"Email is already taken\"}"`
+}
+
+// InternalServerErrorResponse represents a 500 Internal Server Error problem response
+// @Description Internal Server Error problem response format
+type InternalServerErrorResponse struct {
+	Type     string `json:"type" example:"/problems/internal-server-error"`
+	Title    string `json:"title" example:"Internal Server Error"`
+	Status   int    `json:"status" example:"500"`
+	Detail   string `json:"detail" example:"An internal server error occurred"`
+	Instance string `json:"instance,omitempty" example:"/api/v1/users"`
+}
+
+// Legacy response structures (deprecated, for backward compatibility)
+
+// StandardResponse - DEPRECATED: Use direct resource responses instead
+// @Description DEPRECATED: Standard API response format
+type StandardResponse struct {
+	Code    int    `json:"code" example:"0"`                    // Response code (0 for success, non-zero for errors)
+	Message string `json:"message" example:"success"`           // Response message
+	Data    any    `json:"data,omitempty" swaggertype:"object"` // Response data (optional)
+}
+
+// StandardErrorResponse - DEPRECATED: Use ProblemJSON responses instead
+// @Description DEPRECATED: Standard API error response format
 type StandardErrorResponse struct {
 	Code    int    `json:"code" example:"4000"`           // Error code
 	Message string `json:"message" example:"Bad Request"` // Error message
-}
-
-// BadRequestResponse represents a 400 Bad Request response
-// @Description Bad Request response format
-type BadRequestResponse struct {
-	Code    int    `json:"code" example:"4000"`
-	Message string `json:"message" example:"Invalid request parameters"`
-}
-
-// UnauthorizedResponse represents a 401 Unauthorized response
-// @Description Unauthorized response format
-type UnauthorizedResponse struct {
-	Code    int    `json:"code" example:"4001"`
-	Message string `json:"message" example:"Authentication required"`
-}
-
-// ForbiddenResponse represents a 403 Forbidden response
-// @Description Forbidden response format
-type ForbiddenResponse struct {
-	Code    int    `json:"code" example:"4003"`
-	Message string `json:"message" example:"Access denied"`
-}
-
-// NotFoundResponse represents a 404 Not Found response
-// @Description Not Found response format
-type NotFoundResponse struct {
-	Code    int    `json:"code" example:"4004"`
-	Message string `json:"message" example:"Resource not found"`
-}
-
-// ConflictResponse represents a 409 Conflict response
-// @Description Conflict response format
-type ConflictResponse struct {
-	Code    int    `json:"code" example:"4009"`
-	Message string `json:"message" example:"Resource already exists"`
-}
-
-// InternalServerErrorResponse represents a 500 Internal Server Error response
-// @Description Internal Server Error response format
-type InternalServerErrorResponse struct {
-	Code    int    `json:"code" example:"5000"`
-	Message string `json:"message" example:"Internal server error"`
-}
-
-// StandardListResponse represents paginated list response structure for Swagger documentation
-// @Description Standard API paginated list response format
-type StandardListResponse struct {
-	Code    int          `json:"code" example:"0"`
-	Message string       `json:"message" example:"success"`
-	Data    ListDataInfo `json:"data"`
-}
-
-// ListDataInfo represents the data structure for list responses
-// @Description List response data structure
-type ListDataInfo struct {
-	Items      any        `json:"items" swaggertype:"array,object"` // List items
-	Pagination PaginationResponse `json:"pagination"`                       // Pagination information
-}
-
-// MessageOnlyResponse represents a response with only a message (no data)
-// @Description Message only response format
-type MessageOnlyResponse struct {
-	Code    int    `json:"code" example:"0"`
-	Message string `json:"message" example:"Operation completed successfully"`
-}
-
-// SearchResponse represents a search response with pagination and query info
-// @Description Search response format with pagination and query information
-type SearchResponse struct {
-	Code    int                `json:"code" example:"0"`
-	Message string             `json:"message" example:"Search completed"`
-	Data    SearchResponseData `json:"data"`
-}
-
-// SearchResponseData represents the data structure for search responses
-// @Description Search response data structure
-type SearchResponseData struct {
-	Items      any        `json:"items" swaggertype:"array,object"` // Search result items
-	Pagination PaginationResponse `json:"pagination"`                       // Pagination information
-	Query      string             `json:"query" example:"search term"`      // Search query
-}
-
-// ProviderFilterResponse represents a provider filter response with pagination and provider info
-// @Description Provider filter response format with pagination and provider information
-type ProviderFilterResponse struct {
-	Code    int                        `json:"code" example:"0"`
-	Message string                     `json:"message" example:"Users retrieved successfully"`
-	Data    ProviderFilterResponseData `json:"data"`
-}
-
-// ProviderFilterResponseData represents the data structure for provider filter responses
-// @Description Provider filter response data structure
-type ProviderFilterResponseData struct {
-	Items      any        `json:"items" swaggertype:"array,object"` // Filtered items
-	Pagination PaginationResponse `json:"pagination"`                       // Pagination information
-	Provider   string             `json:"provider" example:"google"`        // OAuth provider
-}
-
-// PaginatedResponse represents a paginated response for Swagger documentation
-// @Description Paginated response format
-type PaginatedResponse struct {
-	Code    int         `json:"code" example:"0"`
-	Message string      `json:"message" example:"success"`
-	Data    any `json:"data" swaggertype:"array,object"`
-	Total   int64       `json:"total" example:"100"`
-	Limit   int         `json:"limit" example:"10"`
-	Offset  int         `json:"offset" example:"0"`
-}
-
-// Response represents the standard API response structure for Swagger documentation
-// @Description Standard API response format
-type Response struct {
-	Code    int         `json:"code" example:"0"`                    // Response code (0 for success, non-zero for errors)
-	Message string      `json:"message" example:"success"`           // Response message
-	Data    any `json:"data,omitempty" swaggertype:"object"` // Response data (optional)
 }

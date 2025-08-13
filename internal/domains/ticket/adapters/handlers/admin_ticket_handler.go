@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -45,7 +46,7 @@ func NewAdminTicketHandler(
 // @Produce json
 // @Security BearerAuth
 // @Param ticket body dto.AdminCreateTicketRequest true "Ticket creation data"
-// @Success 201 {object} response.StandardResponse{data=entities.TicketResponse}
+// @Success 201 {object} entities.TicketResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -159,7 +160,7 @@ func (h *AdminTicketHandler) CreateTicket(c *gin.Context) {
 // @Param search query string false "Search in title, description, or ticket number" example("login issue")
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(20)
-// @Success 200 {object} response.StandardListResponse
+// @Success 200 {object} response.HALCollectionResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -265,7 +266,7 @@ func (h *AdminTicketHandler) ListTickets(c *gin.Context) {
 		}
 	}
 
-	response.SuccessList(c, responses, page, limit, total)
+	response.Paginated(c, "Tickets retrieved successfully", responses, page, limit, total, "/api/v1/admin/tickets")
 }
 
 // GetTicket godoc
@@ -276,7 +277,7 @@ func (h *AdminTicketHandler) ListTickets(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
-// @Success 200 {object} response.StandardResponse{data=entities.TicketResponse}
+// @Success 200 {object} entities.TicketResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -364,7 +365,7 @@ func (h *AdminTicketHandler) GetTicket(c *gin.Context) {
 		}
 	}
 
-	response.Success(c, ticketResponse)
+	response.OK(c, ticketResponse)
 }
 
 // UpdateTicket godoc
@@ -376,7 +377,7 @@ func (h *AdminTicketHandler) GetTicket(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
 // @Param ticket body dto.AdminUpdateTicketRequest true "Ticket update data"
-// @Success 200 {object} response.StandardResponse{data=entities.TicketResponse}
+// @Success 200 {object} entities.TicketResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -440,7 +441,7 @@ func (h *AdminTicketHandler) UpdateTicket(c *gin.Context) {
 	logger.Info("Admin updated ticket successfully",
 		logger.Uint("ticket_id", uint(id)))
 
-	response.Success(c, ticketResponse)
+	response.OK(c, ticketResponse)
 }
 
 // AssignTicket godoc
@@ -452,7 +453,7 @@ func (h *AdminTicketHandler) UpdateTicket(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
 // @Param assignment body dto.AssignTicketRequest true "Assignment data"
-// @Success 200 {object} response.StandardResponse{data=entities.TicketResponse}
+// @Success 200 {object} entities.TicketResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -556,7 +557,7 @@ func (h *AdminTicketHandler) AssignTicket(c *gin.Context) {
 		logger.Uint("ticket_id", uint(id)),
 		logger.Uint("assigned_to_id", req.AssignedToID))
 
-	response.Success(c, ticketResponse)
+	response.OK(c, ticketResponse)
 }
 
 // EscalateTicket godoc
@@ -568,7 +569,7 @@ func (h *AdminTicketHandler) AssignTicket(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
 // @Param escalation body dto.EscalateTicketRequest true "Escalation data"
-// @Success 200 {object} response.StandardResponse{data=entities.TicketResponse}
+// @Success 200 {object} entities.TicketResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -693,7 +694,7 @@ func (h *AdminTicketHandler) EscalateTicket(c *gin.Context) {
 		logger.Uint("ticket_id", uint(id)),
 		logger.Uint("escalated_to_id", req.EscalatedToID))
 
-	response.Success(c, ticketResponse)
+	response.OK(c, ticketResponse)
 }
 
 // CloseTicket godoc
@@ -704,7 +705,7 @@ func (h *AdminTicketHandler) EscalateTicket(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
-// @Success 200 {object} response.StandardResponse{data=entities.TicketResponse}
+// @Success 200 {object} entities.TicketResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -751,7 +752,7 @@ func (h *AdminTicketHandler) CloseTicket(c *gin.Context) {
 	logger.Info("Admin closed ticket successfully",
 		logger.Uint("ticket_id", uint(id)))
 
-	response.Success(c, ticketResponse)
+	response.OK(c, ticketResponse)
 }
 
 // ReopenTicket godoc
@@ -762,7 +763,7 @@ func (h *AdminTicketHandler) CloseTicket(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
-// @Success 200 {object} response.StandardResponse{data=entities.TicketResponse}
+// @Success 200 {object} entities.TicketResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -809,7 +810,7 @@ func (h *AdminTicketHandler) ReopenTicket(c *gin.Context) {
 	logger.Info("Admin reopened ticket successfully",
 		logger.Uint("ticket_id", uint(id)))
 
-	response.Success(c, ticketResponse)
+	response.OK(c, ticketResponse)
 }
 
 // GetTicketMessages godoc
@@ -823,7 +824,7 @@ func (h *AdminTicketHandler) ReopenTicket(c *gin.Context) {
 // @Param include_internal query bool false "Include internal notes" default(true)
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(20)
-// @Success 200 {object} response.StandardListResponse
+// @Success 200 {object} response.HALCollectionResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -896,7 +897,7 @@ func (h *AdminTicketHandler) GetTicketMessages(c *gin.Context) {
 		}
 	}
 
-	response.SuccessList(c, responses, page, limit, total)
+	response.Paginated(c, "Messages retrieved successfully", responses, page, limit, total, fmt.Sprintf("/api/v1/admin/tickets/%s/messages", idStr))
 }
 
 // AddMessage godoc
@@ -908,7 +909,7 @@ func (h *AdminTicketHandler) GetTicketMessages(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
 // @Param message body dto.AdminTicketMessageRequest true "Message data"
-// @Success 201 {object} response.StandardResponse{data=entities.TicketMessageResponse}
+// @Success 201 {object} entities.TicketMessageResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -997,7 +998,7 @@ func (h *AdminTicketHandler) AddMessage(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
 // @Param msg_id path uint true "Message ID"
-// @Success 200 {object} response.StandardResponse{data=entities.TicketMessageResponse}
+// @Success 200 {object} entities.TicketMessageResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -1035,7 +1036,7 @@ func (h *AdminTicketHandler) GetMessage(c *gin.Context) {
 		}
 	}
 
-	response.Success(c, messageResponse)
+	response.OK(c, messageResponse)
 }
 
 // UpdateMessage godoc
@@ -1048,7 +1049,7 @@ func (h *AdminTicketHandler) GetMessage(c *gin.Context) {
 // @Param id path uint true "Ticket ID"
 // @Param msg_id path uint true "Message ID"
 // @Param message body dto.UpdateTicketMessageRequest true "Message update data"
-// @Success 200 {object} response.StandardResponse{data=entities.TicketMessageResponse}
+// @Success 200 {object} entities.TicketMessageResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -1101,7 +1102,7 @@ func (h *AdminTicketHandler) UpdateMessage(c *gin.Context) {
 	logger.Info("Admin updated message successfully",
 		logger.Uint("message_id", uint(msgID)))
 
-	response.Success(c, messageResponse)
+	response.OK(c, messageResponse)
 }
 
 // DeleteMessage godoc
@@ -1113,7 +1114,7 @@ func (h *AdminTicketHandler) UpdateMessage(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
 // @Param msg_id path uint true "Message ID"
-// @Success 200 {object} response.MessageOnlyResponse
+// @Success 200 {object} string
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -1145,7 +1146,7 @@ func (h *AdminTicketHandler) DeleteMessage(c *gin.Context) {
 	logger.Info("Admin deleted message successfully",
 		logger.Uint("message_id", uint(msgID)))
 
-	response.SuccessWithMessage(c, "Message deleted successfully", nil)
+	response.OK(c, nil)
 }
 
 // AddInternalNote godoc
@@ -1157,7 +1158,7 @@ func (h *AdminTicketHandler) DeleteMessage(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
 // @Param note body dto.AdminTicketMessageRequest true "Internal note data"
-// @Success 201 {object} response.StandardResponse{data=entities.TicketMessageResponse}
+// @Success 201 {object} entities.TicketMessageResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -1241,7 +1242,7 @@ func (h *AdminTicketHandler) AddInternalNote(c *gin.Context) {
 // @Param tags query string false "Filter by tags" example("urgent,billing")
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(20)
-// @Success 200 {object} response.SearchResponse
+// @Success 200 {object} response.HALCollectionResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -1320,9 +1321,9 @@ func (h *AdminTicketHandler) SearchTickets(c *gin.Context) {
 	}
 
 	page := (req.Offset / req.Limit) + 1
-	response.SuccessListWithExtra(c, "Search completed", responses, page, req.Limit, total, gin.H{
+	response.PaginatedWithQuery(c, "Search completed", responses, page, req.Limit, total, "/api/v1/admin/tickets/search", map[string]any{
 		"query": req.Query,
-		"filters": gin.H{
+		"filters": map[string]any{
 			"status":   req.Status,
 			"priority": req.Priority,
 			"category": req.Category,
@@ -1351,7 +1352,7 @@ func (h *AdminTicketHandler) GetStatistics(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, stats)
+	response.OK(c, stats)
 }
 
 // GetAnalytics godoc
@@ -1419,7 +1420,7 @@ func (h *AdminTicketHandler) GetAnalytics(c *gin.Context) {
 		}
 	}
 
-	response.Success(c, analytics)
+	response.OK(c, analytics)
 }
 
 // GetAgents godoc
@@ -1431,7 +1432,7 @@ func (h *AdminTicketHandler) GetAnalytics(c *gin.Context) {
 // @Security BearerAuth
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(20)
-// @Success 200 {object} response.StandardListResponse
+// @Success 200 {object} response.HALCollectionResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -1475,7 +1476,7 @@ func (h *AdminTicketHandler) GetAgents(c *gin.Context) {
 		}
 	}
 
-	response.SuccessList(c, agents, page, limit, int64(len(agents)))
+	response.Paginated(c, "Agents retrieved successfully", agents, page, limit, int64(len(agents)), "/api/v1/admin/tickets/agents")
 }
 
 // BulkAssignTickets godoc
@@ -1536,7 +1537,8 @@ func (h *AdminTicketHandler) BulkAssignTickets(c *gin.Context) {
 		logger.Any("ticket_ids", req.TicketIDs),
 		logger.Uint("assigned_to_id", *req.AssignedToID))
 
-	response.SuccessWithMessage(c, "Tickets assigned successfully", gin.H{
+	response.OK(c, gin.H{
+		"message":      "Tickets assigned successfully",
 		"ticket_count": len(req.TicketIDs),
 		"assigned_to":  assignedUser.Name,
 		"reason":       req.Reason,
@@ -1589,7 +1591,8 @@ func (h *AdminTicketHandler) BulkUpdateStatus(c *gin.Context) {
 		logger.Any("ticket_ids", req.TicketIDs),
 		logger.String("status", *req.Status))
 
-	response.SuccessWithMessage(c, "Ticket status updated successfully", gin.H{
+	response.OK(c, gin.H{
+		"message":      "Ticket status updated successfully",
 		"ticket_count": len(req.TicketIDs),
 		"new_status":   *req.Status,
 		"reason":       req.Reason,
@@ -1635,7 +1638,8 @@ func (h *AdminTicketHandler) BulkCloseTickets(c *gin.Context) {
 	logger.Info("Admin bulk closed tickets successfully",
 		logger.Any("ticket_ids", req.TicketIDs))
 
-	response.SuccessWithMessage(c, "Tickets closed successfully", gin.H{
+	response.OK(c, gin.H{
+		"message":      "Tickets closed successfully",
 		"ticket_count": len(req.TicketIDs),
 		"reason":       req.Reason,
 	})
@@ -1649,7 +1653,7 @@ func (h *AdminTicketHandler) BulkCloseTickets(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
-// @Success 200 {object} response.MessageOnlyResponse
+// @Success 200 {object} string
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -1681,5 +1685,5 @@ func (h *AdminTicketHandler) DeleteTicket(c *gin.Context) {
 	logger.Info("Admin deleted ticket successfully",
 		logger.Uint("ticket_id", uint(id)))
 
-	response.SuccessWithMessage(c, "Ticket deleted successfully", nil)
+	response.OK(c, nil)
 }

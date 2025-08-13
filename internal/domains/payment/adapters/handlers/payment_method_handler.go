@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -40,12 +39,12 @@ func NewPaymentMethodHandler(
 // @Accept json
 // @Produce json
 // @Param request body dto.CreatePaymentMethodRequest true "Payment method creation request"
-// @Success 201 {object} response.APIResponse{data=dto.PaymentMethodResponse}
-// @Failure 400 {object} response.APIResponse
-// @Failure 401 {object} response.APIResponse
-// @Failure 409 {object} response.APIResponse
-// @Failure 422 {object} response.APIResponse
-// @Failure 500 {object} response.APIResponse
+// @Success 201 {object} response.StandardResponse
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 401 {object} response.BadRequestResponse
+// @Failure 409 {object} response.BadRequestResponse
+// @Failure 422 {object} response.BadRequestResponse
+// @Failure 500 {object} response.BadRequestResponse
 // @Security BearerAuth
 // @Router /payment-methods [post]
 func (h *PaymentMethodHandler) CreatePaymentMethod(c *gin.Context) {
@@ -58,13 +57,13 @@ func (h *PaymentMethodHandler) CreatePaymentMethod(c *gin.Context) {
 	var req dto.CreatePaymentMethodRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Error("Invalid request body", logger.ErrorField(err))
-		response.BadRequest(c, "Invalid request body", err.Error())
+		response.BadRequest(c, "Invalid request")
 		return
 	}
 
 	// Rate limiting - check if user is creating too many payment methods too quickly
 	if err := h.checkRateLimit(c, userID, "create_payment_method"); err != nil {
-		response.Error(c, http.StatusTooManyRequests, 4029, "Rate limit exceeded")
+		response.BadRequest(c, "Rate limit exceeded")
 		return
 	}
 
@@ -78,7 +77,7 @@ func (h *PaymentMethodHandler) CreatePaymentMethod(c *gin.Context) {
 			return
 		}
 		if isValidationError(err) {
-			response.Error(c, http.StatusUnprocessableEntity, 4022, "Payment method validation failed")
+			response.BadRequest(c, "Payment method validation failed")
 			return
 		}
 		if isDuplicateError(err) {
@@ -100,11 +99,11 @@ func (h *PaymentMethodHandler) CreatePaymentMethod(c *gin.Context) {
 // @Tags User-Payment
 // @Produce json
 // @Param id path int true "Payment method ID"
-// @Success 200 {object} response.APIResponse{data=dto.PaymentMethodResponse}
-// @Failure 400 {object} response.APIResponse
-// @Failure 401 {object} response.APIResponse
-// @Failure 404 {object} response.APIResponse
-// @Failure 500 {object} response.APIResponse
+// @Success 200 {object} response.StandardResponse
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 401 {object} response.BadRequestResponse
+// @Failure 404 {object} response.BadRequestResponse
+// @Failure 500 {object} response.BadRequestResponse
 // @Security BearerAuth
 // @Router /payment-methods/{id} [get]
 func (h *PaymentMethodHandler) GetPaymentMethod(c *gin.Context) {
@@ -116,7 +115,7 @@ func (h *PaymentMethodHandler) GetPaymentMethod(c *gin.Context) {
 
 	paymentMethodID, err := h.getPaymentMethodIDFromPath(c)
 	if err != nil {
-		response.BadRequest(c, "Invalid payment method ID", err.Error())
+		response.BadRequest(c, "Invalid request")
 		return
 	}
 
@@ -133,7 +132,7 @@ func (h *PaymentMethodHandler) GetPaymentMethod(c *gin.Context) {
 		return
 	}
 
-	response.SuccessWithMessage(c, "Payment method retrieved successfully", result)
+	response.OK(c, result)
 }
 
 // ListPaymentMethods godoc
@@ -143,9 +142,9 @@ func (h *PaymentMethodHandler) GetPaymentMethod(c *gin.Context) {
 // @Produce json
 // @Param gateway query string false "Filter by payment gateway"
 // @Param active_only query bool false "Show only active payment methods"
-// @Success 200 {object} response.APIResponse{data=dto.PaymentMethodListResponse}
-// @Failure 401 {object} response.APIResponse
-// @Failure 500 {object} response.APIResponse
+// @Success 200 {object} response.StandardResponse
+// @Failure 401 {object} response.BadRequestResponse
+// @Failure 500 {object} response.BadRequestResponse
 // @Security BearerAuth
 // @Router /payment-methods [get]
 func (h *PaymentMethodHandler) ListPaymentMethods(c *gin.Context) {
@@ -193,7 +192,7 @@ func (h *PaymentMethodHandler) ListPaymentMethods(c *gin.Context) {
 		return
 	}
 
-	response.SuccessWithMessage(c, "Payment methods retrieved successfully", result)
+	response.OK(c, result)
 }
 
 // UpdatePaymentMethod godoc
@@ -204,11 +203,11 @@ func (h *PaymentMethodHandler) ListPaymentMethods(c *gin.Context) {
 // @Produce json
 // @Param id path int true "Payment method ID"
 // @Param request body dto.UpdatePaymentMethodRequest true "Payment method update request"
-// @Success 200 {object} response.APIResponse{data=dto.PaymentMethodResponse}
-// @Failure 400 {object} response.APIResponse
-// @Failure 401 {object} response.APIResponse
-// @Failure 404 {object} response.APIResponse
-// @Failure 500 {object} response.APIResponse
+// @Success 200 {object} response.StandardResponse
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 401 {object} response.BadRequestResponse
+// @Failure 404 {object} response.BadRequestResponse
+// @Failure 500 {object} response.BadRequestResponse
 // @Security BearerAuth
 // @Router /payment-methods/{id} [put]
 func (h *PaymentMethodHandler) UpdatePaymentMethod(c *gin.Context) {
@@ -220,14 +219,14 @@ func (h *PaymentMethodHandler) UpdatePaymentMethod(c *gin.Context) {
 
 	paymentMethodID, err := h.getPaymentMethodIDFromPath(c)
 	if err != nil {
-		response.BadRequest(c, "Invalid payment method ID", err.Error())
+		response.BadRequest(c, "Invalid request")
 		return
 	}
 
 	var req dto.UpdatePaymentMethodRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Error("Invalid request body", logger.ErrorField(err))
-		response.BadRequest(c, "Invalid request body", err.Error())
+		response.BadRequest(c, "Invalid request")
 		return
 	}
 
@@ -245,7 +244,7 @@ func (h *PaymentMethodHandler) UpdatePaymentMethod(c *gin.Context) {
 	}
 
 	h.logger.Info("Payment method updated successfully", logger.Uint("user_id", userID), logger.Uint("payment_method_id", paymentMethodID))
-	response.SuccessWithMessage(c, "Payment method updated successfully", result)
+	response.OK(c, result)
 }
 
 // SetDefaultPaymentMethod godoc
@@ -254,12 +253,12 @@ func (h *PaymentMethodHandler) UpdatePaymentMethod(c *gin.Context) {
 // @Tags User-Payment
 // @Produce json
 // @Param id path int true "Payment method ID"
-// @Success 200 {object} response.APIResponse{data=dto.PaymentMethodResponse}
-// @Failure 400 {object} response.APIResponse
-// @Failure 401 {object} response.APIResponse
-// @Failure 404 {object} response.APIResponse
-// @Failure 422 {object} response.APIResponse
-// @Failure 500 {object} response.APIResponse
+// @Success 200 {object} response.StandardResponse
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 401 {object} response.BadRequestResponse
+// @Failure 404 {object} response.BadRequestResponse
+// @Failure 422 {object} response.BadRequestResponse
+// @Failure 500 {object} response.BadRequestResponse
 // @Security BearerAuth
 // @Router /payment-methods/{id}/default [put]
 func (h *PaymentMethodHandler) SetDefaultPaymentMethod(c *gin.Context) {
@@ -271,7 +270,7 @@ func (h *PaymentMethodHandler) SetDefaultPaymentMethod(c *gin.Context) {
 
 	paymentMethodID, err := h.getPaymentMethodIDFromPath(c)
 	if err != nil {
-		response.BadRequest(c, "Invalid payment method ID", err.Error())
+		response.BadRequest(c, "Invalid request")
 		return
 	}
 
@@ -284,7 +283,7 @@ func (h *PaymentMethodHandler) SetDefaultPaymentMethod(c *gin.Context) {
 			return
 		}
 		if isValidationError(err) {
-			response.Error(c, http.StatusUnprocessableEntity, 4022, "Cannot set payment method as default")
+			response.BadRequest(c, "Cannot set payment method as default")
 			return
 		}
 
@@ -293,7 +292,7 @@ func (h *PaymentMethodHandler) SetDefaultPaymentMethod(c *gin.Context) {
 	}
 
 	h.logger.Info("Payment method set as default", logger.Uint("user_id", userID), logger.Uint("payment_method_id", paymentMethodID))
-	response.SuccessWithMessage(c, "Payment method set as default successfully", result)
+	response.OK(c, result)
 }
 
 // DeletePaymentMethod godoc
@@ -302,11 +301,11 @@ func (h *PaymentMethodHandler) SetDefaultPaymentMethod(c *gin.Context) {
 // @Tags User-Payment
 // @Produce json
 // @Param id path int true "Payment method ID"
-// @Success 200 {object} response.APIResponse
-// @Failure 400 {object} response.APIResponse
-// @Failure 401 {object} response.APIResponse
-// @Failure 404 {object} response.APIResponse
-// @Failure 500 {object} response.APIResponse
+// @Success 200 {object} response.BadRequestResponse
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 401 {object} response.BadRequestResponse
+// @Failure 404 {object} response.BadRequestResponse
+// @Failure 500 {object} response.BadRequestResponse
 // @Security BearerAuth
 // @Router /payment-methods/{id} [delete]
 func (h *PaymentMethodHandler) DeletePaymentMethod(c *gin.Context) {
@@ -318,7 +317,7 @@ func (h *PaymentMethodHandler) DeletePaymentMethod(c *gin.Context) {
 
 	paymentMethodID, err := h.getPaymentMethodIDFromPath(c)
 	if err != nil {
-		response.BadRequest(c, "Invalid payment method ID", err.Error())
+		response.BadRequest(c, "Invalid request")
 		return
 	}
 
@@ -335,7 +334,7 @@ func (h *PaymentMethodHandler) DeletePaymentMethod(c *gin.Context) {
 	}
 
 	h.logger.Info("Payment method deleted successfully", logger.Uint("user_id", userID), logger.Uint("payment_method_id", paymentMethodID))
-	response.SuccessWithMessage(c, "Payment method deleted successfully", nil)
+	response.OK(c, nil)
 }
 
 // ValidatePaymentMethod godoc
@@ -344,12 +343,12 @@ func (h *PaymentMethodHandler) DeletePaymentMethod(c *gin.Context) {
 // @Tags User-Payment
 // @Produce json
 // @Param id path int true "Payment method ID"
-// @Success 200 {object} response.APIResponse{data=dto.PaymentMethodResponse}
-// @Failure 400 {object} response.APIResponse
-// @Failure 401 {object} response.APIResponse
-// @Failure 404 {object} response.APIResponse
-// @Failure 422 {object} response.APIResponse
-// @Failure 500 {object} response.APIResponse
+// @Success 200 {object} response.StandardResponse
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 401 {object} response.BadRequestResponse
+// @Failure 404 {object} response.BadRequestResponse
+// @Failure 422 {object} response.BadRequestResponse
+// @Failure 500 {object} response.BadRequestResponse
 // @Security BearerAuth
 // @Router /payment-methods/{id}/validate [post]
 func (h *PaymentMethodHandler) ValidatePaymentMethod(c *gin.Context) {
@@ -361,13 +360,13 @@ func (h *PaymentMethodHandler) ValidatePaymentMethod(c *gin.Context) {
 
 	paymentMethodID, err := h.getPaymentMethodIDFromPath(c)
 	if err != nil {
-		response.BadRequest(c, "Invalid payment method ID", err.Error())
+		response.BadRequest(c, "Invalid request")
 		return
 	}
 
 	// Rate limiting for validation requests
 	if err := h.checkRateLimit(c, userID, "validate_payment_method"); err != nil {
-		response.Error(c, http.StatusTooManyRequests, 4029, "Rate limit exceeded")
+		response.BadRequest(c, "Rate limit exceeded")
 		return
 	}
 
@@ -380,7 +379,7 @@ func (h *PaymentMethodHandler) ValidatePaymentMethod(c *gin.Context) {
 			return
 		}
 		if isValidationError(err) {
-			response.Error(c, http.StatusUnprocessableEntity, 4022, "Payment method validation failed")
+			response.BadRequest(c, "Payment method validation failed")
 			return
 		}
 
@@ -389,7 +388,7 @@ func (h *PaymentMethodHandler) ValidatePaymentMethod(c *gin.Context) {
 	}
 
 	h.logger.Info("Payment method validated successfully", logger.Uint("user_id", userID), logger.Uint("payment_method_id", paymentMethodID))
-	response.SuccessWithMessage(c, "Payment method validated successfully", result)
+	response.OK(c, result)
 }
 
 // GetDefaultPaymentMethod godoc
@@ -398,10 +397,10 @@ func (h *PaymentMethodHandler) ValidatePaymentMethod(c *gin.Context) {
 // @Tags User-Payment
 // @Produce json
 // @Param gateway query string false "Filter by payment gateway"
-// @Success 200 {object} response.APIResponse{data=dto.PaymentMethodResponse}
-// @Failure 401 {object} response.APIResponse
-// @Failure 404 {object} response.APIResponse
-// @Failure 500 {object} response.APIResponse
+// @Success 200 {object} response.StandardResponse
+// @Failure 401 {object} response.BadRequestResponse
+// @Failure 404 {object} response.BadRequestResponse
+// @Failure 500 {object} response.BadRequestResponse
 // @Security BearerAuth
 // @Router /payment-methods/default [get]
 func (h *PaymentMethodHandler) GetDefaultPaymentMethod(c *gin.Context) {
@@ -434,7 +433,7 @@ func (h *PaymentMethodHandler) GetDefaultPaymentMethod(c *gin.Context) {
 		return
 	}
 
-	response.SuccessWithMessage(c, "Default payment method retrieved successfully", result)
+	response.OK(c, result)
 }
 
 // GetPaymentMethodUsageStats godoc
@@ -443,11 +442,11 @@ func (h *PaymentMethodHandler) GetDefaultPaymentMethod(c *gin.Context) {
 // @Tags User-Payment
 // @Produce json
 // @Param id path int true "Payment method ID"
-// @Success 200 {object} response.APIResponse{data=dto.PaymentMethodUsageStats}
-// @Failure 400 {object} response.APIResponse
-// @Failure 401 {object} response.APIResponse
-// @Failure 404 {object} response.APIResponse
-// @Failure 500 {object} response.APIResponse
+// @Success 200 {object} response.StandardResponse
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 401 {object} response.BadRequestResponse
+// @Failure 404 {object} response.BadRequestResponse
+// @Failure 500 {object} response.BadRequestResponse
 // @Security BearerAuth
 // @Router /payment-methods/{id}/statistics [get]
 func (h *PaymentMethodHandler) GetPaymentMethodUsageStats(c *gin.Context) {
@@ -459,7 +458,7 @@ func (h *PaymentMethodHandler) GetPaymentMethodUsageStats(c *gin.Context) {
 
 	paymentMethodID, err := h.getPaymentMethodIDFromPath(c)
 	if err != nil {
-		response.BadRequest(c, "Invalid payment method ID", err.Error())
+		response.BadRequest(c, "Invalid request")
 		return
 	}
 
@@ -476,7 +475,7 @@ func (h *PaymentMethodHandler) GetPaymentMethodUsageStats(c *gin.Context) {
 		return
 	}
 
-	response.SuccessWithMessage(c, "Payment method usage stats retrieved successfully", result)
+	response.OK(c, result)
 }
 
 // GetAvailablePaymentMethods godoc
@@ -485,7 +484,7 @@ func (h *PaymentMethodHandler) GetPaymentMethodUsageStats(c *gin.Context) {
 // @Tags User-Payment
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.StandardResponse{data=map[string][]string} "Returns map of gateway to supported payment methods"
+// @Success 200 {object} map[string][]string "Returns map of gateway to supported payment methods"
 // @Failure 500 {object} response.InternalServerErrorResponse "Failed to retrieve payment methods from database"
 // @Router /payment/methods [get]
 func (h *PaymentMethodHandler) GetAvailablePaymentMethods(c *gin.Context) {
@@ -493,11 +492,11 @@ func (h *PaymentMethodHandler) GetAvailablePaymentMethods(c *gin.Context) {
 	methods, err := h.paymentService.GetAvailablePaymentMethods(c.Request.Context())
 	if err != nil {
 		logger.Error("Failed to get available payment methods", logger.ErrorField(err))
-		response.InternalServerError(c, "Failed to get payment methods", err.Error())
+		response.InternalServerError(c, "Failed to get payment methods")
 		return
 	}
 
-	response.OK(c, "Available payment methods retrieved successfully", methods)
+	response.OK(c, methods)
 }
 
 // Helper methods

@@ -131,22 +131,10 @@ func (vm *VersionMiddleware) handleUnsupportedVersion(c *gin.Context, requestedV
 		supportedVersions[i] = vi.Version.String()
 	}
 
-	errorResponse := response.ErrorResponse{
-		Error:   "unsupported_api_version",
-		Message: fmt.Sprintf("API version %s is not supported", requestedVersion.String()),
-		Details: map[string]any{
-			"requested_version":  requestedVersion.String(),
-			"supported_versions": supportedVersions,
-			"min_version":        vm.config.MinVersion.String(),
-			"max_version":        vm.config.MaxVersion.String(),
-			"latest_version":     vm.config.GetLatestVersion().String(),
-		},
-	}
-
 	// Add recommendation header
 	c.Header("X-API-Recommendation", fmt.Sprintf("Use version %s", vm.config.GetLatestVersion().String()))
 
-	response.ErrorJSON(c, http.StatusBadRequest, errorResponse)
+	response.BadRequest(c, fmt.Sprintf("API version %s is not supported", requestedVersion.String()))
 	c.Abort()
 }
 
@@ -161,21 +149,11 @@ func (vm *VersionMiddleware) handleSunsetVersion(c *gin.Context, requestedVersio
 		logger.String("user_agent", c.GetHeader("User-Agent")),
 	)
 
-	errorResponse := response.ErrorResponse{
-		Error:   "api_version_sunset",
-		Message: fmt.Sprintf("API version %s has been sunset and is no longer available", requestedVersion.String()),
-		Details: map[string]any{
-			"requested_version": requestedVersion.String(),
-			"sunset_date":       versionInfo.SunsetDate.Format(time.RFC3339),
-			"latest_version":    vm.config.GetLatestVersion().String(),
-			"migration_guide":   fmt.Sprintf("Please migrate to version %s", vm.config.GetLatestVersion().String()),
-		},
-	}
-
 	// Add migration recommendation header
 	c.Header("X-API-Migration", fmt.Sprintf("Migrate to version %s", vm.config.GetLatestVersion().String()))
 
-	response.ErrorJSON(c, http.StatusGone, errorResponse)
+	response.Problem(c, http.StatusGone, "/problems/api-version-sunset", "API Version Sunset", 
+		fmt.Sprintf("API version %s has been sunset and is no longer available", requestedVersion.String()))
 	c.Abort()
 }
 
@@ -253,10 +231,7 @@ func (vm *VersionMiddleware) VersionInfo() gin.HandlerFunc {
 			},
 		}
 
-		c.JSON(http.StatusOK, response.SuccessResponse{
-			Message: "API version information",
-			Data:    versionInfo,
-		})
+		response.OK(c, versionInfo)
 	}
 }
 

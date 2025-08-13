@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -42,7 +43,7 @@ func NewAdminCouponHandler(couponService couponInterfaces.CouponService) *AdminC
 // @Produce json
 // @Security BearerAuth
 // @Param coupon body dto.CreateCouponRequest true "Coupon creation data"
-// @Success 201 {object} response.StandardResponse{data=dto.CouponResponse}
+// @Success 201 {object} dto.CouponResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -87,8 +88,7 @@ func (h *AdminCouponHandler) CreateCoupon(c *gin.Context) {
 	logger.Info("Admin created new coupon",
 		logger.Uint("coupon_id", uint(coupon.ID)),
 		logger.String("code", coupon.Code),
-		logger.String("admin_action", "create_coupon"),
-	)
+		logger.String("admin_action", "create_coupon"))
 
 	response.Created(c, dto.ToResponse(coupon))
 }
@@ -105,7 +105,7 @@ func (h *AdminCouponHandler) CreateCoupon(c *gin.Context) {
 // @Param status query string false "Coupon status" Enums(active,inactive,expired)
 // @Param type query string false "Coupon type" Enums(percentage,fixed_amount)
 // @Param is_public query bool false "Public visibility filter"
-// @Success 200 {object} response.StandardListResponse
+// @Success 200 {object} response.HALCollectionResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -155,7 +155,7 @@ func (h *AdminCouponHandler) ListCoupons(c *gin.Context) {
 		couponResponses = append(couponResponses, dto.ToResponse(coupon))
 	}
 
-	response.SuccessList(c, couponResponses, page, limit, total)
+	response.Paginated(c, "Coupons retrieved successfully", couponResponses, page, limit, total, "/api/v1/admin/coupons")
 }
 
 // GetCoupon godoc
@@ -166,7 +166,7 @@ func (h *AdminCouponHandler) ListCoupons(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Coupon ID"
-// @Success 200 {object} response.StandardResponse{data=dto.CouponResponse}
+// @Success 200 {object} dto.CouponResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -190,7 +190,7 @@ func (h *AdminCouponHandler) GetCoupon(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, dto.ToResponse(coupon))
+	response.OK(c, dto.ToResponse(coupon))
 }
 
 // UpdateCoupon godoc
@@ -202,7 +202,7 @@ func (h *AdminCouponHandler) GetCoupon(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Coupon ID"
 // @Param coupon body dto.UpdateCouponRequest true "Coupon update data"
-// @Success 200 {object} response.StandardResponse{data=dto.CouponResponse}
+// @Success 200 {object} dto.CouponResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -238,7 +238,7 @@ func (h *AdminCouponHandler) UpdateCoupon(c *gin.Context) {
 		logger.String("admin_action", "update_coupon"),
 	)
 
-	response.Success(c, dto.ToResponse(coupon))
+	response.OK(c, dto.ToResponse(coupon))
 }
 
 // DeleteCoupon godoc
@@ -249,7 +249,7 @@ func (h *AdminCouponHandler) UpdateCoupon(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Coupon ID"
-// @Success 200 {object} response.MessageOnlyResponse
+// @Success 200 {object} string
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -277,7 +277,7 @@ func (h *AdminCouponHandler) DeleteCoupon(c *gin.Context) {
 		logger.String("admin_action", "delete_coupon"),
 	)
 
-	response.SuccessWithMessage(c, "Coupon deleted successfully", nil)
+	response.OK(c, nil)
 }
 
 // ToggleCouponStatus godoc
@@ -289,7 +289,7 @@ func (h *AdminCouponHandler) DeleteCoupon(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Coupon ID"
 // @Param status body dto.ToggleStatusRequest true "Status data"
-// @Success 200 {object} response.StandardResponse{data=dto.CouponResponse}
+// @Success 200 {object} dto.CouponResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -343,7 +343,7 @@ func (h *AdminCouponHandler) ToggleCouponStatus(c *gin.Context) {
 		logger.String("admin_action", "toggle_coupon_status"),
 	)
 
-	response.Success(c, dto.ToResponse(coupon))
+	response.OK(c, dto.ToResponse(coupon))
 }
 
 // ExtendCouponExpiry godoc
@@ -355,7 +355,7 @@ func (h *AdminCouponHandler) ToggleCouponStatus(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Coupon ID"
 // @Param extend body dto.ExtendExpiryRequest true "Expiry extension data"
-// @Success 200 {object} response.StandardResponse{data=dto.CouponResponse}
+// @Success 200 {object} dto.CouponResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -420,7 +420,7 @@ func (h *AdminCouponHandler) ExtendCouponExpiry(c *gin.Context) {
 		logger.String("admin_action", "extend_coupon"),
 	)
 
-	response.Success(c, dto.ToResponse(updatedCoupon))
+	response.OK(c, dto.ToResponse(updatedCoupon))
 }
 
 // GetCouponUsage godoc
@@ -433,7 +433,7 @@ func (h *AdminCouponHandler) ExtendCouponExpiry(c *gin.Context) {
 // @Param id path int true "Coupon ID"
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
-// @Success 200 {object} response.StandardListResponse
+// @Success 200 {object} response.HALCollectionResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -475,7 +475,7 @@ func (h *AdminCouponHandler) GetCouponUsage(c *gin.Context) {
 		usageResponses = append(usageResponses, dto.CouponUsageToResponse(usage))
 	}
 
-	response.SuccessList(c, usageResponses, page, limit, total)
+	response.Paginated(c, "Coupon usage retrieved successfully", usageResponses, page, limit, total, fmt.Sprintf("/api/v1/admin/coupons/%s/usage", idStr))
 }
 
 // SearchCoupons godoc
@@ -499,7 +499,7 @@ func (h *AdminCouponHandler) GetCouponUsage(c *gin.Context) {
 // @Param max_used query int false "Maximum usage count"
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
-// @Success 200 {object} response.SearchResponse
+// @Success 200 {object} response.HALCollectionResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -562,7 +562,7 @@ func (h *AdminCouponHandler) SearchCoupons(c *gin.Context) {
 		couponResponses = append(couponResponses, dto.ToResponse(coupon))
 	}
 
-	response.SuccessListWithExtra(c, "Search completed", couponResponses, searchReq.Page, searchReq.Limit, int64(len(filteredCoupons)), gin.H{
+	response.PaginatedWithQuery(c, "Search completed", couponResponses, searchReq.Page, searchReq.Limit, int64(len(filteredCoupons)), "/api/v1/admin/coupons/search", map[string]any{
 		"query": searchReq.Query,
 	})
 }
@@ -587,7 +587,7 @@ func (h *AdminCouponHandler) GetCouponStatistics(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, stats)
+	response.OK(c, stats)
 }
 
 // GetCouponAnalytics godoc
@@ -627,7 +627,7 @@ func (h *AdminCouponHandler) GetCouponAnalytics(c *gin.Context) {
 		logger.String("admin_action", "get_coupon_analytics"),
 	)
 
-	response.Success(c, analytics)
+	response.OK(c, analytics)
 }
 
 // BulkCreateCoupons godoc
@@ -706,7 +706,7 @@ func (h *AdminCouponHandler) BulkCreateCoupons(c *gin.Context) {
 		logger.String("admin_action", "bulk_create_coupons"),
 	)
 
-	response.SuccessWithMessage(c, "Bulk coupon creation completed", gin.H{
+	response.OK(c, gin.H{
 		"requested_count": bulkReq.Count,
 		"created_count":   len(createdCoupons),
 		"failed_count":    len(failedCodes),
@@ -769,7 +769,7 @@ func (h *AdminCouponHandler) BulkUpdateCoupons(c *gin.Context) {
 		logger.String("admin_action", "bulk_update_coupons"),
 	)
 
-	response.SuccessWithMessage(c, "Bulk coupon update completed", gin.H{
+	response.OK(c, gin.H{
 		"requested_count": len(bulkReq.IDs),
 		"success_count":   successCount,
 		"failed_count":    len(failedIDs),
@@ -821,7 +821,7 @@ func (h *AdminCouponHandler) BulkDeactivateCoupons(c *gin.Context) {
 		logger.String("admin_action", "bulk_deactivate_coupons"),
 	)
 
-	response.SuccessWithMessage(c, "Bulk coupon deactivation completed", gin.H{
+	response.OK(c, gin.H{
 		"requested_count": len(bulkReq.IDs),
 		"success_count":   successCount,
 		"failed_count":    len(failedIDs),

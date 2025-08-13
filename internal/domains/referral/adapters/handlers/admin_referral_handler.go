@@ -41,7 +41,7 @@ func NewAdminReferralHandler(
 // @Produce json
 // @Security BearerAuth
 // @Param referral body dto.CreateReferralRequest true "Referral creation data"
-// @Success 201 {object} response.StandardResponse{data=dto.ReferralResponse}
+// @Success 201 {object} dto.ReferralResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -111,7 +111,7 @@ func (h *AdminReferralHandler) CreateReferral(c *gin.Context) {
 // @Param campaign_id query int false "Campaign ID filter"
 // @Param referrer_id query int false "Referrer user ID filter"
 // @Param referee_id query int false "Referee user ID filter"
-// @Success 200 {object} response.StandardListResponse
+// @Success 200 {object} response.HALCollectionResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -164,7 +164,7 @@ func (h *AdminReferralHandler) ListReferrals(c *gin.Context) {
 		referralResponses = append(referralResponses, dto.ToReferralResponse(referral))
 	}
 
-	response.SuccessList(c, referralResponses, page, limit, total)
+	response.Paginated(c, "Referrals retrieved successfully", referralResponses, page, limit, total, "/api/v1/admin/referrals")
 }
 
 // GetReferral godoc
@@ -175,7 +175,7 @@ func (h *AdminReferralHandler) ListReferrals(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Referral ID"
-// @Success 200 {object} response.StandardResponse{data=dto.ReferralResponse}
+// @Success 200 {object} dto.ReferralResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -199,7 +199,7 @@ func (h *AdminReferralHandler) GetReferral(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, dto.ToReferralResponse(referral))
+	response.OK(c, dto.ToReferralResponse(referral))
 }
 
 // UpdateReferral godoc
@@ -211,7 +211,7 @@ func (h *AdminReferralHandler) GetReferral(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Referral ID"
 // @Param referral body dto.UpdateReferralRequest true "Referral update data"
-// @Success 200 {object} response.StandardResponse{data=dto.ReferralResponse}
+// @Success 200 {object} dto.ReferralResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -257,7 +257,7 @@ func (h *AdminReferralHandler) UpdateReferral(c *gin.Context) {
 		logger.String("admin_action", "update_referral"),
 	)
 
-	response.Success(c, dto.ToReferralResponse(referral))
+	response.OK(c, dto.ToReferralResponse(referral))
 }
 
 // ApproveReferral godoc
@@ -269,7 +269,7 @@ func (h *AdminReferralHandler) UpdateReferral(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Referral ID"
 // @Param approve body dto.ApproveReferralRequest true "Approval data"
-// @Success 200 {object} response.StandardResponse{data=dto.ReferralResponse}
+// @Success 200 {object} dto.ReferralResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -324,7 +324,7 @@ func (h *AdminReferralHandler) ApproveReferral(c *gin.Context) {
 		logger.String("admin_action", "approve_referral"),
 	)
 
-	response.Success(c, dto.ToReferralResponse(referral))
+	response.OK(c, dto.ToReferralResponse(referral))
 }
 
 // RejectReferral godoc
@@ -336,7 +336,7 @@ func (h *AdminReferralHandler) ApproveReferral(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Referral ID"
 // @Param reject body dto.RejectReferralRequest true "Rejection data"
-// @Success 200 {object} response.StandardResponse{data=dto.ReferralResponse}
+// @Success 200 {object} dto.ReferralResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -382,7 +382,7 @@ func (h *AdminReferralHandler) RejectReferral(c *gin.Context) {
 		logger.String("admin_action", "reject_referral"),
 	)
 
-	response.Success(c, dto.ToReferralResponse(referral))
+	response.OK(c, dto.ToReferralResponse(referral))
 }
 
 // ProcessReferralPayout godoc
@@ -394,7 +394,7 @@ func (h *AdminReferralHandler) RejectReferral(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Referral ID"
 // @Param payout body dto.PayoutReferralRequest true "Payout data"
-// @Success 200 {object} response.StandardResponse{data=dto.ReferralResponse}
+// @Success 200 {object} dto.ReferralResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -440,7 +440,7 @@ func (h *AdminReferralHandler) ProcessReferralPayout(c *gin.Context) {
 		logger.String("admin_action", "process_payout"),
 	)
 
-	response.Success(c, dto.ToReferralResponse(referral))
+	response.OK(c, dto.ToReferralResponse(referral))
 }
 
 // SearchReferrals godoc
@@ -462,7 +462,7 @@ func (h *AdminReferralHandler) ProcessReferralPayout(c *gin.Context) {
 // @Param max_reward query number false "Maximum reward amount"
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
-// @Success 200 {object} response.SearchResponse
+// @Success 200 {object} response.HALCollectionResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -516,7 +516,7 @@ func (h *AdminReferralHandler) SearchReferrals(c *gin.Context) {
 		referralResponses = append(referralResponses, dto.ToReferralResponse(referral))
 	}
 
-	response.SuccessListWithExtra(c, "Search completed", referralResponses, searchReq.Page, searchReq.Limit, total, gin.H{
+	response.PaginatedWithQuery(c, "Search completed", referralResponses, searchReq.Page, searchReq.Limit, total, "/api/v1/admin/referrals/search", map[string]any{
 		"query": searchReq.Query,
 	})
 }
@@ -541,7 +541,7 @@ func (h *AdminReferralHandler) GetReferralStatistics(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, stats)
+	response.OK(c, stats)
 }
 
 // GetReferralAnalytics godoc
@@ -584,7 +584,7 @@ func (h *AdminReferralHandler) GetReferralAnalytics(c *gin.Context) {
 		logger.String("admin_action", "get_referral_analytics"),
 	)
 
-	response.Success(c, analytics)
+	response.OK(c, analytics)
 }
 
 // BulkApproveReferrals godoc
@@ -649,7 +649,7 @@ func (h *AdminReferralHandler) BulkApproveReferrals(c *gin.Context) {
 		logger.String("admin_action", "bulk_approve_referrals"),
 	)
 
-	response.SuccessWithMessage(c, "Bulk referral approval completed", gin.H{
+	response.OK(c, gin.H{
 		"requested_count": len(bulkReq.IDs),
 		"success_count":   successCount,
 		"failed_count":    len(failedIDs),
@@ -706,7 +706,7 @@ func (h *AdminReferralHandler) BulkProcessPayouts(c *gin.Context) {
 		logger.String("admin_action", "bulk_process_payouts"),
 	)
 
-	response.SuccessWithMessage(c, "Bulk referral payout completed", gin.H{
+	response.OK(c, gin.H{
 		"requested_count": len(bulkReq.IDs),
 		"success_count":   successCount,
 		"failed_count":    len(failedIDs),
@@ -726,7 +726,7 @@ func (h *AdminReferralHandler) BulkProcessPayouts(c *gin.Context) {
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
 // @Param status query string false "Campaign status" Enums(active,paused,ended)
-// @Success 200 {object} response.StandardListResponse
+// @Success 200 {object} response.HALCollectionResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -763,7 +763,7 @@ func (h *AdminReferralHandler) ListCampaigns(c *gin.Context) {
 		campaignResponses = append(campaignResponses, dto.ToReferralCampaignResponse(campaign))
 	}
 
-	response.SuccessList(c, campaignResponses, page, limit, total)
+	response.Paginated(c, "Referral campaigns retrieved successfully", campaignResponses, page, limit, total, "/api/v1/admin/referrals/campaigns")
 }
 
 // CreateCampaign godoc
@@ -774,7 +774,7 @@ func (h *AdminReferralHandler) ListCampaigns(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param campaign body dto.CreateReferralCampaignRequest true "Campaign creation data"
-// @Success 201 {object} response.StandardResponse{data=dto.ReferralCampaignResponse}
+// @Success 201 {object} dto.ReferralCampaignResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -818,7 +818,7 @@ func (h *AdminReferralHandler) CreateCampaign(c *gin.Context) {
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
 // @Param status query string false "Invite code status" Enums(active,used,disabled)
-// @Success 200 {object} response.StandardListResponse
+// @Success 200 {object} response.HALCollectionResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -836,5 +836,5 @@ func (h *AdminReferralHandler) ListInviteCodes(c *gin.Context) {
 
 	// This would call the invite code service
 	// For now, return empty response
-	response.SuccessList(c, []gin.H{}, page, limit, 0)
+	response.Paginated(c, "Invite codes retrieved successfully", []gin.H{}, page, limit, 0, "/api/v1/admin/referrals/invite-codes")
 }

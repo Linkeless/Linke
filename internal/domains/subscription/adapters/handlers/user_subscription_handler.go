@@ -41,7 +41,7 @@ func NewUserSubscriptionHandler(userSubscriptionService interfaces.UserSubscript
 // @Param status query string false "Filter by status" Enums(active, paused, cancelled, expired, trial)
 // @Param limit query int false "Limit results" minimum(1) maximum(100) example(10)
 // @Param offset query int false "Offset results" minimum(0) example(0)
-// @Success 200 {object} response.PaginatedResponse{data=[]entities.UserSubscriptionResponse}
+// @Success 200 {object} response.HALCollectionResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /subscriptions/my [get]
@@ -62,7 +62,7 @@ func (h *UserSubscriptionHandler) GetMySubscriptions(c *gin.Context) {
 	// Parse query parameters
 	var req interfaces.GetUserSubscriptionsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		response.BadRequest(c, "Invalid query parameters", err.Error())
+		response.BadRequest(c, "Invalid query parameters")
 		return
 	}
 
@@ -78,7 +78,7 @@ func (h *UserSubscriptionHandler) GetMySubscriptions(c *gin.Context) {
 	subscriptions, totalCount, err := h.userSubscriptionService.GetUserSubscriptions(c.Request.Context(), &req)
 	if err != nil {
 		logger.Error("Failed to get user subscriptions", logger.ErrorField(err), logger.Uint("user_id", user.ID))
-		response.InternalServerError(c, "Failed to get subscriptions", err.Error())
+		response.InternalServerError(c, "Failed to get subscriptions")
 		return
 	}
 
@@ -88,7 +88,9 @@ func (h *UserSubscriptionHandler) GetMySubscriptions(c *gin.Context) {
 		subscriptionResponses = append(subscriptionResponses, sub.ToResponse())
 	}
 
-	response.OKPaginated(c, "My subscriptions retrieved successfully", subscriptionResponses, totalCount, req.Limit, req.Offset)
+	// Convert offset to page number
+	_ = (req.Offset / req.Limit) + 1 // page calculation
+	response.SendPaginatedResponse(c, subscriptionResponses, totalCount)
 }
 
 // GetMyActiveSubscriptions godoc
@@ -98,7 +100,7 @@ func (h *UserSubscriptionHandler) GetMySubscriptions(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} response.StandardResponse{data=[]entities.UserSubscriptionResponse}
+// @Success 200 {object} []entities.UserSubscriptionResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /subscriptions/my/active [get]
@@ -120,7 +122,7 @@ func (h *UserSubscriptionHandler) GetMyActiveSubscriptions(c *gin.Context) {
 	subscriptions, err := h.userSubscriptionService.GetUserActiveSubscriptions(c.Request.Context(), user.ID)
 	if err != nil {
 		logger.Error("Failed to get active subscriptions", logger.ErrorField(err), logger.Uint("user_id", user.ID))
-		response.InternalServerError(c, "Failed to get active subscriptions", err.Error())
+		response.InternalServerError(c, "Failed to get active subscriptions")
 		return
 	}
 
@@ -130,7 +132,7 @@ func (h *UserSubscriptionHandler) GetMyActiveSubscriptions(c *gin.Context) {
 		subscriptionResponses = append(subscriptionResponses, sub.ToResponse())
 	}
 
-	response.OK(c, "Active subscriptions retrieved successfully", subscriptionResponses)
+	response.OK(c, subscriptionResponses)
 }
 
 // GetSubscription godoc
@@ -141,7 +143,7 @@ func (h *UserSubscriptionHandler) GetMyActiveSubscriptions(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Subscription ID"
-// @Success 200 {object} response.StandardResponse{data=entities.UserSubscriptionResponse}
+// @Success 200 {object} entities.UserSubscriptionResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -166,7 +168,7 @@ func (h *UserSubscriptionHandler) GetSubscription(c *gin.Context) {
 	subscriptionIDStr := c.Param("id")
 	subscriptionID, err := strconv.ParseUint(subscriptionIDStr, 10, 32)
 	if err != nil {
-		response.BadRequest(c, "Invalid subscription ID", "Subscription ID must be a valid number")
+		response.BadRequest(c, "Subscription ID must be a valid number")
 		return
 	}
 
@@ -178,7 +180,7 @@ func (h *UserSubscriptionHandler) GetSubscription(c *gin.Context) {
 			return
 		}
 		logger.Error("Failed to get subscription", logger.ErrorField(err), logger.Uint("subscription_id", uint(subscriptionID)))
-		response.InternalServerError(c, "Failed to get subscription", err.Error())
+		response.InternalServerError(c, "Failed to get subscription")
 		return
 	}
 
@@ -188,7 +190,7 @@ func (h *UserSubscriptionHandler) GetSubscription(c *gin.Context) {
 		return
 	}
 
-	response.OK(c, "Subscription retrieved successfully", subscription.ToResponse())
+	response.OK(c, subscription.ToResponse())
 }
 
 // CancelSubscription godoc
@@ -200,7 +202,7 @@ func (h *UserSubscriptionHandler) GetSubscription(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Subscription ID"
 // @Param request body CancelSubscriptionRequest true "Cancel request"
-// @Success 200 {object} response.StandardResponse{data=entities.UserSubscriptionResponse}
+// @Success 200 {object} entities.UserSubscriptionResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -225,14 +227,14 @@ func (h *UserSubscriptionHandler) CancelSubscription(c *gin.Context) {
 	subscriptionIDStr := c.Param("id")
 	subscriptionID, err := strconv.ParseUint(subscriptionIDStr, 10, 32)
 	if err != nil {
-		response.BadRequest(c, "Invalid subscription ID", "Subscription ID must be a valid number")
+		response.BadRequest(c, "Subscription ID must be a valid number")
 		return
 	}
 
 	// Bind request
 	var req CancelSubscriptionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "Invalid request data", err.Error())
+		response.BadRequest(c, "Invalid request data")
 		return
 	}
 
@@ -244,7 +246,7 @@ func (h *UserSubscriptionHandler) CancelSubscription(c *gin.Context) {
 			return
 		}
 		logger.Error("Failed to get subscription", logger.ErrorField(err), logger.Uint("subscription_id", uint(subscriptionID)))
-		response.InternalServerError(c, "Failed to get subscription", err.Error())
+		response.InternalServerError(c, "Failed to get subscription")
 		return
 	}
 
@@ -257,7 +259,7 @@ func (h *UserSubscriptionHandler) CancelSubscription(c *gin.Context) {
 	// Cancel subscription
 	if err := h.userSubscriptionService.CancelUserSubscription(c.Request.Context(), uint(subscriptionID), req.Reason, req.CancelAtPeriodEnd); err != nil {
 		logger.Error("Failed to cancel subscription", logger.ErrorField(err), logger.Uint("subscription_id", uint(subscriptionID)))
-		response.InternalServerError(c, "Failed to cancel subscription", err.Error())
+		response.InternalServerError(c, "Failed to cancel subscription")
 		return
 	}
 
@@ -265,11 +267,11 @@ func (h *UserSubscriptionHandler) CancelSubscription(c *gin.Context) {
 	updatedSubscription, err := h.userSubscriptionService.GetUserSubscription(c.Request.Context(), uint(subscriptionID))
 	if err != nil {
 		logger.Error("Failed to get updated subscription", logger.ErrorField(err), logger.Uint("subscription_id", uint(subscriptionID)))
-		response.InternalServerError(c, "Subscription cancelled but failed to get updated details", err.Error())
+		response.InternalServerError(c, "Subscription cancelled but failed to get updated details")
 		return
 	}
 
-	response.OK(c, "Subscription cancelled successfully", updatedSubscription.ToResponse())
+	response.OK(c, updatedSubscription.ToResponse())
 }
 
 // GetSubscriptionTrafficStats godoc
@@ -280,7 +282,7 @@ func (h *UserSubscriptionHandler) CancelSubscription(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Subscription ID"
-// @Success 200 {object} response.StandardResponse{data=dto.TrafficStatsResponse}
+// @Success 200 {object} dto.TrafficStatsResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -305,7 +307,7 @@ func (h *UserSubscriptionHandler) GetSubscriptionTrafficStats(c *gin.Context) {
 	subscriptionIDStr := c.Param("id")
 	subscriptionID, err := strconv.ParseUint(subscriptionIDStr, 10, 32)
 	if err != nil {
-		response.BadRequest(c, "Invalid subscription ID", "Subscription ID must be a valid number")
+		response.BadRequest(c, "Subscription ID must be a valid number")
 		return
 	}
 
@@ -317,7 +319,7 @@ func (h *UserSubscriptionHandler) GetSubscriptionTrafficStats(c *gin.Context) {
 			return
 		}
 		logger.Error("Failed to get subscription", logger.ErrorField(err), logger.Uint("subscription_id", uint(subscriptionID)))
-		response.InternalServerError(c, "Failed to get subscription", err.Error())
+		response.InternalServerError(c, "Failed to get subscription")
 		return
 	}
 
@@ -331,11 +333,11 @@ func (h *UserSubscriptionHandler) GetSubscriptionTrafficStats(c *gin.Context) {
 	stats, err := h.userSubscriptionService.GetSubscriptionTrafficStats(c.Request.Context(), uint(subscriptionID))
 	if err != nil {
 		logger.Error("Failed to get traffic stats", logger.ErrorField(err), logger.Uint("subscription_id", uint(subscriptionID)))
-		response.InternalServerError(c, "Failed to get traffic statistics", err.Error())
+		response.InternalServerError(c, "Failed to get traffic statistics")
 		return
 	}
 
-	response.OK(c, "Traffic statistics retrieved successfully", stats)
+	response.OK(c, stats)
 }
 
 // CancelSubscriptionRequest represents the request to cancel a subscription
@@ -353,7 +355,7 @@ type CancelSubscriptionRequest struct {
 // @Security BearerAuth
 // @Param id path int true "Subscription ID"
 // @Param request body interfaces.PauseSubscriptionRequest true "Pause subscription request"
-// @Success 200 {object} response.StandardResponse{data=entities.UserSubscriptionResponse}
+// @Success 200 {object} entities.UserSubscriptionResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -384,14 +386,14 @@ func (h *UserSubscriptionHandler) PauseUserSubscription(c *gin.Context) {
 	subscriptionIDStr := c.Param("id")
 	subscriptionID, err := strconv.ParseUint(subscriptionIDStr, 10, 32)
 	if err != nil {
-		response.BadRequest(c, "Invalid subscription ID", "Subscription ID must be a valid number")
+		response.BadRequest(c, "Subscription ID must be a valid number")
 		return
 	}
 
 	// Parse request body
 	var req interfaces.PauseSubscriptionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "Invalid request body", err.Error())
+		response.BadRequest(c, "Invalid request body")
 		return
 	}
 
@@ -410,15 +412,15 @@ func (h *UserSubscriptionHandler) PauseUserSubscription(c *gin.Context) {
 
 		if err.Error() == "subscription cannot be paused - only active subscriptions can be paused" ||
 			err.Error() == "subscription is already paused" {
-			response.BadRequest(c, "Cannot pause subscription", err.Error())
+			response.BadRequest(c, "Cannot pause subscription")
 			return
 		}
 
-		response.InternalServerError(c, "Failed to pause subscription", err.Error())
+		response.InternalServerError(c, "Failed to pause subscription")
 		return
 	}
 
-	response.OK(c, "Subscription paused successfully", subscription.ToResponse())
+	response.OK(c, subscription.ToResponse())
 }
 
 // ResumeUserSubscription godoc
@@ -430,7 +432,7 @@ func (h *UserSubscriptionHandler) PauseUserSubscription(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Subscription ID"
 // @Param request body interfaces.ResumeSubscriptionRequest true "Resume subscription request"
-// @Success 200 {object} response.StandardResponse{data=entities.UserSubscriptionResponse}
+// @Success 200 {object} entities.UserSubscriptionResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -461,7 +463,7 @@ func (h *UserSubscriptionHandler) ResumeUserSubscription(c *gin.Context) {
 	subscriptionIDStr := c.Param("id")
 	subscriptionID, err := strconv.ParseUint(subscriptionIDStr, 10, 32)
 	if err != nil {
-		response.BadRequest(c, "Invalid subscription ID", "Subscription ID must be a valid number")
+		response.BadRequest(c, "Subscription ID must be a valid number")
 		return
 	}
 
@@ -489,15 +491,15 @@ func (h *UserSubscriptionHandler) ResumeUserSubscription(c *gin.Context) {
 
 		if err.Error() == "subscription cannot be resumed - only paused subscriptions can be resumed" ||
 			err.Error() == "subscription has expired and cannot be resumed" {
-			response.BadRequest(c, "Cannot resume subscription", err.Error())
+			response.BadRequest(c, "Cannot resume subscription")
 			return
 		}
 
-		response.InternalServerError(c, "Failed to resume subscription", err.Error())
+		response.InternalServerError(c, "Failed to resume subscription")
 		return
 	}
 
-	response.OK(c, "Subscription resumed successfully", subscription.ToResponse())
+	response.OK(c, subscription.ToResponse())
 }
 
 // authServiceAdapter adapts the domain AuthService to middleware AuthService interface
@@ -591,14 +593,14 @@ func (h *UserSubscriptionHandler) GetClashConfig(c *gin.Context) {
 	// Fetch accessible servers by user's active subscriptions
 	servers, err := h.userSubscriptionService.GetUserAccessibleServers(c.Request.Context(), user.ID)
 	if err != nil {
-		response.InternalServerError(c, "Failed to fetch accessible servers", err.Error())
+		response.InternalServerError(c, "Failed to fetch accessible servers")
 		return
 	}
 
 	// Build minimal Clash YAML
 	yamlStr, err := BuildMinimalClashYAML(user, sub.UUID, servers)
 	if err != nil {
-		response.InternalServerError(c, "Failed to build YAML", err.Error())
+		response.InternalServerError(c, "Failed to build YAML")
 		return
 	}
 

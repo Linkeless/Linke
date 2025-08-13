@@ -2,7 +2,6 @@ package versioning
 
 import (
 	"fmt"
-	"net/http"
 	"sort"
 
 	"github.com/gin-gonic/gin"
@@ -121,10 +120,7 @@ func (vr *VersionRouter) createVersionDispatchHandler(handlers []VersionedHandle
 		versionCtx, exists := GetVersionFromContext(c)
 		if !exists {
 			vr.logger.Error("No version context found in request")
-			response.ErrorJSON(c, http.StatusInternalServerError, response.ErrorResponse{
-				Error:   "version_context_missing",
-				Message: "Version context not found in request",
-			})
+			response.InternalServerError(c, "Version context not found in request")
 			return
 		}
 
@@ -199,18 +195,7 @@ func (vr *VersionRouter) handleNoCompatibleVersion(c *gin.Context, requestedVers
 		availableVersions[i] = handler.Version.String()
 	}
 
-	errorResponse := response.ErrorResponse{
-		Error:   "version_not_implemented",
-		Message: fmt.Sprintf("Version %s is not implemented for this endpoint", requestedVersion.String()),
-		Details: map[string]any{
-			"requested_version":  requestedVersion.String(),
-			"available_versions": availableVersions,
-			"endpoint":           fmt.Sprintf("%s %s", c.Request.Method, c.Request.URL.Path),
-			"migration_required": true,
-		},
-	}
-
-	response.ErrorJSON(c, http.StatusNotImplemented, errorResponse)
+	response.NotImplemented(c, fmt.Sprintf("Version %s is not implemented for this endpoint", requestedVersion.String()))
 }
 
 // Convenience methods for registering handlers
@@ -287,10 +272,7 @@ func (vhw *VersionedHandlerWrapper) WrapHandler(handler gin.HandlerFunc, support
 		versionCtx, exists := GetVersionFromContext(c)
 		if !exists {
 			vhw.logger.Error("No version context found in wrapped handler")
-			response.ErrorJSON(c, http.StatusInternalServerError, response.ErrorResponse{
-				Error:   "version_context_missing",
-				Message: "Version context not found in request",
-			})
+			response.InternalServerError(c, "Version context not found in request")
 			return
 		}
 
@@ -305,15 +287,7 @@ func (vhw *VersionedHandlerWrapper) WrapHandler(handler gin.HandlerFunc, support
 			}
 
 			if !supported {
-				errorResponse := response.ErrorResponse{
-					Error:   "version_not_supported",
-					Message: fmt.Sprintf("This endpoint does not support version %s", versionCtx.ResolvedVersion.String()),
-					Details: map[string]any{
-						"requested_version":  versionCtx.ResolvedVersion.String(),
-						"supported_versions": supportedVersions,
-					},
-				}
-				response.ErrorJSON(c, http.StatusNotImplemented, errorResponse)
+				response.NotImplemented(c, fmt.Sprintf("This endpoint does not support version %s", versionCtx.ResolvedVersion.String()))
 				return
 			}
 		}

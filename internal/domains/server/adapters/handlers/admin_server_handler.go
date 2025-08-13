@@ -52,7 +52,7 @@ func NewAdminServerHandler(
 // @Produce json
 // @Security BearerAuth
 // @Param server body dto.CreateShadowsocksServerRequest true "Server creation data"
-// @Success 201 {object} response.StandardResponse{data=entities.ShadowsocksServerResponse}
+// @Success 201 {object} entities.ShadowsocksServerResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -128,7 +128,7 @@ func (h *AdminServerHandler) CreateServer(c *gin.Context) {
 // @Param name query string false "Filter by server name (substring match)"
 // @Param sort_by query string false "Sort by field" Enums(sort,created_at,updated_at,name,rate) default(sort)
 // @Param sort_order query string false "Sort order" Enums(asc,desc) default(asc)
-// @Success 200 {object} response.StandardListResponse
+// @Success 200 {object} response.HALCollectionResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -193,7 +193,7 @@ func (h *AdminServerHandler) ListServers(c *gin.Context) {
 		serverResponses[i] = server.ToResponse()
 	}
 
-	response.SuccessList(c, serverResponses, page, limit, total)
+	response.Paginated(c, "Servers retrieved successfully", serverResponses, page, limit, total, "/api/v1/admin/servers")
 }
 
 // GetServer godoc
@@ -204,7 +204,7 @@ func (h *AdminServerHandler) ListServers(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Server ID"
-// @Success 200 {object} response.StandardResponse{data=entities.ShadowsocksServerResponse}
+// @Success 200 {object} entities.ShadowsocksServerResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -228,7 +228,7 @@ func (h *AdminServerHandler) GetServer(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, server.ToResponse())
+	response.OK(c, server.ToResponse())
 }
 
 // UpdateServer godoc
@@ -240,7 +240,7 @@ func (h *AdminServerHandler) GetServer(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Server ID"
 // @Param server body dto.UpdateShadowsocksServerRequest true "Server data"
-// @Success 200 {object} response.StandardResponse{data=entities.ShadowsocksServerResponse}
+// @Success 200 {object} entities.ShadowsocksServerResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -291,7 +291,7 @@ func (h *AdminServerHandler) UpdateServer(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, server.ToResponse())
+	response.OK(c, server.ToResponse())
 }
 
 // PatchServer godoc
@@ -303,7 +303,7 @@ func (h *AdminServerHandler) UpdateServer(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Server ID"
 // @Param server body dto.PatchShadowsocksServerRequest true "Partial server data"
-// @Success 200 {object} response.StandardResponse{data=entities.ShadowsocksServerResponse}
+// @Success 200 {object} entities.ShadowsocksServerResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -355,7 +355,7 @@ func (h *AdminServerHandler) PatchServer(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, server.ToResponse())
+	response.OK(c, server.ToResponse())
 }
 
 // DeleteServer godoc
@@ -366,7 +366,7 @@ func (h *AdminServerHandler) PatchServer(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Server ID"
-// @Success 200 {object} response.MessageOnlyResponse
+// @Success 200 {object} string
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -389,7 +389,7 @@ func (h *AdminServerHandler) DeleteServer(c *gin.Context) {
 		return
 	}
 
-	response.SuccessWithMessage(c, "Server deleted successfully", nil)
+	response.OK(c, nil)
 }
 
 // UpdateServerStatus godoc
@@ -401,7 +401,7 @@ func (h *AdminServerHandler) DeleteServer(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Server ID"
 // @Param status body UpdateServerStatusRequest true "Status data"
-// @Success 200 {object} response.MessageOnlyResponse
+// @Success 200 {object} string
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -431,7 +431,7 @@ func (h *AdminServerHandler) UpdateServerStatus(c *gin.Context) {
 		return
 	}
 
-	response.SuccessWithMessage(c, "Server status updated successfully", nil)
+	response.OK(c, nil)
 }
 
 // GetServerStatistics godoc
@@ -467,7 +467,7 @@ func (h *AdminServerHandler) GetServerStatistics(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, stats)
+	response.OK(c, stats)
 }
 
 // BulkUpdateServers godoc
@@ -501,7 +501,8 @@ func (h *AdminServerHandler) BulkUpdateServers(c *gin.Context) {
 		return
 	}
 
-	response.SuccessWithMessage(c, "Servers updated successfully", gin.H{
+	response.OK(c, gin.H{
+		"message":       "Servers updated successfully",
 		"updated_count": len(requestData.IDs),
 		"server_ids":    requestData.IDs,
 	})
@@ -540,7 +541,7 @@ func (h *AdminServerHandler) CheckServerHealth(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, health)
+	response.OK(c, health)
 }
 
 // GetServersByGroup godoc
@@ -582,5 +583,5 @@ func (h *AdminServerHandler) GetServersByGroup(c *gin.Context) {
 		serverResponses[i] = server.ToResponse()
 	}
 
-	response.Success(c, serverResponses)
+	response.OK(c, serverResponses)
 }

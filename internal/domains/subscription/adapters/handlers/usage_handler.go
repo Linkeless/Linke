@@ -116,7 +116,7 @@ func (h *UsageHandler) ensureOwnership(c *gin.Context, subscriptionID uint) bool
 // @Accept json
 // @Produce json
 // @Param subscription_id path int true "Subscription ID"
-// @Success 200 {object} response.StandardResponse{data=interfaces.CurrentUsageResponse}
+// @Success 200 {object} interfaces.CurrentUsageResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -134,11 +134,11 @@ func (h *UsageHandler) GetCurrentUsage(c *gin.Context) {
 
 	currentUsage, err := h.usageTrackingService.GetCurrentUsage(c.Request.Context(), uint(subscriptionID), "")
 	if err != nil {
-		response.InternalServerError(c, "Failed to get current usage", err.Error())
+		response.InternalServerError(c, "Failed to get current usage")
 		return
 	}
 
-	response.SuccessWithMessage(c, "Current usage retrieved successfully", currentUsage)
+	response.OK(c, currentUsage)
 }
 
 // GetCurrentUsageByType godoc
@@ -149,7 +149,7 @@ func (h *UsageHandler) GetCurrentUsage(c *gin.Context) {
 // @Produce json
 // @Param subscription_id path int true "Subscription ID"
 // @Param usage_type path string true "Usage Type" Enums(traffic,api_call,storage,bandwidth,connections)
-// @Success 200 {object} response.StandardResponse{data=interfaces.CurrentUsageResponse}
+// @Success 200 {object} interfaces.CurrentUsageResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -173,11 +173,11 @@ func (h *UsageHandler) GetCurrentUsageByType(c *gin.Context) {
 
 	currentUsage, err := h.usageTrackingService.GetCurrentUsage(c.Request.Context(), uint(subscriptionID), usageType)
 	if err != nil {
-		response.InternalServerError(c, "Failed to get current usage", err.Error())
+		response.InternalServerError(c, "Failed to get current usage")
 		return
 	}
 
-	response.SuccessWithMessage(c, "Current usage retrieved successfully", currentUsage)
+	response.OK(c, currentUsage)
 }
 
 // Usage History Endpoints
@@ -197,7 +197,7 @@ func (h *UsageHandler) GetCurrentUsageByType(c *gin.Context) {
 // @Param offset query int false "Offset" default(0)
 // @Param include_details query bool false "Include detailed breakdown" default(false)
 // @Param source_type query string false "Source Type Filter"
-// @Success 200 {object} response.StandardResponse{data=interfaces.UsageHistoryResponse}
+// @Success 200 {object} interfaces.UsageHistoryResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -254,11 +254,11 @@ func (h *UsageHandler) GetUsageHistory(c *gin.Context) {
 
 	history, err := h.usageTrackingService.GetUsageHistory(c.Request.Context(), req)
 	if err != nil {
-		response.InternalServerError(c, "Failed to get usage history", err.Error())
+		response.InternalServerError(c, "Failed to get usage history")
 		return
 	}
 
-	response.SuccessWithMessage(c, "Usage history retrieved successfully", history)
+	response.OK(c, history)
 }
 
 // GetUsageSummary godoc
@@ -275,7 +275,7 @@ func (h *UsageHandler) GetUsageHistory(c *gin.Context) {
 // @Param include_breakdown query bool false "Include detailed breakdown" default(false)
 // @Param include_predictions query bool false "Include usage predictions" default(false)
 // @Param compare_with_previous query bool false "Compare with previous period" default(false)
-// @Success 200 {object} response.StandardResponse{data=entities.UsageSummary}
+// @Success 200 {object} entities.UsageSummary
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -322,11 +322,11 @@ func (h *UsageHandler) GetUsageSummary(c *gin.Context) {
 
 	summary, err := h.usageTrackingService.GetUsageSummary(c.Request.Context(), req)
 	if err != nil {
-		response.InternalServerError(c, "Failed to get usage summary", err.Error())
+		response.InternalServerError(c, "Failed to get usage summary")
 		return
 	}
 
-	response.SuccessWithMessage(c, "Usage summary retrieved successfully", summary)
+	response.OK(c, summary)
 }
 
 // GetUsageStatistics godoc
@@ -342,7 +342,7 @@ func (h *UsageHandler) GetUsageSummary(c *gin.Context) {
 // @Param end_time query string false "End Time (RFC3339)" format(date-time)
 // @Param group_by query string false "Group By Dimensions (comma-separated)"
 // @Param include_comparison query bool false "Include period comparison" default(false)
-// @Success 200 {object} response.StandardResponse{data=interfaces.UsageStatistics}
+// @Success 200 {object} interfaces.UsageStatistics
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -381,11 +381,11 @@ func (h *UsageHandler) GetUsageStatistics(c *gin.Context) {
 
 	stats, err := h.usageTrackingService.GetUsageStatistics(c.Request.Context(), req)
 	if err != nil {
-		response.InternalServerError(c, "Failed to get usage statistics", err.Error())
+		response.InternalServerError(c, "Failed to get usage statistics")
 		return
 	}
 
-	response.SuccessWithMessage(c, "Usage statistics retrieved successfully", stats)
+	response.OK(c, stats)
 }
 
 // GetUsageTrends godoc
@@ -400,7 +400,7 @@ func (h *UsageHandler) GetUsageStatistics(c *gin.Context) {
 // @Param granularity query string false "Data Granularity" Enums(hourly,daily,weekly) default(daily)
 // @Param include_predictions query bool false "Include usage predictions" default(false)
 // @Param include_anomalies query bool false "Include anomaly detection" default(false)
-// @Success 200 {object} response.StandardResponse{data=interfaces.UsageTrendsResponse}
+// @Success 200 {object} interfaces.UsageTrendsResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -427,11 +427,11 @@ func (h *UsageHandler) GetUsageTrends(c *gin.Context) {
 
 	trends, err := h.usageTrackingService.GetUsageTrends(c.Request.Context(), req)
 	if err != nil {
-		response.InternalServerError(c, "Failed to get usage trends", err.Error())
+		response.InternalServerError(c, "Failed to get usage trends")
 		return
 	}
 
-	response.SuccessWithMessage(c, "Usage trends retrieved successfully", trends)
+	response.OK(c, trends)
 }
 
 // GetUsagePredictions godoc
@@ -441,7 +441,7 @@ func (h *UsageHandler) GetUsageTrends(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param subscription_id path int true "Subscription ID"
-// @Success 200 {object} response.StandardResponse{data=[]entities.UsagePrediction}
+// @Success 200 {object} []entities.UsagePrediction
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -459,11 +459,11 @@ func (h *UsageHandler) GetUsagePredictions(c *gin.Context) {
 
 	predictions, err := h.usageTrackingService.GetUsagePredictions(c.Request.Context(), uint(subscriptionID), "")
 	if err != nil {
-		response.InternalServerError(c, "Failed to get usage predictions", err.Error())
+		response.InternalServerError(c, "Failed to get usage predictions")
 		return
 	}
 
-	response.SuccessWithMessage(c, "Usage predictions retrieved successfully", predictions)
+	response.OK(c, predictions)
 }
 
 // GetUsagePredictionsByType godoc
@@ -474,7 +474,7 @@ func (h *UsageHandler) GetUsagePredictions(c *gin.Context) {
 // @Produce json
 // @Param subscription_id path int true "Subscription ID"
 // @Param usage_type path string true "Usage Type" Enums(traffic,api_call,storage,bandwidth,connections)
-// @Success 200 {object} response.StandardResponse{data=[]entities.UsagePrediction}
+// @Success 200 {object} []entities.UsagePrediction
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -498,11 +498,11 @@ func (h *UsageHandler) GetUsagePredictionsByType(c *gin.Context) {
 
 	predictions, err := h.usageTrackingService.GetUsagePredictions(c.Request.Context(), uint(subscriptionID), usageType)
 	if err != nil {
-		response.InternalServerError(c, "Failed to get usage predictions", err.Error())
+		response.InternalServerError(c, "Failed to get usage predictions")
 		return
 	}
 
-	response.SuccessWithMessage(c, "Usage predictions retrieved successfully", predictions)
+	response.OK(c, predictions)
 }
 
 // Real-time Monitoring
@@ -514,7 +514,7 @@ func (h *UsageHandler) GetUsagePredictionsByType(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param subscription_id path int true "Subscription ID"
-// @Success 200 {object} response.StandardResponse{data=interfaces.RealTimeUsageResponse}
+// @Success 200 {object} interfaces.RealTimeUsageResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -532,11 +532,11 @@ func (h *UsageHandler) GetRealTimeUsage(c *gin.Context) {
 
 	realTimeUsage, err := h.usageTrackingService.GetRealTimeUsage(c.Request.Context(), uint(subscriptionID))
 	if err != nil {
-		response.InternalServerError(c, "Failed to get real-time usage", err.Error())
+		response.InternalServerError(c, "Failed to get real-time usage")
 		return
 	}
 
-	response.SuccessWithMessage(c, "Real-time usage retrieved successfully", realTimeUsage)
+	response.OK(c, realTimeUsage)
 }
 
 // Export Endpoints
@@ -548,7 +548,7 @@ func (h *UsageHandler) GetRealTimeUsage(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body interfaces.ExportUsageRequest true "Export Request"
-// @Success 200 {object} response.StandardResponse{data=interfaces.ExportUsageResponse}
+// @Success 200 {object} interfaces.ExportUsageResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage/export [post]
@@ -561,11 +561,11 @@ func (h *UsageHandler) ExportUsageData(c *gin.Context) {
 
 	exportResult, err := h.usageTrackingService.ExportUsageData(c.Request.Context(), &req)
 	if err != nil {
-		response.InternalServerError(c, "Failed to export usage data", err.Error())
+		response.InternalServerError(c, "Failed to export usage data")
 		return
 	}
 
-	response.SuccessWithMessage(c, "Usage data export initiated successfully", exportResult)
+	response.OK(c, exportResult)
 }
 
 // Admin Endpoints
@@ -581,7 +581,7 @@ func (h *UsageHandler) ExportUsageData(c *gin.Context) {
 // @Param limit query int false "Limit" default(10) maximum(100)
 // @Param order_by query string false "Order By" Enums(total_usage,average_usage,peak_usage) default(total_usage)
 // @Param include_zero query bool false "Include zero usage subscriptions" default(false)
-// @Success 200 {object} response.StandardResponse{data=interfaces.TopUsageResponse}
+// @Success 200 {object} interfaces.TopUsageResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage/top [get]
@@ -617,11 +617,11 @@ func (h *UsageHandler) GetTopUsageSubscriptions(c *gin.Context) {
 
 	topUsage, err := h.usageTrackingService.GetTopUsageSubscriptions(c.Request.Context(), req)
 	if err != nil {
-		response.InternalServerError(c, "Failed to get top usage subscriptions", err.Error())
+		response.InternalServerError(c, "Failed to get top usage subscriptions")
 		return
 	}
 
-	response.SuccessWithMessage(c, "Top usage subscriptions retrieved successfully", topUsage)
+	response.OK(c, topUsage)
 }
 
 // CleanupOldUsageData godoc
@@ -631,7 +631,7 @@ func (h *UsageHandler) GetTopUsageSubscriptions(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param older_than query string true "Delete data older than this date (RFC3339)" format(date-time)
-// @Success 200 {object} response.StandardResponse{data=interfaces.CleanupResult}
+// @Success 200 {object} interfaces.CleanupResult
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage/admin/cleanup [post]
@@ -650,11 +650,11 @@ func (h *UsageHandler) CleanupOldUsageData(c *gin.Context) {
 
 	result, err := h.usageTrackingService.CleanupOldUsageData(c.Request.Context(), olderThan)
 	if err != nil {
-		response.InternalServerError(c, "Failed to cleanup old usage data", err.Error())
+		response.InternalServerError(c, "Failed to cleanup old usage data")
 		return
 	}
 
-	response.SuccessWithMessage(c, "Old usage data cleanup completed successfully", result)
+	response.OK(c, result)
 }
 
 // ResetUsageForSubscription godoc
@@ -685,11 +685,11 @@ func (h *UsageHandler) ResetUsageForSubscription(c *gin.Context) {
 
 	err = h.usageTrackingService.ResetUsageForSubscription(c.Request.Context(), uint(subscriptionID), usageType)
 	if err != nil {
-		response.InternalServerError(c, "Failed to reset usage for subscription", err.Error())
+		response.InternalServerError(c, "Failed to reset usage for subscription")
 		return
 	}
 
-	response.SuccessWithMessage(c, "Usage reset successfully", nil)
+	response.OK(c, gin.H{"message": "Usage reset successfully"})
 }
 
 // SyncSubscriptionLimits godoc
@@ -713,9 +713,9 @@ func (h *UsageHandler) SyncSubscriptionLimits(c *gin.Context) {
 
 	err = h.usageTrackingService.SyncSubscriptionLimits(c.Request.Context(), uint(subscriptionID))
 	if err != nil {
-		response.InternalServerError(c, "Failed to sync subscription limits", err.Error())
+		response.InternalServerError(c, "Failed to sync subscription limits")
 		return
 	}
 
-	response.SuccessWithMessage(c, "Subscription limits synced successfully", nil)
+	response.OK(c, gin.H{"message": "Subscription limits synced successfully"})
 }

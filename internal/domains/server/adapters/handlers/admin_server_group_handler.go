@@ -37,7 +37,7 @@ func NewAdminServerGroupHandler(
 // @Produce json
 // @Security BearerAuth
 // @Param group body dto.CreateServerGroupRequest true "Server group creation data"
-// @Success 201 {object} response.StandardResponse{data=entities.ServerGroupResponse}
+// @Success 201 {object} entities.ServerGroupResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -91,7 +91,7 @@ func (h *AdminServerGroupHandler) CreateGroup(c *gin.Context) {
 // @Security BearerAuth
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(10)
-// @Success 200 {object} response.StandardListResponse
+// @Success 200 {object} response.HALCollectionResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -128,7 +128,7 @@ func (h *AdminServerGroupHandler) ListGroups(c *gin.Context) {
 		groupResponses[i] = group.ToResponse()
 	}
 
-	response.SuccessList(c, groupResponses, page, limit, total)
+	response.Paginated(c, "Server groups retrieved successfully", groupResponses, page, limit, total, "/api/v1/admin/server-groups")
 }
 
 // GetGroup godoc
@@ -139,7 +139,7 @@ func (h *AdminServerGroupHandler) ListGroups(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Group ID"
-// @Success 200 {object} response.StandardResponse{data=entities.ServerGroupResponse}
+// @Success 200 {object} entities.ServerGroupResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -163,7 +163,7 @@ func (h *AdminServerGroupHandler) GetGroup(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, group.ToResponse())
+	response.OK(c, group.ToResponse())
 }
 
 // UpdateGroup godoc
@@ -175,7 +175,7 @@ func (h *AdminServerGroupHandler) GetGroup(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Group ID"
 // @Param group body dto.UpdateServerGroupRequest true "Server group data"
-// @Success 200 {object} response.StandardResponse{data=entities.ServerGroupResponse}
+// @Success 200 {object} entities.ServerGroupResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -217,7 +217,7 @@ func (h *AdminServerGroupHandler) UpdateGroup(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, group.ToResponse())
+	response.OK(c, group.ToResponse())
 }
 
 // PatchGroup godoc
@@ -229,7 +229,7 @@ func (h *AdminServerGroupHandler) UpdateGroup(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Group ID"
 // @Param group body dto.PatchServerGroupRequest true "Partial server group data"
-// @Success 200 {object} response.StandardResponse{data=entities.ServerGroupResponse}
+// @Success 200 {object} entities.ServerGroupResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -272,7 +272,7 @@ func (h *AdminServerGroupHandler) PatchGroup(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, group.ToResponse())
+	response.OK(c, group.ToResponse())
 }
 
 // DeleteGroup godoc
@@ -283,7 +283,7 @@ func (h *AdminServerGroupHandler) PatchGroup(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Group ID"
-// @Success 200 {object} response.MessageOnlyResponse
+// @Success 200 {object} string
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -329,7 +329,7 @@ func (h *AdminServerGroupHandler) DeleteGroup(c *gin.Context) {
 		return
 	}
 
-	response.SuccessWithMessage(c, "Server group deleted successfully", nil)
+	response.OK(c, nil)
 }
 
 // GetGroupServers godoc
@@ -377,7 +377,7 @@ func (h *AdminServerGroupHandler) GetGroupServers(c *gin.Context) {
 		serverResponses[i] = server.ToResponse()
 	}
 
-	response.Success(c, serverResponses)
+	response.OK(c, serverResponses)
 }
 
 // GetGroupStatistics godoc
@@ -419,7 +419,7 @@ func (h *AdminServerGroupHandler) GetGroupStatistics(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, stats)
+	response.OK(c, stats)
 }
 
 // GetAllGroupStatistics godoc
@@ -456,7 +456,7 @@ func (h *AdminServerGroupHandler) GetAllGroupStatistics(c *gin.Context) {
 		statistics[group.Name] = stats
 	}
 
-	response.Success(c, gin.H{
+	response.OK(c, gin.H{
 		"total_groups": len(groups),
 		"statistics":   statistics,
 	})

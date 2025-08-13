@@ -2,6 +2,8 @@ package implementations
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"slices"
 	"strings"
@@ -850,13 +852,24 @@ func (sos *SubscriptionOrderService) GetUserSubscriptionOrders(ctx context.Conte
 	return orders, totalCount, nil
 }
 
-// generateOrderNumber generates a unique order number
+// generateOrderNumber generates a unique order number with enhanced security
 func (sos *SubscriptionOrderService) generateOrderNumber() string {
-	// Generate format: ORD + YYYYMMDDHHMMSS + 3-digit random
+	// Generate format: ORD + Unix timestamp + 16-character secure random hex
+	// This provides better security than predictable nanosecond-based randomness
 	now := time.Now()
-	timestamp := now.Format("20060102150405")
-	random := now.Nanosecond() % 1000
-	return fmt.Sprintf("ORD%s%03d", timestamp, random)
+	timestamp := now.Unix()
+	
+	// Generate 8 random bytes (16 hex characters) for strong uniqueness
+	randomBytes := make([]byte, 8)
+	if _, err := rand.Read(randomBytes); err != nil {
+		// Fallback to time-based randomness if crypto/rand fails
+		logger.Warn("Failed to generate cryptographically secure random bytes, using fallback", logger.ErrorField(err))
+		fallbackRandom := now.UnixNano() % 1000000000 // 9 digits
+		return fmt.Sprintf("ORD%d%09d", timestamp, fallbackRandom)
+	}
+	
+	randomHex := strings.ToUpper(hex.EncodeToString(randomBytes))
+	return fmt.Sprintf("ORD%d%s", timestamp, randomHex)
 }
 
 // calculateProration calculates the prorated credit for subscription changes

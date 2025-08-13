@@ -32,14 +32,14 @@ func BindJSONRequest(c *gin.Context, req any) bool {
 }
 
 // GetCurrentUser 从上下文中获取当前用户
-func GetCurrentUser(c *gin.Context) (*entities.User, bool) {
+func GetCurrentUser(c *gin.Context) (*entities.UserResponse, bool) {
 	userValue, exists := c.Get(middleware.AuthContextKey)
 	if !exists {
 		response.Unauthorized(c, constants.ErrAuthenticationRequired)
 		return nil, false
 	}
 
-	user, ok := userValue.(*entities.User)
+	user, ok := userValue.(*entities.UserResponse)
 	if !ok {
 		response.Unauthorized(c, constants.ErrInvalidUserContext)
 		return nil, false

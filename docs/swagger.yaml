@@ -345,6 +345,20 @@ definitions:
     required:
     - assigned_to_id
     type: object
+  dto.AuthResponse:
+    properties:
+      token:
+        $ref: '#/definitions/dto.TokenResponse'
+      user:
+        $ref: '#/definitions/dto.UserResponse'
+    type: object
+  dto.AuthorizeURLResponse:
+    properties:
+      auth_url:
+        type: string
+      state:
+        type: string
+    type: object
   dto.BenchmarkResult:
     properties:
       avg_latency_ms:
@@ -710,57 +724,6 @@ definitions:
         description: Discount value
         example: 20
         type: number
-    type: object
-  dto.CouponUsageResponse:
-    properties:
-      coupon:
-        allOf:
-        - $ref: '#/definitions/dto.CouponResponse'
-        description: Related data (to be populated at application layer)
-      coupon_id:
-        description: Coupon ID
-        example: 1
-        type: integer
-      created_at:
-        description: Creation time
-        example: "2024-01-01T00:00:00Z"
-        type: string
-      currency:
-        description: Currency
-        example: CNY
-        type: string
-      discount_amount:
-        description: Discount amount
-        example: 5.99
-        type: number
-      id:
-        description: Usage ID
-        example: 1
-        type: integer
-      order_amount:
-        description: Original order amount
-        example: 29.99
-        type: number
-      subscription_order:
-        allOf:
-        - $ref: '#/definitions/dto.SubscriptionOrderBasicDTO'
-        description: Order info
-      subscription_order_id:
-        description: Order ID
-        example: 1
-        type: integer
-      updated_at:
-        description: Update time
-        example: "2024-01-01T00:00:00Z"
-        type: string
-      user:
-        allOf:
-        - $ref: '#/definitions/dto.UserBasicDTO'
-        description: User info
-      user_id:
-        description: User ID
-        example: 1
-        type: integer
     type: object
   dto.CreateCouponRequest:
     properties:
@@ -1630,140 +1593,6 @@ definitions:
         example: https://api.example.com
         type: string
     type: object
-  dto.PaymentMethodListResponse:
-    properties:
-      default_method:
-        $ref: '#/definitions/dto.PaymentMethodResponse'
-      payment_methods:
-        items:
-          $ref: '#/definitions/dto.PaymentMethodResponse'
-        type: array
-      total:
-        example: 5
-        type: integer
-    type: object
-  dto.PaymentMethodResponse:
-    properties:
-      billing_country:
-        description: Billing country
-        example: CN
-        type: string
-      billing_postcode:
-        description: Billing postcode
-        example: "100000"
-        type: string
-      brand:
-        description: Brand/provider
-        example: Alipay
-        type: string
-      can_be_used:
-        description: Usability status
-        type: boolean
-      created_at:
-        description: Creation time
-        example: "2024-01-01T00:00:00Z"
-        type: string
-      display_name:
-        description: User-friendly name
-        example: My Alipay Account
-        type: string
-      expiry_month:
-        description: Expiry month (cards only)
-        example: 12
-        type: integer
-      expiry_year:
-        description: Expiry year (cards only)
-        example: 2025
-        type: integer
-      failed_uses:
-        description: Failed payment count
-        example: 1
-        type: integer
-      failure_rate:
-        description: Failure rate
-        type: number
-      gateway:
-        description: Payment gateway
-        example: epay
-        type: string
-      id:
-        description: Payment method ID
-        example: 1
-        type: integer
-      is_active:
-        description: Is active
-        example: true
-        type: boolean
-      is_default:
-        description: Is default payment method
-        example: true
-        type: boolean
-      is_expired:
-        description: Computed fields
-        type: boolean
-      last_used_at:
-        description: Last used
-        example: "2024-01-01T00:00:00Z"
-        type: string
-      last_validated_at:
-        description: Last validation
-        example: "2024-01-01T00:00:00Z"
-        type: string
-      masked_info:
-        description: Masked payment info
-        example: ali***@example.com
-        type: string
-      method:
-        description: Payment method
-        example: alipay
-        type: string
-      needs_validation:
-        description: Validation requirement
-        type: boolean
-      status:
-        description: Status
-        example: active
-        type: string
-      successful_uses:
-        description: Successful payment count
-        example: 5
-        type: integer
-      type:
-        description: Payment method type
-        example: card
-        type: string
-      updated_at:
-        description: Update time
-        example: "2024-01-01T00:00:00Z"
-        type: string
-      user_id:
-        description: User ID
-        example: 1
-        type: integer
-    type: object
-  dto.PaymentMethodUsageStats:
-    properties:
-      average_amount:
-        type: number
-      failed_uses:
-        type: integer
-      failure_rate:
-        type: number
-      last_used:
-        type: string
-      payment_method_id:
-        type: integer
-      recent_uses_30_days:
-        type: integer
-      success_rate:
-        type: number
-      successful_uses:
-        type: integer
-      total_amount:
-        type: number
-      total_uses:
-        type: integer
-    type: object
   dto.PaymentRecordResponse:
     properties:
       amount:
@@ -2266,6 +2095,20 @@ definitions:
         example: 2
         type: integer
     type: object
+  dto.RegisterRequest:
+    properties:
+      email:
+        type: string
+      invite_code:
+        description: Optional invite code
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - password
+    type: object
   dto.RejectReferralRequest:
     properties:
       note:
@@ -2341,6 +2184,19 @@ definitions:
         type: string
     required:
     - status
+    type: object
+  dto.TokenResponse:
+    properties:
+      access_token:
+        type: string
+      expires_at:
+        type: string
+      expires_in:
+        type: integer
+      refresh_token:
+        type: string
+      token_type:
+        type: string
     type: object
   dto.TrafficStatsResponse:
     properties:
@@ -2701,6 +2557,39 @@ definitions:
     - category
     - description
     - title
+    type: object
+  dto.UserResponse:
+    properties:
+      avatar:
+        example: https://example.com/avatar.jpg
+        type: string
+      created_at:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      email:
+        example: user@example.com
+        type: string
+      id:
+        example: 1
+        type: integer
+      name:
+        example: John Doe
+        type: string
+      provider:
+        example: local
+        type: string
+      role:
+        example: user
+        type: string
+      status:
+        example: active
+        type: string
+      updated_at:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      username:
+        example: johndoe
+        type: string
     type: object
   dto.UserTicketMessageRequest:
     properties:
@@ -4593,18 +4482,6 @@ definitions:
     - duration_minutes
     - reason
     type: object
-  handlers.TokenExchangeRequest:
-    properties:
-      code:
-        type: string
-      provider:
-        type: string
-      state:
-        type: string
-    required:
-    - code
-    - provider
-    type: object
   handlers.UniProxyBaseConfig:
     properties:
       pull_interval:
@@ -4903,21 +4780,6 @@ definitions:
       total_alerts:
         type: integer
     type: object
-  interfaces.AuthorizeURLRequest:
-    properties:
-      provider:
-        type: string
-      redirect_uri:
-        type: string
-      scopes:
-        items:
-          type: string
-        type: array
-      state:
-        type: string
-    required:
-    - provider
-    type: object
   interfaces.BulkResolveAlertsRequest:
     properties:
       alert_ids:
@@ -5136,16 +4998,6 @@ definitions:
           $ref: '#/definitions/entities.UsageAlertResponse'
         type: array
     type: object
-  interfaces.LoginRequest:
-    properties:
-      email:
-        type: string
-      password:
-        type: string
-    required:
-    - email
-    - password
-    type: object
   interfaces.PaginationInfo:
     properties:
       current_page:
@@ -5224,20 +5076,6 @@ definitions:
         type: object
       user_subscription_id:
         type: integer
-    type: object
-  interfaces.RegisterRequest:
-    properties:
-      email:
-        type: string
-      invite_code:
-        description: Optional invite code
-        type: string
-      password:
-        minLength: 6
-        type: string
-    required:
-    - email
-    - password
     type: object
   interfaces.ResumeSubscriptionRequest:
     properties:
@@ -5817,206 +5655,216 @@ definitions:
       user_id:
         type: integer
     type: object
-  response.APIResponse:
-    properties:
-      code:
-        type: integer
-      data: {}
-      message:
-        type: string
-    type: object
   response.BadRequestResponse:
-    description: Bad Request response format
+    description: Bad Request problem response format
     properties:
-      code:
-        example: 4000
-        type: integer
-      message:
+      detail:
         example: Invalid request parameters
+        type: string
+      errors:
+        additionalProperties:
+          type: string
+        example:
+          '{"email"': '"Invalid email format"}'
+        type: object
+      instance:
+        example: /api/v1/users
+        type: string
+      status:
+        example: 400
+        type: integer
+      title:
+        example: Bad Request
+        type: string
+      type:
+        example: /problems/bad-request
         type: string
     type: object
   response.ConflictResponse:
-    description: Conflict response format
+    description: Conflict problem response format
     properties:
-      code:
-        example: 4009
+      detail:
+        example: A user with this email already exists
+        type: string
+      instance:
+        example: /api/v1/users
+        type: string
+      status:
+        example: 409
         type: integer
-      message:
-        example: Resource already exists
+      title:
+        example: Conflict
+        type: string
+      type:
+        example: /problems/conflict
         type: string
     type: object
   response.ForbiddenResponse:
-    description: Forbidden response format
+    description: Forbidden problem response format
     properties:
-      code:
-        example: 4003
+      detail:
+        example: Access to this resource is denied
+        type: string
+      instance:
+        example: /api/v1/admin/users
+        type: string
+      status:
+        example: 403
         type: integer
-      message:
-        example: Access denied
+      title:
+        example: Forbidden
+        type: string
+      type:
+        example: /problems/forbidden
         type: string
     type: object
-  response.InternalServerErrorResponse:
-    description: Internal Server Error response format
+  response.HALCollectionResponse:
+    description: HAL-style collection response format
     properties:
-      code:
-        example: 5000
-        type: integer
-      message:
-        example: Internal server error
-        type: string
-    type: object
-  response.ListDataInfo:
-    description: List response data structure
-    properties:
-      items:
-        description: List items
-        items:
-          type: object
-        type: array
-      pagination:
+      _embedded:
+        description: Embedded resources
+        type: object
+      _links:
         allOf:
-        - $ref: '#/definitions/response.PaginationResponse'
-        description: Pagination information
-    type: object
-  response.MessageOnlyResponse:
-    description: Message only response format
-    properties:
-      code:
-        example: 0
-        type: integer
-      message:
-        example: Operation completed successfully
-        type: string
-    type: object
-  response.NotFoundResponse:
-    description: Not Found response format
-    properties:
-      code:
-        example: 4004
-        type: integer
-      message:
-        example: Resource not found
-        type: string
-    type: object
-  response.PaginatedResponse:
-    description: Paginated response format
-    properties:
-      code:
-        example: 0
-        type: integer
-      data:
-        items:
-          type: object
-        type: array
-      limit:
-        example: 10
-        type: integer
-      message:
-        example: success
-        type: string
-      offset:
-        example: 0
-        type: integer
+        - $ref: '#/definitions/response.HALLinksSwagger'
+        description: Navigation links
+      page:
+        allOf:
+        - $ref: '#/definitions/response.PageInfoSwagger'
+        description: Page information
       total:
+        description: Total number of items
         example: 100
         type: integer
     type: object
-  response.PaginationResponse:
+  response.HALLinkSwagger:
+    description: HAL link structure
     properties:
-      limit:
-        type: integer
-      page:
-        type: integer
-      total:
-        type: integer
-    type: object
-  response.ProviderFilterResponse:
-    description: Provider filter response format with pagination and provider information
-    properties:
-      code:
-        example: 0
-        type: integer
-      data:
-        $ref: '#/definitions/response.ProviderFilterResponseData'
-      message:
-        example: Users retrieved successfully
+      href:
+        description: Link URL
+        example: /api/v1/users/1
+        type: string
+      templated:
+        description: Whether the link is templated
+        example: false
+        type: boolean
+      title:
+        description: Human-readable title
+        example: User Profile
+        type: string
+      type:
+        description: Media type hint
+        example: application/json
         type: string
     type: object
-  response.ProviderFilterResponseData:
-    description: Provider filter response data structure
+  response.HALLinksSwagger:
+    description: HAL navigation links structure
     properties:
-      items:
-        description: Filtered items
-        items:
-          type: object
-        type: array
-      pagination:
+      first:
         allOf:
-        - $ref: '#/definitions/response.PaginationResponse'
-        description: Pagination information
-      provider:
-        description: OAuth provider
-        example: google
-        type: string
-    type: object
-  response.Response:
-    description: Standard API response format
-    properties:
-      code:
-        description: Response code (0 for success, non-zero for errors)
-        example: 0
-        type: integer
-      data:
-        description: Response data (optional)
-        type: object
-      message:
-        description: Response message
-        example: success
-        type: string
-    type: object
-  response.SearchResponse:
-    description: Search response format with pagination and query information
-    properties:
-      code:
-        example: 0
-        type: integer
-      data:
-        $ref: '#/definitions/response.SearchResponseData'
-      message:
-        example: Search completed
-        type: string
-    type: object
-  response.SearchResponseData:
-    description: Search response data structure
-    properties:
-      items:
-        description: Search result items
-        items:
-          type: object
-        type: array
-      pagination:
+        - $ref: '#/definitions/response.HALLinkSwagger'
+        description: First page link
+      last:
         allOf:
-        - $ref: '#/definitions/response.PaginationResponse'
-        description: Pagination information
-      query:
-        description: Search query
-        example: search term
+        - $ref: '#/definitions/response.HALLinkSwagger'
+        description: Last page link
+      next:
+        allOf:
+        - $ref: '#/definitions/response.HALLinkSwagger'
+        description: Next page link
+      prev:
+        allOf:
+        - $ref: '#/definitions/response.HALLinkSwagger'
+        description: Previous page link
+      self:
+        allOf:
+        - $ref: '#/definitions/response.HALLinkSwagger'
+        description: Self link
+    type: object
+  response.InternalServerErrorResponse:
+    description: Internal Server Error problem response format
+    properties:
+      detail:
+        example: An internal server error occurred
+        type: string
+      instance:
+        example: /api/v1/users
+        type: string
+      status:
+        example: 500
+        type: integer
+      title:
+        example: Internal Server Error
+        type: string
+      type:
+        example: /problems/internal-server-error
         type: string
     type: object
-  response.StandardListResponse:
-    description: Standard API paginated list response format
+  response.NotFoundResponse:
+    description: Not Found problem response format
     properties:
-      code:
+      detail:
+        example: The requested resource was not found
+        type: string
+      instance:
+        example: /api/v1/users/123
+        type: string
+      status:
+        example: 404
+        type: integer
+      title:
+        example: Not Found
+        type: string
+      type:
+        example: /problems/not-found
+        type: string
+    type: object
+  response.PageInfoSwagger:
+    description: Pagination metadata structure
+    properties:
+      number:
+        description: Current page number (0-based)
         example: 0
         type: integer
-      data:
-        $ref: '#/definitions/response.ListDataInfo'
-      message:
-        example: success
+      size:
+        description: Items per page
+        example: 10
+        type: integer
+      totalElements:
+        description: Total number of elements
+        example: 100
+        type: integer
+      totalPages:
+        description: Total number of pages
+        example: 10
+        type: integer
+    type: object
+  response.ProblemJSONResponse:
+    description: RFC 9457 Problem Details for HTTP APIs
+    properties:
+      detail:
+        description: Detailed explanation
+        example: The user with id 123 was not found
+        type: string
+      instance:
+        description: Problem instance URI
+        example: /api/v1/users/123
+        type: string
+      status:
+        description: HTTP status code
+        example: 404
+        type: integer
+      title:
+        description: Short summary
+        example: Not Found
+        type: string
+      type:
+        description: Problem type URI
+        example: /problems/not-found
         type: string
     type: object
   response.StandardResponse:
-    description: Standard API response format
+    description: 'DEPRECATED: Standard API response format'
     properties:
       code:
         description: Response code (0 for success, non-zero for errors)
@@ -6031,13 +5879,22 @@ definitions:
         type: string
     type: object
   response.UnauthorizedResponse:
-    description: Unauthorized response format
+    description: Unauthorized problem response format
     properties:
-      code:
-        example: 4001
+      detail:
+        example: Authentication credentials are required
+        type: string
+      instance:
+        example: /api/v1/users
+        type: string
+      status:
+        example: 401
         type: integer
-      message:
-        example: Authentication required
+      title:
+        example: Unauthorized
+        type: string
+      type:
+        example: /problems/unauthorized
         type: string
     type: object
 host: localhost:8080
@@ -6068,27 +5925,28 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            additionalProperties: true
+            type: object
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.NotFoundResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: Get account security status
@@ -6110,29 +5968,29 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: message
           schema:
-            $ref: '#/definitions/response.MessageOnlyResponse'
+            type: string
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.NotFoundResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: Force password reset
@@ -6154,29 +6012,29 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: message
           schema:
-            $ref: '#/definitions/response.MessageOnlyResponse'
+            type: string
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.NotFoundResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: Unlock locked account
@@ -6205,19 +6063,20 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            additionalProperties: true
+            type: object
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: Get security pattern analysis
@@ -6234,19 +6093,20 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            additionalProperties: true
+            type: object
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: Get overall security score
@@ -6269,19 +6129,20 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            additionalProperties: true
+            type: object
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: Get overall security statistics
@@ -6305,23 +6166,24 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            additionalProperties: true
+            type: object
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: Send security notifications
@@ -6345,23 +6207,24 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            additionalProperties: true
+            type: object
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: Bulk reset passwords
@@ -6385,23 +6248,24 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            additionalProperties: true
+            type: object
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: Bulk revoke user tokens
@@ -6425,23 +6289,24 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            additionalProperties: true
+            type: object
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: Bulk unlock accounts
@@ -6458,19 +6323,20 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            additionalProperties: true
+            type: object
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: Get JWT token analytics
@@ -6506,19 +6372,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardListResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: List JWT blacklist entries
@@ -6540,25 +6406,25 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: message
           schema:
-            $ref: '#/definitions/response.MessageOnlyResponse'
+            type: string
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: Revoke JWT token manually
@@ -6591,19 +6457,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardListResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: List active JWT tokens
@@ -6636,19 +6502,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardListResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: List OAuth security events
@@ -6666,19 +6532,20 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            additionalProperties: true
+            type: object
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: Get OAuth provider statistics
@@ -6702,19 +6569,20 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            additionalProperties: true
+            type: object
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: Analyze failed login patterns
@@ -6763,23 +6631,23 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardListResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: List login attempts
@@ -6796,7 +6664,8 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            additionalProperties: true
+            type: object
       security:
       - BearerAuth: []
       summary: Flush cache
@@ -6813,12 +6682,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/cache.MetricsReport'
-              type: object
+            $ref: '#/definitions/cache.MetricsReport'
       security:
       - BearerAuth: []
       summary: Get cache metrics
@@ -6841,12 +6705,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/cache.Metrics'
-              type: object
+            $ref: '#/definitions/cache.Metrics'
       security:
       - BearerAuth: []
       summary: Get cache metrics by prefix
@@ -6863,14 +6722,9 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  items:
-                    type: string
-                  type: array
-              type: object
+            items:
+              type: string
+            type: array
       security:
       - BearerAuth: []
       summary: Get cache system alerts
@@ -6887,12 +6741,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.CacheBenchmarkResponse'
-              type: object
+            $ref: '#/definitions/dto.CacheBenchmarkResponse'
       security:
       - BearerAuth: []
       summary: Run cache benchmark
@@ -6909,12 +6758,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.CacheDashboardResponse'
-              type: object
+            $ref: '#/definitions/dto.CacheDashboardResponse'
       security:
       - BearerAuth: []
       summary: Get cache dashboard data
@@ -6931,12 +6775,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/cache.CacheHealthStatus'
-              type: object
+            $ref: '#/definitions/cache.CacheHealthStatus'
       security:
       - BearerAuth: []
       summary: Get multi-level cache health
@@ -6953,15 +6792,10 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  additionalProperties:
-                    format: int64
-                    type: integer
-                  type: object
-              type: object
+            additionalProperties:
+              format: int64
+              type: integer
+            type: object
       security:
       - BearerAuth: []
       summary: Get cache invalidation metrics
@@ -6978,12 +6812,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/cache.MultiLevelCacheMetrics'
-              type: object
+            $ref: '#/definitions/cache.MultiLevelCacheMetrics'
       security:
       - BearerAuth: []
       summary: Get multi-level cache metrics
@@ -7000,12 +6829,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/cache.PerformanceMetrics'
-              type: object
+            $ref: '#/definitions/cache.PerformanceMetrics'
       security:
       - BearerAuth: []
       summary: Get cache performance metrics
@@ -7022,12 +6846,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/cache.WarmingMetrics'
-              type: object
+            $ref: '#/definitions/cache.WarmingMetrics'
       security:
       - BearerAuth: []
       summary: Get cache warming status
@@ -7052,12 +6871,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.CacheWarmingResponse'
-              type: object
+            $ref: '#/definitions/dto.CacheWarmingResponse'
       security:
       - BearerAuth: []
       summary: Trigger cache warming
@@ -7080,7 +6894,8 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            additionalProperties: true
+            type: object
       security:
       - BearerAuth: []
       summary: Delete cache by pattern
@@ -7097,7 +6912,8 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            additionalProperties: true
+            type: object
       security:
       - BearerAuth: []
       summary: Reset cache metrics
@@ -7114,12 +6930,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/cache.CacheStats'
-              type: object
+            $ref: '#/definitions/cache.CacheStats'
       security:
       - BearerAuth: []
       summary: Get cache statistics
@@ -7166,7 +6977,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardListResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "401":
           description: Unauthorized
           schema:
@@ -7201,12 +7012,7 @@ paths:
         "201":
           description: Created
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.CouponResponse'
-              type: object
+            $ref: '#/definitions/dto.CouponResponse'
         "400":
           description: Bad Request
           schema:
@@ -7249,7 +7055,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.MessageOnlyResponse'
+            type: string
         "400":
           description: Bad Request
           schema:
@@ -7287,12 +7093,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.CouponResponse'
-              type: object
+            $ref: '#/definitions/dto.CouponResponse'
         "400":
           description: Bad Request
           schema:
@@ -7336,12 +7137,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.CouponResponse'
-              type: object
+            $ref: '#/definitions/dto.CouponResponse'
         "400":
           description: Bad Request
           schema:
@@ -7390,12 +7186,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.CouponResponse'
-              type: object
+            $ref: '#/definitions/dto.CouponResponse'
         "400":
           description: Bad Request
           schema:
@@ -7440,12 +7231,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.CouponResponse'
-              type: object
+            $ref: '#/definitions/dto.CouponResponse'
         "400":
           description: Bad Request
           schema:
@@ -7494,7 +7280,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardListResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "400":
           description: Bad Request
           schema:
@@ -7757,7 +7543,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.SearchResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "400":
           description: Bad Request
           schema:
@@ -7870,7 +7656,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardListResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "401":
           description: Unauthorized
           schema:
@@ -7905,12 +7691,7 @@ paths:
         "201":
           description: Created
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.InvoiceResponse'
-              type: object
+            $ref: '#/definitions/dto.InvoiceResponse'
         "400":
           description: Bad Request
           schema:
@@ -7954,7 +7735,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.MessageOnlyResponse'
+            type: string
         "400":
           description: Bad Request
           schema:
@@ -7992,12 +7773,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.InvoiceResponse'
-              type: object
+            $ref: '#/definitions/dto.InvoiceResponse'
         "400":
           description: Bad Request
           schema:
@@ -8042,12 +7818,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.InvoiceResponse'
-              type: object
+            $ref: '#/definitions/dto.InvoiceResponse'
         "400":
           description: Bad Request
           schema:
@@ -8096,12 +7867,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.InvoiceResponse'
-              type: object
+            $ref: '#/definitions/dto.InvoiceResponse'
         "400":
           description: Bad Request
           schema:
@@ -8147,7 +7913,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.MessageOnlyResponse'
+            type: string
         "400":
           description: Bad Request
           schema:
@@ -8196,7 +7962,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.MessageOnlyResponse'
+            type: string
         "400":
           description: Bad Request
           schema:
@@ -8245,12 +8011,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.InvoiceResponse'
-              type: object
+            $ref: '#/definitions/dto.InvoiceResponse'
         "400":
           description: Bad Request
           schema:
@@ -8545,7 +8306,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardListResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "401":
           description: Unauthorized
           schema:
@@ -8639,7 +8400,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.SearchResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "400":
           description: Bad Request
           schema:
@@ -8743,12 +8504,7 @@ paths:
         "201":
           description: Created
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.InvoiceResponse'
-              type: object
+            $ref: '#/definitions/dto.InvoiceResponse'
         "400":
           description: Bad Request
           schema:
@@ -8810,14 +8566,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.PaginatedResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/dto.PaymentConfigResponse'
-                  type: array
-              type: object
+            $ref: '#/definitions/response.HALCollectionResponse'
         "400":
           description: Bad Request
           schema:
@@ -8858,12 +8607,7 @@ paths:
         "201":
           description: Created
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.PaymentConfigResponse'
-              type: object
+            $ref: '#/definitions/dto.PaymentConfigResponse'
         "400":
           description: Bad Request
           schema:
@@ -8951,12 +8695,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.PaymentConfigResponse'
-              type: object
+            $ref: '#/definitions/dto.PaymentConfigResponse'
         "400":
           description: Bad Request
           schema:
@@ -9034,7 +8773,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardListResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "401":
           description: Unauthorized
           schema:
@@ -9069,12 +8808,7 @@ paths:
         "201":
           description: Created
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.ReferralResponse'
-              type: object
+            $ref: '#/definitions/dto.ReferralResponse'
         "400":
           description: Bad Request
           schema:
@@ -9117,12 +8851,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.ReferralResponse'
-              type: object
+            $ref: '#/definitions/dto.ReferralResponse'
         "400":
           description: Bad Request
           schema:
@@ -9166,12 +8895,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.ReferralResponse'
-              type: object
+            $ref: '#/definitions/dto.ReferralResponse'
         "400":
           description: Bad Request
           schema:
@@ -9220,12 +8944,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.ReferralResponse'
-              type: object
+            $ref: '#/definitions/dto.ReferralResponse'
         "400":
           description: Bad Request
           schema:
@@ -9270,12 +8989,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.ReferralResponse'
-              type: object
+            $ref: '#/definitions/dto.ReferralResponse'
         "400":
           description: Bad Request
           schema:
@@ -9320,12 +9034,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.ReferralResponse'
-              type: object
+            $ref: '#/definitions/dto.ReferralResponse'
         "400":
           description: Bad Request
           schema:
@@ -9497,7 +9206,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardListResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "401":
           description: Unauthorized
           schema:
@@ -9532,12 +9241,7 @@ paths:
         "201":
           description: Created
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.ReferralCampaignResponse'
-              type: object
+            $ref: '#/definitions/dto.ReferralCampaignResponse'
         "400":
           description: Bad Request
           schema:
@@ -9589,7 +9293,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardListResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "401":
           description: Unauthorized
           schema:
@@ -9681,7 +9385,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.SearchResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "400":
           description: Bad Request
           schema:
@@ -9754,7 +9458,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardListResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "401":
           description: Unauthorized
           schema:
@@ -9789,12 +9493,7 @@ paths:
         "201":
           description: Created
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.ServerGroupResponse'
-              type: object
+            $ref: '#/definitions/entities.ServerGroupResponse'
         "400":
           description: Bad Request
           schema:
@@ -9838,7 +9537,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.MessageOnlyResponse'
+            type: string
         "400":
           description: Bad Request
           schema:
@@ -9880,12 +9579,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.ServerGroupResponse'
-              type: object
+            $ref: '#/definitions/entities.ServerGroupResponse'
         "400":
           description: Bad Request
           schema:
@@ -9930,12 +9624,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.ServerGroupResponse'
-              type: object
+            $ref: '#/definitions/entities.ServerGroupResponse'
         "400":
           description: Bad Request
           schema:
@@ -9983,12 +9672,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.ServerGroupResponse'
-              type: object
+            $ref: '#/definitions/entities.ServerGroupResponse'
         "400":
           description: Bad Request
           schema:
@@ -10182,7 +9866,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardListResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "401":
           description: Unauthorized
           schema:
@@ -10217,12 +9901,7 @@ paths:
         "201":
           description: Created
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.ShadowsocksServerResponse'
-              type: object
+            $ref: '#/definitions/entities.ShadowsocksServerResponse'
         "400":
           description: Bad Request
           schema:
@@ -10265,7 +9944,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.MessageOnlyResponse'
+            type: string
         "400":
           description: Bad Request
           schema:
@@ -10303,12 +9982,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.ShadowsocksServerResponse'
-              type: object
+            $ref: '#/definitions/entities.ShadowsocksServerResponse'
         "400":
           description: Bad Request
           schema:
@@ -10352,12 +10026,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.ShadowsocksServerResponse'
-              type: object
+            $ref: '#/definitions/entities.ShadowsocksServerResponse'
         "400":
           description: Bad Request
           schema:
@@ -10405,12 +10074,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.ShadowsocksServerResponse'
-              type: object
+            $ref: '#/definitions/entities.ShadowsocksServerResponse'
         "400":
           description: Bad Request
           schema:
@@ -10545,7 +10209,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.MessageOnlyResponse'
+            type: string
         "400":
           description: Bad Request
           schema:
@@ -10673,12 +10337,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.UserSubscriptionResponse'
-              type: object
+            $ref: '#/definitions/entities.UserSubscriptionResponse'
         "400":
           description: Bad Request
           schema:
@@ -10727,12 +10386,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.UserSubscriptionResponse'
-              type: object
+            $ref: '#/definitions/entities.UserSubscriptionResponse'
         "400":
           description: Bad Request
           schema:
@@ -10810,7 +10464,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardListResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "400":
           description: Bad Request
           schema:
@@ -11078,7 +10732,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardListResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "401":
           description: Unauthorized
           schema:
@@ -11113,12 +10767,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.SubscriptionOrderResponse'
-              type: object
+            $ref: '#/definitions/entities.SubscriptionOrderResponse'
         "400":
           description: Bad Request
           schema:
@@ -11166,7 +10815,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.MessageOnlyResponse'
+            type: string
         "400":
           description: Bad Request
           schema:
@@ -11239,7 +10888,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardListResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "401":
           description: Unauthorized
           schema:
@@ -11274,12 +10923,7 @@ paths:
         "201":
           description: Created
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.SubscriptionPlanResponse'
-              type: object
+            $ref: '#/definitions/entities.SubscriptionPlanResponse'
         "400":
           description: Bad Request
           schema:
@@ -11322,7 +10966,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.MessageOnlyResponse'
+            type: string
         "400":
           description: Bad Request
           schema:
@@ -11360,12 +11004,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.SubscriptionPlanResponse'
-              type: object
+            $ref: '#/definitions/entities.SubscriptionPlanResponse'
         "400":
           description: Bad Request
           schema:
@@ -11409,12 +11048,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.SubscriptionPlanResponse'
-              type: object
+            $ref: '#/definitions/entities.SubscriptionPlanResponse'
         "400":
           description: Bad Request
           schema:
@@ -11457,12 +11091,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.SubscriptionPlanResponse'
-              type: object
+            $ref: '#/definitions/entities.SubscriptionPlanResponse'
         "400":
           description: Bad Request
           schema:
@@ -11610,7 +11239,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardListResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "401":
           description: Unauthorized
           schema:
@@ -11645,12 +11274,7 @@ paths:
         "201":
           description: Created
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.UserSubscriptionResponse'
-              type: object
+            $ref: '#/definitions/entities.UserSubscriptionResponse'
         "400":
           description: Bad Request
           schema:
@@ -11697,12 +11321,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.UserSubscriptionResponse'
-              type: object
+            $ref: '#/definitions/entities.UserSubscriptionResponse'
         "400":
           description: Bad Request
           schema:
@@ -11746,12 +11365,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.UserSubscriptionResponse'
-              type: object
+            $ref: '#/definitions/entities.UserSubscriptionResponse'
         "400":
           description: Bad Request
           schema:
@@ -11805,7 +11419,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.MessageOnlyResponse'
+            type: string
         "400":
           description: Bad Request
           schema:
@@ -11854,12 +11468,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.UserSubscriptionResponse'
-              type: object
+            $ref: '#/definitions/entities.UserSubscriptionResponse'
         "400":
           description: Bad Request
           schema:
@@ -11908,12 +11517,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.UserSubscriptionResponse'
-              type: object
+            $ref: '#/definitions/entities.UserSubscriptionResponse'
         "400":
           description: Bad Request
           schema:
@@ -11962,12 +11566,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.UserSubscriptionResponse'
-              type: object
+            $ref: '#/definitions/entities.UserSubscriptionResponse'
         "400":
           description: Bad Request
           schema:
@@ -12016,12 +11615,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.UserSubscriptionResponse'
-              type: object
+            $ref: '#/definitions/entities.UserSubscriptionResponse'
         "400":
           description: Bad Request
           schema:
@@ -12070,12 +11664,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.UserSubscriptionResponse'
-              type: object
+            $ref: '#/definitions/entities.UserSubscriptionResponse'
         "400":
           description: Bad Request
           schema:
@@ -12124,12 +11713,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.UserSubscriptionResponse'
-              type: object
+            $ref: '#/definitions/entities.UserSubscriptionResponse'
         "400":
           description: Bad Request
           schema:
@@ -12229,7 +11813,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardListResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "401":
           description: Unauthorized
           schema:
@@ -12264,12 +11848,7 @@ paths:
         "201":
           description: Created
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.TicketResponse'
-              type: object
+            $ref: '#/definitions/entities.TicketResponse'
         "400":
           description: Bad Request
           schema:
@@ -12312,7 +11891,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.MessageOnlyResponse'
+            type: string
         "400":
           description: Bad Request
           schema:
@@ -12354,12 +11933,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.TicketResponse'
-              type: object
+            $ref: '#/definitions/entities.TicketResponse'
         "400":
           description: Bad Request
           schema:
@@ -12403,12 +11977,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.TicketResponse'
-              type: object
+            $ref: '#/definitions/entities.TicketResponse'
         "400":
           description: Bad Request
           schema:
@@ -12457,12 +12026,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.TicketResponse'
-              type: object
+            $ref: '#/definitions/entities.TicketResponse'
         "400":
           description: Bad Request
           schema:
@@ -12505,12 +12069,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.TicketResponse'
-              type: object
+            $ref: '#/definitions/entities.TicketResponse'
         "400":
           description: Bad Request
           schema:
@@ -12559,12 +12118,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.TicketResponse'
-              type: object
+            $ref: '#/definitions/entities.TicketResponse'
         "400":
           description: Bad Request
           schema:
@@ -12622,7 +12176,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardListResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "400":
           description: Bad Request
           schema:
@@ -12666,12 +12220,7 @@ paths:
         "201":
           description: Created
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.TicketMessageResponse'
-              type: object
+            $ref: '#/definitions/entities.TicketMessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -12719,7 +12268,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.MessageOnlyResponse'
+            type: string
         "400":
           description: Bad Request
           schema:
@@ -12766,12 +12315,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.TicketMessageResponse'
-              type: object
+            $ref: '#/definitions/entities.TicketMessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -12820,12 +12364,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.TicketMessageResponse'
-              type: object
+            $ref: '#/definitions/entities.TicketMessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -12874,12 +12413,7 @@ paths:
         "201":
           description: Created
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.TicketMessageResponse'
-              type: object
+            $ref: '#/definitions/entities.TicketMessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -12922,12 +12456,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.TicketResponse'
-              type: object
+            $ref: '#/definitions/entities.TicketResponse'
         "400":
           description: Bad Request
           schema:
@@ -12975,7 +12504,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardListResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "401":
           description: Unauthorized
           schema:
@@ -13291,7 +12820,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.SearchResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "400":
           description: Bad Request
           schema:
@@ -13392,19 +12921,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardListResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: List all users
@@ -13427,32 +12956,27 @@ paths:
         "201":
           description: Created
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.UserResponse'
-              type: object
+            $ref: '#/definitions/entities.UserResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/response.ConflictResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: Create new user
@@ -13473,25 +12997,25 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: message
           schema:
-            $ref: '#/definitions/response.MessageOnlyResponse'
+            type: string
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.NotFoundResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: '[Admin] Soft delete user'
@@ -13513,28 +13037,23 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.UserResponse'
-              type: object
+            $ref: '#/definitions/entities.UserResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.NotFoundResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: Get user information
@@ -13562,32 +13081,27 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.UserResponse'
-              type: object
+            $ref: '#/definitions/entities.UserResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.NotFoundResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: '[Admin] Partially update user'
@@ -13615,32 +13129,27 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.UserResponse'
-              type: object
+            $ref: '#/definitions/entities.UserResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.NotFoundResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: '[Admin] Update any user'
@@ -13661,25 +13170,25 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: message
           schema:
-            $ref: '#/definitions/response.MessageOnlyResponse'
+            type: string
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.NotFoundResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: '[Admin] Hard delete user'
@@ -13706,29 +13215,29 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: message
           schema:
-            $ref: '#/definitions/response.MessageOnlyResponse'
+            type: string
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.NotFoundResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: Reset user password
@@ -13749,25 +13258,25 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: message
           schema:
-            $ref: '#/definitions/response.MessageOnlyResponse'
+            type: string
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.NotFoundResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: '[Admin] Restore user'
@@ -13796,28 +13305,23 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.UserResponse'
-              type: object
+            $ref: '#/definitions/entities.UserResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.NotFoundResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: '[Admin] Update user role'
@@ -13846,28 +13350,23 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.UserResponse'
-              type: object
+            $ref: '#/definitions/entities.UserResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.NotFoundResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: '[Admin] Update user status'
@@ -13891,23 +13390,24 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            additionalProperties: true
+            type: object
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: '[Admin] Batch delete users'
@@ -13931,23 +13431,24 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            additionalProperties: true
+            type: object
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: '[Admin] Batch restore users'
@@ -13975,19 +13476,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardListResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: '[Admin] List deleted users'
@@ -14020,23 +13521,23 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.ProviderFilterResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: '[Admin] List users by provider'
@@ -14070,23 +13571,23 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.SearchResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: '[Admin] Search users'
@@ -14103,19 +13604,20 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            additionalProperties: true
+            type: object
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: '[Admin] Get user statistics'
@@ -14132,12 +13634,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.HealthCheckResponse'
-              type: object
+            $ref: '#/definitions/dto.HealthCheckResponse'
       summary: 系统健康检查
       tags:
       - System-Health
@@ -14158,47 +13655,31 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       summary: OAuth login
       tags:
       - auth
   /auth/{provider}/callback:
     get:
       description: Handle OAuth callback from providers
-      parameters:
-      - description: OAuth provider
-        in: path
-        name: provider
-        required: true
-        type: string
-      - description: Authorization code (for OAuth2)
-        in: query
-        name: code
-        type: string
-      - description: State parameter (for OAuth2)
-        in: query
-        name: state
-        type: string
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            $ref: '#/definitions/dto.AuthResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       summary: OAuth callback
-      tags:
-      - auth
   /auth/change-password:
     post:
       consumes:
@@ -14215,17 +13696,17 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: message
           schema:
-            $ref: '#/definitions/response.MessageOnlyResponse'
+            type: string
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: Change user password
@@ -14233,34 +13714,21 @@ paths:
       - auth
   /auth/login:
     post:
-      consumes:
-      - application/json
       description: Login with email and password
-      parameters:
-      - description: Login credentials
-        in: body
-        name: credentials
-        required: true
-        schema:
-          $ref: '#/definitions/interfaces.LoginRequest'
-      produces:
-      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            $ref: '#/definitions/dto.AuthResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       summary: User login with email/password
-      tags:
-      - auth
   /auth/logout:
     post:
       consumes:
@@ -14270,46 +13738,28 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: message
           schema:
-            $ref: '#/definitions/response.MessageOnlyResponse'
+            type: string
       security:
       - BearerAuth: []
       summary: User logout
       tags:
       - auth
-  /auth/providers:
-    get:
-      description: Get list of supported OAuth providers
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.StandardResponse'
-      summary: Get supported OAuth providers
-      tags:
-      - auth
   /auth/refresh:
     post:
-      consumes:
-      - application/json
       description: Refresh an existing JWT token
-      produces:
-      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            additionalProperties: true
+            type: object
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-      security:
-      - BearerAuth: []
+            $ref: '#/definitions/response.ProblemJSONResponse'
       summary: Refresh JWT token
-      tags:
-      - auth
   /auth/register:
     post:
       consumes:
@@ -14322,109 +13772,77 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/interfaces.RegisterRequest'
+          $ref: '#/definitions/dto.RegisterRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            $ref: '#/definitions/dto.AuthResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/response.ConflictResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       summary: User registration
       tags:
       - auth
   /auth/telegram/widget:
     get:
       description: Get Telegram Login Widget HTML for frontend integration
-      parameters:
-      - description: Bot username (optional)
-        in: query
-        name: bot_username
-        type: string
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            additionalProperties: true
+            type: object
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       summary: Get Telegram Login Widget
-      tags:
-      - auth
   /auth/token:
     post:
-      consumes:
-      - application/json
       description: Exchange OAuth authorization code for JWT tokens
-      parameters:
-      - description: Token exchange request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.TokenExchangeRequest'
-      produces:
-      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            $ref: '#/definitions/dto.AuthResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       summary: Exchange authorization code for tokens
-      tags:
-      - auth
   /auth/url:
     post:
-      consumes:
-      - application/json
       description: Generate OAuth authorization URL for frontend applications
-      parameters:
-      - description: Authorization URL request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/interfaces.AuthorizeURLRequest'
-      produces:
-      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            $ref: '#/definitions/dto.AuthorizeURLResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       summary: Get OAuth authorization URL
-      tags:
-      - auth
   /coupons:
     get:
       consumes:
@@ -14446,14 +13864,9 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/dto.CouponResponse'
-                  type: array
-              type: object
+            items:
+              $ref: '#/definitions/dto.CouponResponse'
+            type: array
         "400":
           description: Bad Request
           schema:
@@ -14492,14 +13905,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.PaginatedResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/dto.CouponUsageResponse'
-                  type: array
-              type: object
+            $ref: '#/definitions/response.HALCollectionResponse'
         "400":
           description: Bad Request
           schema:
@@ -14535,12 +13941,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.ValidateCouponResponse'
-              type: object
+            $ref: '#/definitions/dto.ValidateCouponResponse'
         "400":
           description: Bad Request
           schema:
@@ -14577,12 +13978,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.InvoiceResponse'
-              type: object
+            $ref: '#/definitions/dto.InvoiceResponse'
         "400":
           description: Bad Request
           schema:
@@ -14794,14 +14190,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.PaginatedResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/entities.SubscriptionOrderResponse'
-                  type: array
-              type: object
+            $ref: '#/definitions/response.HALCollectionResponse'
         "401":
           description: Unauthorized
           schema:
@@ -14832,12 +14221,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.SubscriptionOrderResponse'
-              type: object
+            $ref: '#/definitions/entities.SubscriptionOrderResponse'
         "400":
           description: Bad Request
           schema:
@@ -14879,12 +14263,7 @@ paths:
       responses:
         "200":
           description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data: {}
-              type: object
+          schema: {}
         "400":
           description: Bad Request
           schema:
@@ -14927,13 +14306,8 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  additionalProperties: true
-                  type: object
-              type: object
+            additionalProperties: true
+            type: object
         "400":
           description: Bad Request
           schema:
@@ -14977,12 +14351,7 @@ paths:
         "201":
           description: Created
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  type: object
-              type: object
+            type: object
         "400":
           description: Bad Request
           schema:
@@ -15022,12 +14391,7 @@ paths:
         "201":
           description: Created
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  type: object
-              type: object
+            type: object
         "400":
           description: Bad Request
           schema:
@@ -15071,20 +14435,15 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.PaymentMethodListResponse'
-              type: object
+            $ref: '#/definitions/response.StandardResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
       security:
       - BearerAuth: []
       summary: List all payment methods
@@ -15107,32 +14466,27 @@ paths:
         "201":
           description: Created
           schema:
-            allOf:
-            - $ref: '#/definitions/response.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.PaymentMethodResponse'
-              type: object
+            $ref: '#/definitions/response.StandardResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
         "422":
           description: Unprocessable Entity
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
       security:
       - BearerAuth: []
       summary: Create a new payment method
@@ -15153,23 +14507,23 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
       security:
       - BearerAuth: []
       summary: Delete a payment method
@@ -15189,28 +14543,23 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.PaymentMethodResponse'
-              type: object
+            $ref: '#/definitions/response.StandardResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
       security:
       - BearerAuth: []
       summary: Get a payment method by ID
@@ -15238,28 +14587,23 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.PaymentMethodResponse'
-              type: object
+            $ref: '#/definitions/response.StandardResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
       security:
       - BearerAuth: []
       summary: Update a payment method
@@ -15280,32 +14624,27 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.PaymentMethodResponse'
-              type: object
+            $ref: '#/definitions/response.StandardResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
         "422":
           description: Unprocessable Entity
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
       security:
       - BearerAuth: []
       summary: Set a payment method as default
@@ -15326,28 +14665,23 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.PaymentMethodUsageStats'
-              type: object
+            $ref: '#/definitions/response.StandardResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
       security:
       - BearerAuth: []
       summary: Get payment method usage statistics
@@ -15368,32 +14702,27 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.PaymentMethodResponse'
-              type: object
+            $ref: '#/definitions/response.StandardResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
         "422":
           description: Unprocessable Entity
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
       security:
       - BearerAuth: []
       summary: Validate a payment method
@@ -15413,24 +14742,19 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.PaymentMethodResponse'
-              type: object
+            $ref: '#/definitions/response.StandardResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            $ref: '#/definitions/response.BadRequestResponse'
       security:
       - BearerAuth: []
       summary: Get default payment method
@@ -15454,14 +14778,9 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/dto.PaymentConfigResponse'
-                  type: array
-              type: object
+            items:
+              $ref: '#/definitions/dto.PaymentConfigResponse'
+            type: array
         "500":
           description: Internal Server Error
           schema:
@@ -15482,16 +14801,11 @@ paths:
         "200":
           description: Returns map of gateway to supported payment methods
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  additionalProperties:
-                    items:
-                      type: string
-                    type: array
-                  type: object
-              type: object
+            additionalProperties:
+              items:
+                type: string
+              type: array
+            type: object
         "500":
           description: Failed to retrieve payment methods from database
           schema:
@@ -15557,12 +14871,7 @@ paths:
           description: Returns payment record with payment URL, QR code, and expiration
             time
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.PaymentRecordResponse'
-              type: object
+            $ref: '#/definitions/dto.PaymentRecordResponse'
         "400":
           description: Invalid request data, unsupported payment method, or missing
             required fields
@@ -15602,12 +14911,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.PaymentRecordResponse'
-              type: object
+            $ref: '#/definitions/dto.PaymentRecordResponse'
         "400":
           description: Bad Request
           schema:
@@ -15658,14 +14962,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.PaginatedResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/dto.PaymentRecordResponse'
-                  type: array
-              type: object
+            $ref: '#/definitions/response.HALCollectionResponse'
         "401":
           description: Unauthorized
           schema:
@@ -15706,12 +15003,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/handlers.UniProxyConfigResponse'
-              type: object
+            $ref: '#/definitions/handlers.UniProxyConfigResponse'
         "400":
           description: Bad Request
           schema:
@@ -15738,12 +15030,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.ServerAPIHealthResponse'
-              type: object
+            $ref: '#/definitions/dto.ServerAPIHealthResponse'
       summary: Server API Health Check
       tags:
       - User-Server
@@ -15776,12 +15063,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.UniProxyPushResponse'
-              type: object
+            $ref: '#/definitions/dto.UniProxyPushResponse'
         "400":
           description: Bad Request
           schema:
@@ -15872,14 +15154,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.PaginatedResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/entities.SubscriptionPlanResponse'
-                  type: array
-              type: object
+            $ref: '#/definitions/response.HALCollectionResponse'
         "400":
           description: Bad Request
           schema:
@@ -15908,12 +15183,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.SubscriptionPlanResponse'
-              type: object
+            $ref: '#/definitions/entities.SubscriptionPlanResponse'
         "400":
           description: Bad Request
           schema:
@@ -15948,12 +15218,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.SubscriptionPlanResponse'
-              type: object
+            $ref: '#/definitions/entities.SubscriptionPlanResponse'
         "400":
           description: Bad Request
           schema:
@@ -15988,14 +15253,9 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/entities.SubscriptionPlanResponse'
-                  type: array
-              type: object
+            items:
+              $ref: '#/definitions/entities.SubscriptionPlanResponse'
+            type: array
         "400":
           description: Bad Request
           schema:
@@ -16024,12 +15284,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.UserSubscriptionResponse'
-              type: object
+            $ref: '#/definitions/entities.UserSubscriptionResponse'
         "400":
           description: Bad Request
           schema:
@@ -16078,12 +15333,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.UserSubscriptionResponse'
-              type: object
+            $ref: '#/definitions/entities.UserSubscriptionResponse'
         "400":
           description: Bad Request
           schema:
@@ -16126,12 +15376,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.TrafficStatsResponse'
-              type: object
+            $ref: '#/definitions/dto.TrafficStatsResponse'
         "400":
           description: Bad Request
           schema:
@@ -16224,14 +15469,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.PaginatedResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/entities.UserSubscriptionResponse'
-                  type: array
-              type: object
+            $ref: '#/definitions/response.HALCollectionResponse'
         "401":
           description: Unauthorized
           schema:
@@ -16256,14 +15494,9 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/entities.UserSubscriptionResponse'
-                  type: array
-              type: object
+            items:
+              $ref: '#/definitions/entities.UserSubscriptionResponse'
+            type: array
         "401":
           description: Unauthorized
           schema:
@@ -16354,12 +15587,7 @@ paths:
         "201":
           description: Created
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.TicketUserResponse'
-              type: object
+            $ref: '#/definitions/entities.TicketUserResponse'
         "400":
           description: Bad Request
           schema:
@@ -16395,12 +15623,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.TicketUserResponse'
-              type: object
+            $ref: '#/definitions/entities.TicketUserResponse'
         "400":
           description: Bad Request
           schema:
@@ -16444,12 +15667,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.TicketUserResponse'
-              type: object
+            $ref: '#/definitions/entities.TicketUserResponse'
         "400":
           description: Bad Request
           schema:
@@ -16503,7 +15721,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardListResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "400":
           description: Bad Request
           schema:
@@ -16547,12 +15765,7 @@ paths:
         "201":
           description: Created
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.TicketMessageUserResponse'
-              type: object
+            $ref: '#/definitions/entities.TicketMessageUserResponse'
         "400":
           description: Bad Request
           schema:
@@ -16641,7 +15854,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardListResponse'
+            $ref: '#/definitions/response.HALCollectionResponse'
         "401":
           description: Unauthorized
           schema:
@@ -16788,12 +16001,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.BulkResolveAlertsResponse'
-              type: object
+            $ref: '#/definitions/interfaces.BulkResolveAlertsResponse'
         "400":
           description: Bad Request
           schema:
@@ -16854,12 +16062,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.AlertConfigurationResponse'
-              type: object
+            $ref: '#/definitions/entities.AlertConfigurationResponse'
         "400":
           description: Bad Request
           schema:
@@ -16897,12 +16100,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.AlertConfigurationResponse'
-              type: object
+            $ref: '#/definitions/entities.AlertConfigurationResponse'
         "400":
           description: Bad Request
           schema:
@@ -16936,12 +16134,7 @@ paths:
         "201":
           description: Created
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.AlertConfigurationResponse'
-              type: object
+            $ref: '#/definitions/entities.AlertConfigurationResponse'
         "400":
           description: Bad Request
           schema:
@@ -17043,12 +16236,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.GetUsageAlertsResponse'
-              type: object
+            $ref: '#/definitions/interfaces.GetUsageAlertsResponse'
         "400":
           description: Bad Request
           schema:
@@ -17127,12 +16315,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.GetAlertConfigsResponse'
-              type: object
+            $ref: '#/definitions/interfaces.GetAlertConfigsResponse'
         "400":
           description: Bad Request
           schema:
@@ -17204,12 +16387,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.AlertHistoryResponse'
-              type: object
+            $ref: '#/definitions/interfaces.AlertHistoryResponse'
         "400":
           description: Bad Request
           schema:
@@ -17287,12 +16465,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.AlertStatisticsResponse'
-              type: object
+            $ref: '#/definitions/interfaces.AlertStatisticsResponse'
         "400":
           description: Bad Request
           schema:
@@ -17326,12 +16499,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.TestNotificationResponse'
-              type: object
+            $ref: '#/definitions/interfaces.TestNotificationResponse'
         "400":
           description: Bad Request
           schema:
@@ -17360,12 +16528,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.CurrentUsageResponse'
-              type: object
+            $ref: '#/definitions/interfaces.CurrentUsageResponse'
         "400":
           description: Bad Request
           schema:
@@ -17410,12 +16573,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.CurrentUsageResponse'
-              type: object
+            $ref: '#/definitions/interfaces.CurrentUsageResponse'
         "400":
           description: Bad Request
           schema:
@@ -17493,12 +16651,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.UsageHistoryResponse'
-              type: object
+            $ref: '#/definitions/interfaces.UsageHistoryResponse'
         "400":
           description: Bad Request
           schema:
@@ -17531,14 +16684,9 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/entities.UsagePrediction'
-                  type: array
-              type: object
+            items:
+              $ref: '#/definitions/entities.UsagePrediction'
+            type: array
         "400":
           description: Bad Request
           schema:
@@ -17582,14 +16730,9 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/entities.UsagePrediction'
-                  type: array
-              type: object
+            items:
+              $ref: '#/definitions/entities.UsagePrediction'
+            type: array
         "400":
           description: Bad Request
           schema:
@@ -17622,12 +16765,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.RealTimeUsageResponse'
-              type: object
+            $ref: '#/definitions/interfaces.RealTimeUsageResponse'
         "400":
           description: Bad Request
           schema:
@@ -17688,12 +16826,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.UsageStatistics'
-              type: object
+            $ref: '#/definitions/interfaces.UsageStatistics'
         "400":
           description: Bad Request
           schema:
@@ -17765,12 +16898,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.UsageSummary'
-              type: object
+            $ref: '#/definitions/entities.UsageSummary'
         "400":
           description: Bad Request
           schema:
@@ -17836,12 +16964,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.UsageTrendsResponse'
-              type: object
+            $ref: '#/definitions/interfaces.UsageTrendsResponse'
         "400":
           description: Bad Request
           schema:
@@ -17875,12 +16998,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.CleanupResult'
-              type: object
+            $ref: '#/definitions/interfaces.CleanupResult'
         "400":
           description: Bad Request
           schema:
@@ -17988,12 +17106,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.ExportUsageResponse'
-              type: object
+            $ref: '#/definitions/interfaces.ExportUsageResponse'
         "400":
           description: Bad Request
           schema:
@@ -18046,12 +17159,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.TopUsageResponse'
-              type: object
+            $ref: '#/definitions/interfaces.TopUsageResponse'
         "400":
           description: Bad Request
           schema:
@@ -18074,20 +17182,15 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.BindingListResponse'
-              type: object
+            $ref: '#/definitions/entities.BindingListResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: Get user's account bindings
@@ -18108,25 +17211,25 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: message
           schema:
-            $ref: '#/definitions/response.MessageOnlyResponse'
+            type: string
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.NotFoundResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: Unbind a third-party account
@@ -18148,28 +17251,23 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.UserAccountBindingResponse'
-              type: object
+            $ref: '#/definitions/entities.UserAccountBindingResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.NotFoundResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: Get a specific account binding
@@ -18198,28 +17296,23 @@ paths:
         "201":
           description: Created
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.UserAccountBindingResponse'
-              type: object
+            $ref: '#/definitions/entities.UserAccountBindingResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/response.ConflictResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: Bind a third-party account
@@ -18247,28 +17340,23 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.UserAccountBindingResponse'
-              type: object
+            $ref: '#/definitions/entities.UserAccountBindingResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.NotFoundResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: Update an account binding
@@ -18289,25 +17377,25 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: message
           schema:
-            $ref: '#/definitions/response.MessageOnlyResponse'
+            type: string
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/response.NotFoundResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: Set primary account binding
@@ -18324,20 +17412,15 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.UserResponse'
-              type: object
+            $ref: '#/definitions/entities.UserResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: Get user profile
@@ -18360,24 +17443,19 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/entities.UserResponse'
-              type: object
+            $ref: '#/definitions/entities.UserResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: '[User] Update own profile'

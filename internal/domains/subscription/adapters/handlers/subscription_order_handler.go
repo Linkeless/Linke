@@ -32,7 +32,7 @@ func NewSubscriptionOrderHandler(subscriptionOrderService interfaces.Subscriptio
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Subscription order ID"
-// @Success 200 {object} response.StandardResponse{data=map[string]any}
+// @Success 200 {object} map[string]any
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -75,10 +75,10 @@ func (h *SubscriptionOrderHandler) GetSubscriptionOrderSummary(c *gin.Context) {
 	summary, err := h.subscriptionOrderService.GetSubscriptionOrderSummary(c.Request.Context(), orderID)
 	if err != nil {
 		logger.Error("Failed to get order summary", logger.Uint("orderID", uint(orderID)))
-		response.InternalServerError(c, "Failed to get order summary", err.Error())
+		response.InternalServerError(c, "Failed to get order summary")
 		return
 	}
-	response.OK(c, "Order summary retrieved successfully", summary)
+	response.OK(c, summary)
 }
 
 // ==============================================================================
@@ -93,7 +93,7 @@ func (h *SubscriptionOrderHandler) GetSubscriptionOrderSummary(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param request body dto.CreateOrderRequest true "Order creation request"
-// @Success 201 {object} response.StandardResponse{data=object}
+// @Success 201 {object} object
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -116,7 +116,7 @@ func (h *SubscriptionOrderHandler) CreateOrderWithInvoice(c *gin.Context) {
 	// Bind request
 	var req dto.CreateOrderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "Invalid request data", err.Error())
+		response.BadRequest(c, "Invalid request data")
 		return
 	}
 
@@ -130,11 +130,11 @@ func (h *SubscriptionOrderHandler) CreateOrderWithInvoice(c *gin.Context) {
 	orderResponse, err := h.subscriptionOrderService.CreateOrderWithInvoice(c.Request.Context(), &req)
 	if err != nil {
 		logger.Error("Failed to create order with invoice", logger.ErrorField(err), logger.Uint("user_id", user.ID))
-		response.InternalServerError(c, "Failed to create order", err.Error())
+		response.InternalServerError(c, "Failed to create order")
 		return
 	}
 
-	response.CreatedWithMessage(c, "Order created successfully with invoice and payment", orderResponse)
+	response.Created(c, orderResponse)
 }
 
 // GenerateInvoiceForOrder godoc
@@ -145,7 +145,7 @@ func (h *SubscriptionOrderHandler) CreateOrderWithInvoice(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Subscription order ID"
-// @Success 200 {object} response.StandardResponse{data=any}
+// @Success 200 {object} any
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -170,7 +170,7 @@ func (h *SubscriptionOrderHandler) GenerateInvoiceForOrder(c *gin.Context) {
 	orderIDStr := c.Param("id")
 	orderID, err := strconv.ParseUint(orderIDStr, 10, 32)
 	if err != nil {
-		response.BadRequest(c, "Invalid order ID", "Order ID must be a valid number")
+		response.BadRequest(c, "Order ID must be a valid number")
 		return
 	}
 
@@ -190,11 +190,11 @@ func (h *SubscriptionOrderHandler) GenerateInvoiceForOrder(c *gin.Context) {
 	invoice, err := h.subscriptionOrderService.GenerateInvoiceForOrder(c.Request.Context(), uint(orderID))
 	if err != nil {
 		logger.Error("Failed to generate invoice for order", logger.ErrorField(err), logger.Uint("order_id", uint(orderID)))
-		response.InternalServerError(c, "Failed to generate invoice", err.Error())
+		response.InternalServerError(c, "Failed to generate invoice")
 		return
 	}
 
-	response.OK(c, "Invoice generated successfully", invoice)
+	response.OK(c, invoice)
 }
 
 // CreatePaymentForOrder godoc
@@ -205,7 +205,7 @@ func (h *SubscriptionOrderHandler) GenerateInvoiceForOrder(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param request body dto.PayOrderRequest true "Payment creation request"
-// @Success 201 {object} response.StandardResponse{data=object}
+// @Success 201 {object} object
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -229,7 +229,7 @@ func (h *SubscriptionOrderHandler) CreatePaymentForOrder(c *gin.Context) {
 	// Bind request
 	var req dto.PayOrderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "Invalid request data", err.Error())
+		response.BadRequest(c, "Invalid request data")
 		return
 	}
 
@@ -249,11 +249,11 @@ func (h *SubscriptionOrderHandler) CreatePaymentForOrder(c *gin.Context) {
 	paymentResponse, err := h.subscriptionOrderService.CreatePaymentForOrder(c.Request.Context(), &req)
 	if err != nil {
 		logger.Error("Failed to create payment for order", logger.ErrorField(err), logger.Uint("order_id", req.OrderID))
-		response.InternalServerError(c, "Failed to create payment", err.Error())
+		response.InternalServerError(c, "Failed to create payment")
 		return
 	}
 
-	response.CreatedWithMessage(c, "Payment created successfully", paymentResponse)
+	response.Created(c, paymentResponse)
 }
 
 // ==============================================================================
@@ -278,7 +278,7 @@ func (h *SubscriptionOrderHandler) CreateSubscriptionOrder(c *gin.Context) {
 	// Bind request
 	var req dto.CreateSubscriptionOrderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "Invalid request data", err.Error())
+		response.BadRequest(c, "Invalid request data")
 		return
 	}
 
@@ -292,11 +292,11 @@ func (h *SubscriptionOrderHandler) CreateSubscriptionOrder(c *gin.Context) {
 	orderResponse, err := h.subscriptionOrderService.CreateSubscriptionOrder(c.Request.Context(), &req)
 	if err != nil {
 		logger.Error("Failed to create subscription order", logger.ErrorField(err), logger.Uint("user_id", user.ID))
-		response.InternalServerError(c, "Failed to create subscription order", err.Error())
+		response.InternalServerError(c, "Failed to create subscription order")
 		return
 	}
 
-	response.CreatedWithMessage(c, "Subscription order created successfully", orderResponse)
+	response.Created(c, orderResponse)
 }
 
 // GetSubscriptionOrder godoc
@@ -307,7 +307,7 @@ func (h *SubscriptionOrderHandler) CreateSubscriptionOrder(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Subscription order ID"
-// @Success 200 {object} response.StandardResponse{data=entities.SubscriptionOrderResponse}
+// @Success 200 {object} entities.SubscriptionOrderResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -332,7 +332,7 @@ func (h *SubscriptionOrderHandler) GetSubscriptionOrder(c *gin.Context) {
 	orderIDStr := c.Param("id")
 	orderID, err := strconv.ParseUint(orderIDStr, 10, 32)
 	if err != nil {
-		response.BadRequest(c, "Invalid order ID", "Order ID must be a valid number")
+		response.BadRequest(c, "Order ID must be a valid number")
 		return
 	}
 
@@ -344,7 +344,7 @@ func (h *SubscriptionOrderHandler) GetSubscriptionOrder(c *gin.Context) {
 			return
 		}
 		logger.Error("Failed to get subscription order", logger.ErrorField(err), logger.Uint("order_id", uint(orderID)))
-		response.InternalServerError(c, "Failed to get subscription order", err.Error())
+		response.InternalServerError(c, "Failed to get subscription order")
 		return
 	}
 
@@ -354,7 +354,7 @@ func (h *SubscriptionOrderHandler) GetSubscriptionOrder(c *gin.Context) {
 		return
 	}
 
-	response.OK(c, "Subscription order retrieved successfully", order.ToResponse())
+	response.OK(c, order.ToResponse())
 }
 
 // GetMySubscriptionOrders godoc
@@ -366,7 +366,7 @@ func (h *SubscriptionOrderHandler) GetSubscriptionOrder(c *gin.Context) {
 // @Security BearerAuth
 // @Param limit query int false "Limit results" minimum(1) maximum(100) example(10)
 // @Param offset query int false "Offset results" minimum(0) example(0)
-// @Success 200 {object} response.PaginatedResponse{data=[]entities.SubscriptionOrderResponse}
+// @Success 200 {object} response.HALCollectionResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /orders [get]
@@ -402,7 +402,7 @@ func (h *SubscriptionOrderHandler) GetMySubscriptionOrders(c *gin.Context) {
 	orders, totalCount, err := h.subscriptionOrderService.GetUserSubscriptionOrders(c.Request.Context(), user.ID, limit, offset)
 	if err != nil {
 		logger.Error("Failed to get user subscription orders", logger.ErrorField(err), logger.Uint("user_id", user.ID))
-		response.InternalServerError(c, "Failed to get subscription orders", err.Error())
+		response.InternalServerError(c, "Failed to get subscription orders")
 		return
 	}
 
@@ -412,5 +412,7 @@ func (h *SubscriptionOrderHandler) GetMySubscriptionOrders(c *gin.Context) {
 		orderResponses = append(orderResponses, order.ToResponse())
 	}
 
-	response.OKPaginated(c, "My subscription orders retrieved successfully", orderResponses, totalCount, limit, offset)
+	// Convert offset to page number
+	_ = (offset / limit) + 1 // page calculation
+	response.SendPaginatedResponse(c, orderResponses, totalCount)
 }

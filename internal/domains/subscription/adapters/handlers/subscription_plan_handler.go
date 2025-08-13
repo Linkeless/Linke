@@ -32,7 +32,7 @@ func NewSubscriptionPlanHandler(subscriptionPlanService interfaces.SubscriptionP
 // @Param currency query string false "Filter by currency" example("USD")
 // @Param limit query int false "Limit results" minimum(1) maximum(100) example(10)
 // @Param offset query int false "Offset results" minimum(0) example(0)
-// @Success 200 {object} response.PaginatedResponse{data=[]entities.SubscriptionPlanResponse}
+// @Success 200 {object} response.HALCollectionResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /subscription/plans [get]
@@ -40,7 +40,7 @@ func (h *SubscriptionPlanHandler) GetSubscriptionPlans(c *gin.Context) {
 	// Parse query parameters
 	var req interfaces.GetSubscriptionPlansRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		response.BadRequest(c, "Invalid query parameters", err.Error())
+		response.BadRequest(c, "Invalid query parameters")
 		return
 	}
 
@@ -62,7 +62,7 @@ func (h *SubscriptionPlanHandler) GetSubscriptionPlans(c *gin.Context) {
 	plans, totalCount, err := h.subscriptionPlanService.GetSubscriptionPlans(c.Request.Context(), &req)
 	if err != nil {
 		logger.Error("Failed to get subscription plans", logger.ErrorField(err))
-		response.InternalServerError(c, "Failed to get subscription plans", err.Error())
+		response.InternalServerError(c, "Failed to get subscription plans")
 		return
 	}
 
@@ -72,7 +72,9 @@ func (h *SubscriptionPlanHandler) GetSubscriptionPlans(c *gin.Context) {
 		planResponses = append(planResponses, plan.ToPublicResponse())
 	}
 
-	response.OKPaginated(c, "Subscription plans retrieved successfully", planResponses, totalCount, req.Limit, req.Offset)
+	// Convert offset to page number
+	_ = (req.Offset / req.Limit) + 1 // page calculation
+	response.SendPaginatedResponse(c, planResponses, totalCount)
 }
 
 // GetPopularSubscriptionPlans godoc
@@ -82,7 +84,7 @@ func (h *SubscriptionPlanHandler) GetSubscriptionPlans(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param limit query int false "Limit results" minimum(1) maximum(20) example(5)
-// @Success 200 {object} response.StandardResponse{data=[]entities.SubscriptionPlanResponse}
+// @Success 200 {object} []entities.SubscriptionPlanResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /subscription/plans/popular [get]
@@ -98,7 +100,7 @@ func (h *SubscriptionPlanHandler) GetPopularSubscriptionPlans(c *gin.Context) {
 	plans, err := h.subscriptionPlanService.GetPopularSubscriptionPlans(c.Request.Context(), limit)
 	if err != nil {
 		logger.Error("Failed to get popular subscription plans", logger.ErrorField(err))
-		response.InternalServerError(c, "Failed to get popular subscription plans", err.Error())
+		response.InternalServerError(c, "Failed to get popular subscription plans")
 		return
 	}
 
@@ -108,7 +110,7 @@ func (h *SubscriptionPlanHandler) GetPopularSubscriptionPlans(c *gin.Context) {
 		planResponses = append(planResponses, plan.ToPublicResponse())
 	}
 
-	response.OK(c, "Popular subscription plans retrieved successfully", planResponses)
+	response.OK(c, planResponses)
 }
 
 // GetSubscriptionPlan godoc
@@ -118,7 +120,7 @@ func (h *SubscriptionPlanHandler) GetPopularSubscriptionPlans(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Plan ID"
-// @Success 200 {object} response.StandardResponse{data=entities.SubscriptionPlanResponse}
+// @Success 200 {object} entities.SubscriptionPlanResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -128,7 +130,7 @@ func (h *SubscriptionPlanHandler) GetSubscriptionPlan(c *gin.Context) {
 	planIDStr := c.Param("id")
 	planID, err := strconv.ParseUint(planIDStr, 10, 32)
 	if err != nil {
-		response.BadRequest(c, "Invalid plan ID", "Plan ID must be a valid number")
+		response.BadRequest(c, "Plan ID must be a valid number")
 		return
 	}
 
@@ -140,7 +142,7 @@ func (h *SubscriptionPlanHandler) GetSubscriptionPlan(c *gin.Context) {
 			return
 		}
 		logger.Error("Failed to get subscription plan", logger.ErrorField(err), logger.Uint("plan_id", uint(planID)))
-		response.InternalServerError(c, "Failed to get subscription plan", err.Error())
+		response.InternalServerError(c, "Failed to get subscription plan")
 		return
 	}
 
@@ -151,7 +153,7 @@ func (h *SubscriptionPlanHandler) GetSubscriptionPlan(c *gin.Context) {
 	}
 
 	// Convert to public response format (hides internal details)
-	response.OK(c, "Subscription plan retrieved successfully", plan.ToPublicResponse())
+	response.OK(c, plan.ToPublicResponse())
 }
 
 // GetSubscriptionPlanByCode godoc
@@ -161,7 +163,7 @@ func (h *SubscriptionPlanHandler) GetSubscriptionPlan(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param code path string true "Plan Code" example("premium-monthly")
-// @Success 200 {object} response.StandardResponse{data=entities.SubscriptionPlanResponse}
+// @Success 200 {object} entities.SubscriptionPlanResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -170,7 +172,7 @@ func (h *SubscriptionPlanHandler) GetSubscriptionPlanByCode(c *gin.Context) {
 	// Parse plan code
 	planCode := c.Param("code")
 	if planCode == "" {
-		response.BadRequest(c, "Invalid plan code", "Plan code cannot be empty")
+		response.BadRequest(c, "Plan code cannot be empty")
 		return
 	}
 
@@ -182,7 +184,7 @@ func (h *SubscriptionPlanHandler) GetSubscriptionPlanByCode(c *gin.Context) {
 			return
 		}
 		logger.Error("Failed to get subscription plan by code", logger.String("plan_code", planCode), logger.ErrorField(err))
-		response.InternalServerError(c, "Failed to get subscription plan", err.Error())
+		response.InternalServerError(c, "Failed to get subscription plan")
 		return
 	}
 
@@ -193,7 +195,7 @@ func (h *SubscriptionPlanHandler) GetSubscriptionPlanByCode(c *gin.Context) {
 	}
 
 	// Convert to public response format (hides internal details)
-	response.OK(c, "Subscription plan retrieved successfully", plan.ToPublicResponse())
+	response.OK(c, plan.ToPublicResponse())
 }
 
 // RegisterRoutes registers all subscription plan routes

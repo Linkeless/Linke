@@ -34,7 +34,7 @@ func NewPaymentRecordHandler(paymentService interfaces.PaymentService) *PaymentR
 // @Security BearerAuth
 // @Param limit query int false "Limit results" minimum(1) maximum(100) example(10)
 // @Param offset query int false "Offset results" minimum(0) example(0)
-// @Success 200 {object} response.PaginatedResponse{data=[]dto.PaymentRecordResponse}
+// @Success 200 {object} response.HALCollectionResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /payment/orders/my [get]
@@ -70,7 +70,7 @@ func (h *PaymentRecordHandler) GetMyPaymentOrders(c *gin.Context) {
 	records, totalCount, err := h.paymentService.GetUserPaymentRecords(c.Request.Context(), user.ID, limit, offset)
 	if err != nil {
 		logger.Error("Failed to get user payment orders", logger.ErrorField(err), logger.Uint("user_id", user.ID))
-		response.InternalServerError(c, "Failed to get payment orders", err.Error())
+		response.InternalServerError(c, "Failed to get payment orders")
 		return
 	}
 
@@ -80,5 +80,5 @@ func (h *PaymentRecordHandler) GetMyPaymentOrders(c *gin.Context) {
 		recordResponses = append(recordResponses, dto.ToPaymentRecordUserResponse(record))
 	}
 
-	response.OKPaginated(c, "My payment orders retrieved successfully", recordResponses, totalCount, limit, offset)
+	response.SendPaginatedResponse(c, recordResponses, totalCount)
 }

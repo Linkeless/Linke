@@ -122,10 +122,10 @@ func (h *AdminAuthHandler) checkLoginSecurityService(c *gin.Context) bool {
 // @Param user_id query uint false "Filter by User ID" example="123"
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(20)
-// @Success 200 {object} response.StandardListResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} response.HALCollectionResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/auth/jwt/tokens [get]
 func (h *AdminAuthHandler) ListActiveTokens(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
@@ -156,9 +156,7 @@ func (h *AdminAuthHandler) ListActiveTokens(c *gin.Context) {
 	)
 
 	// Return blacklist statistics as a proxy for active token information
-	response.SuccessListWithExtra(c, "JWT token statistics retrieved", []any{stats}, page, limit, 1, gin.H{
-		"note": "Active token tracking requires additional implementation",
-	})
+	response.SendPaginatedResponse(c, []any{stats}, 1)
 }
 
 // ListJWTBlacklist godoc
@@ -172,10 +170,10 @@ func (h *AdminAuthHandler) ListActiveTokens(c *gin.Context) {
 // @Param reason query string false "Filter by blacklist reason" example="admin_revoke"
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(20)
-// @Success 200 {object} response.StandardListResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} response.HALCollectionResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/auth/jwt/blacklist [get]
 func (h *AdminAuthHandler) ListJWTBlacklist(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
@@ -202,9 +200,7 @@ func (h *AdminAuthHandler) ListJWTBlacklist(c *gin.Context) {
 		logger.Int("limit", limit),
 	)
 
-	response.SuccessListWithExtra(c, "JWT blacklist retrieved", []any{stats}, page, limit, 1, gin.H{
-		"blacklist_stats": stats,
-	})
+	response.SendPaginatedResponse(c, []any{stats}, 1)
 }
 
 // RevokeJWTToken godoc
@@ -215,11 +211,11 @@ func (h *AdminAuthHandler) ListJWTBlacklist(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param revoke body AdminJWTRevokeRequest true "Token revocation data"
-// @Success 200 {object} response.MessageOnlyResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {string} string "message"
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/auth/jwt/revoke [post]
 func (h *AdminAuthHandler) RevokeJWTToken(c *gin.Context) {
 	var req AdminJWTRevokeRequest
@@ -235,7 +231,7 @@ func (h *AdminAuthHandler) RevokeJWTToken(c *gin.Context) {
 		logger.String("reason", req.Reason),
 	)
 
-	response.SuccessWithMessage(c, "JWT token revoked successfully", gin.H{
+	response.OK(c, gin.H{
 		"token_hash": req.TokenHash,
 		"reason":     req.Reason,
 	})
@@ -248,10 +244,10 @@ func (h *AdminAuthHandler) RevokeJWTToken(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} response.StandardResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/auth/jwt/analytics [get]
 func (h *AdminAuthHandler) GetJWTAnalytics(c *gin.Context) {
 	stats, err := h.jwtBlacklistService.GetBlacklistStats(c.Request.Context())
@@ -265,7 +261,7 @@ func (h *AdminAuthHandler) GetJWTAnalytics(c *gin.Context) {
 
 	logger.Info("Admin accessed JWT analytics")
 
-	response.Success(c, gin.H{
+	response.OK(c, gin.H{
 		"blacklist_stats": stats,
 		"analytics": gin.H{
 			"total_blacklisted": stats["total_count"],
@@ -291,11 +287,11 @@ func (h *AdminAuthHandler) GetJWTAnalytics(c *gin.Context) {
 // @Param end_date query string false "End date (RFC3339)" example="2024-12-31T23:59:59Z"
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(20)
-// @Success 200 {object} response.StandardListResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} response.HALCollectionResponse
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/auth/security/login-attempts [get]
 func (h *AdminAuthHandler) ListLoginAttempts(c *gin.Context) {
 	var filter LoginAttemptFilterRequest
@@ -341,10 +337,7 @@ func (h *AdminAuthHandler) ListLoginAttempts(c *gin.Context) {
 		logger.Int("limit", filter.Limit),
 	)
 
-	response.SuccessListWithExtra(c, "Login attempts retrieved", []any{stats}, filter.Page, filter.Limit, 1, gin.H{
-		"filters": filter,
-		"stats":   stats,
-	})
+	response.SendPaginatedResponse(c, []any{stats}, 1)
 }
 
 // GetFailedLoginAnalysis godoc
@@ -355,10 +348,10 @@ func (h *AdminAuthHandler) ListLoginAttempts(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param days query int false "Analysis period in days" default(7)
-// @Success 200 {object} response.StandardResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/auth/security/failed-logins [get]
 func (h *AdminAuthHandler) GetFailedLoginAnalysis(c *gin.Context) {
 	days, _ := strconv.Atoi(c.DefaultQuery("days", "7"))
@@ -387,7 +380,7 @@ func (h *AdminAuthHandler) GetFailedLoginAnalysis(c *gin.Context) {
 		logger.Int("days", days),
 	)
 
-	response.Success(c, gin.H{
+	response.OK(c, gin.H{
 		"analysis_period": gin.H{
 			"days":       days,
 			"start_date": since,
@@ -407,12 +400,12 @@ func (h *AdminAuthHandler) GetFailedLoginAnalysis(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param unlock body AdminAccountUnlockRequest true "Account unlock data"
-// @Success 200 {object} response.MessageOnlyResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 404 {object} response.NotFoundResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {string} string "message"
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 404 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/auth/accounts/unlock [post]
 func (h *AdminAuthHandler) UnlockAccount(c *gin.Context) {
 	var req AdminAccountUnlockRequest
@@ -446,7 +439,7 @@ func (h *AdminAuthHandler) UnlockAccount(c *gin.Context) {
 		logger.String("reason", req.Reason),
 	)
 
-	response.SuccessWithMessage(c, "Account unlocked successfully", gin.H{
+	response.OK(c, gin.H{
 		"email":  req.Email,
 		"reason": req.Reason,
 	})
@@ -460,12 +453,12 @@ func (h *AdminAuthHandler) UnlockAccount(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param reset body AdminForcePasswordResetRequest true "Password reset data"
-// @Success 200 {object} response.MessageOnlyResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 404 {object} response.NotFoundResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {string} string "message"
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 404 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/auth/accounts/reset-password [post]
 func (h *AdminAuthHandler) ForcePasswordReset(c *gin.Context) {
 	adminUser, exists := c.Get(middleware.AuthContextKey)
@@ -511,7 +504,7 @@ func (h *AdminAuthHandler) ForcePasswordReset(c *gin.Context) {
 		logger.Uint("target_user_id", req.UserID),
 	)
 
-	response.SuccessWithMessage(c, "Password reset successfully. All user tokens have been revoked.", gin.H{
+	response.OK(c, gin.H{
 		"user_id": req.UserID,
 	})
 }
@@ -524,12 +517,12 @@ func (h *AdminAuthHandler) ForcePasswordReset(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param user_id path uint true "User ID"
-// @Success 200 {object} response.StandardResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 404 {object} response.NotFoundResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 404 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/auth/accounts/{user_id}/security-status [get]
 func (h *AdminAuthHandler) GetAccountSecurityStatus(c *gin.Context) {
 	userIDStr := c.Param("user_id")
@@ -594,7 +587,7 @@ func (h *AdminAuthHandler) GetAccountSecurityStatus(c *gin.Context) {
 		"security_score":     calculateSecurityScore(user, isLocked, failureCount),
 	}
 
-	response.Success(c, securityStatus)
+	response.OK(c, securityStatus)
 }
 
 // Security Analytics and Reporting
@@ -607,10 +600,10 @@ func (h *AdminAuthHandler) GetAccountSecurityStatus(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param days query int false "Statistics period in days" default(30)
-// @Success 200 {object} response.StandardResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/auth/analytics/statistics [get]
 func (h *AdminAuthHandler) GetSecurityStatistics(c *gin.Context) {
 	days, _ := strconv.Atoi(c.DefaultQuery("days", "30"))
@@ -657,7 +650,7 @@ func (h *AdminAuthHandler) GetSecurityStatistics(c *gin.Context) {
 		},
 	}
 
-	response.Success(c, statistics)
+	response.OK(c, statistics)
 }
 
 // Bulk Security Operations
@@ -670,11 +663,11 @@ func (h *AdminAuthHandler) GetSecurityStatistics(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param bulk body BulkSecurityActionRequest true "Bulk revocation data"
-// @Success 200 {object} response.StandardResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/auth/bulk/revoke-tokens [post]
 func (h *AdminAuthHandler) BulkRevokeTokens(c *gin.Context) {
 	var req BulkSecurityActionRequest
@@ -707,7 +700,7 @@ func (h *AdminAuthHandler) BulkRevokeTokens(c *gin.Context) {
 		logger.String("reason", req.Reason),
 	)
 
-	response.SuccessWithMessage(c, "Bulk token revocation completed", gin.H{
+	response.OK(c, gin.H{
 		"success_count": successCount,
 		"failed_ids":    failedIDs,
 		"total_users":   len(req.UserIDs),
@@ -723,11 +716,11 @@ func (h *AdminAuthHandler) BulkRevokeTokens(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param bulk body BulkSecurityActionRequest true "Bulk unlock data"
-// @Success 200 {object} response.StandardResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/auth/bulk/unlock-accounts [post]
 func (h *AdminAuthHandler) BulkUnlockAccounts(c *gin.Context) {
 	var req BulkSecurityActionRequest
@@ -780,7 +773,7 @@ func (h *AdminAuthHandler) BulkUnlockAccounts(c *gin.Context) {
 		logger.String("reason", req.Reason),
 	)
 
-	response.SuccessWithMessage(c, "Bulk account unlock completed", gin.H{
+	response.OK(c, gin.H{
 		"success_count": successCount,
 		"failed_ids":    failedIDs,
 		"total_users":   len(req.UserIDs),
@@ -797,10 +790,10 @@ func (h *AdminAuthHandler) BulkUnlockAccounts(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} response.StandardResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/auth/oauth/providers [get]
 func (h *AdminAuthHandler) GetOAuthProviderStats(c *gin.Context) {
 	// Get user statistics by provider
@@ -826,7 +819,7 @@ func (h *AdminAuthHandler) GetOAuthProviderStats(c *gin.Context) {
 		},
 	}
 
-	response.Success(c, providerStats)
+	response.OK(c, providerStats)
 }
 
 // ListOAuthSecurityEvents godoc
@@ -839,10 +832,10 @@ func (h *AdminAuthHandler) GetOAuthProviderStats(c *gin.Context) {
 // @Param provider query string false "Filter by OAuth provider" example="google"
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(20)
-// @Success 200 {object} response.StandardListResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} response.HALCollectionResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/auth/oauth/incidents [get]
 func (h *AdminAuthHandler) ListOAuthSecurityEvents(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
@@ -884,9 +877,7 @@ func (h *AdminAuthHandler) ListOAuthSecurityEvents(c *gin.Context) {
 		},
 	}
 
-	response.SuccessListWithExtra(c, "OAuth security events retrieved", events, page, limit, int64(len(events)), gin.H{
-		"provider_filter": provider,
-	})
+	response.SendPaginatedResponse(c, events, int64(len(events)))
 }
 
 // Advanced Security Analytics
@@ -900,10 +891,10 @@ func (h *AdminAuthHandler) ListOAuthSecurityEvents(c *gin.Context) {
 // @Security BearerAuth
 // @Param analysis_type query string false "Analysis type" default("login_patterns") example="login_patterns"
 // @Param days query int false "Analysis period in days" default(30)
-// @Success 200 {object} response.StandardResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/auth/analytics/patterns [get]
 func (h *AdminAuthHandler) GetSecurityPatterns(c *gin.Context) {
 	analysisType := c.DefaultQuery("analysis_type", "login_patterns")
@@ -980,7 +971,7 @@ func (h *AdminAuthHandler) GetSecurityPatterns(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, patterns)
+	response.OK(c, patterns)
 }
 
 // GetSecurityScore godoc
@@ -990,10 +981,10 @@ func (h *AdminAuthHandler) GetSecurityPatterns(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} response.StandardResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/auth/analytics/security-score [get]
 func (h *AdminAuthHandler) GetSecurityScore(c *gin.Context) {
 	logger.Info("Admin accessed security score")
@@ -1019,7 +1010,7 @@ func (h *AdminAuthHandler) GetSecurityScore(c *gin.Context) {
 	// Calculate overall security score
 	securityScore := calculateOverallSecurityScore(loginStats, jwtStats)
 
-	response.Success(c, gin.H{
+	response.OK(c, gin.H{
 		"overall_score": securityScore,
 		"score_breakdown": gin.H{
 			"authentication": 85,
@@ -1059,11 +1050,11 @@ func (h *AdminAuthHandler) GetSecurityScore(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param bulk body BulkSecurityActionRequest true "Bulk password reset data"
-// @Success 200 {object} response.StandardResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/auth/bulk/reset-passwords [post]
 func (h *AdminAuthHandler) BulkResetPasswords(c *gin.Context) {
 	adminUser, exists := c.Get(middleware.AuthContextKey)
@@ -1120,7 +1111,7 @@ func (h *AdminAuthHandler) BulkResetPasswords(c *gin.Context) {
 		logger.String("reason", req.Reason),
 	)
 
-	response.SuccessWithMessage(c, "Bulk password reset completed", gin.H{
+	response.OK(c, gin.H{
 		"success_count": successCount,
 		"failed_ids":    failedIDs,
 		"total_users":   len(req.UserIDs),
@@ -1137,11 +1128,11 @@ func (h *AdminAuthHandler) BulkResetPasswords(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param notification body SecurityNotificationRequest true "Notification data"
-// @Success 200 {object} response.StandardResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 403 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/auth/bulk/notifications [post]
 func (h *AdminAuthHandler) SendSecurityNotifications(c *gin.Context) {
 	var req SecurityNotificationRequest
@@ -1170,7 +1161,7 @@ func (h *AdminAuthHandler) SendSecurityNotifications(c *gin.Context) {
 		logger.String("subject", req.Subject),
 	)
 
-	response.SuccessWithMessage(c, "Security notifications sent successfully", gin.H{
+	response.OK(c, gin.H{
 		"success_count":    successCount,
 		"failed_ids":       failedIDs,
 		"total_recipients": len(req.UserIDs),

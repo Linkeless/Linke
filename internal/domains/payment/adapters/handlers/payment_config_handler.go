@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"strconv"
-	"strings"
 
 	"linke/internal/domains/payment/dto"
 	"linke/internal/domains/payment/usecases/interfaces"
@@ -34,7 +33,7 @@ func NewPaymentConfigHandler(paymentConfigService interfaces.PaymentConfigServic
 // @Produce json
 // @Security BearerAuth
 // @Param config body dto.CreatePaymentConfigRequest true "Payment config data with method (epay/crypto), URL, PID, and Key"
-// @Success 201 {object} response.StandardResponse{data=dto.PaymentConfigResponse}
+// @Success 201 {object} dto.PaymentConfigResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -63,13 +62,13 @@ func (h *PaymentConfigHandler) CreatePaymentConfig(c *gin.Context) {
 	// Bind request
 	var req dto.CreatePaymentConfigRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "Invalid request data", err.Error())
+		response.BadRequest(c, "Invalid request")
 		return
 	}
 
 	// Validate epay configuration
 	if validationErrors := dto.ValidateEpayConfig(&req); len(validationErrors) > 0 {
-		response.BadRequest(c, "Configuration validation failed", strings.Join(validationErrors, "; "))
+		response.BadRequest(c, "Invalid request")
 		return
 	}
 
@@ -77,11 +76,11 @@ func (h *PaymentConfigHandler) CreatePaymentConfig(c *gin.Context) {
 	config, err := h.paymentConfigService.CreatePaymentConfig(c.Request.Context(), &req)
 	if err != nil {
 		logger.Error("Failed to create payment config", logger.ErrorField(err), logger.Uint("admin_id", user.ID))
-		response.InternalServerError(c, "Failed to create payment config", err.Error())
+		response.InternalServerError(c, "Failed to create payment config")
 		return
 	}
 
-	response.CreatedWithMessage(c, "Payment config created successfully", dto.ToPaymentConfigResponseWithFullKey(config))
+	response.Created(c, dto.ToPaymentConfigResponseWithFullKey(config))
 }
 
 // GetPaymentConfigs godoc
@@ -95,7 +94,7 @@ func (h *PaymentConfigHandler) CreatePaymentConfig(c *gin.Context) {
 // @Param is_enabled query bool false "Filter by enabled status" example(true)
 // @Param limit query int false "Limit results" minimum(1) maximum(100) example(10)
 // @Param offset query int false "Offset results" minimum(0) example(0)
-// @Success 200 {object} response.PaginatedResponse{data=[]dto.PaymentConfigResponse}
+// @Success 200 {object} response.HALCollectionResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -124,7 +123,7 @@ func (h *PaymentConfigHandler) GetPaymentConfigs(c *gin.Context) {
 	// Bind query parameters
 	var req dto.GetPaymentConfigsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		response.BadRequest(c, "Invalid query parameters", err.Error())
+		response.BadRequest(c, "Invalid request")
 		return
 	}
 
@@ -132,7 +131,7 @@ func (h *PaymentConfigHandler) GetPaymentConfigs(c *gin.Context) {
 	configs, totalCount, err := h.paymentConfigService.GetPaymentConfigs(c.Request.Context(), &req)
 	if err != nil {
 		logger.Error("Failed to get payment configs", logger.ErrorField(err))
-		response.InternalServerError(c, "Failed to get payment configs", err.Error())
+		response.InternalServerError(c, "Failed to get payment configs")
 		return
 	}
 
@@ -142,7 +141,7 @@ func (h *PaymentConfigHandler) GetPaymentConfigs(c *gin.Context) {
 		configResponses = append(configResponses, dto.ToPaymentConfigResponseWithFullKey(config))
 	}
 
-	response.OKPaginated(c, "Payment configs retrieved successfully", configResponses, totalCount, req.Limit, req.Offset)
+	response.SendPaginatedResponse(c, configResponses, totalCount)
 }
 
 // UpdatePaymentConfig godoc
@@ -154,7 +153,7 @@ func (h *PaymentConfigHandler) GetPaymentConfigs(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Payment config ID"
 // @Param config body dto.UpdatePaymentConfigRequest true "Updated payment config data (URL, PID, Key, etc.)"
-// @Success 200 {object} response.StandardResponse{data=dto.PaymentConfigResponse}
+// @Success 200 {object} dto.PaymentConfigResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -185,14 +184,14 @@ func (h *PaymentConfigHandler) UpdatePaymentConfig(c *gin.Context) {
 	configIDStr := c.Param("id")
 	configID, err := strconv.ParseUint(configIDStr, 10, 32)
 	if err != nil {
-		response.BadRequest(c, "Invalid config ID", "Config ID must be a valid number")
+		response.BadRequest(c, "Invalid request")
 		return
 	}
 
 	// Bind request
 	var req dto.UpdatePaymentConfigRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "Invalid request data", err.Error())
+		response.BadRequest(c, "Invalid request")
 		return
 	}
 
@@ -204,13 +203,13 @@ func (h *PaymentConfigHandler) UpdatePaymentConfig(c *gin.Context) {
 			return
 		}
 		logger.Error("Failed to get payment config for validation", logger.ErrorField(err))
-		response.InternalServerError(c, "Failed to get payment config", err.Error())
+		response.InternalServerError(c, "Failed to get payment config")
 		return
 	}
 
 	// Validate epay configuration if it's an epay config
 	if validationErrors := dto.ValidateEpayUpdateConfig(&req, existingConfig.Method); len(validationErrors) > 0 {
-		response.BadRequest(c, "Configuration validation failed", strings.Join(validationErrors, "; "))
+		response.BadRequest(c, "Invalid request")
 		return
 	}
 
@@ -222,11 +221,11 @@ func (h *PaymentConfigHandler) UpdatePaymentConfig(c *gin.Context) {
 			return
 		}
 		logger.Error("Failed to update payment config", logger.ErrorField(err), logger.Uint("config_id", uint(configID)), logger.Uint("admin_id", user.ID))
-		response.InternalServerError(c, "Failed to update payment config", err.Error())
+		response.InternalServerError(c, "Failed to update payment config")
 		return
 	}
 
-	response.OK(c, "Payment config updated successfully", dto.ToPaymentConfigResponseWithFullKey(config))
+	response.OK(c, dto.ToPaymentConfigResponseWithFullKey(config))
 }
 
 // DeletePaymentConfig godoc
@@ -268,7 +267,7 @@ func (h *PaymentConfigHandler) DeletePaymentConfig(c *gin.Context) {
 	configIDStr := c.Param("id")
 	configID, err := strconv.ParseUint(configIDStr, 10, 32)
 	if err != nil {
-		response.BadRequest(c, "Invalid config ID", "Config ID must be a valid number")
+		response.BadRequest(c, "Invalid request")
 		return
 	}
 
@@ -279,11 +278,11 @@ func (h *PaymentConfigHandler) DeletePaymentConfig(c *gin.Context) {
 			return
 		}
 		logger.Error("Failed to delete payment config", logger.ErrorField(err), logger.Uint("config_id", uint(configID)), logger.Uint("admin_id", user.ID))
-		response.InternalServerError(c, "Failed to delete payment config", err.Error())
+		response.InternalServerError(c, "Failed to delete payment config")
 		return
 	}
 
-	response.OK(c, "Payment config deleted successfully", nil)
+	response.NoContent(c)
 }
 
 // GetActivePaymentConfigs godoc
@@ -293,7 +292,7 @@ func (h *PaymentConfigHandler) DeletePaymentConfig(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param currency query string false "Filter by currency" example("CNY")
-// @Success 200 {object} response.StandardResponse{data=[]dto.PaymentConfigResponse}
+// @Success 200 {object} []dto.PaymentConfigResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /payment/configs [get]
 func (h *PaymentConfigHandler) GetActivePaymentConfigs(c *gin.Context) {
@@ -303,7 +302,7 @@ func (h *PaymentConfigHandler) GetActivePaymentConfigs(c *gin.Context) {
 	configs, err := h.paymentConfigService.GetActivePaymentConfigs(c.Request.Context(), currency)
 	if err != nil {
 		logger.Error("Failed to get active payment configs", logger.ErrorField(err))
-		response.InternalServerError(c, "Failed to get payment configs", err.Error())
+		response.InternalServerError(c, "Failed to get payment configs")
 		return
 	}
 
@@ -313,5 +312,5 @@ func (h *PaymentConfigHandler) GetActivePaymentConfigs(c *gin.Context) {
 		configResponses = append(configResponses, dto.ToPaymentConfigPublicResponse(config))
 	}
 
-	response.OK(c, "Active payment configs retrieved successfully", configResponses)
+	response.OK(c, configResponses)
 }

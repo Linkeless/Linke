@@ -32,11 +32,11 @@ func NewUserAccountBindingHandler(bindingService interfaces.UserAccountBindingSe
 // @Security BearerAuth
 // @Param provider path string true "Provider name (google, github, telegram)"
 // @Param binding body entities.CreateBindingRequest true "Binding data"
-// @Success 201 {object} response.StandardResponse{data=entities.UserAccountBindingResponse}
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 409 {object} response.ConflictResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 201 {object} entities.UserAccountBindingResponse
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 409 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /user/bindings/{provider} [post]
 func (h *UserAccountBindingHandler) CreateBinding(c *gin.Context) {
 	user, exists := c.Get(middleware.AuthContextKey)
@@ -59,7 +59,7 @@ func (h *UserAccountBindingHandler) CreateBinding(c *gin.Context) {
 
 	var req entities.CreateBindingRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "Invalid request format", err.Error())
+		response.BadRequest(c, "Invalid request format: "+err.Error())
 		return
 	}
 
@@ -80,7 +80,7 @@ func (h *UserAccountBindingHandler) CreateBinding(c *gin.Context) {
 			return
 		}
 
-		response.InternalServerError(c, "Failed to create account binding", err.Error())
+		response.InternalServerError(c, "Failed to create account binding: "+err.Error())
 		return
 	}
 
@@ -99,9 +99,9 @@ func (h *UserAccountBindingHandler) CreateBinding(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} response.StandardResponse{data=entities.BindingListResponse}
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} entities.BindingListResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /user/bindings [get]
 func (h *UserAccountBindingHandler) GetBindings(c *gin.Context) {
 	user, exists := c.Get(middleware.AuthContextKey)
@@ -121,7 +121,7 @@ func (h *UserAccountBindingHandler) GetBindings(c *gin.Context) {
 		logger.Error("Failed to get user bindings",
 			logger.Uint("user_id", u.ID),
 			logger.ErrorField(err))
-		response.InternalServerError(c, "Failed to get account bindings", err.Error())
+		response.InternalServerError(c, "Failed to get account bindings: "+err.Error())
 		return
 	}
 
@@ -136,7 +136,7 @@ func (h *UserAccountBindingHandler) GetBindings(c *gin.Context) {
 		Total:    int64(len(bindingResponses)),
 	}
 
-	response.Success(c, bindingList)
+	response.OK(c, bindingList)
 }
 
 // GetBinding godoc
@@ -147,11 +147,11 @@ func (h *UserAccountBindingHandler) GetBindings(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param provider path string true "Provider name (google, github, telegram)"
-// @Success 200 {object} response.StandardResponse{data=entities.UserAccountBindingResponse}
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 404 {object} response.NotFoundResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} entities.UserAccountBindingResponse
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 404 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /user/bindings/{provider} [get]
 func (h *UserAccountBindingHandler) GetBinding(c *gin.Context) {
 	user, exists := c.Get(middleware.AuthContextKey)
@@ -195,7 +195,7 @@ func (h *UserAccountBindingHandler) GetBinding(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, binding.ToResponse())
+	response.OK(c, binding.ToResponse())
 }
 
 // UpdateBinding godoc
@@ -207,11 +207,11 @@ func (h *UserAccountBindingHandler) GetBinding(c *gin.Context) {
 // @Security BearerAuth
 // @Param provider path string true "Provider name (google, github, telegram)"
 // @Param binding body entities.UpdateBindingRequest true "Updated binding data"
-// @Success 200 {object} response.StandardResponse{data=entities.UserAccountBindingResponse}
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 404 {object} response.NotFoundResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} entities.UserAccountBindingResponse
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 404 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /user/bindings/{provider} [put]
 func (h *UserAccountBindingHandler) UpdateBinding(c *gin.Context) {
 	user, exists := c.Get(middleware.AuthContextKey)
@@ -234,7 +234,7 @@ func (h *UserAccountBindingHandler) UpdateBinding(c *gin.Context) {
 
 	var req entities.UpdateBindingRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "Invalid request format", err.Error())
+		response.BadRequest(c, "Invalid request format: "+err.Error())
 		return
 	}
 
@@ -251,7 +251,7 @@ func (h *UserAccountBindingHandler) UpdateBinding(c *gin.Context) {
 			return
 		}
 
-		response.InternalServerError(c, "Failed to update account binding", err.Error())
+		response.InternalServerError(c, "Failed to update account binding: "+err.Error())
 		return
 	}
 
@@ -259,7 +259,7 @@ func (h *UserAccountBindingHandler) UpdateBinding(c *gin.Context) {
 		logger.Uint("user_id", u.ID),
 		logger.String("provider", provider))
 
-	response.Success(c, binding.ToResponse())
+	response.OK(c, binding.ToResponse())
 }
 
 // DeleteBinding godoc
@@ -270,11 +270,11 @@ func (h *UserAccountBindingHandler) UpdateBinding(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param provider path string true "Provider name (google, github, telegram)"
-// @Success 200 {object} response.MessageOnlyResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 404 {object} response.NotFoundResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {string} string "message"
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 404 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /user/bindings/{provider} [delete]
 func (h *UserAccountBindingHandler) DeleteBinding(c *gin.Context) {
 	user, exists := c.Get(middleware.AuthContextKey)
@@ -308,7 +308,7 @@ func (h *UserAccountBindingHandler) DeleteBinding(c *gin.Context) {
 			return
 		}
 
-		response.InternalServerError(c, "Failed to delete account binding", err.Error())
+		response.InternalServerError(c, "Failed to delete account binding: "+err.Error())
 		return
 	}
 
@@ -316,7 +316,7 @@ func (h *UserAccountBindingHandler) DeleteBinding(c *gin.Context) {
 		logger.Uint("user_id", u.ID),
 		logger.String("provider", provider))
 
-	response.SuccessWithMessage(c, "Account binding removed successfully", nil)
+	response.OK(c, gin.H{"message": "Account binding removed successfully"})
 }
 
 // SetPrimaryBinding godoc
@@ -327,11 +327,11 @@ func (h *UserAccountBindingHandler) DeleteBinding(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param provider path string true "Provider name (google, github, telegram)"
-// @Success 200 {object} response.MessageOnlyResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 404 {object} response.NotFoundResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {string} string "message"
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 404 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /user/bindings/{provider}/primary [put]
 func (h *UserAccountBindingHandler) SetPrimaryBinding(c *gin.Context) {
 	user, exists := c.Get(middleware.AuthContextKey)
@@ -365,7 +365,7 @@ func (h *UserAccountBindingHandler) SetPrimaryBinding(c *gin.Context) {
 			return
 		}
 
-		response.InternalServerError(c, "Failed to set primary binding", err.Error())
+		response.InternalServerError(c, "Failed to set primary binding: "+err.Error())
 		return
 	}
 
@@ -373,7 +373,7 @@ func (h *UserAccountBindingHandler) SetPrimaryBinding(c *gin.Context) {
 		logger.Uint("user_id", u.ID),
 		logger.String("provider", provider))
 
-	response.SuccessWithMessage(c, "Primary binding set successfully", nil)
+	response.OK(c, gin.H{"message": "Primary binding set successfully"})
 }
 
 /*
@@ -384,10 +384,10 @@ func (h *UserAccountBindingHandler) SetPrimaryBinding(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} response.StandardResponse{data=interfaces.BindingStats}
-// @Failure 401 {object} response.UnauthorizedResponse
+// @Success 200 {object} interfaces.BindingStats
+// @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 403 {object} response.ForbiddenResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/bindings/stats [get]
 func (h *UserAccountBindingHandler) GetBindingStats(c *gin.Context) {
 	user, exists := c.Get(middleware.AuthContextKey)
@@ -428,11 +428,11 @@ func (h *UserAccountBindingHandler) GetBindingStats(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param days query int false "Days of inactivity threshold (default: 90)"
-// @Success 200 {object} response.MessageOnlyResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
+// @Success 200 {string} string "message"
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 403 {object} response.ForbiddenResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/bindings/cleanup [post]
 func (h *UserAccountBindingHandler) CleanupInactiveBindings(c *gin.Context) {
 	user, exists := c.Get(middleware.AuthContextKey)

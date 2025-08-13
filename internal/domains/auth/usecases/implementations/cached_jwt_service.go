@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"linke/internal/domains/auth/dto"
 	"linke/internal/domains/auth/usecases/interfaces"
 	userEntities "linke/internal/domains/user/entities"
 	"linke/internal/shared/cache"
@@ -36,12 +37,12 @@ func NewCachedJWTService(
 }
 
 // GenerateToken generates JWT token (no caching needed as each token is unique)
-func (s *CachedJWTService) GenerateToken(user *userEntities.User) (*interfaces.TokenResponse, error) {
+func (s *CachedJWTService) GenerateToken(user *userEntities.User) (*dto.TokenResponse, error) {
 	return s.baseService.GenerateToken(user)
 }
 
 // ValidateToken validates JWT token with caching to reduce computation overhead
-func (s *CachedJWTService) ValidateToken(tokenString string) (*interfaces.Claims, error) {
+func (s *CachedJWTService) ValidateToken(tokenString string) (*dto.Claims, error) {
 	// Create cache key based on token hash to avoid storing full token
 	tokenHash := s.hashToken(tokenString)
 	cacheKey := fmt.Sprintf("%svalidation:%s", cache.CachePrefixAuth, tokenHash)
@@ -50,7 +51,7 @@ func (s *CachedJWTService) ValidateToken(tokenString string) (*interfaces.Claims
 	cached, err := s.cacheManager.GetCache().Get(context.Background(), cacheKey)
 	if err == nil && cached != nil {
 		var cachedResult struct {
-			Claims *interfaces.Claims `json:"claims"`
+			Claims *dto.Claims `json:"claims"`
 			Valid  bool               `json:"valid"`
 		}
 		if err := json.Unmarshal(cached, &cachedResult); err == nil && cachedResult.Valid {
@@ -66,7 +67,7 @@ func (s *CachedJWTService) ValidateToken(tokenString string) (*interfaces.Claims
 	// We use short TTL to balance performance with security (token might be revoked)
 	if err == nil && claims != nil {
 		result := struct {
-			Claims *interfaces.Claims `json:"claims"`
+			Claims *dto.Claims `json:"claims"`
 			Valid  bool               `json:"valid"`
 		}{
 			Claims: claims,
@@ -87,7 +88,7 @@ func (s *CachedJWTService) ValidateToken(tokenString string) (*interfaces.Claims
 }
 
 // RefreshToken generates new token (no caching needed)
-func (s *CachedJWTService) RefreshToken(tokenString string) (*interfaces.TokenResponse, error) {
+func (s *CachedJWTService) RefreshToken(tokenString string) (*dto.TokenResponse, error) {
 	// Invalidate validation cache for old token
 	tokenHash := s.hashToken(tokenString)
 	cacheKey := fmt.Sprintf("%svalidation:%s", cache.CachePrefixAuth, tokenHash)

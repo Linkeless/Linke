@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"linke/internal/domains/auth/usecases/interfaces"
+	"linke/internal/domains/auth/dto"
 	"linke/internal/shared/config"
 
 	"golang.org/x/oauth2"
@@ -62,7 +62,7 @@ func (o *OAuthService) ExchangeCodeForToken(ctx context.Context, provider, code 
 	return config.Exchange(ctx, code)
 }
 
-func (o *OAuthService) GetUserInfo(ctx context.Context, provider string, token *oauth2.Token) (*interfaces.UserInfo, error) {
+func (o *OAuthService) GetUserInfo(ctx context.Context, provider string, token *oauth2.Token) (*dto.UserInfo, error) {
 	switch provider {
 	case "google":
 		return o.getGoogleUserInfo(ctx, token)
@@ -73,7 +73,7 @@ func (o *OAuthService) GetUserInfo(ctx context.Context, provider string, token *
 	}
 }
 
-func (o *OAuthService) VerifyTelegramAuth(data map[string]string) (*interfaces.UserInfo, error) {
+func (o *OAuthService) VerifyTelegramAuth(data map[string]string) (*dto.UserInfo, error) {
 	hash, exists := data["hash"]
 	if !exists {
 		return nil, fmt.Errorf("hash not found in auth data")
@@ -103,7 +103,7 @@ func (o *OAuthService) VerifyTelegramAuth(data map[string]string) (*interfaces.U
 		name += " " + lastName
 	}
 
-	return &interfaces.UserInfo{
+	return &dto.UserInfo{
 		ID:       id,
 		Name:     name,
 		Username: username,
@@ -150,7 +150,7 @@ func (o *OAuthService) getOAuth2Config(provider string) *oauth2.Config {
 	}
 }
 
-func (o *OAuthService) getGoogleUserInfo(ctx context.Context, token *oauth2.Token) (*interfaces.UserInfo, error) {
+func (o *OAuthService) getGoogleUserInfo(ctx context.Context, token *oauth2.Token) (*dto.UserInfo, error) {
 	config := o.getOAuth2Config("google")
 	client := config.Client(ctx, token)
 
@@ -175,7 +175,7 @@ func (o *OAuthService) getGoogleUserInfo(ctx context.Context, token *oauth2.Toke
 		return nil, fmt.Errorf("failed to decode user info: %w", err)
 	}
 
-	return &interfaces.UserInfo{
+	return &dto.UserInfo{
 		ID:       googleUser.ID,
 		Email:    googleUser.Email,
 		Name:     googleUser.Name,
@@ -184,7 +184,7 @@ func (o *OAuthService) getGoogleUserInfo(ctx context.Context, token *oauth2.Toke
 	}, nil
 }
 
-func (o *OAuthService) getGitHubUserInfo(ctx context.Context, token *oauth2.Token) (*interfaces.UserInfo, error) {
+func (o *OAuthService) getGitHubUserInfo(ctx context.Context, token *oauth2.Token) (*dto.UserInfo, error) {
 	config := o.getOAuth2Config("github")
 	client := config.Client(ctx, token)
 
@@ -210,7 +210,7 @@ func (o *OAuthService) getGitHubUserInfo(ctx context.Context, token *oauth2.Toke
 		return nil, fmt.Errorf("failed to decode user info: %w", err)
 	}
 
-	userInfo := &interfaces.UserInfo{
+	userInfo := &dto.UserInfo{
 		ID:       strconv.Itoa(githubUser.ID),
 		Email:    githubUser.Email,
 		Name:     githubUser.Name,

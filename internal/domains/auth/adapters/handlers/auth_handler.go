@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"linke/internal/domains/auth/dto"
 	authImplementations "linke/internal/domains/auth/usecases/implementations"
 	interfaces "linke/internal/domains/auth/usecases/interfaces"
 	userEntities "linke/internal/domains/user/entities"
@@ -46,7 +47,7 @@ func NewAuthHandler(cfg *config.Config, authService interfaces.AuthService, jwtS
 // @Tags auth
 // @Param provider path string true "OAuth provider (google, github, telegram)"
 // @Success 302 {string} string "redirect"
-// @Failure 400 {object} response.BadRequestResponse
+// @Failure 400 {object} response.ProblemJSONResponse
 // @Router /auth/{provider} [get]
 func (h *AuthHandler) Login(c *gin.Context) {
 	provider := c.Param("provider")
@@ -73,14 +74,10 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 // @Summary OAuth callback
 // @Description Handle OAuth callback from providers
-// @Tags auth
-// @Param provider path string true "OAuth provider"
-// @Param code query string false "Authorization code (for OAuth2)"
-// @Param state query string false "State parameter (for OAuth2)"
-// @Success 200 {object} response.StandardResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} dto.AuthResponse
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /auth/{provider}/callback [get]
 func (h *AuthHandler) Callback(c *gin.Context) {
 	provider := c.Param("provider")
@@ -144,7 +141,7 @@ func (h *AuthHandler) Callback(c *gin.Context) {
 		return
 	}
 
-	response.SuccessWithMessage(c, "Authentication successful", gin.H{
+	response.OK(c, gin.H{
 		"user":  user,
 		"token": jwtToken,
 	})
@@ -152,9 +149,7 @@ func (h *AuthHandler) Callback(c *gin.Context) {
 
 // @Summary Get supported OAuth providers
 // @Description Get list of supported OAuth providers
-// @Tags auth
-// @Success 200 {object} response.StandardResponse
-// @Router /auth/providers [get]
+// @Success 200 {object} map[string]interface{}
 func (h *AuthHandler) GetProviders(c *gin.Context) {
 	providers := []map[string]any{
 		{
@@ -180,17 +175,15 @@ func (h *AuthHandler) GetProviders(c *gin.Context) {
 		},
 	}
 
-	response.Success(c, gin.H{
+	response.OK(c, gin.H{
 		"providers": providers,
 	})
 }
 
 // @Summary Get Telegram Login Widget
 // @Description Get Telegram Login Widget HTML for frontend integration
-// @Tags auth
-// @Param bot_username query string false "Bot username (optional)"
-// @Success 200 {object} response.StandardResponse
-// @Failure 400 {object} response.BadRequestResponse
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} response.ProblemJSONResponse
 // @Router /auth/telegram/widget [get]
 func (h *AuthHandler) GetTelegramWidget(c *gin.Context) {
 	if h.cfg.OAuth2.TelegramBotToken == "" {
@@ -211,7 +204,7 @@ func (h *AuthHandler) GetTelegramWidget(c *gin.Context) {
 		data-auth-url="` + redirectURL + `"
 		data-request-access="write"></script>`
 
-	response.Success(c, gin.H{
+	response.OK(c, gin.H{
 		"widget_html":  widgetHTML,
 		"redirect_url": redirectURL,
 		"instructions": "1. Create a bot via @BotFather on Telegram\n2. Set domain with /setdomain command\n3. Replace 'YourBot' with your bot username\n4. Use the widget HTML in your frontend",
@@ -257,7 +250,7 @@ func (h *AuthHandler) handleTelegramCallback(c *gin.Context) {
 	})
 }
 
-func (h *AuthHandler) createOrUpdateUser(userInfo *interfaces.UserInfo) (*userEntities.User, error) {
+func (h *AuthHandler) createOrUpdateUser(userInfo *dto.UserInfo) (*userEntities.User, error) {
 	// Use the AuthService to handle OAuth user creation/update
 	return h.authService.CreateOrUpdateOAuthUser(context.Background(), userInfo)
 }
@@ -268,13 +261,13 @@ func (h *AuthHandler) createOrUpdateUser(userInfo *interfaces.UserInfo) (*userEn
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param user body interfaces.RegisterRequest true "Registration data (email, password, and optional invite_code)"
-// @Success 201 {object} response.StandardResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 409 {object} response.ConflictResponse
+// @Param user body dto.RegisterRequest true "Registration data (email, password, and optional invite_code)"
+// @Success 201 {object} dto.AuthResponse
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 409 {object} response.ProblemJSONResponse
 // @Router /auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
-	var req interfaces.RegisterRequest
+	var req dto.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -296,16 +289,12 @@ func (h *AuthHandler) Register(c *gin.Context) {
 // LoginLocal godoc
 // @Summary User login with email/password
 // @Description Login with email and password
-// @Tags auth
-// @Accept json
-// @Produce json
-// @Param credentials body interfaces.LoginRequest true "Login credentials"
-// @Success 200 {object} response.StandardResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
+// @Success 200 {object} dto.AuthResponse
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
 // @Router /auth/login [post]
 func (h *AuthHandler) LoginLocal(c *gin.Context) {
-	var req interfaces.LoginRequest
+	var req dto.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -326,7 +315,7 @@ func (h *AuthHandler) LoginLocal(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, authResponse)
+	response.OK(c, authResponse)
 }
 
 // Logout godoc
@@ -336,7 +325,7 @@ func (h *AuthHandler) LoginLocal(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} response.MessageOnlyResponse
+// @Success 200 {string} string "message"
 // @Router /auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
 	user, exists := c.Get(middleware.AuthContextKey)
@@ -379,18 +368,14 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		return
 	}
 
-	response.SuccessWithMessage(c, "Logged out successfully. Token has been revoked.", nil)
+	response.OK(c, gin.H{"message": "Logged out successfully. Token has been revoked."})
 }
 
 // RefreshToken godoc
 // @Summary Refresh JWT token
 // @Description Refresh an existing JWT token
-// @Tags auth
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Success 200 {object} response.StandardResponse
-// @Failure 401 {object} response.UnauthorizedResponse
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} response.ProblemJSONResponse
 // @Router /auth/refresh [post]
 func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	authHeader := c.GetHeader("Authorization")
@@ -415,7 +400,7 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, newToken)
+	response.OK(c, newToken)
 }
 
 // ChangePassword godoc
@@ -426,9 +411,9 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param passwords body ChangePasswordRequest true "Password change data"
-// @Success 200 {object} response.MessageOnlyResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
+// @Success 200 {string} string "message"
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
 // @Router /auth/change-password [post]
 func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	user, exists := c.Get(middleware.AuthContextKey)
@@ -459,7 +444,7 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	response.SuccessWithMessage(c, "Password changed successfully", nil)
+	response.OK(c, gin.H{"message": "Password changed successfully"})
 }
 
 // GetProfile - DEPRECATED: This method is no longer routed
@@ -477,30 +462,26 @@ func (h *AuthHandler) GetProfile(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, u.ToResponse())
+	response.OK(c, u.ToResponse())
 }
 
 // GetAuthURL godoc
 // @Summary Get OAuth authorization URL
 // @Description Generate OAuth authorization URL for frontend applications
-// @Tags auth
-// @Accept json
-// @Produce json
-// @Param request body interfaces.AuthorizeURLRequest true "Authorization URL request"
-// @Success 200 {object} response.StandardResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} dto.AuthorizeURLResponse
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /auth/url [post]
 func (h *AuthHandler) GetAuthURL(c *gin.Context) {
-	var req interfaces.AuthorizeURLRequest
+	var req dto.AuthorizeURLRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "Invalid request format", err.Error())
+		response.BadRequest(c, "Invalid request format: "+err.Error())
 		return
 	}
 
 	// Validate provider
 	if req.Provider != "google" && req.Provider != "github" && req.Provider != "telegram" {
-		response.BadRequest(c, "Unsupported OAuth provider", "Supported providers: google, github, telegram")
+		response.BadRequest(c, "Unsupported OAuth provider. Supported providers: google, github, telegram")
 		return
 	}
 
@@ -512,11 +493,11 @@ func (h *AuthHandler) GetAuthURL(c *gin.Context) {
 			return
 		}
 
-		telegramResp := &interfaces.AuthorizeURLResponse{
+		telegramResp := &dto.AuthorizeURLResponse{
 			AuthURL: url,
 			State:   "telegram-auth",
 		}
-		response.OK(c, "Authorization URL generated successfully", telegramResp)
+		response.OK(c, telegramResp)
 		return
 	}
 
@@ -528,12 +509,12 @@ func (h *AuthHandler) GetAuthURL(c *gin.Context) {
 
 	url, err := h.oauthService.GetAuthURL(req.Provider, state)
 	if err != nil {
-		response.InternalServerError(c, "Failed to generate authorization URL", err.Error())
+		response.InternalServerError(c, "Failed to generate authorization URL: "+err.Error())
 		return
 	}
 
 	// Store state information for later validation
-	stateInfo := &interfaces.OAuthStateInfo{
+	stateInfo := &dto.OAuthStateInfo{
 		Provider:    req.Provider,
 		RedirectURI: req.RedirectURI,
 		CreatedAt:   time.Now(),
@@ -545,7 +526,7 @@ func (h *AuthHandler) GetAuthURL(c *gin.Context) {
 		logger.String("provider", req.Provider),
 		logger.String("state", state))
 
-	response.OK(c, "Authorization URL generated successfully", &interfaces.AuthorizeURLResponse{
+	response.OK(c, &dto.AuthorizeURLResponse{
 		AuthURL: url,
 		State:   state,
 	})
@@ -554,25 +535,21 @@ func (h *AuthHandler) GetAuthURL(c *gin.Context) {
 // ExchangeToken godoc
 // @Summary Exchange authorization code for tokens
 // @Description Exchange OAuth authorization code for JWT tokens
-// @Tags auth
-// @Accept json
-// @Produce json
-// @Param request body TokenExchangeRequest true "Token exchange request"
-// @Success 200 {object} response.StandardResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} dto.AuthResponse
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /auth/token [post]
 func (h *AuthHandler) ExchangeToken(c *gin.Context) {
 	var req TokenExchangeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "Invalid request format", err.Error())
+		response.BadRequest(c, "Invalid request format: "+err.Error())
 		return
 	}
 
 	// Validate provider
 	if req.Provider != "google" && req.Provider != "github" {
-		response.BadRequest(c, "Unsupported OAuth provider for token exchange", "Supported providers: google, github")
+		response.BadRequest(c, "Unsupported OAuth provider for token exchange. Supported providers: google, github")
 		return
 	}
 
@@ -615,7 +592,7 @@ func (h *AuthHandler) ExchangeToken(c *gin.Context) {
 		logger.Error("Failed to get user info",
 			logger.String("provider", req.Provider),
 			logger.ErrorField(err))
-		response.InternalServerError(c, "Failed to get user information", err.Error())
+		response.InternalServerError(c, "Failed to get user information: "+err.Error())
 		return
 	}
 
@@ -626,7 +603,7 @@ func (h *AuthHandler) ExchangeToken(c *gin.Context) {
 			logger.String("provider", req.Provider),
 			logger.String("provider_user_id", userInfo.ID),
 			logger.ErrorField(err))
-		response.InternalServerError(c, "Failed to process user information", err.Error())
+		response.InternalServerError(c, "Failed to process user information: "+err.Error())
 		return
 	}
 
@@ -636,13 +613,13 @@ func (h *AuthHandler) ExchangeToken(c *gin.Context) {
 		logger.Error("Failed to generate JWT token",
 			logger.Uint("user_id", user.ID),
 			logger.ErrorField(err))
-		response.InternalServerError(c, "Failed to generate authentication tokens", err.Error())
+		response.InternalServerError(c, "Failed to generate authentication tokens: "+err.Error())
 		return
 	}
 
 	// Prepare response
-	authResponse := &interfaces.AuthResponse{
-		User:  user.ToResponse(),
+	authResponse := &dto.AuthResponse{
+		User:  dto.ConvertUserResponse(user.ToResponse()),
 		Token: jwtToken,
 	}
 
@@ -650,7 +627,7 @@ func (h *AuthHandler) ExchangeToken(c *gin.Context) {
 		logger.String("provider", req.Provider),
 		logger.Uint("user_id", user.ID))
 
-	response.OK(c, "Authentication successful", authResponse)
+	response.OK(c, authResponse)
 }
 
 // TokenExchangeRequest represents token exchange request

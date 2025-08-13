@@ -51,10 +51,10 @@ func NewServerAPIHandler(shadowsocksService serverInterfaces.ShadowsocksServerSe
 // @Tags User-Server
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.StandardResponse{data=dto.ServerAPIHealthResponse}
+// @Success 200 {object} dto.ServerAPIHealthResponse
 // @Router /server/UniProxy/health [get]
 func (h *ServerAPIHandler) Health(c *gin.Context) {
-	response.Success(c, gin.H{
+	response.OK(c, gin.H{
 		"status":  "ok",
 		"service": "server-api",
 	})
@@ -84,7 +84,7 @@ type UniProxyBaseConfig struct {
 // @Param node_id query int true "Node ID"
 // @Param node_type query string true "Node Type (shadowsocks)"
 // @Param token query string true "Authentication Token"
-// @Success 200 {object} response.StandardResponse{data=UniProxyConfigResponse}
+// @Success 200 {object} UniProxyConfigResponse
 // @Failure 400 {object} response.StandardResponse
 // @Failure 401 {object} response.StandardResponse
 // @Failure 404 {object} response.StandardResponse
@@ -565,7 +565,7 @@ type UniProxyPushRequest struct {
 // @Param node_id query int true "Node ID"
 // @Param node_type query string true "Node Type" Enums(shadowsocks)
 // @Param token query string true "Authentication Token"
-// @Success 200 {object} response.StandardResponse{data=dto.UniProxyPushResponse}
+// @Success 200 {object} dto.UniProxyPushResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -578,7 +578,7 @@ func (h *ServerAPIHandler) UniProxyPush(c *gin.Context) {
 			logger.String("client_ip", c.ClientIP()),
 			logger.ErrorField(err),
 		)
-		response.BadRequest(c, "Invalid parameters", err.Error())
+		response.BadRequest(c, "Invalid request")
 		return
 	}
 
@@ -617,7 +617,8 @@ func (h *ServerAPIHandler) UniProxyPush(c *gin.Context) {
 		logger.String("node_type", req.NodeType),
 	)
 
-	response.OK(c, "Node data received and processed", gin.H{
+	response.OK(c, gin.H{
+		"message":   "Node data received and processed",
 		"status":    "processed",
 		"node_id":   req.NodeID,
 		"node_type": req.NodeType,

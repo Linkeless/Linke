@@ -345,7 +345,7 @@ func (b *Bot) handlePlans(msg *tgbotapi.Message) {
 
 // Helper functions
 
-func (b *Bot) getUserByTelegramID(ctx context.Context, telegramID int64) (*entities.User, error) {
+func (b *Bot) getUserByTelegramID(ctx context.Context, telegramID int64) (*entities.UserResponse, error) {
 	// Convert telegram ID to string
 	telegramIDStr := fmt.Sprintf("%d", telegramID)
 	
@@ -354,7 +354,7 @@ func (b *Bot) getUserByTelegramID(ctx context.Context, telegramID int64) (*entit
 		return nil, err
 	}
 	
-	return user, nil
+	return user.ToResponse(), nil
 }
 
 func (b *Bot) sendMessage(chatID int64, text string) {

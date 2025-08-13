@@ -400,7 +400,7 @@ func (e *EpayGateway) mapPaymentMethodToEpayType(method string) string {
 // 按照标准算法：1. 参数按ASCII码排序 2. sign、sign_type、空值不参与签名 3. 拼接成a=b&c=d格式 4. 加上KEY做MD5
 func (e *EpayGateway) generateSignature(params map[string]string) string {
 	// Log current config for debugging - 明文输出完整key
-	logger.Info("Current epay config",
+	logger.Debug("Current epay config",
 		logger.String("url", e.config.URL),
 		logger.String("pid", e.config.PID),
 		logger.String("key_length", fmt.Sprintf("%d", len(e.config.Key))),
@@ -426,7 +426,7 @@ func (e *EpayGateway) generateSignature(params map[string]string) string {
 	signString := queryString + e.config.Key
 
 	// Log signature details for debugging
-	logger.Info("Standard epay signature generation",
+	logger.Debug("Standard epay signature generation",
 		logger.String("query_string", queryString),
 		logger.String("sign_string", signString))
 
@@ -434,7 +434,7 @@ func (e *EpayGateway) generateSignature(params map[string]string) string {
 	hash := md5.Sum([]byte(signString))
 	signature := hex.EncodeToString(hash[:]) // hex.EncodeToString已经返回小写
 	
-	logger.Info("Generated signature", 
+	logger.Debug("Generated signature", 
 		logger.String("signature", signature))
 	
 	return signature
@@ -468,7 +468,7 @@ func (e *EpayGateway) submitPaymentOrder(params map[string]string) (string, erro
 	curlCmd := fmt.Sprintf(`curl -X POST "%s" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "%s"`, apiURL, formData)
-	logger.Info("Equivalent curl command", logger.String("curl", curlCmd))
+	logger.Debug("Equivalent curl command", logger.String("curl", curlCmd))
 
 	req, err := http.NewRequest("POST", apiURL, strings.NewReader(formData))
 	if err != nil {
@@ -479,7 +479,7 @@ func (e *EpayGateway) submitPaymentOrder(params map[string]string) (string, erro
 	req.Header.Set("User-Agent", "Linke-Payment-Gateway/1.0")
 
 	// Log all request headers
-	logger.Info("Request headers",
+	logger.Debug("Request headers",
 		logger.String("content_type", req.Header.Get("Content-Type")),
 		logger.String("user_agent", req.Header.Get("User-Agent")),
 		logger.String("content_length", fmt.Sprintf("%d", len(formData))))
@@ -498,7 +498,7 @@ func (e *EpayGateway) submitPaymentOrder(params map[string]string) (string, erro
 	}
 
 	// Log actual response for debugging
-	logger.Info("Epay response received",
+	logger.Debug("Epay response received",
 		logger.Int("status_code", resp.StatusCode),
 		logger.String("response_body", string(body)),
 		logger.String("content_type", resp.Header.Get("Content-Type")))
@@ -515,13 +515,13 @@ func (e *EpayGateway) submitPaymentOrder(params map[string]string) (string, erro
 	var epayResp EpayResponse
 	if err := json.Unmarshal(body, &epayResp); err != nil {
 		// If JSON parsing fails, treat response as HTML redirect page
-		logger.Info("Response is not JSON, treating as HTML redirect page",
+		logger.Debug("Response is not JSON, treating as HTML redirect page",
 			logger.String("response_preview", string(body)[:min(500, len(body))]))
 		
 		// For HTML responses, extract payment URL from meta refresh or form action
 		paymentURL := e.extractPaymentURLFromHTML(string(body))
 		if paymentURL != "" {
-			logger.Info("Extracted payment URL from HTML", logger.String("payment_url", paymentURL))
+			logger.Debug("Extracted payment URL from HTML", logger.String("payment_url", paymentURL))
 			return paymentURL, nil
 		}
 		

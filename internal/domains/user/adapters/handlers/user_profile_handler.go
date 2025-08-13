@@ -27,9 +27,9 @@ func NewUserProfileHandler(userService userInterfaces.UserService) *UserProfileH
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} response.StandardResponse{data=entities.UserResponse}
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} entities.UserResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /user/profile [get]
 func (h *UserProfileHandler) GetProfile(c *gin.Context) {
 	// Get current user from context (set by auth middleware)
@@ -39,7 +39,7 @@ func (h *UserProfileHandler) GetProfile(c *gin.Context) {
 		return
 	}
 
-	user, ok := userValue.(*entities.User)
+	user, ok := userValue.(*entities.UserResponse)
 	if !ok {
 		response.Unauthorized(c, "Invalid user context")
 		return
@@ -56,7 +56,7 @@ func (h *UserProfileHandler) GetProfile(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, currentUser.ToResponse())
+	response.OK(c, currentUser.ToResponse())
 }
 
 // UpdateProfile godoc
@@ -67,10 +67,10 @@ func (h *UserProfileHandler) GetProfile(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param user body UserProfileUpdateRequest true "User profile data"
-// @Success 200 {object} response.StandardResponse{data=entities.UserResponse}
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 200 {object} entities.UserResponse
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /user/profile [put]
 func (h *UserProfileHandler) UpdateProfile(c *gin.Context) {
 	// Get current user from context
@@ -80,7 +80,7 @@ func (h *UserProfileHandler) UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	currentUser, ok := userValue.(*entities.User)
+	currentUser, ok := userValue.(*entities.UserResponse)
 	if !ok {
 		response.Unauthorized(c, "Invalid user context")
 		return
@@ -130,7 +130,7 @@ func (h *UserProfileHandler) UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, user.ToResponse())
+	response.OK(c, user.ToResponse())
 }
 
 // ChangePassword has been removed - password changes are now handled by /api/v1/auth/change-password

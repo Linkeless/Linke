@@ -59,6 +59,71 @@ Linke 是基于 Go 语言构建的现代化服务管理平台，采用 VSA (垂�
 - 示例: `@Router /user/bindings [get]` 而不是 `@Router /api/v1/user/bindings [get]`
 - 最终生成路径: `basePath` + `@Router路径` = `/api/v1/user/bindings`
 
+## RESTful API 重构 (2024年重大更新)
+
+**系统已完成全面的RESTful API重构，所有API现在严格遵循RESTful设计原则：**
+
+**响应格式变更:**
+- **移除包装结构**: 不再使用 `{code, message, data}` 包装格式
+- **直接返回资源**: API直接返回资源数据，如 `{"id": 1, "name": "user"}` 
+- **标准HTTP状态码**: 通过HTTP状态码传达操作结果，无需自定义code字段
+
+**错误响应 (RFC 9457 Problem JSON):**
+```json
+{
+  "type": "/problems/not-found",
+  "title": "Not Found", 
+  "status": 404,
+  "detail": "The user with id 123 was not found",
+  "instance": "/api/v1/users/123"
+}
+```
+
+**分页响应 (HAL格式):**
+```json
+{
+  "_embedded": {
+    "items": [{"id": 1, "name": "user1"}, {"id": 2, "name": "user2"}]
+  },
+  "_links": {
+    "self": {"href": "/api/v1/users?page=1&size=20"},
+    "first": {"href": "/api/v1/users?page=1&size=20"},
+    "next": {"href": "/api/v1/users?page=2&size=20"},
+    "last": {"href": "/api/v1/users?page=5&size=20"}
+  },
+  "page": {
+    "size": 20,
+    "totalElements": 100,
+    "totalPages": 5,
+    "number": 0
+  },
+  "total": 100
+}
+```
+
+**新响应函数:**
+- `response.OK(c, data)` - 200响应，直接返回资源数据
+- `response.Created(c, data)` - 201响应，返回创建的资源
+- `response.NoContent(c)` - 204响应，无内容
+- `response.BadRequest(c, detail)` - 400 Problem JSON响应
+- `response.NotFound(c, detail)` - 404 Problem JSON响应
+- `response.SendPaginatedResponse(c, items, total)` - HAL分页响应
+
+**标准HTTP头部支持:**
+- `ETag` 和条件请求 (If-Match, If-None-Match)
+- `Last-Modified` 和 `If-Modified-Since`
+- `Cache-Control`, `Vary`, `Content-Location`
+- `Idempotency-Key` 用于防重复操作
+- `API-Version`, `Deprecation`, `Sunset` 用于版本管理
+
+**查询参数标准化:**
+- `page` - 页码 (1-based)
+- `size` - 页面大小 (默认20，最大100)
+- `sort` - 排序字段，支持 `field` 或 `-field` (降序)
+- `search` - 全文搜索
+- `fields` - 字段选择，如 `fields=id,name,email`
+- `from`, `to` - 日期范围过滤
+
 ## 架构结构
 
 **VSA + 清洁架构设计:**
@@ -249,6 +314,17 @@ domains/[领域]/
 5. **缓存考虑**: 对于频繁访问的数据，创建缓存装饰器
 6. **事件集成**: 考虑是否需要发布领域事件
 7. **Telegram 通知**: 对于重要操作考虑添加 Telegram 通知
+8. **RESTful响应**: 使用新的响应函数，遵循RESTful标准
+
+**RESTful Handler 开发指导:**
+- **GET**: 使用 `response.OK(c, resource)` 返回资源数据
+- **POST**: 使用 `response.Created(c, resource)` 返回创建的资源
+- **PUT/PATCH**: 使用 `response.OK(c, updatedResource)` 返回更新后的资源
+- **DELETE**: 使用 `response.NoContent(c)` 表示删除成功
+- **列表接口**: 使用 `response.SendPaginatedResponse(c, items, total)` 
+- **搜索接口**: 使用 `response.SendSearchResults(c, items, total, query)`
+- **错误处理**: 使用相应的Problem JSON函数 (`BadRequest`, `NotFound`, `Conflict`等)
+- **Swagger注释**: 直接引用资源类型，错误响应使用 `ProblemJSONResponse`
 
 **架构重构准则 (重要):**
 - 所有领域必须遵循统一的包结构: `constants/`, `dto/`, `entities/`, `usecases/`, `adapters/`

@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"net/http"
 	"strconv"
 	"time"
 
@@ -86,7 +85,7 @@ func (h *UsageAlertHandler) ensureOwnership(c *gin.Context, subscriptionID uint)
 // @Param offset query int false "Offset" default(0)
 // @Param order_by query string false "Order By" Enums(name,threshold,priority,created_at) default(created_at)
 // @Param order_direction query string false "Order Direction" Enums(asc,desc) default(desc)
-// @Success 200 {object} response.StandardResponse{data=interfaces.GetAlertConfigsResponse}
+// @Success 200 {object} interfaces.GetAlertConfigsResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -135,11 +134,11 @@ func (h *UsageAlertHandler) GetAlertConfigurations(c *gin.Context) {
 
 	configs, err := h.usageAlertService.GetAlertConfigurations(c.Request.Context(), req)
 	if err != nil {
-		response.InternalServerError(c, "Failed to get alert configurations", err.Error())
+		response.InternalServerError(c, "Failed to get alert configurations")
 		return
 	}
 
-	response.SuccessWithMessage(c, "Alert configurations retrieved successfully", configs)
+	response.OK(c, configs)
 }
 
 // CreateAlertConfiguration godoc
@@ -149,7 +148,7 @@ func (h *UsageAlertHandler) GetAlertConfigurations(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body interfaces.CreateAlertConfigRequest true "Alert Configuration Request"
-// @Success 201 {object} response.StandardResponse{data=entities.AlertConfigurationResponse}
+// @Success 201 {object} entities.AlertConfigurationResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage-alerts/configurations [post]
@@ -162,11 +161,11 @@ func (h *UsageAlertHandler) CreateAlertConfiguration(c *gin.Context) {
 
 	config, err := h.usageAlertService.CreateAlertConfiguration(c.Request.Context(), &req)
 	if err != nil {
-		response.InternalServerError(c, "Failed to create alert configuration", err.Error())
+		response.InternalServerError(c, "Failed to create alert configuration")
 		return
 	}
 
-	response.CreatedWithMessage(c, "Alert configuration created successfully", config.ToResponse())
+	response.Created(c, config.ToResponse())
 }
 
 // UpdateAlertConfiguration godoc
@@ -177,7 +176,7 @@ func (h *UsageAlertHandler) CreateAlertConfiguration(c *gin.Context) {
 // @Produce json
 // @Param config_id path int true "Configuration ID"
 // @Param request body interfaces.UpdateAlertConfigRequest true "Update Request"
-// @Success 200 {object} response.StandardResponse{data=entities.AlertConfigurationResponse}
+// @Success 200 {object} entities.AlertConfigurationResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -199,11 +198,11 @@ func (h *UsageAlertHandler) UpdateAlertConfiguration(c *gin.Context) {
 
 	config, err := h.usageAlertService.UpdateAlertConfiguration(c.Request.Context(), &req)
 	if err != nil {
-		response.InternalServerError(c, "Failed to update alert configuration", err.Error())
+		response.InternalServerError(c, "Failed to update alert configuration")
 		return
 	}
 
-	response.SuccessWithMessage(c, "Alert configuration updated successfully", config.ToResponse())
+	response.OK(c, config.ToResponse())
 }
 
 // DeleteAlertConfiguration godoc
@@ -227,11 +226,11 @@ func (h *UsageAlertHandler) DeleteAlertConfiguration(c *gin.Context) {
 
 	err = h.usageAlertService.DeleteAlertConfiguration(c.Request.Context(), uint(configID))
 	if err != nil {
-		response.InternalServerError(c, "Failed to delete alert configuration", err.Error())
+		response.InternalServerError(c, "Failed to delete alert configuration")
 		return
 	}
 
-	response.SuccessWithMessage(c, "Alert configuration deleted successfully", nil)
+	response.OK(c, gin.H{"message": "Alert configuration deleted successfully"})
 }
 
 // GetAlertConfiguration godoc
@@ -241,7 +240,7 @@ func (h *UsageAlertHandler) DeleteAlertConfiguration(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param config_id path int true "Configuration ID"
-// @Success 200 {object} response.StandardResponse{data=entities.AlertConfigurationResponse}
+// @Success 200 {object} entities.AlertConfigurationResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -255,11 +254,11 @@ func (h *UsageAlertHandler) GetAlertConfiguration(c *gin.Context) {
 
 	config, err := h.usageAlertService.GetAlertConfiguration(c.Request.Context(), uint(configID))
 	if err != nil {
-		response.InternalServerError(c, "Failed to get alert configuration", err.Error())
+		response.InternalServerError(c, "Failed to get alert configuration")
 		return
 	}
 
-	response.SuccessWithMessage(c, "Alert configuration retrieved successfully", config.ToResponse())
+	response.OK(c, config.ToResponse())
 }
 
 // Alert Management
@@ -283,7 +282,7 @@ func (h *UsageAlertHandler) GetAlertConfiguration(c *gin.Context) {
 // @Param offset query int false "Offset" default(0)
 // @Param order_by query string false "Order By" Enums(fired_at,resolved_at,severity,usage_percent) default(fired_at)
 // @Param order_direction query string false "Order Direction" Enums(asc,desc) default(desc)
-// @Success 200 {object} response.StandardResponse{data=interfaces.GetUsageAlertsResponse}
+// @Success 200 {object} interfaces.GetUsageAlertsResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -358,11 +357,11 @@ func (h *UsageAlertHandler) GetUsageAlerts(c *gin.Context) {
 
 	alerts, err := h.usageAlertService.GetUsageAlerts(c.Request.Context(), req)
 	if err != nil {
-		response.InternalServerError(c, "Failed to get usage alerts", err.Error())
+		response.InternalServerError(c, "Failed to get usage alerts")
 		return
 	}
 
-	response.SuccessWithMessage(c, "Usage alerts retrieved successfully", alerts)
+	response.OK(c, alerts)
 }
 
 // ResolveAlert godoc
@@ -394,11 +393,11 @@ func (h *UsageAlertHandler) ResolveAlert(c *gin.Context) {
 	reason := req["reason"]
 	err = h.usageAlertService.ResolveAlert(c.Request.Context(), uint(alertID), reason)
 	if err != nil {
-		response.InternalServerError(c, "Failed to resolve alert", err.Error())
+		response.InternalServerError(c, "Failed to resolve alert")
 		return
 	}
 
-	response.SuccessWithMessage(c, "Alert resolved successfully", nil)
+	response.OK(c, gin.H{"message": "Alert resolved successfully"})
 }
 
 // AcknowledgeAlert godoc
@@ -431,11 +430,11 @@ func (h *UsageAlertHandler) AcknowledgeAlert(c *gin.Context) {
 
 	err = h.usageAlertService.AcknowledgeAlert(c.Request.Context(), uint(alertID), acknowledgedBy)
 	if err != nil {
-		response.InternalServerError(c, "Failed to acknowledge alert", err.Error())
+		response.InternalServerError(c, "Failed to acknowledge alert")
 		return
 	}
 
-	response.SuccessWithMessage(c, "Alert acknowledged successfully", nil)
+	response.OK(c, gin.H{"message": "Alert acknowledged successfully"})
 }
 
 // SuppressAlert godoc
@@ -470,11 +469,11 @@ func (h *UsageAlertHandler) SuppressAlert(c *gin.Context) {
 	duration := time.Duration(durationMinutes) * time.Minute
 	err = h.usageAlertService.SuppressAlert(c.Request.Context(), uint(alertID), duration, reason)
 	if err != nil {
-		response.InternalServerError(c, "Failed to suppress alert", err.Error())
+		response.InternalServerError(c, "Failed to suppress alert")
 		return
 	}
 
-	response.SuccessWithMessage(c, "Alert suppressed successfully", nil)
+	response.OK(c, gin.H{"message": "Alert suppressed successfully"})
 }
 
 // BulkResolveAlerts godoc
@@ -484,7 +483,7 @@ func (h *UsageAlertHandler) SuppressAlert(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body interfaces.BulkResolveAlertsRequest true "Bulk Resolve Request"
-// @Success 200 {object} response.StandardResponse{data=interfaces.BulkResolveAlertsResponse}
+// @Success 200 {object} interfaces.BulkResolveAlertsResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage-alerts/bulk-resolve [post]
@@ -497,11 +496,11 @@ func (h *UsageAlertHandler) BulkResolveAlerts(c *gin.Context) {
 
 	result, err := h.usageAlertService.BulkResolveAlerts(c.Request.Context(), &req)
 	if err != nil {
-		response.InternalServerError(c, "Failed to bulk resolve alerts", err.Error())
+		response.InternalServerError(c, "Failed to bulk resolve alerts")
 		return
 	}
 
-	response.SuccessWithMessage(c, "Bulk resolve operation completed", result)
+	response.OK(c, result)
 }
 
 // Alert Analytics
@@ -519,7 +518,7 @@ func (h *UsageAlertHandler) BulkResolveAlerts(c *gin.Context) {
 // @Param start_time query string false "Start Time (RFC3339)" format(date-time)
 // @Param end_time query string false "End Time (RFC3339)" format(date-time)
 // @Param group_by query string false "Group By" Enums(hour,day,week,month,severity,usage_type)
-// @Success 200 {object} response.StandardResponse{data=interfaces.AlertStatisticsResponse}
+// @Success 200 {object} interfaces.AlertStatisticsResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -558,11 +557,11 @@ func (h *UsageAlertHandler) GetAlertStatistics(c *gin.Context) {
 
 	stats, err := h.usageAlertService.GetAlertStatistics(c.Request.Context(), req)
 	if err != nil {
-		response.InternalServerError(c, "Failed to get alert statistics", err.Error())
+		response.InternalServerError(c, "Failed to get alert statistics")
 		return
 	}
 
-	response.SuccessWithMessage(c, "Alert statistics retrieved successfully", stats)
+	response.OK(c, stats)
 }
 
 // GetAlertHistory godoc
@@ -580,7 +579,7 @@ func (h *UsageAlertHandler) GetAlertStatistics(c *gin.Context) {
 // @Param include_notifications query bool false "Include notification history" default(false)
 // @Param limit query int false "Limit" default(50) maximum(1000)
 // @Param offset query int false "Offset" default(0)
-// @Success 200 {object} response.StandardResponse{data=interfaces.AlertHistoryResponse}
+// @Success 200 {object} interfaces.AlertHistoryResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -640,11 +639,11 @@ func (h *UsageAlertHandler) GetAlertHistory(c *gin.Context) {
 
 	history, err := h.usageAlertService.GetAlertHistory(c.Request.Context(), req)
 	if err != nil {
-		response.InternalServerError(c, "Failed to get alert history", err.Error())
+		response.InternalServerError(c, "Failed to get alert history")
 		return
 	}
 
-	response.SuccessWithMessage(c, "Alert history retrieved successfully", history)
+	response.OK(c, history)
 }
 
 // Notification Testing
@@ -656,7 +655,7 @@ func (h *UsageAlertHandler) GetAlertHistory(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body interfaces.TestNotificationRequest true "Test Notification Request"
-// @Success 200 {object} response.StandardResponse{data=interfaces.TestNotificationResponse}
+// @Success 200 {object} interfaces.TestNotificationResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /usage-alerts/test-notification [post]
@@ -669,14 +668,14 @@ func (h *UsageAlertHandler) TestNotificationChannel(c *gin.Context) {
 
 	result, err := h.usageAlertService.TestNotificationChannel(c.Request.Context(), &req)
 	if err != nil {
-		response.InternalServerError(c, "Failed to test notification channel", err.Error())
+		response.InternalServerError(c, "Failed to test notification channel")
 		return
 	}
 
 	if result.Success {
-		response.SuccessWithMessage(c, "Test notification sent successfully", result)
+		response.OK(c, result)
 	} else {
-		response.Error(c, http.StatusBadRequest, 4000, "Test notification failed")
+		response.BadRequest(c, "Test notification failed")
 	}
 }
 

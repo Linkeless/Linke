@@ -87,7 +87,7 @@ func (h *CacheMonitoringHandler) RegisterRoutes(router *gin.RouterGroup) {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.Response{data=MetricsReport}
+// @Success 200 {object} MetricsReport
 // @Router /admin/cache/metrics [get]
 func (h *CacheMonitoringHandler) GetMetrics(c *gin.Context) {
 	report := GenerateMetricsReport(h.collector)
@@ -102,7 +102,7 @@ func (h *CacheMonitoringHandler) GetMetrics(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param prefix path string true "Cache prefix (user, subscription, payment, etc.)"
-// @Success 200 {object} response.Response{data=Metrics}
+// @Success 200 {object} Metrics
 // @Router /admin/cache/metrics/{prefix} [get]
 func (h *CacheMonitoringHandler) GetMetricsByPrefix(c *gin.Context) {
 	prefix := c.Param("prefix")
@@ -125,7 +125,7 @@ func (h *CacheMonitoringHandler) GetMetricsByPrefix(c *gin.Context) {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.Response{data=CacheStats}
+// @Success 200 {object} CacheStats
 // @Router /admin/cache/statistics [get]
 func (h *CacheMonitoringHandler) GetCacheStats(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -146,7 +146,7 @@ func (h *CacheMonitoringHandler) GetCacheStats(c *gin.Context) {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.Response
+// @Success 200 {object} map[string]any
 // @Router /admin/cache/reset-metrics [post]
 func (h *CacheMonitoringHandler) ResetMetrics(c *gin.Context) {
 	h.collector.Reset()
@@ -163,7 +163,7 @@ func (h *CacheMonitoringHandler) ResetMetrics(c *gin.Context) {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.Response
+// @Success 200 {object} map[string]any
 // @Router /admin/cache/flush [delete]
 func (h *CacheMonitoringHandler) FlushCache(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -189,7 +189,7 @@ func (h *CacheMonitoringHandler) FlushCache(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param pattern path string true "Cache key pattern (e.g., user:*, subscription:123:*)"
-// @Success 200 {object} response.Response
+// @Success 200 {object} map[string]any
 // @Router /admin/cache/pattern/{pattern} [delete]
 func (h *CacheMonitoringHandler) DeleteByPattern(c *gin.Context) {
 	pattern := c.Param("pattern")
@@ -349,7 +349,7 @@ type CacheHealthStatus struct {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.Response{data=CacheHealthStatus}
+// @Success 200 {object} CacheHealthStatus
 // @Router /admin/cache/monitor/health [get]
 func (h *CacheMonitoringHandler) GetMultiLevelHealth(c *gin.Context) {
 	if h.multiLevelMgr == nil {
@@ -368,7 +368,7 @@ func (h *CacheMonitoringHandler) GetMultiLevelHealth(c *gin.Context) {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.Response{data=MultiLevelCacheMetrics}
+// @Success 200 {object} MultiLevelCacheMetrics
 // @Router /admin/cache/monitor/metrics [get]
 func (h *CacheMonitoringHandler) GetMultiLevelMetrics(c *gin.Context) {
 	if h.multiLevelMgr == nil {
@@ -390,7 +390,7 @@ func (h *CacheMonitoringHandler) GetMultiLevelMetrics(c *gin.Context) {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.Response{data=PerformanceMetrics}
+// @Success 200 {object} PerformanceMetrics
 // @Router /admin/cache/monitor/performance [get]
 func (h *CacheMonitoringHandler) GetPerformanceMetrics(c *gin.Context) {
 	if h.multiLevelMgr == nil {
@@ -414,7 +414,7 @@ func (h *CacheMonitoringHandler) GetPerformanceMetrics(c *gin.Context) {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.Response{data=dto.CacheDashboardResponse}
+// @Success 200 {object} dto.CacheDashboardResponse
 // @Router /admin/cache/monitor/dashboard [get]
 func (h *CacheMonitoringHandler) GetDashboard(c *gin.Context) {
 	if h.multiLevelMgr == nil {
@@ -446,7 +446,7 @@ func (h *CacheMonitoringHandler) GetDashboard(c *gin.Context) {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.Response{data=[]string}
+// @Success 200 {object} []string
 // @Router /admin/cache/monitor/alerts [get]
 func (h *CacheMonitoringHandler) GetAlerts(c *gin.Context) {
 	alerts := h.checkAlerts()
@@ -460,7 +460,7 @@ func (h *CacheMonitoringHandler) GetAlerts(c *gin.Context) {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.Response{data=dto.CacheBenchmarkResponse}
+// @Success 200 {object} dto.CacheBenchmarkResponse
 // @Router /admin/cache/monitor/benchmark [post]
 func (h *CacheMonitoringHandler) RunBenchmark(c *gin.Context) {
 	if h.multiLevelMgr == nil {
@@ -480,7 +480,7 @@ func (h *CacheMonitoringHandler) RunBenchmark(c *gin.Context) {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.Response{data=WarmingMetrics}
+// @Success 200 {object} WarmingMetrics
 // @Router /admin/cache/monitor/warming/status [get]
 func (h *CacheMonitoringHandler) GetWarmingStatus(c *gin.Context) {
 	if h.multiLevelMgr == nil {
@@ -505,7 +505,7 @@ func (h *CacheMonitoringHandler) GetWarmingStatus(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body map[string]any true "Warming request"
-// @Success 200 {object} response.Response{data=dto.CacheWarmingResponse}
+// @Success 200 {object} dto.CacheWarmingResponse
 // @Router /admin/cache/monitor/warming/trigger [post]
 func (h *CacheMonitoringHandler) TriggerWarming(c *gin.Context) {
 	if h.multiLevelMgr == nil {
@@ -551,7 +551,7 @@ func (h *CacheMonitoringHandler) TriggerWarming(c *gin.Context) {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.Response{data=map[string]int64}
+// @Success 200 {object} map[string]int64
 // @Router /admin/cache/monitor/invalidation/metrics [get]
 func (h *CacheMonitoringHandler) GetInvalidationMetrics(c *gin.Context) {
 	if h.multiLevelMgr == nil {

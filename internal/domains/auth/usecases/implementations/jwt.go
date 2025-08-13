@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"linke/internal/domains/auth/usecases/interfaces"
+	"linke/internal/domains/auth/dto"
 	userEntities "linke/internal/domains/user/entities"
 	"linke/internal/shared/config"
 
@@ -17,8 +17,9 @@ type JWTService struct {
 	blacklistService *JWTBlacklistService
 }
 
-// Custom Claims struct for JWT parsing (includes jwt.RegisteredClaims)
-type Claims struct {
+// JWTClaims struct for internal JWT parsing (includes jwt.RegisteredClaims)
+// This is different from the public dto.Claims as it includes jwt.RegisteredClaims
+type JWTClaims struct {
 	UserID   uint   `json:"user_id"`
 	Email    string `json:"email"`
 	Username string `json:"username"`
@@ -36,10 +37,10 @@ func NewJWTService(cfg *config.Config, blacklistService *JWTBlacklistService) *J
 }
 
 // GenerateToken generates a JWT token for the given user
-func (j *JWTService) GenerateToken(user *userEntities.User) (*interfaces.TokenResponse, error) {
+func (j *JWTService) GenerateToken(user *userEntities.User) (*dto.TokenResponse, error) {
 	expirationTime := time.Now().Add(time.Duration(j.cfg.JWT.ExpireHours) * time.Hour)
 
-	claims := &Claims{
+	claims := &JWTClaims{
 		UserID:   user.ID,
 		Email:    user.Email,
 		Username: user.Username,
@@ -61,7 +62,7 @@ func (j *JWTService) GenerateToken(user *userEntities.User) (*interfaces.TokenRe
 		return nil, fmt.Errorf("failed to generate token: %w", err)
 	}
 
-	return &interfaces.TokenResponse{
+	return &dto.TokenResponse{
 		AccessToken: tokenString,
 		TokenType:   "Bearer",
 		ExpiresIn:   j.cfg.JWT.ExpireHours * 3600, // Convert hours to seconds
@@ -70,8 +71,8 @@ func (j *JWTService) GenerateToken(user *userEntities.User) (*interfaces.TokenRe
 }
 
 // ValidateToken validates a JWT token and returns the claims
-func (j *JWTService) ValidateToken(tokenString string) (*interfaces.Claims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (any, error) {
+func (j *JWTService) ValidateToken(tokenString string) (*dto.Claims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
@@ -82,7 +83,7 @@ func (j *JWTService) ValidateToken(tokenString string) (*interfaces.Claims, erro
 		return nil, fmt.Errorf("failed to parse token: %w", err)
 	}
 
-	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
+	if claims, ok := token.Claims.(*JWTClaims); ok && token.Valid {
 		// Check if token is blacklisted
 		if j.blacklistService != nil {
 			// Check specific token blacklist
@@ -104,7 +105,7 @@ func (j *JWTService) ValidateToken(tokenString string) (*interfaces.Claims, erro
 			}
 		}
 
-		return &interfaces.Claims{
+		return &dto.Claims{
 			UserID:    claims.UserID,
 			Email:     claims.Email,
 			Username:  claims.Username,
@@ -120,7 +121,7 @@ func (j *JWTService) ValidateToken(tokenString string) (*interfaces.Claims, erro
 }
 
 // RefreshToken generates a new token based on an existing valid token
-func (j *JWTService) RefreshToken(tokenString string) (*interfaces.TokenResponse, error) {
+func (j *JWTService) RefreshToken(tokenString string) (*dto.TokenResponse, error) {
 	claims, err := j.ValidateToken(tokenString)
 	if err != nil {
 		return nil, fmt.Errorf("invalid token for refresh: %w", err)
@@ -133,7 +134,7 @@ func (j *JWTService) RefreshToken(tokenString string) (*interfaces.TokenResponse
 
 	// Create new token with updated expiration
 	newExpirationTime := time.Now().Add(time.Duration(j.cfg.JWT.ExpireHours) * time.Hour)
-	newClaims := &Claims{
+	newClaims := &JWTClaims{
 		UserID:   claims.UserID,
 		Email:    claims.Email,
 		Username: claims.Username,
@@ -152,7 +153,7 @@ func (j *JWTService) RefreshToken(tokenString string) (*interfaces.TokenResponse
 		return nil, fmt.Errorf("failed to generate refresh token: %w", err)
 	}
 
-	return &interfaces.TokenResponse{
+	return &dto.TokenResponse{
 		AccessToken: newTokenString,
 		TokenType:   "Bearer",
 		ExpiresIn:   j.cfg.JWT.ExpireHours * 3600,
@@ -167,7 +168,7 @@ func (j *JWTService) RevokeToken(tokenString string, userID *uint, reason string
 	}
 
 	// Parse token to get expiration time
-	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (any, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (any, error) {
 		return []byte(j.cfg.JWT.Secret), nil
 	})
 
@@ -175,7 +176,7 @@ func (j *JWTService) RevokeToken(tokenString string, userID *uint, reason string
 		return fmt.Errorf("failed to parse token for revocation: %w", err)
 	}
 
-	claims, ok := token.Claims.(*Claims)
+	claims, ok := token.Claims.(*JWTClaims)
 	if !ok {
 		return fmt.Errorf("invalid token claims")
 	}

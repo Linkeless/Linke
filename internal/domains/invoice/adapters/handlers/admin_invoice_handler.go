@@ -170,7 +170,7 @@ type RegeneratePDFRequest struct {
 // @Security BearerAuth
 // @Param order_id path uint true "Subscription Order ID"
 // @Param options body dto.CreateInvoiceFromOrderRequest true "Invoice creation options"
-// @Success 201 {object} response.StandardResponse{data=dto.InvoiceResponse}
+// @Success 201 {object} dto.InvoiceResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -239,7 +239,7 @@ func (h *AdminInvoiceHandler) CreateInvoiceFromOrder(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param invoice body AdminCreateInvoiceRequest true "Invoice creation data"
-// @Success 201 {object} response.StandardResponse{data=dto.InvoiceResponse}
+// @Success 201 {object} dto.InvoiceResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -258,8 +258,7 @@ func (h *AdminInvoiceHandler) CreateInvoice(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to find user for invoice creation",
 			logger.Uint("user_id", createReq.UserID),
-			logger.ErrorField(err),
-		)
+			logger.ErrorField(err))
 		response.BadRequest(c, "User not found")
 		return
 	}
@@ -298,8 +297,7 @@ func (h *AdminInvoiceHandler) CreateInvoice(c *gin.Context) {
 		logger.Error("Admin failed to create invoice",
 			logger.Uint("user_id", createReq.UserID),
 			logger.Uint("subscription_order_id", createReq.SubscriptionOrderID),
-			logger.ErrorField(err),
-		)
+			logger.ErrorField(err))
 
 		if strings.Contains(err.Error(), "duplicate") || strings.Contains(err.Error(), "unique") {
 			response.Conflict(c, "Invoice with similar details already exists")
@@ -314,8 +312,7 @@ func (h *AdminInvoiceHandler) CreateInvoice(c *gin.Context) {
 		logger.Uint("invoice_id", invoice.ID),
 		logger.String("invoice_number", invoice.InvoiceNumber),
 		logger.String("user_email", user.Email),
-		logger.String("admin_action", "create_invoice"),
-	)
+		logger.String("admin_action", "create_invoice"))
 
 	response.Created(c, dto.ToResponse(invoice))
 }
@@ -328,7 +325,7 @@ func (h *AdminInvoiceHandler) CreateInvoice(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Invoice ID"
-// @Success 200 {object} response.StandardResponse{data=dto.InvoiceResponse}
+// @Success 200 {object} dto.InvoiceResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -346,13 +343,12 @@ func (h *AdminInvoiceHandler) GetInvoice(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to get invoice",
 			logger.Uint("invoice_id", uint(id)),
-			logger.ErrorField(err),
-		)
+			logger.ErrorField(err))
 		response.NotFound(c, "Invoice not found")
 		return
 	}
 
-	response.Success(c, dto.ToResponse(invoice))
+	response.OK(c, dto.ToResponse(invoice))
 }
 
 // ListInvoices godoc
@@ -371,7 +367,7 @@ func (h *AdminInvoiceHandler) GetInvoice(c *gin.Context) {
 // @Param date_to query string false "End date filter (YYYY-MM-DD)"
 // @Param currency query string false "Filter by currency"
 // @Param is_overdue query bool false "Filter overdue invoices"
-// @Success 200 {object} response.StandardListResponse
+// @Success 200 {object} response.HALCollectionResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -424,7 +420,7 @@ func (h *AdminInvoiceHandler) ListInvoices(c *gin.Context) {
 		invoiceResponses[i] = dto.ToResponse(invoice)
 	}
 
-	response.SuccessList(c, invoiceResponses, page, limit, total)
+	response.Paginated(c, "Invoices retrieved successfully", invoiceResponses, page, limit, total, "/api/v1/admin/invoices")
 }
 
 // UpdateInvoice godoc
@@ -436,7 +432,7 @@ func (h *AdminInvoiceHandler) ListInvoices(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Invoice ID"
 // @Param invoice body AdminUpdateInvoiceRequest true "Invoice update data"
-// @Success 200 {object} response.StandardResponse{data=dto.InvoiceResponse}
+// @Success 200 {object} dto.InvoiceResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -485,8 +481,7 @@ func (h *AdminInvoiceHandler) UpdateInvoice(c *gin.Context) {
 		logger.Error("Admin failed to update invoice",
 			logger.Uint("invoice_id", uint(id)),
 			logger.Any("update_request", updateReq),
-			logger.ErrorField(err),
-		)
+			logger.ErrorField(err))
 
 		if strings.Contains(err.Error(), "not found") {
 			response.NotFound(c, "Invoice not found")
@@ -505,10 +500,9 @@ func (h *AdminInvoiceHandler) UpdateInvoice(c *gin.Context) {
 	logger.Info("Admin updated invoice",
 		logger.Uint("invoice_id", uint(id)),
 		logger.String("invoice_number", invoice.InvoiceNumber),
-		logger.String("admin_action", "update_invoice"),
-	)
+		logger.String("admin_action", "update_invoice"))
 
-	response.Success(c, dto.ToResponse(invoice))
+	response.OK(c, dto.ToResponse(invoice))
 }
 
 // DeleteInvoice godoc
@@ -519,7 +513,7 @@ func (h *AdminInvoiceHandler) UpdateInvoice(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Invoice ID"
-// @Success 200 {object} response.MessageOnlyResponse
+// @Success 200 {object} string
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -536,8 +530,7 @@ func (h *AdminInvoiceHandler) DeleteInvoice(c *gin.Context) {
 	if err := h.invoiceService.DeleteInvoice(c.Request.Context(), uint(id)); err != nil {
 		logger.Error("Admin failed to delete invoice",
 			logger.Uint("invoice_id", uint(id)),
-			logger.ErrorField(err),
-		)
+			logger.ErrorField(err))
 
 		if strings.Contains(err.Error(), "not found") {
 			response.NotFound(c, "Invoice not found")
@@ -555,10 +548,9 @@ func (h *AdminInvoiceHandler) DeleteInvoice(c *gin.Context) {
 
 	logger.Info("Admin deleted invoice",
 		logger.Uint("invoice_id", uint(id)),
-		logger.String("admin_action", "delete_invoice"),
-	)
+		logger.String("admin_action", "delete_invoice"))
 
-	response.SuccessWithMessage(c, "Invoice deleted successfully", nil)
+	response.OK(c, nil)
 }
 
 // VoidInvoice godoc
@@ -570,7 +562,7 @@ func (h *AdminInvoiceHandler) DeleteInvoice(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Invoice ID"
 // @Param request body VoidInvoiceRequest true "Void request data"
-// @Success 200 {object} response.StandardResponse{data=dto.InvoiceResponse}
+// @Success 200 {object} dto.InvoiceResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -595,8 +587,7 @@ func (h *AdminInvoiceHandler) VoidInvoice(c *gin.Context) {
 		logger.Error("Admin failed to void invoice",
 			logger.Uint("invoice_id", uint(id)),
 			logger.String("reason", voidReq.Reason),
-			logger.ErrorField(err),
-		)
+			logger.ErrorField(err))
 
 		if strings.Contains(err.Error(), "not found") {
 			response.NotFound(c, "Invoice not found")
@@ -624,10 +615,9 @@ func (h *AdminInvoiceHandler) VoidInvoice(c *gin.Context) {
 		logger.Uint("invoice_id", uint(id)),
 		logger.String("invoice_number", invoice.InvoiceNumber),
 		logger.String("reason", voidReq.Reason),
-		logger.String("admin_action", "void_invoice"),
-	)
+		logger.String("admin_action", "void_invoice"))
 
-	response.SuccessWithMessage(c, "Invoice voided successfully", dto.ToResponse(invoice))
+	response.OK(c, dto.ToResponse(invoice))
 }
 
 // MarkInvoiceAsPaid godoc
@@ -639,7 +629,7 @@ func (h *AdminInvoiceHandler) VoidInvoice(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Invoice ID"
 // @Param request body MarkPaidRequest true "Mark paid request data"
-// @Success 200 {object} response.StandardResponse{data=dto.InvoiceResponse}
+// @Success 200 {object} dto.InvoiceResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -672,8 +662,7 @@ func (h *AdminInvoiceHandler) MarkInvoiceAsPaid(c *gin.Context) {
 		logger.Error("Admin failed to mark invoice as paid",
 			logger.Uint("invoice_id", uint(id)),
 			logger.String("payment_date", paymentDate),
-			logger.ErrorField(err),
-		)
+			logger.ErrorField(err))
 
 		if strings.Contains(err.Error(), "not found") {
 			response.NotFound(c, "Invoice not found")
@@ -701,10 +690,9 @@ func (h *AdminInvoiceHandler) MarkInvoiceAsPaid(c *gin.Context) {
 		logger.Uint("invoice_id", uint(id)),
 		logger.String("invoice_number", invoice.InvoiceNumber),
 		logger.String("payment_date", paymentDate),
-		logger.String("admin_action", "mark_paid"),
-	)
+		logger.String("admin_action", "mark_paid"))
 
-	response.SuccessWithMessage(c, "Invoice marked as paid successfully", dto.ToResponse(invoice))
+	response.OK(c, dto.ToResponse(invoice))
 }
 
 // RegenerateInvoicePDF godoc
@@ -716,7 +704,7 @@ func (h *AdminInvoiceHandler) MarkInvoiceAsPaid(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Invoice ID"
 // @Param request body RegeneratePDFRequest true "PDF generation options"
-// @Success 200 {object} response.MessageOnlyResponse
+// @Success 200 {object} string
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -761,8 +749,7 @@ func (h *AdminInvoiceHandler) RegenerateInvoicePDF(c *gin.Context) {
 		logger.Error("Admin failed to regenerate invoice PDF",
 			logger.Uint("invoice_id", uint(id)),
 			logger.Any("pdf_options", pdfOptions),
-			logger.ErrorField(err),
-		)
+			logger.ErrorField(err))
 
 		if strings.Contains(err.Error(), "not found") {
 			response.NotFound(c, "Invoice not found")
@@ -776,10 +763,10 @@ func (h *AdminInvoiceHandler) RegenerateInvoicePDF(c *gin.Context) {
 	logger.Info("Admin regenerated invoice PDF",
 		logger.Uint("invoice_id", uint(id)),
 		logger.String("file_path", filePath),
-		logger.String("admin_action", "regenerate_pdf"),
-	)
+		logger.String("admin_action", "regenerate_pdf"))
 
-	response.SuccessWithMessage(c, "PDF regenerated successfully", gin.H{
+	response.OK(c, gin.H{
+		"message":   "PDF regenerated successfully",
 		"file_path": filePath,
 	})
 }
@@ -793,7 +780,7 @@ func (h *AdminInvoiceHandler) RegenerateInvoicePDF(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Invoice ID"
 // @Param request body ResendInvoiceRequest true "Resend request data"
-// @Success 200 {object} response.MessageOnlyResponse
+// @Success 200 {object} string
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -819,8 +806,7 @@ func (h *AdminInvoiceHandler) ResendInvoice(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to get invoice for resend",
 			logger.Uint("invoice_id", uint(id)),
-			logger.ErrorField(err),
-		)
+			logger.ErrorField(err))
 		response.NotFound(c, "Invoice not found")
 		return
 	}
@@ -848,8 +834,7 @@ func (h *AdminInvoiceHandler) ResendInvoice(c *gin.Context) {
 		logger.Error("Admin failed to resend invoice",
 			logger.Uint("invoice_id", uint(id)),
 			logger.String("to_email", emailReq.ToEmail),
-			logger.ErrorField(err),
-		)
+			logger.ErrorField(err))
 
 		response.InternalServerError(c, "Failed to resend invoice")
 		return
@@ -859,10 +844,10 @@ func (h *AdminInvoiceHandler) ResendInvoice(c *gin.Context) {
 		logger.Uint("invoice_id", uint(id)),
 		logger.String("invoice_number", invoice.InvoiceNumber),
 		logger.String("to_email", emailReq.ToEmail),
-		logger.String("admin_action", "resend_invoice"),
-	)
+		logger.String("admin_action", "resend_invoice"))
 
-	response.SuccessWithMessage(c, "Invoice resent successfully", gin.H{
+	response.OK(c, gin.H{
+		"message": "Invoice resent successfully",
 		"sent_to": emailReq.ToEmail,
 	})
 }
@@ -889,7 +874,7 @@ func (h *AdminInvoiceHandler) ResendInvoice(c *gin.Context) {
 // @Param has_company_info query bool false "Filter invoices with company information"
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(20)
-// @Success 200 {object} response.SearchResponse
+// @Success 200 {object} response.HALCollectionResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -931,8 +916,7 @@ func (h *AdminInvoiceHandler) SearchInvoices(c *gin.Context) {
 		logger.Error("Admin failed to search invoices",
 			logger.String("query", searchReq.Query),
 			logger.Any("search_params", searchReq),
-			logger.ErrorField(err),
-		)
+			logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to search invoices")
 		return
 	}
@@ -1000,10 +984,10 @@ func (h *AdminInvoiceHandler) SearchInvoices(c *gin.Context) {
 		invoiceResponses[i] = dto.ToResponse(invoice)
 	}
 
-	response.SuccessListWithExtra(c, "Search completed", invoiceResponses, 
-		searchReq.Page, searchReq.Limit, int64(len(filteredInvoices)), gin.H{
+	response.PaginatedWithQuery(c, "Search completed", invoiceResponses, 
+		searchReq.Page, searchReq.Limit, int64(len(filteredInvoices)), "/api/v1/admin/invoices/search", map[string]any{
 		"query": searchReq.Query,
-		"filters_applied": gin.H{
+		"filters_applied": map[string]any{
 			"status":           searchReq.Status,
 			"invoice_type":     searchReq.InvoiceType,
 			"amount_range":     fmt.Sprintf("%.2f-%.2f", getValue(searchReq.AmountMin), getValue(searchReq.AmountMax)),
@@ -1054,13 +1038,12 @@ func (h *AdminInvoiceHandler) GetInvoiceStatistics(c *gin.Context) {
 		logger.Error("Admin failed to get invoice statistics", 
 			logger.String("date_from", fromDate),
 			logger.String("date_to", toDate),
-			logger.ErrorField(err),
-		)
+			logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get invoice statistics")
 		return
 	}
 
-	response.Success(c, stats)
+	response.OK(c, stats)
 }
 
 // GetInvoiceAnalytics godoc
@@ -1106,8 +1089,7 @@ func (h *AdminInvoiceHandler) GetInvoiceAnalytics(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin failed to get invoice analytics", 
 			logger.Any("analytics_params", analyticsReq),
-			logger.ErrorField(err),
-		)
+			logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get invoice analytics")
 		return
 	}
@@ -1125,7 +1107,7 @@ func (h *AdminInvoiceHandler) GetInvoiceAnalytics(c *gin.Context) {
 		"generated_at": time.Now(),
 	}
 
-	response.Success(c, analyticsData)
+	response.OK(c, analyticsData)
 }
 
 // GetOverdueInvoices godoc
@@ -1138,7 +1120,7 @@ func (h *AdminInvoiceHandler) GetInvoiceAnalytics(c *gin.Context) {
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(20)
 // @Param days_overdue query int false "Minimum days overdue filter"
-// @Success 200 {object} response.StandardListResponse
+// @Success 200 {object} response.HALCollectionResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -1191,8 +1173,8 @@ func (h *AdminInvoiceHandler) GetOverdueInvoices(c *gin.Context) {
 		invoiceResponses[i] = dto.ToResponse(invoice)
 	}
 
-	response.SuccessListWithExtra(c, "Overdue invoices retrieved", invoiceResponses, 
-		page, limit, int64(len(overdueInvoices)), gin.H{
+	response.PaginatedWithQuery(c, "Overdue invoices retrieved", invoiceResponses, 
+		page, limit, int64(len(overdueInvoices)), "/api/v1/admin/invoices/overdue", map[string]any{
 		"days_overdue_filter": daysOverdue,
 		"total_overdue":       len(overdueInvoices),
 	})
@@ -1242,8 +1224,7 @@ func (h *AdminInvoiceHandler) BulkVoidInvoices(c *gin.Context) {
 			errors = append(errors, fmt.Sprintf("Invoice %d: %s", invoiceID, err.Error()))
 			logger.Error("Bulk void failed for invoice",
 				logger.Uint("invoice_id", invoiceID),
-				logger.ErrorField(err),
-			)
+				logger.ErrorField(err))
 		} else {
 			successCount++
 		}
@@ -1253,10 +1234,10 @@ func (h *AdminInvoiceHandler) BulkVoidInvoices(c *gin.Context) {
 		logger.Int("success_count", successCount),
 		logger.Int("failed_count", len(failedIDs)),
 		logger.String("reason", reason),
-		logger.String("admin_action", "bulk_void_invoices"),
-	)
+		logger.String("admin_action", "bulk_void_invoices"))
 
-	response.SuccessWithMessage(c, "Bulk void operation completed", gin.H{
+	response.OK(c, gin.H{
+		"message": "Bulk void operation completed",
 		"total_requested": len(bulkReq.InvoiceIDs),
 		"success_count":   successCount,
 		"failed_count":    len(failedIDs),
@@ -1303,8 +1284,7 @@ func (h *AdminInvoiceHandler) BulkMarkPaid(c *gin.Context) {
 			errors = append(errors, fmt.Sprintf("Invoice %d: %s", invoiceID, err.Error()))
 			logger.Error("Bulk mark paid failed for invoice",
 				logger.Uint("invoice_id", invoiceID),
-				logger.ErrorField(err),
-			)
+				logger.ErrorField(err))
 		} else {
 			successCount++
 		}
@@ -1314,10 +1294,10 @@ func (h *AdminInvoiceHandler) BulkMarkPaid(c *gin.Context) {
 		logger.Int("success_count", successCount),
 		logger.Int("failed_count", len(failedIDs)),
 		logger.String("payment_date", paymentDate),
-		logger.String("admin_action", "bulk_mark_paid"),
-	)
+		logger.String("admin_action", "bulk_mark_paid"))
 
-	response.SuccessWithMessage(c, "Bulk mark paid operation completed", gin.H{
+	response.OK(c, gin.H{
+		"message": "Bulk mark paid operation completed",
 		"total_requested": len(bulkReq.InvoiceIDs),
 		"success_count":   successCount,
 		"failed_count":    len(failedIDs),
@@ -1364,8 +1344,7 @@ func (h *AdminInvoiceHandler) BulkResendInvoices(c *gin.Context) {
 			errors = append(errors, fmt.Sprintf("Invoice %d: %s", invoiceID, err.Error()))
 			logger.Error("Bulk resend failed for invoice",
 				logger.Uint("invoice_id", invoiceID),
-				logger.ErrorField(err),
-			)
+				logger.ErrorField(err))
 		} else {
 			successCount++
 		}
@@ -1374,10 +1353,10 @@ func (h *AdminInvoiceHandler) BulkResendInvoices(c *gin.Context) {
 	logger.Info("Admin bulk resend invoices completed",
 		logger.Int("success_count", successCount),
 		logger.Int("failed_count", len(failedIDs)),
-		logger.String("admin_action", "bulk_resend_invoices"),
-	)
+		logger.String("admin_action", "bulk_resend_invoices"))
 
-	response.SuccessWithMessage(c, "Bulk resend operation completed", gin.H{
+	response.OK(c, gin.H{
+		"message": "Bulk resend operation completed",
 		"total_requested": len(bulkReq.InvoiceIDs),
 		"success_count":   successCount,
 		"failed_count":    len(failedIDs),
@@ -1421,8 +1400,7 @@ func (h *AdminInvoiceHandler) BulkRegeneratePDF(c *gin.Context) {
 	if err != nil {
 		logger.Error("Admin bulk PDF generation failed",
 			logger.Any("invoice_ids", bulkReq.InvoiceIDs),
-			logger.ErrorField(err),
-		)
+			logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to generate bulk PDFs")
 		return
 	}
@@ -1430,10 +1408,10 @@ func (h *AdminInvoiceHandler) BulkRegeneratePDF(c *gin.Context) {
 	logger.Info("Admin bulk PDF generation completed",
 		logger.Int("invoice_count", len(bulkReq.InvoiceIDs)),
 		logger.Int("pdf_size_bytes", len(pdfData)),
-		logger.String("admin_action", "bulk_regenerate_pdf"),
-	)
+		logger.String("admin_action", "bulk_regenerate_pdf"))
 
-	response.SuccessWithMessage(c, "Bulk PDF generation completed", gin.H{
+	response.OK(c, gin.H{
+		"message": "Bulk PDF generation completed",
 		"total_invoices":   len(bulkReq.InvoiceIDs),
 		"pdf_size_bytes":   len(pdfData),
 		"generation_time":  time.Now(),
@@ -1462,7 +1440,7 @@ func (h *AdminInvoiceHandler) GetAvailableTemplates(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, gin.H{
+	response.OK(c, gin.H{
 		"templates": templates,
 		"total":     len(templates),
 	})
@@ -1488,7 +1466,7 @@ func (h *AdminInvoiceHandler) GetAvailableLanguages(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, gin.H{
+	response.OK(c, gin.H{
 		"languages": languages,
 		"total":     len(languages),
 	})

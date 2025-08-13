@@ -1,20 +1,20 @@
 package handlers
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 
-	ticketInterfaces "linke/internal/domains/ticket/usecases/interfaces"
 	"linke/internal/domains/ticket/constants"
 	"linke/internal/domains/ticket/dto"
 	"linke/internal/domains/ticket/entities"
+	ticketInterfaces "linke/internal/domains/ticket/usecases/interfaces"
 	"linke/internal/shared/handlers"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/response"
 )
-
 
 // UserTicketHandler provides user ticket management functionality
 type UserTicketHandler struct {
@@ -41,7 +41,7 @@ func NewUserTicketHandler(
 // @Produce json
 // @Security BearerAuth
 // @Param ticket body dto.UserCreateTicketRequest true "Ticket creation data"
-// @Success 201 {object} response.StandardResponse{data=entities.TicketUserResponse}
+// @Success 201 {object} entities.TicketUserResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -106,7 +106,7 @@ func (h *UserTicketHandler) CreateTicket(c *gin.Context) {
 // @Param search query string false "Search in title or description" example("subscription issue")
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(20)
-// @Success 200 {object} response.StandardListResponse
+// @Success 200 {object} response.HALCollectionResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /tickets/my [get]
@@ -119,7 +119,7 @@ func (h *UserTicketHandler) GetMyTickets(c *gin.Context) {
 
 	// Parse pagination
 	pagination := handlers.ParsePagination(c)
-	
+
 	// For page-based pagination, convert to offset
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	if page < 1 {
@@ -153,7 +153,7 @@ func (h *UserTicketHandler) GetMyTickets(c *gin.Context) {
 		responses[i] = ticket.ToUserResponse()
 	}
 
-	response.SuccessList(c, responses, page, pagination.Limit, total)
+	response.Paginated(c, "Tickets retrieved successfully", responses, page, pagination.Limit, total, "/api/v1/tickets/my")
 }
 
 // GetTicket godoc
@@ -164,7 +164,7 @@ func (h *UserTicketHandler) GetMyTickets(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
-// @Success 200 {object} response.StandardResponse{data=entities.TicketUserResponse}
+// @Success 200 {object} entities.TicketUserResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -205,7 +205,7 @@ func (h *UserTicketHandler) GetTicket(c *gin.Context) {
 	}
 
 	// Return user-appropriate response (filters out internal messages and admin-only fields)
-	response.Success(c, ticket.ToUserResponse())
+	response.OK(c, ticket.ToUserResponse())
 }
 
 // CloseTicket godoc
@@ -217,7 +217,7 @@ func (h *UserTicketHandler) GetTicket(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
 // @Param closure body dto.CloseTicketRequest false "Closure reason"
-// @Success 200 {object} response.StandardResponse{data=entities.TicketUserResponse}
+// @Success 200 {object} entities.TicketUserResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -281,7 +281,7 @@ func (h *UserTicketHandler) CloseTicket(c *gin.Context) {
 			logger.Uint("ticket_id", ticketID),
 			logger.Uint("user_id", user.ID),
 			logger.ErrorField(err))
-		
+
 		if strings.Contains(err.Error(), "not found") {
 			response.NotFound(c, "Ticket not found")
 		} else {
@@ -295,7 +295,7 @@ func (h *UserTicketHandler) CloseTicket(c *gin.Context) {
 		logger.Uint("user_id", user.ID))
 
 	// Return user-appropriate response
-	response.Success(c, closedTicket.ToUserResponse())
+	response.OK(c, closedTicket.ToUserResponse())
 }
 
 // GetTicketMessages godoc
@@ -308,7 +308,7 @@ func (h *UserTicketHandler) CloseTicket(c *gin.Context) {
 // @Param id path uint true "Ticket ID"
 // @Param page query int false "Page number" default(1)
 // @Param limit query int false "Items per page" default(20)
-// @Success 200 {object} response.StandardListResponse
+// @Success 200 {object} response.HALCollectionResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -329,7 +329,7 @@ func (h *UserTicketHandler) GetTicketMessages(c *gin.Context) {
 
 	// Parse pagination
 	pagination := handlers.ParsePagination(c)
-	
+
 	// For page-based pagination, convert to offset
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	if page < 1 {
@@ -382,7 +382,7 @@ func (h *UserTicketHandler) GetTicketMessages(c *gin.Context) {
 		responses[i] = message.ToUserResponse()
 	}
 
-	response.SuccessList(c, responses, page, pagination.Limit, total)
+	response.Paginated(c, "Messages retrieved successfully", responses, page, pagination.Limit, total, fmt.Sprintf("/api/v1/tickets/%d/messages", ticketID))
 }
 
 // AddMessage godoc
@@ -394,7 +394,7 @@ func (h *UserTicketHandler) GetTicketMessages(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
 // @Param message body dto.UserTicketMessageRequest true "Message data"
-// @Success 201 {object} response.StandardResponse{data=entities.TicketMessageUserResponse}
+// @Success 201 {object} entities.TicketMessageUserResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
