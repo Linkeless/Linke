@@ -3,6 +3,7 @@ package handlers
 import (
 	"strconv"
 
+	"linke/internal/domains/subscription/dto"
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/domains/subscription/usecases/interfaces"
 	userEntities "linke/internal/domains/user/entities"
@@ -80,7 +81,186 @@ func (h *SubscriptionOrderHandler) GetSubscriptionOrderSummary(c *gin.Context) {
 	response.OK(c, "Order summary retrieved successfully", summary)
 }
 
-// Deprecated (user): Use POST /api/v1/purchase instead. Handler remains for internal/admin flows if needed.
+// ==============================================================================
+// NEW STANDARDIZED ORDER CREATION FLOW
+// ==============================================================================
+
+// CreateOrderWithInvoice godoc
+// @Summary [User] Create order with complete invoice and payment flow
+// @Description Create a new subscription order with invoice and payment record
+// @Tags User-Subscription
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.CreateOrderRequest true "Order creation request"
+// @Success 201 {object} response.StandardResponse{data=object}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 401 {object} response.UnauthorizedResponse
+// @Failure 403 {object} response.ForbiddenResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
+// @Router /orders/create [post]
+func (h *SubscriptionOrderHandler) CreateOrderWithInvoice(c *gin.Context) {
+	// Get current user from context
+	userValue, exists := c.Get(middleware.AuthContextKey)
+	if !exists {
+		response.Unauthorized(c, "Authentication required")
+		return
+	}
+
+	user, ok := userValue.(*userEntities.User)
+	if !ok {
+		response.Unauthorized(c, "Invalid user context")
+		return
+	}
+
+	// Bind request
+	var req dto.CreateOrderRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request data", err.Error())
+		return
+	}
+
+	// Only allow users to create orders for themselves (unless admin)
+	if !user.IsAdmin() && req.UserID != user.ID {
+		response.Forbidden(c, "You can only create orders for yourself")
+		return
+	}
+
+	// Create order with complete flow
+	orderResponse, err := h.subscriptionOrderService.CreateOrderWithInvoice(c.Request.Context(), &req)
+	if err != nil {
+		logger.Error("Failed to create order with invoice", logger.ErrorField(err), logger.Uint("user_id", user.ID))
+		response.InternalServerError(c, "Failed to create order", err.Error())
+		return
+	}
+
+	response.CreatedWithMessage(c, "Order created successfully with invoice and payment", orderResponse)
+}
+
+// GenerateInvoiceForOrder godoc
+// @Summary [User] Generate invoice for existing order
+// @Description Generate an invoice for an existing subscription order
+// @Tags User-Subscription
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Subscription order ID"
+// @Success 200 {object} response.StandardResponse{data=any}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 401 {object} response.UnauthorizedResponse
+// @Failure 403 {object} response.ForbiddenResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
+// @Router /orders/{id}/invoice [post]
+func (h *SubscriptionOrderHandler) GenerateInvoiceForOrder(c *gin.Context) {
+	// Get current user from context
+	userValue, exists := c.Get(middleware.AuthContextKey)
+	if !exists {
+		response.Unauthorized(c, "Authentication required")
+		return
+	}
+
+	user, ok := userValue.(*userEntities.User)
+	if !ok {
+		response.Unauthorized(c, "Invalid user context")
+		return
+	}
+
+	// Parse order ID
+	orderIDStr := c.Param("id")
+	orderID, err := strconv.ParseUint(orderIDStr, 10, 32)
+	if err != nil {
+		response.BadRequest(c, "Invalid order ID", "Order ID must be a valid number")
+		return
+	}
+
+	// Check order ownership
+	order, err := h.subscriptionOrderService.GetSubscriptionOrder(c.Request.Context(), uint(orderID))
+	if err != nil {
+		response.NotFound(c, "Subscription order not found")
+		return
+	}
+
+	if !user.IsAdmin() && order.UserID != user.ID {
+		response.Forbidden(c, "You can only generate invoices for your own orders")
+		return
+	}
+
+	// Generate invoice
+	invoice, err := h.subscriptionOrderService.GenerateInvoiceForOrder(c.Request.Context(), uint(orderID))
+	if err != nil {
+		logger.Error("Failed to generate invoice for order", logger.ErrorField(err), logger.Uint("order_id", uint(orderID)))
+		response.InternalServerError(c, "Failed to generate invoice", err.Error())
+		return
+	}
+
+	response.OK(c, "Invoice generated successfully", invoice)
+}
+
+// CreatePaymentForOrder godoc
+// @Summary [User] Create payment for existing order
+// @Description Create a payment record for an existing subscription order
+// @Tags User-Subscription
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.PayOrderRequest true "Payment creation request"
+// @Success 201 {object} response.StandardResponse{data=object}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 401 {object} response.UnauthorizedResponse
+// @Failure 403 {object} response.ForbiddenResponse
+// @Failure 404 {object} response.NotFoundResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
+// @Router /orders/pay [post]
+func (h *SubscriptionOrderHandler) CreatePaymentForOrder(c *gin.Context) {
+	// Get current user from context
+	userValue, exists := c.Get(middleware.AuthContextKey)
+	if !exists {
+		response.Unauthorized(c, "Authentication required")
+		return
+	}
+
+	user, ok := userValue.(*userEntities.User)
+	if !ok {
+		response.Unauthorized(c, "Invalid user context")
+		return
+	}
+
+	// Bind request
+	var req dto.PayOrderRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request data", err.Error())
+		return
+	}
+
+	// Check order ownership
+	order, err := h.subscriptionOrderService.GetSubscriptionOrder(c.Request.Context(), req.OrderID)
+	if err != nil {
+		response.NotFound(c, "Subscription order not found")
+		return
+	}
+
+	if !user.IsAdmin() && order.UserID != user.ID {
+		response.Forbidden(c, "You can only create payments for your own orders")
+		return
+	}
+
+	// Create payment
+	paymentResponse, err := h.subscriptionOrderService.CreatePaymentForOrder(c.Request.Context(), &req)
+	if err != nil {
+		logger.Error("Failed to create payment for order", logger.ErrorField(err), logger.Uint("order_id", req.OrderID))
+		response.InternalServerError(c, "Failed to create payment", err.Error())
+		return
+	}
+
+	response.CreatedWithMessage(c, "Payment created successfully", paymentResponse)
+}
+
+// ==============================================================================
+// LEGACY ENDPOINTS (for backward compatibility)
+// ==============================================================================
+
+// Deprecated (user): Use POST /api/v1/orders/create instead. Handler remains for internal/admin flows if needed.
 func (h *SubscriptionOrderHandler) CreateSubscriptionOrder(c *gin.Context) {
 	// Get current user from context
 	userValue, exists := c.Get(middleware.AuthContextKey)
@@ -96,7 +276,7 @@ func (h *SubscriptionOrderHandler) CreateSubscriptionOrder(c *gin.Context) {
 	}
 
 	// Bind request
-	var req interfaces.CreateSubscriptionOrderRequest
+	var req dto.CreateSubscriptionOrderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "Invalid request data", err.Error())
 		return

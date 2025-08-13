@@ -382,7 +382,7 @@ definitions:
         minimum: 1
         type: integer
       currency:
-        example: USD
+        example: CNY
         type: string
       description:
         example: Bulk generated discount coupons
@@ -652,7 +652,7 @@ definitions:
         type: string
       currency:
         description: Currency
-        example: USD
+        example: CNY
         type: string
       description:
         description: Description
@@ -727,7 +727,7 @@ definitions:
         type: string
       currency:
         description: Currency
-        example: USD
+        example: CNY
         type: string
       discount_amount:
         description: Discount amount
@@ -773,7 +773,7 @@ definitions:
         minLength: 3
         type: string
       currency:
-        example: USD
+        example: CNY
         type: string
       description:
         example: Save 20% on any subscription plan
@@ -820,6 +820,73 @@ definitions:
     - name
     - type
     - value
+    type: object
+  dto.CreateInvoiceFromOrderRequest:
+    properties:
+      auto_send:
+        description: Auto-send flag
+        example: false
+        type: boolean
+      due_date:
+        description: Due date (optional)
+        example: "2024-01-31"
+        type: string
+      language:
+        example: en
+        type: string
+      notes:
+        description: Additional notes (optional)
+        example: Thank you for your subscription
+        type: string
+      template:
+        description: Template and language options
+        example: default
+        type: string
+    type: object
+  dto.CreateOrderRequest:
+    properties:
+      coupon_code:
+        example: SAVE20
+        type: string
+      metadata:
+        type: string
+      order_type:
+        enum:
+        - new
+        - renewal
+        - upgrade
+        - downgrade
+        example: new
+        type: string
+      payment_gateway:
+        example: epay
+        type: string
+      payment_method:
+        example: alipay
+        type: string
+      payment_method_id:
+        description: 'Optional: Use saved payment method'
+        example: 1
+        type: integer
+      return_url:
+        example: https://example.com/payment/return
+        type: string
+      subscription_plan_id:
+        example: 1
+        type: integer
+      use_default_payment:
+        description: Use user's default payment method
+        example: false
+        type: boolean
+      user_id:
+        example: 1
+        type: integer
+    required:
+    - order_type
+    - payment_gateway
+    - payment_method
+    - subscription_plan_id
+    - user_id
     type: object
   dto.CreatePaymentConfigRequest:
     properties:
@@ -1013,7 +1080,7 @@ definitions:
         minimum: 0
         type: number
       reward_currency:
-        example: USD
+        example: CNY
         type: string
       start_date:
         example: "2024-06-01T00:00:00Z"
@@ -1244,7 +1311,7 @@ definitions:
         example: 5
         type: number
       referral_reward_currency:
-        example: USD
+        example: CNY
         type: string
       status:
         enum:
@@ -1300,7 +1367,7 @@ definitions:
         format: date-time
         type: string
       currency:
-        example: USD
+        example: CNY
         type: string
       days_overdue:
         type: integer
@@ -1454,6 +1521,38 @@ definitions:
       tags:
         example: premium,fast
         type: string
+    type: object
+  dto.PayOrderRequest:
+    properties:
+      client_ip:
+        example: 192.168.1.1
+        type: string
+      metadata:
+        type: string
+      order_id:
+        example: 1
+        type: integer
+      payment_gateway:
+        example: epay
+        type: string
+      payment_method:
+        example: alipay
+        type: string
+      payment_method_id:
+        description: 'Optional: Use saved payment method'
+        example: 1
+        type: integer
+      return_url:
+        example: https://example.com/payment/return
+        type: string
+      use_default_payment:
+        description: Use user's default payment method
+        example: false
+        type: boolean
+    required:
+    - order_id
+    - payment_gateway
+    - payment_method
     type: object
   dto.PaymentConfigResponse:
     properties:
@@ -1854,7 +1953,7 @@ definitions:
         example: 20
         type: number
       referee_reward_currency:
-        example: USD
+        example: CNY
         type: string
       referee_reward_type:
         example: discount
@@ -1870,7 +1969,7 @@ definitions:
         example: 100
         type: number
       referrer_reward_currency:
-        example: USD
+        example: CNY
         type: string
       referrer_reward_type:
         example: fixed
@@ -1912,7 +2011,7 @@ definitions:
         example: "2024-01-01T00:00:00Z"
         type: string
       event_currency:
-        example: USD
+        example: CNY
         type: string
       event_data:
         example: '{"signup_method":"email"}'
@@ -2053,7 +2152,7 @@ definitions:
         example: 5
         type: number
       reward_currency:
-        example: USD
+        example: CNY
         type: string
       reward_status:
         example: earned
@@ -2147,7 +2246,7 @@ definitions:
         example: 10
         type: number
       reward_currency:
-        example: USD
+        example: CNY
         type: string
       reward_description:
         example: Referral bonus for new subscriber
@@ -2196,7 +2295,7 @@ definitions:
         example: "2024-01-01T00:00:00Z"
         type: string
       currency:
-        example: USD
+        example: CNY
         type: string
       id:
         example: 1
@@ -2626,7 +2725,7 @@ definitions:
         example: SAVE20
         type: string
       currency:
-        example: USD
+        example: CNY
         type: string
       order_amount:
         example: 29.99
@@ -2972,7 +3071,7 @@ definitions:
         type: string
       currency:
         description: Currency
-        example: USD
+        example: CNY
         type: string
       discount_amount:
         description: Discount amount
@@ -3107,7 +3206,7 @@ definitions:
         type: string
       currency:
         description: Currency
-        example: USD
+        example: CNY
         type: string
       default_server_group_id:
         description: Server Group Configuration (Single group per plan)
@@ -3668,7 +3767,7 @@ definitions:
         type: string
       currency:
         description: Currency
-        example: USD
+        example: CNY
         type: string
       current_period_end:
         description: Current period end
@@ -3861,7 +3960,7 @@ definitions:
         example: 12-3456789
         type: string
       currency:
-        example: USD
+        example: CNY
         type: string
       description:
         example: Monthly subscription
@@ -4269,7 +4368,7 @@ definitions:
         minLength: 1
         type: string
       currency:
-        example: USD
+        example: CNY
         type: string
       default_server_group_ids:
         description: Server Group Configuration (Required)
@@ -5076,71 +5175,6 @@ definitions:
         type: string
     required:
     - reason
-    type: object
-  interfaces.QuickPurchaseDiscountInfo:
-    properties:
-      coupon_code:
-        type: string
-      discount_amount:
-        type: number
-      final_amount:
-        type: number
-      original_amount:
-        type: number
-    type: object
-  interfaces.QuickPurchaseRequest:
-    properties:
-      client_ip:
-        example: 192.168.1.1
-        type: string
-      coupon_code:
-        example: SAVE20
-        type: string
-      metadata:
-        type: string
-      payment_gateway:
-        example: epay
-        type: string
-      payment_method:
-        example: alipay
-        type: string
-      payment_method_id:
-        description: 'Optional: Use saved payment method'
-        example: 1
-        type: integer
-      plan_id:
-        example: 1
-        type: integer
-      return_url:
-        example: https://example.com/payment/return
-        type: string
-      use_default_payment:
-        description: Use user's default payment method
-        example: false
-        type: boolean
-      user_id:
-        example: 1
-        type: integer
-    required:
-    - payment_gateway
-    - payment_method
-    - plan_id
-    - user_id
-    type: object
-  interfaces.QuickPurchaseResponse:
-    properties:
-      discount_info:
-        $ref: '#/definitions/interfaces.QuickPurchaseDiscountInfo'
-      expired_at:
-        type: string
-      payment_record:
-        type: object
-      payment_url:
-        type: string
-      plan_info:
-        $ref: '#/definitions/entities.SubscriptionPlanResponse'
-      qr_code_url:
-        type: string
     type: object
   interfaces.RealTimeUsageData:
     properties:
@@ -8683,6 +8717,61 @@ paths:
       security:
       - BearerAuth: []
       summary: Get available invoice templates
+      tags:
+      - Admin-Invoice-Management
+  /admin/orders/{order_id}/invoice:
+    post:
+      consumes:
+      - application/json
+      description: Create a new invoice from an existing subscription order (Admin
+        only)
+      parameters:
+      - description: Subscription Order ID
+        in: path
+        name: order_id
+        required: true
+        type: integer
+      - description: Invoice creation options
+        in: body
+        name: options
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateInvoiceFromOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.InvoiceResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.ConflictResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create invoice from subscription order
       tags:
       - Admin-Invoice-Management
   /admin/payment/configs:
@@ -14774,6 +14863,53 @@ paths:
       summary: '[User] Get order'
       tags:
       - User-Subscription
+  /orders/{id}/invoice:
+    post:
+      consumes:
+      - application/json
+      description: Generate an invoice for an existing subscription order
+      parameters:
+      - description: Subscription order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data: {}
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User] Generate invoice for existing order'
+      tags:
+      - User-Subscription
   /orders/{id}/summary:
     get:
       consumes:
@@ -14821,6 +14957,100 @@ paths:
       security:
       - BearerAuth: []
       summary: '[User] Get order summary (order + latest payment + latest invoice)'
+      tags:
+      - User-Subscription
+  /orders/create:
+    post:
+      consumes:
+      - application/json
+      description: Create a new subscription order with invoice and payment record
+      parameters:
+      - description: Order creation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User] Create order with complete invoice and payment flow'
+      tags:
+      - User-Subscription
+  /orders/pay:
+    post:
+      consumes:
+      - application/json
+      description: Create a payment record for an existing subscription order
+      parameters:
+      - description: Payment creation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PayOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.StandardResponse'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User] Create payment for existing order'
       tags:
       - User-Subscription
   /payment-methods:
@@ -15449,63 +15679,6 @@ paths:
       summary: '[User] Get my payment orders'
       tags:
       - User-Payment
-  /purchase:
-    post:
-      consumes:
-      - application/json
-      description: Create a payment directly for subscription without creating order/invoice
-        first. Supports multiple payment gateways (epay with Alipay/WeChat/QQPay).
-        Includes coupon validation, price protection, and automatic service activation
-        after successful payment. Order and invoice are created asynchronously after
-        payment success.
-      parameters:
-      - description: Quick purchase data with gateway, method, plan_id, and optional
-          coupon_code
-        in: body
-        name: purchase
-        required: true
-        schema:
-          $ref: '#/definitions/interfaces.QuickPurchaseRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Returns payment URL, QR code, expiration time, and discount
-            info
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.StandardResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/interfaces.QuickPurchaseResponse'
-              type: object
-        "400":
-          description: Invalid request data, unsupported payment method, or invalid
-            amount
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Authentication required
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Insufficient permissions - users can only create purchases
-            for themselves
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "422":
-          description: Coupon validation failed or discount exceeds limits
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "500":
-          description: Payment gateway error or internal service failure
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[User] Quick purchase subscription'
-      tags:
-      - User-Subscription
   /server/UniProxy/config:
     get:
       consumes:

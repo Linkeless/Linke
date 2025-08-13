@@ -500,6 +500,28 @@ func ToPaymentConfigResponse(pc *entities.PaymentConfig) *PaymentConfigResponse 
 	}
 }
 
+// ToPaymentConfigResponseWithFullKey converts PaymentConfig to response with full key (for debugging)
+func ToPaymentConfigResponseWithFullKey(pc *entities.PaymentConfig) *PaymentConfigResponse {
+	return &PaymentConfigResponse{
+		ID:                  pc.ID,
+		Method:              pc.Method,
+		Name:                pc.Name,
+		URL:                 pc.URL,
+		PID:                 pc.PID,
+		Key:                 pc.Key, // 不掩码，显示完整key
+		NotifyURL:          pc.NotifyURL,
+		ReturnURL:          pc.ReturnURL,
+		SupportedCurrencies: pc.SupportedCurrencies,
+		Methods:            parseSupportedMethods(pc.SupportedMethods),
+		MinAmount:          pc.MinAmount,
+		MaxAmount:          pc.MaxAmount,
+		IsEnabled:          pc.IsEnabled,
+		SortOrder:          pc.SortOrder,
+		CreatedAt:          pc.CreatedAt,
+		UpdatedAt:          pc.UpdatedAt,
+	}
+}
+
 // ToPaymentConfigPublicResponse converts a PaymentConfig entity to public response (without sensitive data)
 func ToPaymentConfigPublicResponse(pc *entities.PaymentConfig) *PaymentConfigResponse {
 	return &PaymentConfigResponse{

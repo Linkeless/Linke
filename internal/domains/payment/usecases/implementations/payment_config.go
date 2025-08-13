@@ -137,6 +137,12 @@ func (pcs *PaymentConfigService) CreatePaymentConfig(ctx context.Context, req *d
 		maxAmount = req.MaxAmount
 	}
 
+	// 调试日志：检查入库的原始key
+	logger.Info("Creating payment config - original key",
+		logger.String("method", req.Method),
+		logger.String("key", req.Key),
+		logger.String("key_length", fmt.Sprintf("%d", len(req.Key))))
+
 	// Create the config
 	config := &entities.PaymentConfig{
 		Method:              req.Method,
@@ -286,6 +292,11 @@ func (pcs *PaymentConfigService) UpdatePaymentConfig(ctx context.Context, config
 	}
 
 	if req.Key != nil {
+		// 调试日志：检查更新的原始key
+		logger.Info("Updating payment config - original key",
+			logger.Uint("config_id", configID),
+			logger.String("key", *req.Key),
+			logger.String("key_length", fmt.Sprintf("%d", len(*req.Key))))
 		updates["key"] = *req.Key
 	}
 
@@ -415,6 +426,17 @@ func (pcs *PaymentConfigService) GetEnabledConfigs() ([]*entities.PaymentConfig,
 		Order("sort_order ASC, created_at ASC").Find(&configs).Error; err != nil {
 		logger.Error("Failed to get enabled payment configs", logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to get enabled payment configs: %w", err)
+	}
+
+	// 调试日志：检查从数据库读取的原始key
+	for _, config := range configs {
+		if config.Method == "epay" {
+			logger.Info("Retrieved epay config from database",
+				logger.Uint("config_id", config.ID),
+				logger.String("method", config.Method),
+				logger.String("key", config.Key),
+				logger.String("key_length", fmt.Sprintf("%d", len(config.Key))))
+		}
 	}
 
 	return configs, nil

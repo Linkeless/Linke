@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"linke/internal/domains/subscription/dto"
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/domains/subscription/usecases/interfaces"
 	"linke/internal/shared/logger"
@@ -1186,7 +1187,7 @@ func (h *AdminSubscriptionHandler) GetSubscriptionOrder(c *gin.Context) {
 // @Router /admin/subscriptions/orders [get]
 func (h *AdminSubscriptionHandler) ListSubscriptionOrders(c *gin.Context) {
 	// Parse query parameters
-	req := &interfaces.GetSubscriptionOrdersRequest{}
+	req := &dto.GetSubscriptionOrdersRequest{}
 
 	if err := c.ShouldBindQuery(req); err != nil {
 		response.BadRequest(c, err.Error())

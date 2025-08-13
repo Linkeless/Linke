@@ -3,9 +3,12 @@ package gateways
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -20,6 +23,16 @@ import (
 // EpayGateway implements the PaymentGateway interface for epay payment system
 type EpayGateway struct {
 	config *entities.PaymentConfig
+}
+
+// EpayResponse represents the response structure from epay gateway
+type EpayResponse struct {
+	Code      int    `json:"code"`
+	Message   string `json:"msg,omitempty"`
+	TradeNo   string `json:"trade_no,omitempty"`
+	PayURL    string `json:"payurl,omitempty"`
+	QRCode    string `json:"qrcode,omitempty"`
+	URLScheme string `json:"urlscheme,omitempty"`
 }
 
 // NewEpayGateway creates a new epay gateway instance
@@ -60,12 +73,18 @@ func (e *EpayGateway) CreatePaymentOrder(req *dto.CreatePaymentOrderRequest) (*d
 	// Prepare epay parameters
 	params := e.buildEpayParams(req, outTradeNo)
 
-	// Generate signature
+	// Generate signature (before adding sign)
 	signature := e.generateSignature(params)
+	
+	// Add sign after signature generation (不添加sign_type)
 	params["sign"] = signature
 
-	// Create payment URL
-	paymentURL := e.buildPaymentURL(params)
+	// Submit payment order to epay and get payment URL
+	paymentURL, err := e.submitPaymentOrder(params)
+	if err != nil {
+		logger.Error("Failed to submit payment order to epay", logger.ErrorField(err))
+		return nil, fmt.Errorf("failed to create payment order: %w", err)
+	}
 
 	// Generate QR code URL for mobile payments
 	qrCodeURL := e.generateQRCodeURL(paymentURL)
@@ -323,14 +342,23 @@ func (e *EpayGateway) generateOutTradeNo() string {
 
 // buildEpayParams builds epay request parameters according to new API specification
 func (e *EpayGateway) buildEpayParams(req *dto.CreatePaymentOrderRequest, outTradeNo string) map[string]string {
+	// Determine notify URL - use request value, config default, or generate one
+	notifyURL := req.NotifyURL
+	if notifyURL == "" && e.config.NotifyURL != "" {
+		notifyURL = e.config.NotifyURL
+	}
+	if notifyURL == "" {
+		// Generate a default notify URL - this should be configured properly in production
+		notifyURL = "https://linkeless.com/api/v1/payments/notify"
+	}
+
 	params := map[string]string{
 		"pid":          e.config.PID,
 		"type":         e.mapPaymentMethodToEpayType(req.PaymentMethod),
 		"out_trade_no": outTradeNo,
-		"notify_url":   req.NotifyURL,
+		"notify_url":   notifyURL,
 		"name":         req.Subject,
 		"money":        fmt.Sprintf("%.2f", req.Amount),
-		"sign_type":    "MD5", // Required by new API spec
 	}
 
 	// Add optional parameters
@@ -343,9 +371,7 @@ func (e *EpayGateway) buildEpayParams(req *dto.CreatePaymentOrderRequest, outTra
 		params["clientip"] = req.ClientIP
 	}
 
-	// Add device type based on user agent or default to pc
-	device := "pc" // Default device type
-	params["device"] = device
+	// 移除device参数，不发送
 
 	// Add business extension parameter (param) - can be used for metadata
 	if req.Metadata != "" {
@@ -371,41 +397,201 @@ func (e *EpayGateway) mapPaymentMethodToEpayType(method string) string {
 }
 
 // generateSignature generates MD5 signature for epay parameters
+// 按照标准算法：1. 参数按ASCII码排序 2. sign、sign_type、空值不参与签名 3. 拼接成a=b&c=d格式 4. 加上KEY做MD5
 func (e *EpayGateway) generateSignature(params map[string]string) string {
-	// Sort parameters by key
+	// Log current config for debugging - 明文输出完整key
+	logger.Info("Current epay config",
+		logger.String("url", e.config.URL),
+		logger.String("pid", e.config.PID),
+		logger.String("key_length", fmt.Sprintf("%d", len(e.config.Key))),
+		logger.String("key", e.config.Key))
+
+	// 1. 按照参数名ASCII码从小到大排序（a-z），sign、sign_type、和空值不参与签名
 	keys := make([]string, 0, len(params))
-	for k := range params {
-		if k != "sign" { // Exclude sign parameter
+	for k, v := range params {
+		if k != "sign" && k != "sign_type" && v != "" { // 排除sign、sign_type和空值
 			keys = append(keys, k)
 		}
 	}
-	sort.Strings(keys)
+	sort.Strings(keys) // ASCII排序
 
-	// Build query string
+	// 2. 拼接成URL键值对格式：a=b&c=d&e=f，参数值不进行url编码
 	var parts []string
 	for _, key := range keys {
-		if params[key] != "" { // Only include non-empty values
-			parts = append(parts, key+"="+params[key])
-		}
+		parts = append(parts, key+"="+params[key])
 	}
+	queryString := strings.Join(parts, "&")
+	
+	// 3. 拼接商户密钥KEY进行MD5加密：sign = md5(a=b&c=d&e=f + KEY)
+	signString := queryString + e.config.Key
 
-	// Add key
-	queryString := strings.Join(parts, "&") + e.config.Key
+	// Log signature details for debugging
+	logger.Info("Standard epay signature generation",
+		logger.String("query_string", queryString),
+		logger.String("sign_string", signString))
 
-	// Generate MD5 hash
-	hash := md5.Sum([]byte(queryString))
-	return hex.EncodeToString(hash[:])
+	// 4. MD5加密，结果为小写
+	hash := md5.Sum([]byte(signString))
+	signature := hex.EncodeToString(hash[:]) // hex.EncodeToString已经返回小写
+	
+	logger.Info("Generated signature", 
+		logger.String("signature", signature))
+	
+	return signature
 }
 
-// buildPaymentURL builds the complete payment URL using POST method
-// According to new API spec, this should be a POST request to mapi.php
-func (e *EpayGateway) buildPaymentURL(params map[string]string) string {
+// submitPaymentOrder submits payment order to epay via POST request and returns payment URL
+func (e *EpayGateway) submitPaymentOrder(params map[string]string) (string, error) {
+	// Build form data manually without URL encoding parameter values
+	// 重要：参数值不要进行URL编码，保持与签名时一致
+	var formParts []string
+	for k, v := range params {
+		formParts = append(formParts, k+"="+v)
+	}
+	formData := strings.Join(formParts, "&")
+
+	// Use the configured URL directly, don't auto-append mapi.php
+	apiURL := e.config.URL
+
+	// Create POST request
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+
+	// Log request details for debugging  
+	logger.Info("Sending epay payment request",
+		logger.String("url", apiURL),
+		logger.String("pid", e.config.PID),
+		logger.String("post_data", formData))
+
+	// Log equivalent curl command for debugging
+	curlCmd := fmt.Sprintf(`curl -X POST "%s" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "%s"`, apiURL, formData)
+	logger.Info("Equivalent curl command", logger.String("curl", curlCmd))
+
+	req, err := http.NewRequest("POST", apiURL, strings.NewReader(formData))
+	if err != nil {
+		return "", fmt.Errorf("failed to create HTTP request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("User-Agent", "Linke-Payment-Gateway/1.0")
+
+	// Log all request headers
+	logger.Info("Request headers",
+		logger.String("content_type", req.Header.Get("Content-Type")),
+		logger.String("user_agent", req.Header.Get("User-Agent")),
+		logger.String("content_length", fmt.Sprintf("%d", len(formData))))
+
+	// Send request
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to send POST request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Read response body first to log actual content
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read response: %w", err)
+	}
+
+	// Log actual response for debugging
+	logger.Info("Epay response received",
+		logger.Int("status_code", resp.StatusCode),
+		logger.String("response_body", string(body)),
+		logger.String("content_type", resp.Header.Get("Content-Type")))
+
+	// Check status code but don't fail immediately on non-200
+	if resp.StatusCode != http.StatusOK {
+		logger.Warn("Epay returned non-200 status code",
+			logger.Int("status_code", resp.StatusCode),
+			logger.String("response", string(body)))
+		// For redirect responses, still try to extract payment URL
+	}
+
+	// Try to parse as JSON first
+	var epayResp EpayResponse
+	if err := json.Unmarshal(body, &epayResp); err != nil {
+		// If JSON parsing fails, treat response as HTML redirect page
+		logger.Info("Response is not JSON, treating as HTML redirect page",
+			logger.String("response_preview", string(body)[:min(500, len(body))]))
+		
+		// For HTML responses, extract payment URL from meta refresh or form action
+		paymentURL := e.extractPaymentURLFromHTML(string(body))
+		if paymentURL != "" {
+			logger.Info("Extracted payment URL from HTML", logger.String("payment_url", paymentURL))
+			return paymentURL, nil
+		}
+		
+		// If we can't extract URL, return the original URL for redirect
+		// This means the user should be redirected to the epay page directly
+		return apiURL + "?" + e.buildPaymentQueryString(params), nil
+	}
+
+	// Check if request was successful
+	if epayResp.Code != 1 {
+		return "", fmt.Errorf("epay request failed: code=%d, message=%s", epayResp.Code, epayResp.Message)
+	}
+
+	// Extract payment URL from response (priority: payurl > qrcode > urlscheme)
+	var paymentURL string
+	if epayResp.PayURL != "" {
+		paymentURL = epayResp.PayURL
+	} else if epayResp.QRCode != "" {
+		paymentURL = epayResp.QRCode
+	} else if epayResp.URLScheme != "" {
+		paymentURL = epayResp.URLScheme
+	} else {
+		return "", fmt.Errorf("no payment URL found in epay response")
+	}
+
+	logger.Info("Epay response parsed successfully",
+		logger.String("trade_no", epayResp.TradeNo),
+		logger.String("payment_url", paymentURL))
+
+	return paymentURL, nil
+}
+
+// extractPaymentURLFromHTML tries to extract payment URL from HTML response
+func (e *EpayGateway) extractPaymentURLFromHTML(html string) string {
+	// Try to find meta refresh URL
+	metaRefreshPattern := regexp.MustCompile(`<meta[^>]*http-equiv=["']refresh["'][^>]*content=["'][^"']*url=([^"']+)["'][^>]*>`)
+	if matches := metaRefreshPattern.FindStringSubmatch(html); len(matches) > 1 {
+		return matches[1]
+	}
+	
+	// Try to find form action URL
+	formActionPattern := regexp.MustCompile(`<form[^>]*action=["']([^"']+)["'][^>]*>`)
+	if matches := formActionPattern.FindStringSubmatch(html); len(matches) > 1 {
+		return matches[1]
+	}
+	
+	// Try to find direct redirect URL in JavaScript
+	jsRedirectPattern := regexp.MustCompile(`location\.href\s*=\s*["']([^"']+)["']`)
+	if matches := jsRedirectPattern.FindStringSubmatch(html); len(matches) > 1 {
+		return matches[1]
+	}
+	
+	return ""
+}
+
+// buildPaymentQueryString builds query string from parameters
+func (e *EpayGateway) buildPaymentQueryString(params map[string]string) string {
 	values := url.Values{}
 	for k, v := range params {
 		values.Add(k, v)
 	}
+	return values.Encode()
+}
 
-	return e.config.URL + "?" + values.Encode()
+// min returns the minimum of two integers
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 // buildQueryURL builds the query URL for payment status

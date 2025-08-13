@@ -15,6 +15,8 @@ type InvoiceRepository interface {
 
 	// Invoice-specific query methods
 	GetByInvoiceNumber(ctx context.Context, invoiceNumber string) (*entities.Invoice, error)
+	GetBySubscriptionOrderID(ctx context.Context, orderID uint) (*entities.Invoice, error)
+	ListBySubscriptionOrderIDs(ctx context.Context, orderIDs []uint, limit, offset int) ([]*entities.Invoice, int64, error)
 
 	// User operations (extending UserScopedRepository)
 	GetUserInvoiceHistory(ctx context.Context, userID uint, limit, offset int) ([]*entities.Invoice, int64, error)

@@ -36,9 +36,15 @@ var Module = fx.Module("payment",
 		// Gateway factory
 		gateways.NewGatewayFactory,
 
-		// Base service implementations
-		implementations.NewPaymentService,
-		implementations.NewPaymentConfigService,
+		// Base service implementations that need EventBus
+		fx.Annotate(
+			implementations.NewPaymentService,
+			fx.As(new(interfaces.PaymentService)),
+		),
+		fx.Annotate(
+			implementations.NewPaymentConfigService,
+			fx.As(new(interfaces.PaymentConfigService)),
+		),
 
 		// Payment method service implementation
 		fx.Annotate(
@@ -46,15 +52,8 @@ var Module = fx.Module("payment",
 			fx.As(new(interfaces.PaymentMethodService)),
 		),
 
-		// Cached service implementations
-		fx.Annotate(
-			implementations.NewCachedPaymentService,
-			fx.As(new(interfaces.PaymentService)),
-		),
-		fx.Annotate(
-			implementations.NewCachedPaymentConfigService,
-			fx.As(new(interfaces.PaymentConfigService)),
-		),
+		// Cached service implementations (decorators)
+		implementations.NewCachedPaymentService,
 	),
 
 	// 提供 Handler 实现

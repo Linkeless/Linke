@@ -10,9 +10,11 @@ import (
 	couponInterfaces "linke/internal/domains/coupon/usecases/interfaces"
 	invoiceInterfaces "linke/internal/domains/invoice/usecases/interfaces"
 	paymentInterfaces "linke/internal/domains/payment/usecases/interfaces"
+	"linke/internal/domains/subscription/dto"
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/domains/subscription/usecases/interfaces"
 	"linke/internal/shared/cache"
+	"linke/internal/shared/events"
 	"linke/internal/shared/logger"
 
 	"gorm.io/gorm"
@@ -33,6 +35,7 @@ func NewSubscriptionOrderServiceWithCache(
 	paymentMethodService paymentInterfaces.PaymentMethodService,
 	couponService couponInterfaces.CouponService,
 	invoiceService invoiceInterfaces.InvoiceService,
+	eventPublisher events.Publisher,
 	cacheManager cache.CacheManager,
 	cacheKeys *cache.AllCacheKeys,
 ) interfaces.SubscriptionOrderService {
@@ -44,6 +47,7 @@ func NewSubscriptionOrderServiceWithCache(
 		paymentMethodService,
 		couponService,
 		invoiceService,
+		eventPublisher,
 	)
 
 	orderCache := cache.NewCacheAside[entities.SubscriptionOrder](
@@ -64,7 +68,7 @@ func NewSubscriptionOrderServiceWithCache(
 }
 
 // CreateSubscriptionOrder creates order with cache management
-func (sos *CachedSubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context, req *interfaces.CreateSubscriptionOrderRequest) (*interfaces.CreateSubscriptionOrderResponse, error) {
+func (sos *CachedSubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context, req *dto.CreateSubscriptionOrderRequest) (*dto.CreateSubscriptionOrderResponse, error) {
 	response, err := sos.SubscriptionOrderService.CreateSubscriptionOrder(ctx, req)
 	if err != nil {
 		return nil, err
@@ -106,6 +110,95 @@ func (sos *CachedSubscriptionOrderService) CreateSubscriptionOrder(ctx context.C
 		// Invalidate user order caches
 		sos.invalidateUserOrderCaches(ctx, req.UserID)
 	}
+
+	return response, nil
+}
+
+// ==============================================================================
+// NEW STANDARDIZED ORDER CREATION FLOW (CACHED IMPLEMENTATIONS)
+// ==============================================================================
+
+// CreateOrderWithInvoice creates order with complete flow and cache management
+func (sos *CachedSubscriptionOrderService) CreateOrderWithInvoice(ctx context.Context, req *dto.CreateOrderRequest) (*dto.CreateOrderResponse, error) {
+	response, err := sos.SubscriptionOrderService.CreateOrderWithInvoice(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	// Cache the new order after successful creation
+	if response != nil && response.Order != nil {
+		// Convert response back to entity for caching
+		order := &entities.SubscriptionOrder{
+			ID:                 response.Order.ID,
+			UserID:             response.Order.UserID,
+			SubscriptionPlanID: response.Order.SubscriptionPlanID,
+			OrderNumber:        response.Order.OrderNumber,
+			OrderType:          response.Order.OrderType,
+			Status:             response.Order.Status,
+			Amount:             response.Order.Amount,
+			Currency:           response.Order.Currency,
+			SetupFee:           response.Order.SetupFee,
+			DiscountAmount:     response.Order.DiscountAmount,
+			TotalAmount:        response.Order.TotalAmount,
+			PaymentGateway:     response.Order.PaymentGateway,
+			PaymentMethod:      response.Order.PaymentMethod,
+			CouponCode:         response.Order.CouponCode,
+			TransactionID:      response.Order.TransactionID,
+		}
+
+		if err := sos.orderCache.Set(ctx, order); err != nil {
+			logger.Error("Failed to cache new order",
+				logger.Uint("order_id", order.ID),
+				logger.ErrorField(err))
+		}
+
+		// Cache order by number
+		orderByNumberKey := sos.cacheKeys.Subscription.OrderByNumber(order.OrderNumber)
+		if data, err := json.Marshal(order); err == nil {
+			_ = sos.cacheManager.GetCache().Set(ctx, orderByNumberKey, data, cache.MediumCacheTTL)
+		}
+
+		// Invalidate user order caches
+		sos.invalidateUserOrderCaches(ctx, req.UserID)
+	}
+
+	return response, nil
+}
+
+// GenerateInvoiceForOrder generates invoice with cache invalidation
+func (sos *CachedSubscriptionOrderService) GenerateInvoiceForOrder(ctx context.Context, orderID uint) (any, error) {
+	// Get the order to know userID for cache invalidation
+	existingOrder, err := sos.GetSubscriptionOrder(ctx, orderID)
+	if err != nil {
+		return nil, err
+	}
+
+	invoice, err := sos.SubscriptionOrderService.GenerateInvoiceForOrder(ctx, orderID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Invalidate caches after invoice generation
+	sos.invalidateOrderCaches(ctx, orderID, existingOrder.OrderNumber, existingOrder.UserID)
+
+	return invoice, nil
+}
+
+// CreatePaymentForOrder creates payment with cache invalidation
+func (sos *CachedSubscriptionOrderService) CreatePaymentForOrder(ctx context.Context, req *dto.PayOrderRequest) (*dto.PayOrderResponse, error) {
+	// Get the order to know userID for cache invalidation
+	existingOrder, err := sos.GetSubscriptionOrder(ctx, req.OrderID)
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := sos.SubscriptionOrderService.CreatePaymentForOrder(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	// Invalidate caches after payment creation
+	sos.invalidateOrderCaches(ctx, req.OrderID, existingOrder.OrderNumber, existingOrder.UserID)
 
 	return response, nil
 }
@@ -154,7 +247,7 @@ func (sos *CachedSubscriptionOrderService) GetSubscriptionOrderByNumber(ctx cont
 }
 
 // GetSubscriptionOrders gets orders with caching for list results
-func (sos *CachedSubscriptionOrderService) GetSubscriptionOrders(ctx context.Context, req *interfaces.GetSubscriptionOrdersRequest) ([]*entities.SubscriptionOrder, int64, error) {
+func (sos *CachedSubscriptionOrderService) GetSubscriptionOrders(ctx context.Context, req *dto.GetSubscriptionOrdersRequest) ([]*entities.SubscriptionOrder, int64, error) {
 	cacheKey := sos.buildOrderListCacheKey(req)
 
 	// Use cache decorator for list results
@@ -382,7 +475,7 @@ func (sos *CachedSubscriptionOrderService) invalidateAllOrderCaches(ctx context.
 
 // Cache key building helper methods
 
-func (sos *CachedSubscriptionOrderService) buildOrderListCacheKey(req *interfaces.GetSubscriptionOrdersRequest) string {
+func (sos *CachedSubscriptionOrderService) buildOrderListCacheKey(req *dto.GetSubscriptionOrdersRequest) string {
 	var keyParts []string
 	keyParts = append(keyParts, "list", "order")
 
@@ -408,9 +501,3 @@ func (sos *CachedSubscriptionOrderService) buildOrderListCacheKey(req *interface
 	return cache.CachePrefixSubscription + strings.Join(keyParts, ":")
 }
 
-// QuickPurchase delegates to base service (no caching needed for payment creation)
-func (sos *CachedSubscriptionOrderService) QuickPurchase(ctx context.Context, req *interfaces.QuickPurchaseRequest) (*interfaces.QuickPurchaseResponse, error) {
-	// Quick purchase doesn't need caching since it's just creating a payment
-	// The actual order/invoice creation happens asynchronously after payment success
-	return sos.SubscriptionOrderService.QuickPurchase(ctx, req)
-}

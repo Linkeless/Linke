@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"strings"
 	"time"
 
 	couponDto "linke/internal/domains/coupon/dto"
@@ -15,8 +16,10 @@ import (
 	paymentEntities "linke/internal/domains/payment/entities"
 	paymentInterfaces "linke/internal/domains/payment/usecases/interfaces"
 	"linke/internal/domains/subscription/constants"
+	"linke/internal/domains/subscription/dto"
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/domains/subscription/usecases/interfaces"
+	"linke/internal/shared/events"
 	"linke/internal/shared/logger"
 
 	"gorm.io/gorm"
@@ -30,9 +33,19 @@ type SubscriptionOrderService struct {
 	paymentMethodService    paymentInterfaces.PaymentMethodService
 	couponService           couponInterfaces.CouponService
 	invoiceService          invoiceInterfaces.InvoiceService
+	eventPublisher          events.Publisher
 }
 
-func NewSubscriptionOrderService(db *gorm.DB, subscriptionPlanService interfaces.SubscriptionPlanService, userSubscriptionService interfaces.UserSubscriptionService, paymentService paymentInterfaces.PaymentService, paymentMethodService paymentInterfaces.PaymentMethodService, couponService couponInterfaces.CouponService, invoiceService invoiceInterfaces.InvoiceService) *SubscriptionOrderService {
+func NewSubscriptionOrderService(
+	db *gorm.DB,
+	subscriptionPlanService interfaces.SubscriptionPlanService,
+	userSubscriptionService interfaces.UserSubscriptionService,
+	paymentService paymentInterfaces.PaymentService,
+	paymentMethodService paymentInterfaces.PaymentMethodService,
+	couponService couponInterfaces.CouponService,
+	invoiceService invoiceInterfaces.InvoiceService,
+	eventPublisher events.Publisher,
+) *SubscriptionOrderService {
 	return &SubscriptionOrderService{
 		db:                      db,
 		subscriptionPlanService: subscriptionPlanService,
@@ -41,6 +54,7 @@ func NewSubscriptionOrderService(db *gorm.DB, subscriptionPlanService interfaces
 		paymentMethodService:    paymentMethodService,
 		couponService:           couponService,
 		invoiceService:          invoiceService,
+		eventPublisher:          eventPublisher,
 	}
 }
 
@@ -82,8 +96,242 @@ func (sos *SubscriptionOrderService) GetSubscriptionOrderSummary(ctx context.Con
 	return result, nil
 }
 
+// ==============================================================================
+// NEW STANDARDIZED ORDER CREATION FLOW IMPLEMENTATION
+// ==============================================================================
+
+// CreateOrderWithInvoice creates a complete order -> invoice -> payment flow
+func (sos *SubscriptionOrderService) CreateOrderWithInvoice(ctx context.Context, req *dto.CreateOrderRequest) (*dto.CreateOrderResponse, error) {
+	// Convert to legacy request for now - this uses the existing battle-tested logic
+	legacyReq := &dto.CreateSubscriptionOrderRequest{
+		UserID:             req.UserID,
+		SubscriptionPlanID: req.SubscriptionPlanID,
+		OrderType:          req.OrderType,
+		CouponCode:         req.CouponCode,
+		PaymentGateway:     req.PaymentGateway,
+		PaymentMethod:      req.PaymentMethod,
+		PaymentMethodID:    req.PaymentMethodID,
+		UseDefaultPayment:  req.UseDefaultPayment,
+		ReturnURL:          req.ReturnURL,
+		Metadata:           req.Metadata,
+	}
+
+	// Call the existing implementation
+	legacyResp, err := sos.CreateSubscriptionOrder(ctx, legacyReq)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert to new response format
+	response := &dto.CreateOrderResponse{
+		Order:         legacyResp.Order,
+		Invoice:       legacyResp.Invoice,
+		PaymentRecord: legacyResp.PaymentRecord,
+		PaymentURL:    legacyResp.PaymentURL,
+		QRCodeURL:     legacyResp.QRCodeURL,
+		ExpiredAt:     legacyResp.ExpiredAt,
+	}
+
+	// Publish order created event
+	if sos.eventPublisher != nil {
+		event := events.NewBaseEvent("subscription.order.created", "subscription", map[string]any{
+			"order_id":   legacyResp.Order.ID,
+			"user_id":    req.UserID,
+			"plan_id":    req.SubscriptionPlanID,
+			"order_type": req.OrderType,
+			"amount":     legacyResp.Order.TotalAmount,
+			"currency":   legacyResp.Order.Currency,
+		})
+		if err := sos.eventPublisher.Publish(ctx, event); err != nil {
+			logger.Error("Failed to publish order created event", logger.ErrorField(err))
+		}
+	}
+
+	return response, nil
+}
+
+// GenerateInvoiceForOrder creates an invoice for an existing order
+func (sos *SubscriptionOrderService) GenerateInvoiceForOrder(ctx context.Context, orderID uint) (any, error) {
+	// Get the order
+	order, err := sos.GetSubscriptionOrder(ctx, orderID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get order: %w", err)
+	}
+
+	// Check if order can have an invoice generated
+	if order.Status != constants.OrderStatusPending && order.Status != constants.OrderStatusConfirmed {
+		return nil, fmt.Errorf("invoice can only be generated for pending or confirmed orders")
+	}
+
+	// Get plan for invoice details
+	plan, err := sos.subscriptionPlanService.GetSubscriptionPlan(ctx, order.SubscriptionPlanID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get subscription plan: %w", err)
+	}
+
+	// Create invoice request
+	invoiceReq := &invoiceDto.CreateInvoiceRequest{
+		UserID:              order.UserID,
+		SubscriptionOrderID: order.ID,
+		Amount:              order.TotalAmount,
+		Currency:            order.Currency,
+		Description:         fmt.Sprintf("Subscription: %s", plan.Name),
+		BillingName:         fmt.Sprintf("User %d", order.UserID),                // TODO: Get actual user name
+		BillingEmail:        fmt.Sprintf("user%d@example.com", order.UserID),     // TODO: Get actual user email
+		DueDate:             time.Now().AddDate(0, 0, 30).Format("2006-01-02"), // 30 days from now
+	}
+
+	// Create invoice
+	invoice, err := sos.invoiceService.CreateInvoice(ctx, invoiceReq)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create invoice: %w", err)
+	}
+
+	// Update order with invoice information
+	if err := sos.db.WithContext(ctx).Model(order).Updates(map[string]any{
+		"invoice_number": invoice.InvoiceNumber,
+		"invoice_status": invoice.Status,
+		"invoiced_at":    time.Now(),
+		"updated_at":     time.Now(),
+	}).Error; err != nil {
+		logger.Error("Failed to update order with invoice info", logger.ErrorField(err))
+		// Don't fail the entire process, just log the error
+	}
+
+	// Publish invoice generated event
+	if sos.eventPublisher != nil {
+		event := events.NewBaseEvent("subscription.invoice.generated", "subscription", map[string]any{
+			"order_id":       order.ID,
+			"invoice_id":     invoice.ID,
+			"invoice_number": invoice.InvoiceNumber,
+			"user_id":        order.UserID,
+			"amount":         invoice.TotalAmount,
+		})
+		if err := sos.eventPublisher.Publish(ctx, event); err != nil {
+			logger.Error("Failed to publish invoice generated event", logger.ErrorField(err))
+		}
+	}
+
+	return invoiceDto.ToResponse(invoice), nil
+}
+
+// CreatePaymentForOrder creates a payment record for an existing order
+func (sos *SubscriptionOrderService) CreatePaymentForOrder(ctx context.Context, req *dto.PayOrderRequest) (*dto.PayOrderResponse, error) {
+	// Get the order
+	order, err := sos.GetSubscriptionOrder(ctx, req.OrderID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get order: %w", err)
+	}
+
+	// Check if order can be paid
+	if order.Status != constants.OrderStatusPending && order.Status != constants.OrderStatusConfirmed {
+		return nil, fmt.Errorf("payment can only be created for pending or confirmed orders")
+	}
+
+	// Get plan for payment details
+	plan, err := sos.subscriptionPlanService.GetSubscriptionPlan(ctx, order.SubscriptionPlanID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get subscription plan: %w", err)
+	}
+
+	// Resolve payment method if using saved payment methods
+	finalPaymentGateway := req.PaymentGateway
+	finalPaymentMethod := req.PaymentMethod
+
+	if req.UseDefaultPayment {
+		// Use default payment method for the specified gateway
+		defaultPaymentMethod, err := sos.paymentMethodService.GetDefaultPaymentMethodByGateway(ctx, order.UserID, req.PaymentGateway)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get default payment method: %w", err)
+		}
+		finalPaymentMethod = defaultPaymentMethod.Method
+	} else if req.PaymentMethodID != nil {
+		// Use specific saved payment method
+		paymentMethod, err := sos.paymentMethodService.GetPaymentMethod(ctx, order.UserID, *req.PaymentMethodID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get payment method: %w", err)
+		}
+		finalPaymentGateway = paymentMethod.Gateway
+		finalPaymentMethod = paymentMethod.Method
+	}
+
+	// Check if there's already an invoice for this order
+	var invoice *invoiceEntities.Invoice
+	var invoiceResp *invoiceDto.InvoiceResponse
+	if err := sos.db.WithContext(ctx).Where("subscription_order_id = ?", order.ID).First(&invoice).Error; err == nil {
+		invoiceResp = invoiceDto.ToResponse(invoice)
+	}
+
+	// Create payment request
+	paymentReq := &paymentDto.CreatePaymentOrderRequest{
+		UserID:              order.UserID,
+		SubscriptionOrderID: &order.ID,
+		Gateway:             finalPaymentGateway,
+		PaymentMethod:       finalPaymentMethod,
+		Amount:              order.TotalAmount,
+		Currency:            order.Currency,
+		Subject:             strings.ReplaceAll(plan.Name, " ", ""),
+		Body:                fmt.Sprintf("Payment for order %s - %s subscription plan", order.OrderNumber, plan.Name),
+		ClientIP:            req.ClientIP,
+		ReturnURL:           req.ReturnURL,
+		ExpiredMinutes:      30, // 30 minutes expiration
+		Metadata:            req.Metadata,
+	}
+
+	// Add invoice reference if exists
+	if invoice != nil {
+		paymentReq.InvoiceID = &invoice.ID
+	}
+
+	// Create payment record
+	paymentRecord, err := sos.paymentService.CreatePaymentOrder(ctx, paymentReq)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create payment order: %w", err)
+	}
+
+	// Update order with payment information
+	if err := sos.db.WithContext(ctx).Model(order).Updates(map[string]any{
+		"transaction_id":   paymentRecord.PaymentNo,
+		"payment_gateway":  finalPaymentGateway,
+		"payment_method":   finalPaymentMethod,
+		"payment_status":   paymentRecord.Status,
+		"updated_at":       time.Now(),
+	}).Error; err != nil {
+		logger.Error("Failed to update order with payment info", logger.ErrorField(err))
+		// Don't fail the entire process, just log the error
+	}
+
+	// Build response
+	response := &dto.PayOrderResponse{
+		Order:         order.ToResponse(),
+		Invoice:       invoiceResp,
+		PaymentRecord: paymentDto.ToPaymentRecordUserResponse(paymentRecord),
+		PaymentURL:    paymentRecord.PaymentURL,
+		QRCodeURL:     paymentRecord.QRCodeURL,
+		ExpiredAt:     *paymentRecord.ExpiredAt,
+	}
+
+	// Publish payment created event
+	if sos.eventPublisher != nil {
+		event := events.NewBaseEvent("subscription.payment.created", "subscription", map[string]any{
+			"order_id":    order.ID,
+			"payment_id":  paymentRecord.ID,
+			"payment_no":  paymentRecord.PaymentNo,
+			"user_id":     order.UserID,
+			"amount":      paymentRecord.Amount,
+			"gateway":     finalPaymentGateway,
+			"method":      finalPaymentMethod,
+		})
+		if err := sos.eventPublisher.Publish(ctx, event); err != nil {
+			logger.Error("Failed to publish payment created event", logger.ErrorField(err))
+		}
+	}
+
+	return response, nil
+}
+
 // CreateSubscriptionOrder creates a new subscription order with payment
-func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context, req *interfaces.CreateSubscriptionOrderRequest) (*interfaces.CreateSubscriptionOrderResponse, error) {
+func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context, req *dto.CreateSubscriptionOrderRequest) (*dto.CreateSubscriptionOrderResponse, error) {
 	// SECURITY: Check for duplicate pending orders to prevent order spam
 	if err := sos.checkDuplicateOrders(ctx, req.UserID, req.SubscriptionPlanID, req.OrderType); err != nil {
 		return nil, fmt.Errorf("duplicate order check failed: %w", err)
@@ -266,7 +514,7 @@ func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context
 		PaymentMethod:       finalPaymentMethod,
 		Amount:              totalAmount,
 		Currency:            plan.Currency,
-		Subject:             fmt.Sprintf("Invoice %s - Subscription: %s", invoice.InvoiceNumber, plan.Name),
+		Subject:             strings.ReplaceAll(plan.Name, " ", ""),
 		Body:                fmt.Sprintf("Payment for invoice %s - %s subscription plan", invoice.InvoiceNumber, plan.Name),
 		ReturnURL:           req.ReturnURL,
 		ExpiredMinutes:      30, // 30 minutes expiration
@@ -329,7 +577,7 @@ func (sos *SubscriptionOrderService) CreateSubscriptionOrder(ctx context.Context
 		logger.Any("used_payment_method_id", usedPaymentMethodID))
 
 	// Return response
-	response := &interfaces.CreateSubscriptionOrderResponse{
+	response := &dto.CreateSubscriptionOrderResponse{
 		Order:         order.ToResponse(),
 		Invoice:       invoiceDto.ToResponse(invoice),
 		PaymentRecord: paymentDto.ToPaymentRecordUserResponse(paymentRecord),
@@ -671,7 +919,7 @@ type UpgradeDowngradeRequest struct {
 }
 
 // CreateUpgradeDowngradeOrder creates an order for subscription upgrade or downgrade
-func (sos *SubscriptionOrderService) CreateUpgradeDowngradeOrder(ctx context.Context, userID uint, req *UpgradeDowngradeRequest) (*interfaces.CreateSubscriptionOrderResponse, error) {
+func (sos *SubscriptionOrderService) CreateUpgradeDowngradeOrder(ctx context.Context, userID uint, req *UpgradeDowngradeRequest) (*dto.CreateSubscriptionOrderResponse, error) {
 	// Get current subscription
 	currentSubscription, err := sos.userSubscriptionService.GetUserSubscription(ctx, req.CurrentSubscriptionID)
 	if err != nil {
@@ -715,7 +963,7 @@ func (sos *SubscriptionOrderService) CreateUpgradeDowngradeOrder(ctx context.Con
 	}
 
 	// Create order request
-	orderReq := &interfaces.CreateSubscriptionOrderRequest{
+	orderReq := &dto.CreateSubscriptionOrderRequest{
 		UserID:             userID,
 		SubscriptionPlanID: req.NewPlanID,
 		OrderType:          orderType,
@@ -1230,7 +1478,7 @@ type OrderStatistics struct {
 }
 
 // GetSubscriptionOrders gets subscription orders with filtering
-func (sos *SubscriptionOrderService) GetSubscriptionOrders(ctx context.Context, req *interfaces.GetSubscriptionOrdersRequest) ([]*entities.SubscriptionOrder, int64, error) {
+func (sos *SubscriptionOrderService) GetSubscriptionOrders(ctx context.Context, req *dto.GetSubscriptionOrdersRequest) ([]*entities.SubscriptionOrder, int64, error) {
 	query := sos.db.WithContext(ctx).Model(&entities.SubscriptionOrder{})
 
 	// Apply filters
@@ -1569,117 +1817,3 @@ func (sos *SubscriptionOrderService) checkDuplicateOrders(ctx context.Context, u
 	return nil
 }
 
-// QuickPurchase creates a payment directly without creating order/invoice first
-// Order and invoice are created asynchronously after payment success
-func (sos *SubscriptionOrderService) QuickPurchase(ctx context.Context, req *interfaces.QuickPurchaseRequest) (*interfaces.QuickPurchaseResponse, error) {
-	// SECURITY: Check for duplicate pending orders to prevent order spam
-	if err := sos.checkDuplicateOrders(ctx, req.UserID, req.PlanID, constants.OrderTypeNew); err != nil {
-		return nil, fmt.Errorf("duplicate order check failed: %w", err)
-	}
-
-	// Get subscription plan
-	plan, err := sos.subscriptionPlanService.GetSubscriptionPlan(ctx, req.PlanID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid subscription plan: %w", err)
-	}
-
-	if !plan.IsAvailableForPurchase() {
-		return nil, fmt.Errorf("subscription plan is not available for purchase")
-	}
-
-	// Calculate amounts
-	amount := plan.Price
-	setupFee := plan.SetupFee
-	var discountAmount, couponDiscountAmount float64 = 0.0, 0.0
-	var discountInfo *interfaces.QuickPurchaseDiscountInfo
-
-	// Apply coupon discount if provided
-	if req.CouponCode != "" {
-		validateReq := &couponDto.ValidateCouponRequest{
-			Code:        req.CouponCode,
-			UserID:      uint64(req.UserID),
-			OrderAmount: amount + setupFee,
-			PlanID:      uint64(req.PlanID),
-			Currency:    plan.Currency,
-		}
-
-		validateResp, err := sos.couponService.ValidateCoupon(ctx, validateReq)
-		if err != nil {
-			logger.Error("Failed to validate coupon", logger.ErrorField(err), logger.String("coupon_code", req.CouponCode))
-			return nil, fmt.Errorf("failed to validate coupon: %w", err)
-		}
-
-		if !validateResp.Valid {
-			return nil, fmt.Errorf("coupon validation failed: %s", validateResp.Message)
-		}
-
-		couponDiscountAmount = validateResp.DiscountAmount
-		discountAmount = couponDiscountAmount
-
-		// Create discount info for response
-		discountInfo = &interfaces.QuickPurchaseDiscountInfo{
-			CouponCode:     req.CouponCode,
-			DiscountAmount: discountAmount,
-			OriginalAmount: amount + setupFee,
-			FinalAmount:    validateResp.FinalAmount,
-		}
-	}
-
-	totalAmount := amount + setupFee - discountAmount
-
-	// SECURITY: Price protection - validate final amount is reasonable
-	if totalAmount < 0 {
-		return nil, fmt.Errorf("invalid total amount: negative value not allowed")
-	}
-
-	// Prevent excessive discounts (more than 95% off)
-	originalTotal := amount + setupFee
-	if originalTotal > 0 && discountAmount > (originalTotal*0.95) {
-		return nil, fmt.Errorf("discount amount %.2f exceeds maximum allowed (95%% of original price)", discountAmount)
-	}
-
-	// Validate amounts are within reasonable limits
-	maxAllowedAmount := 10000.0 // $10,000 max
-	if totalAmount > maxAllowedAmount {
-		return nil, fmt.Errorf("total amount %.2f exceeds maximum allowed amount %.2f", totalAmount, maxAllowedAmount)
-	}
-
-	// Create payment order directly
-	paymentReq := &paymentDto.CreatePaymentOrderRequest{
-		UserID:         req.UserID,
-		Gateway:        req.PaymentGateway,
-		PaymentMethod:  req.PaymentMethod,
-		Amount:         totalAmount,
-		Currency:       plan.Currency,
-		Subject:        fmt.Sprintf("Quick Purchase - Subscription: %s", plan.Name),
-		Body:           fmt.Sprintf("Quick purchase for %s subscription plan", plan.Name),
-		ClientIP:       req.ClientIP,
-		ReturnURL:      req.ReturnURL,
-		ExpiredMinutes: 30, // 30 minutes expiration
-		Metadata:       req.Metadata,
-	}
-
-	paymentRecord, err := sos.paymentService.CreatePaymentOrder(ctx, paymentReq)
-	if err != nil {
-		logger.Error("Failed to create payment order for quick purchase", logger.ErrorField(err))
-		return nil, fmt.Errorf("failed to create payment order: %w", err)
-	}
-
-	logger.Info("Quick purchase payment created successfully",
-		logger.String("payment_no", paymentRecord.PaymentNo),
-		logger.Uint("user_id", req.UserID),
-		logger.Uint("plan_id", req.PlanID),
-		logger.Any("total_amount", totalAmount))
-
-	// Build response
-	response := &interfaces.QuickPurchaseResponse{
-		PaymentRecord: paymentDto.ToPaymentRecordUserResponse(paymentRecord),
-		PaymentURL:    paymentRecord.PaymentURL,
-		QRCodeURL:     paymentRecord.QRCodeURL,
-		ExpiredAt:     *paymentRecord.ExpiredAt,
-		PlanInfo:      plan.ToResponse(),
-		DiscountInfo:  discountInfo,
-	}
-
-	return response, nil
-}

@@ -188,15 +188,32 @@ type UpdateInvoiceRequest struct {
 	Language    *string `json:"language,omitempty"`
 }
 
+// CreateInvoiceFromOrderRequest represents a simplified request to create an invoice from an order
+type CreateInvoiceFromOrderRequest struct {
+	// Template and language options
+	Template string `json:"template,omitempty" example:"default"`
+	Language string `json:"language,omitempty" example:"en"`
+	
+	// Due date (optional)
+	DueDate string `json:"due_date,omitempty" example:"2024-01-31"`
+	
+	// Additional notes (optional)
+	Notes string `json:"notes,omitempty" example:"Thank you for your subscription"`
+	
+	// Auto-send flag
+	AutoSend bool `json:"auto_send,omitempty" example:"false"`
+}
+
 // GetInvoicesRequest represents the request to get invoices
 type GetInvoicesRequest struct {
-	UserID      uint   `form:"user_id,omitempty" example:"1"`
-	Status      string `form:"status,omitempty" example:"pending"`
-	InvoiceType string `form:"invoice_type,omitempty" example:"standard"`
-	DateFrom    string `form:"date_from,omitempty" example:"2024-01-01"`
-	DateTo      string `form:"date_to,omitempty" example:"2024-12-31"`
-	Limit       int    `form:"limit,omitempty" example:"10"`
-	Offset      int    `form:"offset,omitempty" example:"0"`
+	UserID              uint   `form:"user_id,omitempty" example:"1"`
+	SubscriptionOrderID uint   `form:"subscription_order_id,omitempty" example:"1"`
+	Status              string `form:"status,omitempty" example:"pending"`
+	InvoiceType         string `form:"invoice_type,omitempty" example:"standard"`
+	DateFrom            string `form:"date_from,omitempty" example:"2024-01-01"`
+	DateTo              string `form:"date_to,omitempty" example:"2024-12-31"`
+	Limit               int    `form:"limit,omitempty" example:"10"`
+	Offset              int    `form:"offset,omitempty" example:"0"`
 }
 
 // SendInvoiceRequest represents the request to send an invoice via email

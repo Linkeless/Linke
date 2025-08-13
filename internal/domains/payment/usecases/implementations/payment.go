@@ -16,6 +16,7 @@ import (
 	"linke/internal/domains/payment/entities"
 	"linke/internal/domains/payment/gateways"
 	"linke/internal/domains/payment/usecases/interfaces"
+	"linke/internal/shared/events"
 	"linke/internal/shared/logger"
 
 	"gorm.io/gorm"
@@ -27,10 +28,11 @@ type PaymentService struct {
 	gatewayFactory           *gateways.GatewayFactory
 	subscriptionOrderService interfaces.SubscriptionOrderServiceInterface
 	invoiceService           invoiceInterfaces.InvoiceService
+	eventBus                 events.EventBus
 }
 
 // NewPaymentService creates a new payment service instance
-func NewPaymentService(db *gorm.DB, paymentConfigService interfaces.PaymentConfigService) *PaymentService {
+func NewPaymentService(db *gorm.DB, paymentConfigService interfaces.PaymentConfigService, eventBus events.EventBus) *PaymentService {
 	// Create gateway factory
 	gatewayFactory := gateways.NewGatewayFactory(paymentConfigService)
 	
@@ -43,6 +45,7 @@ func NewPaymentService(db *gorm.DB, paymentConfigService interfaces.PaymentConfi
 	return &PaymentService{
 		db:             db,
 		gatewayFactory: gatewayFactory,
+		eventBus:       eventBus,
 	}
 }
 
@@ -340,6 +343,12 @@ func (ps *PaymentService) ProcessNotification(ctx context.Context, gateway strin
 			return fmt.Errorf("failed to update payment status: %w", err)
 		}
 
+		// Publish payment completed event
+		if err := ps.publishPaymentCompletedEvent(ctx, paymentRecord); err != nil {
+			logger.Error("Failed to publish payment completed event", logger.ErrorField(err))
+			// Don't return error here as payment is already processed
+		}
+
 		// Process order completion (integrate with subscription system)
 		if err := ps.processOrderCompletion(ctx, paymentRecord); err != nil {
 			logger.Error("Failed to process order completion", logger.ErrorField(err))
@@ -492,4 +501,44 @@ func (ps *PaymentService) generateNotificationHash(data map[string]any) string {
 	// Generate SHA256 hash
 	h := sha256.Sum256([]byte(hashContent))
 	return fmt.Sprintf("%x", h)
+}
+
+// publishPaymentCompletedEvent publishes a payment completed event
+func (ps *PaymentService) publishPaymentCompletedEvent(ctx context.Context, paymentRecord *entities.PaymentRecord) error {
+	if ps.eventBus == nil {
+		logger.Warn("Event bus not available, skipping payment completed event")
+		return nil
+	}
+
+	// Create payment completed event data
+	eventData := map[string]any{
+		"payment_no":            paymentRecord.PaymentNo,
+		"subscription_order_id": paymentRecord.SubscriptionOrderID,
+		"invoice_id":            paymentRecord.InvoiceID,
+		"amount":                paymentRecord.Amount,
+		"currency":              paymentRecord.Currency,
+		"gateway":               paymentRecord.Gateway,
+		"payment_method":        paymentRecord.PaymentMethod,
+		"transaction_id":        paymentRecord.TransactionID,
+		"paid_at":               paymentRecord.PaidAt,
+	}
+
+	// Create and publish payment event
+	paymentEvent := events.NewPaymentEvent(
+		events.EventTypePaymentCompleted,
+		paymentRecord.PaymentNo,
+		paymentRecord.Amount,
+		paymentRecord.UserID,
+		eventData,
+	)
+
+	if err := ps.eventBus.Publish(ctx, paymentEvent); err != nil {
+		return fmt.Errorf("failed to publish payment completed event: %w", err)
+	}
+
+	logger.Info("Payment completed event published successfully",
+		logger.String("payment_no", paymentRecord.PaymentNo),
+		logger.Uint("user_id", paymentRecord.UserID))
+
+	return nil
 }

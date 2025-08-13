@@ -187,6 +187,13 @@ func NewApplication() *fx.App {
 				events.NewEnhancedEventBus,
 				fx.As(new(events.EventBus)),
 			),
+			// Publisher interface (EventBus implements Publisher)
+			fx.Annotate(
+				func(eventBus events.EventBus) events.Publisher {
+					return eventBus
+				},
+				fx.As(new(events.Publisher)),
+			),
 			// Event store
 			func(db *gorm.DB) events.EventStore {
 				return events.NewDatabaseEventStore(db)

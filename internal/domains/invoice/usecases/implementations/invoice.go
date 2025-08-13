@@ -12,6 +12,7 @@ import (
 	"linke/internal/domains/invoice/dto"
 	"linke/internal/domains/invoice/entities"
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
+	"linke/internal/shared/events"
 	"linke/internal/shared/logger"
 
 	"gorm.io/gorm"
@@ -21,14 +22,16 @@ type InvoiceService struct {
 	db           *gorm.DB
 	userService  userInterfaces.UserService
 	pdfGenerator *PDFGeneratorService
+	publisher    events.Publisher
 	logger       logger.Logger
 }
 
-func NewInvoiceService(db *gorm.DB, userService userInterfaces.UserService, pdfGenerator *PDFGeneratorService, logger logger.Logger) *InvoiceService {
+func NewInvoiceService(db *gorm.DB, userService userInterfaces.UserService, pdfGenerator *PDFGeneratorService, publisher events.Publisher, logger logger.Logger) *InvoiceService {
 	return &InvoiceService{
 		db:           db,
 		userService:  userService,
 		pdfGenerator: pdfGenerator,
+		publisher:    publisher,
 		logger:       logger,
 	}
 }
@@ -140,6 +143,30 @@ func (is *InvoiceService) CreateInvoice(ctx context.Context, req *dto.CreateInvo
 		logger.String("invoice_number", invoiceNumber),
 		logger.Uint("user_id", req.UserID),
 		logger.Uint("order_id", req.SubscriptionOrderID))
+
+	// Publish invoice created event
+	if is.publisher != nil {
+		event := events.NewInvoiceEvent(
+			events.EventTypeInvoiceCreated,
+			invoice.ID,
+			req.SubscriptionOrderID,
+			req.UserID,
+			invoice.TotalAmount,
+			map[string]any{
+				"invoice_number": invoice.InvoiceNumber,
+				"invoice_type":   invoice.InvoiceType,
+				"currency":       invoice.Currency,
+				"amount":         invoice.Amount,
+				"total_amount":   invoice.TotalAmount,
+				"status":         invoice.Status,
+			},
+		)
+		if err := is.publisher.Publish(ctx, event); err != nil {
+			is.logger.Error("Failed to publish invoice created event",
+				logger.ErrorField(err),
+				logger.Uint("invoice_id", invoice.ID))
+		}
+	}
 
 	return invoice, nil
 }
@@ -279,6 +306,10 @@ func (is *InvoiceService) GetInvoices(ctx context.Context, req *dto.GetInvoicesR
 	// Apply filters
 	if req.UserID != 0 {
 		query = query.Where("user_id = ?", req.UserID)
+	}
+
+	if req.SubscriptionOrderID != 0 {
+		query = query.Where("subscription_order_id = ?", req.SubscriptionOrderID)
 	}
 
 	if req.Status != "" {
@@ -462,6 +493,27 @@ func (is *InvoiceService) SendInvoice(ctx context.Context, invoiceID uint, email
 		logger.String("invoice_number", invoice.InvoiceNumber),
 		logger.String("billing_email", invoice.BillingEmail))
 
+	// Publish invoice sent event
+	if is.publisher != nil {
+		event := events.NewInvoiceEvent(
+			events.EventTypeInvoiceSent,
+			invoice.ID,
+			invoice.SubscriptionOrderID,
+			invoice.UserID,
+			invoice.TotalAmount,
+			map[string]any{
+				"invoice_number": invoice.InvoiceNumber,
+				"billing_email":  invoice.BillingEmail,
+				"sent_to":        emailRequest.ToEmail,
+			},
+		)
+		if err := is.publisher.Publish(ctx, event); err != nil {
+			is.logger.Error("Failed to publish invoice sent event",
+				logger.ErrorField(err),
+				logger.Uint("invoice_id", invoiceID))
+		}
+	}
+
 	return nil
 }
 
@@ -505,6 +557,28 @@ func (is *InvoiceService) MarkInvoiceAsPaid(ctx context.Context, invoiceID uint,
 		logger.Uint("invoice_id", invoiceID),
 		logger.String("invoice_number", invoice.InvoiceNumber),
 		logger.String("payment_date", paymentDate))
+
+	// Publish invoice paid event
+	if is.publisher != nil {
+		event := events.NewInvoiceEvent(
+			events.EventTypeInvoicePaid,
+			invoice.ID,
+			invoice.SubscriptionOrderID,
+			invoice.UserID,
+			invoice.TotalAmount,
+			map[string]any{
+				"invoice_number": invoice.InvoiceNumber,
+				"payment_date":   paymentDate,
+				"total_amount":   invoice.TotalAmount,
+				"currency":       invoice.Currency,
+			},
+		)
+		if err := is.publisher.Publish(ctx, event); err != nil {
+			is.logger.Error("Failed to publish invoice paid event",
+				logger.ErrorField(err),
+				logger.Uint("invoice_id", invoiceID))
+		}
+	}
 
 	return nil
 }

@@ -4254,6 +4254,94 @@ const docTemplate = `{
                 }
             }
         },
+        "/admin/orders/{order_id}/invoice": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new invoice from an existing subscription order (Admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Invoice-Management"
+                ],
+                "summary": "Create invoice from subscription order",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription Order ID",
+                        "name": "order_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Invoice creation options",
+                        "name": "options",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateInvoiceFromOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.InvoiceResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/response.ConflictResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/admin/payment/configs": {
             "get": {
                 "security": [
@@ -13767,6 +13855,162 @@ const docTemplate = `{
                 }
             }
         },
+        "/orders/create": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new subscription order with invoice and payment record",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Create order with complete invoice and payment flow",
+                "parameters": [
+                    {
+                        "description": "Order creation request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/orders/pay": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a payment record for an existing subscription order",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Create payment for existing order",
+                "parameters": [
+                    {
+                        "description": "Payment creation request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.PayOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/orders/{id}": {
             "get": {
                 "security": [
@@ -13808,6 +14052,83 @@ const docTemplate = `{
                                         "data": {
                                             "$ref": "#/definitions/entities.SubscriptionOrderResponse"
                                         }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/orders/{id}/invoice": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Generate an invoice for an existing subscription order",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Generate invoice for existing order",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Subscription order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.StandardResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {}
                                     }
                                 }
                             ]
@@ -14928,87 +15249,6 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/purchase": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Create a payment directly for subscription without creating order/invoice first. Supports multiple payment gateways (epay with Alipay/WeChat/QQPay). Includes coupon validation, price protection, and automatic service activation after successful payment. Order and invoice are created asynchronously after payment success.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User-Subscription"
-                ],
-                "summary": "[User] Quick purchase subscription",
-                "parameters": [
-                    {
-                        "description": "Quick purchase data with gateway, method, plan_id, and optional coupon_code",
-                        "name": "purchase",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.QuickPurchaseRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Returns payment URL, QR code, expiration time, and discount info",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.StandardResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/interfaces.QuickPurchaseResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request data, unsupported payment method, or invalid amount",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Authentication required",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Insufficient permissions - users can only create purchases for themselves",
-                        "schema": {
-                            "$ref": "#/definitions/response.ForbiddenResponse"
-                        }
-                    },
-                    "422": {
-                        "description": "Coupon validation failed or discount exceeds limits",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Payment gateway error or internal service failure",
                         "schema": {
                             "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
@@ -19849,7 +20089,7 @@ const docTemplate = `{
                 },
                 "currency": {
                     "type": "string",
-                    "example": "USD"
+                    "example": "CNY"
                 },
                 "description": {
                     "type": "string",
@@ -20211,7 +20451,7 @@ const docTemplate = `{
                 "currency": {
                     "description": "Currency",
                     "type": "string",
-                    "example": "USD"
+                    "example": "CNY"
                 },
                 "description": {
                     "description": "Description",
@@ -20309,7 +20549,7 @@ const docTemplate = `{
                 "currency": {
                     "description": "Currency",
                     "type": "string",
-                    "example": "USD"
+                    "example": "CNY"
                 },
                 "discount_amount": {
                     "description": "Discount amount",
@@ -20380,7 +20620,7 @@ const docTemplate = `{
                 },
                 "currency": {
                     "type": "string",
-                    "example": "USD"
+                    "example": "CNY"
                 },
                 "description": {
                     "type": "string",
@@ -20432,6 +20672,94 @@ const docTemplate = `{
                     "type": "number",
                     "minimum": 0,
                     "example": 20
+                }
+            }
+        },
+        "dto.CreateInvoiceFromOrderRequest": {
+            "type": "object",
+            "properties": {
+                "auto_send": {
+                    "description": "Auto-send flag",
+                    "type": "boolean",
+                    "example": false
+                },
+                "due_date": {
+                    "description": "Due date (optional)",
+                    "type": "string",
+                    "example": "2024-01-31"
+                },
+                "language": {
+                    "type": "string",
+                    "example": "en"
+                },
+                "notes": {
+                    "description": "Additional notes (optional)",
+                    "type": "string",
+                    "example": "Thank you for your subscription"
+                },
+                "template": {
+                    "description": "Template and language options",
+                    "type": "string",
+                    "example": "default"
+                }
+            }
+        },
+        "dto.CreateOrderRequest": {
+            "type": "object",
+            "required": [
+                "order_type",
+                "payment_gateway",
+                "payment_method",
+                "subscription_plan_id",
+                "user_id"
+            ],
+            "properties": {
+                "coupon_code": {
+                    "type": "string",
+                    "example": "SAVE20"
+                },
+                "metadata": {
+                    "type": "string"
+                },
+                "order_type": {
+                    "type": "string",
+                    "enum": [
+                        "new",
+                        "renewal",
+                        "upgrade",
+                        "downgrade"
+                    ],
+                    "example": "new"
+                },
+                "payment_gateway": {
+                    "type": "string",
+                    "example": "epay"
+                },
+                "payment_method": {
+                    "type": "string",
+                    "example": "alipay"
+                },
+                "payment_method_id": {
+                    "description": "Optional: Use saved payment method",
+                    "type": "integer",
+                    "example": 1
+                },
+                "return_url": {
+                    "type": "string",
+                    "example": "https://example.com/payment/return"
+                },
+                "subscription_plan_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "use_default_payment": {
+                    "description": "Use user's default payment method",
+                    "type": "boolean",
+                    "example": false
+                },
+                "user_id": {
+                    "type": "integer",
+                    "example": 1
                 }
             }
         },
@@ -20696,7 +21024,7 @@ const docTemplate = `{
                 },
                 "reward_currency": {
                     "type": "string",
-                    "example": "USD"
+                    "example": "CNY"
                 },
                 "start_date": {
                     "type": "string",
@@ -20998,7 +21326,7 @@ const docTemplate = `{
                 },
                 "referral_reward_currency": {
                     "type": "string",
-                    "example": "USD"
+                    "example": "CNY"
                 },
                 "status": {
                     "type": "string",
@@ -21073,7 +21401,7 @@ const docTemplate = `{
                 },
                 "currency": {
                     "type": "string",
-                    "example": "USD"
+                    "example": "CNY"
                 },
                 "days_overdue": {
                     "type": "integer"
@@ -21281,6 +21609,49 @@ const docTemplate = `{
                 "tags": {
                     "type": "string",
                     "example": "premium,fast"
+                }
+            }
+        },
+        "dto.PayOrderRequest": {
+            "type": "object",
+            "required": [
+                "order_id",
+                "payment_gateway",
+                "payment_method"
+            ],
+            "properties": {
+                "client_ip": {
+                    "type": "string",
+                    "example": "192.168.1.1"
+                },
+                "metadata": {
+                    "type": "string"
+                },
+                "order_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "payment_gateway": {
+                    "type": "string",
+                    "example": "epay"
+                },
+                "payment_method": {
+                    "type": "string",
+                    "example": "alipay"
+                },
+                "payment_method_id": {
+                    "description": "Optional: Use saved payment method",
+                    "type": "integer",
+                    "example": 1
+                },
+                "return_url": {
+                    "type": "string",
+                    "example": "https://example.com/payment/return"
+                },
+                "use_default_payment": {
+                    "description": "Use user's default payment method",
+                    "type": "boolean",
+                    "example": false
                 }
             }
         },
@@ -21814,7 +22185,7 @@ const docTemplate = `{
                 },
                 "referee_reward_currency": {
                     "type": "string",
-                    "example": "USD"
+                    "example": "CNY"
                 },
                 "referee_reward_type": {
                     "type": "string",
@@ -21836,7 +22207,7 @@ const docTemplate = `{
                 },
                 "referrer_reward_currency": {
                     "type": "string",
-                    "example": "USD"
+                    "example": "CNY"
                 },
                 "referrer_reward_type": {
                     "type": "string",
@@ -21893,7 +22264,7 @@ const docTemplate = `{
                 },
                 "event_currency": {
                     "type": "string",
-                    "example": "USD"
+                    "example": "CNY"
                 },
                 "event_data": {
                     "type": "string",
@@ -22090,7 +22461,7 @@ const docTemplate = `{
                 },
                 "reward_currency": {
                     "type": "string",
-                    "example": "USD"
+                    "example": "CNY"
                 },
                 "reward_status": {
                     "type": "string",
@@ -22220,7 +22591,7 @@ const docTemplate = `{
                 },
                 "reward_currency": {
                     "type": "string",
-                    "example": "USD"
+                    "example": "CNY"
                 },
                 "reward_description": {
                     "type": "string",
@@ -22289,7 +22660,7 @@ const docTemplate = `{
                 },
                 "currency": {
                     "type": "string",
-                    "example": "USD"
+                    "example": "CNY"
                 },
                 "id": {
                     "type": "integer",
@@ -22868,7 +23239,7 @@ const docTemplate = `{
                 },
                 "currency": {
                     "type": "string",
-                    "example": "USD"
+                    "example": "CNY"
                 },
                 "order_amount": {
                     "type": "number",
@@ -23328,7 +23699,7 @@ const docTemplate = `{
                 "currency": {
                     "description": "Currency",
                     "type": "string",
-                    "example": "USD"
+                    "example": "CNY"
                 },
                 "discount_amount": {
                     "description": "Discount amount",
@@ -23507,7 +23878,7 @@ const docTemplate = `{
                 "currency": {
                     "description": "Currency",
                     "type": "string",
-                    "example": "USD"
+                    "example": "CNY"
                 },
                 "default_server_group_id": {
                     "description": "Server Group Configuration (Single group per plan)",
@@ -24266,7 +24637,7 @@ const docTemplate = `{
                 "currency": {
                     "description": "Currency",
                     "type": "string",
-                    "example": "USD"
+                    "example": "CNY"
                 },
                 "current_period_end": {
                     "description": "Current period end",
@@ -24527,7 +24898,7 @@ const docTemplate = `{
                 },
                 "currency": {
                     "type": "string",
-                    "example": "USD"
+                    "example": "CNY"
                 },
                 "description": {
                     "type": "string",
@@ -25079,7 +25450,7 @@ const docTemplate = `{
                 },
                 "currency": {
                     "type": "string",
-                    "example": "USD"
+                    "example": "CNY"
                 },
                 "default_server_group_ids": {
                     "description": "Server Group Configuration (Required)",
@@ -26218,98 +26589,6 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 255,
                     "example": "User requested pause"
-                }
-            }
-        },
-        "interfaces.QuickPurchaseDiscountInfo": {
-            "type": "object",
-            "properties": {
-                "coupon_code": {
-                    "type": "string"
-                },
-                "discount_amount": {
-                    "type": "number"
-                },
-                "final_amount": {
-                    "type": "number"
-                },
-                "original_amount": {
-                    "type": "number"
-                }
-            }
-        },
-        "interfaces.QuickPurchaseRequest": {
-            "type": "object",
-            "required": [
-                "payment_gateway",
-                "payment_method",
-                "plan_id",
-                "user_id"
-            ],
-            "properties": {
-                "client_ip": {
-                    "type": "string",
-                    "example": "192.168.1.1"
-                },
-                "coupon_code": {
-                    "type": "string",
-                    "example": "SAVE20"
-                },
-                "metadata": {
-                    "type": "string"
-                },
-                "payment_gateway": {
-                    "type": "string",
-                    "example": "epay"
-                },
-                "payment_method": {
-                    "type": "string",
-                    "example": "alipay"
-                },
-                "payment_method_id": {
-                    "description": "Optional: Use saved payment method",
-                    "type": "integer",
-                    "example": 1
-                },
-                "plan_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "return_url": {
-                    "type": "string",
-                    "example": "https://example.com/payment/return"
-                },
-                "use_default_payment": {
-                    "description": "Use user's default payment method",
-                    "type": "boolean",
-                    "example": false
-                },
-                "user_id": {
-                    "type": "integer",
-                    "example": 1
-                }
-            }
-        },
-        "interfaces.QuickPurchaseResponse": {
-            "type": "object",
-            "properties": {
-                "discount_info": {
-                    "$ref": "#/definitions/interfaces.QuickPurchaseDiscountInfo"
-                },
-                "expired_at": {
-                    "type": "string"
-                },
-                "payment_record": {
-                    "type": "object"
-                },
-                "payment_url": {
-                    "type": "string"
-                },
-                "plan_info": {
-                    "$ref": "#/definitions/entities.SubscriptionPlanResponse"
-                },
-                "qr_code_url": {
-                    "type": "string"
                 }
             }
         },

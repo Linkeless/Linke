@@ -13,6 +13,7 @@ import (
 	"linke/internal/domains/subscription/usecases/implementations"
 	"linke/internal/domains/subscription/usecases/interfaces"
 	"linke/internal/shared/cache"
+	"linke/internal/shared/events"
 	"linke/internal/shared/notification"
 )
 
@@ -53,6 +54,7 @@ func NewSubscriptionOrderServiceWithInvoice(
 	paymentMethodService paymentInterfaces.PaymentMethodService,
 	couponService couponInterfaces.CouponService,
 	invoiceService invoiceInterfaces.InvoiceService,
+	eventPublisher events.Publisher,
 	cacheManager cache.CacheManager,
 	cacheKeys *cache.AllCacheKeys,
 ) interfaces.SubscriptionOrderService {
@@ -64,6 +66,7 @@ func NewSubscriptionOrderServiceWithInvoice(
 		paymentMethodService,
 		couponService,
 		invoiceService,
+		eventPublisher,
 		cacheManager,
 		cacheKeys,
 	)
@@ -155,7 +158,6 @@ var Module = fx.Module("subscription",
 		handlers.NewSubscriptionPlanHandler,
 		handlers.NewSubscriptionOrderHandler,
 		NewUserSubscriptionHandlerWithAuth,
-		handlers.NewQuickPurchaseHandler,
 		handlers.NewUsageAlertHandler,
 		handlers.NewUsageHandler,
 		handlers.NewAdminSubscriptionHandler,

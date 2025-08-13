@@ -56,7 +56,6 @@ func SetupRoutes(
 	subscriptionPlanHandler *subscriptionHandlers.SubscriptionPlanHandler,
 	subscriptionOrderHandler *subscriptionHandlers.SubscriptionOrderHandler,
 	userSubscriptionHandler *subscriptionHandlers.UserSubscriptionHandler,
-	quickPurchaseHandler *subscriptionHandlers.QuickPurchaseHandler,
 	usageHandler *subscriptionHandlers.UsageHandler,
 	usageAlertHandler *subscriptionHandlers.UsageAlertHandler,
 	adminSubscriptionHandler *subscriptionHandlers.AdminSubscriptionHandler,
@@ -424,6 +423,19 @@ func SetupRoutes(
 	}
 	logger.Debug("Registered admin invoice routes", zap.String("prefix", "/api/v1/admin/invoices"))
 
+	// Admin Order routes - enhanced with invoice management
+	adminOrderGroup := adminGroup.Group("/orders")
+	{
+		// Query all orders
+		adminOrderGroup.GET("", adminSubscriptionHandler.ListSubscriptionOrders)
+		adminOrderGroup.GET("/:id", adminSubscriptionHandler.GetSubscriptionOrder)
+		adminOrderGroup.POST("/:id/cancel", adminSubscriptionHandler.CancelSubscriptionOrder)
+		
+		// Create invoice from order (moved to orders/:id/generate-invoice to avoid conflict)
+		adminOrderGroup.POST("/:id/generate-invoice", adminInvoiceHandler.CreateInvoiceFromOrder)
+	}
+	logger.Debug("Registered admin order routes", zap.String("prefix", "/api/v1/admin/orders"))
+
 	// Admin ticket routes (/api/v1/admin/tickets)
 	adminTicketGroup := adminGroup.Group("/tickets")
 	{
@@ -564,13 +576,17 @@ func SetupRoutes(
 	}
 	logger.Debug("Registered admin referral routes", zap.String("prefix", "/api/v1/admin/referrals"))
 
-	// Purchase route (destructive refactor): unify user purchase to a single endpoint
-	apiV1.POST("/purchase", middleware.AuthMiddleware(newAuthServiceAdapter(authService)), quickPurchaseHandler.QuickPurchase)
 
-	// Orders routes (read-only for user)
+	// Orders routes - enhanced with new order creation flow
 	ordersGroup := apiV1.Group("/orders")
 	ordersGroup.Use(middleware.AuthMiddleware(newAuthServiceAdapter(authService)))
 	{
+		// New standardized order creation flow
+		ordersGroup.POST("/create", subscriptionOrderHandler.CreateOrderWithInvoice)
+		ordersGroup.POST("/pay", subscriptionOrderHandler.CreatePaymentForOrder)
+		ordersGroup.POST("/:id/invoice", subscriptionOrderHandler.GenerateInvoiceForOrder)
+		
+		// Query and management endpoints
 		ordersGroup.GET("", subscriptionOrderHandler.GetMySubscriptionOrders)
 		ordersGroup.GET("/:id", subscriptionOrderHandler.GetSubscriptionOrder)
 		ordersGroup.GET("/:id/summary", subscriptionOrderHandler.GetSubscriptionOrderSummary)
@@ -755,9 +771,13 @@ func SetupRoutes(
 		"/api/v1/payment-methods/*/validate",
 		"/api/v1/payment/orders",
 		"/api/v1/subscriptions/my",
-		"/api/v1/purchase",
 		"/api/v1/orders",
+		"/api/v1/orders/create",
+		"/api/v1/orders/pay",
+		"/api/v1/orders/*/invoice",
 		"/api/v1/orders/*/summary",
+		"/api/v1/admin/orders",
+		"/api/v1/admin/orders/*/generate-invoice",
 		"/api/v1/usage/current/*",
 		"/api/v1/usage-alerts",
 		"/api/v1/auth/providers",

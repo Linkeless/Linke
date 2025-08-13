@@ -161,6 +161,76 @@ type RegeneratePDFRequest struct {
 
 // INVOICE MANAGEMENT
 
+// CreateInvoiceFromOrder godoc
+// @Summary Create invoice from subscription order
+// @Description Create a new invoice from an existing subscription order (Admin only)
+// @Tags Admin-Invoice-Management
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param order_id path uint true "Subscription Order ID"
+// @Param options body dto.CreateInvoiceFromOrderRequest true "Invoice creation options"
+// @Success 201 {object} response.StandardResponse{data=dto.InvoiceResponse}
+// @Failure 400 {object} response.BadRequestResponse
+// @Failure 401 {object} response.UnauthorizedResponse
+// @Failure 403 {object} response.ForbiddenResponse
+// @Failure 409 {object} response.ConflictResponse
+// @Failure 500 {object} response.InternalServerErrorResponse
+// @Router /admin/orders/{order_id}/invoice [post]
+func (h *AdminInvoiceHandler) CreateInvoiceFromOrder(c *gin.Context) {
+	orderIDStr := c.Param("order_id")
+	orderID, err := strconv.ParseUint(orderIDStr, 10, 32)
+	if err != nil {
+		response.BadRequest(c, "Invalid order ID")
+		return
+	}
+
+	var req dto.CreateInvoiceFromOrderRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	// TODO: Get order details from subscription service
+	// For now, we'll create invoice with minimal required info
+	options := &dto.CreateInvoiceRequest{
+		UserID:              1, // TODO: Get from order
+		SubscriptionOrderID: uint(orderID),
+		Amount:              0, // TODO: Get from order
+		Currency:            "CNY",
+		BillingName:         "From Order", // TODO: Get from order
+		BillingEmail:        "order@example.com", // TODO: Get from order
+		Template:            req.Template,
+		Language:            req.Language,
+		DueDate:             req.DueDate,
+		Notes:               req.Notes,
+		AutoSend:            req.AutoSend,
+	}
+
+	invoice, err := h.invoiceService.CreateInvoiceFromOrder(c.Request.Context(), uint(orderID), options)
+	if err != nil {
+		logger.Error("Admin failed to create invoice from order",
+			logger.Uint("order_id", uint(orderID)),
+			logger.ErrorField(err))
+
+		if strings.Contains(err.Error(), "already exists") {
+			response.Conflict(c, "Invoice already exists for this order")
+			return
+		}
+
+		response.InternalServerError(c, "Failed to create invoice from order")
+		return
+	}
+
+	logger.Info("Admin created invoice from order",
+		logger.Uint("invoice_id", invoice.ID),
+		logger.String("invoice_number", invoice.InvoiceNumber),
+		logger.Uint("order_id", uint(orderID)),
+		logger.String("admin_action", "create_invoice_from_order"))
+
+	response.Created(c, dto.ToResponse(invoice))
+}
+
 // CreateInvoice godoc
 // @Summary Create invoice
 // @Description Create a new invoice (Admin only)

@@ -163,6 +163,15 @@ func (pgs *PDFGeneratorService) generateDefaultTemplate(pdf *gofpdf.Fpdf, invoic
 		invoice.InvoiceNumber))
 	pdf.Ln(8)
 
+	// Order information
+	if invoice.SubscriptionOrderID > 0 {
+		pdf.SetFont("Arial", "", 10)
+		pdf.Cell(0, 6, fmt.Sprintf("%s: #%d",
+			pgs.getLocalizedText("Order Reference", options.Language),
+			invoice.SubscriptionOrderID))
+		pdf.Ln(6)
+	}
+
 	pdf.SetFont("Arial", "", 10)
 	pdf.Cell(0, 6, fmt.Sprintf("%s: %s",
 		pgs.getLocalizedText("Date", options.Language),
@@ -306,6 +315,12 @@ func (pgs *PDFGeneratorService) generateMinimalTemplate(pdf *gofpdf.Fpdf, invoic
 	pdf.SetFont("Arial", "", 9)
 	pdf.Cell(0, 5, fmt.Sprintf("Date: %s", invoice.IssuedAt.Format("2006-01-02")))
 	pdf.Ln(5)
+
+	// Add order reference if available
+	if invoice.SubscriptionOrderID > 0 {
+		pdf.Cell(0, 5, fmt.Sprintf("Order: #%d", invoice.SubscriptionOrderID))
+		pdf.Ln(5)
+	}
 
 	if invoice.DueAt != nil {
 		pdf.Cell(0, 5, fmt.Sprintf("Due: %s", invoice.DueAt.Format("2006-01-02")))
@@ -552,6 +567,13 @@ func (pgs *PDFGeneratorService) addInvoiceDetailsProfessional(pdf *gofpdf.Fpdf, 
 	pdf.Cell(0, 6, fmt.Sprintf("%s: %s", pgs.getLocalizedText("Invoice", language), invoice.InvoiceNumber))
 	pdf.Ln(6)
 
+	// Add order reference if available
+	if invoice.SubscriptionOrderID > 0 {
+		pdf.SetFont("Arial", "", 9)
+		pdf.Cell(0, 4, fmt.Sprintf("%s: #%d", pgs.getLocalizedText("Order Reference", language), invoice.SubscriptionOrderID))
+		pdf.Ln(4)
+	}
+
 	pdf.SetFont("Arial", "", 9)
 	pdf.Cell(0, 4, fmt.Sprintf("%s: %s", pgs.getLocalizedText("Date", language), invoice.IssuedAt.Format("2006-01-02")))
 	pdf.Ln(4)
@@ -661,6 +683,7 @@ func (pgs *PDFGeneratorService) getLocalizedText(key, language string) string {
 			"INVOICE":                      "INVOICE",
 			"Invoice Number":               "Invoice Number",
 			"Invoice":                      "Invoice",
+			"Order Reference":              "Order Reference",
 			"Date":                         "Date",
 			"Due Date":                     "Due Date",
 			"Status":                       "Status",
@@ -686,6 +709,7 @@ func (pgs *PDFGeneratorService) getLocalizedText(key, language string) string {
 			"INVOICE":                      "发票",
 			"Invoice Number":               "发票号码",
 			"Invoice":                      "发票",
+			"Order Reference":              "订单编号",
 			"Date":                         "日期",
 			"Due Date":                     "到期日期",
 			"Status":                       "状态",

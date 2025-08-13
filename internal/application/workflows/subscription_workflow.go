@@ -11,6 +11,7 @@ import (
 	couponInterfaces "linke/internal/domains/coupon/usecases/interfaces"
 	invoiceInterfaces "linke/internal/domains/invoice/usecases/interfaces"
 	paymentInterfaces "linke/internal/domains/payment/usecases/interfaces"
+	subscriptionDto "linke/internal/domains/subscription/dto"
 	subscriptionInterfaces "linke/internal/domains/subscription/usecases/interfaces"
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/shared/database"
@@ -158,7 +159,7 @@ func (w *SubscriptionWorkflow) PurchaseSubscription(ctx context.Context, req *Pu
 	// 2. 创建订阅订单
 	workflowLogger.Info("Creating subscription order")
 
-	createOrderReq := &subscriptionInterfaces.CreateSubscriptionOrderRequest{
+	createOrderReq := &subscriptionDto.CreateSubscriptionOrderRequest{
 		UserID:             req.UserID,
 		SubscriptionPlanID: req.SubscriptionPlanID,
 		OrderType:          req.OrderType,
@@ -548,7 +549,7 @@ func (w *SubscriptionWorkflow) HandleSubscriptionRenewal(ctx context.Context, su
 	paymentGateway := "epay"  // 默认支付网关
 	paymentMethod := "alipay" // 默认支付方式
 
-	createOrderReq := &subscriptionInterfaces.CreateSubscriptionOrderRequest{
+	createOrderReq := &subscriptionDto.CreateSubscriptionOrderRequest{
 		UserID:             userSubscription.UserID,
 		SubscriptionPlanID: userSubscription.SubscriptionPlanID,
 		OrderType:          "renewal",

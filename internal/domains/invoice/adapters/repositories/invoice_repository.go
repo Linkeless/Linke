@@ -39,6 +39,42 @@ func (r *invoiceRepository) GetByInvoiceNumber(ctx context.Context, invoiceNumbe
 	return &invoice, nil
 }
 
+// GetBySubscriptionOrderID retrieves an invoice by subscription order ID
+func (r *invoiceRepository) GetBySubscriptionOrderID(ctx context.Context, orderID uint) (*entities.Invoice, error) {
+	var invoice entities.Invoice
+	if err := r.GetDB().WithContext(ctx).Where("subscription_order_id = ?", orderID).First(&invoice).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("invoice for order %d not found", orderID)
+		}
+		return nil, fmt.Errorf("failed to get invoice by order ID: %w", err)
+	}
+	return &invoice, nil
+}
+
+// ListBySubscriptionOrderIDs retrieves invoices by subscription order IDs
+func (r *invoiceRepository) ListBySubscriptionOrderIDs(ctx context.Context, orderIDs []uint, limit, offset int) ([]*entities.Invoice, int64, error) {
+	var invoices []*entities.Invoice
+	var total int64
+
+	// Count total records
+	if err := r.GetDB().WithContext(ctx).Model(&entities.Invoice{}).
+		Where("subscription_order_id IN ?", orderIDs).
+		Count(&total).Error; err != nil {
+		return nil, 0, fmt.Errorf("failed to count invoices by order IDs: %w", err)
+	}
+
+	// Get paginated results
+	if err := r.GetDB().WithContext(ctx).
+		Where("subscription_order_id IN ?", orderIDs).
+		Order("created_at DESC").
+		Limit(limit).Offset(offset).
+		Find(&invoices).Error; err != nil {
+		return nil, 0, fmt.Errorf("failed to list invoices by order IDs: %w", err)
+	}
+
+	return invoices, total, nil
+}
+
 // GetUserInvoiceHistory retrieves invoice history for a user
 func (r *invoiceRepository) GetUserInvoiceHistory(ctx context.Context, userID uint, limit, offset int) ([]*entities.Invoice, int64, error) {
 	return r.ListByUser(ctx, userID, limit, offset)

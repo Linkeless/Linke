@@ -81,7 +81,7 @@ func (h *PaymentConfigHandler) CreatePaymentConfig(c *gin.Context) {
 		return
 	}
 
-	response.CreatedWithMessage(c, "Payment config created successfully", dto.ToPaymentConfigResponse(config))
+	response.CreatedWithMessage(c, "Payment config created successfully", dto.ToPaymentConfigResponseWithFullKey(config))
 }
 
 // GetPaymentConfigs godoc
@@ -136,10 +136,10 @@ func (h *PaymentConfigHandler) GetPaymentConfigs(c *gin.Context) {
 		return
 	}
 
-	// Convert to response format
+	// Convert to response format with full key for admin
 	var configResponses []*dto.PaymentConfigResponse
 	for _, config := range configs {
-		configResponses = append(configResponses, dto.ToPaymentConfigResponse(config))
+		configResponses = append(configResponses, dto.ToPaymentConfigResponseWithFullKey(config))
 	}
 
 	response.OKPaginated(c, "Payment configs retrieved successfully", configResponses, totalCount, req.Limit, req.Offset)
@@ -226,7 +226,7 @@ func (h *PaymentConfigHandler) UpdatePaymentConfig(c *gin.Context) {
 		return
 	}
 
-	response.OK(c, "Payment config updated successfully", dto.ToPaymentConfigResponse(config))
+	response.OK(c, "Payment config updated successfully", dto.ToPaymentConfigResponseWithFullKey(config))
 }
 
 // DeletePaymentConfig godoc
