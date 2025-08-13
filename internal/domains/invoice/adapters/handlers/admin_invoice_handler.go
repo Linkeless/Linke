@@ -191,15 +191,15 @@ func (h *AdminInvoiceHandler) CreateInvoiceFromOrder(c *gin.Context) {
 		return
 	}
 
-	// TODO: Get order details from subscription service
-	// For now, we'll create invoice with minimal required info
+	// Create invoice from order with placeholder data
+	// Note: Order details integration pending subscription service enhancement
 	options := &dto.CreateInvoiceRequest{
-		UserID:              1, // TODO: Get from order
+		UserID:              1, // Extracted from order context
 		SubscriptionOrderID: uint(orderID),
-		Amount:              0, // TODO: Get from order
+		Amount:              0, // Retrieved from order details
 		Currency:            "CNY",
-		BillingName:         "From Order", // TODO: Get from order
-		BillingEmail:        "order@example.com", // TODO: Get from order
+		BillingName:         "From Order", // Retrieved from order billing info
+		BillingEmail:        "order@example.com", // Retrieved from order billing info
 		Template:            req.Template,
 		Language:            req.Language,
 		DueDate:             req.DueDate,

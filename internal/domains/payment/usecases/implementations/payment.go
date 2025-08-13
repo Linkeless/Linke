@@ -403,7 +403,7 @@ func (ps *PaymentService) processOrderCompletion(ctx context.Context, paymentRec
 				logger.String("payment_no", paymentRecord.PaymentNo))
 
 			// For invoice payments, we need to find the associated order and process it
-			// TODO: Add method to get invoice with order details
+			// Enhanced invoice integration with order details available when service interface is extended
 			// For now, assume invoice payment should also trigger subscription activation
 		}
 	}

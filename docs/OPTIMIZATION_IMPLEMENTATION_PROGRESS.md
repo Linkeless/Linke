@@ -6,7 +6,7 @@
 ## 实施进度总览
 
 ### ✅ 第一阶段（已完成）
-- [x] 快捷购买流程
+- [x] ~~快捷购买流程~~ [已弃用，使用标准订单流程]
 - [x] 订阅暂停功能  
 - [x] 支付失败智能重试策略
 
@@ -25,21 +25,19 @@
 
 ## 详细实施内容
 
-### 1. 快捷购买功能（Quick Purchase）
+### 1. ~~快捷购买功能（Quick Purchase）~~ [已弃用]
 **实施时间**: 第一阶段
-**状态**: ✅ 已完成
+**状态**: ❌ 已弃用，使用标准订单流程
 
-**主要功能**:
-- 一步完成订阅购买，减少API调用次数
-- 支持优惠券自动应用
-- 异步处理订单和发票创建
-- 完整的单元测试覆盖
+**弃用原因**:
+- 违反业务最佳实践
+- 增加系统复杂性
+- 不符合订单-发票-支付的标准流程
 
-**文件变更**:
-- 新增: `handlers/quick_purchase_handler.go`
-- 新增: `handlers/quick_purchase_handler_test.go`
-- 修改: `usecases/interfaces/subscription_order_service.go`
-- 修改: `usecases/implementations/subscription_order.go`
+**替代方案**:
+- 使用标准订单创建流程: `POST /api/v1/orders/create`
+- 使用标准支付流程: `POST /api/v1/orders/pay`
+- 保持审计追踪和业务一致性
 
 ### 2. 订阅暂停/恢复功能（Pause/Resume）
 **实施时间**: 第一阶段

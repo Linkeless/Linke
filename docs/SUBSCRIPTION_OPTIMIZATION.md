@@ -51,7 +51,7 @@
 #### 1.1 简化订阅购买流程
 **问题**：当前流程需要创建订单→发票→支付，步骤过多
 **建议**：
-- 引入快捷购买模式，直接创建支付，成功后自动创建订单和发票
+- ~~引入快捷购买模式，直接创建支付，成功后自动创建订单和发票~~ [已弃用，使用标准订单流程]
 - 保留完整流程用于企业客户需要先开发票的场景
 
 #### 1.2 智能定价和促销
@@ -151,25 +151,13 @@
 
 ## 优化方案详情
 
-### 1. 快捷购买流程实现
+### 1. ~~快捷购买流程实现~~ [已弃用]
 
-```go
-// 新增快捷购买接口
-type QuickPurchaseRequest struct {
-    UserID        uint   `json:"user_id"`
-    PlanID        uint   `json:"plan_id"`
-    PaymentMethod string `json:"payment_method"`
-    CouponCode    string `json:"coupon_code,omitempty"`
-}
+**弃用说明**: 基于业务最佳实践，QuickPurchase功能已被弃用，系统统一使用标准的订单→发票→支付流程，确保业务审计追踪和一致性。
 
-// 快捷购买服务
-func (s *SubscriptionService) QuickPurchase(ctx context.Context, req *QuickPurchaseRequest) (*QuickPurchaseResponse, error) {
-    // 1. 验证计划可用性
-    // 2. 直接创建支付
-    // 3. 返回支付URL
-    // 4. 支付成功后异步创建订单、发票、激活服务
-}
-```
+**标准订单流程**:
+- `POST /api/v1/orders/create` - 创建订单
+- `POST /api/v1/orders/pay` - 处理支付
 
 ### 2. 订阅暂停功能
 
@@ -238,7 +226,7 @@ func (s *PaymentService) SmartRetry(payment *PaymentRecord) error {
 ## 实施建议
 
 ### 第一阶段（1-2个月）
-1. **快捷购买流程** - 提升用户体验，减少购买摩擦
+1. ~~**快捷购买流程** - 提升用户体验，减少购买摩擦~~ [已弃用，使用标准订单流程]
 2. **订阅暂停功能** - 增加用户留存
 3. **支付重试优化** - 提高支付成功率
 
