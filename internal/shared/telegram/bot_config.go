@@ -8,7 +8,7 @@ import (
 
 // SetMyDescriptionConfig represents a setMyDescription request
 type SetMyDescriptionConfig struct {
-	Description   string `json:"description,omitempty"`
+	Description  string `json:"description,omitempty"`
 	LanguageCode string `json:"language_code,omitempty"`
 }
 
@@ -32,7 +32,7 @@ func (config SetMyDescriptionConfig) params() (tgbotapi.Params, error) {
 // NewSetMyDescription creates a new setMyDescription request
 func NewSetMyDescription(description, languageCode string) SetMyDescriptionConfig {
 	return SetMyDescriptionConfig{
-		Description:   description,
+		Description:  description,
 		LanguageCode: languageCode,
 	}
 }
@@ -40,7 +40,7 @@ func NewSetMyDescription(description, languageCode string) SetMyDescriptionConfi
 // SetMyShortDescriptionConfig represents a setMyShortDescription request
 type SetMyShortDescriptionConfig struct {
 	ShortDescription string `json:"short_description,omitempty"`
-	LanguageCode    string `json:"language_code,omitempty"`
+	LanguageCode     string `json:"language_code,omitempty"`
 }
 
 // method returns the API method name (required by Chattable interface)
@@ -64,7 +64,7 @@ func (config SetMyShortDescriptionConfig) params() (tgbotapi.Params, error) {
 func NewSetMyShortDescription(shortDescription, languageCode string) SetMyShortDescriptionConfig {
 	return SetMyShortDescriptionConfig{
 		ShortDescription: shortDescription,
-		LanguageCode:    languageCode,
+		LanguageCode:     languageCode,
 	}
 }
 

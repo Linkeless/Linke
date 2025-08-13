@@ -48,7 +48,7 @@ func CORS() gin.HandlerFunc {
 func CORSWithConfig(config *CORSConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
-		
+
 		// Check if origin is allowed
 		allowedOrigin := "*"
 		if len(config.AllowOrigins) > 0 {
@@ -68,11 +68,11 @@ func CORSWithConfig(config *CORSConfig) gin.HandlerFunc {
 		c.Header("Access-Control-Allow-Origin", allowedOrigin)
 		c.Header("Access-Control-Allow-Methods", strings.Join(config.AllowMethods, ", "))
 		c.Header("Access-Control-Allow-Headers", strings.Join(config.AllowHeaders, ", "))
-		
+
 		if config.AllowCredentials {
 			c.Header("Access-Control-Allow-Credentials", "true")
 		}
-		
+
 		if config.MaxAge > 0 {
 			c.Header("Access-Control-Max-Age", fmt.Sprintf("%d", config.MaxAge))
 		}
@@ -90,7 +90,7 @@ func CORSWithConfig(config *CORSConfig) gin.HandlerFunc {
 // CORSFromConfig creates CORS middleware from application config
 func CORSFromConfig(cfg *config.Config) gin.HandlerFunc {
 	corsConfig := DefaultCORSConfig()
-	
+
 	// Allow localhost origins for development
 	// Include localhost origins regardless of log level for local development
 	corsConfig.AllowOrigins = []string{
@@ -104,7 +104,7 @@ func CORSFromConfig(cfg *config.Config) gin.HandlerFunc {
 		"https://localhost:8080",
 		"https://localhost:3001",
 	}
-	
+
 	// In production deployment, add production domains
 	if cfg.Log.Level != "debug" {
 		// Add production domains while keeping localhost for development
@@ -113,6 +113,6 @@ func CORSFromConfig(cfg *config.Config) gin.HandlerFunc {
 			"https://www.your-frontend-domain.com",
 		}...)
 	}
-	
+
 	return CORSWithConfig(corsConfig)
 }

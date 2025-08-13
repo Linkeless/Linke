@@ -71,7 +71,6 @@ func (ReferralReward) TableName() string {
 	return "referral_rewards"
 }
 
-
 // IsActive checks if the reward is in an active state
 func (rr *ReferralReward) IsActive() bool {
 	activeStatuses := map[string]bool{
@@ -107,7 +106,6 @@ func (rr *ReferralReward) CanBePaid() bool {
 func (rr *ReferralReward) IsPaymentCompleted() bool {
 	return rr.Status == constants.RewardStatusPaid && rr.PaidAt != nil
 }
-
 
 // ToResponse should be implemented in service layer to avoid import cycles
 // Use dto.ToReferralRewardResponse(rr) instead

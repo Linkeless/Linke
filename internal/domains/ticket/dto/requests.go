@@ -191,11 +191,11 @@ type AgentInfo struct {
 	UserID            uint     `json:"user_id"`
 	Name              string   `json:"name"`
 	Email             string   `json:"email"`
-	Specialties       []string `json:"specialties"`       // Categories this agent specializes in
-	CurrentLoad       int      `json:"current_load"`      // Number of currently assigned tickets
-	MaxLoad           int      `json:"max_load"`          // Maximum tickets this agent can handle
+	Specialties       []string `json:"specialties"`  // Categories this agent specializes in
+	CurrentLoad       int      `json:"current_load"` // Number of currently assigned tickets
+	MaxLoad           int      `json:"max_load"`     // Maximum tickets this agent can handle
 	IsOnline          bool     `json:"is_online"`
 	LastActiveAt      string   `json:"last_active_at,omitempty"`
-	AvgResponseTime   int      `json:"avg_response_time"`   // In minutes
+	AvgResponseTime   int      `json:"avg_response_time"`  // In minutes
 	SatisfactionScore float64  `json:"satisfaction_score"` // 0-10 scale
 }

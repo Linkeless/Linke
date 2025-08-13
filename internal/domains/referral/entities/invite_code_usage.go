@@ -36,6 +36,5 @@ func (InviteCodeUsage) TableName() string {
 	return "invite_code_usages"
 }
 
-
 // ToResponse should be implemented in service layer to avoid import cycles
 // Use dto.ToInviteCodeUsageResponse(icu) instead

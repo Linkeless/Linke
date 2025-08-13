@@ -17,12 +17,12 @@ type TaskQueue struct {
 }
 
 type Task struct {
-	ID        string                 `json:"id"`
-	Type      string                 `json:"type"`
+	ID        string         `json:"id"`
+	Type      string         `json:"type"`
 	Payload   map[string]any `json:"payload"`
-	Retry     int                    `json:"retry"`
-	MaxRetry  int                    `json:"max_retry"`
-	CreatedAt time.Time              `json:"created_at"`
+	Retry     int            `json:"retry"`
+	MaxRetry  int            `json:"max_retry"`
+	CreatedAt time.Time      `json:"created_at"`
 }
 
 // NewTask creates a new task with the given type and payload

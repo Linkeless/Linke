@@ -73,6 +73,11 @@ func (h *AdminCouponHandler) CreateCoupon(c *gin.Context) {
 		logger.Error("Admin failed to create coupon",
 			logger.String("code", createReq.Code),
 			logger.String("name", createReq.Name),
+			logger.String("type", createReq.Type),
+			logger.Float64("value", createReq.Value),
+			logger.Uint64("creator_id", creatorID),
+			logger.String("user_agent", c.Request.UserAgent()),
+			logger.String("client_ip", c.ClientIP()),
 			logger.ErrorField(err),
 		)
 
@@ -149,8 +154,8 @@ func (h *AdminCouponHandler) ListCoupons(c *gin.Context) {
 		return
 	}
 
-	// Convert to responses
-	var couponResponses []*dto.CouponResponse
+	// Convert to responses with preallocation
+	couponResponses := make([]*dto.CouponResponse, 0, len(coupons))
 	for _, coupon := range coupons {
 		couponResponses = append(couponResponses, dto.ToResponse(coupon))
 	}
@@ -469,8 +474,8 @@ func (h *AdminCouponHandler) GetCouponUsage(c *gin.Context) {
 		return
 	}
 
-	// Convert to responses
-	var usageResponses []*dto.CouponUsageResponse
+	// Convert to responses with preallocation
+	usageResponses := make([]*dto.CouponUsageResponse, 0, len(usageRecords))
 	for _, usage := range usageRecords {
 		usageResponses = append(usageResponses, dto.CouponUsageToResponse(usage))
 	}
@@ -545,8 +550,8 @@ func (h *AdminCouponHandler) SearchCoupons(c *gin.Context) {
 		return
 	}
 
-	// Filter results by search query (simple text search)
-	var filteredCoupons []*entities.Coupon
+	// Filter results by search query (simple text search) with preallocation
+	filteredCoupons := make([]*entities.Coupon, 0, len(coupons)) // Preallocate based on input size
 	query := strings.ToLower(searchReq.Query)
 	for _, coupon := range coupons {
 		if strings.Contains(strings.ToLower(coupon.Code), query) ||
@@ -556,8 +561,8 @@ func (h *AdminCouponHandler) SearchCoupons(c *gin.Context) {
 		}
 	}
 
-	// Convert to responses
-	var couponResponses []*dto.CouponResponse
+	// Convert to responses with preallocation
+	couponResponses := make([]*dto.CouponResponse, 0, len(filteredCoupons))
 	for _, coupon := range filteredCoupons {
 		couponResponses = append(couponResponses, dto.ToResponse(coupon))
 	}
@@ -653,7 +658,7 @@ func (h *AdminCouponHandler) BulkCreateCoupons(c *gin.Context) {
 
 	creatorID := uint64(1) // TODO: Get from auth context
 	createdCoupons := make([]*entities.Coupon, 0, bulkReq.Count)
-	failedCodes := make([]string, 0)
+	failedCodes := make([]string, 0, bulkReq.Count/10) // Estimate 10% failure rate
 
 	// Set defaults
 	if bulkReq.Currency == "" {
@@ -712,7 +717,7 @@ func (h *AdminCouponHandler) BulkCreateCoupons(c *gin.Context) {
 		"failed_count":    len(failedCodes),
 		"failed_codes":    failedCodes,
 		"created_coupons": func() []*dto.CouponResponse {
-			var responses []*dto.CouponResponse
+			responses := make([]*dto.CouponResponse, 0, len(createdCoupons))
 			for _, coupon := range createdCoupons {
 				responses = append(responses, dto.ToResponse(coupon))
 			}
@@ -743,7 +748,7 @@ func (h *AdminCouponHandler) BulkUpdateCoupons(c *gin.Context) {
 	}
 
 	successCount := 0
-	failedIDs := make([]uint64, 0)
+	failedIDs := make([]uint64, 0, len(bulkReq.IDs)/10) // Estimate 10% failure rate
 
 	serviceReq := &dto.UpdateCouponRequest{
 		Status: bulkReq.Status,
@@ -799,7 +804,7 @@ func (h *AdminCouponHandler) BulkDeactivateCoupons(c *gin.Context) {
 	}
 
 	successCount := 0
-	failedIDs := make([]uint64, 0)
+	failedIDs := make([]uint64, 0, len(bulkReq.IDs)/10) // Estimate 10% failure rate
 
 	for _, id := range bulkReq.IDs {
 		err := h.couponService.DeactivateCoupon(c.Request.Context(), id)

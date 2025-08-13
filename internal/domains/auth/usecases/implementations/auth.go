@@ -24,24 +24,24 @@ import (
 )
 
 type AuthService struct {
-	db                      *gorm.DB
-	userService             userInterfaces.UserService
-	userRepository          userInterfaces.UserRepository
-	userBindingService      userInterfaces.UserAccountBindingService
-	jwtService              interfaces.JWTService
-	inviteCodeService       referralInterfaces.InviteCodeService
-	loginSecurityService    interfaces.LoginSecurityService
+	db                   *gorm.DB
+	userService          userInterfaces.UserService
+	userRepository       userInterfaces.UserRepository
+	userBindingService   userInterfaces.UserAccountBindingService
+	jwtService           interfaces.JWTService
+	inviteCodeService    referralInterfaces.InviteCodeService
+	loginSecurityService interfaces.LoginSecurityService
 }
 
 func NewAuthService(db *gorm.DB, userService userInterfaces.UserService, userRepository userInterfaces.UserRepository, userBindingService userInterfaces.UserAccountBindingService, jwtService interfaces.JWTService, inviteCodeService referralInterfaces.InviteCodeService, loginSecurityService interfaces.LoginSecurityService) *AuthService {
 	return &AuthService{
-		db:                      db,
-		userService:             userService,
-		userRepository:          userRepository,
-		userBindingService:      userBindingService,
-		jwtService:              jwtService,
-		inviteCodeService:       inviteCodeService,
-		loginSecurityService:    loginSecurityService,
+		db:                   db,
+		userService:          userService,
+		userRepository:       userRepository,
+		userBindingService:   userBindingService,
+		jwtService:           jwtService,
+		inviteCodeService:    inviteCodeService,
+		loginSecurityService: loginSecurityService,
 	}
 }
 

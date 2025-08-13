@@ -87,7 +87,7 @@ type BaseListRequest struct {
 	PaginationRequest
 	StatusFilterRequest
 	UserFilterRequest
-	TimeRangeRequest  
+	TimeRangeRequest
 	SearchRequest
 	SortRequest
 }
@@ -136,11 +136,11 @@ type BatchOperationResult[ID comparable] struct {
 
 // StatsResponse represents common statistics response structure
 type StatsResponse struct {
-	TotalCount   int64                  `json:"total_count"`
-	StatusCounts map[string]int64       `json:"status_counts,omitempty"`
-	DateCounts   map[string]int64       `json:"date_counts,omitempty"`
-	CustomStats  map[string]any `json:"custom_stats,omitempty"`
-	Period       string                 `json:"period,omitempty"` // e.g., "daily", "monthly", "yearly"
+	TotalCount   int64            `json:"total_count"`
+	StatusCounts map[string]int64 `json:"status_counts,omitempty"`
+	DateCounts   map[string]int64 `json:"date_counts,omitempty"`
+	CustomStats  map[string]any   `json:"custom_stats,omitempty"`
+	Period       string           `json:"period,omitempty"` // e.g., "daily", "monthly", "yearly"
 }
 
 // CountResponse represents a simple count response
@@ -155,7 +155,7 @@ type MessageResponse struct {
 
 // StatusResponse represents a status response with optional details
 type StatusResponse struct {
-	Status  string                 `json:"status"`
+	Status  string         `json:"status"`
 	Details map[string]any `json:"details,omitempty"`
 }
 
@@ -200,21 +200,21 @@ func (tr TimeRangeRequest) ValidateTimeRange() error {
 	if tr.DateFrom == "" || tr.DateTo == "" {
 		return nil
 	}
-	
+
 	from, err := time.Parse("2006-01-02", tr.DateFrom)
 	if err != nil {
 		return err
 	}
-	
+
 	to, err := time.Parse("2006-01-02", tr.DateTo)
 	if err != nil {
 		return err
 	}
-	
+
 	if from.After(to) {
 		return fmt.Errorf("date_from must be before date_to")
 	}
-	
+
 	return nil
 }
 

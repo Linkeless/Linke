@@ -25,4 +25,3 @@ type ServerGroupService interface {
 	// Group statistics
 	GetGroupStatistics(ctx context.Context, groupID uint) (map[string]any, error)
 }
-

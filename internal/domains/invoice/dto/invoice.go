@@ -193,13 +193,13 @@ type CreateInvoiceFromOrderRequest struct {
 	// Template and language options
 	Template string `json:"template,omitempty" example:"default"`
 	Language string `json:"language,omitempty" example:"en"`
-	
+
 	// Due date (optional)
 	DueDate string `json:"due_date,omitempty" example:"2024-01-31"`
-	
+
 	// Additional notes (optional)
 	Notes string `json:"notes,omitempty" example:"Thank you for your subscription"`
-	
+
 	// Auto-send flag
 	AutoSend bool `json:"auto_send,omitempty" example:"false"`
 }

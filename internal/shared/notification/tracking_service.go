@@ -42,7 +42,7 @@ func (s *TrackingNotificationService) Send(ctx context.Context, req *Notificatio
 	// Initialize tracking if enabled
 	if s.enableTracking && s.statusTracker != nil {
 		if err := s.statusTracker.InitializeTracking(ctx, req, requestID); err != nil {
-			s.logger.Error("Failed to initialize tracking", 
+			s.logger.Error("Failed to initialize tracking",
 				logger.String("request_id", requestID),
 				logger.ErrorField(err))
 		}
@@ -61,7 +61,7 @@ func (s *TrackingNotificationService) Send(ctx context.Context, req *Notificatio
 
 	// Process each channel individually for detailed tracking
 	var results []*NotificationResult
-	
+
 	for _, channel := range req.Channels {
 		channelReq := &NotificationRequest{
 			UserID:    req.UserID,
@@ -94,7 +94,7 @@ func (s *TrackingNotificationService) processChannelWithTracking(
 	requestID string,
 ) *NotificationResult {
 	attemptNumber := 1 // This would be tracked properly in retry scenarios
-	
+
 	// Create delivery attempt record
 	attempt := &DeliveryAttempt{
 		AttemptNumber: attemptNumber,
@@ -110,7 +110,7 @@ func (s *TrackingNotificationService) processChannelWithTracking(
 
 	// Send using base service
 	results, err := s.baseService.Send(ctx, req)
-	
+
 	// Complete the attempt record
 	completedAt := time.Now()
 	attempt.CompletedAt = &completedAt
@@ -121,7 +121,7 @@ func (s *TrackingNotificationService) processChannelWithTracking(
 		// Service-level error
 		attempt.Status = StatusFailed
 		attempt.Error = err.Error()
-		
+
 		result = &NotificationResult{
 			Channel:   channel,
 			Success:   false,
@@ -136,7 +136,7 @@ func (s *TrackingNotificationService) processChannelWithTracking(
 		// No results returned
 		attempt.Status = StatusFailed
 		attempt.Error = "no results returned from provider"
-		
+
 		result = &NotificationResult{
 			Channel:   channel,
 			Success:   false,
@@ -149,10 +149,10 @@ func (s *TrackingNotificationService) processChannelWithTracking(
 	} else {
 		// Use the first (and should be only) result
 		result = results[0]
-		
+
 		if result.Success {
 			attempt.Status = StatusSent
-			
+
 			// Check for delivery confirmation in metadata
 			if deliveryInfo, ok := result.Metadata["delivery_info"]; ok {
 				attempt.Status = StatusDelivered
@@ -168,7 +168,7 @@ func (s *TrackingNotificationService) processChannelWithTracking(
 		// Extract provider response information
 		if result.Metadata != nil {
 			providerResp := &ProviderResponse{}
-			
+
 			if providerID, ok := result.Metadata["provider_id"].(string); ok {
 				providerResp.ProviderID = providerID
 			}
@@ -379,7 +379,7 @@ func (s *TrackingRetryableNotificationService) Send(ctx context.Context, req *No
 
 	// Initialize tracking
 	if err := s.statusTracker.InitializeTracking(ctx, req, requestID); err != nil {
-		s.logger.Error("Failed to initialize retry tracking", 
+		s.logger.Error("Failed to initialize retry tracking",
 			logger.String("request_id", requestID),
 			logger.ErrorField(err))
 	}

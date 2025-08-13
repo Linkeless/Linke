@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"linke/internal/domains/user/entities"
-	"linke/internal/domains/user/usecases/interfaces"
 	userEntities "linke/internal/domains/user/entities"
+	"linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/middleware"
 	"linke/internal/shared/response"

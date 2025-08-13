@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"linke/internal/domains/subscription/usecases/interfaces"
-	ticketInterfaces "linke/internal/domains/ticket/usecases/interfaces"
-	ticketEntities "linke/internal/domains/ticket/entities"
 	"linke/internal/domains/ticket/dto"
+	ticketEntities "linke/internal/domains/ticket/entities"
+	ticketInterfaces "linke/internal/domains/ticket/usecases/interfaces"
 	"linke/internal/domains/user/entities"
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/shared/config"
@@ -22,15 +22,15 @@ import (
 // BotEnhanced represents an enhanced Telegram bot with friendly UI
 type BotEnhanced struct {
 	api                     *tgbotapi.BotAPI
-	userService            userInterfaces.UserService
-	subscriptionService    interfaces.UserSubscriptionService
+	userService             userInterfaces.UserService
+	subscriptionService     interfaces.UserSubscriptionService
 	subscriptionPlanService interfaces.SubscriptionPlanService
-	ticketService          ticketInterfaces.TicketService
-	ticketMessageService   ticketInterfaces.TicketMessageService
-	cfg                    *config.Config
-	userStates             map[int64]string                 // Track user conversation states
-	ticketReplyBuffer      map[string][]string              // Buffer for multi-message replies [key: "chatID_ticketID"]
-	ticketReplyMetadata    map[string]map[string]interface{} // Metadata for buffered replies
+	ticketService           ticketInterfaces.TicketService
+	ticketMessageService    ticketInterfaces.TicketMessageService
+	cfg                     *config.Config
+	userStates              map[int64]string                  // Track user conversation states
+	ticketReplyBuffer       map[string][]string               // Buffer for multi-message replies [key: "chatID_ticketID"]
+	ticketReplyMetadata     map[string]map[string]interface{} // Metadata for buffered replies
 }
 
 // NewBotEnhanced creates a new enhanced Telegram bot instance
@@ -53,15 +53,15 @@ func NewBotEnhanced(
 
 	return &BotEnhanced{
 		api:                     bot,
-		userService:            userService,
-		subscriptionService:    subscriptionService,
+		userService:             userService,
+		subscriptionService:     subscriptionService,
 		subscriptionPlanService: subscriptionPlanService,
-		ticketService:          ticketService,
-		ticketMessageService:   ticketMessageService,
-		cfg:                    cfg,
-		userStates:             make(map[int64]string),
-		ticketReplyBuffer:      make(map[string][]string),
-		ticketReplyMetadata:    make(map[string]map[string]interface{}),
+		ticketService:           ticketService,
+		ticketMessageService:    ticketMessageService,
+		cfg:                     cfg,
+		userStates:              make(map[int64]string),
+		ticketReplyBuffer:       make(map[string][]string),
+		ticketReplyMetadata:     make(map[string]map[string]interface{}),
 	}, nil
 }
 
@@ -152,7 +152,7 @@ func (b *BotEnhanced) handleCommand(msg *tgbotapi.Message) {
 func (b *BotEnhanced) handleMessage(msg *tgbotapi.Message) {
 	chatID := msg.Chat.ID
 	text := strings.ToLower(msg.Text)
-	
+
 	// Check user state for conversation flow
 	state, exists := b.userStates[chatID]
 	if exists {
@@ -185,14 +185,14 @@ func (b *BotEnhanced) handleCallbackQuery(query *tgbotapi.CallbackQuery) {
 	// Parse callback data
 	data := query.Data
 	parts := strings.Split(data, ":")
-	
+
 	logger.Info("Processing callback",
 		logger.String("full_data", data),
 		logger.String("action", parts[0]),
 		logger.Strings("parts", parts),
 		logger.Int("parts_count", len(parts)),
 		logger.String("from", query.From.UserName))
-	
+
 	if len(parts) < 1 {
 		return
 	}
@@ -221,7 +221,7 @@ func (b *BotEnhanced) handleCallbackQuery(query *tgbotapi.CallbackQuery) {
 		b.showSettingsMenu(query.Message.Chat.ID, query.Message.MessageID)
 	case "toggle_autorenew":
 		b.toggleAutoRenew(query.Message.Chat.ID, query.Message.MessageID)
-	
+
 	// New menu callbacks
 	case "my_tickets":
 		b.editMessageToMyTicketsMenu(query.Message.Chat.ID, query.Message.MessageID)
@@ -239,7 +239,7 @@ func (b *BotEnhanced) handleCallbackQuery(query *tgbotapi.CallbackQuery) {
 		b.startSearchTickets(query.Message.Chat.ID, query.Message.MessageID)
 	case "ticket_stats":
 		b.showTicketStatistics(query.Message.Chat.ID, query.Message.MessageID)
-	
+
 	// Enhanced ticket-related actions
 	case "ticket_view":
 		if len(parts) > 1 {
@@ -306,7 +306,7 @@ func (b *BotEnhanced) handleCallbackQuery(query *tgbotapi.CallbackQuery) {
 				b.showError(query.Message.Chat.ID, query.Message.MessageID, "无效的工单ID")
 				return
 			}
-			logger.Info("Processing add_reply callback", 
+			logger.Info("Processing add_reply callback",
 				logger.Uint("ticket_id", uint(ticketID)))
 			b.startAddReply(query.Message.Chat.ID, query.Message.MessageID, uint(ticketID))
 		} else {
@@ -315,7 +315,7 @@ func (b *BotEnhanced) handleCallbackQuery(query *tgbotapi.CallbackQuery) {
 				logger.Int("parts_length", len(parts)))
 			b.showError(query.Message.Chat.ID, query.Message.MessageID, "缺少工单ID")
 		}
-	
+
 	// Enhanced user ticket actions
 	case "user_set_priority":
 		if len(parts) > 1 {
@@ -347,7 +347,7 @@ func (b *BotEnhanced) handleCallbackQuery(query *tgbotapi.CallbackQuery) {
 			ticketID, _ := strconv.Atoi(parts[1])
 			b.startMessageSearch(query.Message.Chat.ID, query.Message.MessageID, uint(ticketID))
 		}
-	
+
 	// Advanced admin operations
 	case "admin_batch_operations":
 		b.showBatchOperationsMenu(query.Message.Chat.ID, query.Message.MessageID)
@@ -368,7 +368,7 @@ func (b *BotEnhanced) handleCallbackQuery(query *tgbotapi.CallbackQuery) {
 			level := parts[2]
 			b.handleTicketEscalation(query.Message.Chat.ID, query.Message.MessageID, uint(ticketID), level)
 		}
-	
+
 	// Notification system handlers
 	case "notification_preferences":
 		b.showNotificationPreferences(query.Message.Chat.ID, query.Message.MessageID)
@@ -383,7 +383,7 @@ func (b *BotEnhanced) handleCallbackQuery(query *tgbotapi.CallbackQuery) {
 		b.showBatchNotificationMenu(query.Message.Chat.ID, query.Message.MessageID)
 	case "scheduled_notifications":
 		b.showScheduledNotifications(query.Message.Chat.ID, query.Message.MessageID)
-	
+
 	// Status and priority change actions
 	case "set_status":
 		if len(parts) > 2 {
@@ -397,7 +397,7 @@ func (b *BotEnhanced) handleCallbackQuery(query *tgbotapi.CallbackQuery) {
 			priority := parts[2]
 			b.handlePriorityChange(query.Message.Chat.ID, query.Message.MessageID, uint(ticketID), priority)
 		}
-	
+
 	// Navigation
 	case "cancel_reply":
 		// Cancel the current reply operation and clear buffers
@@ -411,35 +411,35 @@ func (b *BotEnhanced) handleCallbackQuery(query *tgbotapi.CallbackQuery) {
 			}
 		}
 		b.editMessageToMainMenu(chatID, query.Message.MessageID)
-	
+
 	case "send_reply":
 		// Send accumulated messages
 		if len(parts) > 1 {
 			ticketID, _ := strconv.Atoi(parts[1])
 			b.sendAccumulatedReply(query.Message.Chat.ID, query.Message.MessageID, uint(ticketID))
 		}
-	
+
 	case "add_more":
 		// Continue adding messages
 		if len(parts) > 1 {
 			ticketID, _ := strconv.Atoi(parts[1])
 			b.continueAddingMessages(query.Message.Chat.ID, query.Message.MessageID, uint(ticketID))
 		}
-	
+
 	case "preview_all":
 		// Preview all buffered messages
 		if len(parts) > 1 {
 			ticketID, _ := strconv.Atoi(parts[1])
 			b.previewAllMessages(query.Message.Chat.ID, query.Message.MessageID, uint(ticketID))
 		}
-	
+
 	case "clear_buffer":
 		// Clear buffer and restart
 		if len(parts) > 1 {
 			ticketID, _ := strconv.Atoi(parts[1])
 			b.clearBufferAndRestart(query.Message.Chat.ID, query.Message.MessageID, uint(ticketID))
 		}
-	
+
 	case "back":
 		if len(parts) > 1 {
 			b.navigateBack(query.Message.Chat.ID, query.Message.MessageID, parts[1])
@@ -450,7 +450,7 @@ func (b *BotEnhanced) handleCallbackQuery(query *tgbotapi.CallbackQuery) {
 // showMainMenu displays the main menu with inline keyboard
 func (b *BotEnhanced) showMainMenu(chatID int64) {
 	ctx := context.Background()
-	
+
 	// Try to get user info for personalized greeting
 	var greeting string
 	user, err := b.getUserByTelegramID(ctx, chatID)
@@ -489,7 +489,7 @@ func (b *BotEnhanced) showMainMenu(chatID int64) {
 			tgbotapi.NewInlineKeyboardButtonData("❓ 帮助", "help"),
 		),
 	)
-	
+
 	// Add admin button if user is admin
 	if user != nil && b.isUserAdmin(user) {
 		// Add admin row
@@ -502,7 +502,7 @@ func (b *BotEnhanced) showMainMenu(chatID int64) {
 	msg := tgbotapi.NewMessage(chatID, greeting)
 	msg.ParseMode = "Markdown"
 	msg.ReplyMarkup = keyboard
-	
+
 	b.api.Send(msg)
 }
 
@@ -528,7 +528,7 @@ func (b *BotEnhanced) editMessageToMainMenu(chatID int64, messageID int) {
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
@@ -557,7 +557,7 @@ func (b *BotEnhanced) showSubscriptionMenu(chatID int64) {
 	msg := tgbotapi.NewMessage(chatID, text)
 	msg.ParseMode = "Markdown"
 	msg.ReplyMarkup = keyboard
-	
+
 	b.api.Send(msg)
 }
 
@@ -586,7 +586,7 @@ func (b *BotEnhanced) editMessageToSubscriptionMenu(chatID int64, messageID int)
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
@@ -612,14 +612,14 @@ func (b *BotEnhanced) showQuickActions(chatID int64) {
 
 	msg := tgbotapi.NewMessage(chatID, text)
 	msg.ReplyMarkup = keyboard
-	
+
 	b.api.Send(msg)
 }
 
 // showSubscriptionInfo displays detailed subscription information
 func (b *BotEnhanced) showSubscriptionInfo(chatID int64, messageID int) {
 	ctx := context.Background()
-	
+
 	// Get user by telegram ID
 	user, err := b.getUserByTelegramID(ctx, chatID)
 	if err != nil {
@@ -655,22 +655,22 @@ func (b *BotEnhanced) showSubscriptionInfo(chatID int64, messageID int) {
 
 		sb.WriteString(fmt.Sprintf("*%s*\n", plan.Name))
 		sb.WriteString(fmt.Sprintf("📌 状态: %s\n", b.formatStatus(sub.Status)))
-		sb.WriteString(fmt.Sprintf("💰 价格: %.2f %s/%s\n", 
-			sub.Price, 
+		sb.WriteString(fmt.Sprintf("💰 价格: %.2f %s/%s\n",
+			sub.Price,
 			sub.Currency,
 			b.formatBillingCycleShort(sub.BillingCycle)))
-		
+
 		// Traffic info with progress bar
 		if sub.TrafficLimit > 0 {
 			percentage := float64(sub.TrafficUsed) / float64(sub.TrafficLimit) * 100
-			sb.WriteString(fmt.Sprintf("📊 流量: %s / %s\n", 
-				b.formatBytes(sub.TrafficUsed), 
+			sb.WriteString(fmt.Sprintf("📊 流量: %s / %s\n",
+				b.formatBytes(sub.TrafficUsed),
 				b.formatBytes(sub.TrafficLimit)))
-			sb.WriteString(fmt.Sprintf("%s %.1f%%\n", 
-				b.getProgressBar(percentage), 
+			sb.WriteString(fmt.Sprintf("%s %.1f%%\n",
+				b.getProgressBar(percentage),
 				percentage))
 		}
-		
+
 		// Date info
 		if sub.CurrentPeriodEnd != nil {
 			now := time.Now()
@@ -679,7 +679,7 @@ func (b *BotEnhanced) showSubscriptionInfo(chatID int64, messageID int) {
 				sb.WriteString(fmt.Sprintf("📅 剩余天数: %d 天\n", daysLeft))
 			}
 		}
-		
+
 		// Auto-renew status
 		if sub.AutoRenew {
 			sb.WriteString("🔄 自动续费: ✅ 已开启\n")
@@ -702,14 +702,14 @@ func (b *BotEnhanced) showSubscriptionInfo(chatID int64, messageID int) {
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, sb.String())
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
 // showUsageDetails displays detailed usage information
 func (b *BotEnhanced) showUsageDetails(chatID int64, messageID int) {
 	ctx := context.Background()
-	
+
 	user, err := b.getUserByTelegramID(ctx, chatID)
 	if err != nil {
 		b.showUnboundAccount(chatID, messageID)
@@ -763,7 +763,7 @@ func (b *BotEnhanced) showUsageDetails(chatID int64, messageID int) {
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, sb.String())
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
@@ -784,19 +784,19 @@ func (b *BotEnhanced) showUsageMenu(chatID int64) {
 	msg := tgbotapi.NewMessage(chatID, text)
 	msg.ParseMode = "Markdown"
 	msg.ReplyMarkup = keyboard
-	
+
 	b.api.Send(msg)
 }
 
 // showPlansMenu displays available plans (new message)
 func (b *BotEnhanced) showPlansMenu(chatID int64) {
 	ctx := context.Background()
-	
+
 	plans, _, err := b.subscriptionPlanService.GetSubscriptionPlans(ctx, &interfaces.GetSubscriptionPlansRequest{
 		Status: "active",
 		Limit:  10,
 	})
-	
+
 	if err != nil || len(plans) == 0 {
 		b.sendMessage(chatID, "❌ 获取套餐信息失败，请稍后重试。")
 		return
@@ -806,27 +806,27 @@ func (b *BotEnhanced) showPlansMenu(chatID int64) {
 	sb.WriteString("💎 *套餐商店*\n\n选择套餐查看详情：\n\n")
 
 	var buttons [][]tgbotapi.InlineKeyboardButton
-	
+
 	for _, plan := range plans {
 		if !plan.IsVisible {
 			continue
 		}
-		
-		buttonText := fmt.Sprintf("%s - %.2f %s/%s", 
-			plan.Name, 
-			plan.Price, 
+
+		buttonText := fmt.Sprintf("%s - %.2f %s/%s",
+			plan.Name,
+			plan.Price,
 			plan.Currency,
 			b.formatBillingCycleShort(plan.BillingCycle))
-		
+
 		if plan.IsRecommended {
 			buttonText = "⭐ " + buttonText
 		}
-		
+
 		buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData(buttonText, fmt.Sprintf("plan_details:%d", plan.ID)),
 		))
 	}
-	
+
 	// Add back button
 	buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
 		tgbotapi.NewInlineKeyboardButtonData("🔙 返回主菜单", "main_menu"),
@@ -837,19 +837,19 @@ func (b *BotEnhanced) showPlansMenu(chatID int64) {
 	msg := tgbotapi.NewMessage(chatID, sb.String())
 	msg.ParseMode = "Markdown"
 	msg.ReplyMarkup = keyboard
-	
+
 	b.api.Send(msg)
 }
 
 // editMessageToPlansMenu edits existing message to show plans menu
 func (b *BotEnhanced) editMessageToPlansMenu(chatID int64, messageID int) {
 	ctx := context.Background()
-	
+
 	plans, _, err := b.subscriptionPlanService.GetSubscriptionPlans(ctx, &interfaces.GetSubscriptionPlansRequest{
 		Status: "active",
 		Limit:  10,
 	})
-	
+
 	if err != nil || len(plans) == 0 {
 		b.showError(chatID, messageID, "获取套餐信息失败")
 		return
@@ -859,27 +859,27 @@ func (b *BotEnhanced) editMessageToPlansMenu(chatID int64, messageID int) {
 	sb.WriteString("💎 *套餐商店*\n\n选择套餐查看详情：\n\n")
 
 	var buttons [][]tgbotapi.InlineKeyboardButton
-	
+
 	for _, plan := range plans {
 		if !plan.IsVisible {
 			continue
 		}
-		
-		buttonText := fmt.Sprintf("%s - %.2f %s/%s", 
-			plan.Name, 
-			plan.Price, 
+
+		buttonText := fmt.Sprintf("%s - %.2f %s/%s",
+			plan.Name,
+			plan.Price,
 			plan.Currency,
 			b.formatBillingCycleShort(plan.BillingCycle))
-		
+
 		if plan.IsRecommended {
 			buttonText = "⭐ " + buttonText
 		}
-		
+
 		buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData(buttonText, fmt.Sprintf("plan_details:%d", plan.ID)),
 		))
 	}
-	
+
 	// Add back button
 	buttons = append(buttons, tgbotapi.NewInlineKeyboardRow(
 		tgbotapi.NewInlineKeyboardButtonData("🔙 返回主菜单", "main_menu"),
@@ -890,14 +890,14 @@ func (b *BotEnhanced) editMessageToPlansMenu(chatID int64, messageID int) {
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, sb.String())
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
 // showPlanDetails shows detailed information about a specific plan
 func (b *BotEnhanced) showPlanDetails(chatID int64, messageID int, planID uint) {
 	ctx := context.Background()
-	
+
 	plan, err := b.subscriptionPlanService.GetSubscriptionPlan(ctx, planID)
 	if err != nil {
 		b.showError(chatID, messageID, "获取套餐详情失败")
@@ -906,32 +906,32 @@ func (b *BotEnhanced) showPlanDetails(chatID int64, messageID int, planID uint) 
 
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("💎 *%s*\n\n", plan.Name))
-	
+
 	if plan.Description != "" {
 		sb.WriteString(fmt.Sprintf("📝 %s\n\n", plan.Description))
 	}
-	
-	sb.WriteString(fmt.Sprintf("💰 *价格:* %.2f %s/%s\n", 
-		plan.Price, 
+
+	sb.WriteString(fmt.Sprintf("💰 *价格:* %.2f %s/%s\n",
+		plan.Price,
 		plan.Currency,
 		b.formatBillingCycle(plan.BillingCycle)))
-	
+
 	if plan.TrafficLimit > 0 {
 		sb.WriteString(fmt.Sprintf("📊 *流量:* %s/月\n", b.formatBytes(plan.TrafficLimit)))
 	} else {
 		sb.WriteString("📊 *流量:* 无限制\n")
 	}
-	
+
 	if plan.TrialPeriodDays > 0 {
 		sb.WriteString(fmt.Sprintf("🎁 *试用期:* %d 天免费试用\n", plan.TrialPeriodDays))
 	}
-	
+
 	// Add features if available
 	sb.WriteString("\n*套餐特色:*\n")
 	sb.WriteString("✅ 高速稳定连接\n")
 	sb.WriteString("✅ 全球节点覆盖\n")
 	sb.WriteString("✅ 7×24 技术支持\n")
-	
+
 	if plan.IsRecommended {
 		sb.WriteString("\n⭐ *推荐套餐* - 性价比最高的选择！\n")
 	}
@@ -949,7 +949,7 @@ func (b *BotEnhanced) showPlanDetails(chatID int64, messageID int, planID uint) 
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, sb.String())
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
@@ -982,7 +982,7 @@ func (b *BotEnhanced) showUnboundAccount(chatID int64, messageID int) {
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
@@ -1004,7 +1004,7 @@ func (b *BotEnhanced) showNoSubscription(chatID int64, messageID int) {
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
@@ -1021,7 +1021,7 @@ func (b *BotEnhanced) showError(chatID int64, messageID int, errorMsg string) {
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
@@ -1062,7 +1062,7 @@ A: 在"套餐商店"选择新套餐购买
 	msg := tgbotapi.NewMessage(chatID, help)
 	msg.ParseMode = "Markdown"
 	msg.ReplyMarkup = keyboard
-	
+
 	b.api.Send(msg)
 }
 
@@ -1091,7 +1091,7 @@ func (b *BotEnhanced) showSupportMenu(chatID int64, messageID int) {
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
@@ -1119,7 +1119,7 @@ func (b *BotEnhanced) showSettingsMenu(chatID int64, messageID int) {
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
@@ -1140,34 +1140,34 @@ func (b *BotEnhanced) toggleAutoRenew(chatID int64, messageID int) {
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
 func (b *BotEnhanced) handleConversationFlow(msg *tgbotapi.Message, state string) {
 	// Handle conversation states
 	chatID := msg.Chat.ID
-	
+
 	switch {
 	case state == "awaiting_feedback":
 		// Process feedback
 		b.sendMessage(chatID, "感谢您的反馈！我们会尽快处理。")
 		delete(b.userStates, chatID)
-		
+
 	case strings.HasPrefix(state, "replying_to_ticket_"):
 		// Handle admin reply to ticket (support multi-message)
 		ticketIDStr := strings.TrimPrefix(state, "replying_to_ticket_")
 		if ticketID, err := strconv.Atoi(ticketIDStr); err == nil {
 			b.handleMultiMessageReply(chatID, uint(ticketID), msg.Text, "admin")
 		}
-		
+
 	case strings.HasPrefix(state, "adding_reply_to_ticket_"):
 		// Handle user reply to ticket (support multi-message)
 		ticketIDStr := strings.TrimPrefix(state, "adding_reply_to_ticket_")
 		if ticketID, err := strconv.Atoi(ticketIDStr); err == nil {
 			b.handleMultiMessageReply(chatID, uint(ticketID), msg.Text, "user")
 		}
-		
+
 	case strings.HasPrefix(state, "adding_internal_note_"):
 		// Handle internal note creation
 		ticketIDStr := strings.TrimPrefix(state, "adding_internal_note_")
@@ -1175,7 +1175,7 @@ func (b *BotEnhanced) handleConversationFlow(msg *tgbotapi.Message, state string
 			b.handleInternalNote(chatID, uint(ticketID), msg.Text)
 		}
 		delete(b.userStates, chatID)
-		
+
 	case strings.HasPrefix(state, "searching_messages_"):
 		// Handle message search
 		ticketIDStr := strings.TrimPrefix(state, "searching_messages_")
@@ -1183,7 +1183,7 @@ func (b *BotEnhanced) handleConversationFlow(msg *tgbotapi.Message, state string
 			b.handleMessageSearch(chatID, uint(ticketID), msg.Text)
 		}
 		delete(b.userStates, chatID)
-		
+
 	case strings.HasPrefix(state, "adding_tags_"):
 		// Handle tag addition
 		ticketIDStr := strings.TrimPrefix(state, "adding_tags_")
@@ -1191,7 +1191,7 @@ func (b *BotEnhanced) handleConversationFlow(msg *tgbotapi.Message, state string
 			b.handleTagAddition(chatID, uint(ticketID), msg.Text)
 		}
 		delete(b.userStates, chatID)
-		
+
 	case strings.HasPrefix(state, "editing_title_"):
 		// Handle ticket title editing
 		ticketIDStr := strings.TrimPrefix(state, "editing_title_")
@@ -1199,7 +1199,7 @@ func (b *BotEnhanced) handleConversationFlow(msg *tgbotapi.Message, state string
 			b.handleTitleEdit(chatID, uint(ticketID), msg.Text)
 		}
 		delete(b.userStates, chatID)
-		
+
 	case strings.HasPrefix(state, "editing_description_"):
 		// Handle ticket description editing
 		ticketIDStr := strings.TrimPrefix(state, "editing_description_")
@@ -1207,7 +1207,7 @@ func (b *BotEnhanced) handleConversationFlow(msg *tgbotapi.Message, state string
 			b.handleDescriptionEdit(chatID, uint(ticketID), msg.Text)
 		}
 		delete(b.userStates, chatID)
-		
+
 	default:
 		delete(b.userStates, chatID)
 	}
@@ -1234,18 +1234,18 @@ func (b *BotEnhanced) sendMessage(chatID int64, text string) {
 // sendErrorMessage sends a formatted error message with details
 func (b *BotEnhanced) sendErrorMessage(chatID int64, title string, description string) {
 	text := fmt.Sprintf("❌ *%s*\n\n%s", title, description)
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("💬 联系客服", "support"),
 			tgbotapi.NewInlineKeyboardButtonData("🏠 主菜单", "main_menu"),
 		),
 	)
-	
+
 	msg := tgbotapi.NewMessage(chatID, text)
 	msg.ParseMode = "Markdown"
 	msg.ReplyMarkup = keyboard
-	
+
 	b.api.Send(msg)
 }
 
@@ -1302,7 +1302,7 @@ func (b *BotEnhanced) getProgressBar(percentage float64) string {
 	if filled > barLength {
 		filled = barLength
 	}
-	
+
 	var bar strings.Builder
 	for i := 0; i < barLength; i++ {
 		if i < filled {
@@ -1311,7 +1311,7 @@ func (b *BotEnhanced) getProgressBar(percentage float64) string {
 			bar.WriteString("░")
 		}
 	}
-	
+
 	return bar.String()
 }
 
@@ -1389,7 +1389,7 @@ func (b *BotEnhanced) SendTicketNotification(chatID int64, notification *TicketN
 	// Format the message based on notification type
 	var message string
 	var keyboard *tgbotapi.InlineKeyboardMarkup
-	
+
 	switch notification.Type {
 	case TicketNotificationTypeCreated:
 		message = b.formatTicketCreatedMessage(notification)
@@ -1413,13 +1413,13 @@ func (b *BotEnhanced) SendTicketNotification(chatID int64, notification *TicketN
 		message = b.formatGenericTicketMessage(notification)
 		keyboard = b.createTicketActionKeyboard(notification.TicketID, notification.TicketNo)
 	}
-	
+
 	msg := tgbotapi.NewMessage(chatID, message)
 	msg.ParseMode = "Markdown"
 	if keyboard != nil {
 		msg.ReplyMarkup = keyboard
 	}
-	
+
 	_, err := b.api.Send(msg)
 	return err
 }
@@ -1428,7 +1428,7 @@ func (b *BotEnhanced) SendTicketNotification(chatID int64, notification *TicketN
 func (b *BotEnhanced) SendTicketNotificationToAdmins(notification *TicketNotification) error {
 	// Get admin chat IDs from configuration
 	adminChatIDs := b.getAdminChatIDs()
-	
+
 	var errors []error
 	for _, chatID := range adminChatIDs {
 		if err := b.SendTicketNotification(chatID, notification); err != nil {
@@ -1438,11 +1438,11 @@ func (b *BotEnhanced) SendTicketNotificationToAdmins(notification *TicketNotific
 			errors = append(errors, err)
 		}
 	}
-	
+
 	if len(errors) > 0 {
 		return fmt.Errorf("failed to send to %d admins", len(errors))
 	}
-	
+
 	return nil
 }
 
@@ -1452,16 +1452,16 @@ func (b *BotEnhanced) SendTicketNotificationToUser(userTelegramID string, notifi
 	if err != nil {
 		return fmt.Errorf("invalid telegram ID: %w", err)
 	}
-	
+
 	// Format user-friendly message (hide internal details)
 	message := b.formatUserTicketMessage(notification)
-	
+
 	keyboard := b.createUserTicketKeyboard(notification.TicketID, notification.TicketNo)
-	
+
 	msg := tgbotapi.NewMessage(chatID, message)
 	msg.ParseMode = "Markdown"
 	msg.ReplyMarkup = keyboard
-	
+
 	_, err = b.api.Send(msg)
 	return err
 }
@@ -1477,11 +1477,11 @@ func (b *BotEnhanced) formatTicketCreatedMessage(n *TicketNotification) string {
 	sb.WriteString(fmt.Sprintf("分类: %s\n", n.Category))
 	sb.WriteString(fmt.Sprintf("创建者: %s\n", n.UserName))
 	sb.WriteString(fmt.Sprintf("\n描述:\n%s\n", n.Description))
-	
+
 	if n.Priority == "urgent" || n.Priority == "critical" {
 		sb.WriteString("\n⚠️ *需要立即处理*")
 	}
-	
+
 	return sb.String()
 }
 
@@ -1509,7 +1509,7 @@ func (b *BotEnhanced) formatTicketStatusChangedMessage(n *TicketNotification) st
 
 func (b *BotEnhanced) formatTicketRepliedMessage(n *TicketNotification) string {
 	var sb strings.Builder
-	
+
 	// Choose appropriate icon and title based on who replied
 	isAdminReply := false
 	if metadata, ok := n.Metadata["is_admin_reply"]; ok {
@@ -1517,33 +1517,33 @@ func (b *BotEnhanced) formatTicketRepliedMessage(n *TicketNotification) string {
 			isAdminReply = adminReply
 		}
 	}
-	
+
 	if isAdminReply {
 		sb.WriteString("👨‍💼 *管理员回复了您的工单*\n\n")
 	} else {
 		sb.WriteString("💬 *工单收到新回复*\n\n")
 	}
-	
+
 	// Ticket basic info
 	sb.WriteString(fmt.Sprintf("🎫 工单号: `%s`\n", n.TicketNo))
 	sb.WriteString(fmt.Sprintf("📝 标题: %s\n", n.Title))
-	
+
 	// Priority and status with icons
 	priorityIcon := b.getPriorityIcon(n.Priority)
 	sb.WriteString(fmt.Sprintf("%s 优先级: %s\n", priorityIcon, b.formatPriority(n.Priority)))
-	
+
 	statusIcon := b.getStatusIcon(n.Status)
 	sb.WriteString(fmt.Sprintf("%s 状态: %s\n", statusIcon, b.formatTicketStatus(n.Status)))
-	
+
 	// Reply information
 	sb.WriteString(fmt.Sprintf("\n👤 回复者: *%s*\n", n.RepliedByName))
 	sb.WriteString(fmt.Sprintf("⏰ 时间: %s\n", time.Now().Format("15:04:05")))
-	
+
 	// Reply content with better formatting
 	if n.ReplyContent != "" {
 		sb.WriteString("\n📄 *回复内容:*\n")
 		sb.WriteString("━━━━━━━━━━━━━━━━━━━━━━\n")
-		
+
 		// Format and truncate content if needed
 		content := n.ReplyContent
 		if len(content) > 300 {
@@ -1555,14 +1555,14 @@ func (b *BotEnhanced) formatTicketRepliedMessage(n *TicketNotification) string {
 		}
 		sb.WriteString("━━━━━━━━━━━━━━━━━━━━━━\n")
 	}
-	
+
 	// Add action prompt
 	if isAdminReply {
 		sb.WriteString("\n✨ 管理员已处理您的工单，请查看详情。")
 	} else {
 		sb.WriteString("\n⚡ 请及时查看并处理新回复。")
 	}
-	
+
 	return sb.String()
 }
 
@@ -1599,17 +1599,17 @@ func (b *BotEnhanced) formatGenericTicketMessage(n *TicketNotification) string {
 
 func (b *BotEnhanced) formatUserTicketMessage(n *TicketNotification) string {
 	var sb strings.Builder
-	
+
 	switch n.Type {
 	case TicketNotificationTypeCreated:
 		sb.WriteString("✅ *您的工单已成功创建*\n\n")
 		sb.WriteString(fmt.Sprintf("🎫 工单号: `%s`\n", n.TicketNo))
 		sb.WriteString(fmt.Sprintf("📝 标题: %s\n", n.Title))
-		
+
 		// Add priority info
 		priorityIcon := b.getPriorityIcon(n.Priority)
 		sb.WriteString(fmt.Sprintf("%s 优先级: %s\n\n", priorityIcon, b.formatPriority(n.Priority)))
-		
+
 		// Add expected response time
 		switch n.Priority {
 		case "critical":
@@ -1623,9 +1623,9 @@ func (b *BotEnhanced) formatUserTicketMessage(n *TicketNotification) string {
 		default:
 			sb.WriteString("⏰ 预计响应时间: 7天内\n")
 		}
-		
+
 		sb.WriteString("\n💡 我们已收到您的请求，客服团队将尽快为您处理。")
-		
+
 	case TicketNotificationTypeReplied:
 		// Check if it's admin reply
 		isAdminReply := false
@@ -1634,16 +1634,16 @@ func (b *BotEnhanced) formatUserTicketMessage(n *TicketNotification) string {
 				isAdminReply = adminReply
 			}
 		}
-		
+
 		if isAdminReply {
 			sb.WriteString("👨‍💼 *客服回复了您的工单*\n\n")
 		} else {
 			sb.WriteString("💬 *您的工单有新动态*\n\n")
 		}
-		
+
 		sb.WriteString(fmt.Sprintf("🎫 工单号: `%s`\n", n.TicketNo))
 		sb.WriteString(fmt.Sprintf("📝 标题: %s\n", n.Title))
-		
+
 		// Add reply preview if available
 		if n.ReplyContent != "" {
 			sb.WriteString("\n📄 *回复预览:*\n")
@@ -1653,14 +1653,14 @@ func (b *BotEnhanced) formatUserTicketMessage(n *TicketNotification) string {
 			}
 			sb.WriteString(fmt.Sprintf("_%s_\n", preview))
 		}
-		
+
 		sb.WriteString("\n👆 点击下方按钮查看完整回复")
-		
+
 	case TicketNotificationTypeResolved:
 		sb.WriteString("🎉 *您的工单已解决*\n\n")
 		sb.WriteString(fmt.Sprintf("🎫 工单号: `%s`\n", n.TicketNo))
 		sb.WriteString(fmt.Sprintf("📝 标题: %s\n", n.Title))
-		
+
 		if n.Resolution != "" {
 			sb.WriteString("\n💡 *解决方案:*\n")
 			resolution := n.Resolution
@@ -1669,53 +1669,53 @@ func (b *BotEnhanced) formatUserTicketMessage(n *TicketNotification) string {
 			}
 			sb.WriteString(fmt.Sprintf("_%s_\n", resolution))
 		}
-		
+
 		sb.WriteString("\n😊 如果问题已解决，感谢您的耐心等待！")
 		sb.WriteString("\n🔄 如果问题仍存在，您可以重新打开工单。")
-		
+
 	case TicketNotificationTypeClosed:
 		sb.WriteString("🔒 *您的工单已关闭*\n\n")
 		sb.WriteString(fmt.Sprintf("🎫 工单号: `%s`\n", n.TicketNo))
 		sb.WriteString(fmt.Sprintf("📝 标题: %s\n", n.Title))
-		
+
 		if n.ClosedReason != "" {
 			sb.WriteString(fmt.Sprintf("\n📋 关闭原因: %s\n", n.ClosedReason))
 		}
-		
+
 		sb.WriteString("\n🙏 感谢您的反馈，我们会持续改进服务。")
 		sb.WriteString("\n💬 如需帮助，欢迎创建新工单。")
-		
+
 	case TicketNotificationTypeAssigned:
 		sb.WriteString("👤 *您的工单已分配给专员*\n\n")
 		sb.WriteString(fmt.Sprintf("🎫 工单号: `%s`\n", n.TicketNo))
 		sb.WriteString(fmt.Sprintf("📝 标题: %s\n", n.Title))
-		
+
 		if n.AssignedToName != "" {
 			sb.WriteString(fmt.Sprintf("👨‍💼 处理专员: %s\n", n.AssignedToName))
 		}
-		
+
 		sb.WriteString("\n⚡ 专员将尽快为您处理此工单。")
-		
+
 	case TicketNotificationTypeEscalated:
 		sb.WriteString("⚡ *您的工单已升级处理*\n\n")
 		sb.WriteString(fmt.Sprintf("🎫 工单号: `%s`\n", n.TicketNo))
 		sb.WriteString(fmt.Sprintf("📝 标题: %s\n", n.Title))
 		sb.WriteString("\n🚀 您的工单已提升优先级，将获得更快速的处理。")
-		
+
 	default:
 		sb.WriteString("📢 *工单状态更新*\n\n")
 		sb.WriteString(fmt.Sprintf("🎫 工单号: `%s`\n", n.TicketNo))
 		sb.WriteString(fmt.Sprintf("📝 标题: %s\n", n.Title))
-		
+
 		statusIcon := b.getStatusIcon(n.Status)
 		sb.WriteString(fmt.Sprintf("%s 当前状态: %s\n", statusIcon, b.formatTicketStatus(n.Status)))
-		
+
 		if n.OldStatus != "" {
 			oldStatusIcon := b.getStatusIcon(n.OldStatus)
 			sb.WriteString(fmt.Sprintf("%s 原状态: %s\n", oldStatusIcon, b.formatTicketStatus(n.OldStatus)))
 		}
 	}
-	
+
 	return sb.String()
 }
 
@@ -1886,7 +1886,7 @@ func (b *BotEnhanced) getAdminChatIDs() []int64 {
 	if adminIDsStr == "" {
 		return []int64{}
 	}
-	
+
 	var adminIDs []int64
 	for _, idStr := range strings.Split(adminIDsStr, ",") {
 		idStr = strings.TrimSpace(idStr)
@@ -1894,7 +1894,7 @@ func (b *BotEnhanced) getAdminChatIDs() []int64 {
 			adminIDs = append(adminIDs, id)
 		}
 	}
-	
+
 	return adminIDs
 }
 
@@ -1903,36 +1903,36 @@ func (b *BotEnhanced) getAdminChatIDs() []int64 {
 // showTicketDetails shows detailed information about a specific ticket (admin view)
 func (b *BotEnhanced) showTicketDetails(chatID int64, messageID int, ticketID uint) {
 	ctx := context.Background()
-	
+
 	// Get ticket details
 	ticket, err := b.ticketService.GetTicket(ctx, ticketID)
 	if err != nil {
 		b.showError(chatID, messageID, "获取工单详情失败")
 		return
 	}
-	
+
 	// Get ticket creator information
 	user, userErr := b.userService.GetUserByID(ctx, ticket.UserID)
-	
+
 	// Build enhanced message with emojis and better formatting
 	var sb strings.Builder
 	sb.WriteString("🎫 *工单详情*\n")
 	sb.WriteString("━━━━━━━━━━━━━━━━━━━━━━\n\n")
-	
+
 	// Basic Information Section
 	sb.WriteString("📋 *基本信息*\n")
 	sb.WriteString(fmt.Sprintf("🆔 工单号: `%s`\n", ticket.TicketNo))
 	sb.WriteString(fmt.Sprintf("📌 标题: *%s*\n", b.escapeMarkdownV2(ticket.Title)))
 	sb.WriteString(fmt.Sprintf("🏷️ 分类: `%s`\n", ticket.Category))
-	
+
 	// Status with visual indicator
 	statusIcon := b.getStatusIcon(ticket.Status)
 	sb.WriteString(fmt.Sprintf("%s 状态: *%s*\n", statusIcon, b.formatTicketStatus(ticket.Status)))
-	
+
 	// Priority with visual indicator
 	priorityIcon := b.getPriorityIcon(ticket.Priority)
 	sb.WriteString(fmt.Sprintf("%s 优先级: *%s*\n\n", priorityIcon, b.formatPriority(ticket.Priority)))
-	
+
 	// People Section
 	sb.WriteString("👥 *人员信息*\n")
 	if userErr == nil && user != nil {
@@ -1941,7 +1941,7 @@ func (b *BotEnhanced) showTicketDetails(chatID int64, messageID int, ticketID ui
 			sb.WriteString(fmt.Sprintf("📧 邮箱: `%s`\n", user.Email))
 		}
 	}
-	
+
 	if ticket.AssignedToID != nil {
 		assignedUser, assignedErr := b.userService.GetUserByID(ctx, *ticket.AssignedToID)
 		if assignedErr == nil && assignedUser != nil {
@@ -1950,39 +1950,39 @@ func (b *BotEnhanced) showTicketDetails(chatID int64, messageID int, ticketID ui
 	} else {
 		sb.WriteString("👨‍💼 负责人: `未分配`\n")
 	}
-	
+
 	// Timing Section
 	sb.WriteString("\n⏰ *时间信息*\n")
 	sb.WriteString(fmt.Sprintf("🕐 创建时间: `%s`\n", ticket.CreatedAt.Format("2006-01-02 15:04:05")))
-	
+
 	if ticket.FirstResponseAt != nil {
 		sb.WriteString(fmt.Sprintf("⚡ 首次响应: `%s`\n", ticket.FirstResponseAt.Format("2006-01-02 15:04:05")))
 	}
-	
+
 	if ticket.LastResponseAt != nil {
 		sb.WriteString(fmt.Sprintf("💬 最后回复: `%s`\n", ticket.LastResponseAt.Format("2006-01-02 15:04:05")))
 	}
-	
+
 	if ticket.ClosedAt != nil {
 		sb.WriteString(fmt.Sprintf("🔒 关闭时间: `%s`\n", ticket.ClosedAt.Format("2006-01-02 15:04:05")))
 	}
-	
+
 	// Tags Section
 	if ticket.Tags != nil && *ticket.Tags != "" {
 		sb.WriteString(fmt.Sprintf("\n🏷️ *标签*: `%s`\n", *ticket.Tags))
 	}
-	
+
 	// Description Section
 	sb.WriteString("\n📝 *工单描述*\n")
 	sb.WriteString("━━━━━━━━━━━━━━━━━━━━━━\n")
 	sb.WriteString(fmt.Sprintf("_%s_\n\n", b.escapeMarkdownV2(ticket.Description)))
-	
+
 	// Recent Messages Section
 	messages, _, msgErr := b.ticketMessageService.GetTicketMessages(ctx, &dto.GetTicketMessagesRequest{
 		TicketID: ticketID,
 		Limit:    3,
 	})
-	
+
 	if msgErr == nil && len(messages) > 0 {
 		sb.WriteString("💬 *最近消息* (最新3条)\n")
 		sb.WriteString("━━━━━━━━━━━━━━━━━━━━━━\n")
@@ -1992,57 +1992,57 @@ func (b *BotEnhanced) showTicketDetails(chatID int64, messageID int, ticketID ui
 			if msgUser != nil {
 				userName = msgUser.Username
 			}
-			
+
 			msgIcon := "👤"
 			if msg.MessageType == "admin" {
 				msgIcon = "👨‍💼"
 			} else if msg.MessageType == "system" {
 				msgIcon = "🤖"
 			}
-			
+
 			sb.WriteString(fmt.Sprintf("%s *%s* `%s`\n", msgIcon, userName, msg.CreatedAt.Format("01-02 15:04")))
 			content := b.truncateString(msg.Content, 100)
 			sb.WriteString(fmt.Sprintf("💭 _%s_\n", b.escapeMarkdownV2(content)))
-			
+
 			if i < len(messages)-1 {
 				sb.WriteString("- - - - - - - - - -\n")
 			}
 		}
 	}
-	
+
 	keyboard := b.createTicketActionKeyboard(ticketID, ticket.TicketNo)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, sb.String())
 	edit.ParseMode = "MarkdownV2"
 	edit.ReplyMarkup = keyboard
-	
+
 	b.api.Send(edit)
 }
 
 // showMyTicketDetails shows ticket details for regular users
 func (b *BotEnhanced) showMyTicketDetails(chatID int64, messageID int, ticketID uint) {
 	ctx := context.Background()
-	
+
 	// Get user by telegram ID to verify ownership
 	user, userErr := b.getUserByTelegramID(ctx, chatID)
 	if userErr != nil {
 		b.showUnboundAccount(chatID, messageID)
 		return
 	}
-	
+
 	// Get ticket details
 	ticket, err := b.ticketService.GetTicket(ctx, ticketID)
 	if err != nil {
 		b.showError(chatID, messageID, "获取工单详情失败")
 		return
 	}
-	
+
 	// Verify user owns this ticket
 	if ticket.UserID != user.ID {
 		b.showError(chatID, messageID, "您只能查看自己的工单")
 		return
 	}
-	
+
 	// Build message
 	var sb strings.Builder
 	sb.WriteString("*我的工单*\n\n")
@@ -2052,24 +2052,24 @@ func (b *BotEnhanced) showMyTicketDetails(chatID int64, messageID int, ticketID 
 	sb.WriteString(fmt.Sprintf("优先级: %s\n", b.formatPriority(ticket.Priority)))
 	sb.WriteString(fmt.Sprintf("分类: %s\n", ticket.Category))
 	sb.WriteString(fmt.Sprintf("创建时间: %s\n", ticket.CreatedAt.Format("2006-01-02 15:04")))
-	
+
 	if ticket.FirstResponseAt != nil {
 		sb.WriteString(fmt.Sprintf("首次回复: %s\n", ticket.FirstResponseAt.Format("2006-01-02 15:04")))
 	}
-	
+
 	if ticket.Status == "resolved" && ticket.Resolution != "" {
 		sb.WriteString(fmt.Sprintf("\n解决方案:\n%s\n", ticket.Resolution))
 	}
-	
+
 	sb.WriteString(fmt.Sprintf("\n描述:\n%s\n", ticket.Description))
-	
+
 	// Get user-visible messages
 	messages, _, msgErr := b.ticketMessageService.GetTicketMessages(ctx, &dto.GetTicketMessagesRequest{
 		TicketID:        ticketID,
 		IncludeInternal: false, // Hide internal messages from users
 		Limit:           10,
 	})
-	
+
 	if msgErr == nil && len(messages) > 0 {
 		sb.WriteString("\n*对话记录:*\n")
 		for _, msg := range messages {
@@ -2077,62 +2077,62 @@ func (b *BotEnhanced) showMyTicketDetails(chatID int64, messageID int, ticketID 
 			if msg.MessageType == "admin" || msg.MessageType == "system" {
 				msgTypeIcon = "🔧"
 			}
-			sb.WriteString(fmt.Sprintf("\n%s *%s*\n%s\n", 
+			sb.WriteString(fmt.Sprintf("\n%s *%s*\n%s\n",
 				msgTypeIcon,
 				msg.CreatedAt.Format("01-02 15:04"),
 				msg.Content))
 		}
 	}
-	
+
 	keyboard := b.createUserTicketKeyboard(ticketID, ticket.TicketNo)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, sb.String())
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = keyboard
-	
+
 	b.api.Send(edit)
 }
 
 // startTicketReply starts the conversation flow for replying to a ticket (admin)
 func (b *BotEnhanced) startTicketReply(chatID int64, messageID int, ticketID uint) {
 	ctx := context.Background()
-	
+
 	// Get ticket details first
 	ticket, err := b.ticketService.GetTicket(ctx, ticketID)
 	if err != nil {
 		b.showError(chatID, messageID, "无法获取工单信息")
 		return
 	}
-	
+
 	// Check if ticket is closed
 	if ticket.Status == "closed" {
 		b.showError(chatID, messageID, "工单已关闭，无法回复")
 		return
 	}
-	
+
 	// Get user information for the ticket
 	ticketUser, _ := b.userService.GetUserByID(ctx, ticket.UserID)
-	
+
 	// Set conversation state for this user
 	stateKey := fmt.Sprintf("replying_to_ticket_%d", ticketID)
 	b.userStates[chatID] = stateKey
-	
+
 	// Build informative prompt
 	var sb strings.Builder
 	sb.WriteString("💬 *管理员回复*\n\n")
 	sb.WriteString(fmt.Sprintf("🎫 工单号: `%s`\n", ticket.TicketNo))
 	sb.WriteString(fmt.Sprintf("📝 标题: %s\n", ticket.Title))
-	
+
 	if ticketUser != nil {
 		sb.WriteString(fmt.Sprintf("👤 用户: %s\n", ticketUser.Username))
 	}
-	
+
 	priorityIcon := b.getPriorityIcon(ticket.Priority)
 	sb.WriteString(fmt.Sprintf("%s 优先级: %s\n", priorityIcon, b.formatPriority(ticket.Priority)))
-	
+
 	statusIcon := b.getStatusIcon(ticket.Status)
 	sb.WriteString(fmt.Sprintf("%s 状态: %s\n\n", statusIcon, b.formatTicketStatus(ticket.Status)))
-	
+
 	sb.WriteString("请输入您的回复内容：\n\n")
 	sb.WriteString("💡 *提示*:\n")
 	sb.WriteString("• 回复将发送给用户\n")
@@ -2140,54 +2140,54 @@ func (b *BotEnhanced) startTicketReply(chatID int64, messageID int, ticketID uin
 	sb.WriteString("• 支持多条消息 - 发送后可继续添加\n")
 	sb.WriteString("• 提供清晰的解决方案\n")
 	sb.WriteString("• 用户将收到通知")
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("❌ 取消", "cancel_reply"),
 			tgbotapi.NewInlineKeyboardButtonData("🔍 查看详情", fmt.Sprintf("ticket_view:%d", ticketID)),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, sb.String())
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
 // startAddReply starts the conversation flow for adding a reply (user)
 func (b *BotEnhanced) startAddReply(chatID int64, messageID int, ticketID uint) {
 	ctx := context.Background()
-	
+
 	// Get ticket details first
 	ticket, err := b.ticketService.GetTicket(ctx, ticketID)
 	if err != nil {
 		b.showError(chatID, messageID, "无法获取工单信息")
 		return
 	}
-	
+
 	// Check if ticket is closed
 	if ticket.Status == "closed" {
 		b.showError(chatID, messageID, "工单已关闭，无法添加回复")
 		return
 	}
-	
+
 	// Verify user owns this ticket
 	user, err := b.getUserByTelegramID(ctx, chatID)
 	if err != nil {
 		b.showUnboundAccount(chatID, messageID)
 		return
 	}
-	
+
 	if ticket.UserID != user.ID {
 		b.showError(chatID, messageID, "您只能回复自己的工单")
 		return
 	}
-	
+
 	// Set conversation state for this user
 	stateKey := fmt.Sprintf("adding_reply_to_ticket_%d", ticketID)
 	b.userStates[chatID] = stateKey
-	
+
 	// Build informative prompt
 	var sb strings.Builder
 	sb.WriteString("💬 *添加回复*\n\n")
@@ -2200,42 +2200,42 @@ func (b *BotEnhanced) startAddReply(chatID int64, messageID int, ticketID uint) 
 	sb.WriteString("• 支持多条消息 - 发送后可继续添加\n")
 	sb.WriteString("• 所有消息会合并为一条回复\n")
 	sb.WriteString("• 回复将记录在工单历史中")
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("❌ 取消", "cancel_reply"),
 			tgbotapi.NewInlineKeyboardButtonData("📄 查看工单", fmt.Sprintf("my_ticket:%d", ticketID)),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, sb.String())
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
 // showTicketAssignment shows ticket assignment interface (admin only)
 func (b *BotEnhanced) showTicketAssignment(chatID int64, messageID int, ticketID uint) {
 	text := "*工单分配*\n\n该功能需要通过管理面板操作。"
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("返回工单", fmt.Sprintf("ticket_view:%d", ticketID)),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
 // showTicketStatusChange shows ticket status change interface (admin only)
 func (b *BotEnhanced) showTicketStatusChange(chatID int64, messageID int, ticketID uint) {
 	text := "*更改工单状态*\n\n请选择新状态："
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("处理中", fmt.Sprintf("set_status:%d:in_progress", ticketID)),
@@ -2249,11 +2249,11 @@ func (b *BotEnhanced) showTicketStatusChange(chatID int64, messageID int, ticket
 			tgbotapi.NewInlineKeyboardButtonData("返回工单", fmt.Sprintf("ticket_view:%d", ticketID)),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
@@ -2268,13 +2268,13 @@ func (b *BotEnhanced) truncateString(s string, maxLen int) string {
 // handleTicketReply processes ticket reply submissions
 func (b *BotEnhanced) handleTicketReply(chatID int64, ticketID uint, content string, messageType string) {
 	ctx := context.Background()
-	
+
 	logger.Info("Processing ticket reply via telegram",
 		logger.Int64("chat_id", chatID),
 		logger.Uint("ticket_id", ticketID),
 		logger.String("message_type", messageType),
 		logger.Int("content_length", len(content)))
-	
+
 	// Validate ticket ID
 	if ticketID == 0 {
 		logger.Error("Invalid ticket ID provided for telegram reply",
@@ -2283,7 +2283,7 @@ func (b *BotEnhanced) handleTicketReply(chatID int64, ticketID uint, content str
 		b.sendErrorMessage(chatID, "无效的工单ID", "请确认工单号是否正确")
 		return
 	}
-	
+
 	// Get user by telegram ID
 	user, err := b.getUserByTelegramID(ctx, chatID)
 	if err != nil {
@@ -2294,20 +2294,20 @@ func (b *BotEnhanced) handleTicketReply(chatID int64, ticketID uint, content str
 		b.sendErrorMessage(chatID, "账号未绑定", "请先在网站上使用 Telegram 登录绑定账号")
 		return
 	}
-	
+
 	// Validate content
 	content = strings.TrimSpace(content)
 	if content == "" {
 		b.sendErrorMessage(chatID, "回复内容为空", "请输入有效的回复内容")
 		return
 	}
-	
+
 	// Check content length
 	if len(content) > 5000 {
 		b.sendErrorMessage(chatID, "回复内容过长", "回复内容不能超过5000个字符")
 		return
 	}
-	
+
 	// Get ticket to verify it exists and check permissions
 	ticket, err := b.ticketService.GetTicket(ctx, ticketID)
 	if err != nil {
@@ -2317,13 +2317,13 @@ func (b *BotEnhanced) handleTicketReply(chatID int64, ticketID uint, content str
 		b.sendErrorMessage(chatID, "工单不存在", "无法找到指定的工单")
 		return
 	}
-	
+
 	// Check if ticket is closed
 	if ticket.Status == "closed" {
 		b.sendErrorMessage(chatID, "工单已关闭", "该工单已关闭，无法添加回复")
 		return
 	}
-	
+
 	// Verify permissions based on message type
 	if messageType == "user" {
 		// User can only reply to their own tickets
@@ -2336,11 +2336,11 @@ func (b *BotEnhanced) handleTicketReply(chatID int64, ticketID uint, content str
 		// For now, we'll allow any authenticated user to reply as admin
 		// This should be restricted to actual admin users
 	}
-	
+
 	// Show typing indicator
 	typingAction := tgbotapi.NewChatAction(chatID, tgbotapi.ChatTyping)
 	b.api.Send(typingAction)
-	
+
 	// Create the ticket message
 	req := &dto.CreateTicketMessageRequest{
 		Content:     content,
@@ -2348,7 +2348,7 @@ func (b *BotEnhanced) handleTicketReply(chatID int64, ticketID uint, content str
 		IsInternal:  false,
 		Metadata:    fmt.Sprintf(`{"source":"telegram","chat_id":%d}`, chatID),
 	}
-	
+
 	message, err := b.ticketMessageService.CreateTicketMessage(ctx, ticketID, user.ID, req)
 	if err != nil {
 		logger.Error("Failed to create ticket message via telegram",
@@ -2358,7 +2358,7 @@ func (b *BotEnhanced) handleTicketReply(chatID int64, ticketID uint, content str
 		b.sendErrorMessage(chatID, "回复失败", "系统错误，请稍后重试")
 		return
 	}
-	
+
 	// Build enhanced confirmation message
 	var sb strings.Builder
 	if messageType == "admin" {
@@ -2372,7 +2372,7 @@ func (b *BotEnhanced) handleTicketReply(chatID int64, ticketID uint, content str
 		sb.WriteString(fmt.Sprintf("🎫 工单号: `%s`\n", ticket.TicketNo))
 		sb.WriteString(fmt.Sprintf("📝 标题: %s\n", b.escapeMarkdownV2(ticket.Title)))
 		sb.WriteString(fmt.Sprintf("💬 消息ID: \\#%d\n\n", message.ID))
-		
+
 		// Add estimated response time based on priority
 		switch ticket.Priority {
 		case "critical":
@@ -2386,10 +2386,10 @@ func (b *BotEnhanced) handleTicketReply(chatID int64, ticketID uint, content str
 		default:
 			sb.WriteString("⏰ 预计响应时间: 7天内\n")
 		}
-		
+
 		sb.WriteString("\n客服将尽快处理您的消息。")
 	}
-	
+
 	// Create keyboard for further actions
 	var keyboard tgbotapi.InlineKeyboardMarkup
 	if messageType == "admin" {
@@ -2421,18 +2421,18 @@ func (b *BotEnhanced) handleTicketReply(chatID int64, ticketID uint, content str
 			),
 		)
 	}
-	
+
 	msg := tgbotapi.NewMessage(chatID, sb.String())
 	msg.ParseMode = "MarkdownV2"
 	msg.ReplyMarkup = keyboard
-	
+
 	_, sendErr := b.api.Send(msg)
 	if sendErr != nil {
 		logger.Error("Failed to send confirmation message",
 			logger.Int64("chat_id", chatID),
 			logger.ErrorField(sendErr))
 	}
-	
+
 	logger.Info("Ticket reply processed successfully via telegram",
 		logger.Uint("message_id", message.ID),
 		logger.Uint("ticket_id", ticketID),
@@ -2443,7 +2443,7 @@ func (b *BotEnhanced) handleTicketReply(chatID int64, ticketID uint, content str
 // handleStatusChange processes ticket status changes
 func (b *BotEnhanced) handleStatusChange(chatID int64, messageID int, ticketID uint, newStatus string) {
 	ctx := context.Background()
-	
+
 	// Update ticket status
 	ticket, err := b.ticketService.UpdateTicketStatus(ctx, ticketID, newStatus)
 	if err != nil {
@@ -2454,27 +2454,27 @@ func (b *BotEnhanced) handleStatusChange(chatID int64, messageID int, ticketID u
 		b.showError(chatID, messageID, "状态更新失败")
 		return
 	}
-	
+
 	// Send enhanced confirmation message with visual indicators
 	statusIcon := b.getStatusIcon(newStatus)
-	text := fmt.Sprintf("✅ *状态已更新*\n\n🎫 工单: `%s`\n%s 新状态: *%s*", 
-		ticket.TicketNo, 
+	text := fmt.Sprintf("✅ *状态已更新*\n\n🎫 工单: `%s`\n%s 新状态: *%s*",
+		ticket.TicketNo,
 		statusIcon,
 		b.formatTicketStatus(newStatus))
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🔍 查看工单", fmt.Sprintf("ticket_view:%d", ticketID)),
 			tgbotapi.NewInlineKeyboardButtonData("🏠 主菜单", "main_menu"),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
-	
+
 	logger.Info("Ticket status updated via telegram",
 		logger.Uint("ticket_id", ticketID),
 		logger.String("old_status", ticket.Status),
@@ -2484,7 +2484,7 @@ func (b *BotEnhanced) handleStatusChange(chatID int64, messageID int, ticketID u
 // Enhanced Priority Management
 func (b *BotEnhanced) showTicketPriorityChange(chatID int64, messageID int, ticketID uint) {
 	text := "⚡ *设置工单优先级*\n\n请选择新的优先级："
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🟢 低", fmt.Sprintf("set_priority:%d:low", ticketID)),
@@ -2501,57 +2501,57 @@ func (b *BotEnhanced) showTicketPriorityChange(chatID int64, messageID int, tick
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回工单", fmt.Sprintf("ticket_view:%d", ticketID)),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
 func (b *BotEnhanced) handlePriorityChange(chatID int64, messageID int, ticketID uint, newPriority string) {
 	// Update ticket priority (you'll need to implement this in your ticket service)
 	// ticket, err := b.ticketService.UpdateTicketPriority(ctx, ticketID, newPriority)
-	
+
 	// For now, we'll show a confirmation message
 	priorityIcon := b.getPriorityIcon(newPriority)
-	text := fmt.Sprintf("✅ *优先级已更新*\n\n🎫 工单: \\#%d\n%s 新优先级: *%s*", 
-		ticketID, 
+	text := fmt.Sprintf("✅ *优先级已更新*\n\n🎫 工单: \\#%d\n%s 新优先级: *%s*",
+		ticketID,
 		priorityIcon,
 		b.formatPriority(newPriority))
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🔍 查看工单", fmt.Sprintf("ticket_view:%d", ticketID)),
 			tgbotapi.NewInlineKeyboardButtonData("🏠 主菜单", "main_menu"),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
 // Tags Management
 func (b *BotEnhanced) showTicketTagsManagement(chatID int64, messageID int, ticketID uint) {
 	ctx := context.Background()
-	
+
 	ticket, err := b.ticketService.GetTicket(ctx, ticketID)
 	if err != nil {
 		b.showError(chatID, messageID, "获取工单信息失败")
 		return
 	}
-	
+
 	currentTags := ""
 	if ticket.Tags != nil && *ticket.Tags != "" {
 		currentTags = *ticket.Tags
 	}
-	
-	text := fmt.Sprintf("🏷️ *标签管理*\n\n🎫 工单: `%s`\n\n📋 当前标签: `%s`\n\n点击下方按钮管理标签：", 
+
+	text := fmt.Sprintf("🏷️ *标签管理*\n\n🎫 工单: `%s`\n\n📋 当前标签: `%s`\n\n点击下方按钮管理标签：",
 		ticket.TicketNo, currentTags)
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("➕ 添加标签", fmt.Sprintf("add_tag:%d", ticketID)),
@@ -2564,11 +2564,11 @@ func (b *BotEnhanced) showTicketTagsManagement(chatID int64, messageID int, tick
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回工单", fmt.Sprintf("ticket_view:%d", ticketID)),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
@@ -2577,19 +2577,19 @@ func (b *BotEnhanced) startInternalNote(chatID int64, messageID int, ticketID ui
 	// Set conversation state for internal note
 	stateKey := fmt.Sprintf("adding_internal_note_%d", ticketID)
 	b.userStates[chatID] = stateKey
-	
+
 	text := "📝 *添加内部注释*\n\n请输入内部注释内容（仅管理员可见）："
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("❌ 取消", "cancel_reply"),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
@@ -2597,59 +2597,59 @@ func (b *BotEnhanced) startInternalNote(chatID int64, messageID int, ticketID ui
 func (b *BotEnhanced) startMessageSearch(chatID int64, messageID int, ticketID uint) {
 	stateKey := fmt.Sprintf("searching_messages_%d", ticketID)
 	b.userStates[chatID] = stateKey
-	
+
 	text := "🔍 *搜索工单消息*\n\n请输入要搜索的关键词："
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("❌ 取消", "cancel_reply"),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
 // Ticket History
 func (b *BotEnhanced) showTicketHistory(chatID int64, messageID int, ticketID uint) {
 	ctx := context.Background()
-	
+
 	// Get all messages for the ticket
 	messages, _, err := b.ticketMessageService.GetTicketMessages(ctx, &dto.GetTicketMessagesRequest{
 		TicketID: ticketID,
 		Limit:    50, // Get more history
 	})
-	
+
 	if err != nil {
 		b.showError(chatID, messageID, "获取历史记录失败")
 		return
 	}
-	
+
 	var sb strings.Builder
 	sb.WriteString("📊 *工单历史记录*\n")
 	sb.WriteString("━━━━━━━━━━━━━━━━━━━━━━\n\n")
-	
+
 	if len(messages) == 0 {
 		sb.WriteString("暂无历史记录\n")
 	} else {
 		sb.WriteString(fmt.Sprintf("📈 总消息数: *%d*\n\n", len(messages)))
-		
+
 		// Group messages by date
 		dateGroups := make(map[string][]*ticketEntities.TicketMessage)
 		for _, msg := range messages {
 			date := msg.CreatedAt.Format("2006-01-02")
 			dateGroups[date] = append(dateGroups[date], msg)
 		}
-		
+
 		// Show recent messages
 		recentCount := 10
 		if len(messages) < recentCount {
 			recentCount = len(messages)
 		}
-		
+
 		sb.WriteString(fmt.Sprintf("📝 *最近 %d 条消息*:\n", recentCount))
 		for i := 0; i < recentCount; i++ {
 			msg := messages[i]
@@ -2658,20 +2658,20 @@ func (b *BotEnhanced) showTicketHistory(chatID int64, messageID int, ticketID ui
 			if msgUser != nil {
 				userName = msgUser.Username
 			}
-			
+
 			msgIcon := "👤"
 			if msg.MessageType == "admin" {
 				msgIcon = "👨‍💼"
 			} else if msg.MessageType == "system" {
 				msgIcon = "🤖"
 			}
-			
+
 			sb.WriteString(fmt.Sprintf("%s %s `%s`\n", msgIcon, userName, msg.CreatedAt.Format("01-02 15:04")))
 			content := b.truncateString(msg.Content, 80)
 			sb.WriteString(fmt.Sprintf("💭 _%s_\n\n", content))
 		}
 	}
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("📤 导出历史", fmt.Sprintf("ticket_export:%d", ticketID)),
@@ -2681,35 +2681,35 @@ func (b *BotEnhanced) showTicketHistory(chatID int64, messageID int, ticketID ui
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回工单", fmt.Sprintf("ticket_view:%d", ticketID)),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, sb.String())
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
 // Export functionality
 func (b *BotEnhanced) exportTicket(chatID int64, messageID int, ticketID uint) {
 	text := "📤 *导出工单*\n\n🚧 导出功能开发中...\n\n将支持以下格式：\n• 📄 PDF 报告\n• 📊 Excel 表格\n• 💾 JSON 数据\n• 📧 邮件发送"
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回工单", fmt.Sprintf("ticket_view:%d", ticketID)),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
 // Placeholder functions for user actions (to be implemented)
 func (b *BotEnhanced) showUserPriorityChange(chatID int64, messageID int, ticketID uint) {
 	text := "🎯 *设置优先级*\n\n用户可设置的优先级："
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🔵 普通", fmt.Sprintf("set_priority:%d:normal", ticketID)),
@@ -2722,42 +2722,42 @@ func (b *BotEnhanced) showUserPriorityChange(chatID int64, messageID int, ticket
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回", fmt.Sprintf("my_ticket:%d", ticketID)),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
 func (b *BotEnhanced) startAttachmentUpload(chatID int64, messageID int, ticketID uint) {
 	text := "📎 *添加附件*\n\n🚧 附件上传功能开发中...\n\n将支持：\n• 🖼️ 图片文件\n• 📄 文档文件\n• 🎥 视频文件\n• 🗂️ 压缩文件"
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回", fmt.Sprintf("my_ticket:%d", ticketID)),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
 func (b *BotEnhanced) showTicketStatusInfo(chatID int64, messageID int, ticketID uint) {
 	ctx := context.Background()
-	
+
 	ticket, err := b.ticketService.GetTicket(ctx, ticketID)
 	if err != nil {
 		b.showError(chatID, messageID, "获取工单信息失败")
 		return
 	}
-	
+
 	statusIcon := b.getStatusIcon(ticket.Status)
 	var statusDescription string
-	
+
 	switch ticket.Status {
 	case "open":
 		statusDescription = "工单已创建，等待处理"
@@ -2772,26 +2772,26 @@ func (b *BotEnhanced) showTicketStatusInfo(chatID int64, messageID int, ticketID
 	default:
 		statusDescription = "状态信息"
 	}
-	
-	text := fmt.Sprintf("📊 *工单状态信息*\n\n🎫 工单号: `%s`\n%s 当前状态: *%s*\n\n📝 状态说明:\n_%s_", 
+
+	text := fmt.Sprintf("📊 *工单状态信息*\n\n🎫 工单号: `%s`\n%s 当前状态: *%s*\n\n📝 状态说明:\n_%s_",
 		ticket.TicketNo, statusIcon, b.formatTicketStatus(ticket.Status), statusDescription)
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回", fmt.Sprintf("my_ticket:%d", ticketID)),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
 func (b *BotEnhanced) showTicketEditOptions(chatID int64, messageID int, ticketID uint) {
 	text := "📝 *编辑工单信息*\n\n选择要编辑的内容："
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("📌 修改标题", fmt.Sprintf("edit_title:%d", ticketID)),
@@ -2804,43 +2804,43 @@ func (b *BotEnhanced) showTicketEditOptions(chatID int64, messageID int, ticketI
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回", fmt.Sprintf("my_ticket:%d", ticketID)),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
 func (b *BotEnhanced) showNotificationSettings(chatID int64, messageID int, ticketID uint) {
 	text := "🔔 *通知设置*\n\n🚧 通知设置功能开发中...\n\n将提供：\n• 🔕 静音通知\n• ⏰ 定时提醒\n• 📧 邮件通知\n• 💌 重要更新提醒"
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回", fmt.Sprintf("my_ticket:%d", ticketID)),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
 func (b *BotEnhanced) showRelatedTickets(chatID int64, messageID int, ticketID uint) {
 	text := "🔗 *相关工单*\n\n🚧 相关工单功能开发中...\n\n将支持：\n• 🔍 智能关联\n• 📊 问题模式识别\n• 🔄 重复问题检测\n• 📈 趋势分析"
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回工单", fmt.Sprintf("ticket_view:%d", ticketID)),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
@@ -2849,14 +2849,14 @@ func (b *BotEnhanced) showRelatedTickets(chatID int64, messageID int, ticketID u
 // handleInternalNote processes internal note creation
 func (b *BotEnhanced) handleInternalNote(chatID int64, ticketID uint, content string) {
 	ctx := context.Background()
-	
+
 	// Get user by telegram ID
 	user, err := b.getUserByTelegramID(ctx, chatID)
 	if err != nil {
 		b.sendMessage(chatID, "❌ 未找到绑定的账号")
 		return
 	}
-	
+
 	// Create internal note
 	message, err := b.ticketMessageService.CreateInternalMessage(ctx, ticketID, user.ID, content)
 	if err != nil {
@@ -2867,23 +2867,23 @@ func (b *BotEnhanced) handleInternalNote(chatID int64, ticketID uint, content st
 		b.sendMessage(chatID, "❌ 创建内部注释失败，请稍后重试")
 		return
 	}
-	
-	text := fmt.Sprintf("✅ *内部注释已添加*\n\n🎫 工单: \\#%d\n📝 注释ID: \\#%d\n\n内部注释仅管理员可见。", 
+
+	text := fmt.Sprintf("✅ *内部注释已添加*\n\n🎫 工单: \\#%d\n📝 注释ID: \\#%d\n\n内部注释仅管理员可见。",
 		ticketID, message.ID)
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🔍 查看工单", fmt.Sprintf("ticket_view:%d", ticketID)),
 			tgbotapi.NewInlineKeyboardButtonData("🏠 主菜单", "main_menu"),
 		),
 	)
-	
+
 	msg := tgbotapi.NewMessage(chatID, text)
 	msg.ParseMode = "Markdown"
 	msg.ReplyMarkup = keyboard
-	
+
 	b.api.Send(msg)
-	
+
 	logger.Info("Internal note created via telegram",
 		logger.Uint("message_id", message.ID),
 		logger.Uint("ticket_id", ticketID),
@@ -2893,37 +2893,37 @@ func (b *BotEnhanced) handleInternalNote(chatID int64, ticketID uint, content st
 // handleMessageSearch processes message search queries
 func (b *BotEnhanced) handleMessageSearch(chatID int64, ticketID uint, searchQuery string) {
 	ctx := context.Background()
-	
+
 	if strings.TrimSpace(searchQuery) == "" {
 		b.sendMessage(chatID, "❌ 搜索关键词不能为空")
 		return
 	}
-	
+
 	// Get all messages for the ticket
 	messages, _, err := b.ticketMessageService.GetTicketMessages(ctx, &dto.GetTicketMessagesRequest{
 		TicketID: ticketID,
 		Limit:    100, // Get more messages for search
 	})
-	
+
 	if err != nil {
 		b.sendMessage(chatID, "❌ 搜索失败，请稍后重试")
 		return
 	}
-	
+
 	// Search for matching messages
 	var matchedMessages []*ticketEntities.TicketMessage
 	searchLower := strings.ToLower(searchQuery)
-	
+
 	for _, msg := range messages {
 		if strings.Contains(strings.ToLower(msg.Content), searchLower) {
 			matchedMessages = append(matchedMessages, msg)
 		}
 	}
-	
+
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("🔍 *搜索结果*\n\n🔎 关键词: `%s`\n📊 找到 %d 条匹配消息\n\n", 
+	sb.WriteString(fmt.Sprintf("🔍 *搜索结果*\n\n🔎 关键词: `%s`\n📊 找到 %d 条匹配消息\n\n",
 		searchQuery, len(matchedMessages)))
-	
+
 	if len(matchedMessages) == 0 {
 		sb.WriteString("😔 没有找到包含该关键词的消息")
 	} else {
@@ -2932,7 +2932,7 @@ func (b *BotEnhanced) handleMessageSearch(chatID int64, ticketID uint, searchQue
 		if displayCount > 5 {
 			displayCount = 5 // Limit display to first 5 matches
 		}
-		
+
 		for i := 0; i < displayCount; i++ {
 			msg := matchedMessages[i]
 			msgUser, _ := b.userService.GetUserByID(ctx, msg.UserID)
@@ -2940,16 +2940,16 @@ func (b *BotEnhanced) handleMessageSearch(chatID int64, ticketID uint, searchQue
 			if msgUser != nil {
 				userName = msgUser.Username
 			}
-			
+
 			msgIcon := "👤"
 			if msg.MessageType == "admin" {
 				msgIcon = "👨‍💼"
 			} else if msg.MessageType == "system" {
 				msgIcon = "🤖"
 			}
-			
+
 			sb.WriteString(fmt.Sprintf("%s *%s* `%s`\n", msgIcon, userName, msg.CreatedAt.Format("01-02 15:04")))
-			
+
 			// Highlight the search term in content
 			content := msg.Content
 			if len(content) > 150 {
@@ -2957,12 +2957,12 @@ func (b *BotEnhanced) handleMessageSearch(chatID int64, ticketID uint, searchQue
 			}
 			sb.WriteString(fmt.Sprintf("💭 %s\n\n", content))
 		}
-		
+
 		if len(matchedMessages) > displayCount {
 			sb.WriteString(fmt.Sprintf("... 还有 %d 条匹配结果\n", len(matchedMessages)-displayCount))
 		}
 	}
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("📊 历史记录", fmt.Sprintf("ticket_history:%d", ticketID)),
@@ -2972,13 +2972,13 @@ func (b *BotEnhanced) handleMessageSearch(chatID int64, ticketID uint, searchQue
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回工单", fmt.Sprintf("ticket_view:%d", ticketID)),
 		),
 	)
-	
+
 	msg := tgbotapi.NewMessage(chatID, sb.String())
 	msg.ParseMode = "Markdown"
 	msg.ReplyMarkup = keyboard
-	
+
 	b.api.Send(msg)
-	
+
 	logger.Info("Message search completed via telegram",
 		logger.Int64("chat_id", chatID),
 		logger.Uint("ticket_id", ticketID),
@@ -2989,19 +2989,19 @@ func (b *BotEnhanced) handleMessageSearch(chatID int64, ticketID uint, searchQue
 // handleTagAddition processes tag addition to tickets
 func (b *BotEnhanced) handleTagAddition(chatID int64, ticketID uint, tagsInput string) {
 	ctx := context.Background()
-	
+
 	if strings.TrimSpace(tagsInput) == "" {
 		b.sendMessage(chatID, "❌ 标签不能为空")
 		return
 	}
-	
+
 	// Get current ticket
 	ticket, err := b.ticketService.GetTicket(ctx, ticketID)
 	if err != nil {
 		b.sendMessage(chatID, "❌ 获取工单信息失败")
 		return
 	}
-	
+
 	// Parse new tags (comma-separated)
 	newTags := strings.Split(tagsInput, ",")
 	var cleanedTags []string
@@ -3011,7 +3011,7 @@ func (b *BotEnhanced) handleTagAddition(chatID int64, ticketID uint, tagsInput s
 			cleanedTags = append(cleanedTags, tag)
 		}
 	}
-	
+
 	// Combine with existing tags
 	var existingTags []string
 	if ticket.Tags != nil && *ticket.Tags != "" {
@@ -3020,11 +3020,11 @@ func (b *BotEnhanced) handleTagAddition(chatID int64, ticketID uint, tagsInput s
 			existingTags[i] = strings.TrimSpace(tag)
 		}
 	}
-	
+
 	// Remove duplicates and create final tag list
 	tagMap := make(map[string]bool)
 	var finalTags []string
-	
+
 	// Add existing tags
 	for _, tag := range existingTags {
 		if tag != "" && !tagMap[tag] {
@@ -3032,7 +3032,7 @@ func (b *BotEnhanced) handleTagAddition(chatID int64, ticketID uint, tagsInput s
 			finalTags = append(finalTags, tag)
 		}
 	}
-	
+
 	// Add new tags
 	for _, tag := range cleanedTags {
 		if !tagMap[tag] {
@@ -3040,16 +3040,16 @@ func (b *BotEnhanced) handleTagAddition(chatID int64, ticketID uint, tagsInput s
 			finalTags = append(finalTags, tag)
 		}
 	}
-	
+
 	// Update ticket with new tags (placeholder - would need actual ticket service method)
 	finalTagsStr := strings.Join(finalTags, ", ")
-	
+
 	// TODO: Implement UpdateTicketTags method in ticket service
 	// For now, just show confirmation
-	
-	text := fmt.Sprintf("✅ *标签已更新*\n\n🎫 工单: `%s`\n🏷️ 新标签: `%s`\n\n📊 总标签数: %d", 
+
+	text := fmt.Sprintf("✅ *标签已更新*\n\n🎫 工单: `%s`\n🏷️ 新标签: `%s`\n\n📊 总标签数: %d",
 		ticket.TicketNo, finalTagsStr, len(finalTags))
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🏷️ 标签管理", fmt.Sprintf("ticket_tags:%d", ticketID)),
@@ -3059,13 +3059,13 @@ func (b *BotEnhanced) handleTagAddition(chatID int64, ticketID uint, tagsInput s
 			tgbotapi.NewInlineKeyboardButtonData("🏠 主菜单", "main_menu"),
 		),
 	)
-	
+
 	msg := tgbotapi.NewMessage(chatID, text)
 	msg.ParseMode = "Markdown"
 	msg.ReplyMarkup = keyboard
-	
+
 	b.api.Send(msg)
-	
+
 	logger.Info("Tags added to ticket via telegram",
 		logger.Uint("ticket_id", ticketID),
 		logger.String("new_tags", finalTagsStr),
@@ -3075,46 +3075,46 @@ func (b *BotEnhanced) handleTagAddition(chatID int64, ticketID uint, tagsInput s
 // handleTitleEdit processes ticket title editing
 func (b *BotEnhanced) handleTitleEdit(chatID int64, ticketID uint, newTitle string) {
 	ctx := context.Background()
-	
+
 	newTitle = strings.TrimSpace(newTitle)
 	if newTitle == "" {
 		b.sendMessage(chatID, "❌ 工单标题不能为空")
 		return
 	}
-	
+
 	if len(newTitle) > 255 {
 		b.sendMessage(chatID, "❌ 工单标题过长，请控制在255字符以内")
 		return
 	}
-	
+
 	// Get current ticket to verify ownership
 	ticket, err := b.ticketService.GetTicket(ctx, ticketID)
 	if err != nil {
 		b.sendMessage(chatID, "❌ 获取工单信息失败")
 		return
 	}
-	
+
 	// Get user by telegram ID to verify ownership
 	user, err := b.getUserByTelegramID(ctx, chatID)
 	if err != nil {
 		b.sendMessage(chatID, "❌ 未找到绑定的账号")
 		return
 	}
-	
+
 	// Check if user owns this ticket
 	if ticket.UserID != user.ID {
 		b.sendMessage(chatID, "❌ 您只能编辑自己的工单")
 		return
 	}
-	
+
 	// TODO: Implement UpdateTicketTitle method in ticket service
 	// For now, just show confirmation
-	
-	text := fmt.Sprintf("✅ *工单标题已更新*\n\n🎫 工单号: `%s`\n📝 原标题: _%s_\n📝 新标题: *%s*", 
-		ticket.TicketNo, 
-		b.escapeMarkdownV2(ticket.Title), 
+
+	text := fmt.Sprintf("✅ *工单标题已更新*\n\n🎫 工单号: `%s`\n📝 原标题: _%s_\n📝 新标题: *%s*",
+		ticket.TicketNo,
+		b.escapeMarkdownV2(ticket.Title),
 		b.escapeMarkdownV2(newTitle))
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("📄 查看工单", fmt.Sprintf("my_ticket:%d", ticketID)),
@@ -3124,13 +3124,13 @@ func (b *BotEnhanced) handleTitleEdit(chatID int64, ticketID uint, newTitle stri
 			tgbotapi.NewInlineKeyboardButtonData("🏠 主菜单", "main_menu"),
 		),
 	)
-	
+
 	msg := tgbotapi.NewMessage(chatID, text)
 	msg.ParseMode = "MarkdownV2"
 	msg.ReplyMarkup = keyboard
-	
+
 	b.api.Send(msg)
-	
+
 	logger.Info("Ticket title updated via telegram",
 		logger.Uint("ticket_id", ticketID),
 		logger.Uint("user_id", user.ID),
@@ -3141,51 +3141,51 @@ func (b *BotEnhanced) handleTitleEdit(chatID int64, ticketID uint, newTitle stri
 // handleDescriptionEdit processes ticket description editing
 func (b *BotEnhanced) handleDescriptionEdit(chatID int64, ticketID uint, newDescription string) {
 	ctx := context.Background()
-	
+
 	newDescription = strings.TrimSpace(newDescription)
 	if newDescription == "" {
 		b.sendMessage(chatID, "❌ 工单描述不能为空")
 		return
 	}
-	
+
 	// Get current ticket to verify ownership
 	ticket, err := b.ticketService.GetTicket(ctx, ticketID)
 	if err != nil {
 		b.sendMessage(chatID, "❌ 获取工单信息失败")
 		return
 	}
-	
+
 	// Get user by telegram ID to verify ownership
 	user, err := b.getUserByTelegramID(ctx, chatID)
 	if err != nil {
 		b.sendMessage(chatID, "❌ 未找到绑定的账号")
 		return
 	}
-	
+
 	// Check if user owns this ticket
 	if ticket.UserID != user.ID {
 		b.sendMessage(chatID, "❌ 您只能编辑自己的工单")
 		return
 	}
-	
+
 	// TODO: Implement UpdateTicketDescription method in ticket service
 	// For now, just show confirmation
-	
+
 	oldDescPreview := ticket.Description
 	if len(oldDescPreview) > 100 {
 		oldDescPreview = oldDescPreview[:100] + "..."
 	}
-	
+
 	newDescPreview := newDescription
 	if len(newDescPreview) > 100 {
 		newDescPreview = newDescPreview[:100] + "..."
 	}
-	
-	text := fmt.Sprintf("✅ *工单描述已更新*\n\n🎫 工单号: `%s`\n\n📝 *原描述预览*:\n_%s_\n\n📝 *新描述预览*:\n*%s*", 
-		ticket.TicketNo, 
-		b.escapeMarkdownV2(oldDescPreview), 
+
+	text := fmt.Sprintf("✅ *工单描述已更新*\n\n🎫 工单号: `%s`\n\n📝 *原描述预览*:\n_%s_\n\n📝 *新描述预览*:\n*%s*",
+		ticket.TicketNo,
+		b.escapeMarkdownV2(oldDescPreview),
 		b.escapeMarkdownV2(newDescPreview))
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("📄 查看工单", fmt.Sprintf("my_ticket:%d", ticketID)),
@@ -3195,13 +3195,13 @@ func (b *BotEnhanced) handleDescriptionEdit(chatID int64, ticketID uint, newDesc
 			tgbotapi.NewInlineKeyboardButtonData("🏠 主菜单", "main_menu"),
 		),
 	)
-	
+
 	msg := tgbotapi.NewMessage(chatID, text)
 	msg.ParseMode = "MarkdownV2"
 	msg.ReplyMarkup = keyboard
-	
+
 	b.api.Send(msg)
-	
+
 	logger.Info("Ticket description updated via telegram",
 		logger.Uint("ticket_id", ticketID),
 		logger.Uint("user_id", user.ID),
@@ -3219,7 +3219,7 @@ func (b *BotEnhanced) showBatchOperationsMenu(chatID int64, messageID int) {
 		"• 批量状态 - 同时更改多个工单状态\n" +
 		"• 批量优先级 - 调整多个工单优先级\n" +
 		"• 批量标签 - 为多个工单添加标签"
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("👥 批量分配", "batch_assign"),
@@ -3241,24 +3241,24 @@ func (b *BotEnhanced) showBatchOperationsMenu(chatID int64, messageID int) {
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回", "admin_dashboard"),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
 // showTicketEscalation displays ticket escalation options
 func (b *BotEnhanced) showTicketEscalation(chatID int64, messageID int, ticketID uint) {
 	ctx := context.Background()
-	
+
 	ticket, err := b.ticketService.GetTicket(ctx, ticketID)
 	if err != nil {
 		b.showError(chatID, messageID, "获取工单信息失败")
 		return
 	}
-	
+
 	text := fmt.Sprintf("⚡ *工单升级*\n\n"+
 		"🎫 工单号: `%s`\n"+
 		"📝 标题: %s\n"+
@@ -3269,7 +3269,7 @@ func (b *BotEnhanced) showTicketEscalation(chatID int64, messageID int, ticketID
 		ticket.Title,
 		b.getPriorityIcon(ticket.Priority), b.formatPriority(ticket.Priority),
 		b.getStatusIcon(ticket.Status), b.formatTicketStatus(ticket.Status))
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🟡 L1 - 高级技术支持", fmt.Sprintf("escalate_to:%d:l1", ticketID)),
@@ -3287,11 +3287,11 @@ func (b *BotEnhanced) showTicketEscalation(chatID int64, messageID int, ticketID
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回工单", fmt.Sprintf("ticket_view:%d", ticketID)),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
@@ -3305,7 +3305,7 @@ func (b *BotEnhanced) showBatchAssignMenu(chatID int64, messageID int) {
 		"• ⚡ 自动分配规则\n" +
 		"• 📊 负载均衡分配\n" +
 		"• 📈 分配历史追踪"
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("📋 按状态筛选", "batch_filter_status"),
@@ -3322,11 +3322,11 @@ func (b *BotEnhanced) showBatchAssignMenu(chatID int64, messageID int) {
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回", "admin_batch_operations"),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
@@ -3340,7 +3340,7 @@ func (b *BotEnhanced) showBatchStatusMenu(chatID int64, messageID int) {
 		"• 批量设为进行中\n" +
 		"• 批量设为待定状态\n" +
 		"• 自定义状态批量更改"
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🔒 批量关闭", "batch_status_close"),
@@ -3357,11 +3357,11 @@ func (b *BotEnhanced) showBatchStatusMenu(chatID int64, messageID int) {
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回", "admin_batch_operations"),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
@@ -3375,7 +3375,7 @@ func (b *BotEnhanced) showBatchPriorityMenu(chatID int64, messageID int) {
 		"🟡 高 - 重要问题，1天内处理\n" +
 		"🟠 紧急 - 紧急问题，4小时内处理\n" +
 		"🔴 严重 - 严重问题，1小时内处理"
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🟢 批量设为低", "batch_priority_low"),
@@ -3395,35 +3395,35 @@ func (b *BotEnhanced) showBatchPriorityMenu(chatID int64, messageID int) {
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回", "admin_batch_operations"),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
 // handleTicketEscalation processes ticket escalation requests
 func (b *BotEnhanced) handleTicketEscalation(chatID int64, messageID int, ticketID uint, level string) {
 	ctx := context.Background()
-	
+
 	// Get user for logging
 	user, err := b.getUserByTelegramID(ctx, chatID)
 	if err != nil {
 		b.showError(chatID, messageID, "用户验证失败")
 		return
 	}
-	
+
 	// Get ticket info
 	ticket, err := b.ticketService.GetTicket(ctx, ticketID)
 	if err != nil {
 		b.showError(chatID, messageID, "获取工单信息失败")
 		return
 	}
-	
+
 	// Determine escalation details
 	var escalationTitle, escalationIcon, escalationDescription string
-	
+
 	switch level {
 	case "l1":
 		escalationTitle = "L1 - 高级技术支持"
@@ -3432,7 +3432,7 @@ func (b *BotEnhanced) handleTicketEscalation(chatID int64, messageID int, ticket
 		// TODO: Update ticket priority to "high"
 	case "l2":
 		escalationTitle = "L2 - 专家支持"
-		escalationIcon = "🟠" 
+		escalationIcon = "🟠"
 		escalationDescription = "工单已升级至专家支持团队"
 		// TODO: Update ticket priority to "urgent"
 	case "l3":
@@ -3449,13 +3449,13 @@ func (b *BotEnhanced) handleTicketEscalation(chatID int64, messageID int, ticket
 		b.showError(chatID, messageID, "无效的升级级别")
 		return
 	}
-	
+
 	// TODO: Implement actual escalation logic in ticket service
 	// For now, we'll create an internal note and show confirmation
-	
+
 	escalationNote := fmt.Sprintf("工单升级：%s\n升级原因：%s\n升级操作员：%s\n升级时间：%s",
 		escalationTitle, escalationDescription, user.Username, time.Now().Format("2006-01-02 15:04:05"))
-	
+
 	// Create internal escalation note
 	_, err = b.ticketMessageService.CreateInternalMessage(ctx, ticketID, user.ID, escalationNote)
 	if err != nil {
@@ -3465,7 +3465,7 @@ func (b *BotEnhanced) handleTicketEscalation(chatID int64, messageID int, ticket
 			logger.ErrorField(err))
 		// Continue anyway, don't fail the escalation
 	}
-	
+
 	text := fmt.Sprintf("%s *工单已升级*\n\n🎫 工单号: `%s`\n📝 标题: %s\n\n"+
 		"⚡ *升级详情*:\n"+
 		"🎯 升级级别: %s %s\n"+
@@ -3474,9 +3474,9 @@ func (b *BotEnhanced) handleTicketEscalation(chatID int64, messageID int, ticket
 		"⏰ 升级时间: %s\n\n"+
 		"📨 相关人员已收到通知",
 		escalationIcon, ticket.TicketNo, ticket.Title,
-		escalationIcon, escalationTitle, escalationDescription, 
+		escalationIcon, escalationTitle, escalationDescription,
 		user.Username, time.Now().Format("01-02 15:04"))
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🔍 查看工单", fmt.Sprintf("ticket_view:%d", ticketID)),
@@ -3487,20 +3487,20 @@ func (b *BotEnhanced) handleTicketEscalation(chatID int64, messageID int, ticket
 			tgbotapi.NewInlineKeyboardButtonData("🏠 主菜单", "main_menu"),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
-	
+
 	logger.Info("Ticket escalated via telegram",
 		logger.Uint("ticket_id", ticketID),
 		logger.String("escalation_level", level),
 		logger.String("escalation_title", escalationTitle),
 		logger.Uint("escalated_by", user.ID),
 		logger.String("escalated_by_username", user.Username))
-	
+
 	// TODO: Send escalation notifications to relevant teams
 	// This would involve notifying L1/L2/L3 teams or management based on escalation level
 }
@@ -3510,17 +3510,17 @@ func (b *BotEnhanced) handleTicketEscalation(chatID int64, messageID int, ticket
 // showNotificationPreferences displays notification preference settings
 func (b *BotEnhanced) showNotificationPreferences(chatID int64, messageID int) {
 	ctx := context.Background()
-	
+
 	// Verify user is bound
 	_, err := b.getUserByTelegramID(ctx, chatID)
 	if err != nil {
 		b.showUnboundAccount(chatID, messageID)
 		return
 	}
-	
+
 	// TODO: Get actual user notification preferences from database
 	// For now, showing example preferences
-	
+
 	text := "🔔 *通知偏好设置*\n\n" +
 		"自定义您希望接收的通知类型：\n\n" +
 		"📋 *当前设置* (示例):\n" +
@@ -3531,7 +3531,7 @@ func (b *BotEnhanced) showNotificationPreferences(chatID int64, messageID int) {
 		"🔒 工单关闭: ✅ 已启用\n" +
 		"📊 系统通知: ❌ 已禁用\n\n" +
 		"点击下方按钮调整设置："
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🎫 工单状态", "toggle_notification:ticket_status"),
@@ -3553,29 +3553,29 @@ func (b *BotEnhanced) showNotificationPreferences(chatID int64, messageID int) {
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回设置", "settings"),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
 // toggleNotificationSetting toggles a specific notification setting
 func (b *BotEnhanced) toggleNotificationSetting(chatID int64, messageID int, notificationType string) {
 	ctx := context.Background()
-	
+
 	user, err := b.getUserByTelegramID(ctx, chatID)
 	if err != nil {
 		b.showUnboundAccount(chatID, messageID)
 		return
 	}
-	
+
 	// TODO: Implement actual notification preference storage and retrieval
 	// For now, show confirmation of the action
-	
+
 	var actionText, descriptionText string
-	
+
 	switch notificationType {
 	case "ticket_status":
 		actionText = "工单状态更新通知"
@@ -3605,17 +3605,17 @@ func (b *BotEnhanced) toggleNotificationSetting(chatID int64, messageID int, not
 		b.showError(chatID, messageID, "未知的通知类型")
 		return
 	}
-	
+
 	// Simulate toggle (in real implementation, this would check and update user preferences)
 	newStatus := "✅ 已启用" // This would be determined by current setting
-	
+
 	text := fmt.Sprintf("🔔 *通知设置已更新*\n\n"+
 		"📋 设置项: %s\n"+
 		"📝 描述: %s\n"+
 		"📊 新状态: %s\n\n"+
 		"设置已保存并立即生效。",
 		actionText, descriptionText, newStatus)
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🔔 通知偏好", "notification_preferences"),
@@ -3625,13 +3625,13 @@ func (b *BotEnhanced) toggleNotificationSetting(chatID int64, messageID int, not
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回设置", "settings"),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
-	
+
 	logger.Info("Notification preference updated via telegram",
 		logger.Uint("user_id", user.ID),
 		logger.String("notification_type", notificationType),
@@ -3651,7 +3651,7 @@ func (b *BotEnhanced) showNotificationChannels(chatID int64, messageID int) {
 		"🚨 紧急: Telegram + 邮件\n" +
 		"⚡ 重要: Telegram\n" +
 		"📝 一般: Telegram (延迟5分钟)"
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("📧 配置邮件", "setup_email_notifications"),
@@ -3669,11 +3669,11 @@ func (b *BotEnhanced) showNotificationChannels(chatID int64, messageID int) {
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回设置", "settings"),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
@@ -3691,7 +3691,7 @@ func (b *BotEnhanced) showBatchNotificationMenu(chatID int64, messageID int) {
 		"• 全部用户: 1,234 人\n" +
 		"• 活跃用户: 892 人\n" +
 		"• VIP用户: 156 人"
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("📣 系统公告", "batch_notify_announcement"),
@@ -3713,11 +3713,11 @@ func (b *BotEnhanced) showBatchNotificationMenu(chatID int64, messageID int) {
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回", "admin_batch_operations"),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
@@ -3737,7 +3737,7 @@ func (b *BotEnhanced) showScheduledNotifications(chatID int64, messageID int) {
 		"• 🤖 根据用户活跃时间智能发送\n" +
 		"• 🌍 支持时区自动调整\n" +
 		"• 📈 发送效果分析优化"
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("➕ 新建定时", "create_scheduled_notification"),
@@ -3755,11 +3755,11 @@ func (b *BotEnhanced) showScheduledNotifications(chatID int64, messageID int) {
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回设置", "settings"),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
@@ -3771,15 +3771,15 @@ func (b *BotEnhanced) sendNotificationToUser(userTelegramID string, title string
 	if err != nil {
 		return fmt.Errorf("invalid telegram ID: %w", err)
 	}
-	
+
 	text := fmt.Sprintf("🔔 *%s*\n\n%s", title, message)
-	
+
 	msg := tgbotapi.NewMessage(chatID, text)
 	msg.ParseMode = "Markdown"
 	if keyboard != nil {
 		msg.ReplyMarkup = keyboard
 	}
-	
+
 	_, err = b.api.Send(msg)
 	return err
 }
@@ -3788,7 +3788,7 @@ func (b *BotEnhanced) sendNotificationToUser(userTelegramID string, title string
 func (b *BotEnhanced) sendBatchNotification(userTelegramIDs []string, title string, message string) error {
 	var errors []error
 	successCount := 0
-	
+
 	for _, telegramID := range userTelegramIDs {
 		if err := b.sendNotificationToUser(telegramID, title, message, nil); err != nil {
 			logger.Error("Failed to send batch notification to user",
@@ -3799,17 +3799,17 @@ func (b *BotEnhanced) sendBatchNotification(userTelegramIDs []string, title stri
 			successCount++
 		}
 	}
-	
+
 	logger.Info("Batch notification sent",
 		logger.Int("total_users", len(userTelegramIDs)),
 		logger.Int("success_count", successCount),
 		logger.Int("error_count", len(errors)),
 		logger.String("title", title))
-	
+
 	if len(errors) > 0 {
 		return fmt.Errorf("failed to send to %d out of %d users", len(errors), len(userTelegramIDs))
 	}
-	
+
 	return nil
 }
 
@@ -3818,12 +3818,12 @@ func (b *BotEnhanced) scheduleNotification(userTelegramID string, title string, 
 	// TODO: Implement actual notification scheduling
 	// This would typically involve storing the notification in a database or queue
 	// and having a background worker process them at the scheduled time
-	
+
 	logger.Info("Notification scheduled",
 		logger.String("telegram_id", userTelegramID),
 		logger.String("title", title),
 		logger.String("send_at", sendAt.Format(time.RFC3339)))
-	
+
 	return nil
 }
 
@@ -3832,7 +3832,7 @@ func (b *BotEnhanced) scheduleNotification(userTelegramID string, title string, 
 // handleMultiMessageReply handles incoming messages for multi-message replies
 func (b *BotEnhanced) handleMultiMessageReply(chatID int64, ticketID uint, content string, messageType string) {
 	bufferKey := fmt.Sprintf("%d_%d", chatID, ticketID)
-	
+
 	// Initialize buffer if not exists
 	if _, exists := b.ticketReplyBuffer[bufferKey]; !exists {
 		b.ticketReplyBuffer[bufferKey] = []string{}
@@ -3841,40 +3841,40 @@ func (b *BotEnhanced) handleMultiMessageReply(chatID int64, ticketID uint, conte
 			"start_time":   time.Now(),
 		}
 	}
-	
+
 	// Add message to buffer
 	b.ticketReplyBuffer[bufferKey] = append(b.ticketReplyBuffer[bufferKey], strings.TrimSpace(content))
-	
+
 	// Send confirmation with options
 	messages := b.ticketReplyBuffer[bufferKey]
 	totalLength := 0
 	for _, msg := range messages {
 		totalLength += len(msg)
 	}
-	
+
 	var sb strings.Builder
 	sb.WriteString("📝 *消息已添加到缓冲区*\n\n")
 	sb.WriteString(fmt.Sprintf("📊 已添加消息数: %d\n", len(messages)))
 	sb.WriteString(fmt.Sprintf("✏️ 总字符数: %d / 5000\n", totalLength))
 	sb.WriteString("\n*最新消息预览:*\n")
-	
+
 	// Show preview of the latest message
 	preview := content
 	if len(preview) > 100 {
 		preview = preview[:97] + "..."
 	}
 	sb.WriteString(fmt.Sprintf("_%s_\n\n", preview))
-	
+
 	// Check if approaching limit
 	if totalLength > 4500 {
 		sb.WriteString("⚠️ *接近字符限制，建议发送*\n\n")
 	}
-	
+
 	sb.WriteString("请选择操作：\n")
 	sb.WriteString("• 📝 继续添加 - 输入更多内容\n")
 	sb.WriteString("• ✅ 发送 - 合并所有消息并发送\n")
 	sb.WriteString("• ❌ 取消 - 放弃所有消息")
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("📝 继续添加", fmt.Sprintf("add_more:%d", ticketID)),
@@ -3885,11 +3885,11 @@ func (b *BotEnhanced) handleMultiMessageReply(chatID int64, ticketID uint, conte
 			tgbotapi.NewInlineKeyboardButtonData("🔍 查看全部", fmt.Sprintf("preview_all:%d", ticketID)),
 		),
 	)
-	
+
 	msg := tgbotapi.NewMessage(chatID, sb.String())
 	msg.ParseMode = "Markdown"
 	msg.ReplyMarkup = keyboard
-	
+
 	b.api.Send(msg)
 }
 
@@ -3898,7 +3898,7 @@ func (b *BotEnhanced) continueAddingMessages(chatID int64, messageID int, ticket
 	bufferKey := fmt.Sprintf("%d_%d", chatID, ticketID)
 	messages := b.ticketReplyBuffer[bufferKey]
 	metadata := b.ticketReplyMetadata[bufferKey]
-	
+
 	// Restore conversation state
 	messageType := metadata["message_type"].(string)
 	if messageType == "admin" {
@@ -3906,7 +3906,7 @@ func (b *BotEnhanced) continueAddingMessages(chatID int64, messageID int, ticket
 	} else {
 		b.userStates[chatID] = fmt.Sprintf("adding_reply_to_ticket_%d", ticketID)
 	}
-	
+
 	var sb strings.Builder
 	sb.WriteString("📝 *继续添加消息*\n\n")
 	sb.WriteString(fmt.Sprintf("📊 当前已有 %d 条消息\n", len(messages)))
@@ -3915,35 +3915,35 @@ func (b *BotEnhanced) continueAddingMessages(chatID int64, messageID int, ticket
 	sb.WriteString("• 每条消息会自动换行分隔\n")
 	sb.WriteString("• 可以发送多条消息后一起提交\n")
 	sb.WriteString("• 总长度不超过5000字符")
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("✅ 直接发送", fmt.Sprintf("send_reply:%d", ticketID)),
 			tgbotapi.NewInlineKeyboardButtonData("❌ 取消", "cancel_reply"),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, sb.String())
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
 // sendAccumulatedReply sends all accumulated messages as one reply
 func (b *BotEnhanced) sendAccumulatedReply(chatID int64, messageID int, ticketID uint) {
 	bufferKey := fmt.Sprintf("%d_%d", chatID, ticketID)
-	
+
 	// Get buffered messages
 	messages, exists := b.ticketReplyBuffer[bufferKey]
 	if !exists || len(messages) == 0 {
 		b.showError(chatID, messageID, "没有待发送的消息")
 		return
 	}
-	
+
 	metadata := b.ticketReplyMetadata[bufferKey]
 	messageType := metadata["message_type"].(string)
-	
+
 	// Combine all messages with proper formatting
 	var combinedContent strings.Builder
 	for i, msg := range messages {
@@ -3952,13 +3952,13 @@ func (b *BotEnhanced) sendAccumulatedReply(chatID int64, messageID int, ticketID
 		}
 		combinedContent.WriteString(msg)
 	}
-	
+
 	// Clear the state first
 	delete(b.userStates, chatID)
-	
+
 	// Send the combined reply
 	b.handleTicketReply(chatID, ticketID, combinedContent.String(), messageType)
-	
+
 	// Clear buffers
 	delete(b.ticketReplyBuffer, bufferKey)
 	delete(b.ticketReplyMetadata, bufferKey)
@@ -3967,17 +3967,17 @@ func (b *BotEnhanced) sendAccumulatedReply(chatID int64, messageID int, ticketID
 // previewAllMessages shows all buffered messages
 func (b *BotEnhanced) previewAllMessages(chatID int64, messageID int, ticketID uint) {
 	bufferKey := fmt.Sprintf("%d_%d", chatID, ticketID)
-	
+
 	messages, exists := b.ticketReplyBuffer[bufferKey]
 	if !exists || len(messages) == 0 {
 		b.showError(chatID, messageID, "没有缓冲的消息")
 		return
 	}
-	
+
 	var sb strings.Builder
 	sb.WriteString("📋 *所有缓冲消息预览*\n")
 	sb.WriteString("━━━━━━━━━━━━━━━━━━━━━━\n\n")
-	
+
 	totalLength := 0
 	for i, msg := range messages {
 		sb.WriteString(fmt.Sprintf("📝 *消息 %d:*\n", i+1))
@@ -3989,16 +3989,16 @@ func (b *BotEnhanced) previewAllMessages(chatID int64, messageID int, ticketID u
 		sb.WriteString(fmt.Sprintf("_%s_\n\n", preview))
 		totalLength += len(msg)
 	}
-	
+
 	sb.WriteString("━━━━━━━━━━━━━━━━━━━━━━\n")
 	sb.WriteString(fmt.Sprintf("📊 *统计信息:*\n"))
 	sb.WriteString(fmt.Sprintf("• 消息数量: %d\n", len(messages)))
 	sb.WriteString(fmt.Sprintf("• 总字符数: %d / 5000\n", totalLength))
-	
+
 	if totalLength > 5000 {
 		sb.WriteString("\n⚠️ *警告: 总长度超过限制！*")
 	}
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("📝 继续添加", fmt.Sprintf("add_more:%d", ticketID)),
@@ -4009,29 +4009,29 @@ func (b *BotEnhanced) previewAllMessages(chatID int64, messageID int, ticketID u
 			tgbotapi.NewInlineKeyboardButtonData("❌ 取消", "cancel_reply"),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, sb.String())
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
 // clearBufferAndRestart clears the message buffer and restarts the reply process
 func (b *BotEnhanced) clearBufferAndRestart(chatID int64, messageID int, ticketID uint) {
 	bufferKey := fmt.Sprintf("%d_%d", chatID, ticketID)
-	
+
 	// Get metadata before clearing
 	metadata := b.ticketReplyMetadata[bufferKey]
 	var messageType string
 	if metadata != nil {
 		messageType = metadata["message_type"].(string)
 	}
-	
+
 	// Clear buffers
 	delete(b.ticketReplyBuffer, bufferKey)
 	delete(b.ticketReplyMetadata, bufferKey)
-	
+
 	// Restart the appropriate reply flow
 	if messageType == "admin" {
 		b.startTicketReply(chatID, messageID, ticketID)
@@ -4045,10 +4045,10 @@ func (b *BotEnhanced) clearBufferAndRestart(chatID int64, messageID int, ticketI
 // showWelcomeMessage displays a welcome message for new users
 func (b *BotEnhanced) showWelcomeMessage(chatID int64) {
 	ctx := context.Background()
-	
+
 	// Try to get user information
 	user, err := b.getUserByTelegramID(ctx, chatID)
-	
+
 	var welcomeText string
 	if err != nil {
 		// User not bound
@@ -4070,7 +4070,7 @@ func (b *BotEnhanced) showWelcomeMessage(chatID int64) {
 			"• 直接输入关键词快速导航\n" +
 			"• 所有操作都可以通过按钮完成"
 	}
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🏠 进入主菜单", "main_menu"),
@@ -4080,25 +4080,25 @@ func (b *BotEnhanced) showWelcomeMessage(chatID int64) {
 			tgbotapi.NewInlineKeyboardButtonURL("🌐 访问网站", "https://your-website.com"),
 		),
 	)
-	
+
 	msg := tgbotapi.NewMessage(chatID, welcomeText)
 	msg.ParseMode = "Markdown"
 	msg.ReplyMarkup = keyboard
-	
+
 	b.api.Send(msg)
 }
 
 // showMyTicketsMenu displays user's tickets menu
 func (b *BotEnhanced) showMyTicketsMenu(chatID int64) {
 	ctx := context.Background()
-	
+
 	// Verify user is bound
 	user, err := b.getUserByTelegramID(ctx, chatID)
 	if err != nil {
 		b.sendUnboundAccountMessage(chatID)
 		return
 	}
-	
+
 	// Get user's tickets (you'll need to implement this in ticket service)
 	// For now, show a menu
 	text := "🎫 *我的工单*\n\n" +
@@ -4108,7 +4108,7 @@ func (b *BotEnhanced) showMyTicketsMenu(chatID int64) {
 		"• 处理中: 1 个\n" +
 		"• 已解决: 5 个\n" +
 		"• 已关闭: 12 个"
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("➕ 创建工单", "create_ticket"),
@@ -4122,13 +4122,13 @@ func (b *BotEnhanced) showMyTicketsMenu(chatID int64) {
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回主菜单", "main_menu"),
 		),
 	)
-	
+
 	msg := tgbotapi.NewMessage(chatID, text)
 	msg.ParseMode = "Markdown"
 	msg.ReplyMarkup = keyboard
-	
+
 	b.api.Send(msg)
-	
+
 	logger.Info("Displayed tickets menu",
 		logger.Int64("chat_id", chatID),
 		logger.Uint("user_id", user.ID))
@@ -4137,17 +4137,17 @@ func (b *BotEnhanced) showMyTicketsMenu(chatID int64) {
 // showAdminMenu displays admin control panel
 func (b *BotEnhanced) showAdminMenu(chatID int64) {
 	ctx := context.Background()
-	
+
 	// Verify user is admin
 	user, err := b.getUserByTelegramID(ctx, chatID)
 	if err != nil {
 		b.sendMessage(chatID, "❌ 未绑定账号，无法访问管理面板")
 		return
 	}
-	
+
 	// TODO: Check if user is admin
 	// For now, we'll assume they are if they're authenticated
-	
+
 	text := "👨‍💼 *管理控制面板*\n\n" +
 		"欢迎进入管理中心，请选择操作：\n\n" +
 		"📊 *系统概览*:\n" +
@@ -4155,7 +4155,7 @@ func (b *BotEnhanced) showAdminMenu(chatID int64) {
 		"• 活跃订阅: 1,892 个\n" +
 		"• 待处理工单: 12 个\n" +
 		"• 系统负载: 正常"
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🎫 工单管理", "admin_tickets"),
@@ -4181,13 +4181,13 @@ func (b *BotEnhanced) showAdminMenu(chatID int64) {
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回主菜单", "main_menu"),
 		),
 	)
-	
+
 	msg := tgbotapi.NewMessage(chatID, text)
 	msg.ParseMode = "Markdown"
 	msg.ReplyMarkup = keyboard
-	
+
 	b.api.Send(msg)
-	
+
 	logger.Info("Admin accessed control panel",
 		logger.Int64("chat_id", chatID),
 		logger.Uint("user_id", user.ID),
@@ -4215,7 +4215,7 @@ func (b *BotEnhanced) showSystemStatus(chatID int64) {
 		"• 最后更新: 2025-08-07\n" +
 		"• 版本号: v2.5.1\n\n" +
 		"更新时间: " + time.Now().Format("2006-01-02 15:04:05")
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🔄 刷新状态", "status"),
@@ -4229,11 +4229,11 @@ func (b *BotEnhanced) showSystemStatus(chatID int64) {
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回主菜单", "main_menu"),
 		),
 	)
-	
+
 	msg := tgbotapi.NewMessage(chatID, text)
 	msg.ParseMode = "Markdown"
 	msg.ReplyMarkup = keyboard
-	
+
 	b.api.Send(msg)
 }
 
@@ -4241,7 +4241,7 @@ func (b *BotEnhanced) showSystemStatus(chatID int64) {
 func (b *BotEnhanced) cancelCurrentOperation(chatID int64) {
 	// Clear any conversation state
 	delete(b.userStates, chatID)
-	
+
 	// Clear any buffered messages
 	for key := range b.ticketReplyBuffer {
 		if strings.HasPrefix(key, fmt.Sprintf("%d_", chatID)) {
@@ -4249,22 +4249,22 @@ func (b *BotEnhanced) cancelCurrentOperation(chatID int64) {
 			delete(b.ticketReplyMetadata, key)
 		}
 	}
-	
+
 	text := "❌ *操作已取消*\n\n" +
 		"所有待处理的操作已被清除。\n" +
 		"您可以开始新的操作。"
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🏠 返回主菜单", "main_menu"),
 			tgbotapi.NewInlineKeyboardButtonData("❓ 获取帮助", "help"),
 		),
 	)
-	
+
 	msg := tgbotapi.NewMessage(chatID, text)
 	msg.ParseMode = "Markdown"
 	msg.ReplyMarkup = keyboard
-	
+
 	b.api.Send(msg)
 }
 
@@ -4280,7 +4280,7 @@ func (b *BotEnhanced) showSupportMenuNew(chatID int64) {
 		"• 在线客服: @support_agent\n" +
 		"• 邮件: support@linke.com\n" +
 		"• 热线: 400-888-8888"
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonURL("👨‍💻 在线客服", "https://t.me/your_support"),
@@ -4302,26 +4302,26 @@ func (b *BotEnhanced) showSupportMenuNew(chatID int64) {
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回主菜单", "main_menu"),
 		),
 	)
-	
+
 	msg := tgbotapi.NewMessage(chatID, text)
 	msg.ParseMode = "Markdown"
 	msg.ReplyMarkup = keyboard
-	
+
 	b.api.Send(msg)
 }
 
 // showSettingsMenuNew displays enhanced settings menu
 func (b *BotEnhanced) showSettingsMenuNew(chatID int64) {
 	ctx := context.Background()
-	
+
 	user, err := b.getUserByTelegramID(ctx, chatID)
 	if err != nil {
 		b.sendUnboundAccountMessage(chatID)
 		return
 	}
-	
+
 	text := fmt.Sprintf("⚙️ *个人设置*\n\n用户: %s\n\n选择要修改的设置：", user.Username)
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("👤 账号信息", "account_info"),
@@ -4347,11 +4347,11 @@ func (b *BotEnhanced) showSettingsMenuNew(chatID int64) {
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回主菜单", "main_menu"),
 		),
 	)
-	
+
 	msg := tgbotapi.NewMessage(chatID, text)
 	msg.ParseMode = "Markdown"
 	msg.ReplyMarkup = keyboard
-	
+
 	b.api.Send(msg)
 }
 
@@ -4364,7 +4364,7 @@ func (b *BotEnhanced) sendUnboundAccountMessage(chatID int64) {
 		"2. 点击 Telegram 登录\n" +
 		"3. 授权并完成绑定\n" +
 		"4. 返回此处即可使用所有功能"
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonURL("🌐 立即绑定", "https://your-website.com/bind"),
@@ -4374,11 +4374,11 @@ func (b *BotEnhanced) sendUnboundAccountMessage(chatID int64) {
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回", "main_menu"),
 		),
 	)
-	
+
 	msg := tgbotapi.NewMessage(chatID, text)
 	msg.ParseMode = "Markdown"
 	msg.ReplyMarkup = keyboard
-	
+
 	b.api.Send(msg)
 }
 
@@ -4388,24 +4388,24 @@ func (b *BotEnhanced) isUserAdmin(user *entities.UserResponse) bool {
 	if user.Role == "admin" || user.Role == "super_admin" {
 		return true
 	}
-	
+
 	// Check if user's telegram ID is in admin list
 	if user.TelegramID == nil || *user.TelegramID == "" {
 		return false
 	}
-	
+
 	adminIDs := b.getAdminChatIDs()
 	userTelegramID, err := strconv.ParseInt(*user.TelegramID, 10, 64)
 	if err != nil {
 		return false
 	}
-	
+
 	for _, adminID := range adminIDs {
 		if adminID == userTelegramID {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -4414,14 +4414,14 @@ func (b *BotEnhanced) isUserAdmin(user *entities.UserResponse) bool {
 // editMessageToMyTicketsMenu edits message to show tickets menu
 func (b *BotEnhanced) editMessageToMyTicketsMenu(chatID int64, messageID int) {
 	ctx := context.Background()
-	
+
 	// Verify user is bound
 	user, err := b.getUserByTelegramID(ctx, chatID)
 	if err != nil {
 		b.showError(chatID, messageID, "账号未绑定")
 		return
 	}
-	
+
 	text := "🎫 *我的工单*\n\n" +
 		"管理您的服务工单：\n\n" +
 		"📊 工单统计:\n" +
@@ -4429,7 +4429,7 @@ func (b *BotEnhanced) editMessageToMyTicketsMenu(chatID int64, messageID int) {
 		"• 处理中: 1 个\n" +
 		"• 已解决: 5 个\n" +
 		"• 已关闭: 12 个"
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("➕ 创建工单", "create_ticket"),
@@ -4443,13 +4443,13 @@ func (b *BotEnhanced) editMessageToMyTicketsMenu(chatID int64, messageID int) {
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回主菜单", "main_menu"),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
-	
+
 	logger.Info("Displayed tickets menu (edit)",
 		logger.Int64("chat_id", chatID),
 		logger.Uint("user_id", user.ID))
@@ -4475,7 +4475,7 @@ func (b *BotEnhanced) editMessageToSystemStatus(chatID int64, messageID int) {
 		"• 最后更新: 2025-08-07\n" +
 		"• 版本号: v2.5.1\n\n" +
 		"更新时间: " + time.Now().Format("2006-01-02 15:04:05")
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🔄 刷新状态", "system_status"),
@@ -4489,30 +4489,30 @@ func (b *BotEnhanced) editMessageToSystemStatus(chatID int64, messageID int) {
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回主菜单", "main_menu"),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
 // editMessageToAdminMenu edits message to show admin menu
 func (b *BotEnhanced) editMessageToAdminMenu(chatID int64, messageID int) {
 	ctx := context.Background()
-	
+
 	// Verify user is admin
 	user, err := b.getUserByTelegramID(ctx, chatID)
 	if err != nil {
 		b.showError(chatID, messageID, "未绑定账号")
 		return
 	}
-	
+
 	if !b.isUserAdmin(user) {
 		b.showError(chatID, messageID, "权限不足")
 		return
 	}
-	
+
 	text := "👨‍💼 *管理控制面板*\n\n" +
 		"欢迎进入管理中心，请选择操作：\n\n" +
 		"📊 *系统概览*:\n" +
@@ -4520,7 +4520,7 @@ func (b *BotEnhanced) editMessageToAdminMenu(chatID int64, messageID int) {
 		"• 活跃订阅: 1,892 个\n" +
 		"• 待处理工单: 12 个\n" +
 		"• 系统负载: 正常"
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🎫 工单管理", "admin_tickets"),
@@ -4546,11 +4546,11 @@ func (b *BotEnhanced) editMessageToAdminMenu(chatID int64, messageID int) {
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回主菜单", "main_menu"),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
@@ -4582,18 +4582,18 @@ Q: 如何升级套餐？
 A: 在"套餐商店"选择新套餐购买
 
 需要更多帮助？点击"客服支持"联系我们！`
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🏠 返回主菜单", "main_menu"),
 			tgbotapi.NewInlineKeyboardButtonData("💬 联系客服", "support"),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, help)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
@@ -4603,7 +4603,7 @@ A: 在"套餐商店"选择新套餐购买
 func (b *BotEnhanced) startCreateTicket(chatID int64, messageID int) {
 	text := "🎫 *创建新工单*\n\n" +
 		"请选择工单类型："
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🔧 技术支持", "ticket_type:technical"),
@@ -4621,24 +4621,24 @@ func (b *BotEnhanced) startCreateTicket(chatID int64, messageID int) {
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回", "my_tickets"),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
 // showUserTicketsList shows list of user's tickets
 func (b *BotEnhanced) showUserTicketsList(chatID int64, messageID int) {
 	ctx := context.Background()
-	
+
 	user, err := b.getUserByTelegramID(ctx, chatID)
 	if err != nil {
 		b.showError(chatID, messageID, "账号未绑定")
 		return
 	}
-	
+
 	// TODO: Get actual tickets from service
 	text := "📋 *您的工单列表*\n\n" +
 		"🔓 *待处理*:\n" +
@@ -4650,7 +4650,7 @@ func (b *BotEnhanced) showUserTicketsList(chatID int64, messageID int) {
 		"• #T2024004 - 支付失败\n" +
 		"• #T2024005 - 账号登录问题\n\n" +
 		"点击工单号查看详情"
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("🔄 刷新列表", "list_tickets"),
@@ -4660,13 +4660,13 @@ func (b *BotEnhanced) showUserTicketsList(chatID int64, messageID int) {
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回", "my_tickets"),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
-	
+
 	logger.Info("Displayed user tickets list",
 		logger.Int64("chat_id", chatID),
 		logger.Uint("user_id", user.ID))
@@ -4676,37 +4676,37 @@ func (b *BotEnhanced) showUserTicketsList(chatID int64, messageID int) {
 func (b *BotEnhanced) startSearchTickets(chatID int64, messageID int) {
 	// Set conversation state
 	b.userStates[chatID] = "searching_tickets"
-	
+
 	text := "🔍 *搜索工单*\n\n" +
 		"请输入搜索关键词：\n\n" +
 		"💡 *搜索提示*:\n" +
 		"• 可以搜索工单号 (如: T2024001)\n" +
 		"• 可以搜索标题关键词\n" +
 		"• 可以搜索工单内容"
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("❌ 取消搜索", "my_tickets"),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
 }
 
 // showTicketStatistics shows ticket statistics
 func (b *BotEnhanced) showTicketStatistics(chatID int64, messageID int) {
 	ctx := context.Background()
-	
+
 	user, err := b.getUserByTelegramID(ctx, chatID)
 	if err != nil {
 		b.showError(chatID, messageID, "账号未绑定")
 		return
 	}
-	
+
 	// TODO: Get actual statistics
 	text := "📊 *工单统计*\n\n" +
 		"📈 *本月统计*:\n" +
@@ -4719,7 +4719,7 @@ func (b *BotEnhanced) showTicketStatistics(chatID int64, messageID int) {
 		"• 解决率: 92%\n" +
 		"• 满意度: 4.8/5.0\n\n" +
 		"🏆 *服务评级*: 优秀"
-	
+
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData("📈 详细报表", "ticket_detailed_stats"),
@@ -4729,13 +4729,13 @@ func (b *BotEnhanced) showTicketStatistics(chatID int64, messageID int) {
 			tgbotapi.NewInlineKeyboardButtonData("🔙 返回", "my_tickets"),
 		),
 	)
-	
+
 	edit := tgbotapi.NewEditMessageText(chatID, messageID, text)
 	edit.ParseMode = "Markdown"
 	edit.ReplyMarkup = &keyboard
-	
+
 	b.api.Send(edit)
-	
+
 	logger.Info("Displayed ticket statistics",
 		logger.Int64("chat_id", chatID),
 		logger.Uint("user_id", user.ID))

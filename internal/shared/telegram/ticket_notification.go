@@ -24,24 +24,24 @@ type TicketNotification struct {
 	Priority    string                 `json:"priority"`
 	Status      string                 `json:"status"`
 	OldStatus   string                 `json:"old_status,omitempty"`
-	
+
 	// User information
 	UserID   uint   `json:"user_id"`
 	UserName string `json:"user_name"`
-	
+
 	// Assignment information
 	AssignedToID   uint   `json:"assigned_to_id,omitempty"`
 	AssignedToName string `json:"assigned_to_name,omitempty"`
-	
+
 	// Reply information
 	RepliedByID   uint   `json:"replied_by_id,omitempty"`
 	RepliedByName string `json:"replied_by_name,omitempty"`
 	ReplyContent  string `json:"reply_content,omitempty"`
-	
+
 	// Resolution information
 	Resolution   string `json:"resolution,omitempty"`
 	ClosedReason string `json:"closed_reason,omitempty"`
-	
+
 	// Additional metadata
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }

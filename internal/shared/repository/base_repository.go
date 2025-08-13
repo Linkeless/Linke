@@ -187,15 +187,15 @@ func (r *BaseRepositoryImpl[T, ID]) Search(ctx context.Context, query string, li
 
 	// Basic search implementation - can be overridden by specific repositories
 	searchQuery := "%" + query + "%"
-	
+
 	// Try to search in common fields
 	db := r.db.WithContext(ctx).Model(new(T))
-	
+
 	// Use reflection to check if entity has searchable fields
 	entityType := reflect.TypeOf(new(T)).Elem()
 	var whereConditions []string
 	var whereArgs []any
-	
+
 	for i := 0; i < entityType.NumField(); i++ {
 		field := entityType.Field(i)
 		// Search in string fields that might contain searchable content
@@ -211,7 +211,7 @@ func (r *BaseRepositoryImpl[T, ID]) Search(ctx context.Context, query string, li
 			}
 		}
 	}
-	
+
 	if len(whereConditions) > 0 {
 		whereClause := fmt.Sprintf("(%s)", whereConditions[0])
 		for _, condition := range whereConditions[1:] {
@@ -354,7 +354,7 @@ func (r *BaseRepositoryImpl[T, ID]) ListWithFilters(ctx context.Context, filters
 	var total int64
 
 	db := r.db.WithContext(ctx).Model(new(T))
-	
+
 	// Apply filters
 	for field, value := range filters {
 		if value != nil {

@@ -165,4 +165,3 @@ func (r *userAccountBindingRepository) UpdateLastUsed(ctx context.Context, id ui
 
 	return nil
 }
-

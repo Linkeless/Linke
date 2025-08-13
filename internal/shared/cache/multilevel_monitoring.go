@@ -68,12 +68,12 @@ type DeprecatedAlertThresholds struct {
 
 // DeprecatedCacheHealthStatus represents the overall health of the cache system (DEPRECATED - use monitoring.go)
 type DeprecatedCacheHealthStatus struct {
-	Overall     string                  `json:"overall"`
-	Components  map[string]string       `json:"components"`
-	Issues      []string                `json:"issues"`
-	Metrics     *MultiLevelCacheMetrics `json:"metrics"`
+	Overall     string                        `json:"overall"`
+	Components  map[string]string             `json:"components"`
+	Issues      []string                      `json:"issues"`
+	Metrics     *MultiLevelCacheMetrics       `json:"metrics"`
 	Performance *DeprecatedPerformanceMetrics `json:"performance"`
-	Timestamp   time.Time               `json:"timestamp" swaggertype:"string" format:"date-time" example:"2023-01-01T00:00:00Z"`
+	Timestamp   time.Time                     `json:"timestamp" swaggertype:"string" format:"date-time" example:"2023-01-01T00:00:00Z"`
 }
 
 // NewMultiLevelCacheMonitor creates a new multi-level cache monitor

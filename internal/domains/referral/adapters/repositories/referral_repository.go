@@ -31,7 +31,6 @@ func (r *ReferralRepository) GetByCode(ctx context.Context, code string) (*entit
 	return &referral, nil
 }
 
-
 // List lists referrals (implements GenericRepository interface)
 func (r *ReferralRepository) List(ctx context.Context, limit, offset int) ([]*entities.Referral, int64, error) {
 	return r.UserScopedTimeBasedRepositoryImpl.List(ctx, limit, offset)
@@ -119,10 +118,10 @@ func (r *ReferralRepository) GetRefereeReferrals(ctx context.Context, userID uin
 // GetReferralStatistics gets statistics for a user's referrals
 func (r *ReferralRepository) GetReferralStatistics(ctx context.Context, userID uint) (map[string]any, error) {
 	var stats struct {
-		TotalReferrals    int64   `gorm:"column:total_referrals"`
-		ConfirmedReferrals int64  `gorm:"column:confirmed_referrals"`
-		TotalRewards      float64 `gorm:"column:total_rewards"`
-		PaidRewards       float64 `gorm:"column:paid_rewards"`
+		TotalReferrals     int64   `gorm:"column:total_referrals"`
+		ConfirmedReferrals int64   `gorm:"column:confirmed_referrals"`
+		TotalRewards       float64 `gorm:"column:total_rewards"`
+		PaidRewards        float64 `gorm:"column:paid_rewards"`
 	}
 
 	err := r.GetDB().WithContext(ctx).
@@ -141,22 +140,22 @@ func (r *ReferralRepository) GetReferralStatistics(ctx context.Context, userID u
 	}
 
 	return map[string]any{
-		"total_referrals":    stats.TotalReferrals,
+		"total_referrals":     stats.TotalReferrals,
 		"confirmed_referrals": stats.ConfirmedReferrals,
-		"total_rewards":      stats.TotalRewards,
-		"paid_rewards":       stats.PaidRewards,
-		"pending_rewards":    stats.TotalRewards - stats.PaidRewards,
+		"total_rewards":       stats.TotalRewards,
+		"paid_rewards":        stats.PaidRewards,
+		"pending_rewards":     stats.TotalRewards - stats.PaidRewards,
 	}, nil
 }
 
 // GetSystemReferralStatistics gets system-wide referral statistics
 func (r *ReferralRepository) GetSystemReferralStatistics(ctx context.Context) (map[string]any, error) {
 	var stats struct {
-		TotalReferrals    int64   `gorm:"column:total_referrals"`
-		ConfirmedReferrals int64  `gorm:"column:confirmed_referrals"`
-		TotalRewards      float64 `gorm:"column:total_rewards"`
-		PaidRewards       float64 `gorm:"column:paid_rewards"`
-		UniqueReferrers   int64   `gorm:"column:unique_referrers"`
+		TotalReferrals     int64   `gorm:"column:total_referrals"`
+		ConfirmedReferrals int64   `gorm:"column:confirmed_referrals"`
+		TotalRewards       float64 `gorm:"column:total_rewards"`
+		PaidRewards        float64 `gorm:"column:paid_rewards"`
+		UniqueReferrers    int64   `gorm:"column:unique_referrers"`
 	}
 
 	err := r.GetDB().WithContext(ctx).
@@ -175,12 +174,12 @@ func (r *ReferralRepository) GetSystemReferralStatistics(ctx context.Context) (m
 	}
 
 	return map[string]any{
-		"total_referrals":    stats.TotalReferrals,
+		"total_referrals":     stats.TotalReferrals,
 		"confirmed_referrals": stats.ConfirmedReferrals,
-		"total_rewards":      stats.TotalRewards,
-		"paid_rewards":       stats.PaidRewards,
-		"pending_rewards":    stats.TotalRewards - stats.PaidRewards,
-		"unique_referrers":   stats.UniqueReferrers,
+		"total_rewards":       stats.TotalRewards,
+		"paid_rewards":        stats.PaidRewards,
+		"pending_rewards":     stats.TotalRewards - stats.PaidRewards,
+		"unique_referrers":    stats.UniqueReferrers,
 	}, nil
 }
 
@@ -202,7 +201,7 @@ func (r *ReferralRepository) GetByReferee(ctx context.Context, refereeID uint) (
 func (r *ReferralRepository) GetReferralChain(ctx context.Context, userID uint, depth int) ([]*entities.Referral, error) {
 	var chain []*entities.Referral
 	currentUserID := userID
-	
+
 	for i := 0; i < depth; i++ {
 		var referral entities.Referral
 		err := r.GetDB().WithContext(ctx).Where("referee_id = ?", currentUserID).First(&referral).Error
@@ -212,11 +211,11 @@ func (r *ReferralRepository) GetReferralChain(ctx context.Context, userID uint, 
 			}
 			return nil, err
 		}
-		
+
 		chain = append(chain, &referral)
 		currentUserID = referral.ReferrerID
 	}
-	
+
 	return chain, nil
 }
 
@@ -231,5 +230,3 @@ func (r *ReferralRepository) CountByReferrer(ctx context.Context, referrerID uin
 func (r *ReferralRepository) GetReferralStats(ctx context.Context, referrerID uint) (map[string]any, error) {
 	return r.GetReferralStatistics(ctx, referrerID)
 }
-
-

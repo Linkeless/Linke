@@ -49,12 +49,12 @@ func (User) TableName() string {
 
 // UserProfile represents a user profile with computed fields
 type UserProfile struct {
-	User                User    `json:"user"`
-	IsEmailVerified     bool    `json:"is_email_verified"`
-	AccountAge          int     `json:"account_age_days"`
-	LastLoginDaysAgo    int     `json:"last_login_days_ago"`
-	HasProfilePicture   bool    `json:"has_profile_picture"`
-	SubscriptionStatus  string  `json:"subscription_status,omitempty"`
+	User               User    `json:"user"`
+	IsEmailVerified    bool    `json:"is_email_verified"`
+	AccountAge         int     `json:"account_age_days"`
+	LastLoginDaysAgo   int     `json:"last_login_days_ago"`
+	HasProfilePicture  bool    `json:"has_profile_picture"`
+	SubscriptionStatus string  `json:"subscription_status,omitempty"`
 	TotalOrders        int64   `json:"total_orders,omitempty"`
 	TotalSpent         float64 `json:"total_spent,omitempty"`
 }

@@ -85,7 +85,6 @@ func (Invoice) TableName() string {
 	return "invoices"
 }
 
-
 // IsDraft checks if the invoice is in draft status
 func (i *Invoice) IsDraft() bool {
 	return i.Status == constants.InvoiceStatusDraft
@@ -175,4 +174,3 @@ func (i *Invoice) GetFullAddress() string {
 	}
 	return address
 }
-

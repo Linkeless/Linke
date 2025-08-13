@@ -216,6 +216,30 @@ func (cck *CouponCacheKeys) UserCoupons(userID uint) string {
 	return cck.kb.BuildWithPrefix(CachePrefixCoupon, "user", fmt.Sprintf("%d", userID))
 }
 
+func (cck *CouponCacheKeys) PublicCoupons() string {
+	return cck.kb.BuildWithPrefix(CachePrefixCoupon, "public", "all")
+}
+
+func (cck *CouponCacheKeys) CouponUsage(couponID uint) string {
+	return cck.kb.BuildWithPrefix(CachePrefixCoupon, "usage", fmt.Sprintf("%d", couponID))
+}
+
+func (cck *CouponCacheKeys) UserCouponUsage(userID uint) string {
+	return cck.kb.BuildWithPrefix(CachePrefixCoupon, "user", fmt.Sprintf("%d", userID), "usage")
+}
+
+func (cck *CouponCacheKeys) CouponStatistics(couponID uint) string {
+	return cck.kb.BuildWithPrefix(CachePrefixCoupon, "stats", fmt.Sprintf("%d", couponID))
+}
+
+func (cck *CouponCacheKeys) SystemStatistics() string {
+	return cck.kb.BuildWithPrefix(CachePrefixCoupon, "stats", "system")
+}
+
+func (cck *CouponCacheKeys) CouponValidation(code string, userID uint) string {
+	return cck.kb.BuildWithPrefix(CachePrefixCoupon, "validation", code, fmt.Sprintf("%d", userID))
+}
+
 type InvoiceCacheKeys struct {
 	kb CacheKeyBuilder
 }

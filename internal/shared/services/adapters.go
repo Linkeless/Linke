@@ -15,7 +15,7 @@ import (
 // while maintaining backward compatibility
 type ServiceAdapter[T any, ID comparable] struct {
 	*BaseServiceImpl[T, ID]
-	legacyService any // The original service implementation
+	legacyService any               // The original service implementation
 	methodMapping map[string]string // legacy method -> generic method mapping
 }
 
@@ -28,7 +28,7 @@ func NewServiceAdapter[T any, ID comparable](
 	if methodMapping == nil {
 		methodMapping = getDefaultMethodMapping()
 	}
-	
+
 	return &ServiceAdapter[T, ID]{
 		BaseServiceImpl: base,
 		legacyService:   legacyService,
@@ -39,39 +39,39 @@ func NewServiceAdapter[T any, ID comparable](
 // getDefaultMethodMapping returns common legacy -> generic method mappings
 func getDefaultMethodMapping() map[string]string {
 	return map[string]string{
-		"CreateUser":           "Create",
-		"GetUserByID":          "GetByID", 
-		"UpdateUser":           "Update",
-		"DeleteUser":           "Delete",
-		"SoftDeleteUser":       "SoftDelete",
-		"RestoreUser":          "Restore",
-		"HardDeleteUser":       "HardDelete",
-		"ListUsers":            "List",
-		"ListDeletedUsers":     "ListDeleted",
-		"SearchUsers":          "Search",
-		"UpdateUserStatus":     "UpdateStatus",
-		"GetUserStats":         "GetStatistics",
-		"BatchDeleteUsers":     "BatchDelete",
-		"BatchRestoreUsers":    "BatchRestore",
-		
+		"CreateUser":        "Create",
+		"GetUserByID":       "GetByID",
+		"UpdateUser":        "Update",
+		"DeleteUser":        "Delete",
+		"SoftDeleteUser":    "SoftDelete",
+		"RestoreUser":       "Restore",
+		"HardDeleteUser":    "HardDelete",
+		"ListUsers":         "List",
+		"ListDeletedUsers":  "ListDeleted",
+		"SearchUsers":       "Search",
+		"UpdateUserStatus":  "UpdateStatus",
+		"GetUserStats":      "GetStatistics",
+		"BatchDeleteUsers":  "BatchDelete",
+		"BatchRestoreUsers": "BatchRestore",
+
 		// Common patterns for other domains
-		"CreateTicket":         "Create",
-		"GetTicketByID":        "GetByID",
-		"UpdateTicket":         "Update",
-		"DeleteTicket":         "Delete",
-		"ListTickets":          "List",
-		"GetTickets":           "ListWithFilters",
-		"UpdateTicketStatus":   "UpdateStatus",
-		
+		"CreateTicket":       "Create",
+		"GetTicketByID":      "GetByID",
+		"UpdateTicket":       "Update",
+		"DeleteTicket":       "Delete",
+		"ListTickets":        "List",
+		"GetTickets":         "ListWithFilters",
+		"UpdateTicketStatus": "UpdateStatus",
+
 		"CreateSubscriptionOrder": "Create",
 		"GetSubscriptionOrder":    "GetByID",
 		"CancelSubscriptionOrder": "Delete",
 		"GetSubscriptionOrders":   "ListWithFilters",
-		
-		"CreatePaymentOrder":      "Create",
-		"GetPaymentRecord":        "GetByID",
-		"UpdatePaymentStatus":     "UpdateStatus",
-		"GetUserPaymentRecords":   "ListByUser",
+
+		"CreatePaymentOrder":    "Create",
+		"GetPaymentRecord":      "GetByID",
+		"UpdatePaymentStatus":   "UpdateStatus",
+		"GetUserPaymentRecords": "ListByUser",
 	}
 }
 
@@ -79,7 +79,7 @@ func getDefaultMethodMapping() map[string]string {
 func (s *ServiceAdapter[T, ID]) CallLegacyMethod(methodName string, args ...any) (any, error) {
 	legacyValue := reflect.ValueOf(s.legacyService)
 	method := legacyValue.MethodByName(methodName)
-	
+
 	if !method.IsValid() {
 		return nil, fmt.Errorf("legacy method %s not found", methodName)
 	}
@@ -92,12 +92,12 @@ func (s *ServiceAdapter[T, ID]) CallLegacyMethod(methodName string, args ...any)
 
 	// Call the method
 	results := method.Call(argValues)
-	
+
 	// Handle results (simplified error handling)
 	if len(results) == 0 {
 		return nil, nil
 	}
-	
+
 	// Check if last result is error
 	if len(results) > 1 {
 		lastResult := results[len(results)-1]
@@ -116,7 +116,7 @@ type DomainServiceWrapper[T any, ID comparable] struct {
 	*BaseServiceImpl[T, ID]
 	domainService any
 	entityType    reflect.Type
-	
+
 	// Configuration for domain-specific behaviors
 	config *DomainServiceConfig
 }
@@ -125,26 +125,26 @@ type DomainServiceWrapper[T any, ID comparable] struct {
 type DomainServiceConfig struct {
 	// Field mappings for lookups
 	FieldMappings map[string]string `json:"field_mappings"`
-	
+
 	// Search configuration
 	SearchableFields []string `json:"searchable_fields"`
-	
+
 	// Cache configuration
-	CacheEnabled      bool              `json:"cache_enabled"`
-	CacheTTL         map[string]int     `json:"cache_ttl"` // method -> TTL in seconds
-	CacheKeyPatterns map[string]string  `json:"cache_key_patterns"`
-	
+	CacheEnabled     bool              `json:"cache_enabled"`
+	CacheTTL         map[string]int    `json:"cache_ttl"` // method -> TTL in seconds
+	CacheKeyPatterns map[string]string `json:"cache_key_patterns"`
+
 	// Order management (if applicable)
 	OrderNumberField string `json:"order_number_field"`
 	StatusField      string `json:"status_field"`
-	
-	// Event configuration  
-	EventsEnabled    bool     `json:"events_enabled"`
-	EventTypes       []string `json:"event_types"`
-	
+
+	// Event configuration
+	EventsEnabled bool     `json:"events_enabled"`
+	EventTypes    []string `json:"event_types"`
+
 	// Validation rules
 	ValidationRules map[string]any `json:"validation_rules"`
-	
+
 	// Business logic hooks
 	BeforeCreate []string `json:"before_create"`
 	AfterCreate  []string `json:"after_create"`
@@ -198,7 +198,7 @@ func (w *DomainServiceWrapper[T, ID]) CreateWithDomainLogic(ctx context.Context,
 		return nil, err
 	}
 
-	// Execute after-create hooks  
+	// Execute after-create hooks
 	if err := w.executeHooks(ctx, "after_create", entity); err != nil {
 		w.logger.Warn("After create hooks failed", logger.ErrorField(err))
 	}
@@ -259,13 +259,13 @@ func (w *DomainServiceWrapper[T, ID]) executeHook(ctx context.Context, hook stri
 	if w.domainService != nil {
 		serviceValue := reflect.ValueOf(w.domainService)
 		method := serviceValue.MethodByName(hook)
-		
+
 		if method.IsValid() {
 			args := []reflect.Value{
 				reflect.ValueOf(ctx),
 				reflect.ValueOf(data),
 			}
-			
+
 			results := method.Call(args)
 			if len(results) > 0 && results[0].Type().Implements(reflect.TypeOf((*error)(nil)).Elem()) {
 				if !results[0].IsNil() {
@@ -285,14 +285,14 @@ func (w *DomainServiceWrapper[T, ID]) GetDomainMethodNames() []string {
 
 	serviceType := reflect.TypeOf(w.domainService)
 	var methods []string
-	
+
 	for i := 0; i < serviceType.NumMethod(); i++ {
 		method := serviceType.Method(i)
 		if method.IsExported() {
 			methods = append(methods, method.Name)
 		}
 	}
-	
+
 	return methods
 }
 
@@ -310,8 +310,8 @@ func NewMigrationHelper(logger framework.Logger) *MigrationHelper {
 func (h *MigrationHelper) AnalyzeService(service any) *ServiceAnalysis {
 	serviceType := reflect.TypeOf(service)
 	analysis := &ServiceAnalysis{
-		ServiceName:      serviceType.Name(),
-		Methods:          []MethodInfo{},
+		ServiceName:     serviceType.Name(),
+		Methods:         []MethodInfo{},
 		Recommendations: []string{},
 	}
 
@@ -323,9 +323,9 @@ func (h *MigrationHelper) AnalyzeService(service any) *ServiceAnalysis {
 		}
 
 		methodInfo := MethodInfo{
-			Name:         method.Name,
-			NumArgs:      method.Type.NumIn(),
-			NumReturns:   method.Type.NumOut(),
+			Name:               method.Name,
+			NumArgs:            method.Type.NumIn(),
+			NumReturns:         method.Type.NumOut(),
 			IsGenericCandidate: h.isGenericCandidate(method.Name),
 		}
 
@@ -416,7 +416,7 @@ func (h *MigrationHelper) GenerateMigrationPlan(analysis *ServiceAnalysis) *Migr
 
 	// Phase 2: List and Search operations
 	phase2 := MigrationPhase{
-		Name:        "List and Search Migration", 
+		Name:        "List and Search Migration",
 		Description: "Migrate list and search operations",
 		Priority:    "Medium",
 		Risk:        "Low",
@@ -442,7 +442,7 @@ func (h *MigrationHelper) GenerateMigrationPlan(analysis *ServiceAnalysis) *Migr
 		Name:        "Domain-Specific Migration",
 		Description: "Migrate domain-specific operations using mixins",
 		Priority:    "Low",
-		Risk:        "Medium", 
+		Risk:        "Medium",
 		Methods:     []string{},
 	}
 

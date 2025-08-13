@@ -45,4 +45,3 @@ type InvoiceService interface {
 	GetInvoiceStatistics(ctx context.Context, fromDate, toDate string) (map[string]any, error)
 	GetUserInvoiceStatistics(ctx context.Context, userID uint) (map[string]any, error)
 }
-

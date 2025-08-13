@@ -2,8 +2,8 @@ package interfaces
 
 import (
 	"context"
-	"linke/internal/domains/auth/dto"
 	"golang.org/x/oauth2"
+	"linke/internal/domains/auth/dto"
 )
 
 // OAuthService defines the interface for OAuth authentication operations
@@ -21,4 +21,3 @@ type OAuthService interface {
 
 // 注意：UserInfo 已统一到 dto 包中定义
 // 请使用 dto.UserInfo
-

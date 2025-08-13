@@ -1,8 +1,8 @@
 package services
 
 import (
-	"linke/internal/shared/framework" 
-	
+	"linke/internal/shared/framework"
+
 	"go.uber.org/fx"
 )
 

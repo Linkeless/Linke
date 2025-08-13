@@ -80,7 +80,7 @@ func (s *userAccountBindingService) CreateBinding(ctx context.Context, userID ui
 	// If this binding was set as primary, ensure it's the only primary binding
 	if binding.IsPrimary {
 		if err := s.bindingRepo.SetPrimaryBinding(ctx, userID, binding.ID); err != nil {
-			logger.Error("Failed to set primary binding", 
+			logger.Error("Failed to set primary binding",
 				logger.Uint("user_id", userID),
 				logger.Uint("binding_id", binding.ID),
 				logger.ErrorField(err))
@@ -145,18 +145,18 @@ func (s *userAccountBindingService) UpdateBinding(ctx context.Context, userID ui
 			if err != nil {
 				return nil, fmt.Errorf("failed to check existing bindings: %w", err)
 			}
-			
+
 			primaryCount := 0
 			for _, b := range bindings {
 				if b.IsPrimary {
 					primaryCount++
 				}
 			}
-			
+
 			if primaryCount <= 1 {
 				return nil, fmt.Errorf("cannot unset primary binding when it's the only primary binding")
 			}
-			
+
 			binding.IsPrimary = false
 		}
 	}
@@ -344,4 +344,3 @@ func (s *userAccountBindingService) isProviderAccountBound(ctx context.Context, 
 	}
 	return true, nil
 }
-

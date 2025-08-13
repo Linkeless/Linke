@@ -36,4 +36,3 @@ type CouponService interface {
 	GetCouponStatistics(ctx context.Context, couponID uint64) (map[string]any, error)
 	GetCouponSystemStatistics(ctx context.Context) (map[string]any, error)
 }
-

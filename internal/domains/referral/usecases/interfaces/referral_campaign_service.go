@@ -28,4 +28,3 @@ type ReferralCampaignService interface {
 	GetCampaignStatistics(ctx context.Context, campaignID uint) (map[string]any, error)
 	GetCampaignPerformance(ctx context.Context, campaignID uint, fromDate, toDate time.Time) (map[string]any, error)
 }
-

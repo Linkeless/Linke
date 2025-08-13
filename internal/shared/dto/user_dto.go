@@ -23,7 +23,6 @@ type UserSummaryDTO struct {
 	Status string `json:"status" example:"active"`
 }
 
-
 // UserProfileDTO represents detailed user profile information
 type UserProfileDTO struct {
 	UserBasicDTO

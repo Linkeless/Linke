@@ -500,4 +500,3 @@ func (sos *CachedSubscriptionOrderService) buildOrderListCacheKey(req *dto.GetSu
 
 	return cache.CachePrefixSubscription + strings.Join(keyParts, ":")
 }
-

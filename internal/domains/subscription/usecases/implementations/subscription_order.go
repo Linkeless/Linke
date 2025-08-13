@@ -178,8 +178,8 @@ func (sos *SubscriptionOrderService) GenerateInvoiceForOrder(ctx context.Context
 		Amount:              order.TotalAmount,
 		Currency:            order.Currency,
 		Description:         fmt.Sprintf("Subscription: %s", plan.Name),
-		BillingName:         fmt.Sprintf("User %d", order.UserID),                // TODO: Get actual user name
-		BillingEmail:        fmt.Sprintf("user%d@example.com", order.UserID),     // TODO: Get actual user email
+		BillingName:         fmt.Sprintf("User %d", order.UserID),              // TODO: Get actual user name
+		BillingEmail:        fmt.Sprintf("user%d@example.com", order.UserID),   // TODO: Get actual user email
 		DueDate:             time.Now().AddDate(0, 0, 30).Format("2006-01-02"), // 30 days from now
 	}
 
@@ -293,11 +293,11 @@ func (sos *SubscriptionOrderService) CreatePaymentForOrder(ctx context.Context, 
 
 	// Update order with payment information
 	if err := sos.db.WithContext(ctx).Model(order).Updates(map[string]any{
-		"transaction_id":   paymentRecord.PaymentNo,
-		"payment_gateway":  finalPaymentGateway,
-		"payment_method":   finalPaymentMethod,
-		"payment_status":   paymentRecord.Status,
-		"updated_at":       time.Now(),
+		"transaction_id":  paymentRecord.PaymentNo,
+		"payment_gateway": finalPaymentGateway,
+		"payment_method":  finalPaymentMethod,
+		"payment_status":  paymentRecord.Status,
+		"updated_at":      time.Now(),
 	}).Error; err != nil {
 		logger.Error("Failed to update order with payment info", logger.ErrorField(err))
 		// Don't fail the entire process, just log the error
@@ -316,13 +316,13 @@ func (sos *SubscriptionOrderService) CreatePaymentForOrder(ctx context.Context, 
 	// Publish payment created event
 	if sos.eventPublisher != nil {
 		event := events.NewBaseEvent("subscription.payment.created", "subscription", map[string]any{
-			"order_id":    order.ID,
-			"payment_id":  paymentRecord.ID,
-			"payment_no":  paymentRecord.PaymentNo,
-			"user_id":     order.UserID,
-			"amount":      paymentRecord.Amount,
-			"gateway":     finalPaymentGateway,
-			"method":      finalPaymentMethod,
+			"order_id":   order.ID,
+			"payment_id": paymentRecord.ID,
+			"payment_no": paymentRecord.PaymentNo,
+			"user_id":    order.UserID,
+			"amount":     paymentRecord.Amount,
+			"gateway":    finalPaymentGateway,
+			"method":     finalPaymentMethod,
 		})
 		if err := sos.eventPublisher.Publish(ctx, event); err != nil {
 			logger.Error("Failed to publish payment created event", logger.ErrorField(err))
@@ -858,7 +858,7 @@ func (sos *SubscriptionOrderService) generateOrderNumber() string {
 	// This provides better security than predictable nanosecond-based randomness
 	now := time.Now()
 	timestamp := now.Unix()
-	
+
 	// Generate 8 random bytes (16 hex characters) for strong uniqueness
 	randomBytes := make([]byte, 8)
 	if _, err := rand.Read(randomBytes); err != nil {
@@ -867,7 +867,7 @@ func (sos *SubscriptionOrderService) generateOrderNumber() string {
 		fallbackRandom := now.UnixNano() % 1000000000 // 9 digits
 		return fmt.Sprintf("ORD%d%09d", timestamp, fallbackRandom)
 	}
-	
+
 	randomHex := strings.ToUpper(hex.EncodeToString(randomBytes))
 	return fmt.Sprintf("ORD%d%s", timestamp, randomHex)
 }
@@ -1355,9 +1355,9 @@ func (sos *SubscriptionOrderService) validatePaymentEvidence(order *entities.Sub
 // isCriticalOperation determines if a status change requires additional confirmation
 func (sos *SubscriptionOrderService) isCriticalOperation(oldStatus, newStatus string) bool {
 	criticalChanges := map[string][]string{
-		constants.OrderStatusPending:   {constants.OrderStatusPaid},                                    // Manual payment confirmation
-		constants.OrderStatusConfirmed: {constants.OrderStatusPaid},                                    // Manual payment confirmation for confirmed orders
-		constants.OrderStatusFailed:    {constants.OrderStatusPaid},                                    // Retry failed payment
+		constants.OrderStatusPending:   {constants.OrderStatusPaid},                                     // Manual payment confirmation
+		constants.OrderStatusConfirmed: {constants.OrderStatusPaid},                                     // Manual payment confirmation for confirmed orders
+		constants.OrderStatusFailed:    {constants.OrderStatusPaid},                                     // Retry failed payment
 		constants.OrderStatusCancelled: {constants.OrderStatusPaid, constants.OrderStatusPending},       // Reactivate cancelled order
 		constants.OrderStatusPaid:      {constants.OrderStatusRefunded, constants.OrderStatusCancelled}, // Reverse paid order
 	}
@@ -1829,4 +1829,3 @@ func (sos *SubscriptionOrderService) checkDuplicateOrders(ctx context.Context, u
 
 	return nil
 }
-

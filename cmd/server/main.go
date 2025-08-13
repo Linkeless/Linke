@@ -30,14 +30,14 @@ func main() {
 		Format: logger.GetEnvLogFormat(),
 		Output: logger.GetEnvLogOutput(),
 	}
-	
+
 	if err := logger.InitLogger(logConfig); err != nil {
 		// Use fmt.Printf for pre-logger errors since logger isn't initialized yet
 		fmt.Printf("❌ Failed to initialize logger: %v\n", err)
 		fmt.Printf("   Falling back to default logger configuration\n")
 		os.Exit(1)
 	}
-	
+
 	// Parse command line flags
 	var (
 		runMigration    = flag.Bool("migrate", false, "Run database migrations and exit (alias for -migrate-command=up)")

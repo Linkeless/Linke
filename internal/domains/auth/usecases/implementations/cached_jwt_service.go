@@ -52,7 +52,7 @@ func (s *CachedJWTService) ValidateToken(tokenString string) (*dto.Claims, error
 	if err == nil && cached != nil {
 		var cachedResult struct {
 			Claims *dto.Claims `json:"claims"`
-			Valid  bool               `json:"valid"`
+			Valid  bool        `json:"valid"`
 		}
 		if err := json.Unmarshal(cached, &cachedResult); err == nil && cachedResult.Valid {
 			s.logger.Debug("JWT validation cache hit", logger.String("token_hash", tokenHash))
@@ -62,24 +62,24 @@ func (s *CachedJWTService) ValidateToken(tokenString string) (*dto.Claims, error
 
 	// Cache miss - validate token
 	claims, err := s.baseService.ValidateToken(tokenString)
-	
+
 	// Cache the result only if validation is successful
 	// We use short TTL to balance performance with security (token might be revoked)
 	if err == nil && claims != nil {
 		result := struct {
 			Claims *dto.Claims `json:"claims"`
-			Valid  bool               `json:"valid"`
+			Valid  bool        `json:"valid"`
 		}{
 			Claims: claims,
 			Valid:  true,
 		}
-		
+
 		if data, marshalErr := json.Marshal(result); marshalErr == nil {
 			// Use short cache TTL for security reasons
 			_ = s.cacheManager.GetCache().Set(context.Background(), cacheKey, data, cache.ShortCacheTTL)
 		}
-		
-		s.logger.Debug("JWT validation result cached", 
+
+		s.logger.Debug("JWT validation result cached",
 			logger.String("token_hash", tokenHash),
 			logger.Uint("user_id", claims.UserID))
 	}
@@ -93,7 +93,7 @@ func (s *CachedJWTService) RefreshToken(tokenString string) (*dto.TokenResponse,
 	tokenHash := s.hashToken(tokenString)
 	cacheKey := fmt.Sprintf("%svalidation:%s", cache.CachePrefixAuth, tokenHash)
 	_ = s.cacheManager.GetCache().Delete(context.Background(), cacheKey)
-	
+
 	return s.baseService.RefreshToken(tokenString)
 }
 
@@ -149,7 +149,7 @@ func (s *CachedJWTService) hashToken(token string) string {
 	if len(token) < 20 {
 		return fmt.Sprintf("%x", token) // Fallback for very short tokens
 	}
-	
+
 	// Use first 10 and last 10 characters as a simple hash
 	// This provides reasonable uniqueness without storing the full token
 	return fmt.Sprintf("%s...%s", token[:10], token[len(token)-10:])

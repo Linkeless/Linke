@@ -20,7 +20,7 @@ const (
 type NotificationPriority int
 
 const (
-	PriorityLow    NotificationPriority = iota
+	PriorityLow NotificationPriority = iota
 	PriorityNormal
 	PriorityHigh
 	PriorityUrgent
@@ -44,19 +44,19 @@ func (p NotificationPriority) String() string {
 // NotificationRequest represents a request to send a notification
 type NotificationRequest struct {
 	// Recipient information
-	UserID       uint     `json:"user_id"`
-	Email        string   `json:"email,omitempty"`
-	Phone        string   `json:"phone,omitempty"`
-	TelegramChatID int64  `json:"telegram_chat_id,omitempty"`
-	TelegramUsername string `json:"telegram_username,omitempty"`
-	Channels     []NotificationChannel `json:"channels"`
-	
+	UserID           uint                  `json:"user_id"`
+	Email            string                `json:"email,omitempty"`
+	Phone            string                `json:"phone,omitempty"`
+	TelegramChatID   int64                 `json:"telegram_chat_id,omitempty"`
+	TelegramUsername string                `json:"telegram_username,omitempty"`
+	Channels         []NotificationChannel `json:"channels"`
+
 	// Message content
 	Subject   string            `json:"subject"`
 	Body      string            `json:"body"`
 	Template  string            `json:"template,omitempty"`
 	Variables map[string]string `json:"variables,omitempty"`
-	
+
 	// Metadata and tracking
 	Priority  NotificationPriority   `json:"priority"`
 	EventType string                 `json:"event_type"`
@@ -81,23 +81,23 @@ type NotificationResult struct {
 type NotificationService interface {
 	// Send a notification to specified channels
 	Send(ctx context.Context, req *NotificationRequest) ([]*NotificationResult, error)
-	
+
 	// Send email notification
 	SendEmail(ctx context.Context, to, subject, body string) error
-	
-	// Send SMS notification  
+
+	// Send SMS notification
 	SendSMS(ctx context.Context, to, message string) error
-	
+
 	// Send push notification
 	SendPush(ctx context.Context, userID uint, title, body string) error
-	
+
 	// Send Telegram notification
 	SendTelegram(ctx context.Context, chatID int64, message string) error
 	SendTelegramByUsername(ctx context.Context, username, message string) error
-	
+
 	// Get notification templates
 	GetTemplate(templateName string) (string, error)
-	
+
 	// Health check
 	HealthCheck(ctx context.Context) error
 }

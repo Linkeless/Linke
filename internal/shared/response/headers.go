@@ -48,11 +48,11 @@ const (
 
 // Cache directives
 const (
-	CacheNoStore         = "no-store"
-	CacheNoCache         = "no-cache"
-	CacheMustRevalidate  = "must-revalidate"
-	CachePrivate         = "private"
-	CachePublic          = "public"
+	CacheNoStore        = "no-store"
+	CacheNoCache        = "no-cache"
+	CacheMustRevalidate = "must-revalidate"
+	CachePrivate        = "private"
+	CachePublic         = "public"
 )
 
 // HeaderManager provides standardized header management for RESTful APIs
@@ -187,11 +187,11 @@ func (h *HeaderManager) CheckIfMatch(etag string) bool {
 	if ifMatch == "" {
 		return true // No condition means proceed
 	}
-	
+
 	if ifMatch == "*" {
 		return true // Wildcard matches any existing resource
 	}
-	
+
 	// Parse comma-separated ETags
 	etags := strings.Split(ifMatch, ",")
 	for _, tag := range etags {
@@ -200,7 +200,7 @@ func (h *HeaderManager) CheckIfMatch(etag string) bool {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -210,11 +210,11 @@ func (h *HeaderManager) CheckIfNoneMatch(etag string) bool {
 	if ifNoneMatch == "" {
 		return true // No condition means proceed
 	}
-	
+
 	if ifNoneMatch == "*" {
 		return false // Wildcard means don't proceed if resource exists
 	}
-	
+
 	// Parse comma-separated ETags
 	etags := strings.Split(ifNoneMatch, ",")
 	for _, tag := range etags {
@@ -223,7 +223,7 @@ func (h *HeaderManager) CheckIfNoneMatch(etag string) bool {
 			return false // ETag matches, don't proceed
 		}
 	}
-	
+
 	return true
 }
 
@@ -233,12 +233,12 @@ func (h *HeaderManager) CheckIfModifiedSince(lastModified time.Time) bool {
 	if ifModifiedSince == "" {
 		return true // No condition means proceed
 	}
-	
+
 	since, err := time.Parse(http.TimeFormat, ifModifiedSince)
 	if err != nil {
 		return true // Invalid date means proceed
 	}
-	
+
 	// Return true if resource was modified after the given time
 	return lastModified.After(since)
 }
@@ -249,12 +249,12 @@ func (h *HeaderManager) CheckIfUnmodifiedSince(lastModified time.Time) bool {
 	if ifUnmodifiedSince == "" {
 		return true // No condition means proceed
 	}
-	
+
 	since, err := time.Parse(http.TimeFormat, ifUnmodifiedSince)
 	if err != nil {
 		return true // Invalid date means proceed
 	}
-	
+
 	// Return true if resource was NOT modified after the given time
 	return !lastModified.After(since)
 }
@@ -277,19 +277,19 @@ func GenerateResourceETag(resourceID string, modTime time.Time) string {
 // SetStandardRESTHeaders sets common headers for RESTful responses
 func SetStandardRESTHeaders(c *gin.Context) {
 	hm := NewHeaderManager(c)
-	
+
 	// Set standard content type
 	hm.SetJSONContentType()
-	
+
 	// Set vary headers for content negotiation
 	hm.SetStandardVary()
-	
+
 	// Set no-cache by default (can be overridden by specific handlers)
 	hm.SetNoCache()
-	
+
 	// Set request ID if available
 	hm.SetRequestID()
-	
+
 	// Set API version if available
 	if version := c.GetString("api_version"); version != "" {
 		hm.SetAPIVersion(version)
@@ -308,12 +308,12 @@ func WithHeaders() gin.HandlerFunc {
 func WithETag(etagFunc func(c *gin.Context) string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		hm := NewHeaderManager(c)
-		
+
 		// Generate ETag
 		etag := etagFunc(c)
 		if etag != "" {
 			hm.SetETag(etag, false)
-			
+
 			// Check If-None-Match for GET/HEAD requests
 			if c.Request.Method == "GET" || c.Request.Method == "HEAD" {
 				if !hm.CheckIfNoneMatch(etag) {
@@ -322,19 +322,19 @@ func WithETag(etagFunc func(c *gin.Context) string) gin.HandlerFunc {
 					return
 				}
 			}
-			
+
 			// Check If-Match for PUT/PATCH/DELETE requests
 			if c.Request.Method == "PUT" || c.Request.Method == "PATCH" || c.Request.Method == "DELETE" {
 				if !hm.CheckIfMatch(etag) {
-					ProblemDetail(c, http.StatusPreconditionFailed, 
-						"/problems/precondition-failed", "Precondition Failed", 
+					ProblemDetail(c, http.StatusPreconditionFailed,
+						"/problems/precondition-failed", "Precondition Failed",
 						"The resource has been modified by another request")
 					c.Abort()
 					return
 				}
 			}
 		}
-		
+
 		c.Next()
 	}
 }
@@ -343,12 +343,12 @@ func WithETag(etagFunc func(c *gin.Context) string) gin.HandlerFunc {
 func WithLastModified(lastModifiedFunc func(c *gin.Context) time.Time) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		hm := NewHeaderManager(c)
-		
+
 		// Get last modified time
 		lastModified := lastModifiedFunc(c)
 		if !lastModified.IsZero() {
 			hm.SetLastModified(lastModified)
-			
+
 			// Check If-Modified-Since for GET/HEAD requests
 			if c.Request.Method == "GET" || c.Request.Method == "HEAD" {
 				if !hm.CheckIfModifiedSince(lastModified) {
@@ -357,19 +357,19 @@ func WithLastModified(lastModifiedFunc func(c *gin.Context) time.Time) gin.Handl
 					return
 				}
 			}
-			
+
 			// Check If-Unmodified-Since for PUT/PATCH/DELETE requests
 			if c.Request.Method == "PUT" || c.Request.Method == "PATCH" || c.Request.Method == "DELETE" {
 				if !hm.CheckIfUnmodifiedSince(lastModified) {
-					ProblemDetail(c, http.StatusPreconditionFailed, 
-						"/problems/precondition-failed", "Precondition Failed", 
+					ProblemDetail(c, http.StatusPreconditionFailed,
+						"/problems/precondition-failed", "Precondition Failed",
 						"The resource has been modified since the specified time")
 					c.Abort()
 					return
 				}
 			}
 		}
-		
+
 		c.Next()
 	}
 }

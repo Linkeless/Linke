@@ -26,14 +26,12 @@ func NewUserRepository(db *gorm.DB, frameworkLogger framework.Logger) interfaces
 	}
 }
 
-
 // 注意：具体的 GetByEmail、GetByGoogleID 等方法已被移除
 // 现在统一使用通用的 GetByField 和 GetActiveByField 方法
 // 例如：
 // - GetByEmail → GetByField(ctx, "email", email)
 // - GetByGoogleID → GetByField(ctx, "google_id", googleID)
 // - GetActiveByEmail → GetActiveByField(ctx, "email", email)
-
 
 // ListByProvider lists users filtered by OAuth provider
 func (r *userRepository) ListByProvider(ctx context.Context, provider string, limit, offset int) ([]*entities.User, int64, error) {
@@ -61,7 +59,6 @@ func (r *userRepository) ListByProvider(ctx context.Context, provider string, li
 	return users, total, nil
 }
 
-
 // ListByRole lists users filtered by role
 func (r *userRepository) ListByRole(ctx context.Context, role string, limit, offset int) ([]*entities.User, int64, error) {
 	var users []*entities.User
@@ -88,7 +85,6 @@ func (r *userRepository) ListByRole(ctx context.Context, role string, limit, off
 	return users, total, nil
 }
 
-
 // UpdateRole updates a user's role
 func (r *userRepository) UpdateRole(ctx context.Context, id uint, role string) error {
 	result := r.GetDB().WithContext(ctx).Model(&entities.User{}).Where("id = ?", id).Update("role", role)
@@ -112,9 +108,7 @@ func (r *userRepository) UpdateRole(ctx context.Context, id uint, role string) e
 	return nil
 }
 
-
 // 注意：CountByProvider 已被移除，使用通用方法 CountByField(ctx, "provider", provider) 替代
-
 
 // CountRecentSignups returns the count of users registered in the last N days
 func (r *userRepository) CountRecentSignups(ctx context.Context, days int) (int64, error) {
@@ -126,9 +120,7 @@ func (r *userRepository) CountRecentSignups(ctx context.Context, days int) (int6
 	return count, nil
 }
 
-
 // 注意：ExistsByEmail 已被移除，使用通用方法 ExistsByField(ctx, "email", email) 替代
-
 
 // GetByInviteCodeUsed retrieves users who used a specific invite code
 func (r *userRepository) GetByInviteCodeUsed(ctx context.Context, inviteCode string) ([]*entities.User, error) {
@@ -184,17 +176,17 @@ func (r *userRepository) ExistsByField(ctx context.Context, field string, value 
 func (r *userRepository) ListByField(ctx context.Context, field string, value interface{}, limit, offset int) ([]*entities.User, int64, error) {
 	var users []*entities.User
 	var total int64
-	
+
 	query := r.GetDB().WithContext(ctx).Model(&entities.User{}).Where(field+" = ?", value)
-	
+
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to count users by %s: %w", field, err)
 	}
-	
+
 	if err := query.Limit(limit).Offset(offset).Find(&users).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to list users by %s: %w", field, err)
 	}
-	
+
 	return users, total, nil
 }
 

@@ -9,12 +9,12 @@ import (
 	"linke/internal/shared/queue"
 
 	// Service interfaces
-	userInterfaces "linke/internal/domains/user/usecases/interfaces"
-	subscriptionInterfaces "linke/internal/domains/subscription/usecases/interfaces"
-	paymentInterfaces "linke/internal/domains/payment/usecases/interfaces"
 	invoiceDto "linke/internal/domains/invoice/dto"
 	invoiceInterfaces "linke/internal/domains/invoice/usecases/interfaces"
+	paymentInterfaces "linke/internal/domains/payment/usecases/interfaces"
 	serverInterfaces "linke/internal/domains/server/usecases/interfaces"
+	subscriptionInterfaces "linke/internal/domains/subscription/usecases/interfaces"
+	userInterfaces "linke/internal/domains/user/usecases/interfaces"
 )
 
 // NotificationService defines the interface for notification services
@@ -55,11 +55,11 @@ type CrossDomainEventHandlers struct {
 	taskQueue  *queue.TaskQueue
 
 	// Service dependencies - injected via constructor
-	userService             userInterfaces.UserService
-	userSubscriptionService subscriptionInterfaces.UserSubscriptionService
+	userService              userInterfaces.UserService
+	userSubscriptionService  subscriptionInterfaces.UserSubscriptionService
 	subscriptionOrderService subscriptionInterfaces.SubscriptionOrderService
-	paymentService          paymentInterfaces.PaymentService
-	invoiceService          invoiceInterfaces.InvoiceService
+	paymentService           paymentInterfaces.PaymentService
+	invoiceService           invoiceInterfaces.InvoiceService
 	shadowsocksServerService serverInterfaces.ShadowsocksServerService
 
 	// Idempotency tracking
@@ -194,7 +194,7 @@ func (h *CrossDomainEventHandlers) PaymentCompletedHandler() EventHandler {
 			if order.OrderType == "new" || order.OrderType == "renewal" {
 				// Check if user already has an active subscription for this plan
 				existingSubscription, _ := h.userSubscriptionService.GetActiveUserSubscription(ctx, order.UserID, order.SubscriptionPlanID)
-				
+
 				if existingSubscription == nil {
 					// Create new subscription
 					createReq := &subscriptionInterfaces.CreateSubscriptionRequest{
@@ -277,7 +277,7 @@ func (h *CrossDomainEventHandlers) PaymentCompletedHandler() EventHandler {
 					SubscriptionOrderID: order.ID,
 					Amount:              order.TotalAmount,
 					Currency:            order.Currency,
-					BillingName:         fmt.Sprintf("User %d", order.UserID), // Would need to get actual user name
+					BillingName:         fmt.Sprintf("User %d", order.UserID),            // Would need to get actual user name
 					BillingEmail:        fmt.Sprintf("user%d@example.com", order.UserID), // Would need actual email
 					Description:         fmt.Sprintf("Subscription Order #%s", order.OrderNumber),
 					AutoSend:            false, // Don't auto-send, let event handler decide
@@ -684,10 +684,10 @@ func (h *CrossDomainEventHandlers) SubscriptionExpiredHandler() EventHandler {
 			// Step 3: Send expiry notification (async)
 			if h.taskQueue != nil {
 				notificationData := map[string]any{
-					"user_id":         subscriptionEvent.UserID,
-					"subscription_id": subscriptionEvent.SubscriptionID,
-					"type":            "expiry",
-					"template":        "subscription_expired",
+					"user_id":          subscriptionEvent.UserID,
+					"subscription_id":  subscriptionEvent.SubscriptionID,
+					"type":             "expiry",
+					"template":         "subscription_expired",
 					"has_other_active": hasOtherActive,
 				}
 				task := queue.NewTask("notification", notificationData)
@@ -753,12 +753,12 @@ func (h *CrossDomainEventHandlers) UserRegisteredHandler() EventHandler {
 			// Step 2: Send welcome email notification (async)
 			if h.taskQueue != nil {
 				welcomeData := map[string]any{
-					"user_id":    user.ID,
-					"email":      user.Email,
-					"username":   user.Username,
-					"name":       user.Name,
-					"type":       "welcome",
-					"template":   "user_welcome",
+					"user_id":  user.ID,
+					"email":    user.Email,
+					"username": user.Username,
+					"name":     user.Name,
+					"type":     "welcome",
+					"template": "user_welcome",
 				}
 				task := queue.NewTask("email", welcomeData)
 				if err := h.taskQueue.Enqueue(ctx, "email", task); err != nil {
@@ -774,8 +774,8 @@ func (h *CrossDomainEventHandlers) UserRegisteredHandler() EventHandler {
 			if h.cacheStore != nil {
 				userConfigKey := fmt.Sprintf("user_config:%d", user.ID)
 				initialConfig := map[string]any{
-					"user_id":          user.ID,
-					"preferences":      map[string]any{},
+					"user_id":     user.ID,
+					"preferences": map[string]any{},
 					"notification_settings": map[string]bool{
 						"email_notifications": true,
 						"sms_notifications":   false,
@@ -900,8 +900,8 @@ func (h *CrossDomainEventHandlers) UserDeletedHandler() EventHandler {
 			// Step 3: Send confirmation notification (async)
 			if h.taskQueue != nil {
 				confirmationData := map[string]any{
-					"user_id": userEvent.UserID,
-					"type":    "user_deletion_confirmation",
+					"user_id":  userEvent.UserID,
+					"type":     "user_deletion_confirmation",
 					"template": "user_deleted",
 				}
 				task := queue.NewTask("notification", confirmationData)
@@ -1001,16 +1001,16 @@ func (h *CrossDomainEventHandlers) PaymentFailedHandler() EventHandler {
 				user, err := h.userService.GetUserByID(ctx, userID)
 				if err == nil && user.Email != "" {
 					failureData := map[string]any{
-						"payment_id":       paymentEvent.PaymentID,
-						"user_id":          user.ID,
-						"order_id":         uint(orderID),
-						"to_email":         user.Email,
-						"user_name":        user.Name,
-						"payment_amount":   paymentEvent.Amount,
-						"failure_reason":   orderData["failure_reason"],
-						"retry_available":  true,
-						"type":             "payment_failed",
-						"template":         "payment_failed",
+						"payment_id":      paymentEvent.PaymentID,
+						"user_id":         user.ID,
+						"order_id":        uint(orderID),
+						"to_email":        user.Email,
+						"user_name":       user.Name,
+						"payment_amount":  paymentEvent.Amount,
+						"failure_reason":  orderData["failure_reason"],
+						"retry_available": true,
+						"type":            "payment_failed",
+						"template":        "payment_failed",
 					}
 					task := queue.NewTask("email", failureData)
 					if err := h.taskQueue.Enqueue(ctx, "email", task); err != nil {
@@ -1134,12 +1134,12 @@ func (h *CrossDomainEventHandlers) InvoiceGeneratedHandler() EventHandler {
 			if h.cacheStore != nil {
 				billingStatusKey := fmt.Sprintf("user_billing:%d", user.ID)
 				billingStatus := map[string]any{
-					"user_id":              user.ID,
-					"latest_invoice_id":    invoice.ID,
+					"user_id":               user.ID,
+					"latest_invoice_id":     invoice.ID,
 					"latest_invoice_amount": invoice.Amount,
 					"latest_invoice_status": invoice.Status,
-					"last_invoice_date":    invoice.CreatedAt,
-					"updated_at":           time.Now(),
+					"last_invoice_date":     invoice.CreatedAt,
+					"updated_at":            time.Now(),
 				}
 				if err := h.cacheStore.SetJSON(ctx, billingStatusKey, billingStatus, 24*time.Hour); err != nil {
 					h.logger.Error("Failed to update user billing status cache",
@@ -1635,11 +1635,11 @@ func (h *NotificationHandler) handlePaymentCompleted(ctx context.Context, event 
 
 	// Create notification request
 	req := &NotificationRequest{
-		UserID:    uint(userID),
-		Email:     userEmail,
-		Channels:  []string{"email"},
-		Subject:   "Payment Confirmation",
-		Template:  "payment_completed",
+		UserID:   uint(userID),
+		Email:    userEmail,
+		Channels: []string{"email"},
+		Subject:  "Payment Confirmation",
+		Template: "payment_completed",
 		Variables: map[string]string{
 			"user_name": userEmail, // Use email as fallback for name
 			"amount":    fmt.Sprintf("%.2f", amount),
@@ -1693,11 +1693,11 @@ func (h *NotificationHandler) handleSubscriptionExpired(ctx context.Context, eve
 	}
 
 	req := &NotificationRequest{
-		UserID:    uint(userID),
-		Email:     userEmail,
-		Channels:  []string{"email"},
-		Subject:   "Subscription Expired",
-		Template:  "subscription_expired",
+		UserID:   uint(userID),
+		Email:    userEmail,
+		Channels: []string{"email"},
+		Subject:  "Subscription Expired",
+		Template: "subscription_expired",
 		Variables: map[string]string{
 			"user_name":       userEmail,
 			"subscription_id": fmt.Sprintf("%.0f", subscriptionID),
@@ -1728,11 +1728,11 @@ func (h *NotificationHandler) handleInvoiceOverdue(ctx context.Context, event Ev
 	}
 
 	req := &NotificationRequest{
-		UserID:    uint(userID),
-		Email:     userEmail,
-		Channels:  []string{"email"},
-		Subject:   "Invoice Overdue Notice",
-		Template:  "invoice_overdue",
+		UserID:   uint(userID),
+		Email:    userEmail,
+		Channels: []string{"email"},
+		Subject:  "Invoice Overdue Notice",
+		Template: "invoice_overdue",
 		Variables: map[string]string{
 			"user_name":  userEmail,
 			"invoice_id": invoiceID,
@@ -1763,11 +1763,11 @@ func (h *NotificationHandler) handleOrderPaid(ctx context.Context, event Event) 
 	}
 
 	req := &NotificationRequest{
-		UserID:    uint(userID),
-		Email:     userEmail,
-		Channels:  []string{"email"},
-		Subject:   "Order Confirmation",
-		Template:  "order_paid",
+		UserID:   uint(userID),
+		Email:    userEmail,
+		Channels: []string{"email"},
+		Subject:  "Order Confirmation",
+		Template: "order_paid",
 		Variables: map[string]string{
 			"user_name": userEmail,
 			"order_id":  orderID,
@@ -1802,11 +1802,11 @@ func (h *NotificationHandler) handleUserCreated(ctx context.Context, event Event
 	}
 
 	req := &NotificationRequest{
-		UserID:    uint(userID),
-		Email:     userEmail,
-		Channels:  []string{"email"},
-		Subject:   "Welcome to Linke!",
-		Template:  "user_created",
+		UserID:   uint(userID),
+		Email:    userEmail,
+		Channels: []string{"email"},
+		Subject:  "Welcome to Linke!",
+		Template: "user_created",
 		Variables: map[string]string{
 			"user_name": userName,
 		},
@@ -1836,11 +1836,11 @@ func (h *NotificationHandler) handleSubscriptionActivated(ctx context.Context, e
 	}
 
 	req := &NotificationRequest{
-		UserID:    uint(userID),
-		Email:     userEmail,
-		Channels:  []string{"email"},
-		Subject:   "Subscription Activated",
-		Template:  "subscription_activated",
+		UserID:   uint(userID),
+		Email:    userEmail,
+		Channels: []string{"email"},
+		Subject:  "Subscription Activated",
+		Template: "subscription_activated",
 		Variables: map[string]string{
 			"user_name": userEmail,
 			"plan_name": planName,

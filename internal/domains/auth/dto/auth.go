@@ -8,20 +8,20 @@ import (
 
 // AuthResponse represents authentication response
 type AuthResponse struct {
-	User  *UserResponse `json:"user"`
-	Token *TokenResponse             `json:"token"`
+	User  *UserResponse  `json:"user"`
+	Token *TokenResponse `json:"token"`
 }
 
 // UserResponse represents user data in auth responses (simplified for Swagger)
 type UserResponse struct {
-	ID       uint      `json:"id" example:"1"`
-	Email    string    `json:"email" example:"user@example.com"`
-	Username string    `json:"username" example:"johndoe"`
-	Name     string    `json:"name" example:"John Doe"`
-	Avatar   string    `json:"avatar" example:"https://example.com/avatar.jpg"`
-	Provider string    `json:"provider" example:"local"`
-	Status   string    `json:"status" example:"active"`
-	Role     string    `json:"role" example:"user"`
+	ID        uint      `json:"id" example:"1"`
+	Email     string    `json:"email" example:"user@example.com"`
+	Username  string    `json:"username" example:"johndoe"`
+	Name      string    `json:"name" example:"John Doe"`
+	Avatar    string    `json:"avatar" example:"https://example.com/avatar.jpg"`
+	Provider  string    `json:"provider" example:"local"`
+	Status    string    `json:"status" example:"active"`
+	Role      string    `json:"role" example:"user"`
 	CreatedAt time.Time `json:"created_at" example:"2024-01-01T00:00:00Z"`
 	UpdatedAt time.Time `json:"updated_at" example:"2024-01-01T00:00:00Z"`
 }

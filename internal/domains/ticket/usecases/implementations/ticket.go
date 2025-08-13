@@ -24,7 +24,6 @@ func NewTicketService(db *gorm.DB) *TicketService {
 	}
 }
 
-
 // CreateTicket creates a new ticket
 func (s *TicketService) CreateTicket(ctx context.Context, userID uint, req *dto.CreateTicketRequest) (*entities.Ticket, error) {
 	// Generate unique ticket number
@@ -378,7 +377,6 @@ func (s *TicketService) DeleteTicket(ctx context.Context, ticketID uint) error {
 
 	return nil
 }
-
 
 // GetUserTickets gets tickets for a specific user
 func (s *TicketService) GetUserTickets(ctx context.Context, userID uint, limit, offset int) ([]*entities.Ticket, int64, error) {
@@ -796,7 +794,7 @@ func (s *TicketService) AutoAssignTicket(ctx context.Context, ticketID uint) (*e
 func (s *TicketService) GetAgentWorkload(ctx context.Context, agentID uint) (int, error) {
 	var count int64
 	if err := s.db.WithContext(ctx).Model(&entities.Ticket{}).
-		Where("assigned_to_id = ? AND status IN ?", agentID, 
+		Where("assigned_to_id = ? AND status IN ?", agentID,
 			[]string{constants.TicketStatusOpen, constants.TicketStatusInProgress, constants.TicketStatusPending}).
 		Count(&count).Error; err != nil {
 		return 0, fmt.Errorf("failed to get agent workload: %w", err)
@@ -841,10 +839,10 @@ func (s *TicketService) GetAvailableAgents(ctx context.Context, category string)
 			Email:             agent.Email,
 			Specialties:       []string{"general", category}, // Simplified: assume all agents can handle any category
 			CurrentLoad:       workload,
-			MaxLoad:           10, // Default max load
+			MaxLoad:           10,   // Default max load
 			IsOnline:          true, // Simplified: assume all agents are online
 			LastActiveAt:      time.Now().Format(time.RFC3339),
-			AvgResponseTime:   30, // Default 30 minutes
+			AvgResponseTime:   30,  // Default 30 minutes
 			SatisfactionScore: 8.5, // Default score
 		}
 
@@ -883,7 +881,7 @@ func (s *TicketService) FindBestAgentForTicket(ctx context.Context, ticket *enti
 	for _, agent := range availableAgents {
 		// Calculate assignment score (lower is better)
 		score := agent.CurrentLoad
-		
+
 		// Bonus for category specialization
 		hasSpecialty := false
 		for _, specialty := range agent.Specialties {
@@ -892,7 +890,7 @@ func (s *TicketService) FindBestAgentForTicket(ctx context.Context, ticket *enti
 				break
 			}
 		}
-		
+
 		if hasSpecialty {
 			score -= 1 // Reduce score (better) if agent specializes in this category
 		}

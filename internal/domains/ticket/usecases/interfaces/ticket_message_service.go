@@ -29,4 +29,3 @@ type TicketMessageService interface {
 	// Message statistics
 	GetMessageStatistics(ctx context.Context, ticketID uint) (map[string]any, error)
 }
-

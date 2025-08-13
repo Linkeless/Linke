@@ -318,7 +318,7 @@ func (h *AdminAuthHandler) ListLoginAttempts(c *gin.Context) {
 	if !h.checkLoginSecurityService(c) {
 		return
 	}
-	
+
 	stats, err := h.loginSecurityService.GetLoginAttemptStats(c.Request.Context(), since)
 	if err != nil {
 		logger.Error("Admin failed to get login attempts",
@@ -360,12 +360,12 @@ func (h *AdminAuthHandler) GetFailedLoginAnalysis(c *gin.Context) {
 	}
 
 	since := time.Now().AddDate(0, 0, -days)
-	
+
 	// 🔴 DISABLED: Check if login security service is available
 	if !h.checkLoginSecurityService(c) {
 		return
 	}
-	
+
 	stats, err := h.loginSecurityService.GetLoginAttemptStats(c.Request.Context(), since)
 	if err != nil {
 		logger.Error("Admin failed to get failed login analysis",
@@ -559,7 +559,7 @@ func (h *AdminAuthHandler) GetAccountSecurityStatus(c *gin.Context) {
 		return
 	}
 
-	// Get failure count  
+	// Get failure count
 	// Note: Already checked loginSecurityService availability above
 	failureCount, err := h.loginSecurityService.GetFailureCount(c.Request.Context(), user.Email)
 	if err != nil {
@@ -810,7 +810,7 @@ func (h *AdminAuthHandler) GetOAuthProviderStats(c *gin.Context) {
 
 	// Extract provider-specific statistics
 	providerStats := gin.H{
-		"total_users":     stats,
+		"total_users": stats,
 		"oauth_breakdown": gin.H{
 			"google":   "Statistics would require provider-specific queries",
 			"github":   "Statistics would require provider-specific queries",
@@ -1013,10 +1013,10 @@ func (h *AdminAuthHandler) GetSecurityScore(c *gin.Context) {
 	response.OK(c, gin.H{
 		"overall_score": securityScore,
 		"score_breakdown": gin.H{
-			"authentication": 85,
-			"authorization":  92,
-			"data_protection": 88,
-			"monitoring":     90,
+			"authentication":    85,
+			"authorization":     92,
+			"data_protection":   88,
+			"monitoring":        90,
 			"incident_response": 87,
 		},
 		"recommendations": []gin.H{

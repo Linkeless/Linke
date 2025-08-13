@@ -97,7 +97,7 @@ func (s *RetryableNotificationService) SetRetryConfig(config *RetryConfig) {
 // Send sends notifications with retry logic and failure compensation
 func (s *RetryableNotificationService) Send(ctx context.Context, req *NotificationRequest) ([]*NotificationResult, error) {
 	requestID := s.generateRequestID(req)
-	
+
 	s.logger.Info("Sending notification with retry support",
 		logger.String("request_id", requestID),
 		logger.Uint("user_id", req.UserID),
@@ -111,7 +111,7 @@ func (s *RetryableNotificationService) Send(ctx context.Context, req *Notificati
 		s.logger.Error("Service-level error, scheduling retry",
 			logger.String("request_id", requestID),
 			logger.ErrorField(err))
-		
+
 		if err := s.scheduleRetry(ctx, req, requestID, 1, err); err != nil {
 			s.logger.Error("Failed to schedule retry", logger.ErrorField(err))
 		}
@@ -131,7 +131,7 @@ func (s *RetryableNotificationService) Send(ctx context.Context, req *Notificati
 		// Channel-level failure, analyze and handle
 		hasFailures = true
 		failureType := s.classifyFailure(result.Error, result.Channel)
-		
+
 		s.logger.Warn("Channel notification failed",
 			logger.String("request_id", requestID),
 			logger.String("channel", string(result.Channel)),
@@ -148,7 +148,7 @@ func (s *RetryableNotificationService) Send(ctx context.Context, req *Notificati
 		case FailureTypeTemporary, FailureTypeThrottled:
 			// Schedule retry for temporary failures
 			if err := s.scheduleChannelRetry(ctx, req, result, requestID, 1, failureType); err != nil {
-				s.logger.Error("Failed to schedule channel retry", 
+				s.logger.Error("Failed to schedule channel retry",
 					logger.String("channel", string(result.Channel)),
 					logger.ErrorField(err))
 				finalResults = append(finalResults, result)
@@ -192,7 +192,7 @@ func (s *RetryableNotificationService) ProcessRetries(ctx context.Context) error
 		return fmt.Errorf("failed to get pending retries: %w", err)
 	}
 
-	s.logger.Info("Processing notification retries", 
+	s.logger.Info("Processing notification retries",
 		logger.Int("pending_count", len(pendingRetries)))
 
 	for _, failure := range pendingRetries {
@@ -205,8 +205,8 @@ func (s *RetryableNotificationService) ProcessRetries(ctx context.Context) error
 			s.logger.Warn("Max retries exceeded, moving to dead letter queue",
 				logger.String("request_id", failure.RequestID),
 				logger.Int("attempts", failure.AttemptCount))
-			
-			if err := s.failureStore.MarkAsDeadLetter(ctx, failure.RequestID, 
+
+			if err := s.failureStore.MarkAsDeadLetter(ctx, failure.RequestID,
 				"max retries exceeded"); err != nil {
 				s.logger.Error("Failed to mark as dead letter", logger.ErrorField(err))
 			}
@@ -253,14 +253,14 @@ func (s *RetryableNotificationService) processRetry(ctx context.Context, failure
 
 		if failure.AttemptCount >= s.retryConfig.MaxRetries {
 			// Max retries reached
-			return s.failureStore.MarkAsDeadLetter(ctx, failure.RequestID, 
+			return s.failureStore.MarkAsDeadLetter(ctx, failure.RequestID,
 				fmt.Sprintf("max retries exceeded: %s", errorMsg))
 		}
 
 		// Schedule next retry
 		nextRetry := s.calculateNextRetry(failure.AttemptCount, failure.FailureType)
 		failure.NextRetryAt = &nextRetry
-		
+
 		return s.failureStore.UpdateFailure(ctx, failure)
 	}
 
@@ -288,11 +288,11 @@ func (s *RetryableNotificationService) scheduleRetry(ctx context.Context, req *N
 		logger.String("delay", delay.String()))
 
 	retryData := map[string]interface{}{
-		"request_id":     requestID,
-		"original_req":   req,
-		"attempt":        attempt,
-		"error":          err.Error(),
-		"scheduled_at":   time.Now().Unix(),
+		"request_id":   requestID,
+		"original_req": req,
+		"attempt":      attempt,
+		"error":        err.Error(),
+		"scheduled_at": time.Now().Unix(),
 	}
 
 	task := queue.NewTask("notification_retry", retryData)
@@ -334,7 +334,7 @@ func (s *RetryableNotificationService) classifyFailure(errorMsg string, channel 
 
 	// Permanent failures - don't retry
 	permanentKeywords := []string{
-		"invalid email", "invalid phone", "invalid user", 
+		"invalid email", "invalid phone", "invalid user",
 		"authentication failed", "unauthorized", "forbidden",
 		"not found", "user blocked", "account disabled",
 		"malformed", "invalid format", "permission denied",
@@ -371,7 +371,7 @@ func (s *RetryableNotificationService) calculateNextRetry(attemptCount int, fail
 // calculateRetryDelay calculates the retry delay using exponential backoff with jitter
 func (s *RetryableNotificationService) calculateRetryDelay(attemptCount int, failureType FailureType) time.Duration {
 	// Base delay calculation
-	delay := time.Duration(float64(s.retryConfig.InitialDelay) * 
+	delay := time.Duration(float64(s.retryConfig.InitialDelay) *
 		math.Pow(s.retryConfig.BackoffMultiplier, float64(attemptCount-1)))
 
 	// Apply failure type multipliers
@@ -389,7 +389,7 @@ func (s *RetryableNotificationService) calculateRetryDelay(attemptCount int, fai
 
 	// Add jitter to prevent thundering herd
 	if s.retryConfig.EnableJitter && delay > 0 {
-		jitter := time.Duration(float64(delay) * 0.1) // 10% jitter
+		jitter := time.Duration(float64(delay) * 0.1)                      // 10% jitter
 		jitterFactor := (2*float64(time.Now().UnixNano()%1000)/1000.0 - 1) // Random factor between -1 and 1
 		delay += time.Duration(float64(jitter) * jitterFactor)
 	}

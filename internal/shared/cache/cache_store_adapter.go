@@ -64,7 +64,7 @@ func (a *CacheStoreAdapter) GetJSON(ctx context.Context, key string, dest any) e
 	if data == nil {
 		return nil
 	}
-	
+
 	if err := json.Unmarshal(data, dest); err != nil {
 		return &CacheError{Op: "unmarshal", Key: key, Err: err}
 	}

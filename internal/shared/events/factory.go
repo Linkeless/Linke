@@ -21,7 +21,7 @@ func (m *MockNotificationService) Send(ctx context.Context, req *NotificationReq
 		logger.Uint("user_id", req.UserID),
 		logger.String("subject", req.Subject),
 		logger.Any("channels", req.Channels))
-	
+
 	// Return mock success results for all channels
 	results := make([]*NotificationResult, len(req.Channels))
 	for i, channel := range req.Channels {
@@ -32,7 +32,7 @@ func (m *MockNotificationService) Send(ctx context.Context, req *NotificationReq
 			SentAt:    time.Now().Format(time.RFC3339),
 		}
 	}
-	
+
 	return results, nil
 }
 

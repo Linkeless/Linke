@@ -49,73 +49,73 @@ func (s NotificationStatus) String() string {
 
 // DeliveryAttempt represents a single delivery attempt
 type DeliveryAttempt struct {
-	AttemptNumber int                       `json:"attempt_number"`
-	Channel       NotificationChannel       `json:"channel"`
-	Status        NotificationStatus        `json:"status"`
-	Error         string                    `json:"error,omitempty"`
-	StartedAt     time.Time                 `json:"started_at"`
-	CompletedAt   *time.Time                `json:"completed_at,omitempty"`
-	Duration      time.Duration             `json:"duration" swaggertype:"string"`
-	Metadata      map[string]interface{}    `json:"metadata,omitempty"`
-	ProviderResp  *ProviderResponse         `json:"provider_response,omitempty"`
+	AttemptNumber int                    `json:"attempt_number"`
+	Channel       NotificationChannel    `json:"channel"`
+	Status        NotificationStatus     `json:"status"`
+	Error         string                 `json:"error,omitempty"`
+	StartedAt     time.Time              `json:"started_at"`
+	CompletedAt   *time.Time             `json:"completed_at,omitempty"`
+	Duration      time.Duration          `json:"duration" swaggertype:"string"`
+	Metadata      map[string]interface{} `json:"metadata,omitempty"`
+	ProviderResp  *ProviderResponse      `json:"provider_response,omitempty"`
 }
 
 // ProviderResponse contains response details from notification providers
 type ProviderResponse struct {
-	ProviderID    string                 `json:"provider_id"`
-	MessageID     string                 `json:"message_id,omitempty"`
-	StatusCode    int                    `json:"status_code,omitempty"`
-	ResponseBody  string                 `json:"response_body,omitempty"`
-	Headers       map[string]string      `json:"headers,omitempty"`
-	DeliveryInfo  map[string]interface{} `json:"delivery_info,omitempty"`
+	ProviderID   string                 `json:"provider_id"`
+	MessageID    string                 `json:"message_id,omitempty"`
+	StatusCode   int                    `json:"status_code,omitempty"`
+	ResponseBody string                 `json:"response_body,omitempty"`
+	Headers      map[string]string      `json:"headers,omitempty"`
+	DeliveryInfo map[string]interface{} `json:"delivery_info,omitempty"`
 }
 
 // NotificationTrackingInfo contains complete tracking information for a notification
 type NotificationTrackingInfo struct {
-	RequestID        string                        `json:"request_id"`
-	UserID           uint                          `json:"user_id"`
-	EventType        string                        `json:"event_type"`
-	EventID          string                        `json:"event_id,omitempty"`
-	OverallStatus    NotificationStatus            `json:"overall_status"`
-	CreatedAt        time.Time                     `json:"created_at"`
-	UpdatedAt        time.Time                     `json:"updated_at"`
-	ExpiresAt        *time.Time                    `json:"expires_at,omitempty"`
-	Priority         NotificationPriority          `json:"priority"`
-	ChannelAttempts  map[NotificationChannel][]*DeliveryAttempt `json:"channel_attempts"`
-	TotalAttempts    int                           `json:"total_attempts"`
-	SuccessfulChannels []NotificationChannel       `json:"successful_channels"`
-	FailedChannels   []NotificationChannel         `json:"failed_channels"`
-	RetryingChannels []NotificationChannel         `json:"retrying_channels"`
-	Metadata         map[string]interface{}        `json:"metadata,omitempty"`
-	Tags             []string                      `json:"tags,omitempty"`
+	RequestID          string                                     `json:"request_id"`
+	UserID             uint                                       `json:"user_id"`
+	EventType          string                                     `json:"event_type"`
+	EventID            string                                     `json:"event_id,omitempty"`
+	OverallStatus      NotificationStatus                         `json:"overall_status"`
+	CreatedAt          time.Time                                  `json:"created_at"`
+	UpdatedAt          time.Time                                  `json:"updated_at"`
+	ExpiresAt          *time.Time                                 `json:"expires_at,omitempty"`
+	Priority           NotificationPriority                       `json:"priority"`
+	ChannelAttempts    map[NotificationChannel][]*DeliveryAttempt `json:"channel_attempts"`
+	TotalAttempts      int                                        `json:"total_attempts"`
+	SuccessfulChannels []NotificationChannel                      `json:"successful_channels"`
+	FailedChannels     []NotificationChannel                      `json:"failed_channels"`
+	RetryingChannels   []NotificationChannel                      `json:"retrying_channels"`
+	Metadata           map[string]interface{}                     `json:"metadata,omitempty"`
+	Tags               []string                                   `json:"tags,omitempty"`
 }
 
 // NotificationStatusTracker provides comprehensive tracking for notifications
 type NotificationStatusTracker struct {
-	cache       cache.CacheStore
-	logger      logger.Logger
-	mu          sync.RWMutex
-	keyPrefix   string
-	defaultTTL  time.Duration
+	cache      cache.CacheStore
+	logger     logger.Logger
+	mu         sync.RWMutex
+	keyPrefix  string
+	defaultTTL time.Duration
 }
 
 // StatusTrackerConfig contains configuration for the status tracker
 type StatusTrackerConfig struct {
-	KeyPrefix         string
-	DefaultTTL        time.Duration
+	KeyPrefix             string
+	DefaultTTL            time.Duration
 	EnableRealTimeUpdates bool
-	BatchUpdateSize   int
-	CleanupInterval   time.Duration
+	BatchUpdateSize       int
+	CleanupInterval       time.Duration
 }
 
 // DefaultStatusTrackerConfig returns default configuration
 func DefaultStatusTrackerConfig() *StatusTrackerConfig {
 	return &StatusTrackerConfig{
-		KeyPrefix:         "notification_status:",
-		DefaultTTL:        7 * 24 * time.Hour, // Keep for 7 days
+		KeyPrefix:             "notification_status:",
+		DefaultTTL:            7 * 24 * time.Hour, // Keep for 7 days
 		EnableRealTimeUpdates: true,
-		BatchUpdateSize:   100,
-		CleanupInterval:   1 * time.Hour,
+		BatchUpdateSize:       100,
+		CleanupInterval:       1 * time.Hour,
 	}
 }
 
@@ -144,21 +144,21 @@ func (t *NotificationStatusTracker) InitializeTracking(
 	requestID string,
 ) error {
 	trackingInfo := &NotificationTrackingInfo{
-		RequestID:        requestID,
-		UserID:           req.UserID,
-		EventType:        req.EventType,
-		EventID:          req.EventID,
-		OverallStatus:    StatusPending,
-		CreatedAt:        time.Now(),
-		UpdatedAt:        time.Now(),
-		Priority:         req.Priority,
-		ChannelAttempts:  make(map[NotificationChannel][]*DeliveryAttempt),
-		TotalAttempts:    0,
+		RequestID:          requestID,
+		UserID:             req.UserID,
+		EventType:          req.EventType,
+		EventID:            req.EventID,
+		OverallStatus:      StatusPending,
+		CreatedAt:          time.Now(),
+		UpdatedAt:          time.Now(),
+		Priority:           req.Priority,
+		ChannelAttempts:    make(map[NotificationChannel][]*DeliveryAttempt),
+		TotalAttempts:      0,
 		SuccessfulChannels: make([]NotificationChannel, 0),
-		FailedChannels:   make([]NotificationChannel, 0),
-		RetryingChannels: make([]NotificationChannel, 0),
-		Metadata:         req.Metadata,
-		Tags:             req.Tags,
+		FailedChannels:     make([]NotificationChannel, 0),
+		RetryingChannels:   make([]NotificationChannel, 0),
+		Metadata:           req.Metadata,
+		Tags:               req.Tags,
 	}
 
 	// Set expiration time based on priority
@@ -202,7 +202,7 @@ func (t *NotificationStatusTracker) RecordDeliveryAttempt(
 		trackingInfo.ChannelAttempts[channel],
 		attempt,
 	)
-	
+
 	trackingInfo.TotalAttempts++
 	trackingInfo.UpdatedAt = time.Now()
 
@@ -281,7 +281,7 @@ func (t *NotificationStatusTracker) GetUserNotificationHistory(
 	// 1. Maintain a separate index of notifications by user
 	// 2. Use a database or search engine for complex queries
 	// 3. Implement pagination and filtering
-	
+
 	return []*NotificationTrackingInfo{}, nil
 }
 
@@ -293,18 +293,18 @@ func (t *NotificationStatusTracker) GetNotificationAnalytics(
 ) (*NotificationAnalytics, error) {
 	// Placeholder implementation - in production, this would aggregate data
 	// from the tracking store and provide comprehensive analytics
-	
+
 	t.logger.Debug("Getting notification analytics",
 		logger.String("time_range", timeRange.String()),
 		logger.String("filters", fmt.Sprintf("%+v", filters)))
 
 	analytics := &NotificationAnalytics{
-		TimeRange:        timeRange,
+		TimeRange:          timeRange,
 		TotalNotifications: 0,
-		SuccessRate:      0.0,
-		ChannelStats:     make(map[NotificationChannel]*ChannelAnalytics),
-		EventTypeStats:   make(map[string]*EventTypeAnalytics),
-		GeneratedAt:      time.Now(),
+		SuccessRate:        0.0,
+		ChannelStats:       make(map[NotificationChannel]*ChannelAnalytics),
+		EventTypeStats:     make(map[string]*EventTypeAnalytics),
+		GeneratedAt:        time.Now(),
 	}
 
 	return analytics, nil
@@ -316,12 +316,12 @@ func (t *NotificationStatusTracker) CleanupExpiredTracking(ctx context.Context) 
 	// 1. Scan for expired tracking entries
 	// 2. Archive important data before deletion
 	// 3. Clean up in batches to avoid performance impact
-	
+
 	t.logger.Info("Cleaning up expired notification tracking data")
-	
+
 	// This is a simplified implementation
 	// Real cleanup would need pattern matching or separate indexes
-	
+
 	return nil
 }
 
@@ -332,7 +332,7 @@ func (t *NotificationStatusTracker) getTrackingInfo(
 	requestID string,
 ) (*NotificationTrackingInfo, error) {
 	key := t.keyPrefix + requestID
-	
+
 	var trackingInfo NotificationTrackingInfo
 	err := t.cache.GetJSON(ctx, key, &trackingInfo)
 	if err != nil {
@@ -347,7 +347,7 @@ func (t *NotificationStatusTracker) storeTrackingInfo(
 	trackingInfo *NotificationTrackingInfo,
 ) error {
 	key := t.keyPrefix + trackingInfo.RequestID
-	
+
 	err := t.cache.SetJSON(ctx, key, trackingInfo, t.defaultTTL)
 	if err != nil {
 		return fmt.Errorf("failed to store tracking info: %w", err)
@@ -423,45 +423,45 @@ func (tr TimeRange) String() string {
 
 // AnalyticsFilters contains filters for analytics queries
 type AnalyticsFilters struct {
-	UserIDs     []uint                  `json:"user_ids,omitempty"`
-	EventTypes  []string                `json:"event_types,omitempty"`
-	Channels    []NotificationChannel   `json:"channels,omitempty"`
-	Statuses    []NotificationStatus    `json:"statuses,omitempty"`
-	Priorities  []NotificationPriority  `json:"priorities,omitempty"`
-	Tags        []string                `json:"tags,omitempty"`
+	UserIDs    []uint                 `json:"user_ids,omitempty"`
+	EventTypes []string               `json:"event_types,omitempty"`
+	Channels   []NotificationChannel  `json:"channels,omitempty"`
+	Statuses   []NotificationStatus   `json:"statuses,omitempty"`
+	Priorities []NotificationPriority `json:"priorities,omitempty"`
+	Tags       []string               `json:"tags,omitempty"`
 }
 
 // NotificationAnalytics contains analytics data
 type NotificationAnalytics struct {
-	TimeRange           TimeRange                             `json:"time_range"`
-	TotalNotifications  int                                  `json:"total_notifications"`
-	SuccessRate         float64                              `json:"success_rate"`
+	TimeRange           TimeRange                                 `json:"time_range"`
+	TotalNotifications  int                                       `json:"total_notifications"`
+	SuccessRate         float64                                   `json:"success_rate"`
 	ChannelStats        map[NotificationChannel]*ChannelAnalytics `json:"channel_stats"`
-	EventTypeStats      map[string]*EventTypeAnalytics       `json:"event_type_stats"`
-	HourlyDistribution  []HourlyStats                        `json:"hourly_distribution"`
-	TopFailureReasons   []FailureReason                      `json:"top_failure_reasons"`
-	AverageDeliveryTime time.Duration                        `json:"average_delivery_time" swaggertype:"string"`
-	GeneratedAt         time.Time                            `json:"generated_at"`
+	EventTypeStats      map[string]*EventTypeAnalytics            `json:"event_type_stats"`
+	HourlyDistribution  []HourlyStats                             `json:"hourly_distribution"`
+	TopFailureReasons   []FailureReason                           `json:"top_failure_reasons"`
+	AverageDeliveryTime time.Duration                             `json:"average_delivery_time" swaggertype:"string"`
+	GeneratedAt         time.Time                                 `json:"generated_at"`
 }
 
 // ChannelAnalytics contains analytics for a specific channel
 type ChannelAnalytics struct {
-	Channel            NotificationChannel `json:"channel"`
-	TotalSent          int                `json:"total_sent"`
-	Successful         int                `json:"successful"`
-	Failed             int                `json:"failed"`
-	SuccessRate        float64           `json:"success_rate"`
-	AverageDeliveryTime time.Duration     `json:"average_delivery_time" swaggertype:"string"`
-	TopFailureReasons  []FailureReason   `json:"top_failure_reasons"`
+	Channel             NotificationChannel `json:"channel"`
+	TotalSent           int                 `json:"total_sent"`
+	Successful          int                 `json:"successful"`
+	Failed              int                 `json:"failed"`
+	SuccessRate         float64             `json:"success_rate"`
+	AverageDeliveryTime time.Duration       `json:"average_delivery_time" swaggertype:"string"`
+	TopFailureReasons   []FailureReason     `json:"top_failure_reasons"`
 }
 
 // EventTypeAnalytics contains analytics for a specific event type
 type EventTypeAnalytics struct {
-	EventType          string            `json:"event_type"`
-	TotalNotifications int               `json:"total_notifications"`
-	SuccessRate        float64          `json:"success_rate"`
-	AverageDeliveryTime time.Duration    `json:"average_delivery_time" swaggertype:"string"`
-	PreferredChannels  []NotificationChannel `json:"preferred_channels"`
+	EventType           string                `json:"event_type"`
+	TotalNotifications  int                   `json:"total_notifications"`
+	SuccessRate         float64               `json:"success_rate"`
+	AverageDeliveryTime time.Duration         `json:"average_delivery_time" swaggertype:"string"`
+	PreferredChannels   []NotificationChannel `json:"preferred_channels"`
 }
 
 // HourlyStats represents notification stats for an hour

@@ -4,8 +4,8 @@ import (
 	"go.uber.org/fx"
 	"gorm.io/gorm"
 
-	"linke/internal/domains/ticket/adapters/repositories"
 	"linke/internal/domains/ticket/adapters/handlers"
+	"linke/internal/domains/ticket/adapters/repositories"
 	"linke/internal/domains/ticket/usecases/implementations"
 	"linke/internal/domains/ticket/usecases/interfaces"
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
@@ -31,7 +31,7 @@ var Module = fx.Module("ticket",
 	fx.Provide(
 		// Base ticket service (not exposed directly)
 		implementations.NewTicketService,
-		
+
 		// Event-aware ticket service wrapper (exposed as the main service)
 		fx.Annotate(
 			func(
@@ -53,10 +53,10 @@ var Module = fx.Module("ticket",
 			},
 			fx.As(new(interfaces.TicketService)),
 		),
-		
+
 		// Base ticket message service (not exposed directly)
 		implementations.NewTicketMessageService,
-		
+
 		// Event-aware ticket message service wrapper (exposed as the main service)
 		fx.Annotate(
 			func(

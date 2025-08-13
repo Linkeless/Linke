@@ -26,7 +26,7 @@ type TicketService interface {
 	UnassignTicket(ctx context.Context, ticketID uint) (*entities.Ticket, error)
 	UpdateTicketStatus(ctx context.Context, ticketID uint, status string) (*entities.Ticket, error)
 	UpdateTicketPriority(ctx context.Context, ticketID uint, priority string) (*entities.Ticket, error)
-	
+
 	// Agent workload management
 	GetAgentWorkload(ctx context.Context, agentID uint) (int, error)
 	GetAvailableAgents(ctx context.Context, category string) ([]*dto.AgentInfo, error)
@@ -46,4 +46,3 @@ type TicketService interface {
 	BulkAssignTickets(ctx context.Context, ticketIDs []uint, assignedToID uint) error
 	BulkUpdateTicketStatus(ctx context.Context, ticketIDs []uint, status string) error
 }
-

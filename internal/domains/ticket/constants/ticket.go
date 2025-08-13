@@ -51,10 +51,10 @@ const (
 
 // Business logic constants
 const (
-	DefaultAgentMaxLoad        = 10
-	DefaultAgentResponseTime   = 30  // minutes
-	DefaultSatisfactionScore   = 8.5
-	AutoAssignmentEnabled      = true
+	DefaultAgentMaxLoad      = 10
+	DefaultAgentResponseTime = 30 // minutes
+	DefaultSatisfactionScore = 8.5
+	AutoAssignmentEnabled    = true
 )
 
 // Validation constraints
@@ -73,8 +73,8 @@ const (
 
 // Validation patterns
 const (
-	StatusValidationPattern   = "open in_progress pending resolved closed"
-	PriorityValidationPattern = "low normal high urgent critical"
-	CategoryValidationPattern = "general technical billing account feature bug subscription payment"
+	StatusValidationPattern      = "open in_progress pending resolved closed"
+	PriorityValidationPattern    = "low normal high urgent critical"
+	CategoryValidationPattern    = "general technical billing account feature bug subscription payment"
 	MessageTypeValidationPattern = "user admin system"
 )

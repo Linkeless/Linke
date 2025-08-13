@@ -28,7 +28,7 @@ type CreateOrderRequest struct {
 // CreateOrderResponse represents the response after creating a complete order flow
 type CreateOrderResponse struct {
 	Order         *entities.SubscriptionOrderResponse `json:"order"`
-	Invoice       *invoiceDto.InvoiceResponse        `json:"invoice"`
+	Invoice       *invoiceDto.InvoiceResponse         `json:"invoice"`
 	PaymentRecord any                                 `json:"payment_record" swaggertype:"object"`
 	PaymentURL    string                              `json:"payment_url"`
 	QRCodeURL     string                              `json:"qr_code_url,omitempty"`
@@ -50,7 +50,7 @@ type PayOrderRequest struct {
 // PayOrderResponse represents the response after creating payment for order
 type PayOrderResponse struct {
 	Order         *entities.SubscriptionOrderResponse `json:"order"`
-	Invoice       *invoiceDto.InvoiceResponse        `json:"invoice,omitempty"`
+	Invoice       *invoiceDto.InvoiceResponse         `json:"invoice,omitempty"`
 	PaymentRecord any                                 `json:"payment_record" swaggertype:"object"`
 	PaymentURL    string                              `json:"payment_url"`
 	QRCodeURL     string                              `json:"qr_code_url,omitempty"`
@@ -78,16 +78,15 @@ type CreateSubscriptionOrderRequest struct {
 // CreateSubscriptionOrderResponse represents the response after creating a subscription order (legacy)
 type CreateSubscriptionOrderResponse struct {
 	Order         *entities.SubscriptionOrderResponse `json:"order"`
-	Invoice       *invoiceDto.InvoiceResponse        `json:"invoice"`
+	Invoice       *invoiceDto.InvoiceResponse         `json:"invoice"`
 	PaymentRecord any                                 `json:"payment_record" swaggertype:"object"`
 	PaymentURL    string                              `json:"payment_url"`
 	QRCodeURL     string                              `json:"qr_code_url,omitempty"`
 	ExpiredAt     time.Time                           `json:"expired_at"`
 }
 
-
 // ==============================================================================
-// QUERY AND LISTING DTOs  
+// QUERY AND LISTING DTOs
 // ==============================================================================
 
 // GetSubscriptionOrdersRequest represents the request to get subscription orders
@@ -132,4 +131,3 @@ func (r *CreateOrderResponse) ToCreateSubscriptionOrderResponse() *CreateSubscri
 		ExpiredAt:     r.ExpiredAt,
 	}
 }
-

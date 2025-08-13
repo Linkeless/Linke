@@ -83,7 +83,6 @@ func (ReferralCampaign) TableName() string {
 	return "referral_campaigns"
 }
 
-
 // IsActive checks if the campaign is currently active
 func (rc *ReferralCampaign) IsActive() bool {
 	if rc.Status != constants.CampaignStatusActive {
@@ -150,7 +149,6 @@ func (rc *ReferralCampaign) CalculateRefereeReward(conversionValue float64) floa
 		return rc.RefereeRewardAmount
 	}
 }
-
 
 // ToResponse should be implemented in service layer to avoid import cycles
 // Use dto.ToReferralCampaignResponse(rc) instead

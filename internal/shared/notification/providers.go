@@ -29,7 +29,7 @@ func (p *MockEmailProvider) SendEmail(ctx context.Context, to, subject, body str
 		logger.String("to", to),
 		logger.String("subject", subject),
 		logger.String("body", body))
-	
+
 	// Simulate some processing time
 	time.Sleep(10 * time.Millisecond)
 	return nil
@@ -58,7 +58,7 @@ func (p *MockSMSProvider) SendSMS(ctx context.Context, to, message string) error
 	p.logger.Info("Mock SMS sent",
 		logger.String("to", to),
 		logger.String("message", message))
-	
+
 	// Simulate some processing time
 	time.Sleep(15 * time.Millisecond)
 	return nil
@@ -88,7 +88,7 @@ func (p *MockPushProvider) SendPush(ctx context.Context, userID uint, title, bod
 		logger.Uint("user_id", userID),
 		logger.String("title", title),
 		logger.String("body", body))
-	
+
 	// Simulate some processing time
 	time.Sleep(20 * time.Millisecond)
 	return nil
@@ -176,7 +176,7 @@ func (p *MockTelegramProvider) SendMessage(ctx context.Context, chatID int64, me
 	p.logger.Info("Mock Telegram message sent",
 		logger.Int64("chat_id", chatID),
 		logger.String("message", message))
-	
+
 	// Simulate some processing time
 	time.Sleep(25 * time.Millisecond)
 	return nil
@@ -187,7 +187,7 @@ func (p *MockTelegramProvider) SendMessageByUsername(ctx context.Context, userna
 	p.logger.Info("Mock Telegram message sent by username",
 		logger.String("username", username),
 		logger.String("message", message))
-	
+
 	time.Sleep(25 * time.Millisecond)
 	return nil
 }
@@ -196,7 +196,7 @@ func (p *MockTelegramProvider) SendMessageByUsername(ctx context.Context, userna
 func (p *MockTelegramProvider) GetChatID(ctx context.Context, username string) (int64, error) {
 	p.logger.Info("Mock getting Telegram chat ID",
 		logger.String("username", username))
-	
+
 	// Return a mock chat ID based on username hash
 	chatID := int64(12345678) // Mock chat ID
 	return chatID, nil
@@ -225,16 +225,16 @@ type TelegramMessage struct {
 
 // TelegramResponse represents a Telegram API response
 type TelegramResponse struct {
-	OK          bool   `json:"ok"`
+	OK          bool        `json:"ok"`
 	Result      interface{} `json:"result,omitempty"`
-	Description string `json:"description,omitempty"`
-	ErrorCode   int    `json:"error_code,omitempty"`
+	Description string      `json:"description,omitempty"`
+	ErrorCode   int         `json:"error_code,omitempty"`
 }
 
 // TelegramChat represents a Telegram chat
 type TelegramChat struct {
-	ID   int64  `json:"id"`
-	Type string `json:"type"`
+	ID       int64  `json:"id"`
+	Type     string `json:"type"`
 	Username string `json:"username,omitempty"`
 }
 
@@ -307,7 +307,7 @@ func (p *TelegramBotProvider) SendMessageByUsername(ctx context.Context, usernam
 	// Note: Telegram Bot API doesn't support sending messages directly by username
 	// without having the chat_id. This would require a database mapping of username -> chat_id
 	// or using the updates mechanism to track user interactions
-	
+
 	p.logger.Warn("SendMessageByUsername called but not fully supported by Telegram Bot API",
 		logger.String("username", username),
 		logger.String("suggestion", "Use GetChatID first or maintain a username->chat_id mapping"))
@@ -320,7 +320,7 @@ func (p *TelegramBotProvider) GetChatID(ctx context.Context, username string) (i
 	// Note: Telegram Bot API doesn't provide a direct way to resolve username to chat_id
 	// This would require maintaining a database mapping from previous interactions
 	// or using webhook updates to track user messages
-	
+
 	p.logger.Warn("GetChatID called but not directly supported by Telegram Bot API",
 		logger.String("username", username),
 		logger.String("suggestion", "Maintain username->chat_id mapping from user interactions"))

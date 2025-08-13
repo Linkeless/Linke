@@ -35,11 +35,11 @@ func NewRetryTaskHandler(
 // HandleNotificationRetry processes notification retry tasks
 func (h *RetryTaskHandler) HandleNotificationRetry(ctx context.Context, task *asynq.Task) error {
 	var retryData struct {
-		RequestID   string                `json:"request_id"`
-		OriginalReq *NotificationRequest  `json:"original_req"`
-		Attempt     int                   `json:"attempt"`
-		Error       string                `json:"error"`
-		ScheduledAt int64                 `json:"scheduled_at"`
+		RequestID   string               `json:"request_id"`
+		OriginalReq *NotificationRequest `json:"original_req"`
+		Attempt     int                  `json:"attempt"`
+		Error       string               `json:"error"`
+		ScheduledAt int64                `json:"scheduled_at"`
 	}
 
 	if err := json.Unmarshal(task.Payload(), &retryData); err != nil {
@@ -80,7 +80,7 @@ func (h *RetryTaskHandler) HandleNotificationRetry(ctx context.Context, task *as
 	// Check individual channel results
 	successCount := 0
 	failureCount := 0
-	
+
 	for _, result := range results {
 		if result.Success {
 			successCount++
@@ -140,7 +140,7 @@ func (h *RetryTaskHandler) scheduleNextRetry(ctx context.Context, retryData *str
 	h.logger.Info("Scheduling retry task",
 		logger.String("request_id", retryData.RequestID),
 		logger.String("delay", delay.String()))
-	
+
 	return h.retryService.taskQueue.Enqueue(ctx, "notification_retry", task)
 }
 
@@ -224,7 +224,7 @@ func (h *RetryTaskHandler) RegisterRetryHandlers(processor *queue.TaskProcessor)
 func (h *RetryTaskHandler) SchedulePeriodicRetryProcessing(ctx context.Context, taskQueue *queue.TaskQueue) error {
 	// For now, just enqueue immediate processing tasks
 	// In production, you'd want to implement proper delayed task scheduling
-	
+
 	// Schedule retry processing task
 	retryProcessingData := map[string]interface{}{
 		"action":     "process_retries",

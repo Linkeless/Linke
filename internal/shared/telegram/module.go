@@ -37,11 +37,11 @@ func NewBotEnhancedForFx(params BotParams) (*BotEnhanced, error) {
 type BotParams struct {
 	fx.In
 	Config                  *config.Config
-	UserService            userInterfaces.UserService
-	SubscriptionService    interfaces.UserSubscriptionService
+	UserService             userInterfaces.UserService
+	SubscriptionService     interfaces.UserSubscriptionService
 	SubscriptionPlanService interfaces.SubscriptionPlanService
-	TicketService          ticketInterfaces.TicketService          `optional:"true"`
-	TicketMessageService   ticketInterfaces.TicketMessageService   `optional:"true"`
+	TicketService           ticketInterfaces.TicketService        `optional:"true"`
+	TicketMessageService    ticketInterfaces.TicketMessageService `optional:"true"`
 }
 
 // BotResult is the result of creating a bot

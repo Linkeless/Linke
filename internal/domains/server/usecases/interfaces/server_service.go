@@ -28,4 +28,3 @@ type ShadowsocksServerService interface {
 	CheckServerHealth(ctx context.Context, serverID uint) (map[string]any, error)
 	GetServerStatistics(ctx context.Context, serverID uint) (map[string]any, error)
 }
-

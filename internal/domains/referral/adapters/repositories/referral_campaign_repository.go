@@ -2,11 +2,11 @@ package repositories
 
 import (
 	"context"
-	"time"
 	"linke/internal/domains/referral/entities"
 	"linke/internal/domains/referral/usecases/interfaces"
 	"linke/internal/shared/framework"
 	"linke/internal/shared/repository"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -22,7 +22,6 @@ func NewReferralCampaignRepository(db *gorm.DB, frameworkLogger framework.Logger
 		TimeBasedRepositoryImpl: repository.NewTimeBasedRepository[entities.ReferralCampaign, uint](db, frameworkLogger),
 	}
 }
-
 
 // List lists referral campaigns
 func (r *ReferralCampaignRepository) List(ctx context.Context, limit, offset int) ([]*entities.ReferralCampaign, int64, error) {
@@ -67,18 +66,18 @@ func (r *ReferralCampaignRepository) ListWithFilters(ctx context.Context, filter
 func (r *ReferralCampaignRepository) ListActive(ctx context.Context, limit, offset int) ([]*entities.ReferralCampaign, int64, error) {
 	var campaigns []*entities.ReferralCampaign
 	var total int64
-	
+
 	query := r.GetDB().WithContext(ctx).
 		Where("status = ? AND start_date <= NOW() AND (end_date IS NULL OR end_date >= NOW())", "active")
-		
+
 	if err := query.Model(&entities.ReferralCampaign{}).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
-	
+
 	if err := query.Limit(limit).Offset(offset).Find(&campaigns).Error; err != nil {
 		return nil, 0, err
 	}
-	
+
 	return campaigns, total, nil
 }
 
@@ -86,18 +85,18 @@ func (r *ReferralCampaignRepository) ListActive(ctx context.Context, limit, offs
 func (r *ReferralCampaignRepository) ListCurrent(ctx context.Context, limit, offset int) ([]*entities.ReferralCampaign, int64, error) {
 	var campaigns []*entities.ReferralCampaign
 	var total int64
-	
+
 	query := r.GetDB().WithContext(ctx).
 		Where("start_date <= NOW() AND (end_date IS NULL OR end_date >= NOW())")
-		
+
 	if err := query.Model(&entities.ReferralCampaign{}).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
-	
+
 	if err := query.Limit(limit).Offset(offset).Find(&campaigns).Error; err != nil {
 		return nil, 0, err
 	}
-	
+
 	return campaigns, total, nil
 }
 
@@ -105,18 +104,18 @@ func (r *ReferralCampaignRepository) ListCurrent(ctx context.Context, limit, off
 func (r *ReferralCampaignRepository) ListExpired(ctx context.Context, limit, offset int) ([]*entities.ReferralCampaign, int64, error) {
 	var campaigns []*entities.ReferralCampaign
 	var total int64
-	
+
 	query := r.GetDB().WithContext(ctx).
 		Where("end_date IS NOT NULL AND end_date < NOW()")
-		
+
 	if err := query.Model(&entities.ReferralCampaign{}).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
-	
+
 	if err := query.Limit(limit).Offset(offset).Find(&campaigns).Error; err != nil {
 		return nil, 0, err
 	}
-	
+
 	return campaigns, total, nil
 }
 
@@ -125,7 +124,7 @@ func (r *ReferralCampaignRepository) ListByDateRange(ctx context.Context, field 
 	return r.TimeBasedRepositoryImpl.ListByDateRange(ctx, field, start, end, limit, offset)
 }
 
-// ListCreatedAfter lists campaigns created after specified time (implements TimeBasedRepository interface) 
+// ListCreatedAfter lists campaigns created after specified time (implements TimeBasedRepository interface)
 func (r *ReferralCampaignRepository) ListCreatedAfter(ctx context.Context, after time.Time, limit, offset int) ([]*entities.ReferralCampaign, int64, error) {
 	return r.TimeBasedRepositoryImpl.ListCreatedAfter(ctx, after, limit, offset)
 }
@@ -134,4 +133,3 @@ func (r *ReferralCampaignRepository) ListCreatedAfter(ctx context.Context, after
 func (r *ReferralCampaignRepository) ListUpdatedAfter(ctx context.Context, after time.Time, limit, offset int) ([]*entities.ReferralCampaign, int64, error) {
 	return r.TimeBasedRepositoryImpl.ListUpdatedAfter(ctx, after, limit, offset)
 }
-

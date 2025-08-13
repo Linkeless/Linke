@@ -12,9 +12,9 @@ import (
 
 // InvalidationRule defines how cache invalidation should be handled for specific events
 type InvalidationRule struct {
-	EventTypes       []string                  `json:"event_types"`
-	KeyPatterns      []string                  `json:"key_patterns"`
-	InvalidationType InvalidationType          `json:"invalidation_type"`
+	EventTypes       []string              `json:"event_types"`
+	KeyPatterns      []string              `json:"key_patterns"`
+	InvalidationType InvalidationType      `json:"invalidation_type"`
 	Condition        func(CacheEvent) bool `json:"-"` // Custom condition function
 }
 

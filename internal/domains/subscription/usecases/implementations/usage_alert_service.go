@@ -327,7 +327,7 @@ func (s *usageAlertService) ProcessUsageUpdate(ctx context.Context, subscription
 				defer cancel()
 
 				if err := s.SendNotification(notifyCtx, alert, channels); err != nil {
-					s.logger.Error("Failed to send notification for alert", 
+					s.logger.Error("Failed to send notification for alert",
 						zap.Uint("alert_id", alert.ID),
 						zap.Error(err))
 				}
@@ -926,7 +926,7 @@ func (s *usageAlertService) CreateDefaultAlertConfigurations(ctx context.Context
 	for _, configReq := range defaultConfigs {
 		_, err := s.CreateAlertConfiguration(ctx, &configReq)
 		if err != nil {
-			s.logger.Error("Failed to create default alert configuration", 
+			s.logger.Error("Failed to create default alert configuration",
 				zap.String("config_name", configReq.Name),
 				zap.Error(err))
 		}

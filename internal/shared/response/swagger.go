@@ -5,18 +5,18 @@ package response
 // HALCollectionResponse represents a HAL-style collection response for Swagger documentation
 // @Description HAL-style collection response format
 type HALCollectionResponse struct {
-	Embedded map[string]any `json:"_embedded" swaggertype:"object"`  // Embedded resources
-	Links    HALLinksSwagger `json:"_links"`                                                              // Navigation links
-	Page     PageInfoSwagger `json:"page,omitempty"`                                                      // Page information
-	Total    int64          `json:"total,omitempty" example:"100"`                                      // Total number of items
+	Embedded map[string]any  `json:"_embedded" swaggertype:"object"` // Embedded resources
+	Links    HALLinksSwagger `json:"_links"`                         // Navigation links
+	Page     PageInfoSwagger `json:"page,omitempty"`                 // Page information
+	Total    int64           `json:"total,omitempty" example:"100"`  // Total number of items
 }
 
 // HALResourceResponse represents a HAL-style resource response for Swagger documentation
 // @Description HAL-style resource response format
 type HALResourceResponse struct {
-	ID    int             `json:"id" example:"1"`          // Resource ID
-	Name  string          `json:"name" example:"example"`  // Resource name
-	Links HALLinksSwagger `json:"_links,omitempty"`        // Navigation links
+	ID    int             `json:"id" example:"1"`         // Resource ID
+	Name  string          `json:"name" example:"example"` // Resource name
+	Links HALLinksSwagger `json:"_links,omitempty"`       // Navigation links
 }
 
 // HALLinksSwagger represents HAL navigation links for Swagger documentation
@@ -32,10 +32,10 @@ type HALLinksSwagger struct {
 // HALLinkSwagger represents a single HAL link for Swagger documentation
 // @Description HAL link structure
 type HALLinkSwagger struct {
-	Href      string `json:"href" example:"/api/v1/users/1"`           // Link URL
-	Templated bool   `json:"templated,omitempty" example:"false"`      // Whether the link is templated
+	Href      string `json:"href" example:"/api/v1/users/1"`            // Link URL
+	Templated bool   `json:"templated,omitempty" example:"false"`       // Whether the link is templated
 	Type      string `json:"type,omitempty" example:"application/json"` // Media type hint
-	Title     string `json:"title,omitempty" example:"User Profile"`   // Human-readable title
+	Title     string `json:"title,omitempty" example:"User Profile"`    // Human-readable title
 }
 
 // PageInfoSwagger represents pagination metadata for Swagger documentation
@@ -50,11 +50,11 @@ type PageInfoSwagger struct {
 // ProblemJSONResponse represents RFC 9457 Problem Details for Swagger documentation
 // @Description RFC 9457 Problem Details for HTTP APIs
 type ProblemJSONResponse struct {
-	Type     string `json:"type" example:"/problems/not-found"`                         // Problem type URI
-	Title    string `json:"title" example:"Not Found"`                                 // Short summary
-	Status   int    `json:"status" example:"404"`                                      // HTTP status code
+	Type     string `json:"type" example:"/problems/not-found"`                            // Problem type URI
+	Title    string `json:"title" example:"Not Found"`                                     // Short summary
+	Status   int    `json:"status" example:"404"`                                          // HTTP status code
 	Detail   string `json:"detail,omitempty" example:"The user with id 123 was not found"` // Detailed explanation
-	Instance string `json:"instance,omitempty" example:"/api/v1/users/123"`              // Problem instance URI
+	Instance string `json:"instance,omitempty" example:"/api/v1/users/123"`                // Problem instance URI
 }
 
 // BadRequestResponse represents a 400 Bad Request problem response

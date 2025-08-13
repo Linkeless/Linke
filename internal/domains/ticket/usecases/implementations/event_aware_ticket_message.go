@@ -44,19 +44,19 @@ func (s *EventAwareTicketMessageService) CreateTicketMessage(ctx context.Context
 
 	// Get ticket information
 	ticket, ticketErr := s.ticketService.GetTicket(ctx, ticketID)
-	
+
 	// Get message author information
 	user, userErr := s.userService.GetUserByID(ctx, userID)
-	
+
 	// Prepare event data
 	eventData := map[string]interface{}{
-		"ticket_id":      ticketID,
-		"message_id":     message.ID,
-		"message_type":   message.MessageType,
-		"reply_content":  message.Content,
-		"replied_by_id":  userID,
-		"is_internal":    message.IsInternal,
-		"user_id":        userID, // Will be overridden with ticket owner ID below if ticket info is available
+		"ticket_id":     ticketID,
+		"message_id":    message.ID,
+		"message_type":  message.MessageType,
+		"reply_content": message.Content,
+		"replied_by_id": userID,
+		"is_internal":   message.IsInternal,
+		"user_id":       userID, // Will be overridden with ticket owner ID below if ticket info is available
 	}
 
 	// Add ticket information if available
@@ -66,7 +66,7 @@ func (s *EventAwareTicketMessageService) CreateTicketMessage(ctx context.Context
 		eventData["priority"] = ticket.Priority
 		eventData["status"] = ticket.Status
 		eventData["user_id"] = ticket.UserID // Ticket owner's ID
-		
+
 		// Get ticket owner information for notifications
 		ticketOwner, ticketOwnerErr := s.userService.GetUserByID(ctx, ticket.UserID)
 		if ticketOwnerErr == nil && ticketOwner != nil {
@@ -75,7 +75,7 @@ func (s *EventAwareTicketMessageService) CreateTicketMessage(ctx context.Context
 				eventData["user_telegram_id"] = *ticketOwner.TelegramID
 			}
 		}
-		
+
 		// Add assigned user information if exists
 		if ticket.AssignedToID != nil {
 			assignedUser, assignedErr := s.userService.GetUserByID(ctx, *ticket.AssignedToID)
@@ -105,7 +105,7 @@ func (s *EventAwareTicketMessageService) CreateTicketMessage(ctx context.Context
 	if !message.IsInternal || isAdminReply {
 		// Create event with metadata for event handler
 		baseEvent := events.NewBaseEvent("ticket.replied", "ticket-message-service", eventData)
-		
+
 		// Add metadata for event handler routing
 		if baseEvent.Metadata == nil {
 			baseEvent.Metadata = make(map[string]interface{})
@@ -119,7 +119,7 @@ func (s *EventAwareTicketMessageService) CreateTicketMessage(ctx context.Context
 		if assignedTelegramID, exists := eventData["assigned_telegram_id"]; exists {
 			baseEvent.Metadata["assigned_telegram_id"] = assignedTelegramID
 		}
-		
+
 		if err := s.eventBus.Publish(ctx, baseEvent); err != nil {
 			logger.Error("Failed to publish ticket replied event",
 				logger.Uint("message_id", message.ID),

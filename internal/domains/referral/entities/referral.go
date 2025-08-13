@@ -75,7 +75,6 @@ func (Referral) TableName() string {
 	return "referrals"
 }
 
-
 // IsActive checks if the referral is active
 func (r *Referral) IsActive() bool {
 	return r.Status == constants.ReferralStatusConfirmed || r.Status == constants.ReferralStatusRewarded
@@ -98,7 +97,6 @@ func (r *Referral) CanEarnReward() bool {
 func (r *Referral) IsConverted() bool {
 	return r.ConvertedAt != nil
 }
-
 
 // ToResponse should be implemented in service layer to avoid import cycles
 // Use dto.ToReferralResponse(r) instead

@@ -13,10 +13,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-
 type AdminServerGroupHandler struct {
-	serverGroupService     interfaces.ServerGroupService
-	shadowsocksService     interfaces.ShadowsocksServerService
+	serverGroupService interfaces.ServerGroupService
+	shadowsocksService interfaces.ShadowsocksServerService
 }
 
 func NewAdminServerGroupHandler(

@@ -57,7 +57,6 @@ func (ReferralEvent) TableName() string {
 	return "referral_events"
 }
 
-
 // IsConversionEvent checks if this event represents a conversion
 func (re *ReferralEvent) IsConversionEvent() bool {
 	conversionEvents := map[string]bool{
@@ -79,7 +78,6 @@ func (re *ReferralEvent) IsRevenueEvent() bool {
 	}
 	return revenueEvents[re.EventType]
 }
-
 
 // ToResponse should be implemented in service layer to avoid import cycles
 // Use dto.ToReferralEventResponse(re) instead

@@ -25,7 +25,6 @@ func NewInviteCodeService(db *gorm.DB) *InviteCodeService {
 	}
 }
 
-
 // GenerateInviteCode generates a random invite code
 func (s *InviteCodeService) GenerateInviteCode() (string, error) {
 	// Generate 16 bytes of random data

@@ -26,7 +26,6 @@ type AuthService interface {
 	CreateOrUpdateOAuthUser(ctx context.Context, userInfo *dto.UserInfo) (*userEntities.User, error)
 }
 
-
 // JWTService defines JWT token management operations (auth domain owned)
 type JWTService interface {
 	GenerateToken(user *userEntities.User) (*dto.TokenResponse, error)
@@ -49,4 +48,3 @@ type LoginSecurityService interface {
 // Note: UserService and InviteCodeService are imported from their respective domains
 // - UserService from domains/user/usecases/interfaces
 // - InviteCodeService from domains/referral/usecases/interfaces
-

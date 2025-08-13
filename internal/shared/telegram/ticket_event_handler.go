@@ -11,10 +11,10 @@ import (
 
 // TicketEventHandler handles ticket-related events and sends Telegram notifications
 type TicketEventHandler struct {
-	bot         *BotEnhanced
-	eventTypes  []string
-	handlerID   string
-	enabled     bool
+	bot        *BotEnhanced
+	eventTypes []string
+	handlerID  string
+	enabled    bool
 }
 
 // NewTicketEventHandler creates a new ticket event handler
@@ -40,11 +40,11 @@ func (h *TicketEventHandler) Handle(ctx context.Context, event events.Event) err
 	if !h.enabled {
 		return nil
 	}
-	
+
 	logger.Info("Handling ticket event",
 		logger.String("event_type", event.EventType()),
 		logger.String("event_id", event.EventID()))
-	
+
 	// Parse event data
 	notification, err := h.parseEventToNotification(event)
 	if err != nil {
@@ -53,7 +53,7 @@ func (h *TicketEventHandler) Handle(ctx context.Context, event events.Event) err
 			logger.ErrorField(err))
 		return err
 	}
-	
+
 	// Send notifications based on event type
 	switch event.EventType() {
 	case "ticket.created":
@@ -62,7 +62,7 @@ func (h *TicketEventHandler) Handle(ctx context.Context, event events.Event) err
 			logger.Error("Failed to send ticket created notification to admins",
 				logger.ErrorField(err))
 		}
-		
+
 		// Notify user about ticket creation
 		if userTelegramID := h.getUserTelegramID(event); userTelegramID != "" {
 			if err := h.bot.SendTicketNotificationToUser(userTelegramID, notification); err != nil {
@@ -71,7 +71,7 @@ func (h *TicketEventHandler) Handle(ctx context.Context, event events.Event) err
 					logger.ErrorField(err))
 			}
 		}
-		
+
 	case "ticket.assigned":
 		// Notify assigned agent
 		if assignedTelegramID := h.getAssignedTelegramID(event); assignedTelegramID != "" {
@@ -84,7 +84,7 @@ func (h *TicketEventHandler) Handle(ctx context.Context, event events.Event) err
 				}
 			}
 		}
-		
+
 	case "ticket.replied":
 		// Determine if reply is from admin or user and notify accordingly
 		if isAdminReply := h.isAdminReply(event); isAdminReply {
@@ -102,7 +102,7 @@ func (h *TicketEventHandler) Handle(ctx context.Context, event events.Event) err
 				logger.Error("Failed to send reply notification to admins",
 					logger.ErrorField(err))
 			}
-			
+
 			// Also notify assigned agent if exists
 			if assignedTelegramID := h.getAssignedTelegramID(event); assignedTelegramID != "" {
 				chatID := h.parseChatID(assignedTelegramID)
@@ -115,7 +115,7 @@ func (h *TicketEventHandler) Handle(ctx context.Context, event events.Event) err
 				}
 			}
 		}
-		
+
 	case "ticket.resolved", "ticket.closed":
 		// Notify user about resolution/closure
 		if userTelegramID := h.getUserTelegramID(event); userTelegramID != "" {
@@ -125,7 +125,7 @@ func (h *TicketEventHandler) Handle(ctx context.Context, event events.Event) err
 					logger.ErrorField(err))
 			}
 		}
-		
+
 	case "ticket.escalated":
 		// Notify all admins about escalation
 		notification.Priority = "urgent" // Override priority for escalated tickets
@@ -133,7 +133,7 @@ func (h *TicketEventHandler) Handle(ctx context.Context, event events.Event) err
 			logger.Error("Failed to send escalation notification to admins",
 				logger.ErrorField(err))
 		}
-		
+
 	case "ticket.status_changed":
 		// Notify assigned agent about status change
 		if assignedTelegramID := h.getAssignedTelegramID(event); assignedTelegramID != "" {
@@ -147,7 +147,7 @@ func (h *TicketEventHandler) Handle(ctx context.Context, event events.Event) err
 			}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -164,10 +164,10 @@ func (h *TicketEventHandler) ID() string {
 // parseEventToNotification converts an event to a TicketNotification
 func (h *TicketEventHandler) parseEventToNotification(event events.Event) (*TicketNotification, error) {
 	notification := NewTicketNotification(TicketNotificationType(event.EventType()[7:])) // Remove "ticket." prefix
-	
+
 	// Get event data
 	data := event.EventData()
-	
+
 	// Try to parse as JSON if it's a string
 	var eventData map[string]interface{}
 	switch v := data.(type) {
@@ -187,7 +187,7 @@ func (h *TicketEventHandler) parseEventToNotification(event events.Event) (*Tick
 			return nil, fmt.Errorf("failed to unmarshal event data: %w", err)
 		}
 	}
-	
+
 	// Fill notification fields from event data
 	// Handle ticket_id with multiple possible types (uint, int, float64)
 	if ticketIDVal, ok := eventData["ticket_id"]; ok {
@@ -208,35 +208,35 @@ func (h *TicketEventHandler) parseEventToNotification(event events.Event) (*Tick
 				logger.Any("value", v))
 		}
 	}
-	
+
 	if ticketNo, ok := eventData["ticket_no"].(string); ok {
 		notification.TicketNo = ticketNo
 	}
-	
+
 	if title, ok := eventData["title"].(string); ok {
 		notification.Title = title
 	}
-	
+
 	if description, ok := eventData["description"].(string); ok {
 		notification.Description = description
 	}
-	
+
 	if category, ok := eventData["category"].(string); ok {
 		notification.Category = category
 	}
-	
+
 	if priority, ok := eventData["priority"].(string); ok {
 		notification.Priority = priority
 	}
-	
+
 	if status, ok := eventData["status"].(string); ok {
 		notification.Status = status
 	}
-	
+
 	if oldStatus, ok := eventData["old_status"].(string); ok {
 		notification.OldStatus = oldStatus
 	}
-	
+
 	// Handle user_id with multiple possible types
 	if userIDVal, ok := eventData["user_id"]; ok {
 		switch v := userIDVal.(type) {
@@ -252,11 +252,11 @@ func (h *TicketEventHandler) parseEventToNotification(event events.Event) (*Tick
 			notification.UserID = uint(v)
 		}
 	}
-	
+
 	if userName, ok := eventData["user_name"].(string); ok {
 		notification.UserName = userName
 	}
-	
+
 	// Handle assigned_to_id with multiple possible types
 	if assignedToIDVal, ok := eventData["assigned_to_id"]; ok {
 		switch v := assignedToIDVal.(type) {
@@ -272,11 +272,11 @@ func (h *TicketEventHandler) parseEventToNotification(event events.Event) (*Tick
 			notification.AssignedToID = uint(v)
 		}
 	}
-	
+
 	if assignedToName, ok := eventData["assigned_to_name"].(string); ok {
 		notification.AssignedToName = assignedToName
 	}
-	
+
 	// Handle replied_by_id with multiple possible types
 	if repliedByIDVal, ok := eventData["replied_by_id"]; ok {
 		switch v := repliedByIDVal.(type) {
@@ -292,26 +292,26 @@ func (h *TicketEventHandler) parseEventToNotification(event events.Event) (*Tick
 			notification.RepliedByID = uint(v)
 		}
 	}
-	
+
 	if repliedByName, ok := eventData["replied_by_name"].(string); ok {
 		notification.RepliedByName = repliedByName
 	}
-	
+
 	if replyContent, ok := eventData["reply_content"].(string); ok {
 		notification.ReplyContent = replyContent
 	}
-	
+
 	if resolution, ok := eventData["resolution"].(string); ok {
 		notification.Resolution = resolution
 	}
-	
+
 	if closedReason, ok := eventData["closed_reason"].(string); ok {
 		notification.ClosedReason = closedReason
 	}
-	
+
 	// Store additional metadata
 	notification.Metadata = eventData
-	
+
 	return notification, nil
 }
 
@@ -324,14 +324,14 @@ func (h *TicketEventHandler) getUserTelegramID(event events.Event) string {
 			return telegramID
 		}
 	}
-	
+
 	// Try to get from event data
 	if data, ok := event.EventData().(map[string]interface{}); ok {
 		if telegramID, ok := data["user_telegram_id"].(string); ok {
 			return telegramID
 		}
 	}
-	
+
 	return ""
 }
 
@@ -342,14 +342,14 @@ func (h *TicketEventHandler) getAssignedTelegramID(event events.Event) string {
 			return telegramID
 		}
 	}
-	
+
 	// Try to get from event data
 	if data, ok := event.EventData().(map[string]interface{}); ok {
 		if telegramID, ok := data["assigned_telegram_id"].(string); ok {
 			return telegramID
 		}
 	}
-	
+
 	return ""
 }
 
@@ -360,7 +360,7 @@ func (h *TicketEventHandler) isAdminReply(event events.Event) bool {
 			return isAdmin
 		}
 	}
-	
+
 	// Try to get from event data
 	if data, ok := event.EventData().(map[string]interface{}); ok {
 		if messageType, ok := data["message_type"].(string); ok {
@@ -370,7 +370,7 @@ func (h *TicketEventHandler) isAdminReply(event events.Event) bool {
 			return isAdmin
 		}
 	}
-	
+
 	return false
 }
 

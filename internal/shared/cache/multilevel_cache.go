@@ -28,10 +28,10 @@ type MultiLevelCacheConfig struct {
 	ReadStrategy     ReadStrategy       `json:"read_strategy"`
 	PromotionRatio   float64            `json:"promotion_ratio"`   // Ratio of L2 hits that get promoted to L1
 	ReplicationDelay time.Duration      `json:"replication_delay"` // Delay for write-behind strategy
-	
+
 	// Cache avalanche protection
-	EnableTTLJitter  bool    `json:"enable_ttl_jitter"`  // Enable TTL randomization to prevent cache avalanche
-	JitterPercent    float64 `json:"jitter_percent"`     // Percentage of jitter to add to TTL (0.0-1.0)
+	EnableTTLJitter bool    `json:"enable_ttl_jitter"` // Enable TTL randomization to prevent cache avalanche
+	JitterPercent   float64 `json:"jitter_percent"`    // Percentage of jitter to add to TTL (0.0-1.0)
 }
 
 // WriteStrategy defines how writes are handled across cache levels
@@ -116,8 +116,8 @@ func NewMultiLevelCache(
 			ReadStrategy:     ReadStrategyPromotion,
 			PromotionRatio:   0.8,
 			ReplicationDelay: 100 * time.Millisecond,
-			EnableTTLJitter:  true,   // Enable jitter by default
-			JitterPercent:    0.2,    // 20% jitter by default
+			EnableTTLJitter:  true, // Enable jitter by default
+			JitterPercent:    0.2,  // 20% jitter by default
 		}
 	}
 
@@ -506,17 +506,17 @@ func (mlc *MultiLevelCache) addTTLJitter(ttl time.Duration) time.Duration {
 
 	// Calculate jitter range: ±(jitterPercent * ttl)
 	jitterRange := time.Duration(float64(ttl) * mlc.config.JitterPercent)
-	
+
 	// Generate random jitter between -jitterRange and +jitterRange
 	jitter := time.Duration(rand.Int63n(int64(2*jitterRange))) - jitterRange
-	
+
 	adjustedTTL := ttl + jitter
-	
+
 	// Ensure TTL doesn't go negative or below 1 second minimum
 	if adjustedTTL < time.Second {
 		adjustedTTL = time.Second
 	}
-	
+
 	return adjustedTTL
 }
 
@@ -531,7 +531,7 @@ func (mlc *MultiLevelCache) shouldPromote() bool {
 func (mlc *MultiLevelCache) promoteToL1(ctx context.Context, key string, value []byte) {
 	// Apply TTL jitter to promotion as well to prevent avalanche on promoted data
 	l1TTL := mlc.addTTLJitter(mlc.config.L1Config.DefaultTTL)
-	
+
 	if err := mlc.l1Cache.Set(ctx, key, value, l1TTL); err != nil {
 		mlc.logger.Debug("Failed to promote key to L1",
 			logger.String("key", key),
@@ -545,7 +545,7 @@ func (mlc *MultiLevelCache) promoteToL1(ctx context.Context, key string, value [
 func (mlc *MultiLevelCache) replicateToL1(ctx context.Context, key string, value []byte) {
 	// Apply TTL jitter to replication as well to prevent avalanche on replicated data
 	l1TTL := mlc.addTTLJitter(mlc.config.L1Config.DefaultTTL)
-	
+
 	if err := mlc.l1Cache.Set(ctx, key, value, l1TTL); err != nil {
 		mlc.logger.Debug("Failed to replicate key to L1",
 			logger.String("key", key),

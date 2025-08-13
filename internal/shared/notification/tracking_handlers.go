@@ -54,7 +54,7 @@ func (h *NotificationTrackingHandlers) GetNotificationStatus(c *gin.Context) {
 		h.logger.Error("Failed to get notification status",
 			logger.String("request_id", requestID),
 			logger.ErrorField(err))
-		
+
 		response.NotFound(c, "Notification not found")
 		return
 	}
@@ -95,7 +95,7 @@ func (h *NotificationTrackingHandlers) GetUserNotificationHistory(c *gin.Context
 		h.logger.Error("Failed to get user notification history",
 			logger.Uint("user_id", userID),
 			logger.ErrorField(err))
-		
+
 		response.InternalServerError(c, "Failed to retrieve notification history")
 		return
 	}
@@ -147,7 +147,7 @@ func (h *NotificationTrackingHandlers) GetNotificationAnalytics(c *gin.Context) 
 		h.logger.Error("Failed to get notification analytics",
 			logger.String("time_range", timeRange.String()),
 			logger.ErrorField(err))
-		
+
 		response.InternalServerError(c, "Failed to retrieve analytics")
 		return
 	}
@@ -167,15 +167,15 @@ func (h *NotificationTrackingHandlers) GetNotificationAnalytics(c *gin.Context) 
 func (h *NotificationTrackingHandlers) GetNotificationStatusSummary(c *gin.Context) {
 	// In a real implementation, you would get the current user from JWT token
 	// For now, we'll return a placeholder summary
-	
+
 	summary := NotificationStatusSummary{
-		TotalNotifications:   0,
-		PendingNotifications: 0,
-		SentNotifications:    0,
-		FailedNotifications:  0,
+		TotalNotifications:    0,
+		PendingNotifications:  0,
+		SentNotifications:     0,
+		FailedNotifications:   0,
 		RetryingNotifications: 0,
-		LastUpdated:          time.Now(),
-		RecentActivity:       []RecentNotificationActivity{},
+		LastUpdated:           time.Now(),
+		RecentActivity:        []RecentNotificationActivity{},
 	}
 
 	response.Success(c, summary)
@@ -186,7 +186,7 @@ func (h *NotificationTrackingHandlers) GetNotificationStatusSummary(c *gin.Conte
 func (h *NotificationTrackingHandlers) parseTimeRange(c *gin.Context) (TimeRange, error) {
 	now := time.Now()
 	defaultStart := now.Add(-24 * time.Hour)
-	
+
 	var timeRange TimeRange
 	var err error
 
@@ -336,21 +336,21 @@ type UserNotificationHistoryResponse struct {
 
 // NotificationStatusSummary provides a summary of notification statuses
 type NotificationStatusSummary struct {
-	TotalNotifications    int                           `json:"total_notifications"`
-	PendingNotifications  int                           `json:"pending_notifications"`
-	SentNotifications     int                           `json:"sent_notifications"`
-	FailedNotifications   int                           `json:"failed_notifications"`
-	RetryingNotifications int                           `json:"retrying_notifications"`
-	LastUpdated           time.Time                     `json:"last_updated"`
-	RecentActivity        []RecentNotificationActivity  `json:"recent_activity"`
+	TotalNotifications    int                          `json:"total_notifications"`
+	PendingNotifications  int                          `json:"pending_notifications"`
+	SentNotifications     int                          `json:"sent_notifications"`
+	FailedNotifications   int                          `json:"failed_notifications"`
+	RetryingNotifications int                          `json:"retrying_notifications"`
+	LastUpdated           time.Time                    `json:"last_updated"`
+	RecentActivity        []RecentNotificationActivity `json:"recent_activity"`
 }
 
 // RecentNotificationActivity represents recent notification activity
 type RecentNotificationActivity struct {
-	RequestID   string                 `json:"request_id"`
-	EventType   string                 `json:"event_type"`
-	Status      NotificationStatus     `json:"status"`
-	Channel     NotificationChannel    `json:"channel"`
-	Timestamp   time.Time              `json:"timestamp"`
-	Description string                 `json:"description"`
+	RequestID   string              `json:"request_id"`
+	EventType   string              `json:"event_type"`
+	Status      NotificationStatus  `json:"status"`
+	Channel     NotificationChannel `json:"channel"`
+	Timestamp   time.Time           `json:"timestamp"`
+	Description string              `json:"description"`
 }

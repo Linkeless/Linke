@@ -7,8 +7,8 @@ import (
 	"go.uber.org/fx"
 	"gorm.io/gorm"
 
-	"linke/internal/domains/invoice/adapters/repositories"
 	"linke/internal/domains/invoice/adapters/handlers"
+	"linke/internal/domains/invoice/adapters/repositories"
 	"linke/internal/domains/invoice/usecases/implementations"
 	"linke/internal/domains/invoice/usecases/interfaces"
 	"linke/internal/shared/logger"

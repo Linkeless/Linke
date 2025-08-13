@@ -189,8 +189,8 @@ func (h *ServerAPIHandler) UniProxyConfig(c *gin.Context) {
 
 // UniProxyUserItem represents a single user item for UniProxy
 type UniProxyUserItem struct {
-	ID         uint        `json:"id"`          // Subscription ID
-	UUID       string      `json:"uuid"`        // Subscription UUID
+	ID         uint        `json:"id"`                                              // Subscription ID
+	UUID       string      `json:"uuid"`                                            // Subscription UUID
 	SpeedLimit interface{} `json:"speed_limit" swaggertype:"integer" example:"100"` // Speed limit (null for unlimited)
 }
 

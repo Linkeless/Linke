@@ -25,28 +25,28 @@ func NewBaseNotificationService(logger logger.Logger) *BaseNotificationService {
 		logger: logger,
 		templates: map[string]string{
 			// Email/SMS templates
-			"payment_completed": "Dear {{user_name}}, your payment of {{amount}} {{currency}} has been successfully processed. Order ID: {{order_id}}.",
-			"subscription_expired": "Dear {{user_name}}, your subscription has expired. Please renew to continue using our services.",
-			"invoice_overdue": "Dear {{user_name}}, your invoice {{invoice_id}} is now overdue. Please make payment to avoid service interruption.",
-			"order_paid": "Dear {{user_name}}, thank you for your order! Your order {{order_id}} has been confirmed and is being processed.",
-			"user_created": "Welcome {{user_name}}! Your account has been successfully created. Start exploring our services now.",
+			"payment_completed":      "Dear {{user_name}}, your payment of {{amount}} {{currency}} has been successfully processed. Order ID: {{order_id}}.",
+			"subscription_expired":   "Dear {{user_name}}, your subscription has expired. Please renew to continue using our services.",
+			"invoice_overdue":        "Dear {{user_name}}, your invoice {{invoice_id}} is now overdue. Please make payment to avoid service interruption.",
+			"order_paid":             "Dear {{user_name}}, thank you for your order! Your order {{order_id}} has been confirmed and is being processed.",
+			"user_created":           "Welcome {{user_name}}! Your account has been successfully created. Start exploring our services now.",
 			"subscription_activated": "Great news {{user_name}}! Your {{plan_name}} subscription is now active and ready to use.",
-			
+
 			// Telegram HTML templates with rich formatting
 			"telegram_payment_completed": "🎉 <b>Payment Successful!</b>\n\nHi {{user_name}},\n\nYour payment has been processed successfully!\n\n💰 <b>Amount:</b> {{amount}} {{currency}}\n📋 <b>Order ID:</b> <code>{{order_id}}</code>\n📅 <b>Date:</b> {{date}}\n\nThank you for your business! 🙏",
-			
+
 			"telegram_subscription_expired": "⚠️ <b>Subscription Expired</b>\n\nHi {{user_name}},\n\nYour subscription has expired and needs renewal.\n\n📦 <b>Plan:</b> {{plan_name}}\n📅 <b>Expired:</b> {{expiry_date}}\n\n<i>Renew now to continue enjoying our services!</i> ⚡",
-			
+
 			"telegram_invoice_overdue": "🔴 <b>Invoice Overdue</b>\n\nHi {{user_name}},\n\nYour invoice is now overdue and requires immediate attention.\n\n🧾 <b>Invoice ID:</b> <code>{{invoice_id}}</code>\n💵 <b>Amount Due:</b> {{amount}} {{currency}}\n📅 <b>Due Date:</b> {{due_date}}\n\n<b>Please make payment to avoid service interruption.</b>",
-			
+
 			"telegram_order_paid": "✅ <b>Order Confirmed!</b>\n\nHi {{user_name}},\n\nThank you for your order! We're processing it now.\n\n📋 <b>Order ID:</b> <code>{{order_id}}</code>\n💰 <b>Amount:</b> {{amount}} {{currency}}\n📦 <b>Items:</b> {{item_count}} items\n\n<i>You'll receive updates as we process your order.</i> 📱",
-			
+
 			"telegram_user_created": "🎊 <b>Welcome to our platform!</b>\n\nHi {{user_name}}!\n\nYour account has been successfully created. You're now part of our community!\n\n👤 <b>Username:</b> {{username}}\n📧 <b>Email:</b> {{email}}\n📅 <b>Joined:</b> {{join_date}}\n\n<i>Start exploring our services and enjoy the experience!</i> 🚀",
-			
+
 			"telegram_subscription_activated": "🔥 <b>Subscription Activated!</b>\n\nHi {{user_name}}!\n\nGreat news! Your subscription is now active and ready to use.\n\n📦 <b>Plan:</b> {{plan_name}}\n💰 <b>Price:</b> {{amount}} {{currency}}\n📅 <b>Valid Until:</b> {{expiry_date}}\n💾 <b>Data Limit:</b> {{data_limit}}\n\n<b>Enjoy your premium experience!</b> ⭐",
-			
+
 			"telegram_ticket_created": "🎫 <b>Support Ticket Created</b>\n\nHi {{user_name}},\n\nYour support ticket has been created successfully.\n\n🎟️ <b>Ticket ID:</b> <code>{{ticket_id}}</code>\n📝 <b>Subject:</b> {{subject}}\n⚡ <b>Priority:</b> {{priority}}\n📊 <b>Status:</b> {{status}}\n\n<i>We'll get back to you soon!</i> 💪",
-			
+
 			"telegram_ticket_resolved": "✅ <b>Ticket Resolved</b>\n\nHi {{user_name}},\n\nYour support ticket has been resolved!\n\n🎟️ <b>Ticket ID:</b> <code>{{ticket_id}}</code>\n👨‍💻 <b>Resolved by:</b> {{resolved_by}}\n📝 <b>Resolution:</b>\n<i>{{resolution}}</i>\n\n<b>Thanks for your patience!</b> 🎉",
 		},
 	}
@@ -149,7 +149,7 @@ func (s *BaseNotificationService) Send(ctx context.Context, req *NotificationReq
 			} else {
 				err = fmt.Errorf("telegram chat ID or username not provided")
 			}
-			
+
 			result.Success = err == nil
 			if err != nil {
 				result.Error = err.Error()

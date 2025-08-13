@@ -136,18 +136,18 @@ func SetupRoutes(
 		// OAuth provider routes - static routes first
 		authGroup.GET("/providers", authHandler.GetProviders)
 		authGroup.GET("/telegram/widget", authHandler.GetTelegramWidget)
-		
+
 		// Generic callback route (compatibility)
 		authGroup.GET("/callback", authHandler.Callback)
 
 		// Additional OAuth endpoints
 		authGroup.POST("/url", authHandler.GetAuthURL)
 		authGroup.POST("/token", authHandler.ExchangeToken)
-		
+
 		// OAuth dynamic routes - must be after static routes to avoid conflicts
 		// OAuth authentication start routes - using dynamic parameters to match handler expectations
 		authGroup.GET("/:provider", authHandler.Login)
-		
+
 		// OAuth callback routes - using dynamic parameters to match handler expectations
 		authGroup.GET("/:provider/callback", authHandler.Callback)
 	}
@@ -275,7 +275,6 @@ func SetupRoutes(
 		adminPaymentGroup.GET("/configs", paymentConfigHandler.GetPaymentConfigs)
 		adminPaymentGroup.PUT("/configs/:id", paymentConfigHandler.UpdatePaymentConfig)
 		adminPaymentGroup.DELETE("/configs/:id", paymentConfigHandler.DeletePaymentConfig)
-
 
 	}
 	logger.Debug("Registered admin payment routes", zap.String("prefix", "/api/v1/admin/payment"))
@@ -430,7 +429,7 @@ func SetupRoutes(
 		adminOrderGroup.GET("", adminSubscriptionHandler.ListSubscriptionOrders)
 		adminOrderGroup.GET("/:id", adminSubscriptionHandler.GetSubscriptionOrder)
 		adminOrderGroup.POST("/:id/cancel", adminSubscriptionHandler.CancelSubscriptionOrder)
-		
+
 		// Create invoice from order (moved to orders/:id/generate-invoice to avoid conflict)
 		adminOrderGroup.POST("/:id/generate-invoice", adminInvoiceHandler.CreateInvoiceFromOrder)
 	}
@@ -576,7 +575,6 @@ func SetupRoutes(
 	}
 	logger.Debug("Registered admin referral routes", zap.String("prefix", "/api/v1/admin/referrals"))
 
-
 	// Orders routes - enhanced with new order creation flow
 	ordersGroup := apiV1.Group("/orders")
 	ordersGroup.Use(middleware.AuthMiddleware(newAuthServiceAdapter(authService)))
@@ -585,7 +583,7 @@ func SetupRoutes(
 		ordersGroup.POST("/create", subscriptionOrderHandler.CreateOrderWithInvoice)
 		ordersGroup.POST("/pay", subscriptionOrderHandler.CreatePaymentForOrder)
 		ordersGroup.POST("/:id/invoice", subscriptionOrderHandler.GenerateInvoiceForOrder)
-		
+
 		// Query and management endpoints
 		ordersGroup.GET("", subscriptionOrderHandler.GetMySubscriptionOrders)
 		ordersGroup.GET("/:id", subscriptionOrderHandler.GetSubscriptionOrder)

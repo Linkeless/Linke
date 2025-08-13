@@ -39,4 +39,3 @@ type InviteCodeService interface {
 	// Utility
 	GenerateInviteCode() (string, error)
 }
-

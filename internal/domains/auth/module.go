@@ -4,8 +4,8 @@ import (
 	"go.uber.org/fx"
 	"gorm.io/gorm"
 
-	"linke/internal/domains/auth/adapters/repositories"
 	"linke/internal/domains/auth/adapters/handlers"
+	"linke/internal/domains/auth/adapters/repositories"
 	"linke/internal/domains/auth/usecases/implementations"
 	"linke/internal/domains/auth/usecases/interfaces"
 	referralInterfaces "linke/internal/domains/referral/usecases/interfaces"
@@ -38,7 +38,7 @@ var Module = fx.Module("auth",
 	fx.Provide(
 		// Provide JWTBlacklistService as concrete type first (for caching wrapper)
 		implementations.NewJWTBlacklistService,
-		
+
 		// Provide cached JWTBlacklistService as interface
 		fx.Annotate(
 			func(
@@ -51,7 +51,7 @@ var Module = fx.Module("auth",
 			},
 			fx.As(new(interfaces.JWTBlacklistService)),
 		),
-		
+
 		// 🔴 DISABLED: Login security service temporarily disabled
 		// fx.Annotate(
 		// 	implementations.NewLoginSecurityService,
@@ -63,7 +63,7 @@ var Module = fx.Module("auth",
 	fx.Provide(
 		// Provide JWTService as concrete type first (for caching wrapper)
 		implementations.NewJWTService,
-		
+
 		// Provide cached JWTService as interface
 		fx.Annotate(
 			func(

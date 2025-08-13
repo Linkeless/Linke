@@ -48,7 +48,6 @@ func (InviteCode) TableName() string {
 	return "invite_codes"
 }
 
-
 // IsActive checks if the invite code is active and can be used
 func (ic *InviteCode) IsActive() bool {
 	if ic.Status != constants.InviteCodeStatusActive {
@@ -77,7 +76,6 @@ func (ic *InviteCode) CanBeUsed() bool {
 func (ic *InviteCode) IsDeleted() bool {
 	return ic.DeletedAt.Valid
 }
-
 
 // ToResponse should be implemented in service layer to avoid import cycles
 // Use dto.ToInviteCodeResponse(ic) instead

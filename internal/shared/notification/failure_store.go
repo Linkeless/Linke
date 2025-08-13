@@ -20,10 +20,10 @@ type MemoryFailureStore struct {
 
 // DeadLetterEntry represents a failed notification that has exceeded max retries
 type DeadLetterEntry struct {
-	Failure    *NotificationFailure `json:"failure"`
-	Reason     string               `json:"reason"`
-	MovedAt    time.Time            `json:"moved_at"`
-	ProcessedBy string              `json:"processed_by,omitempty"`
+	Failure     *NotificationFailure `json:"failure"`
+	Reason      string               `json:"reason"`
+	MovedAt     time.Time            `json:"moved_at"`
+	ProcessedBy string               `json:"processed_by,omitempty"`
 }
 
 // NewMemoryFailureStore creates a new in-memory failure store
@@ -41,12 +41,12 @@ func (s *MemoryFailureStore) StoreFailure(ctx context.Context, failure *Notifica
 	defer s.mutex.Unlock()
 
 	s.failures[failure.RequestID] = failure
-	
+
 	s.logger.Debug("Stored notification failure",
 		logger.String("request_id", failure.RequestID),
 		logger.String("channel", string(failure.Channel)),
 		logger.Int("attempt_count", failure.AttemptCount))
-	
+
 	return nil
 }
 
@@ -73,11 +73,11 @@ func (s *MemoryFailureStore) UpdateFailure(ctx context.Context, failure *Notific
 	}
 
 	s.failures[failure.RequestID] = failure
-	
+
 	s.logger.Debug("Updated notification failure",
 		logger.String("request_id", failure.RequestID),
 		logger.Int("attempt_count", failure.AttemptCount))
-	
+
 	return nil
 }
 
@@ -96,7 +96,7 @@ func (s *MemoryFailureStore) GetPendingRetries(ctx context.Context, limit int) (
 		}
 
 		pending = append(pending, failure)
-		
+
 		if len(pending) >= limit {
 			break
 		}
@@ -162,10 +162,10 @@ func (s *MemoryFailureStore) GetStats() map[string]any {
 	defer s.mutex.RUnlock()
 
 	return map[string]any{
-		"pending_failures":  len(s.failures),
-		"dead_letters":      len(s.deadLetters),
-		"store_type":        "memory",
-		"last_updated":      time.Now().Format(time.RFC3339),
+		"pending_failures": len(s.failures),
+		"dead_letters":     len(s.deadLetters),
+		"store_type":       "memory",
+		"last_updated":     time.Now().Format(time.RFC3339),
 	}
 }
 
@@ -188,10 +188,10 @@ func NewRedisFailureStore(cache cache.CacheStore, logger logger.Logger) *RedisFa
 // StoreFailure stores a notification failure in Redis
 func (s *RedisFailureStore) StoreFailure(ctx context.Context, failure *NotificationFailure) error {
 	key := s.prefix + failure.RequestID
-	
+
 	// Store with TTL of 7 days to prevent indefinite growth
 	ttl := 7 * 24 * time.Hour
-	
+
 	if err := s.cache.SetJSON(ctx, key, failure, ttl); err != nil {
 		return fmt.Errorf("failed to store failure in Redis: %w", err)
 	}
@@ -200,7 +200,7 @@ func (s *RedisFailureStore) StoreFailure(ctx context.Context, failure *Notificat
 	if failure.NextRetryAt != nil {
 		retryIndexKey := fmt.Sprintf("%spending_index:%d:%s", s.prefix, failure.NextRetryAt.Unix(), failure.RequestID)
 		if err := s.cache.Set(ctx, retryIndexKey, "1", ttl); err != nil {
-			s.logger.Warn("Failed to add to pending retry index", 
+			s.logger.Warn("Failed to add to pending retry index",
 				logger.String("request_id", failure.RequestID),
 				logger.ErrorField(err))
 		}
@@ -217,7 +217,7 @@ func (s *RedisFailureStore) StoreFailure(ctx context.Context, failure *Notificat
 // GetFailure retrieves a notification failure from Redis
 func (s *RedisFailureStore) GetFailure(ctx context.Context, requestID string) (*NotificationFailure, error) {
 	key := s.prefix + requestID
-	
+
 	var failure NotificationFailure
 	if err := s.cache.GetJSON(ctx, key, &failure); err != nil {
 		return nil, fmt.Errorf("failed to get failure from Redis: %w", err)
@@ -229,7 +229,7 @@ func (s *RedisFailureStore) GetFailure(ctx context.Context, requestID string) (*
 // UpdateFailure updates an existing notification failure in Redis
 func (s *RedisFailureStore) UpdateFailure(ctx context.Context, failure *NotificationFailure) error {
 	key := s.prefix + failure.RequestID
-	
+
 	// Check if failure exists
 	exists, err := s.cache.Exists(ctx, key)
 	if err != nil {
@@ -249,7 +249,7 @@ func (s *RedisFailureStore) UpdateFailure(ctx context.Context, failure *Notifica
 	if failure.NextRetryAt != nil {
 		retryIndexKey := fmt.Sprintf("%spending_index:%d:%s", s.prefix, failure.NextRetryAt.Unix(), failure.RequestID)
 		if err := s.cache.Set(ctx, retryIndexKey, "1", ttl); err != nil {
-			s.logger.Warn("Failed to update pending retry index", 
+			s.logger.Warn("Failed to update pending retry index",
 				logger.String("request_id", failure.RequestID),
 				logger.ErrorField(err))
 		}
@@ -267,20 +267,20 @@ func (s *RedisFailureStore) GetPendingRetries(ctx context.Context, limit int) ([
 	// Since we can't use sorted sets or pattern matching with the current cache interface,
 	// we'll implement a simplified approach that would work in a real production system
 	// with proper Redis operations or a background indexing system
-	
+
 	s.logger.Debug("Getting pending retries - simplified implementation",
 		logger.Int("requested_limit", limit))
-	
+
 	var failures []*NotificationFailure
-	
+
 	// TODO: In a production system, implement one of these approaches:
 	// 1. Use a background task to maintain a list of ready-for-retry failures
 	// 2. Use Redis sorted sets with the full Redis client (not just CacheStore)
 	// 3. Store retry timestamps in a queryable format
-	// 
+	//
 	// For now, returning empty list to satisfy the interface
 	// The memory-based failure store will handle retries in development
-	
+
 	return failures, nil
 }
 
@@ -307,7 +307,7 @@ func (s *RedisFailureStore) MarkAsDeadLetter(ctx context.Context, requestID stri
 	// Store in dead letters with 30-day TTL
 	deadLetterKey := s.prefix + "dead_letter:" + requestID
 	deadLetterTTL := 30 * 24 * time.Hour
-	
+
 	if err := s.cache.SetJSON(ctx, deadLetterKey, deadLetter, deadLetterTTL); err != nil {
 		return fmt.Errorf("failed to store dead letter: %w", err)
 	}
@@ -334,7 +334,7 @@ func (s *RedisFailureStore) removeFailure(ctx context.Context, requestID string,
 
 	// Remove from failure store
 	if err := s.cache.Delete(ctx, key); err != nil {
-		s.logger.Warn("Failed to delete failure from Redis", 
+		s.logger.Warn("Failed to delete failure from Redis",
 			logger.String("request_id", requestID),
 			logger.ErrorField(err))
 	}
@@ -354,7 +354,7 @@ func (s *RedisFailureStore) GetDeadLetters(ctx context.Context, limit int) ([]*D
 	// In a production system, you'd maintain a separate index of dead letter entries
 	s.logger.Debug("Getting dead letters - simplified implementation",
 		logger.Int("requested_limit", limit))
-	
+
 	var deadLetters []*DeadLetterEntry
 	// TODO: Implement proper dead letter retrieval when pattern matching is available
 	return deadLetters, nil
@@ -364,12 +364,12 @@ func (s *RedisFailureStore) GetDeadLetters(ctx context.Context, limit int) ([]*D
 func (s *RedisFailureStore) GetStats(ctx context.Context) (map[string]any, error) {
 	// Since we don't have advanced Redis operations available, return basic stats
 	s.logger.Debug("Getting failure store stats - simplified implementation")
-	
+
 	return map[string]any{
 		"pending_failures": "unavailable", // Would need pattern matching to count
 		"dead_letters":     "unavailable", // Would need pattern matching to count
 		"store_type":       "redis_simple",
 		"last_updated":     time.Now().Format(time.RFC3339),
-		"note":            "Advanced statistics require Redis pattern matching operations",
+		"note":             "Advanced statistics require Redis pattern matching operations",
 	}, nil
 }

@@ -152,7 +152,7 @@ func (vm *VersionMiddleware) handleSunsetVersion(c *gin.Context, requestedVersio
 	// Add migration recommendation header
 	c.Header("X-API-Migration", fmt.Sprintf("Migrate to version %s", vm.config.GetLatestVersion().String()))
 
-	response.Problem(c, http.StatusGone, "/problems/api-version-sunset", "API Version Sunset", 
+	response.Problem(c, http.StatusGone, "/problems/api-version-sunset", "API Version Sunset",
 		fmt.Sprintf("API version %s has been sunset and is no longer available", requestedVersion.String()))
 	c.Abort()
 }

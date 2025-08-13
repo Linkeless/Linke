@@ -4,8 +4,8 @@ import (
 	"go.uber.org/fx"
 	"gorm.io/gorm"
 
-	"linke/internal/domains/server/adapters/repositories"
 	"linke/internal/domains/server/adapters/handlers"
+	"linke/internal/domains/server/adapters/repositories"
 	"linke/internal/domains/server/usecases/implementations"
 	"linke/internal/domains/server/usecases/interfaces"
 	"linke/internal/shared/config"

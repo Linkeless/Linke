@@ -39,22 +39,22 @@ func (s *EventAwareTicketService) CreateTicket(ctx context.Context, userID uint,
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Get user information for notification
 	user, userErr := s.userService.GetUserByID(ctx, userID)
-	
+
 	// Prepare event data
 	eventData := map[string]interface{}{
-		"ticket_id":    ticket.ID,
-		"ticket_no":    ticket.TicketNo,
-		"title":        ticket.Title,
-		"description":  ticket.Description,
-		"category":     ticket.Category,
-		"priority":     ticket.Priority,
-		"status":       ticket.Status,
-		"user_id":      userID,
+		"ticket_id":   ticket.ID,
+		"ticket_no":   ticket.TicketNo,
+		"title":       ticket.Title,
+		"description": ticket.Description,
+		"category":    ticket.Category,
+		"priority":    ticket.Priority,
+		"status":      ticket.Status,
+		"user_id":     userID,
 	}
-	
+
 	// Add user information if available
 	if userErr == nil && user != nil {
 		eventData["user_name"] = user.Username
@@ -62,7 +62,7 @@ func (s *EventAwareTicketService) CreateTicket(ctx context.Context, userID uint,
 			eventData["user_telegram_id"] = *user.TelegramID
 		}
 	}
-	
+
 	// Publish ticket created event
 	event := events.NewBaseEvent("ticket.created", "ticket-service", eventData)
 	if err := s.eventBus.Publish(ctx, event); err != nil {
@@ -70,7 +70,7 @@ func (s *EventAwareTicketService) CreateTicket(ctx context.Context, userID uint,
 			logger.Uint("ticket_id", ticket.ID),
 			logger.ErrorField(err))
 	}
-	
+
 	return ticket, nil
 }
 
@@ -78,19 +78,19 @@ func (s *EventAwareTicketService) CreateTicket(ctx context.Context, userID uint,
 func (s *EventAwareTicketService) AssignTicket(ctx context.Context, ticketID uint, req *dto.AssignTicketRequest) (*entities.Ticket, error) {
 	// Get ticket before assignment for comparison
 	oldTicket, _ := s.ticketService.GetTicket(ctx, ticketID)
-	
+
 	// Assign the ticket
 	ticket, err := s.ticketService.AssignTicket(ctx, ticketID, req)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Get assigned user information
 	assignedUser, assignedErr := s.userService.GetUserByID(ctx, req.AssignedToID)
-	
+
 	// Get ticket creator information
 	user, userErr := s.userService.GetUserByID(ctx, ticket.UserID)
-	
+
 	// Prepare event data
 	eventData := map[string]interface{}{
 		"ticket_id":      ticket.ID,
@@ -100,7 +100,7 @@ func (s *EventAwareTicketService) AssignTicket(ctx context.Context, ticketID uin
 		"assigned_to_id": req.AssignedToID,
 		"user_id":        ticket.UserID,
 	}
-	
+
 	// Add assigned user information
 	if assignedErr == nil && assignedUser != nil {
 		eventData["assigned_to_name"] = assignedUser.Username
@@ -108,7 +108,7 @@ func (s *EventAwareTicketService) AssignTicket(ctx context.Context, ticketID uin
 			eventData["assigned_telegram_id"] = *assignedUser.TelegramID
 		}
 	}
-	
+
 	// Add user information
 	if userErr == nil && user != nil {
 		eventData["user_name"] = user.Username
@@ -116,12 +116,12 @@ func (s *EventAwareTicketService) AssignTicket(ctx context.Context, ticketID uin
 			eventData["user_telegram_id"] = *user.TelegramID
 		}
 	}
-	
+
 	// Add old assigned ID if changed
 	if oldTicket != nil && oldTicket.AssignedToID != nil {
 		eventData["old_assigned_to_id"] = *oldTicket.AssignedToID
 	}
-	
+
 	// Publish ticket assigned event
 	event := events.NewBaseEvent("ticket.assigned", "ticket-service", eventData)
 	if err := s.eventBus.Publish(ctx, event); err != nil {
@@ -129,7 +129,7 @@ func (s *EventAwareTicketService) AssignTicket(ctx context.Context, ticketID uin
 			logger.Uint("ticket_id", ticket.ID),
 			logger.ErrorField(err))
 	}
-	
+
 	return ticket, nil
 }
 
@@ -141,16 +141,16 @@ func (s *EventAwareTicketService) UpdateTicketStatus(ctx context.Context, ticket
 	if oldTicket != nil {
 		oldStatus = oldTicket.Status
 	}
-	
+
 	// Update the status
 	ticket, err := s.ticketService.UpdateTicketStatus(ctx, ticketID, status)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Get user information
 	user, userErr := s.userService.GetUserByID(ctx, ticket.UserID)
-	
+
 	// Prepare event data
 	eventData := map[string]interface{}{
 		"ticket_id":  ticket.ID,
@@ -160,7 +160,7 @@ func (s *EventAwareTicketService) UpdateTicketStatus(ctx context.Context, ticket
 		"old_status": oldStatus,
 		"user_id":    ticket.UserID,
 	}
-	
+
 	// Add user information
 	if userErr == nil && user != nil {
 		eventData["user_name"] = user.Username
@@ -168,7 +168,7 @@ func (s *EventAwareTicketService) UpdateTicketStatus(ctx context.Context, ticket
 			eventData["user_telegram_id"] = *user.TelegramID
 		}
 	}
-	
+
 	// Add assigned user information if assigned
 	if ticket.AssignedToID != nil {
 		assignedUser, assignedErr := s.userService.GetUserByID(ctx, *ticket.AssignedToID)
@@ -180,7 +180,7 @@ func (s *EventAwareTicketService) UpdateTicketStatus(ctx context.Context, ticket
 			}
 		}
 	}
-	
+
 	// Publish status changed event
 	event := events.NewBaseEvent("ticket.status_changed", "ticket-service", eventData)
 	if err := s.eventBus.Publish(ctx, event); err != nil {
@@ -188,7 +188,7 @@ func (s *EventAwareTicketService) UpdateTicketStatus(ctx context.Context, ticket
 			logger.Uint("ticket_id", ticket.ID),
 			logger.ErrorField(err))
 	}
-	
+
 	return ticket, nil
 }
 
@@ -199,13 +199,13 @@ func (s *EventAwareTicketService) ResolveTicket(ctx context.Context, ticketID ui
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Get user information
 	user, userErr := s.userService.GetUserByID(ctx, ticket.UserID)
-	
+
 	// Get resolver information
 	resolver, resolverErr := s.userService.GetUserByID(ctx, resolvedByID)
-	
+
 	// Prepare event data
 	eventData := map[string]interface{}{
 		"ticket_id":      ticket.ID,
@@ -215,7 +215,7 @@ func (s *EventAwareTicketService) ResolveTicket(ctx context.Context, ticketID ui
 		"resolved_by_id": resolvedByID,
 		"user_id":        ticket.UserID,
 	}
-	
+
 	// Add user information
 	if userErr == nil && user != nil {
 		eventData["user_name"] = user.Username
@@ -223,7 +223,7 @@ func (s *EventAwareTicketService) ResolveTicket(ctx context.Context, ticketID ui
 			eventData["user_telegram_id"] = *user.TelegramID
 		}
 	}
-	
+
 	// Add resolver information
 	if resolverErr == nil && resolver != nil {
 		eventData["resolved_by_name"] = resolver.Username
@@ -231,7 +231,7 @@ func (s *EventAwareTicketService) ResolveTicket(ctx context.Context, ticketID ui
 			eventData["resolved_telegram_id"] = *resolver.TelegramID
 		}
 	}
-	
+
 	// Publish ticket resolved event
 	event := events.NewBaseEvent("ticket.resolved", "ticket-service", eventData)
 	if err := s.eventBus.Publish(ctx, event); err != nil {
@@ -239,7 +239,7 @@ func (s *EventAwareTicketService) ResolveTicket(ctx context.Context, ticketID ui
 			logger.Uint("ticket_id", ticket.ID),
 			logger.ErrorField(err))
 	}
-	
+
 	return ticket, nil
 }
 
@@ -250,10 +250,10 @@ func (s *EventAwareTicketService) CloseTicket(ctx context.Context, ticketID uint
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Get user information
 	user, userErr := s.userService.GetUserByID(ctx, ticket.UserID)
-	
+
 	// Prepare event data
 	eventData := map[string]interface{}{
 		"ticket_id":     ticket.ID,
@@ -262,7 +262,7 @@ func (s *EventAwareTicketService) CloseTicket(ctx context.Context, ticketID uint
 		"closed_reason": reason,
 		"user_id":       ticket.UserID,
 	}
-	
+
 	// Add user information
 	if userErr == nil && user != nil {
 		eventData["user_name"] = user.Username
@@ -270,7 +270,7 @@ func (s *EventAwareTicketService) CloseTicket(ctx context.Context, ticketID uint
 			eventData["user_telegram_id"] = *user.TelegramID
 		}
 	}
-	
+
 	// Publish ticket closed event
 	event := events.NewBaseEvent("ticket.closed", "ticket-service", eventData)
 	if err := s.eventBus.Publish(ctx, event); err != nil {
@@ -278,7 +278,7 @@ func (s *EventAwareTicketService) CloseTicket(ctx context.Context, ticketID uint
 			logger.Uint("ticket_id", ticket.ID),
 			logger.ErrorField(err))
 	}
-	
+
 	return ticket, nil
 }
 
@@ -290,20 +290,20 @@ func (s *EventAwareTicketService) UpdateTicketPriority(ctx context.Context, tick
 	if oldTicket != nil {
 		oldPriority = oldTicket.Priority
 	}
-	
+
 	// Update the priority
 	ticket, err := s.ticketService.UpdateTicketPriority(ctx, ticketID, priority)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Check if this is an escalation
 	isEscalation := s.isEscalation(oldPriority, priority)
-	
+
 	if isEscalation {
 		// Get user information
 		user, userErr := s.userService.GetUserByID(ctx, ticket.UserID)
-		
+
 		// Prepare event data
 		eventData := map[string]interface{}{
 			"ticket_id":    ticket.ID,
@@ -313,7 +313,7 @@ func (s *EventAwareTicketService) UpdateTicketPriority(ctx context.Context, tick
 			"old_priority": oldPriority,
 			"user_id":      ticket.UserID,
 		}
-		
+
 		// Add user information
 		if userErr == nil && user != nil {
 			eventData["user_name"] = user.Username
@@ -321,7 +321,7 @@ func (s *EventAwareTicketService) UpdateTicketPriority(ctx context.Context, tick
 				eventData["user_telegram_id"] = *user.TelegramID
 			}
 		}
-		
+
 		// Publish ticket escalated event
 		event := events.NewBaseEvent("ticket.escalated", "ticket-service", eventData)
 		if err := s.eventBus.Publish(ctx, event); err != nil {
@@ -330,7 +330,7 @@ func (s *EventAwareTicketService) UpdateTicketPriority(ctx context.Context, tick
 				logger.ErrorField(err))
 		}
 	}
-	
+
 	return ticket, nil
 }
 
@@ -343,10 +343,10 @@ func (s *EventAwareTicketService) isEscalation(oldPriority, newPriority string) 
 		constants.TicketPriorityUrgent:   4,
 		constants.TicketPriorityCritical: 5,
 	}
-	
+
 	oldLevel := priorityLevels[oldPriority]
 	newLevel := priorityLevels[newPriority]
-	
+
 	return newLevel > oldLevel
 }
 

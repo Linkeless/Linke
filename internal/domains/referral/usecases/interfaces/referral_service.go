@@ -28,4 +28,3 @@ type ReferralService interface {
 	GetReferralStatistics(ctx context.Context, userID uint) (map[string]any, error)
 	GetSystemReferralStatistics(ctx context.Context) (map[string]any, error)
 }
-

@@ -37,11 +37,11 @@ import (
 	"linke/internal/shared/versioning"
 
 	// Service interface imports for event handlers
-	userInterfaces "linke/internal/domains/user/usecases/interfaces"
-	subscriptionInterfaces "linke/internal/domains/subscription/usecases/interfaces"
-	paymentInterfaces "linke/internal/domains/payment/usecases/interfaces"
 	invoiceInterfaces "linke/internal/domains/invoice/usecases/interfaces"
+	paymentInterfaces "linke/internal/domains/payment/usecases/interfaces"
 	serverInterfaces "linke/internal/domains/server/usecases/interfaces"
+	subscriptionInterfaces "linke/internal/domains/subscription/usecases/interfaces"
+	userInterfaces "linke/internal/domains/user/usecases/interfaces"
 
 	// 业务领域模块
 	authDomain "linke/internal/domains/auth"
@@ -57,7 +57,6 @@ import (
 	// 应用层
 	applicationLayer "linke/internal/application"
 	"linke/internal/application/server"
-
 )
 
 // frameworkLogger 定义 framework.Logger 接口的类型别名
@@ -115,7 +114,6 @@ func NewApplication() *fx.App {
 				fx.As(new(frameworkLogger)),
 			),
 		),
-
 
 		// 自定义 Fx 日志系统 - 统一日志输出格式
 		fx.WithLogger(func(logger loggerPkg.Logger) fxevent.Logger {

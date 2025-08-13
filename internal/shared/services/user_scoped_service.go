@@ -35,7 +35,7 @@ func (s *UserScopedServiceImpl[T, ID]) ListByUser(ctx context.Context, userID ui
 	if req == nil {
 		req = &framework.ListRequest{Limit: 10, Offset: 0}
 	}
-	
+
 	// Set default limit if not provided
 	if req.Limit <= 0 {
 		req.Limit = 10
@@ -116,7 +116,7 @@ func (s *UserScopedServiceImpl[T, ID]) ValidateUserAccess(ctx context.Context, u
 	// Use reflection to check if entity has a UserID field
 	entityValue := reflect.ValueOf(entity).Elem()
 	userIDField := entityValue.FieldByName("UserID")
-	
+
 	if !userIDField.IsValid() {
 		// If no UserID field, assume access is allowed (override in specific implementations if needed)
 		return nil

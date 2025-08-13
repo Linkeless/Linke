@@ -12,12 +12,12 @@ import (
 
 // ProblemJSON represents RFC 9457 Problem Details for HTTP APIs
 type ProblemJSON struct {
-	Type     string            `json:"type"`               // URI reference that identifies the problem type
-	Title    string            `json:"title"`              // Short, human-readable summary
-	Status   int               `json:"status"`             // HTTP status code
-	Detail   string            `json:"detail,omitempty"`   // Human-readable explanation
-	Instance string            `json:"instance,omitempty"` // URI reference that identifies the specific occurrence
-	Extensions map[string]any  `json:"-"`                  // Additional problem-specific fields
+	Type       string         `json:"type"`               // URI reference that identifies the problem type
+	Title      string         `json:"title"`              // Short, human-readable summary
+	Status     int            `json:"status"`             // HTTP status code
+	Detail     string         `json:"detail,omitempty"`   // Human-readable explanation
+	Instance   string         `json:"instance,omitempty"` // URI reference that identifies the specific occurrence
+	Extensions map[string]any `json:"-"`                  // Additional problem-specific fields
 }
 
 // MarshalJSON implements custom JSON marshaling to include extensions at the root level
@@ -33,12 +33,12 @@ func (p ProblemJSON) MarshalJSON() ([]byte, error) {
 	if p.Instance != "" {
 		result["instance"] = p.Instance
 	}
-	
+
 	// Add extensions
 	for k, v := range p.Extensions {
 		result[k] = v
 	}
-	
+
 	return json.Marshal(result)
 }
 
@@ -74,10 +74,10 @@ type HALLink struct {
 
 // PageInfo represents pagination metadata
 type PageInfo struct {
-	Size          int `json:"size"`           // Items per page
+	Size          int   `json:"size"`          // Items per page
 	TotalElements int64 `json:"totalElements"` // Total number of elements
-	TotalPages    int `json:"totalPages"`     // Total number of pages
-	Number        int `json:"number"`         // Current page number (0-based)
+	TotalPages    int   `json:"totalPages"`    // Total number of pages
+	Number        int   `json:"number"`        // Current page number (0-based)
 }
 
 // ServerGroupResponseData represents server group data for responses (kept for compatibility)
@@ -87,7 +87,6 @@ type ServerGroupResponseData struct {
 	CreatedAt string `json:"created_at" example:"2024-01-01T00:00:00Z"`
 	UpdatedAt string `json:"updated_at" example:"2024-01-01T00:00:00Z"`
 }
-
 
 // Direct response functions - return resources directly without wrapping
 
@@ -124,11 +123,11 @@ func Collection(c *gin.Context, items any, links HALLinks, page *PageInfo, total
 		Links: links,
 		Total: total,
 	}
-	
+
 	if page != nil {
 		response.Page = *page
 	}
-	
+
 	c.JSON(http.StatusOK, response)
 }
 
@@ -152,7 +151,7 @@ func Resource(c *gin.Context, data any, links ...HALLinks) {
 		c.JSON(http.StatusOK, response)
 		return
 	}
-	
+
 	// No links, send data directly
 	c.JSON(http.StatusOK, data)
 }
@@ -167,11 +166,11 @@ func Problem(c *gin.Context, status int, problemType, title, detail string, exte
 		Status: status,
 		Detail: detail,
 	}
-	
+
 	if len(extensions) > 0 {
 		problem.Extensions = extensions[0]
 	}
-	
+
 	c.Header("Content-Type", "application/problem+json")
 	c.JSON(status, problem)
 }
@@ -254,7 +253,6 @@ func SuccessJSON(c *gin.Context, httpStatus int, data any) {
 	c.JSON(httpStatus, data)
 }
 
-
 // HandleError is a helper function to handle errors with logging
 func HandleError(logger any, c *gin.Context, err error) {
 	if err == nil {
@@ -288,7 +286,7 @@ func HandleError(logger any, c *gin.Context, err error) {
 // BuildHALLinks creates HAL-style pagination links
 func BuildHALLinks(baseURL string, page, limit int, total int64) HALLinks {
 	totalPages := int((total + int64(limit) - 1) / int64(limit))
-	
+
 	links := HALLinks{
 		Self: &HALLink{
 			Href: fmt.Sprintf("%s?page=%d&limit=%d", baseURL, page, limit),
@@ -300,33 +298,33 @@ func BuildHALLinks(baseURL string, page, limit int, total int64) HALLinks {
 			Href: fmt.Sprintf("%s?page=%d&limit=%d", baseURL, totalPages, limit),
 		},
 	}
-	
+
 	if page > 1 {
 		links.Prev = &HALLink{
 			Href: fmt.Sprintf("%s?page=%d&limit=%d", baseURL, page-1, limit),
 		}
 	}
-	
+
 	if page < totalPages {
 		links.Next = &HALLink{
 			Href: fmt.Sprintf("%s?page=%d&limit=%d", baseURL, page+1, limit),
 		}
 	}
-	
+
 	return links
 }
 
 // BuildHALLinksWithQuery creates HAL-style pagination links with query parameters
 func BuildHALLinksWithQuery(baseURL string, page, limit int, total int64, query map[string]any) HALLinks {
 	totalPages := int((total + int64(limit) - 1) / int64(limit))
-	
+
 	// Build query string
 	queryStr := buildQueryString(query)
 	separator := "?"
 	if strings.Contains(baseURL, "?") {
 		separator = "&"
 	}
-	
+
 	links := HALLinks{
 		Self: &HALLink{
 			Href: fmt.Sprintf("%s%spage=%d&limit=%d%s", baseURL, separator, page, limit, queryStr),
@@ -338,19 +336,19 @@ func BuildHALLinksWithQuery(baseURL string, page, limit int, total int64, query 
 			Href: fmt.Sprintf("%s%spage=%d&limit=%d%s", baseURL, separator, totalPages, limit, queryStr),
 		},
 	}
-	
+
 	if page > 1 {
 		links.Prev = &HALLink{
 			Href: fmt.Sprintf("%s%spage=%d&limit=%d%s", baseURL, separator, page-1, limit, queryStr),
 		}
 	}
-	
+
 	if page < totalPages {
 		links.Next = &HALLink{
 			Href: fmt.Sprintf("%s%spage=%d&limit=%d%s", baseURL, separator, page+1, limit, queryStr),
 		}
 	}
-	
+
 	return links
 }
 
@@ -365,7 +363,7 @@ func Paginated(c *gin.Context, message string, data any, page int, limit int, to
 		TotalPages:    int((total + int64(limit) - 1) / int64(limit)),
 		Number:        page - 1, // HAL uses 0-based page numbers
 	}
-	
+
 	Collection(c, data, links, pageInfo, total)
 }
 
@@ -378,7 +376,7 @@ func PaginatedWithQuery(c *gin.Context, message string, data any, page int, limi
 		TotalPages:    int((total + int64(limit) - 1) / int64(limit)),
 		Number:        page - 1, // HAL uses 0-based page numbers
 	}
-	
+
 	Collection(c, data, links, pageInfo, total)
 }
 
@@ -387,18 +385,18 @@ func buildQueryString(query map[string]any) string {
 	if len(query) == 0 {
 		return ""
 	}
-	
+
 	var params []string
 	for key, value := range query {
 		if value != nil && value != "" {
 			params = append(params, fmt.Sprintf("%s=%v", key, value))
 		}
 	}
-	
+
 	if len(params) == 0 {
 		return ""
 	}
-	
+
 	return "&" + strings.Join(params, "&")
 }
 
@@ -432,7 +430,7 @@ func SetStandardHeaders(c *gin.Context) {
 	c.Header("Cache-Control", "no-cache, no-store, must-revalidate")
 	c.Header("Pragma", "no-cache")
 	c.Header("Expires", "0")
-	
+
 	// Set content type to JSON by default
 	c.Header("Content-Type", "application/json")
 }

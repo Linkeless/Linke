@@ -4,17 +4,17 @@ import (
 	"context"
 	"fmt"
 
-	"linke/internal/shared/logger"
-	subscriptionInterfaces "linke/internal/domains/subscription/usecases/interfaces"
 	subscriptionEntities "linke/internal/domains/subscription/entities"
+	subscriptionInterfaces "linke/internal/domains/subscription/usecases/interfaces"
+	"linke/internal/shared/logger"
 )
 
 // UsageMonitor handles real-time usage monitoring and traffic limit checking
 type UsageMonitor struct {
-	logger                   logger.Logger
-	userSubscriptionService  subscriptionInterfaces.UserSubscriptionService
-	eventBus                 EventBus
-	
+	logger                  logger.Logger
+	userSubscriptionService subscriptionInterfaces.UserSubscriptionService
+	eventBus                EventBus
+
 	// Configuration
 	warningThresholds []float64 // e.g., [80.0, 90.0] for 80% and 90% warnings
 }
@@ -27,8 +27,8 @@ func NewUsageMonitor(
 	return &UsageMonitor{
 		logger:                  logger.GetGlobalLogger(),
 		userSubscriptionService: userSubscriptionService,
-		eventBus:               eventBus,
-		warningThresholds:      []float64{80.0, 90.0}, // Default warning at 80% and 90%
+		eventBus:                eventBus,
+		warningThresholds:       []float64{80.0, 90.0}, // Default warning at 80% and 90%
 	}
 }
 
@@ -51,7 +51,7 @@ func (m *UsageMonitor) MonitorTrafficUsage(ctx context.Context, subscriptionID u
 
 	// Calculate previous and new usage percentages
 	oldUsagePercentage := subscription.GetTrafficUsagePercentage()
-	
+
 	// Update traffic usage
 	limitExceeded := subscription.AddTrafficUsage(newUsageBytes)
 	newUsagePercentage := subscription.GetTrafficUsagePercentage()

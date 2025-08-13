@@ -142,11 +142,11 @@ type CacheStore interface {
 	Get(ctx context.Context, key string) (string, error)
 	Delete(ctx context.Context, key string) error
 	Exists(ctx context.Context, key string) (bool, error)
-	
+
 	// JSON operations for structured data
 	SetJSON(ctx context.Context, key string, value any, expiration time.Duration) error
 	GetJSON(ctx context.Context, key string, dest any) error
-	
+
 	// Pattern-based operations
 	DeletePattern(ctx context.Context, pattern string) error
 }

@@ -52,9 +52,9 @@ func (s *BusinessServiceImpl[T, ID]) AddWorkflow(action string, handler Workflow
 func (s *BusinessServiceImpl[T, ID]) ValidateBusinessRules(ctx context.Context, entity *T) error {
 	for i, rule := range s.businessRules {
 		if err := rule(ctx, entity); err != nil {
-			s.logger.Error("Business rule validation failed", 
-				logger.String("service", s.name), 
-				logger.Int("rule_index", i), 
+			s.logger.Error("Business rule validation failed",
+				logger.String("service", s.name),
+				logger.Int("rule_index", i),
 				logger.ErrorField(err))
 			return fmt.Errorf("business rule %d failed: %w", i, err)
 		}
@@ -71,7 +71,7 @@ func (s *BusinessServiceImpl[T, ID]) ValidateBusinessRulesForUpdate(ctx context.
 
 	// Create a merged entity for validation (existing + updates)
 	mergedEntity := s.mergeEntityForValidation(existing, req.Data)
-	
+
 	return s.ValidateBusinessRules(ctx, mergedEntity)
 }
 
@@ -91,15 +91,15 @@ func (s *BusinessServiceImpl[T, ID]) PublishCreatedEvent(ctx context.Context, en
 	}
 
 	if err := s.eventPub.PublishAsync(ctx, event); err != nil {
-		s.logger.Error("Failed to publish created event", 
-			logger.String("service", s.name), 
-			logger.String("event_type", eventType), 
+		s.logger.Error("Failed to publish created event",
+			logger.String("service", s.name),
+			logger.String("event_type", eventType),
 			logger.ErrorField(err))
 		return fmt.Errorf("publish created event: %w", err)
 	}
 
-	s.logger.Info("Published created event", 
-		logger.String("service", s.name), 
+	s.logger.Info("Published created event",
+		logger.String("service", s.name),
 		logger.String("event_type", eventType))
 	return nil
 }
@@ -118,15 +118,15 @@ func (s *BusinessServiceImpl[T, ID]) PublishUpdatedEvent(ctx context.Context, ol
 	}
 
 	if err := s.eventPub.PublishAsync(ctx, event); err != nil {
-		s.logger.Error("Failed to publish updated event", 
-			logger.String("service", s.name), 
-			logger.String("event_type", eventType), 
+		s.logger.Error("Failed to publish updated event",
+			logger.String("service", s.name),
+			logger.String("event_type", eventType),
 			logger.ErrorField(err))
 		return fmt.Errorf("publish updated event: %w", err)
 	}
 
-	s.logger.Info("Published updated event", 
-		logger.String("service", s.name), 
+	s.logger.Info("Published updated event",
+		logger.String("service", s.name),
 		logger.String("event_type", eventType))
 	return nil
 }
@@ -145,15 +145,15 @@ func (s *BusinessServiceImpl[T, ID]) PublishDeletedEvent(ctx context.Context, en
 	}
 
 	if err := s.eventPub.PublishAsync(ctx, event); err != nil {
-		s.logger.Error("Failed to publish deleted event", 
-			logger.String("service", s.name), 
-			logger.String("event_type", eventType), 
+		s.logger.Error("Failed to publish deleted event",
+			logger.String("service", s.name),
+			logger.String("event_type", eventType),
 			logger.ErrorField(err))
 		return fmt.Errorf("publish deleted event: %w", err)
 	}
 
-	s.logger.Info("Published deleted event", 
-		logger.String("service", s.name), 
+	s.logger.Info("Published deleted event",
+		logger.String("service", s.name),
 		logger.String("event_type", eventType))
 	return nil
 }
@@ -187,17 +187,17 @@ func (s *BusinessServiceImpl[T, ID]) ProcessWorkflow(ctx context.Context, id ID,
 
 	// Execute workflow
 	if err := handler(ctx, entity, params); err != nil {
-		s.logger.Error("Workflow execution failed", 
-			logger.String("service", s.name), 
-			logger.Any("id", id), 
-			logger.String("action", action), 
+		s.logger.Error("Workflow execution failed",
+			logger.String("service", s.name),
+			logger.Any("id", id),
+			logger.String("action", action),
 			logger.ErrorField(err))
 		return fmt.Errorf("workflow '%s' failed: %w", action, err)
 	}
 
-	s.logger.Info("Workflow executed successfully", 
-		logger.String("service", s.name), 
-		logger.Any("id", id), 
+	s.logger.Info("Workflow executed successfully",
+		logger.String("service", s.name),
+		logger.Any("id", id),
 		logger.String("action", action))
 	return nil
 }
@@ -270,7 +270,7 @@ func (s *BusinessServiceImpl[T, ID]) getEntityID(entity *T) ID {
 	// Use reflection to get ID field
 	entityValue := reflect.ValueOf(entity).Elem()
 	idField := entityValue.FieldByName("ID")
-	
+
 	if !idField.IsValid() {
 		// Fallback - this should be handled better in real implementation
 		var zero ID
@@ -286,7 +286,7 @@ func (s *BusinessServiceImpl[T, ID]) getEntityID(entity *T) ID {
 			return idValue
 		}
 	case reflect.Int, reflect.Int32, reflect.Int64:
-		// For int-based IDs  
+		// For int-based IDs
 		if idValue, ok := any(int(idField.Int())).(ID); ok {
 			return idValue
 		}
@@ -296,7 +296,7 @@ func (s *BusinessServiceImpl[T, ID]) getEntityID(entity *T) ID {
 			return idValue
 		}
 	}
-	
+
 	var zero ID
 	return zero
 }

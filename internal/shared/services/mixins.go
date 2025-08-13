@@ -39,9 +39,9 @@ func (s *LookupServiceMixin[T, ID]) GetByField(ctx context.Context, field string
 
 	var entity T
 	if err := s.repository.GetDB().WithContext(ctx).Where(dbField+" = ?", value).First(&entity).Error; err != nil {
-		s.logger.Error("Failed to get entity by field", 
-			logger.String("field", field), 
-			logger.Any("value", value), 
+		s.logger.Error("Failed to get entity by field",
+			logger.String("field", field),
+			logger.Any("value", value),
 			logger.ErrorField(err))
 		return nil, fmt.Errorf("get entity by %s: %w", field, err)
 	}
@@ -57,9 +57,9 @@ func (s *LookupServiceMixin[T, ID]) ExistsByField(ctx context.Context, field str
 
 	var count int64
 	if err := s.repository.GetDB().WithContext(ctx).Model(new(T)).Where(dbField+" = ?", value).Count(&count).Error; err != nil {
-		s.logger.Error("Failed to check entity exists by field", 
-			logger.String("field", field), 
-			logger.Any("value", value), 
+		s.logger.Error("Failed to check entity exists by field",
+			logger.String("field", field),
+			logger.Any("value", value),
 			logger.ErrorField(err))
 		return false, fmt.Errorf("check entity exists by %s: %w", field, err)
 	}
@@ -83,8 +83,8 @@ func (s *LookupServiceMixin[T, ID]) GetByUniqueFields(ctx context.Context, field
 
 	var entity T
 	if err := db.First(&entity).Error; err != nil {
-		s.logger.Error("Failed to get entity by unique fields", 
-			logger.Any("fields", fields), 
+		s.logger.Error("Failed to get entity by unique fields",
+			logger.Any("fields", fields),
 			logger.ErrorField(err))
 		return nil, fmt.Errorf("get entity by unique fields: %w", err)
 	}
@@ -120,8 +120,8 @@ func NewOrderManagementServiceMixin[T any, ID comparable](
 func (s *OrderManagementServiceMixin[T, ID]) GetByOrderNumber(ctx context.Context, orderNumber string) (*T, error) {
 	var entity T
 	if err := s.repository.GetDB().WithContext(ctx).Where(s.orderNumberField+" = ?", orderNumber).First(&entity).Error; err != nil {
-		s.logger.Error("Failed to get entity by order number", 
-			logger.String("order_number", orderNumber), 
+		s.logger.Error("Failed to get entity by order number",
+			logger.String("order_number", orderNumber),
 			logger.ErrorField(err))
 		return nil, fmt.Errorf("get entity by order number: %w", err)
 	}
@@ -139,9 +139,9 @@ func (s *OrderManagementServiceMixin[T, ID]) UpdateOrderStatus(ctx context.Conte
 	}
 
 	if err := s.repository.GetDB().WithContext(ctx).Model(new(T)).Where("id = ?", id).Updates(updates).Error; err != nil {
-		s.logger.Error("Failed to update order status", 
-			logger.Any("id", id), 
-			logger.String("status", status), 
+		s.logger.Error("Failed to update order status",
+			logger.Any("id", id),
+			logger.String("status", status),
 			logger.ErrorField(err))
 		return nil, fmt.Errorf("update order status: %w", err)
 	}
@@ -156,8 +156,8 @@ func (s *OrderManagementServiceMixin[T, ID]) ProcessOrder(ctx context.Context, i
 	processData[s.statusField] = "processing"
 
 	if err := s.repository.GetDB().WithContext(ctx).Model(new(T)).Where("id = ?", id).Updates(processData).Error; err != nil {
-		s.logger.Error("Failed to process order", 
-			logger.Any("id", id), 
+		s.logger.Error("Failed to process order",
+			logger.Any("id", id),
 			logger.ErrorField(err))
 		return nil, fmt.Errorf("process order: %w", err)
 	}
@@ -168,15 +168,15 @@ func (s *OrderManagementServiceMixin[T, ID]) ProcessOrder(ctx context.Context, i
 // CancelOrder cancels an order with reason
 func (s *OrderManagementServiceMixin[T, ID]) CancelOrder(ctx context.Context, id ID, reason string) (*T, error) {
 	updates := map[string]any{
-		s.statusField:      "cancelled",
-		"cancelled_at":     time.Now(),
+		s.statusField:         "cancelled",
+		"cancelled_at":        time.Now(),
 		"cancellation_reason": reason,
 	}
 
 	if err := s.repository.GetDB().WithContext(ctx).Model(new(T)).Where("id = ?", id).Updates(updates).Error; err != nil {
-		s.logger.Error("Failed to cancel order", 
-			logger.Any("id", id), 
-			logger.String("reason", reason), 
+		s.logger.Error("Failed to cancel order",
+			logger.Any("id", id),
+			logger.String("reason", reason),
 			logger.ErrorField(err))
 		return nil, fmt.Errorf("cancel order: %w", err)
 	}
@@ -199,9 +199,9 @@ func (s *OrderManagementServiceMixin[T, ID]) GetOrderStatisticsByPeriod(ctx cont
 
 	// Get period-specific counts
 	db := s.repository.GetDB().WithContext(ctx).Model(new(T)).Where("created_at BETWEEN ? AND ?", start, end)
-	
+
 	var total, completed, pending, cancelled int64
-	
+
 	// Total in period
 	if err := db.Count(&total).Error; err != nil {
 		return nil, fmt.Errorf("count total orders in period: %w", err)
@@ -288,7 +288,7 @@ func (s *CacheableServiceMixin[T, ID]) RefreshCache(ctx context.Context, id ID) 
 	// Clear cache first
 	cacheKey := fmt.Sprintf("%s:%v", s.GetName(), id)
 	s.cache.Delete(ctx, cacheKey)
-	
+
 	// Get fresh data
 	return s.GetByID(ctx, id)
 }
@@ -318,7 +318,7 @@ func (s *SearchableServiceMixin[T, ID]) FullTextSearch(ctx context.Context, quer
 	if len(fields) == 0 {
 		fields = s.searchableFields
 	}
-	
+
 	// Use the base Search method but with custom fields
 	return s.Search(ctx, query, req)
 }
@@ -333,7 +333,7 @@ func (s *SearchableServiceMixin[T, ID]) SearchByTags(ctx context.Context, tags [
 	var total int64
 
 	db := s.repository.GetDB().WithContext(ctx).Model(new(T))
-	
+
 	// Build tag query
 	for _, tag := range tags {
 		db = db.Where("tags LIKE ?", "%"+tag+"%")
@@ -380,7 +380,7 @@ func (s *SearchableServiceMixin[T, ID]) SearchWithHighlight(ctx context.Context,
 func (s *SearchableServiceMixin[T, ID]) GetSearchSuggestions(ctx context.Context, query string, limit int) ([]string, error) {
 	// Simple implementation - return query variations
 	suggestions := make([]string, 0, limit)
-	
+
 	if query != "" {
 		suggestions = append(suggestions, query+" tips")
 		suggestions = append(suggestions, query+" guide")

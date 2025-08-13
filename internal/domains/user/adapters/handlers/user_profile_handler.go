@@ -139,6 +139,6 @@ func (h *UserProfileHandler) UpdateProfile(c *gin.Context) {
 // UserProfileUpdateRequest represents the structure for profile updates
 type UserProfileUpdateRequest struct {
 	Username string `json:"username"`
-	Name     string `json:"name"`  
+	Name     string `json:"name"`
 	Avatar   string `json:"avatar"`
 }

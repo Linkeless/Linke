@@ -9,7 +9,6 @@ import (
 	"linke/internal/shared/dto"
 )
 
-
 // Ticket represents a support ticket
 type Ticket struct {
 	ID          uint   `gorm:"primaryKey" json:"id"`

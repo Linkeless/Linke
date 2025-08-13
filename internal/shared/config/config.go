@@ -136,10 +136,10 @@ type VersioningConfig struct {
 type TelegramConfig struct {
 	// AdminChatIDs is a comma-separated list of Telegram chat IDs for admin notifications
 	AdminChatIDs string `json:"admin_chat_ids"`
-	
+
 	// SupportGroupID is the Telegram group ID for support tickets
 	SupportGroupID string `json:"support_group_id"`
-	
+
 	// EnableTicketNotifications enables ticket notifications via Telegram
 	EnableTicketNotifications bool `json:"enable_ticket_notifications"`
 }

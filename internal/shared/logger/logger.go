@@ -138,7 +138,7 @@ func Duration(key string, val time.Duration) zap.Field {
 	return zap.Duration(key, val)
 }
 
-// Time returns a zap.Field for time values  
+// Time returns a zap.Field for time values
 func Time(key string, val time.Time) zap.Field {
 	return zap.Time(key, val)
 }

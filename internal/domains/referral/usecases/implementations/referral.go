@@ -28,7 +28,6 @@ func NewReferralService(db *database.Database) *ReferralService {
 	}
 }
 
-
 // CreateReferral creates a new referral relationship
 func (s *ReferralService) CreateReferral(ctx context.Context, req *dto.CreateReferralRequest) (*entities.Referral, error) {
 	// Validate that referrer and referee are different

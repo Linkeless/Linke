@@ -35,16 +35,16 @@ type SortQuery struct {
 
 // FilterQuery represents filtering parameters
 type FilterQuery struct {
-	Search  string            `json:"search,omitempty"`  // Full-text search
-	Filters map[string]string `json:"filters,omitempty"` // Field-specific filters
-	DateRange *DateRangeFilter `json:"date_range,omitempty"` // Date range filter
+	Search    string            `json:"search,omitempty"`     // Full-text search
+	Filters   map[string]string `json:"filters,omitempty"`    // Field-specific filters
+	DateRange *DateRangeFilter  `json:"date_range,omitempty"` // Date range filter
 }
 
 // DateRangeFilter represents date range filtering
 type DateRangeFilter struct {
-	Field string     `json:"field"`           // Date field name
-	From  *time.Time `json:"from,omitempty"`  // Start date
-	To    *time.Time `json:"to,omitempty"`    // End date
+	Field string     `json:"field"`          // Date field name
+	From  *time.Time `json:"from,omitempty"` // Start date
+	To    *time.Time `json:"to,omitempty"`   // End date
 }
 
 // FieldSelection represents field selection for partial responses
@@ -55,19 +55,19 @@ type FieldSelection struct {
 
 // QueryOptions contains all parsed query parameters
 type QueryOptions struct {
-	Pagination    PaginationQuery `json:"pagination"`
-	Sort          *SortQuery      `json:"sort,omitempty"`
-	Filter        FilterQuery     `json:"filter"`
-	FieldSelect   *FieldSelection `json:"field_selection,omitempty"`
-	IncludeTotal  bool           `json:"include_total"`
-	IncludeCount  bool           `json:"include_count"`
+	Pagination   PaginationQuery `json:"pagination"`
+	Sort         *SortQuery      `json:"sort,omitempty"`
+	Filter       FilterQuery     `json:"filter"`
+	FieldSelect  *FieldSelection `json:"field_selection,omitempty"`
+	IncludeTotal bool            `json:"include_total"`
+	IncludeCount bool            `json:"include_count"`
 }
 
 // ParsePagination extracts and validates pagination parameters
 func (q *QueryProcessor) ParsePagination() PaginationQuery {
 	page, _ := strconv.Atoi(q.c.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(q.c.DefaultQuery("size", "20"))
-	
+
 	// Validate and apply constraints
 	if page < 1 {
 		page = 1
@@ -78,9 +78,9 @@ func (q *QueryProcessor) ParsePagination() PaginationQuery {
 	if size > 100 {
 		size = 100 // Maximum page size limit
 	}
-	
+
 	offset := (page - 1) * size
-	
+
 	return PaginationQuery{
 		Page:   page,
 		Size:   size,
@@ -94,11 +94,11 @@ func (q *QueryProcessor) ParseSort(allowedFields []string) *SortQuery {
 	if sortParam == "" {
 		return nil
 	}
-	
+
 	// Parse sort parameter: "field" or "field:desc" or "-field"
 	field := sortParam
 	order := "asc"
-	
+
 	// Handle "-field" format (descending)
 	if strings.HasPrefix(sortParam, "-") {
 		field = strings.TrimPrefix(sortParam, "-")
@@ -113,14 +113,14 @@ func (q *QueryProcessor) ParseSort(allowedFields []string) *SortQuery {
 			}
 		}
 	}
-	
+
 	// Override with explicit order parameter
 	if orderParam := q.c.Query("order"); orderParam != "" {
 		if orderParam == "asc" || orderParam == "desc" {
 			order = orderParam
 		}
 	}
-	
+
 	// Validate field against allowed list
 	if len(allowedFields) > 0 {
 		allowed := false
@@ -134,7 +134,7 @@ func (q *QueryProcessor) ParseSort(allowedFields []string) *SortQuery {
 			return nil // Field not allowed
 		}
 	}
-	
+
 	return &SortQuery{
 		Field: field,
 		Order: order,
@@ -146,17 +146,17 @@ func (q *QueryProcessor) ParseFilters(allowedFilters []string) FilterQuery {
 	filter := FilterQuery{
 		Filters: make(map[string]string),
 	}
-	
+
 	// Search parameter
 	filter.Search = q.c.Query("search")
-	
+
 	// Individual filters
 	for _, filterName := range allowedFilters {
 		if value := q.c.Query(filterName); value != "" {
 			filter.Filters[filterName] = value
 		}
 	}
-	
+
 	// Date range filters
 	if from := q.c.Query("from"); from != "" {
 		if to := q.c.Query("to"); to != "" {
@@ -166,21 +166,21 @@ func (q *QueryProcessor) ParseFilters(allowedFilters []string) FilterQuery {
 			}
 		}
 	}
-	
+
 	return filter
 }
 
 // parseDateRange parses date range parameters
 func (q *QueryProcessor) parseDateRange(field, from, to string) *DateRangeFilter {
 	dateRange := &DateRangeFilter{Field: field}
-	
+
 	// Parse from date
 	if fromTime, err := time.Parse("2006-01-02", from); err == nil {
 		dateRange.From = &fromTime
 	} else if fromTime, err := time.Parse(time.RFC3339, from); err == nil {
 		dateRange.From = &fromTime
 	}
-	
+
 	// Parse to date
 	if toTime, err := time.Parse("2006-01-02", to); err == nil {
 		// Set to end of day for date-only format
@@ -189,12 +189,12 @@ func (q *QueryProcessor) parseDateRange(field, from, to string) *DateRangeFilter
 	} else if toTime, err := time.Parse(time.RFC3339, to); err == nil {
 		dateRange.To = &toTime
 	}
-	
+
 	// Validate date range
 	if dateRange.From != nil && dateRange.To != nil && dateRange.From.After(*dateRange.To) {
 		return nil // Invalid range
 	}
-	
+
 	return dateRange
 }
 
@@ -202,13 +202,13 @@ func (q *QueryProcessor) parseDateRange(field, from, to string) *DateRangeFilter
 func (q *QueryProcessor) ParseFieldSelection() *FieldSelection {
 	fieldsParam := q.c.Query("fields")
 	excludeParam := q.c.Query("exclude")
-	
+
 	if fieldsParam == "" && excludeParam == "" {
 		return nil
 	}
-	
+
 	selection := &FieldSelection{}
-	
+
 	// Parse include fields
 	if fieldsParam != "" {
 		fields := q.parseFieldList(fieldsParam)
@@ -216,7 +216,7 @@ func (q *QueryProcessor) ParseFieldSelection() *FieldSelection {
 			selection.Fields = fields
 		}
 	}
-	
+
 	// Parse exclude fields
 	if excludeParam != "" {
 		exclude := q.parseFieldList(excludeParam)
@@ -224,7 +224,7 @@ func (q *QueryProcessor) ParseFieldSelection() *FieldSelection {
 			selection.Exclude = exclude
 		}
 	}
-	
+
 	return selection
 }
 
@@ -232,14 +232,14 @@ func (q *QueryProcessor) ParseFieldSelection() *FieldSelection {
 func (q *QueryProcessor) parseFieldList(fields string) []string {
 	// Remove whitespace and split by comma
 	fieldList := strings.Split(strings.ReplaceAll(fields, " ", ""), ",")
-	
+
 	var result []string
 	for _, field := range fieldList {
 		if field != "" && q.isValidFieldName(field) {
 			result = append(result, field)
 		}
 	}
-	
+
 	return result
 }
 
@@ -258,48 +258,48 @@ func (q *QueryProcessor) ParseQueryOptions(config QueryParsingConfig) QueryOptio
 		IncludeTotal: q.c.Query("include_total") != "false", // Default true
 		IncludeCount: q.c.Query("include_count") == "true",  // Default false
 	}
-	
+
 	// Parse sorting if allowed
 	if len(config.AllowedSortFields) > 0 {
 		options.Sort = q.ParseSort(config.AllowedSortFields)
 	}
-	
+
 	// Parse field selection if enabled
 	if config.AllowFieldSelection {
 		options.FieldSelect = q.ParseFieldSelection()
 	}
-	
+
 	return options
 }
 
 // QueryParsingConfig configures query parameter parsing
 type QueryParsingConfig struct {
-	AllowedSortFields  []string // Fields that can be used for sorting
-	AllowedFilters     []string // Filters that are allowed
+	AllowedSortFields   []string // Fields that can be used for sorting
+	AllowedFilters      []string // Filters that are allowed
 	AllowFieldSelection bool     // Whether field selection is enabled
-	DefaultPageSize    int      // Default page size (if not 20)
-	MaxPageSize        int      // Maximum page size (if not 100)
+	DefaultPageSize     int      // Default page size (if not 20)
+	MaxPageSize         int      // Maximum page size (if not 100)
 }
 
 // StandardConfig returns a standard configuration for most APIs
 func StandardConfig() QueryParsingConfig {
 	return QueryParsingConfig{
-		AllowedSortFields: []string{"id", "name", "created_at", "updated_at"},
-		AllowedFilters:    []string{"status", "type", "category"},
+		AllowedSortFields:   []string{"id", "name", "created_at", "updated_at"},
+		AllowedFilters:      []string{"status", "type", "category"},
 		AllowFieldSelection: true,
-		DefaultPageSize:   20,
-		MaxPageSize:       100,
+		DefaultPageSize:     20,
+		MaxPageSize:         100,
 	}
 }
 
 // BuildQueryString rebuilds a query string from options (useful for pagination links)
 func (options *QueryOptions) BuildQueryString() string {
 	params := url.Values{}
-	
+
 	// Add pagination
 	params.Set("page", strconv.Itoa(options.Pagination.Page))
 	params.Set("size", strconv.Itoa(options.Pagination.Size))
-	
+
 	// Add sorting
 	if options.Sort != nil {
 		sortValue := options.Sort.Field
@@ -308,17 +308,17 @@ func (options *QueryOptions) BuildQueryString() string {
 		}
 		params.Set("sort", sortValue)
 	}
-	
+
 	// Add search
 	if options.Filter.Search != "" {
 		params.Set("search", options.Filter.Search)
 	}
-	
+
 	// Add filters
 	for key, value := range options.Filter.Filters {
 		params.Set(key, value)
 	}
-	
+
 	// Add date range
 	if options.Filter.DateRange != nil {
 		if options.Filter.DateRange.From != nil {
@@ -328,7 +328,7 @@ func (options *QueryOptions) BuildQueryString() string {
 			params.Set("to", options.Filter.DateRange.To.Format("2006-01-02"))
 		}
 	}
-	
+
 	// Add field selection
 	if options.FieldSelect != nil {
 		if len(options.FieldSelect.Fields) > 0 {
@@ -338,7 +338,7 @@ func (options *QueryOptions) BuildQueryString() string {
 			params.Set("exclude", strings.Join(options.FieldSelect.Exclude, ","))
 		}
 	}
-	
+
 	return params.Encode()
 }
 
@@ -353,26 +353,26 @@ func ParseListQuery(c *gin.Context, config QueryParsingConfig) QueryOptions {
 // ParseSearchQuery parses query parameters specifically for search endpoints
 func ParseSearchQuery(c *gin.Context, allowedFilters []string) QueryOptions {
 	config := QueryParsingConfig{
-		AllowedSortFields: []string{"relevance", "created_at", "updated_at", "name"},
-		AllowedFilters:    allowedFilters,
+		AllowedSortFields:   []string{"relevance", "created_at", "updated_at", "name"},
+		AllowedFilters:      allowedFilters,
 		AllowFieldSelection: true,
 	}
-	
+
 	processor := NewQueryProcessor(c)
 	options := processor.ParseQueryOptions(config)
-	
+
 	// Search endpoints require a search term
 	if options.Filter.Search == "" {
 		options.Filter.Search = c.Query("q") // Alternative search parameter
 	}
-	
+
 	return options
 }
 
 // ValidateRequiredFilters validates that required filters are present
 func ValidateRequiredFilters(options QueryOptions, required []string) []string {
 	var missing []string
-	
+
 	for _, requiredFilter := range required {
 		if _, exists := options.Filter.Filters[requiredFilter]; !exists {
 			if requiredFilter == "search" && options.Filter.Search == "" {
@@ -382,6 +382,6 @@ func ValidateRequiredFilters(options QueryOptions, required []string) []string {
 			}
 		}
 	}
-	
+
 	return missing
 }

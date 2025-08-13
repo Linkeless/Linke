@@ -14,4 +14,3 @@ type OAuthStateService interface {
 	// Statistics
 	GetStatsString() string
 }
-

@@ -208,7 +208,7 @@ func (s *BaseServiceImpl[T, ID]) List(ctx context.Context, req *framework.ListRe
 	if req == nil {
 		req = &framework.ListRequest{Limit: 10, Offset: 0}
 	}
-	
+
 	// Set default limit if not provided
 	if req.Limit <= 0 {
 		req.Limit = 10
@@ -230,7 +230,7 @@ func (s *BaseServiceImpl[T, ID]) ListDeleted(ctx context.Context, req *framework
 	if req == nil {
 		req = &framework.ListRequest{Limit: 10, Offset: 0}
 	}
-	
+
 	entities, total, err := s.repository.ListDeleted(ctx, req.Limit, req.Offset)
 	if err != nil {
 		s.logger.Error("Failed to list deleted entities", logger.String("service", s.name), logger.ErrorField(err))
@@ -244,7 +244,7 @@ func (s *BaseServiceImpl[T, ID]) ListByStatus(ctx context.Context, status string
 	if req == nil {
 		req = &framework.ListRequest{Limit: 10, Offset: 0}
 	}
-	
+
 	entities, total, err := s.repository.ListByStatus(ctx, status, req.Limit, req.Offset)
 	if err != nil {
 		s.logger.Error("Failed to list entities by status", logger.String("service", s.name), logger.String("status", status), logger.ErrorField(err))
@@ -259,7 +259,7 @@ func (s *BaseServiceImpl[T, ID]) Search(ctx context.Context, query string, req *
 	if req == nil {
 		req = &framework.ListRequest{Limit: 10, Offset: 0}
 	}
-	
+
 	entities, total, err := s.repository.Search(ctx, query, req.Limit, req.Offset)
 	if err != nil {
 		s.logger.Error("Failed to search entities", logger.String("service", s.name), logger.String("query", query), logger.ErrorField(err))
@@ -302,7 +302,7 @@ func (s *BaseServiceImpl[T, ID]) GetStatistics(ctx context.Context) (*framework.
 	// Try to get status counts for common statuses
 	statusCounts := make(map[string]int64)
 	commonStatuses := []string{"active", "inactive", "pending", "completed", "cancelled"}
-	
+
 	var activeCount, inactiveCount int64
 	for _, status := range commonStatuses {
 		count, err := s.repository.CountByStatus(ctx, status)
@@ -311,7 +311,7 @@ func (s *BaseServiceImpl[T, ID]) GetStatistics(ctx context.Context) (*framework.
 			continue
 		}
 		statusCounts[status] = count
-		
+
 		if status == "active" {
 			activeCount = count
 		} else if status == "inactive" {
@@ -353,7 +353,7 @@ func (s *BaseServiceImpl[T, ID]) BatchDelete(ctx context.Context, ids []ID) (*fr
 		SuccessCount: successCount,
 		FailedCount:  len(failedIDs),
 	}
-	
+
 	// Convert failed IDs to []uint for response
 	if len(failedIDs) > 0 {
 		response.FailedIDs = make([]uint, len(failedIDs))
@@ -378,7 +378,7 @@ func (s *BaseServiceImpl[T, ID]) BatchRestore(ctx context.Context, ids []ID) (*f
 		SuccessCount: successCount,
 		FailedCount:  len(failedIDs),
 	}
-	
+
 	// Convert failed IDs to []uint for response
 	if len(failedIDs) > 0 {
 		response.FailedIDs = make([]uint, len(failedIDs))
@@ -402,7 +402,7 @@ func (s *BaseServiceImpl[T, ID]) BatchUpdateStatus(ctx context.Context, ids []ID
 		SuccessCount: successCount,
 		FailedCount:  len(failedIDs),
 	}
-	
+
 	// Convert failed IDs to []uint for response
 	if len(failedIDs) > 0 {
 		response.FailedIDs = make([]uint, len(failedIDs))
@@ -425,7 +425,7 @@ func (s *BaseServiceImpl[T, ID]) ListWithFilters(ctx context.Context, filters ma
 	if req == nil {
 		req = &framework.ListRequest{Limit: 10, Offset: 0}
 	}
-	
+
 	entities, total, err := s.repository.ListWithFilters(ctx, filters, req.Limit, req.Offset)
 	if err != nil {
 		s.logger.Error("Failed to list entities with filters", logger.String("service", s.name), logger.Any("filters", filters), logger.ErrorField(err))

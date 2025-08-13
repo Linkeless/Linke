@@ -13,10 +13,10 @@ import (
 )
 
 type CacheMonitoringHandler struct {
-	manager         CacheManager
-	collector       MetricsCollector
-	multiLevelMgr   MultiLevelCacheManager // Optional multi-level cache manager
-	logger          logger.Logger
+	manager       CacheManager
+	collector     MetricsCollector
+	multiLevelMgr MultiLevelCacheManager // Optional multi-level cache manager
+	logger        logger.Logger
 
 	// Performance tracking for multi-level monitoring
 	performanceMetrics *PerformanceMetrics

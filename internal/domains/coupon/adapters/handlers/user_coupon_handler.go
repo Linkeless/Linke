@@ -5,10 +5,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	authInterfaces "linke/internal/domains/auth/usecases/interfaces"
 	"linke/internal/domains/coupon/dto"
 	"linke/internal/domains/coupon/usecases/interfaces"
 	userEntities "linke/internal/domains/user/entities"
-	authInterfaces "linke/internal/domains/auth/usecases/interfaces"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/middleware"
 	"linke/internal/shared/response"
@@ -27,7 +27,6 @@ func NewUserCouponHandler(couponService interfaces.CouponService, authService au
 		authService:   authService,
 	}
 }
-
 
 // GetPublicCoupons godoc
 // @Summary Get public coupons
@@ -59,8 +58,8 @@ func (h *UserCouponHandler) GetPublicCoupons(c *gin.Context) {
 		return
 	}
 
-	// Convert to public response format (without sensitive info)
-	var couponResponses []*dto.CouponResponse
+	// Convert to public response format (without sensitive info) with preallocation
+	couponResponses := make([]*dto.CouponResponse, 0, len(coupons))
 	for _, coupon := range coupons {
 		couponResponses = append(couponResponses, dto.ToPublicResponse(coupon))
 	}
@@ -212,13 +211,13 @@ func (a *authServiceAdapter) ValidateToken(token string) (any, error) {
 func (h *UserCouponHandler) RegisterRoutes(router *gin.RouterGroup) {
 	// Create auth service adapter
 	authAdapter := &authServiceAdapter{authService: h.authService}
-	
+
 	// Coupon routes
 	couponGroup := router.Group("/coupons")
 	{
 		// Public route (no authentication required)
 		couponGroup.GET("", h.GetPublicCoupons)
-		
+
 		// Authenticated routes - apply auth middleware
 		couponGroup.POST("/validate", middleware.AuthMiddleware(authAdapter), h.ValidateCoupon)
 		couponGroup.GET("/my-usage", middleware.AuthMiddleware(authAdapter), h.GetMyCouponUsage)

@@ -24,7 +24,6 @@ func NewTicketMessageService(db *gorm.DB) *TicketMessageService {
 	}
 }
 
-
 // CreateTicketMessage creates a new ticket message
 func (s *TicketMessageService) CreateTicketMessage(ctx context.Context, ticketID uint, userID uint, req *dto.CreateTicketMessageRequest) (*entities.TicketMessage, error) {
 	// Verify ticket exists
@@ -50,12 +49,12 @@ func (s *TicketMessageService) CreateTicketMessage(ctx context.Context, ticketID
 		MessageType: messageType,
 		IsInternal:  req.IsInternal,
 	}
-	
+
 	// Only set Attachments if not empty
 	if strings.TrimSpace(req.Attachments) != "" {
 		message.Attachments = &req.Attachments
 	}
-	
+
 	// Only set Metadata if not empty
 	if strings.TrimSpace(req.Metadata) != "" {
 		message.Metadata = &req.Metadata
@@ -313,8 +312,8 @@ func (s *TicketMessageService) GetLatestTicketMessages(ctx context.Context, tick
 func (s *TicketMessageService) MarkMessageAsRead(ctx context.Context, messageID uint, userID uint) error {
 	// For now, we'll implement a simple version
 	// In a full implementation, this would track read status per user
-	logger.Info("Message marked as read", 
-		logger.Uint("message_id", messageID), 
+	logger.Info("Message marked as read",
+		logger.Uint("message_id", messageID),
 		logger.Uint("user_id", userID))
 	return nil
 }
@@ -323,8 +322,8 @@ func (s *TicketMessageService) MarkMessageAsRead(ctx context.Context, messageID 
 func (s *TicketMessageService) MarkTicketMessagesAsRead(ctx context.Context, ticketID uint, userID uint) error {
 	// For now, we'll implement a simple version
 	// In a full implementation, this would track read status per user for all messages
-	logger.Info("All ticket messages marked as read", 
-		logger.Uint("ticket_id", ticketID), 
+	logger.Info("All ticket messages marked as read",
+		logger.Uint("ticket_id", ticketID),
 		logger.Uint("user_id", userID))
 	return nil
 }

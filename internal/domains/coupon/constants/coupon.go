@@ -22,18 +22,18 @@ const (
 
 // Validation limits
 const (
-	MinCouponCodeLength = 3
-	MaxCouponCodeLength = 50
-	MinCouponNameLength = 1
-	MaxCouponNameLength = 100
+	MinCouponCodeLength  = 3
+	MaxCouponCodeLength  = 50
+	MinCouponNameLength  = 1
+	MaxCouponNameLength  = 100
 	MaxDescriptionLength = 1000
-	MaxCurrencyLength = 3
+	MaxCurrencyLength    = 3
 )
 
 // Search and pagination limits
 const (
-	DefaultPageSize     = 10
-	MaxPageSize         = 100
-	MaxBulkOperations   = 1000
-	DefaultSearchLimit  = 50
+	DefaultPageSize    = 10
+	MaxPageSize        = 100
+	MaxBulkOperations  = 1000
+	DefaultSearchLimit = 50
 )

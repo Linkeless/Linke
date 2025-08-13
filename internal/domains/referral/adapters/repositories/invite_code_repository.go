@@ -51,7 +51,7 @@ func (r *InviteCodeRepository) List(ctx context.Context, limit, offset int) ([]*
 	return r.UserScopedRepositoryImpl.List(ctx, limit, offset)
 }
 
-// ListWithFilters lists invite codes with filters  
+// ListWithFilters lists invite codes with filters
 func (r *InviteCodeRepository) ListWithFilters(ctx context.Context, filters map[string]any, limit, offset int) ([]*entities.InviteCode, int64, error) {
 	var inviteCodes []*entities.InviteCode
 	var total int64
@@ -131,7 +131,7 @@ func (r *InviteCodeRepository) ListActive(ctx context.Context, limit, offset int
 	return r.UserScopedRepositoryImpl.ListByStatus(ctx, "active", limit, offset)
 }
 
-// ListAvailable lists available invite codes  
+// ListAvailable lists available invite codes
 func (r *InviteCodeRepository) ListAvailable(ctx context.Context, limit, offset int) ([]*entities.InviteCode, int64, error) {
 	var inviteCodes []*entities.InviteCode
 	var total int64

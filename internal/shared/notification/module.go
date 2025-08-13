@@ -79,7 +79,7 @@ var Module = fx.Module("notification",
 					logger.Info("Using mock Telegram provider (no bot token configured)")
 					return NewMockTelegramProvider(logger)
 				}
-				
+
 				logger.Info("Using real Telegram Bot provider")
 				return NewTelegramBotProvider(cfg.TelegramBotToken, logger)
 			},
@@ -208,7 +208,7 @@ var Module = fx.Module("notification",
 			OnStart: func(ctx context.Context) error {
 				// Perform health check on startup
 				if err := notificationService.HealthCheck(ctx); err != nil {
-					logger.Warn("Notification service health check failed", 
+					logger.Warn("Notification service health check failed",
 						loggerPkg.ErrorField(err))
 				} else {
 					logger.Info("Notification service initialized successfully")

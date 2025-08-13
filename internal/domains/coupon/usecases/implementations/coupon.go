@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -37,7 +38,10 @@ func (s *CouponService) CreateCoupon(ctx context.Context, creatorID uint64, req 
 	if err := s.db.Where("code = ?", code).First(&existingCoupon).Error; err == nil {
 		return nil, fmt.Errorf("coupon with code '%s' already exists", code)
 	} else if err != gorm.ErrRecordNotFound {
-		logger.Error("Failed to check existing coupon", logger.ErrorField(err))
+		logger.Error("Failed to check existing coupon during creation",
+			logger.String("code", code),
+			logger.Uint64("creator_id", creatorID),
+			logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to check existing coupon: %w", err)
 	}
 
@@ -52,9 +56,9 @@ func (s *CouponService) CreateCoupon(ctx context.Context, creatorID uint64, req 
 		currency = strings.ToUpper(req.Currency)
 	}
 
-	maxUsesPerUser := 1
+	maxUsesPerUser := int32(1)
 	if req.MaxUsesPerUser > 0 {
-		maxUsesPerUser = req.MaxUsesPerUser
+		maxUsesPerUser = int32(req.MaxUsesPerUser)
 	}
 
 	isPublic := false
@@ -69,7 +73,7 @@ func (s *CouponService) CreateCoupon(ctx context.Context, creatorID uint64, req 
 		Description:     req.Description,
 		Type:            req.Type,
 		Value:           req.Value,
-		MaxUses:         req.MaxUses,
+		MaxUses:         int32(req.MaxUses),
 		MaxUsesPerUser:  maxUsesPerUser,
 		MinOrderAmount:  req.MinOrderAmount,
 		Currency:        currency,
@@ -82,7 +86,13 @@ func (s *CouponService) CreateCoupon(ctx context.Context, creatorID uint64, req 
 	}
 
 	if err := s.db.WithContext(ctx).Create(coupon).Error; err != nil {
-		logger.Error("Failed to create coupon", logger.ErrorField(err))
+		logger.Error("Failed to create coupon in database",
+			logger.String("code", coupon.Code),
+			logger.String("name", coupon.Name),
+			logger.String("type", coupon.Type),
+			logger.Float64("value", coupon.Value),
+			logger.Uint64("creator_id", creatorID),
+			logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to create coupon: %w", err)
 	}
 
@@ -101,7 +111,9 @@ func (s *CouponService) GetCoupon(ctx context.Context, couponID uint64) (*entiti
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("coupon not found")
 		}
-		logger.Error("Failed to get coupon", logger.Uint64("couponID", couponID))
+		logger.Error("Failed to get coupon from database",
+			logger.Uint64("couponID", couponID),
+			logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to get coupon: %w", err)
 	}
 
@@ -115,7 +127,9 @@ func (s *CouponService) GetCouponByCode(ctx context.Context, code string) (*enti
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("coupon not found")
 		}
-		logger.Error("Failed to get coupon by code", logger.String("code", code), logger.ErrorField(err))
+		logger.Error("Failed to get coupon by code from database",
+			logger.String("code", code),
+			logger.ErrorField(err))
 		return nil, fmt.Errorf("failed to get coupon: %w", err)
 	}
 
@@ -224,11 +238,11 @@ func (s *CouponService) UpdateCoupon(ctx context.Context, couponID uint64, req *
 	}
 
 	if req.MaxUses != nil {
-		updates["max_uses"] = *req.MaxUses
+		updates["max_uses"] = int32(*req.MaxUses)
 	}
 
 	if req.MaxUsesPerUser != nil {
-		updates["max_uses_per_user"] = *req.MaxUsesPerUser
+		updates["max_uses_per_user"] = int32(*req.MaxUsesPerUser)
 	}
 
 	if req.MinOrderAmount != nil {
@@ -293,6 +307,14 @@ func (s *CouponService) DeleteCoupon(ctx context.Context, couponID uint64) error
 
 // ValidateCoupon validates a coupon for a specific user and order
 func (s *CouponService) ValidateCoupon(ctx context.Context, req *dto.ValidateCouponRequest) (*dto.ValidateCouponResponse, error) {
+	start := time.Now()
+	defer func() {
+		logger.Debug("Coupon validation completed",
+			logger.String("code", req.Code),
+			logger.Uint64("user_id", req.UserID),
+			logger.Float64("order_amount", req.OrderAmount),
+			logger.Duration("duration", time.Since(start)))
+	}()
 	// Get coupon by code
 	coupon, err := s.GetCouponByCode(ctx, req.Code)
 	if err != nil {
@@ -388,8 +410,9 @@ func (s *CouponService) useCouponInternal(ctx context.Context, couponID, userID,
 		return fmt.Errorf("coupon is no longer valid")
 	}
 
-	// Check usage limits
-	if coupon.MaxUses > 0 && coupon.UsedCount >= coupon.MaxUses {
+	// Check usage limits using atomic load
+	currentUsedCount := coupon.AtomicLoadUsedCount()
+	if coupon.MaxUses > 0 && currentUsedCount >= coupon.MaxUses {
 		tx.Rollback()
 		return fmt.Errorf("coupon usage limit exceeded")
 	}
@@ -410,10 +433,22 @@ func (s *CouponService) useCouponInternal(ctx context.Context, couponID, userID,
 		return fmt.Errorf("failed to create coupon usage record: %w", err)
 	}
 
-	// Increment used count
-	if err := tx.Model(&coupon).Update("used_count", coupon.UsedCount+1).Error; err != nil {
+	// Increment used count atomically and update in database
+	oldUsedCount := coupon.AtomicLoadUsedCount()
+	newUsedCount := coupon.AtomicIncrementUsedCount()
+
+	logger.Debug("Incrementing coupon used count atomically",
+		logger.Uint64("coupon_id", couponID),
+		logger.Int("old_count", int(oldUsedCount)),
+		logger.Int("new_count", int(newUsedCount)),
+		logger.Int("max_uses", int(coupon.MaxUses)))
+
+	if err := tx.Model(&coupon).Update("used_count", newUsedCount).Error; err != nil {
 		tx.Rollback()
-		logger.Error("Failed to update coupon used count", logger.ErrorField(err))
+		logger.Error("Failed to update coupon used count in database",
+			logger.Uint64("coupon_id", couponID),
+			logger.Int("attempted_count", int(newUsedCount)),
+			logger.ErrorField(err))
 		return fmt.Errorf("failed to update coupon used count: %w", err)
 	}
 

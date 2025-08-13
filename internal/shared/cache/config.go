@@ -12,14 +12,14 @@ type CacheConfigManager struct {
 
 // CacheLayerConfig defines configuration for a specific cache layer or domain
 type CacheLayerConfig struct {
-	Name            string                 `json:"name"`
-	Enabled         bool                   `json:"enabled"`
-	TTL             time.Duration          `json:"ttl"`
-	MaxSize         int64                  `json:"max_size"`
-	EvictionPolicy  EvictionPolicy         `json:"eviction_policy"`
-	CompressionType string                 `json:"compression_type"`
-	Strategies      *CacheStrategies       `json:"strategies"`
-	DomainSpecific  map[string]any `json:"domain_specific"`
+	Name            string           `json:"name"`
+	Enabled         bool             `json:"enabled"`
+	TTL             time.Duration    `json:"ttl"`
+	MaxSize         int64            `json:"max_size"`
+	EvictionPolicy  EvictionPolicy   `json:"eviction_policy"`
+	CompressionType string           `json:"compression_type"`
+	Strategies      *CacheStrategies `json:"strategies"`
+	DomainSpecific  map[string]any   `json:"domain_specific"`
 }
 
 // CacheStrategies defines caching strategies for different operations

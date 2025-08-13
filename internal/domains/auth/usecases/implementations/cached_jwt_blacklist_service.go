@@ -71,7 +71,7 @@ func (s *CachedJWTBlacklistService) IsTokenBlacklisted(ctx context.Context, toke
 			CachedAt      time.Time `json:"cached_at"`
 		}
 		if err := json.Unmarshal(cached, &result); err == nil {
-			s.logger.Debug("Token blacklist check cache hit", 
+			s.logger.Debug("Token blacklist check cache hit",
 				logger.String("token_hash", tokenHash),
 				logger.Bool("is_blacklisted", result.IsBlacklisted))
 			return result.IsBlacklisted, nil
@@ -138,9 +138,9 @@ func (s *CachedJWTBlacklistService) IsUserTokensBlacklisted(ctx context.Context,
 	cached, err := s.cacheManager.GetCache().Get(ctx, cacheKey)
 	if err == nil && cached != nil {
 		var result struct {
-			IsBlacklisted   bool      `json:"is_blacklisted"`
-			BlacklistedAt   time.Time `json:"blacklisted_at"`
-			CachedAt        time.Time `json:"cached_at"`
+			IsBlacklisted bool      `json:"is_blacklisted"`
+			BlacklistedAt time.Time `json:"blacklisted_at"`
+			CachedAt      time.Time `json:"cached_at"`
 		}
 		if err := json.Unmarshal(cached, &result); err == nil {
 			// Check if token was issued before blacklist time
@@ -164,9 +164,9 @@ func (s *CachedJWTBlacklistService) IsUserTokensBlacklisted(ctx context.Context,
 
 	// Cache the result with blacklist timestamp if applicable
 	result := struct {
-		IsBlacklisted   bool      `json:"is_blacklisted"`
-		BlacklistedAt   time.Time `json:"blacklisted_at"`
-		CachedAt        time.Time `json:"cached_at"`
+		IsBlacklisted bool      `json:"is_blacklisted"`
+		BlacklistedAt time.Time `json:"blacklisted_at"`
+		CachedAt      time.Time `json:"cached_at"`
 	}{
 		IsBlacklisted: isBlacklisted,
 		BlacklistedAt: time.Now(), // This will be overridden if we need exact timestamp

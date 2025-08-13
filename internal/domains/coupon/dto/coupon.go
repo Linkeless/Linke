@@ -1,8 +1,9 @@
 package dto
 
 import (
+	"sync"
 	"time"
-	
+
 	"linke/internal/domains/coupon/entities"
 	"linke/internal/shared/dto"
 )
@@ -98,30 +99,30 @@ type BulkUpdateRequest struct {
 
 // SearchCouponsRequest represents the search request
 type SearchCouponsRequest struct {
-	Query           string     `form:"q" binding:"omitempty,min=1,max=100"`
-	Status          string     `form:"status,omitempty" binding:"omitempty,oneof=active inactive expired"`
-	Type            string     `form:"type,omitempty" binding:"omitempty,oneof=percentage fixed_amount"`
-	IsPublic        *bool      `form:"is_public,omitempty"`
-	CreatedAfter    *time.Time `form:"created_after,omitempty"`
-	CreatedBefore   *time.Time `form:"created_before,omitempty"`
-	ExpiresAfter    *time.Time `form:"expires_after,omitempty"`
-	ExpiresBefore   *time.Time `form:"expires_before,omitempty"`
-	MinValue        *float64   `form:"min_value,omitempty" binding:"omitempty,min=0"`
-	MaxValue        *float64   `form:"max_value,omitempty" binding:"omitempty,min=0"`
-	MinUsed         *int       `form:"min_used,omitempty" binding:"omitempty,min=0"`
-	MaxUsed         *int       `form:"max_used,omitempty" binding:"omitempty,min=0"`
-	Page            int        `form:"page,omitempty" binding:"omitempty,min=1" example:"1"`
-	Limit           int        `form:"limit,omitempty" binding:"omitempty,min=1,max=100" example:"10"`
+	Query         string     `form:"q" binding:"omitempty,min=1,max=100"`
+	Status        string     `form:"status,omitempty" binding:"omitempty,oneof=active inactive expired"`
+	Type          string     `form:"type,omitempty" binding:"omitempty,oneof=percentage fixed_amount"`
+	IsPublic      *bool      `form:"is_public,omitempty"`
+	CreatedAfter  *time.Time `form:"created_after,omitempty"`
+	CreatedBefore *time.Time `form:"created_before,omitempty"`
+	ExpiresAfter  *time.Time `form:"expires_after,omitempty"`
+	ExpiresBefore *time.Time `form:"expires_before,omitempty"`
+	MinValue      *float64   `form:"min_value,omitempty" binding:"omitempty,min=0"`
+	MaxValue      *float64   `form:"max_value,omitempty" binding:"omitempty,min=0"`
+	MinUsed       *int       `form:"min_used,omitempty" binding:"omitempty,min=0"`
+	MaxUsed       *int       `form:"max_used,omitempty" binding:"omitempty,min=0"`
+	Page          int        `form:"page,omitempty" binding:"omitempty,min=1" example:"1"`
+	Limit         int        `form:"limit,omitempty" binding:"omitempty,min=1,max=100" example:"10"`
 }
 
 // Response DTOs
 
 // ValidateCouponResponse represents the response of coupon validation
 type ValidateCouponResponse struct {
-	Valid          bool           `json:"valid" example:"true"`
-	Message        string         `json:"message" example:"Coupon is valid"`
-	DiscountAmount float64        `json:"discount_amount" example:"5.99"`
-	FinalAmount    float64        `json:"final_amount" example:"24.00"`
+	Valid          bool            `json:"valid" example:"true"`
+	Message        string          `json:"message" example:"Coupon is valid"`
+	DiscountAmount float64         `json:"discount_amount" example:"5.99"`
+	FinalAmount    float64         `json:"final_amount" example:"24.00"`
 	Coupon         *CouponResponse `json:"coupon,omitempty"`
 }
 
@@ -176,9 +177,9 @@ func ToResponse(coupon *entities.Coupon) *CouponResponse {
 		Description:     coupon.Description,
 		Type:            coupon.Type,
 		Value:           coupon.Value,
-		MaxUses:         coupon.MaxUses,
-		UsedCount:       coupon.UsedCount,
-		MaxUsesPerUser:  coupon.MaxUsesPerUser,
+		MaxUses:         int(coupon.MaxUses),        // Convert from int32
+		UsedCount:       int(coupon.UsedCount),      // Convert from int32
+		MaxUsesPerUser:  int(coupon.MaxUsesPerUser), // Convert from int32
 		MinOrderAmount:  coupon.MinOrderAmount,
 		Currency:        coupon.Currency,
 		ValidFrom:       coupon.ValidFrom,
@@ -223,4 +224,125 @@ func CouponUsageToResponse(usage *entities.CouponUsage) *CouponUsageResponse {
 		// Note: Related data should be populated at the application layer
 		// to avoid cross-domain dependencies
 	}
+}
+
+// Object pools for frequently used DTOs to reduce GC pressure
+var (
+	// CouponResponsePool reduces allocations for API responses
+	couponResponsePool = sync.Pool{
+		New: func() any {
+			return &CouponResponse{}
+		},
+	}
+
+	// CreateCouponRequestPool reduces allocations for creation requests
+	createCouponRequestPool = sync.Pool{
+		New: func() any {
+			return &CreateCouponRequest{}
+		},
+	}
+
+	// ValidateCouponResponsePool reduces allocations for validation responses
+	validateCouponResponsePool = sync.Pool{
+		New: func() any {
+			return &ValidateCouponResponse{}
+		},
+	}
+
+	// CouponUsageResponsePool reduces allocations for usage response DTOs
+	couponUsageResponsePool = sync.Pool{
+		New: func() any {
+			return &CouponUsageResponse{}
+		},
+	}
+)
+
+// Object pool management functions
+
+// GetCouponResponse retrieves a CouponResponse from the pool
+func GetCouponResponse() *CouponResponse {
+	return couponResponsePool.Get().(*CouponResponse)
+}
+
+// PutCouponResponse returns a CouponResponse to the pool after resetting it
+func PutCouponResponse(resp *CouponResponse) {
+	// Reset the response to prevent data leakage
+	*resp = CouponResponse{}
+	couponResponsePool.Put(resp)
+}
+
+// GetCreateCouponRequest retrieves a CreateCouponRequest from the pool
+func GetCreateCouponRequest() *CreateCouponRequest {
+	return createCouponRequestPool.Get().(*CreateCouponRequest)
+}
+
+// PutCreateCouponRequest returns a CreateCouponRequest to the pool after resetting it
+func PutCreateCouponRequest(req *CreateCouponRequest) {
+	// Reset the request to prevent data leakage
+	*req = CreateCouponRequest{}
+	createCouponRequestPool.Put(req)
+}
+
+// GetValidateCouponResponse retrieves a ValidateCouponResponse from the pool
+func GetValidateCouponResponse() *ValidateCouponResponse {
+	return validateCouponResponsePool.Get().(*ValidateCouponResponse)
+}
+
+// PutValidateCouponResponse returns a ValidateCouponResponse to the pool after resetting it
+func PutValidateCouponResponse(resp *ValidateCouponResponse) {
+	// Reset the response to prevent data leakage
+	*resp = ValidateCouponResponse{}
+	validateCouponResponsePool.Put(resp)
+}
+
+// GetCouponUsageResponse retrieves a CouponUsageResponse from the pool
+func GetCouponUsageResponse() *CouponUsageResponse {
+	return couponUsageResponsePool.Get().(*CouponUsageResponse)
+}
+
+// PutCouponUsageResponse returns a CouponUsageResponse to the pool after resetting it
+func PutCouponUsageResponse(resp *CouponUsageResponse) {
+	// Reset the response to prevent data leakage
+	*resp = CouponUsageResponse{}
+	couponUsageResponsePool.Put(resp)
+}
+
+// ToResponsePooled converts Coupon entity to CouponResponse DTO using object pool
+func ToResponsePooled(coupon *entities.Coupon) *CouponResponse {
+	resp := GetCouponResponse()
+	resp.ID = coupon.ID
+	resp.Code = coupon.Code
+	resp.Name = coupon.Name
+	resp.Description = coupon.Description
+	resp.Type = coupon.Type
+	resp.Value = coupon.Value
+	resp.MaxUses = int(coupon.MaxUses)               // Convert from int32
+	resp.UsedCount = int(coupon.UsedCount)           // Convert from int32
+	resp.MaxUsesPerUser = int(coupon.MaxUsesPerUser) // Convert from int32
+	resp.MinOrderAmount = coupon.MinOrderAmount
+	resp.Currency = coupon.Currency
+	resp.ValidFrom = coupon.ValidFrom
+	resp.ValidUntil = coupon.ValidUntil
+	resp.ApplicablePlans = coupon.ApplicablePlans
+	resp.Status = coupon.Status
+	resp.IsPublic = coupon.IsPublic
+	resp.CreatedAt = coupon.CreatedAt
+	resp.UpdatedAt = coupon.UpdatedAt
+	return resp
+}
+
+// CouponUsageToResponsePooled converts CouponUsage entity to CouponUsageResponse DTO using object pool
+func CouponUsageToResponsePooled(usage *entities.CouponUsage) *CouponUsageResponse {
+	resp := GetCouponUsageResponse()
+	resp.ID = usage.ID
+	resp.CouponID = usage.CouponID
+	resp.UserID = usage.UserID
+	resp.SubscriptionOrderID = usage.SubscriptionOrderID
+	resp.DiscountAmount = usage.DiscountAmount
+	resp.OrderAmount = usage.OrderAmount
+	resp.Currency = usage.Currency
+	resp.CreatedAt = usage.CreatedAt
+	resp.UpdatedAt = usage.UpdatedAt
+	// Note: Related data should be populated at the application layer
+	return resp
 }

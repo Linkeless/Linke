@@ -117,42 +117,42 @@ type BaseRepository interface {
 // GenericRepository provides type-safe repository operations with full CRUD, pagination, soft delete, and batch operations
 type GenericRepository[T any, ID comparable] interface {
 	Repository
-	
+
 	// Basic CRUD operations
 	Create(ctx context.Context, entity *T) error
 	GetByID(ctx context.Context, id ID) (*T, error)
 	Update(ctx context.Context, entity *T) error
 	Delete(ctx context.Context, id ID) error
-	
+
 	// Soft delete operations
 	SoftDelete(ctx context.Context, id ID) error
-	Restore(ctx context.Context, id ID) error  
+	Restore(ctx context.Context, id ID) error
 	HardDelete(ctx context.Context, id ID) error
-	
+
 	// List operations with pagination
 	List(ctx context.Context, limit, offset int) ([]*T, int64, error)
 	ListDeleted(ctx context.Context, limit, offset int) ([]*T, int64, error)
 	ListByStatus(ctx context.Context, status string, limit, offset int) ([]*T, int64, error)
-	
+
 	// Search operations
 	Search(ctx context.Context, query string, limit, offset int) ([]*T, int64, error)
-	
+
 	// Status management
 	UpdateStatus(ctx context.Context, id ID, status string) error
-	
+
 	// Statistics operations
 	CountTotal(ctx context.Context) (int64, error)
 	CountByStatus(ctx context.Context, status string) (int64, error)
 	CountDeleted(ctx context.Context) (int64, error)
-		
+
 	// Batch operations
-	BatchDelete(ctx context.Context, ids []ID) (int, []ID, error)     // returns (successCount, failedIDs, error)
-	BatchRestore(ctx context.Context, ids []ID) (int, []ID, error)    // returns (successCount, failedIDs, error)
+	BatchDelete(ctx context.Context, ids []ID) (int, []ID, error)                      // returns (successCount, failedIDs, error)
+	BatchRestore(ctx context.Context, ids []ID) (int, []ID, error)                     // returns (successCount, failedIDs, error)
 	BatchUpdateStatus(ctx context.Context, ids []ID, status string) (int, []ID, error) // returns (successCount, failedIDs, error)
-	
+
 	// Existence checks
 	ExistsByID(ctx context.Context, id ID) (bool, error)
-	
+
 	// Advanced filtering
 	ListWithFilters(ctx context.Context, filters map[string]any, limit, offset int) ([]*T, int64, error)
 }
@@ -160,7 +160,7 @@ type GenericRepository[T any, ID comparable] interface {
 // UserScopedRepository extends GenericRepository with user-specific operations
 type UserScopedRepository[T any, ID comparable] interface {
 	GenericRepository[T, ID]
-	
+
 	// User-specific operations
 	ListByUser(ctx context.Context, userID uint, limit, offset int) ([]*T, int64, error)
 	CountByUser(ctx context.Context, userID uint) (int64, error)
@@ -170,7 +170,7 @@ type UserScopedRepository[T any, ID comparable] interface {
 // TimeBasedRepository extends GenericRepository with time-based operations
 type TimeBasedRepository[T any, ID comparable] interface {
 	GenericRepository[T, ID]
-	
+
 	// Time-based queries
 	ListByDateRange(ctx context.Context, field string, start, end time.Time, limit, offset int) ([]*T, int64, error)
 	ListCreatedAfter(ctx context.Context, after time.Time, limit, offset int) ([]*T, int64, error)
@@ -180,12 +180,12 @@ type TimeBasedRepository[T any, ID comparable] interface {
 // UserScopedTimeBasedRepository extends GenericRepository with both user-specific and time-based operations
 type UserScopedTimeBasedRepository[T any, ID comparable] interface {
 	GenericRepository[T, ID]
-	
+
 	// User-specific operations
 	ListByUser(ctx context.Context, userID uint, limit, offset int) ([]*T, int64, error)
 	CountByUser(ctx context.Context, userID uint) (int64, error)
 	GetUserTotalCount(ctx context.Context, userID uint) (int64, error)
-	
+
 	// Time-based queries
 	ListByDateRange(ctx context.Context, field string, start, end time.Time, limit, offset int) ([]*T, int64, error)
 	ListCreatedAfter(ctx context.Context, after time.Time, limit, offset int) ([]*T, int64, error)
@@ -208,46 +208,46 @@ type DomainService interface {
 // GenericService provides type-safe service operations with full CRUD, validation, and business logic
 type GenericService[T any, ID comparable] interface {
 	Service
-	
+
 	// Basic CRUD operations
 	Create(ctx context.Context, req *CreateRequest[T]) (*T, error)
 	GetByID(ctx context.Context, id ID) (*T, error)
 	Update(ctx context.Context, id ID, req *UpdateRequest[T]) (*T, error)
 	Delete(ctx context.Context, id ID) error
-	
-	// Soft delete operations  
+
+	// Soft delete operations
 	SoftDelete(ctx context.Context, id ID) error
 	Restore(ctx context.Context, id ID) error
 	HardDelete(ctx context.Context, id ID) error
-	
+
 	// List operations with pagination
 	List(ctx context.Context, req *ListRequest) (*ListResponse[T], error)
 	ListDeleted(ctx context.Context, req *ListRequest) (*ListResponse[T], error)
 	ListByStatus(ctx context.Context, status string, req *ListRequest) (*ListResponse[T], error)
-	
+
 	// Search operations
 	Search(ctx context.Context, query string, req *ListRequest) (*ListResponse[T], error)
-	
+
 	// Status management
 	UpdateStatus(ctx context.Context, id ID, status string) (*T, error)
-	
+
 	// Statistics operations
 	GetStatistics(ctx context.Context) (*StatisticsResponse, error)
 	CountTotal(ctx context.Context) (int64, error)
 	CountByStatus(ctx context.Context, status string) (int64, error)
 	CountDeleted(ctx context.Context) (int64, error)
-		
+
 	// Batch operations
 	BatchDelete(ctx context.Context, ids []ID) (*BatchOperationResponse, error)
 	BatchRestore(ctx context.Context, ids []ID) (*BatchOperationResponse, error)
 	BatchUpdateStatus(ctx context.Context, ids []ID, status string) (*BatchOperationResponse, error)
-	
+
 	// Existence checks
 	ExistsByID(ctx context.Context, id ID) (bool, error)
-	
+
 	// Advanced filtering
 	ListWithFilters(ctx context.Context, filters map[string]any, req *ListRequest) (*ListResponse[T], error)
-	
+
 	// Validation hooks (can be overridden by implementations)
 	ValidateCreate(ctx context.Context, req *CreateRequest[T]) error
 	ValidateUpdate(ctx context.Context, id ID, req *UpdateRequest[T]) error
@@ -257,13 +257,13 @@ type GenericService[T any, ID comparable] interface {
 // UserScopedService extends GenericService with user-specific operations
 type UserScopedService[T any, ID comparable] interface {
 	GenericService[T, ID]
-	
+
 	// User-specific operations
 	ListByUser(ctx context.Context, userID uint, req *ListRequest) (*ListResponse[T], error)
 	CountByUser(ctx context.Context, userID uint) (int64, error)
 	GetUserTotalCount(ctx context.Context, userID uint) (int64, error)
 	DeleteByUser(ctx context.Context, userID uint, ids []ID) (*BatchOperationResponse, error)
-	
+
 	// User validation
 	ValidateUserAccess(ctx context.Context, userID uint, id ID) error
 }
@@ -271,12 +271,12 @@ type UserScopedService[T any, ID comparable] interface {
 // TimeBasedService extends GenericService with time-based operations
 type TimeBasedService[T any, ID comparable] interface {
 	GenericService[T, ID]
-	
+
 	// Time-based queries
 	ListByDateRange(ctx context.Context, field string, start, end time.Time, req *ListRequest) (*ListResponse[T], error)
 	ListCreatedAfter(ctx context.Context, after time.Time, req *ListRequest) (*ListResponse[T], error)
 	ListUpdatedAfter(ctx context.Context, after time.Time, req *ListRequest) (*ListResponse[T], error)
-	
+
 	// Time-based statistics
 	GetStatisticsByDateRange(ctx context.Context, start, end time.Time) (*StatisticsResponse, error)
 }
@@ -284,24 +284,24 @@ type TimeBasedService[T any, ID comparable] interface {
 // UserScopedTimeBasedService extends GenericService with both user-specific and time-based operations
 type UserScopedTimeBasedService[T any, ID comparable] interface {
 	GenericService[T, ID]
-	
+
 	// User-specific operations
 	ListByUser(ctx context.Context, userID uint, req *ListRequest) (*ListResponse[T], error)
 	CountByUser(ctx context.Context, userID uint) (int64, error)
 	GetUserTotalCount(ctx context.Context, userID uint) (int64, error)
 	DeleteByUser(ctx context.Context, userID uint, ids []ID) (*BatchOperationResponse, error)
-	
+
 	// Time-based queries
 	ListByDateRange(ctx context.Context, field string, start, end time.Time, req *ListRequest) (*ListResponse[T], error)
 	ListCreatedAfter(ctx context.Context, after time.Time, req *ListRequest) (*ListResponse[T], error)
 	ListUpdatedAfter(ctx context.Context, after time.Time, req *ListRequest) (*ListResponse[T], error)
-	
+
 	// Combined user + time operations
 	ListByUserAndDateRange(ctx context.Context, userID uint, field string, start, end time.Time, req *ListRequest) (*ListResponse[T], error)
-	
+
 	// User validation
 	ValidateUserAccess(ctx context.Context, userID uint, id ID) error
-	
+
 	// Time-based statistics
 	GetStatisticsByDateRange(ctx context.Context, start, end time.Time) (*StatisticsResponse, error)
 	GetUserStatisticsByDateRange(ctx context.Context, userID uint, start, end time.Time) (*StatisticsResponse, error)
@@ -312,7 +312,7 @@ type UserScopedTimeBasedService[T any, ID comparable] interface {
 // LookupService provides common lookup operations for entities with multiple unique fields
 type LookupService[T any, ID comparable] interface {
 	GenericService[T, ID]
-	
+
 	// Lookup operations - to be implemented by domain services based on their unique fields
 	GetByField(ctx context.Context, field string, value any) (*T, error)
 	ExistsByField(ctx context.Context, field string, value any) (bool, error)
@@ -322,14 +322,14 @@ type LookupService[T any, ID comparable] interface {
 // OrderManagementService provides order/transaction-specific operations
 type OrderManagementService[T any, ID comparable] interface {
 	GenericService[T, ID]
-	
+
 	// Order-specific operations
 	GetByOrderNumber(ctx context.Context, orderNumber string) (*T, error)
 	UpdateOrderStatus(ctx context.Context, id ID, status string, reason string) (*T, error)
 	ProcessOrder(ctx context.Context, id ID, processData map[string]any) (*T, error)
 	CancelOrder(ctx context.Context, id ID, reason string) (*T, error)
 	GetOrdersByStatus(ctx context.Context, status string, req *ListRequest) (*ListResponse[T], error)
-	
+
 	// Statistics for orders
 	GetOrderStatisticsByPeriod(ctx context.Context, start, end time.Time) (*OrderStatistics, error)
 }
@@ -337,7 +337,7 @@ type OrderManagementService[T any, ID comparable] interface {
 // NotificationAwareService adds notification capabilities to generic services
 type NotificationAwareService[T any, ID comparable] interface {
 	GenericService[T, ID]
-	
+
 	// Notification operations
 	SendNotification(ctx context.Context, id ID, notificationType string, data map[string]any) error
 	GetNotificationHistory(ctx context.Context, id ID, req *ListRequest) (*ListResponse[NotificationRecord], error)
@@ -348,33 +348,33 @@ type NotificationAwareService[T any, ID comparable] interface {
 // OrderStatistics represents statistics for order-based entities
 type OrderStatistics struct {
 	StatisticsResponse
-	CompletedOrders   int64                  `json:"completed_orders"`
-	PendingOrders     int64                  `json:"pending_orders"`
-	CancelledOrders   int64                  `json:"cancelled_orders"`
-	TotalRevenue      float64                `json:"total_revenue"`
-	AverageOrderValue float64                `json:"average_order_value"`
-	OrdersByPeriod    map[string]int64       `json:"orders_by_period"`
-	RevenueByPeriod   map[string]float64     `json:"revenue_by_period"`
+	CompletedOrders   int64              `json:"completed_orders"`
+	PendingOrders     int64              `json:"pending_orders"`
+	CancelledOrders   int64              `json:"cancelled_orders"`
+	TotalRevenue      float64            `json:"total_revenue"`
+	AverageOrderValue float64            `json:"average_order_value"`
+	OrdersByPeriod    map[string]int64   `json:"orders_by_period"`
+	RevenueByPeriod   map[string]float64 `json:"revenue_by_period"`
 }
 
 // NotificationRecord represents a notification record
 type NotificationRecord struct {
-	ID               uint                   `json:"id"`
-	EntityType       string                 `json:"entity_type"`
-	EntityID         string                 `json:"entity_id"`
-	NotificationType string                 `json:"notification_type"`
-	Status           string                 `json:"status"` // sent, pending, failed
-	Recipients       []string               `json:"recipients"`
+	ID               uint           `json:"id"`
+	EntityType       string         `json:"entity_type"`
+	EntityID         string         `json:"entity_id"`
+	NotificationType string         `json:"notification_type"`
+	Status           string         `json:"status"` // sent, pending, failed
+	Recipients       []string       `json:"recipients"`
 	Content          map[string]any `json:"content"`
-	SentAt           *time.Time             `json:"sent_at,omitempty"`
-	FailureReason    string                 `json:"failure_reason,omitempty"`
-	CreatedAt        time.Time              `json:"created_at"`
+	SentAt           *time.Time     `json:"sent_at,omitempty"`
+	FailureReason    string         `json:"failure_reason,omitempty"`
+	CreatedAt        time.Time      `json:"created_at"`
 }
 
 // SearchableService extends GenericService with advanced search capabilities
 type SearchableService[T any, ID comparable] interface {
 	GenericService[T, ID]
-	
+
 	// Advanced search operations
 	FullTextSearch(ctx context.Context, query string, fields []string, req *ListRequest) (*ListResponse[T], error)
 	SearchByTags(ctx context.Context, tags []string, req *ListRequest) (*ListResponse[T], error)
@@ -385,16 +385,16 @@ type SearchableService[T any, ID comparable] interface {
 // SearchResponse extends ListResponse with search-specific features
 type SearchResponse[T any] struct {
 	ListResponse[T]
-	Highlights    map[string][]string `json:"highlights,omitempty"` // field -> highlighted snippets
-	Suggestions   []string            `json:"suggestions,omitempty"`
-	SearchTime    int64               `json:"search_time_ms"`
-	TotalMatches  int64               `json:"total_matches"`
+	Highlights   map[string][]string `json:"highlights,omitempty"` // field -> highlighted snippets
+	Suggestions  []string            `json:"suggestions,omitempty"`
+	SearchTime   int64               `json:"search_time_ms"`
+	TotalMatches int64               `json:"total_matches"`
 }
 
 // CacheableService defines operations for services that need caching
 type CacheableService[T any, ID comparable] interface {
 	GenericService[T, ID]
-	
+
 	// Cache management operations
 	InvalidateCache(ctx context.Context, keys ...string) error
 	WarmCache(ctx context.Context, ids []ID) error
@@ -404,32 +404,32 @@ type CacheableService[T any, ID comparable] interface {
 
 // CacheStats represents caching statistics
 type CacheStats struct {
-	HitRate        float64           `json:"hit_rate"`
-	TotalRequests  int64             `json:"total_requests"`
-	CacheHits      int64             `json:"cache_hits"`
-	CacheMisses    int64             `json:"cache_misses"`
-	CacheSize      int64             `json:"cache_size"`
-	EvictionCount  int64             `json:"eviction_count"`
-	KeysByPattern  map[string]int64  `json:"keys_by_pattern"`
-	LastUpdated    time.Time         `json:"last_updated"`
+	HitRate       float64          `json:"hit_rate"`
+	TotalRequests int64            `json:"total_requests"`
+	CacheHits     int64            `json:"cache_hits"`
+	CacheMisses   int64            `json:"cache_misses"`
+	CacheSize     int64            `json:"cache_size"`
+	EvictionCount int64            `json:"eviction_count"`
+	KeysByPattern map[string]int64 `json:"keys_by_pattern"`
+	LastUpdated   time.Time        `json:"last_updated"`
 }
 
 // BusinessService extends GenericService with business logic operations
 type BusinessService[T any, ID comparable] interface {
 	GenericService[T, ID]
-	
+
 	// Business validation
 	ValidateBusinessRules(ctx context.Context, entity *T) error
 	ValidateBusinessRulesForUpdate(ctx context.Context, id ID, req *UpdateRequest[T]) error
-	
+
 	// Event publishing
 	PublishCreatedEvent(ctx context.Context, entity *T) error
-	PublishUpdatedEvent(ctx context.Context, old *T, new *T) error  
+	PublishUpdatedEvent(ctx context.Context, old *T, new *T) error
 	PublishDeletedEvent(ctx context.Context, entity *T) error
-	
+
 	// Audit operations
 	GetAuditLog(ctx context.Context, id ID, req *ListRequest) (*ListResponse[AuditLogEntry], error)
-	
+
 	// Workflow operations
 	ProcessWorkflow(ctx context.Context, id ID, action string, params map[string]any) error
 }
@@ -438,24 +438,24 @@ type BusinessService[T any, ID comparable] interface {
 
 // CreateRequest represents a generic create request
 type CreateRequest[T any] struct {
-	Data     *T                     `json:"data" binding:"required"`
-	Options  *CreateOptions         `json:"options,omitempty"`
+	Data     *T             `json:"data" binding:"required"`
+	Options  *CreateOptions `json:"options,omitempty"`
 	Metadata map[string]any `json:"metadata,omitempty"`
 }
 
-// UpdateRequest represents a generic update request  
+// UpdateRequest represents a generic update request
 type UpdateRequest[T any] struct {
-	Data     *T                     `json:"data" binding:"required"`
-	Options  *UpdateOptions         `json:"options,omitempty"`
+	Data     *T             `json:"data" binding:"required"`
+	Options  *UpdateOptions `json:"options,omitempty"`
 	Metadata map[string]any `json:"metadata,omitempty"`
 }
 
 // ListRequest represents a generic list request
 type ListRequest struct {
-	Limit   int                    `form:"limit,omitempty" binding:"omitempty,min=1,max=1000" example:"10"`
-	Offset  int                    `form:"offset,omitempty" binding:"omitempty,min=0" example:"0"`
-	SortBy  string                 `form:"sort_by,omitempty" example:"created_at"`
-	SortDir string                 `form:"sort_dir,omitempty" binding:"omitempty,oneof=asc desc" example:"desc"`
+	Limit   int            `form:"limit,omitempty" binding:"omitempty,min=1,max=1000" example:"10"`
+	Offset  int            `form:"offset,omitempty" binding:"omitempty,min=0" example:"0"`
+	SortBy  string         `form:"sort_by,omitempty" example:"created_at"`
+	SortDir string         `form:"sort_dir,omitempty" binding:"omitempty,oneof=asc desc" example:"desc"`
 	Filters map[string]any `form:"filters,omitempty"`
 }
 
@@ -471,50 +471,50 @@ type ListResponse[T any] struct {
 
 // StatisticsResponse represents a generic statistics response
 type StatisticsResponse struct {
-	TotalCount    int64                  `json:"total_count"`
-	ActiveCount   int64                  `json:"active_count"`
-	InactiveCount int64                  `json:"inactive_count"`
-	DeletedCount  int64                  `json:"deleted_count"`
-	StatusCounts  map[string]int64       `json:"status_counts"`
-	CustomStats   map[string]any `json:"custom_stats,omitempty"`
-	GeneratedAt   time.Time              `json:"generated_at"`
+	TotalCount    int64            `json:"total_count"`
+	ActiveCount   int64            `json:"active_count"`
+	InactiveCount int64            `json:"inactive_count"`
+	DeletedCount  int64            `json:"deleted_count"`
+	StatusCounts  map[string]int64 `json:"status_counts"`
+	CustomStats   map[string]any   `json:"custom_stats,omitempty"`
+	GeneratedAt   time.Time        `json:"generated_at"`
 }
 
 // BatchOperationResponse represents a generic batch operation response
 type BatchOperationResponse struct {
-	SuccessCount int    `json:"success_count"`
-	FailedCount  int    `json:"failed_count"`
-	FailedIDs    []uint `json:"failed_ids,omitempty"`
+	SuccessCount int               `json:"success_count"`
+	FailedCount  int               `json:"failed_count"`
+	FailedIDs    []uint            `json:"failed_ids,omitempty"`
 	Errors       map[string]string `json:"errors,omitempty"`
 }
 
 // CreateOptions represents options for create operations
 type CreateOptions struct {
-	SkipValidation    bool `json:"skip_validation,omitempty"`
-	PublishEvents     bool `json:"publish_events,omitempty"`
-	EnableAuditLog    bool `json:"enable_audit_log,omitempty"`
-	ProcessWorkflows  bool `json:"process_workflows,omitempty"`
+	SkipValidation   bool `json:"skip_validation,omitempty"`
+	PublishEvents    bool `json:"publish_events,omitempty"`
+	EnableAuditLog   bool `json:"enable_audit_log,omitempty"`
+	ProcessWorkflows bool `json:"process_workflows,omitempty"`
 }
 
 // UpdateOptions represents options for update operations
 type UpdateOptions struct {
-	SkipValidation    bool   `json:"skip_validation,omitempty"`
-	PublishEvents     bool   `json:"publish_events,omitempty"`
-	EnableAuditLog    bool   `json:"enable_audit_log,omitempty"`
-	ProcessWorkflows  bool   `json:"process_workflows,omitempty"`
-	UpdateMode        string `json:"update_mode,omitempty"` // "merge", "replace"
+	SkipValidation   bool   `json:"skip_validation,omitempty"`
+	PublishEvents    bool   `json:"publish_events,omitempty"`
+	EnableAuditLog   bool   `json:"enable_audit_log,omitempty"`
+	ProcessWorkflows bool   `json:"process_workflows,omitempty"`
+	UpdateMode       string `json:"update_mode,omitempty"` // "merge", "replace"
 }
 
 // AuditLogEntry represents an audit log entry
 type AuditLogEntry struct {
-	ID          uint                   `json:"id"`
-	EntityType  string                 `json:"entity_type"`
-	EntityID    string                 `json:"entity_id"`
-	Action      string                 `json:"action"` // create, update, delete, etc.
-	UserID      *uint                  `json:"user_id,omitempty"`
-	Changes     map[string]any `json:"changes,omitempty"`
-	Metadata    map[string]any `json:"metadata,omitempty"`
-	CreatedAt   time.Time              `json:"created_at"`
+	ID         uint           `json:"id"`
+	EntityType string         `json:"entity_type"`
+	EntityID   string         `json:"entity_id"`
+	Action     string         `json:"action"` // create, update, delete, etc.
+	UserID     *uint          `json:"user_id,omitempty"`
+	Changes    map[string]any `json:"changes,omitempty"`
+	Metadata   map[string]any `json:"metadata,omitempty"`
+	CreatedAt  time.Time      `json:"created_at"`
 }
 
 // EventPublisher interface for publishing domain events

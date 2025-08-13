@@ -146,21 +146,21 @@ func (r *TicketMessageRepository) BatchDelete(ctx context.Context, messageIDs []
 	if len(messageIDs) == 0 {
 		return 0, nil, nil
 	}
-	
+
 	result := r.db.WithContext(ctx).Delete(&entities.TicketMessage{}, messageIDs)
 	if result.Error != nil {
 		return 0, messageIDs, result.Error
 	}
-	
+
 	successCount := int(result.RowsAffected)
 	failedIDs := make([]uint, 0)
-	
+
 	// If not all rows were affected, some IDs might have failed
 	if successCount < len(messageIDs) {
 		for _, id := range messageIDs[successCount:] {
 			failedIDs = append(failedIDs, id)
 		}
 	}
-	
+
 	return successCount, failedIDs, nil
 }

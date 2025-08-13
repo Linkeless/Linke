@@ -25,11 +25,11 @@ type Event interface {
 
 // BaseEvent provides a basic implementation of Event interface
 type BaseEvent struct {
-	ID       string                 `json:"id"`
-	Type     string                 `json:"type"`
-	Source   string                 `json:"source"`
-	Time     time.Time              `json:"time"`
-	Version  string                 `json:"version"`
+	ID       string         `json:"id"`
+	Type     string         `json:"type"`
+	Source   string         `json:"source"`
+	Time     time.Time      `json:"time"`
+	Version  string         `json:"version"`
 	Data     any            `json:"data"`
 	Metadata map[string]any `json:"metadata,omitempty"`
 }
@@ -125,19 +125,19 @@ func NewEventHandler(eventTypes []string, handlerFunc func(ctx context.Context, 
 
 // EventEnvelope wraps an event with additional context information
 type EventEnvelope struct {
-	Event     Event                  `json:"-"` // Skip JSON serialization, handled by custom methods
-	Context   map[string]any `json:"context,omitempty"`
-	Headers   map[string]string      `json:"headers,omitempty"`
-	CreatedAt time.Time              `json:"created_at"`
+	Event     Event             `json:"-"` // Skip JSON serialization, handled by custom methods
+	Context   map[string]any    `json:"context,omitempty"`
+	Headers   map[string]string `json:"headers,omitempty"`
+	CreatedAt time.Time         `json:"created_at"`
 }
 
 // eventEnvelopeJSON is used for JSON serialization/deserialization
 type eventEnvelopeJSON struct {
-	EventType string                 `json:"event_type"`
-	EventData json.RawMessage        `json:"event_data"`
-	Context   map[string]any `json:"context,omitempty"`
-	Headers   map[string]string      `json:"headers,omitempty"`
-	CreatedAt time.Time              `json:"created_at"`
+	EventType string            `json:"event_type"`
+	EventData json.RawMessage   `json:"event_data"`
+	Context   map[string]any    `json:"context,omitempty"`
+	Headers   map[string]string `json:"headers,omitempty"`
+	CreatedAt time.Time         `json:"created_at"`
 }
 
 // NewEventEnvelope creates a new event envelope

@@ -33,7 +33,7 @@ type FieldSchema struct {
 	Type        string       `json:"type"` // string, number, boolean, object, array
 	Required    bool         `json:"required"`
 	Deprecated  bool         `json:"deprecated"`
-	Default     any  `json:"default,omitempty"`
+	Default     any          `json:"default,omitempty"`
 	Description string       `json:"description,omitempty"`
 	Constraints *Constraints `json:"constraints,omitempty"`
 }

@@ -116,31 +116,31 @@ type BulkInvoiceActionRequest struct {
 
 // InvoiceSearchRequest represents advanced search parameters for invoices
 type InvoiceSearchRequest struct {
-	Query            string  `form:"q,omitempty" example:"INV-2024-001"`
-	UserID           *uint   `form:"user_id,omitempty" example:"1"`
-	Status           string  `form:"status,omitempty" example:"sent"`
-	InvoiceType      string  `form:"invoice_type,omitempty" example:"standard"`
-	AmountMin        *float64 `form:"amount_min,omitempty" example:"10.00"`
-	AmountMax        *float64 `form:"amount_max,omitempty" example:"100.00"`
-	Currency         string  `form:"currency,omitempty" example:"CNY"`
-	DateFrom         string  `form:"date_from,omitempty" example:"2024-01-01"`
-	DateTo           string  `form:"date_to,omitempty" example:"2024-12-31"`
-	IsOverdue        *bool   `form:"is_overdue,omitempty" example:"false"`
-	BillingCountry   string  `form:"billing_country,omitempty" example:"US"`
-	PaymentMethod    string  `form:"payment_method,omitempty" example:"credit_card"`
-	HasCompanyInfo   *bool   `form:"has_company_info,omitempty" example:"true"`
-	Page             int     `form:"page,omitempty" example:"1"`
-	Limit            int     `form:"limit,omitempty" example:"20"`
+	Query          string   `form:"q,omitempty" example:"INV-2024-001"`
+	UserID         *uint    `form:"user_id,omitempty" example:"1"`
+	Status         string   `form:"status,omitempty" example:"sent"`
+	InvoiceType    string   `form:"invoice_type,omitempty" example:"standard"`
+	AmountMin      *float64 `form:"amount_min,omitempty" example:"10.00"`
+	AmountMax      *float64 `form:"amount_max,omitempty" example:"100.00"`
+	Currency       string   `form:"currency,omitempty" example:"CNY"`
+	DateFrom       string   `form:"date_from,omitempty" example:"2024-01-01"`
+	DateTo         string   `form:"date_to,omitempty" example:"2024-12-31"`
+	IsOverdue      *bool    `form:"is_overdue,omitempty" example:"false"`
+	BillingCountry string   `form:"billing_country,omitempty" example:"US"`
+	PaymentMethod  string   `form:"payment_method,omitempty" example:"credit_card"`
+	HasCompanyInfo *bool    `form:"has_company_info,omitempty" example:"true"`
+	Page           int      `form:"page,omitempty" example:"1"`
+	Limit          int      `form:"limit,omitempty" example:"20"`
 }
 
 // InvoiceAnalyticsRequest represents analytics query parameters
 type InvoiceAnalyticsRequest struct {
-	DateFrom   string `form:"date_from,omitempty" example:"2024-01-01"`
-	DateTo     string `form:"date_to,omitempty" example:"2024-12-31"`
-	GroupBy    string `form:"group_by,omitempty" example:"month"`
-	Currency   string `form:"currency,omitempty" example:"CNY"`
-	UserID     *uint  `form:"user_id,omitempty" example:"1"`
-	Breakdown  string `form:"breakdown,omitempty" example:"status"`
+	DateFrom  string `form:"date_from,omitempty" example:"2024-01-01"`
+	DateTo    string `form:"date_to,omitempty" example:"2024-12-31"`
+	GroupBy   string `form:"group_by,omitempty" example:"month"`
+	Currency  string `form:"currency,omitempty" example:"CNY"`
+	UserID    *uint  `form:"user_id,omitempty" example:"1"`
+	Breakdown string `form:"breakdown,omitempty" example:"status"`
 }
 
 // ResendInvoiceRequest represents the request body for resending invoices
@@ -198,7 +198,7 @@ func (h *AdminInvoiceHandler) CreateInvoiceFromOrder(c *gin.Context) {
 		SubscriptionOrderID: uint(orderID),
 		Amount:              0, // Retrieved from order details
 		Currency:            "CNY",
-		BillingName:         "From Order", // Retrieved from order billing info
+		BillingName:         "From Order",        // Retrieved from order billing info
 		BillingEmail:        "order@example.com", // Retrieved from order billing info
 		Template:            req.Template,
 		Language:            req.Language,
@@ -984,20 +984,20 @@ func (h *AdminInvoiceHandler) SearchInvoices(c *gin.Context) {
 		invoiceResponses[i] = dto.ToResponse(invoice)
 	}
 
-	response.PaginatedWithQuery(c, "Search completed", invoiceResponses, 
+	response.PaginatedWithQuery(c, "Search completed", invoiceResponses,
 		searchReq.Page, searchReq.Limit, int64(len(filteredInvoices)), "/api/v1/admin/invoices/search", map[string]any{
-		"query": searchReq.Query,
-		"filters_applied": map[string]any{
-			"status":           searchReq.Status,
-			"invoice_type":     searchReq.InvoiceType,
-			"amount_range":     fmt.Sprintf("%.2f-%.2f", getValue(searchReq.AmountMin), getValue(searchReq.AmountMax)),
-			"currency":         searchReq.Currency,
-			"is_overdue":       searchReq.IsOverdue,
-			"billing_country":  searchReq.BillingCountry,
-			"payment_method":   searchReq.PaymentMethod,
-			"has_company_info": searchReq.HasCompanyInfo,
-		},
-	})
+			"query": searchReq.Query,
+			"filters_applied": map[string]any{
+				"status":           searchReq.Status,
+				"invoice_type":     searchReq.InvoiceType,
+				"amount_range":     fmt.Sprintf("%.2f-%.2f", getValue(searchReq.AmountMin), getValue(searchReq.AmountMax)),
+				"currency":         searchReq.Currency,
+				"is_overdue":       searchReq.IsOverdue,
+				"billing_country":  searchReq.BillingCountry,
+				"payment_method":   searchReq.PaymentMethod,
+				"has_company_info": searchReq.HasCompanyInfo,
+			},
+		})
 }
 
 // getValue helper function to safely get pointer values
@@ -1035,7 +1035,7 @@ func (h *AdminInvoiceHandler) GetInvoiceStatistics(c *gin.Context) {
 
 	stats, err := h.invoiceService.GetInvoiceStatistics(c.Request.Context(), fromDate, toDate)
 	if err != nil {
-		logger.Error("Admin failed to get invoice statistics", 
+		logger.Error("Admin failed to get invoice statistics",
 			logger.String("date_from", fromDate),
 			logger.String("date_to", toDate),
 			logger.ErrorField(err))
@@ -1087,7 +1087,7 @@ func (h *AdminInvoiceHandler) GetInvoiceAnalytics(c *gin.Context) {
 	// In a production system, this would generate detailed analytics based on the parameters
 	stats, err := h.invoiceService.GetInvoiceStatistics(c.Request.Context(), analyticsReq.DateFrom, analyticsReq.DateTo)
 	if err != nil {
-		logger.Error("Admin failed to get invoice analytics", 
+		logger.Error("Admin failed to get invoice analytics",
 			logger.Any("analytics_params", analyticsReq),
 			logger.ErrorField(err))
 		response.InternalServerError(c, "Failed to get invoice analytics")
@@ -1173,11 +1173,11 @@ func (h *AdminInvoiceHandler) GetOverdueInvoices(c *gin.Context) {
 		invoiceResponses[i] = dto.ToResponse(invoice)
 	}
 
-	response.PaginatedWithQuery(c, "Overdue invoices retrieved", invoiceResponses, 
+	response.PaginatedWithQuery(c, "Overdue invoices retrieved", invoiceResponses,
 		page, limit, int64(len(overdueInvoices)), "/api/v1/admin/invoices/overdue", map[string]any{
-		"days_overdue_filter": daysOverdue,
-		"total_overdue":       len(overdueInvoices),
-	})
+			"days_overdue_filter": daysOverdue,
+			"total_overdue":       len(overdueInvoices),
+		})
 }
 
 // BULK OPERATIONS
@@ -1237,7 +1237,7 @@ func (h *AdminInvoiceHandler) BulkVoidInvoices(c *gin.Context) {
 		logger.String("admin_action", "bulk_void_invoices"))
 
 	response.OK(c, gin.H{
-		"message": "Bulk void operation completed",
+		"message":         "Bulk void operation completed",
 		"total_requested": len(bulkReq.InvoiceIDs),
 		"success_count":   successCount,
 		"failed_count":    len(failedIDs),
@@ -1297,7 +1297,7 @@ func (h *AdminInvoiceHandler) BulkMarkPaid(c *gin.Context) {
 		logger.String("admin_action", "bulk_mark_paid"))
 
 	response.OK(c, gin.H{
-		"message": "Bulk mark paid operation completed",
+		"message":         "Bulk mark paid operation completed",
 		"total_requested": len(bulkReq.InvoiceIDs),
 		"success_count":   successCount,
 		"failed_count":    len(failedIDs),
@@ -1356,7 +1356,7 @@ func (h *AdminInvoiceHandler) BulkResendInvoices(c *gin.Context) {
 		logger.String("admin_action", "bulk_resend_invoices"))
 
 	response.OK(c, gin.H{
-		"message": "Bulk resend operation completed",
+		"message":         "Bulk resend operation completed",
 		"total_requested": len(bulkReq.InvoiceIDs),
 		"success_count":   successCount,
 		"failed_count":    len(failedIDs),
@@ -1411,10 +1411,10 @@ func (h *AdminInvoiceHandler) BulkRegeneratePDF(c *gin.Context) {
 		logger.String("admin_action", "bulk_regenerate_pdf"))
 
 	response.OK(c, gin.H{
-		"message": "Bulk PDF generation completed",
-		"total_invoices":   len(bulkReq.InvoiceIDs),
-		"pdf_size_bytes":   len(pdfData),
-		"generation_time":  time.Now(),
+		"message":         "Bulk PDF generation completed",
+		"total_invoices":  len(bulkReq.InvoiceIDs),
+		"pdf_size_bytes":  len(pdfData),
+		"generation_time": time.Now(),
 	})
 }
 

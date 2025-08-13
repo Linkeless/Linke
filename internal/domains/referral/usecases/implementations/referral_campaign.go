@@ -22,7 +22,6 @@ func NewReferralCampaignService(db *database.Database) *ReferralCampaignService 
 	}
 }
 
-
 // CreateReferralCampaign creates a new referral campaign
 func (s *ReferralCampaignService) CreateReferralCampaign(ctx context.Context, req *dto.CreateReferralCampaignRequest) (*entities.ReferralCampaign, error) {
 	// Check if name already exists
@@ -52,7 +51,6 @@ func (s *ReferralCampaignService) CreateReferralCampaign(ctx context.Context, re
 		MaxReferrals:           req.MaxReferrals,
 		IsPublic:               req.IsPublic,
 	}
-
 
 	if err := s.db.DB.Create(campaign).Error; err != nil {
 		return nil, fmt.Errorf("failed to create referral campaign: %w", err)
@@ -160,7 +158,6 @@ func (s *ReferralCampaignService) UpdateReferralCampaign(ctx context.Context, ca
 	if req.IsPublic != nil {
 		updates["is_public"] = *req.IsPublic
 	}
-
 
 	if len(updates) > 0 {
 		updates["updated_at"] = time.Now()

@@ -70,17 +70,17 @@ const (
 
 // Reward Type constants (for campaigns)
 const (
-	RewardTypeFixed      = "fixed"
-	RewardTypePercentage = "percentage"
-	RewardTypeTiered     = "tiered"
-	RewardTypeDiscount   = "discount"
-	RewardTypeCash       = "cash"
-	RewardTypeCredit     = "credit"
-	RewardTypeBonus      = "bonus"
-	RewardTypeCoupon     = "coupon"
+	RewardTypeFixed        = "fixed"
+	RewardTypePercentage   = "percentage"
+	RewardTypeTiered       = "tiered"
+	RewardTypeDiscount     = "discount"
+	RewardTypeCash         = "cash"
+	RewardTypeCredit       = "credit"
+	RewardTypeBonus        = "bonus"
+	RewardTypeCoupon       = "coupon"
 	RewardTypeSubscription = "subscription"
-	RewardTypeProduct    = "product"
-	RewardTypeService    = "service"
+	RewardTypeProduct      = "product"
+	RewardTypeService      = "service"
 )
 
 // Reward Trigger constants
@@ -110,9 +110,9 @@ const (
 
 // Default values
 const (
-	DefaultCurrency        = "CNY"
-	DefaultMaxUsesPerCode  = 10
-	DefaultRewardAmount    = 0.0
-	DefaultMaxReferrals    = 0
-	DefaultMaxRewards      = 0
+	DefaultCurrency       = "CNY"
+	DefaultMaxUsesPerCode = 10
+	DefaultRewardAmount   = 0.0
+	DefaultMaxReferrals   = 0
+	DefaultMaxRewards     = 0
 )

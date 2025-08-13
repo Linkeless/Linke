@@ -17,10 +17,10 @@ import (
 // Bot represents the Telegram bot handler
 type Bot struct {
 	api                     *tgbotapi.BotAPI
-	userService            userInterfaces.UserService
-	subscriptionService    interfaces.UserSubscriptionService
+	userService             userInterfaces.UserService
+	subscriptionService     interfaces.UserSubscriptionService
 	subscriptionPlanService interfaces.SubscriptionPlanService
-	cfg                    *config.Config
+	cfg                     *config.Config
 }
 
 // NewBot creates a new Telegram bot instance
@@ -43,10 +43,10 @@ func NewBot(
 
 	return &Bot{
 		api:                     bot,
-		userService:            userService,
-		subscriptionService:    subscriptionService,
+		userService:             userService,
+		subscriptionService:     subscriptionService,
 		subscriptionPlanService: subscriptionPlanService,
-		cfg:                    cfg,
+		cfg:                     cfg,
 	}, nil
 }
 
@@ -105,8 +105,8 @@ func (b *Bot) handleUpdate(update tgbotapi.Update) {
 // handleStart handles the /start command
 func (b *Bot) handleStart(msg *tgbotapi.Message) {
 	welcome := fmt.Sprintf(
-		"👋 欢迎使用 Linke 服务！\n\n"+
-			"我是您的订阅管理助手。\n\n"+
+		"👋 欢迎使用 Linke 服务！\n\n" +
+			"我是您的订阅管理助手。\n\n" +
 			"使用 /help 查看可用命令。")
 	b.sendMessage(msg.Chat.ID, welcome)
 }
@@ -131,13 +131,13 @@ func (b *Bot) handleHelp(msg *tgbotapi.Message) {
 // handleSubscription handles the /subscription command
 func (b *Bot) handleSubscription(msg *tgbotapi.Message) {
 	ctx := context.Background()
-	
+
 	// Get user by telegram ID
 	user, err := b.getUserByTelegramID(ctx, msg.From.ID)
 	if err != nil {
-		b.sendMessage(msg.Chat.ID, 
+		b.sendMessage(msg.Chat.ID,
 			"❌ 未找到绑定的账号\n\n"+
-			"请先在网站上使用 Telegram 登录绑定您的账号。")
+				"请先在网站上使用 Telegram 登录绑定您的账号。")
 		return
 	}
 
@@ -152,9 +152,9 @@ func (b *Bot) handleSubscription(msg *tgbotapi.Message) {
 	}
 
 	if len(subscriptions) == 0 {
-		b.sendMessage(msg.Chat.ID, 
+		b.sendMessage(msg.Chat.ID,
 			"📭 您当前没有活跃的订阅\n\n"+
-			"访问我们的网站选择合适的套餐开始使用服务。")
+				"访问我们的网站选择合适的套餐开始使用服务。")
 		return
 	}
 
@@ -176,35 +176,35 @@ func (b *Bot) handleSubscription(msg *tgbotapi.Message) {
 		sb.WriteString(fmt.Sprintf("├ 状态: %s\n", b.formatStatus(sub.Status)))
 		sb.WriteString(fmt.Sprintf("├ 价格: %.2f %s\n", sub.Price, sub.Currency))
 		sb.WriteString(fmt.Sprintf("├ 计费周期: %s\n", b.formatBillingCycle(sub.BillingCycle)))
-		
+
 		// Add dates
 		sb.WriteString(fmt.Sprintf("├ 开始日期: %s\n", sub.StartDate.Format("2006-01-02")))
 		if sub.CurrentPeriodEnd != nil {
 			sb.WriteString(fmt.Sprintf("├ 当前周期结束: %s\n", sub.CurrentPeriodEnd.Format("2006-01-02")))
 		}
-		
+
 		// Add traffic info
 		if sub.TrafficLimit > 0 {
 			used := b.formatBytes(sub.TrafficUsed)
 			total := b.formatBytes(sub.TrafficLimit)
 			percentage := float64(sub.TrafficUsed) / float64(sub.TrafficLimit) * 100
-			
+
 			sb.WriteString(fmt.Sprintf("├ 流量使用: %s / %s (%.1f%%)\n", used, total, percentage))
-			
+
 			if sub.TrafficResetDate != nil {
 				sb.WriteString(fmt.Sprintf("├ 流量重置: %s\n", sub.TrafficResetDate.Format("2006-01-02")))
 			}
 		} else {
 			sb.WriteString("├ 流量: 无限制\n")
 		}
-		
+
 		// Add auto-renew status
 		if sub.AutoRenew {
 			sb.WriteString("└ 自动续费: ✅ 已开启\n")
 		} else {
 			sb.WriteString("└ 自动续费: ❌ 已关闭\n")
 		}
-		
+
 		sb.WriteString("\n")
 	}
 
@@ -214,13 +214,13 @@ func (b *Bot) handleSubscription(msg *tgbotapi.Message) {
 // handleUsage handles the /usage command
 func (b *Bot) handleUsage(msg *tgbotapi.Message) {
 	ctx := context.Background()
-	
+
 	// Get user by telegram ID
 	user, err := b.getUserByTelegramID(ctx, msg.From.ID)
 	if err != nil {
-		b.sendMessage(msg.Chat.ID, 
+		b.sendMessage(msg.Chat.ID,
 			"❌ 未找到绑定的账号\n\n"+
-			"请先在网站上使用 Telegram 登录绑定您的账号。")
+				"请先在网站上使用 Telegram 登录绑定您的账号。")
 		return
 	}
 
@@ -255,12 +255,12 @@ func (b *Bot) handleUsage(msg *tgbotapi.Message) {
 		if sub.TrafficLimit > 0 {
 			totalUsed += sub.TrafficUsed
 			totalLimit += sub.TrafficLimit
-			
+
 			used := b.formatBytes(sub.TrafficUsed)
 			total := b.formatBytes(sub.TrafficLimit)
 			remaining := b.formatBytes(sub.TrafficLimit - sub.TrafficUsed)
 			percentage := float64(sub.TrafficUsed) / float64(sub.TrafficLimit) * 100
-			
+
 			sb.WriteString(fmt.Sprintf("*%s*\n", plan.Name))
 			sb.WriteString(fmt.Sprintf("├ 已使用: %s\n", used))
 			sb.WriteString(fmt.Sprintf("├ 总流量: %s\n", total))
@@ -274,9 +274,9 @@ func (b *Bot) handleUsage(msg *tgbotapi.Message) {
 	if totalLimit > 0 {
 		totalPercentage := float64(totalUsed) / float64(totalLimit) * 100
 		sb.WriteString("*📈 总计*\n")
-		sb.WriteString(fmt.Sprintf("已使用: %s / %s (%.1f%%)\n", 
-			b.formatBytes(totalUsed), 
-			b.formatBytes(totalLimit), 
+		sb.WriteString(fmt.Sprintf("已使用: %s / %s (%.1f%%)\n",
+			b.formatBytes(totalUsed),
+			b.formatBytes(totalLimit),
 			totalPercentage))
 	}
 
@@ -286,7 +286,7 @@ func (b *Bot) handleUsage(msg *tgbotapi.Message) {
 // handlePlans handles the /plans command
 func (b *Bot) handlePlans(msg *tgbotapi.Message) {
 	ctx := context.Background()
-	
+
 	// Get available plans
 	plans, _, err := b.subscriptionPlanService.GetSubscriptionPlans(ctx, &interfaces.GetSubscriptionPlansRequest{
 		Status: "active",
@@ -316,25 +316,25 @@ func (b *Bot) handlePlans(msg *tgbotapi.Message) {
 		if plan.Description != "" {
 			sb.WriteString(fmt.Sprintf("📝 %s\n", plan.Description))
 		}
-		sb.WriteString(fmt.Sprintf("💰 价格: %.2f %s/%s\n", 
-			plan.Price, 
+		sb.WriteString(fmt.Sprintf("💰 价格: %.2f %s/%s\n",
+			plan.Price,
 			plan.Currency,
 			b.formatBillingCycleShort(plan.BillingCycle)))
-		
+
 		if plan.TrafficLimit > 0 {
 			sb.WriteString(fmt.Sprintf("📊 流量: %s/月\n", b.formatBytes(plan.TrafficLimit)))
 		} else {
 			sb.WriteString("📊 流量: 无限制\n")
 		}
-		
+
 		if plan.TrialPeriodDays > 0 {
 			sb.WriteString(fmt.Sprintf("🎁 试用期: %d 天\n", plan.TrialPeriodDays))
 		}
-		
+
 		if plan.IsRecommended {
 			sb.WriteString("⭐ *推荐套餐*\n")
 		}
-		
+
 		sb.WriteString("\n")
 	}
 
@@ -348,12 +348,12 @@ func (b *Bot) handlePlans(msg *tgbotapi.Message) {
 func (b *Bot) getUserByTelegramID(ctx context.Context, telegramID int64) (*entities.UserResponse, error) {
 	// Convert telegram ID to string
 	telegramIDStr := fmt.Sprintf("%d", telegramID)
-	
+
 	user, err := b.userService.GetUserByTelegramID(ctx, telegramIDStr)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return user.ToResponse(), nil
 }
 
@@ -438,7 +438,7 @@ func (b *Bot) getUsageBar(percentage float64) string {
 	if filled > barLength {
 		filled = barLength
 	}
-	
+
 	bar := "["
 	for i := 0; i < barLength; i++ {
 		if i < filled {
@@ -448,6 +448,6 @@ func (b *Bot) getUsageBar(percentage float64) string {
 		}
 	}
 	bar += "]"
-	
+
 	return bar
 }
