@@ -33,6 +33,7 @@ type JWTService interface {
 	RefreshToken(tokenString string) (*dto.TokenResponse, error)
 	RevokeToken(tokenString string, userID *uint, reason string) error
 	RevokeAllUserTokens(userID uint, reason string) error
+	RotateSecret(newSecret string) // Add secret rotation support
 }
 
 // LoginSecurityService defines login security operations (auth domain owned)

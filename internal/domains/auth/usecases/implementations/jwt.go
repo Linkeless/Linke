@@ -15,6 +15,8 @@ import (
 type JWTService struct {
 	cfg              *config.Config
 	blacklistService *JWTBlacklistService
+	currentSecret    []byte
+	previousSecret   []byte // For supporting secret rotation
 }
 
 // JWTClaims struct for internal JWT parsing (includes jwt.RegisteredClaims)
@@ -33,6 +35,8 @@ func NewJWTService(cfg *config.Config, blacklistService *JWTBlacklistService) *J
 	return &JWTService{
 		cfg:              cfg,
 		blacklistService: blacklistService,
+		currentSecret:    []byte(cfg.JWT.Secret),
+		previousSecret:   nil, // Will be set during secret rotation
 	}
 }
 
@@ -57,27 +61,40 @@ func (j *JWTService) GenerateToken(user *userEntities.User) (*dto.TokenResponse,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString([]byte(j.cfg.JWT.Secret))
+	tokenString, err := token.SignedString(j.currentSecret)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate token: %w", err)
 	}
 
-	return &dto.TokenResponse{
-		AccessToken: tokenString,
-		TokenType:   "Bearer",
-		ExpiresIn:   j.cfg.JWT.ExpireHours * 3600, // Convert hours to seconds
-		ExpiresAt:   expirationTime,
-	}, nil
+	// Use object pool to reduce memory allocations
+	tokenResponse := dto.GetTokenResponse()
+	tokenResponse.AccessToken = tokenString
+	tokenResponse.TokenType = "Bearer"
+	tokenResponse.ExpiresIn = j.cfg.JWT.ExpireHours * 3600 // Convert hours to seconds
+	tokenResponse.ExpiresAt = expirationTime
+
+	return tokenResponse, nil
 }
 
 // ValidateToken validates a JWT token and returns the claims
 func (j *JWTService) ValidateToken(tokenString string) (*dto.Claims, error) {
+	// Try current secret first
 	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte(j.cfg.JWT.Secret), nil
+		return j.currentSecret, nil
 	})
+
+	// If parsing with current secret fails and we have a previous secret, try it
+	if err != nil && j.previousSecret != nil {
+		token, err = jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (any, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return j.previousSecret, nil
+		})
+	}
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse token: %w", err)
@@ -89,32 +106,36 @@ func (j *JWTService) ValidateToken(tokenString string) (*dto.Claims, error) {
 			// Check specific token blacklist
 			isBlacklisted, err := j.blacklistService.IsTokenBlacklisted(context.Background(), tokenString)
 			if err != nil {
-				return nil, fmt.Errorf("failed to check token blacklist: %w", err)
+				return nil, dto.NewAuthErrorWithCause(dto.ErrorTypeBlacklistFailure, 
+					"Failed to check token blacklist", err).WithTokenHash(tokenString[:8])
 			}
 			if isBlacklisted {
-				return nil, fmt.Errorf("token has been revoked")
+				return nil, dto.ErrRevokedToken().WithTokenHash(tokenString[:8])
 			}
 
 			// Check user-wide blacklist
 			isUserBlacklisted, err := j.blacklistService.IsUserTokensBlacklisted(context.Background(), claims.UserID, claims.IssuedAt.Time)
 			if err != nil {
-				return nil, fmt.Errorf("failed to check user token blacklist: %w", err)
+				return nil, dto.NewAuthErrorWithCause(dto.ErrorTypeBlacklistFailure,
+					"Failed to check user token blacklist", err).WithUserID(claims.UserID)
 			}
 			if isUserBlacklisted {
-				return nil, fmt.Errorf("all user tokens have been revoked")
+				return nil, dto.ErrRevokedToken().WithUserID(claims.UserID).WithDetails("all user tokens revoked")
 			}
 		}
 
-		return &dto.Claims{
-			UserID:    claims.UserID,
-			Email:     claims.Email,
-			Username:  claims.Username,
-			Provider:  claims.Provider,
-			Role:      claims.Role,
-			Status:    claims.Status,
-			IssuedAt:  claims.IssuedAt.Time,
-			ExpiresAt: claims.ExpiresAt.Time,
-		}, nil
+		// Use object pool to reduce memory allocations
+		dtoClaims := dto.GetClaims()
+		dtoClaims.UserID = claims.UserID
+		dtoClaims.Email = claims.Email
+		dtoClaims.Username = claims.Username
+		dtoClaims.Provider = claims.Provider
+		dtoClaims.Role = claims.Role
+		dtoClaims.Status = claims.Status
+		dtoClaims.IssuedAt = claims.IssuedAt.Time
+		dtoClaims.ExpiresAt = claims.ExpiresAt.Time
+		
+		return dtoClaims, nil
 	}
 
 	return nil, fmt.Errorf("invalid token")
@@ -148,17 +169,19 @@ func (j *JWTService) RefreshToken(tokenString string) (*dto.TokenResponse, error
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, newClaims)
-	newTokenString, err := token.SignedString([]byte(j.cfg.JWT.Secret))
+	newTokenString, err := token.SignedString(j.currentSecret)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate refresh token: %w", err)
 	}
 
-	return &dto.TokenResponse{
-		AccessToken: newTokenString,
-		TokenType:   "Bearer",
-		ExpiresIn:   j.cfg.JWT.ExpireHours * 3600,
-		ExpiresAt:   newExpirationTime,
-	}, nil
+	// Use object pool to reduce memory allocations
+	tokenResponse := dto.GetTokenResponse()
+	tokenResponse.AccessToken = newTokenString
+	tokenResponse.TokenType = "Bearer"
+	tokenResponse.ExpiresIn = j.cfg.JWT.ExpireHours * 3600
+	tokenResponse.ExpiresAt = newExpirationTime
+
+	return tokenResponse, nil
 }
 
 // RevokeToken adds a token to the blacklist
@@ -167,10 +190,17 @@ func (j *JWTService) RevokeToken(tokenString string, userID *uint, reason string
 		return fmt.Errorf("blacklist service not available")
 	}
 
-	// Parse token to get expiration time
+	// Parse token to get expiration time - try current secret first
 	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (any, error) {
-		return []byte(j.cfg.JWT.Secret), nil
+		return j.currentSecret, nil
 	})
+
+	// If parsing with current secret fails and we have a previous secret, try it
+	if err != nil && j.previousSecret != nil {
+		token, err = jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (any, error) {
+			return j.previousSecret, nil
+		})
+	}
 
 	if err != nil {
 		return fmt.Errorf("failed to parse token for revocation: %w", err)
@@ -195,4 +225,10 @@ func (j *JWTService) RevokeAllUserTokens(userID uint, reason string) error {
 	expiresAt := time.Now().Add(time.Duration(j.cfg.JWT.ExpireHours) * time.Hour)
 
 	return j.blacklistService.BlacklistAllUserTokens(context.Background(), userID, reason, expiresAt)
+}
+
+// RotateSecret rotates the JWT signing secret while maintaining backward compatibility
+func (j *JWTService) RotateSecret(newSecret string) {
+	j.previousSecret = j.currentSecret
+	j.currentSecret = []byte(newSecret)
 }

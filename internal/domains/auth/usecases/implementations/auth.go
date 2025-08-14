@@ -153,10 +153,12 @@ func (a *AuthService) Register(ctx context.Context, req *dto.RegisterRequest) (*
 		logger.String("email", user.Email),
 	)
 
-	return &dto.AuthResponse{
-		User:  dto.ConvertUserResponse(user.ToResponse()),
-		Token: token,
-	}, nil
+	// Use object pool to reduce memory allocations
+	authResponse := dto.GetAuthResponse()
+	authResponse.User = dto.ConvertUserResponse(user.ToResponse())
+	authResponse.Token = token
+
+	return authResponse, nil
 }
 
 // Login authenticates a user with email and password
@@ -273,10 +275,12 @@ func (a *AuthService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Au
 		logger.String("email", user.Email),
 		logger.String("ip", ip))
 
-	return &dto.AuthResponse{
-		User:  dto.ConvertUserResponse(user.ToResponse()),
-		Token: token,
-	}, nil
+	// Use object pool to reduce memory allocations
+	authResponse := dto.GetAuthResponse()
+	authResponse.User = dto.ConvertUserResponse(user.ToResponse())
+	authResponse.Token = token
+
+	return authResponse, nil
 }
 
 // ChangePassword changes a user's password
