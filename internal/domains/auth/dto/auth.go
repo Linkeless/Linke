@@ -3,7 +3,7 @@ package dto
 import (
 	"time"
 
-	userEntities "linke/internal/domains/user/entities"
+	userDTO "linke/internal/domains/user/dto"
 )
 
 // AuthResponse represents authentication response
@@ -26,8 +26,8 @@ type UserResponse struct {
 	UpdatedAt time.Time `json:"updated_at" example:"2024-01-01T00:00:00Z"`
 }
 
-// ConvertUserResponse converts userEntities.UserResponse to auth DTO UserResponse
-func ConvertUserResponse(userResp *userEntities.UserResponse) *UserResponse {
+// ConvertUserResponse converts userDTO.UserResponse to auth DTO UserResponse
+func ConvertUserResponse(userResp *userDTO.UserResponse) *UserResponse {
 	if userResp == nil {
 		return nil
 	}

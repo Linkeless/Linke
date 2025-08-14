@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"linke/internal/domains/user/constants"
+	"linke/internal/domains/user/dto"
 	"linke/internal/domains/user/entities"
 
 	"github.com/stretchr/testify/assert"
@@ -17,7 +19,7 @@ func TestUserAccountBindingService_CreateBinding_Validation(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		request     *entities.CreateBindingRequest
+		request     *dto.CreateBindingRequest
 		expectedErr string
 	}{
 		{
@@ -27,21 +29,21 @@ func TestUserAccountBindingService_CreateBinding_Validation(t *testing.T) {
 		},
 		{
 			name: "empty_provider",
-			request: &entities.CreateBindingRequest{
+			request: &dto.CreateBindingRequest{
 				Provider: "",
 			},
 			expectedErr: "provider is required",
 		},
 		{
 			name: "invalid_provider",
-			request: &entities.CreateBindingRequest{
+			request: &dto.CreateBindingRequest{
 				Provider: "invalid",
 			},
 			expectedErr: "invalid provider: invalid",
 		},
 		{
 			name: "empty_provider_user_id",
-			request: &entities.CreateBindingRequest{
+			request: &dto.CreateBindingRequest{
 				Provider:       "google",
 				ProviderUserID: "",
 			},
@@ -75,7 +77,7 @@ func TestUserAccountBindingService_IsProviderAccountBound(t *testing.T) {
 
 // Test entity validation functions
 func TestEntityValidProviders(t *testing.T) {
-	providers := entities.ValidProviders()
+	providers := constants.ValidBindingProviders()
 	assert.Contains(t, providers, "google")
 	assert.Contains(t, providers, "github")
 	assert.Contains(t, providers, "telegram")
@@ -83,11 +85,11 @@ func TestEntityValidProviders(t *testing.T) {
 }
 
 func TestEntityIsValidProvider(t *testing.T) {
-	assert.True(t, entities.IsValidProvider("google"))
-	assert.True(t, entities.IsValidProvider("github"))
-	assert.True(t, entities.IsValidProvider("telegram"))
-	assert.False(t, entities.IsValidProvider("invalid"))
-	assert.False(t, entities.IsValidProvider(""))
+	assert.True(t, dto.ValidateProvider("google"))
+	assert.True(t, dto.ValidateProvider("github"))
+	assert.True(t, dto.ValidateProvider("telegram"))
+	assert.False(t, dto.ValidateProvider("invalid"))
+	assert.False(t, dto.ValidateProvider(""))
 }
 
 func TestUserAccountBinding_TableName(t *testing.T) {
@@ -104,11 +106,13 @@ func TestUserAccountBinding_ToResponse(t *testing.T) {
 		IsPrimary:      true,
 	}
 
-	resp := binding.ToResponse()
+	resp := dto.ToUserAccountBindingResponse(binding)
 	assert.Equal(t, uint(1), resp.ID)
 	assert.Equal(t, "google", resp.Provider)
 	assert.Equal(t, "google123", resp.ProviderUserID)
 	assert.True(t, resp.IsPrimary)
+	// Return the response to pool after use
+	dto.PutUserAccountBindingResponse(resp)
 }
 
 // Helper functions

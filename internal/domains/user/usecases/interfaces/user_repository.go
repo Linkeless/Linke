@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"context"
+
 	"linke/internal/domains/user/entities"
 	"linke/internal/shared/framework"
 )

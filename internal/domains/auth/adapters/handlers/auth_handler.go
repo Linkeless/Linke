@@ -9,6 +9,7 @@ import (
 	"linke/internal/domains/auth/dto"
 	authImplementations "linke/internal/domains/auth/usecases/implementations"
 	interfaces "linke/internal/domains/auth/usecases/interfaces"
+	userDTO "linke/internal/domains/user/dto"
 	userEntities "linke/internal/domains/user/entities"
 	"linke/internal/shared/config"
 	"linke/internal/shared/logger"
@@ -462,7 +463,10 @@ func (h *AuthHandler) GetProfile(c *gin.Context) {
 		return
 	}
 
-	response.OK(c, u.ToResponse())
+	userResponse := userDTO.ToUserResponse(u)
+	response.OK(c, userResponse)
+	// Return the response to pool after use
+	userDTO.PutUserResponse(userResponse)
 }
 
 // GetAuthURL godoc
@@ -618,10 +622,13 @@ func (h *AuthHandler) ExchangeToken(c *gin.Context) {
 	}
 
 	// Prepare response
+	userResponse := userDTO.ToUserResponse(user)
 	authResponse := &dto.AuthResponse{
-		User:  dto.ConvertUserResponse(user.ToResponse()),
+		User:  dto.ConvertUserResponse(userResponse),
 		Token: jwtToken,
 	}
+	// Return the user response to pool after use
+	userDTO.PutUserResponse(userResponse)
 
 	logger.Info("OAuth token exchange successful",
 		logger.String("provider", req.Provider),

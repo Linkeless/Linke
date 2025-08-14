@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"linke/internal/domains/user/entities"
+	"linke/internal/domains/user/dto"
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/middleware"
@@ -27,7 +27,7 @@ func NewUserProfileHandler(userService userInterfaces.UserService) *UserProfileH
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} entities.UserResponse
+// @Success 200 {object} dto.UserResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 500 {object} response.ProblemJSONResponse
 // @Router /user/profile [get]
@@ -39,7 +39,7 @@ func (h *UserProfileHandler) GetProfile(c *gin.Context) {
 		return
 	}
 
-	user, ok := userValue.(*entities.UserResponse)
+	user, ok := userValue.(*dto.UserResponse)
 	if !ok {
 		response.Unauthorized(c, "Invalid user context")
 		return
@@ -56,7 +56,10 @@ func (h *UserProfileHandler) GetProfile(c *gin.Context) {
 		return
 	}
 
-	response.OK(c, currentUser.ToResponse())
+	userResponse := dto.ToUserResponse(currentUser)
+	response.OK(c, userResponse)
+	// Return the response to pool after use
+	dto.PutUserResponse(userResponse)
 }
 
 // UpdateProfile godoc
@@ -66,8 +69,8 @@ func (h *UserProfileHandler) GetProfile(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param user body UserProfileUpdateRequest true "User profile data"
-// @Success 200 {object} entities.UserResponse
+// @Param user body dto.UserProfileUpdateRequest true "User profile data"
+// @Success 200 {object} dto.UserResponse
 // @Failure 400 {object} response.ProblemJSONResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 500 {object} response.ProblemJSONResponse
@@ -80,7 +83,7 @@ func (h *UserProfileHandler) UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	currentUser, ok := userValue.(*entities.UserResponse)
+	currentUser, ok := userValue.(*dto.UserResponse)
 	if !ok {
 		response.Unauthorized(c, "Invalid user context")
 		return
@@ -130,15 +133,11 @@ func (h *UserProfileHandler) UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	response.OK(c, user.ToResponse())
+	userResponse := dto.ToUserResponse(user)
+	response.OK(c, userResponse)
+	// Return the response to pool after use
+	dto.PutUserResponse(userResponse)
 }
 
 // ChangePassword has been removed - password changes are now handled by /api/v1/auth/change-password
 // This consolidates password functionality in the auth domain where it belongs.
-
-// UserProfileUpdateRequest represents the structure for profile updates
-type UserProfileUpdateRequest struct {
-	Username string `json:"username"`
-	Name     string `json:"name"`
-	Avatar   string `json:"avatar"`
-}

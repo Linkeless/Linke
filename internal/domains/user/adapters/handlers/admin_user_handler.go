@@ -6,9 +6,9 @@ import (
 
 	authInterfaces "linke/internal/domains/auth/usecases/interfaces"
 	"linke/internal/domains/user/constants"
+	"linke/internal/domains/user/dto"
 	"linke/internal/domains/user/entities"
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
-	userInterfacesDto "linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/middleware"
 	"linke/internal/shared/response"
@@ -16,30 +16,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
-
-// PatchUserRequest represents the request body for patching user fields
-type PatchUserRequest struct {
-	Name     *string `json:"name,omitempty" example:"John Doe"`
-	Email    *string `json:"email,omitempty" example:"user@example.com"`
-	Username *string `json:"username,omitempty" example:"johndoe"`
-	Role     *string `json:"role,omitempty" example:"user" enums:"user,admin"`
-	Status   *string `json:"status,omitempty" example:"active" enums:"active,inactive,banned"`
-}
-
-// UpdateUserRoleRequest represents the request body for updating user role
-type UpdateUserRoleRequest struct {
-	Role string `json:"role" binding:"required,oneof=user admin" example:"user"`
-}
-
-// UpdateUserStatusRequest represents the request body for updating user status
-type UpdateUserStatusRequest struct {
-	Status string `json:"status" binding:"required,oneof=active inactive banned" example:"active"`
-}
-
-// BatchUserIDsRequest represents the request body for batch operations on users
-type BatchUserIDsRequest struct {
-	IDs []uint `json:"ids" binding:"required,min=1,max=100"`
-}
 
 type AdminUserHandler struct {
 	userService userInterfaces.UserService
@@ -60,8 +36,8 @@ func NewAdminUserHandler(userService userInterfaces.UserService, authService aut
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param user body entities.CreateUserRequest true "User creation data"
-// @Success 201 {object} entities.UserResponse
+// @Param user body dto.CreateUserRequest true "User creation data"
+// @Success 201 {object} dto.UserResponse
 // @Failure 400 {object} response.ProblemJSONResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 403 {object} response.ProblemJSONResponse
@@ -69,7 +45,7 @@ func NewAdminUserHandler(userService userInterfaces.UserService, authService aut
 // @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/users [post]
 func (h *AdminUserHandler) CreateUser(c *gin.Context) {
-	var createReq entities.CreateUserRequest
+	var createReq dto.CreateUserRequest
 	if err := c.ShouldBindJSON(&createReq); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -130,7 +106,11 @@ func (h *AdminUserHandler) CreateUser(c *gin.Context) {
 		logger.String("admin_action", "create_user"),
 	)
 
-	response.Created(c, user.ToResponse())
+	// Convert to response format
+	userResponse := dto.ToUserResponse(user)
+	response.Created(c, userResponse)
+	// Return the response to pool after use
+	dto.PutUserResponse(userResponse)
 }
 
 // GetUser godoc
@@ -141,7 +121,7 @@ func (h *AdminUserHandler) CreateUser(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "User ID"
-// @Success 200 {object} entities.UserResponse
+// @Success 200 {object} dto.UserResponse
 // @Failure 400 {object} response.ProblemJSONResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 403 {object} response.ProblemJSONResponse
@@ -205,7 +185,7 @@ func (h *AdminUserHandler) ListUsers(c *gin.Context) {
 	role := strings.TrimSpace(c.Query("role"))
 	provider := strings.TrimSpace(c.Query("provider"))
 
-	req := &userInterfacesDto.AdvancedUserSearchRequest{
+	req := &dto.AdvancedUserSearchRequest{
 		Query:    q,
 		Status:   status,
 		Provider: provider,
@@ -232,8 +212,8 @@ func (h *AdminUserHandler) ListUsers(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "User ID"
-// @Param user body entities.UserResponse true "User data"
-// @Success 200 {object} entities.UserResponse
+// @Param user body dto.UpdateUserRequest true "User data"
+// @Success 200 {object} dto.UserResponse
 // @Failure 400 {object} response.ProblemJSONResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 403 {object} response.ProblemJSONResponse
@@ -260,7 +240,7 @@ func (h *AdminUserHandler) UpdateUser(c *gin.Context) {
 	}
 
 	// Bind update data to UserResponse (for safe API binding)
-	var updateData entities.UserResponse
+	var updateData dto.UserResponse
 	if err := c.ShouldBindJSON(&updateData); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -284,7 +264,11 @@ func (h *AdminUserHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	response.OK(c, existingUser.ToResponse())
+	// Convert to response format
+	userResponse := dto.ToUserResponse(existingUser)
+	response.OK(c, userResponse)
+	// Return the response to pool after use
+	dto.PutUserResponse(userResponse)
 }
 
 // UpdateUserRole godoc
@@ -295,8 +279,8 @@ func (h *AdminUserHandler) UpdateUser(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "User ID"
-// @Param role body UpdateUserRoleRequest true "Role data"
-// @Success 200 {object} entities.UserResponse
+// @Param role body dto.UpdateUserRoleRequest true "Role data"
+// @Success 200 {object} dto.UserResponse
 // @Failure 400 {object} response.ProblemJSONResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 403 {object} response.ProblemJSONResponse
@@ -310,7 +294,7 @@ func (h *AdminUserHandler) UpdateUserRole(c *gin.Context) {
 		return
 	}
 
-	var roleData UpdateUserRoleRequest
+	var roleData dto.UpdateUserRoleRequest
 
 	if err := c.ShouldBindJSON(&roleData); err != nil {
 		response.BadRequest(c, err.Error())
@@ -339,8 +323,8 @@ func (h *AdminUserHandler) UpdateUserRole(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "User ID"
-// @Param status body UpdateUserStatusRequest true "Status data"
-// @Success 200 {object} entities.UserResponse
+// @Param status body dto.UpdateUserStatusRequest true "Status data"
+// @Success 200 {object} dto.UserResponse
 // @Failure 400 {object} response.ProblemJSONResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 403 {object} response.ProblemJSONResponse
@@ -354,7 +338,7 @@ func (h *AdminUserHandler) UpdateUserStatus(c *gin.Context) {
 		return
 	}
 
-	var statusData UpdateUserStatusRequest
+	var statusData dto.UpdateUserStatusRequest
 
 	if err := c.ShouldBindJSON(&statusData); err != nil {
 		response.BadRequest(c, err.Error())
@@ -651,7 +635,7 @@ func (h *AdminUserHandler) GetUserStats(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param ids body BatchUserIDsRequest true "User IDs"
+// @Param ids body dto.BatchUserIDsRequest true "User IDs"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} response.ProblemJSONResponse
 // @Failure 401 {object} response.ProblemJSONResponse
@@ -659,7 +643,7 @@ func (h *AdminUserHandler) GetUserStats(c *gin.Context) {
 // @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/users/bulk/delete [post]
 func (h *AdminUserHandler) BatchDeleteUsers(c *gin.Context) {
-	var requestData BatchUserIDsRequest
+	var requestData dto.BatchUserIDsRequest
 
 	if err := c.ShouldBindJSON(&requestData); err != nil {
 		response.BadRequest(c, err.Error())
@@ -690,8 +674,8 @@ func (h *AdminUserHandler) BatchDeleteUsers(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "User ID"
-// @Param user body PatchUserRequest true "Partial user data"
-// @Success 200 {object} entities.UserResponse
+// @Param user body dto.PatchUserRequest true "Partial user data"
+// @Success 200 {object} dto.UserResponse
 // @Failure 400 {object} response.ProblemJSONResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 403 {object} response.ProblemJSONResponse
@@ -718,7 +702,7 @@ func (h *AdminUserHandler) PatchUser(c *gin.Context) {
 	}
 
 	// Parse partial update data
-	var patchReq PatchUserRequest
+	var patchReq dto.PatchUserRequest
 	if err := c.ShouldBindJSON(&patchReq); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -777,7 +761,7 @@ func (h *AdminUserHandler) PatchUser(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param ids body BatchUserIDsRequest true "User IDs"
+// @Param ids body dto.BatchUserIDsRequest true "User IDs"
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} response.ProblemJSONResponse
 // @Failure 401 {object} response.ProblemJSONResponse
@@ -785,7 +769,7 @@ func (h *AdminUserHandler) PatchUser(c *gin.Context) {
 // @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/users/bulk/restore [post]
 func (h *AdminUserHandler) BatchRestoreUsers(c *gin.Context) {
-	var requestData BatchUserIDsRequest
+	var requestData dto.BatchUserIDsRequest
 
 	if err := c.ShouldBindJSON(&requestData); err != nil {
 		response.BadRequest(c, err.Error())
@@ -816,7 +800,7 @@ func (h *AdminUserHandler) BatchRestoreUsers(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path uint true "User ID"
-// @Param password body ResetPasswordRequest true "New password data"
+// @Param password body dto.ResetPasswordRequest true "New password data"
 // @Success 200 {string} string "message"
 // @Failure 400 {object} response.ProblemJSONResponse
 // @Failure 401 {object} response.ProblemJSONResponse
@@ -832,7 +816,7 @@ func (h *AdminUserHandler) ResetUserPassword(c *gin.Context) {
 		return
 	}
 
-	admin, ok := adminUser.(*entities.UserResponse)
+	admin, ok := adminUser.(*dto.UserResponse)
 	if !ok {
 		response.InternalServerError(c, "Invalid admin user context")
 		return
@@ -847,7 +831,7 @@ func (h *AdminUserHandler) ResetUserPassword(c *gin.Context) {
 	}
 
 	// Parse request body
-	var req ResetPasswordRequest
+	var req dto.ResetPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
@@ -876,9 +860,4 @@ func (h *AdminUserHandler) ResetUserPassword(c *gin.Context) {
 	}
 
 	response.OK(c, gin.H{"message": "User password reset successfully. All existing tokens have been revoked."})
-}
-
-// ResetPasswordRequest represents the request structure for admin password reset
-type ResetPasswordRequest struct {
-	NewPassword string `json:"new_password" binding:"required,min=6,max=255" example:"newSecurePassword123"`
 }

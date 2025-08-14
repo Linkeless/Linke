@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"linke/internal/domains/user/dto"
 	"linke/internal/domains/user/entities"
 	userEntities "linke/internal/domains/user/entities"
 	"linke/internal/domains/user/usecases/interfaces"
@@ -31,8 +32,8 @@ func NewUserAccountBindingHandler(bindingService interfaces.UserAccountBindingSe
 // @Produce json
 // @Security BearerAuth
 // @Param provider path string true "Provider name (google, github, telegram)"
-// @Param binding body entities.CreateBindingRequest true "Binding data"
-// @Success 201 {object} entities.UserAccountBindingResponse
+// @Param binding body dto.CreateBindingRequest true "Binding data"
+// @Success 201 {object} dto.UserAccountBindingResponse
 // @Failure 400 {object} response.ProblemJSONResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 409 {object} response.ProblemJSONResponse
@@ -52,12 +53,12 @@ func (h *UserAccountBindingHandler) CreateBinding(c *gin.Context) {
 	}
 
 	provider := c.Param("provider")
-	if !entities.IsValidProvider(provider) {
+	if !dto.ValidateProvider(provider) {
 		response.BadRequest(c, "Invalid provider. Supported providers: google, github, telegram")
 		return
 	}
 
-	var req entities.CreateBindingRequest
+	var req dto.CreateBindingRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "Invalid request format: "+err.Error())
 		return
@@ -89,7 +90,10 @@ func (h *UserAccountBindingHandler) CreateBinding(c *gin.Context) {
 		logger.String("provider", provider),
 		logger.Uint("binding_id", binding.ID))
 
-	response.Created(c, binding.ToResponse())
+	bindingResponse := dto.ToUserAccountBindingResponse(binding)
+	response.Created(c, bindingResponse)
+	// Return the response to pool after use
+	dto.PutUserAccountBindingResponse(bindingResponse)
 }
 
 // GetBindings godoc
@@ -99,7 +103,7 @@ func (h *UserAccountBindingHandler) CreateBinding(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} entities.BindingListResponse
+// @Success 200 {object} dto.BindingListResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 500 {object} response.ProblemJSONResponse
 // @Router /user/bindings [get]
@@ -126,17 +130,16 @@ func (h *UserAccountBindingHandler) GetBindings(c *gin.Context) {
 	}
 
 	// Convert to response format
-	bindingResponses := make([]*entities.UserAccountBindingResponse, len(bindings))
-	for i, binding := range bindings {
-		bindingResponses[i] = binding.ToResponse()
-	}
+	bindingResponses := dto.ToUserAccountBindingResponseSlice(bindings)
 
-	bindingList := &entities.BindingListResponse{
+	bindingList := &dto.BindingListResponse{
 		Bindings: bindingResponses,
 		Total:    int64(len(bindingResponses)),
 	}
 
 	response.OK(c, bindingList)
+	// Return the responses to pool after use
+	dto.PutUserAccountBindingResponseSlice(bindingResponses)
 }
 
 // GetBinding godoc
@@ -147,7 +150,7 @@ func (h *UserAccountBindingHandler) GetBindings(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param provider path string true "Provider name (google, github, telegram)"
-// @Success 200 {object} entities.UserAccountBindingResponse
+// @Success 200 {object} dto.UserAccountBindingResponse
 // @Failure 400 {object} response.ProblemJSONResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 404 {object} response.ProblemJSONResponse
@@ -167,7 +170,7 @@ func (h *UserAccountBindingHandler) GetBinding(c *gin.Context) {
 	}
 
 	provider := c.Param("provider")
-	if !entities.IsValidProvider(provider) {
+	if !dto.ValidateProvider(provider) {
 		response.BadRequest(c, "Invalid provider. Supported providers: google, github, telegram")
 		return
 	}
@@ -195,7 +198,10 @@ func (h *UserAccountBindingHandler) GetBinding(c *gin.Context) {
 		return
 	}
 
-	response.OK(c, binding.ToResponse())
+	bindingResponse := dto.ToUserAccountBindingResponse(binding)
+	response.OK(c, bindingResponse)
+	// Return the response to pool after use
+	dto.PutUserAccountBindingResponse(bindingResponse)
 }
 
 // UpdateBinding godoc
@@ -206,8 +212,8 @@ func (h *UserAccountBindingHandler) GetBinding(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param provider path string true "Provider name (google, github, telegram)"
-// @Param binding body entities.UpdateBindingRequest true "Updated binding data"
-// @Success 200 {object} entities.UserAccountBindingResponse
+// @Param binding body dto.UpdateBindingRequest true "Updated binding data"
+// @Success 200 {object} dto.UserAccountBindingResponse
 // @Failure 400 {object} response.ProblemJSONResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 404 {object} response.ProblemJSONResponse
@@ -227,12 +233,12 @@ func (h *UserAccountBindingHandler) UpdateBinding(c *gin.Context) {
 	}
 
 	provider := c.Param("provider")
-	if !entities.IsValidProvider(provider) {
+	if !dto.ValidateProvider(provider) {
 		response.BadRequest(c, "Invalid provider. Supported providers: google, github, telegram")
 		return
 	}
 
-	var req entities.UpdateBindingRequest
+	var req dto.UpdateBindingRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "Invalid request format: "+err.Error())
 		return
@@ -259,7 +265,10 @@ func (h *UserAccountBindingHandler) UpdateBinding(c *gin.Context) {
 		logger.Uint("user_id", u.ID),
 		logger.String("provider", provider))
 
-	response.OK(c, binding.ToResponse())
+	bindingResponse := dto.ToUserAccountBindingResponse(binding)
+	response.OK(c, bindingResponse)
+	// Return the response to pool after use
+	dto.PutUserAccountBindingResponse(bindingResponse)
 }
 
 // DeleteBinding godoc
@@ -290,7 +299,7 @@ func (h *UserAccountBindingHandler) DeleteBinding(c *gin.Context) {
 	}
 
 	provider := c.Param("provider")
-	if !entities.IsValidProvider(provider) {
+	if !dto.ValidateProvider(provider) {
 		response.BadRequest(c, "Invalid provider. Supported providers: google, github, telegram")
 		return
 	}
@@ -347,7 +356,7 @@ func (h *UserAccountBindingHandler) SetPrimaryBinding(c *gin.Context) {
 	}
 
 	provider := c.Param("provider")
-	if !entities.IsValidProvider(provider) {
+	if !dto.ValidateProvider(provider) {
 		response.BadRequest(c, "Invalid provider. Supported providers: google, github, telegram")
 		return
 	}

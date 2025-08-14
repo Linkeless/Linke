@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"linke/internal/domains/user/dto"
 	"linke/internal/domains/user/entities"
 	"linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/shared/logger"
@@ -27,7 +28,7 @@ func NewUserAccountBindingService(
 }
 
 // CreateBinding creates a new account binding for a user
-func (s *userAccountBindingService) CreateBinding(ctx context.Context, userID uint, req *entities.CreateBindingRequest) (*entities.UserAccountBinding, error) {
+func (s *userAccountBindingService) CreateBinding(ctx context.Context, userID uint, req *dto.CreateBindingRequest) (*entities.UserAccountBinding, error) {
 	// Validate request
 	if err := s.validateBindingRequest(req); err != nil {
 		return nil, fmt.Errorf("invalid binding request: %w", err)
@@ -107,7 +108,7 @@ func (s *userAccountBindingService) GetUserBindings(ctx context.Context, userID 
 }
 
 // UpdateBinding updates an existing binding
-func (s *userAccountBindingService) UpdateBinding(ctx context.Context, userID uint, provider string, req *entities.UpdateBindingRequest) (*entities.UserAccountBinding, error) {
+func (s *userAccountBindingService) UpdateBinding(ctx context.Context, userID uint, provider string, req *dto.UpdateBindingRequest) (*entities.UserAccountBinding, error) {
 	// Get existing binding
 	binding, err := s.getUserBinding(ctx, userID, provider)
 	if err != nil {
@@ -216,7 +217,7 @@ func (s *userAccountBindingService) DeleteBinding(ctx context.Context, userID ui
 
 // FindUserByProviderAccount finds a user by provider account
 func (s *userAccountBindingService) FindUserByProviderAccount(ctx context.Context, provider, providerUserID string) (*entities.UserAccountBinding, error) {
-	if !entities.IsValidProvider(provider) {
+	if !dto.ValidateProvider(provider) {
 		return nil, fmt.Errorf("invalid provider: %s", provider)
 	}
 
@@ -238,7 +239,7 @@ func (s *userAccountBindingService) FindUserByProviderAccount(ctx context.Contex
 
 // SetPrimaryBinding sets a binding as primary
 func (s *userAccountBindingService) SetPrimaryBinding(ctx context.Context, userID uint, provider string) error {
-	if !entities.IsValidProvider(provider) {
+	if !dto.ValidateProvider(provider) {
 		return fmt.Errorf("invalid provider: %s", provider)
 	}
 
@@ -264,7 +265,7 @@ func (s *userAccountBindingService) SetPrimaryBinding(ctx context.Context, userI
 
 // getUserBinding retrieves a specific binding for a user and provider
 func (s *userAccountBindingService) getUserBinding(ctx context.Context, userID uint, provider string) (*entities.UserAccountBinding, error) {
-	if !entities.IsValidProvider(provider) {
+	if !dto.ValidateProvider(provider) {
 		return nil, fmt.Errorf("invalid provider: %s", provider)
 	}
 
@@ -285,7 +286,7 @@ func (s *userAccountBindingService) getUserBinding(ctx context.Context, userID u
 }
 
 // validateBindingRequest validates a binding request
-func (s *userAccountBindingService) validateBindingRequest(req *entities.CreateBindingRequest) error {
+func (s *userAccountBindingService) validateBindingRequest(req *dto.CreateBindingRequest) error {
 	if req == nil {
 		return fmt.Errorf("request cannot be nil")
 	}
@@ -294,7 +295,7 @@ func (s *userAccountBindingService) validateBindingRequest(req *entities.CreateB
 		return fmt.Errorf("provider is required")
 	}
 
-	if !entities.IsValidProvider(req.Provider) {
+	if !dto.ValidateProvider(req.Provider) {
 		return fmt.Errorf("invalid provider: %s", req.Provider)
 	}
 
@@ -307,7 +308,7 @@ func (s *userAccountBindingService) validateBindingRequest(req *entities.CreateB
 
 // canBindProvider checks if a user can bind a provider
 func (s *userAccountBindingService) canBindProvider(ctx context.Context, userID uint, provider string) error {
-	if !entities.IsValidProvider(provider) {
+	if !dto.ValidateProvider(provider) {
 		return fmt.Errorf("invalid provider: %s", provider)
 	}
 

@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"linke/internal/domains/subscription/usecases/interfaces"
-	"linke/internal/domains/user/entities"
+	"linke/internal/domains/user/dto"
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/shared/config"
 	"linke/internal/shared/logger"
@@ -345,7 +345,7 @@ func (b *Bot) handlePlans(msg *tgbotapi.Message) {
 
 // Helper functions
 
-func (b *Bot) getUserByTelegramID(ctx context.Context, telegramID int64) (*entities.UserResponse, error) {
+func (b *Bot) getUserByTelegramID(ctx context.Context, telegramID int64) (*dto.UserResponse, error) {
 	// Convert telegram ID to string
 	telegramIDStr := fmt.Sprintf("%d", telegramID)
 
@@ -354,7 +354,8 @@ func (b *Bot) getUserByTelegramID(ctx context.Context, telegramID int64) (*entit
 		return nil, err
 	}
 
-	return user.ToResponse(), nil
+	userResponse := dto.ToUserResponse(user)
+	return userResponse, nil
 }
 
 func (b *Bot) sendMessage(chatID int64, text string) {

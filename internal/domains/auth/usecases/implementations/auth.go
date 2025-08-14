@@ -15,6 +15,7 @@ import (
 	referralEntities "linke/internal/domains/referral/entities"
 	referralInterfaces "linke/internal/domains/referral/usecases/interfaces"
 	userConstants "linke/internal/domains/user/constants"
+	userDTO "linke/internal/domains/user/dto"
 	userEntities "linke/internal/domains/user/entities"
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/shared/logger"
@@ -155,7 +156,10 @@ func (a *AuthService) Register(ctx context.Context, req *dto.RegisterRequest) (*
 
 	// Use object pool to reduce memory allocations
 	authResponse := dto.GetAuthResponse()
-	authResponse.User = dto.ConvertUserResponse(user.ToResponse())
+	userResponse := userDTO.ToUserResponse(user)
+	authResponse.User = dto.ConvertUserResponse(userResponse)
+	// Return the user response to pool after use
+	userDTO.PutUserResponse(userResponse)
 	authResponse.Token = token
 
 	return authResponse, nil
@@ -277,7 +281,10 @@ func (a *AuthService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Au
 
 	// Use object pool to reduce memory allocations
 	authResponse := dto.GetAuthResponse()
-	authResponse.User = dto.ConvertUserResponse(user.ToResponse())
+	userResponse := userDTO.ToUserResponse(user)
+	authResponse.User = dto.ConvertUserResponse(userResponse)
+	// Return the user response to pool after use
+	userDTO.PutUserResponse(userResponse)
 	authResponse.Token = token
 
 	return authResponse, nil
@@ -517,7 +524,7 @@ func (a *AuthService) CreateOrUpdateOAuthUser(ctx context.Context, userInfo *dto
 		}
 
 		// Update the binding with latest information using UpdateBinding
-		updateReq := &userEntities.UpdateBindingRequest{
+		updateReq := &userDTO.UpdateBindingRequest{
 			ProviderEmail:    &userInfo.Email,
 			ProviderUsername: &userInfo.Username,
 			ProviderName:     &userInfo.Name,
@@ -557,7 +564,7 @@ func (a *AuthService) CreateOrUpdateOAuthUser(ctx context.Context, userInfo *dto
 	// If user exists in legacy system, migrate them to the new binding system
 	if err == nil && user != nil {
 		// Create a binding for this legacy user
-		createReq := &userEntities.CreateBindingRequest{
+		createReq := &userDTO.CreateBindingRequest{
 			Provider:         userInfo.Provider,
 			ProviderUserID:   userInfo.ID,
 			ProviderEmail:    &userInfo.Email,
@@ -637,7 +644,7 @@ func (a *AuthService) CreateOrUpdateOAuthUser(ctx context.Context, userInfo *dto
 		}
 
 		// Create a binding for the new user
-		createReq := &userEntities.CreateBindingRequest{
+		createReq := &userDTO.CreateBindingRequest{
 			Provider:         userInfo.Provider,
 			ProviderUserID:   userInfo.ID,
 			ProviderEmail:    &userInfo.Email,

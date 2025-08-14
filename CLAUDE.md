@@ -399,3 +399,449 @@ domains/[领域]/
 - 在高频支付场景中，使用DTO对象池函数（GetPaymentRecordResponse/PutPaymentRecordResponse）
 - 监控原子操作的通知计数性能表现
 - 利用增强的错误日志进行问题诊断和性能调优
+
+## Go 优化最佳实践 (基于 admin_ticket_handler 重构经验)
+
+### 代码组织最佳实践
+
+**文件拆分原则:**
+- **单一职责**: 每个文件应聚焦于单一功能领域，如 CRUD、状态管理、消息处理
+- **文件大小限制**: 单个文件不超过 400-500 行，超过时考虑拆分
+- **功能分组**: 按业务逻辑分组，而非按技术层面分组
+
+**重构实例 - admin_ticket_handler.go (1618行 → 7个文件):**
+```
+admin_ticket_common.go (28行)        - 共享基础功能
+admin_ticket_base_handler.go (384行) - CRUD 操作
+admin_ticket_status_handler.go (346行) - 状态和分配管理
+admin_ticket_message_handler.go (342行) - 消息操作
+admin_ticket_search_handler.go (134行) - 搜索和分析
+admin_ticket_bulk_handler.go (141行) - 批量操作
+admin_ticket_unified_handler.go (71行) - 组合接口
+```
+
+**组合模式 (Composition over Inheritance):**
+```go
+// 基础结构体
+type AdminTicketHandlerBase struct {
+    ticketService        ticketInterfaces.TicketService
+    ticketMessageService ticketInterfaces.TicketMessageService
+    userService          userInterfaces.UserService
+}
+
+// 专用处理器 (单一职责)
+type AdminTicketBaseHandler struct {
+    *AdminTicketHandlerBase
+}
+
+// 统一接口 (向后兼容)
+type AdminTicketHandler struct {
+    *AdminTicketBaseHandler
+    *AdminTicketStatusHandler
+    *AdminTicketMessageHandler
+    *AdminTicketSearchHandler
+    *AdminTicketBulkHandler
+}
+```
+
+### 性能优化模式
+
+**1. 内存优化**
+
+**结构体字段对齐:**
+```go
+// Bad: 浪费内存的结构体
+type PoorlyAligned struct {
+    A bool   // 1 byte + 3 bytes padding
+    B int32  // 4 bytes  
+    C int64  // 8 bytes
+    D bool   // 1 byte + 7 bytes padding
+}
+
+// Good: 优化的结构体 (节省内存)
+type WellAligned struct {
+    C int64  // 8 bytes
+    B int32  // 4 bytes
+    A bool   // 1 byte
+    D bool   // 1 byte + 2 bytes padding
+}
+```
+
+**对象池模式 (sync.Pool):**
+```go
+var bufferPool = sync.Pool{
+    New: func() any { return make([]byte, 4096) },
+}
+
+func handleRequest() {
+    buf := bufferPool.Get().([]byte)
+    defer bufferPool.Put(buf)
+    // 使用 buffer 处理请求
+}
+
+// DTO 对象池示例
+var ticketResponsePool = sync.Pool{
+    New: func() any { return &dto.TicketResponse{} },
+}
+
+func GetTicketResponse() *dto.TicketResponse {
+    return ticketResponsePool.Get().(*dto.TicketResponse)
+}
+
+func PutTicketResponse(resp *dto.TicketResponse) {
+    // 重置对象状态
+    *resp = dto.TicketResponse{}
+    ticketResponsePool.Put(resp)
+}
+```
+
+**内存预分配:**
+```go
+// Bad: 动态增长的 slice
+var result []int
+for i := 0; i < 10000; i++ {
+    result = append(result, i)
+}
+
+// Good: 预分配容量
+result := make([]int, 0, 10000)
+for i := 0; i < 10000; i++ {
+    result = append(result, i)
+}
+
+// Best: 直接索引赋值 (已知大小)
+result := make([]int, 10000)
+for i := range result {
+    result[i] = i
+}
+```
+
+**2. 并发优化**
+
+**原子操作 (避免锁竞争):**
+```go
+type PaymentRecord struct {
+    ID          uint
+    Amount      decimal.Decimal
+    NotifyCount int32  // 使用 int32 配合原子操作
+}
+
+// 原子增量操作
+func (p *PaymentRecord) IncrementNotifyCount() {
+    atomic.AddInt32(&p.NotifyCount, 1)
+}
+
+// 原子读取
+func (p *PaymentRecord) GetNotifyCount() int32 {
+    return atomic.LoadInt32(&p.NotifyCount)
+}
+```
+
+**HTTP 连接池优化:**
+```go
+var httpClient = &http.Client{
+    Transport: &http.Transport{
+        MaxIdleConns:       100,
+        MaxConnsPerHost:    10,
+        IdleConnTimeout:    90 * time.Second,
+        DisableCompression: true,
+    },
+    Timeout: 30 * time.Second,
+}
+
+// 单例模式确保连接复用
+var once sync.Once
+var optimizedClient *http.Client
+
+func GetHTTPClient() *http.Client {
+    once.Do(func() {
+        optimizedClient = &http.Client{
+            Transport: &http.Transport{
+                DialContext: (&net.Dialer{
+                    Timeout:   5 * time.Second,
+                    KeepAlive: 30 * time.Second,
+                }).DialContext,
+                MaxIdleConns:        1000,
+                MaxConnsPerHost:     100,
+                IdleConnTimeout:     90 * time.Second,
+                ExpectContinueTimeout: 0, // 跳过 100-continue 等待
+            },
+            Timeout: 2 * time.Second,
+        }
+    })
+    return optimizedClient
+}
+```
+
+**3. 缓存优化**
+
+**批量用户数据加载 (减少数据库查询):**
+```go
+// 用户ID收集器
+type UserIDCollector struct {
+    ids map[uint]struct{}
+}
+
+func NewUserIDCollector() *UserIDCollector {
+    return &UserIDCollector{ids: make(map[uint]struct{})}
+}
+
+func (c *UserIDCollector) Add(id uint) {
+    c.ids[id] = struct{}{}
+}
+
+// 批量用户加载器
+type BatchUserLoader struct {
+    userService userInterfaces.UserService
+    cache       map[uint]*dto.UserBasicDTO
+}
+
+func (loader *BatchUserLoader) LoadUsers(ctx context.Context, userIDs []uint) error {
+    // 批量查询用户数据
+    users, err := loader.userService.GetUsersByIDs(ctx, userIDs)
+    if err != nil {
+        return err
+    }
+    
+    // 填充缓存
+    for _, user := range users {
+        loader.cache[user.ID] = handlers.ConvertUserToBasicDTO(user)
+    }
+    return nil
+}
+
+func (loader *BatchUserLoader) GetUser(id uint) *dto.UserBasicDTO {
+    return loader.cache[id]
+}
+```
+
+**缓存失效策略:**
+```go
+// 标签式缓存管理
+const (
+    CacheTagUser    = "user"
+    CacheTagTicket  = "ticket"
+    CacheTagPayment = "payment"
+)
+
+func InvalidateUserCache(userID uint) {
+    cache.DeleteByPattern(fmt.Sprintf("user:*:%d", userID))
+    cache.DeleteByTag(CacheTagUser)
+}
+```
+
+**4. 网络优化**
+
+**缓冲写入 (减少系统调用):**
+```go
+writer := bufio.NewWriter(conn)
+const flushInterval = 10
+count := 0
+
+for {
+    line, err := reader.ReadString('\n')
+    if err != nil {
+        return
+    }
+    
+    writer.WriteString(line)
+    count++
+    
+    if count >= flushInterval {
+        writer.Flush()
+        count = 0
+    }
+}
+```
+
+**连接限制 (防止资源耗尽):**
+```go
+var connLimiter = make(chan struct{}, 10000) // 最大 10K 并发连接
+
+func handleConnection(conn net.Conn) {
+    connLimiter <- struct{}{} // 获取连接槽
+    defer func() {
+        conn.Close()
+        <-connLimiter // 释放连接槽
+    }()
+    
+    // 处理连接逻辑
+}
+```
+
+### 错误处理最佳实践
+
+**错误包装和上下文:**
+```go
+// Bad: 无上下文信息
+if err != nil {
+    return err
+}
+
+// Good: 提供上下文
+if err != nil {
+    return fmt.Errorf("failed to create ticket for user %d: %w", userID, err)
+}
+
+// Best: 结构化错误处理
+convertedErr := sharedErrors.ConvertServiceError(err, "ticket", ticketID)
+if sharedErrors.IsTicketNotFound(convertedErr) {
+    response.NotFound(c, "Ticket not found")
+} else {
+    response.InternalServerError(c, "Failed to update ticket")
+}
+```
+
+**避免错误信息重复:**
+```go
+// Bad: 文件名会重复
+f, err := os.Open(fileName)
+if err != nil {
+    return fmt.Errorf("opening %q: %w", fileName, err)
+}
+
+// Good: 直接返回已包含文件名的错误
+f, err := os.Open(fileName)
+if err != nil {
+    return err
+}
+```
+
+### 代码格式化规范
+
+**使用 gofumpt 而非 gofmt:**
+```bash
+# 安装 gofumpt
+go install mvdan.cc/gofumpt@latest
+
+# 格式化代码 (更严格的规则)
+gofumpt -w -extra -s .
+
+# 替代 gofmt
+gofumpt -w .
+```
+
+**函数签名格式化:**
+```go
+// 多行参数对齐
+func functionWithLongName(
+    firstArg  typeWithLongName,
+    secondArg otherTypeWithLongName,
+    thirdArg  thirdTypeWithLongName,
+) (
+    returnVal typeWithLongName,
+    err error,
+) {
+    // 实现
+}
+
+// 结构体初始化
+config := &Config{
+    Timeout:     5 * time.Second,
+    MaxRetries:  3,
+    EnableCache: true,
+}
+```
+
+### GC 调优
+
+**内存限制和 GC 调优:**
+```bash
+# 容器环境: 设置内存限制并关闭 GOGC
+GOMEMLIMIT=2GiB GOGC=off ./my-app
+
+# 平衡模式: 内存限制 + GC 百分比
+GOMEMLIMIT=4GiB GOGC=100 ./my-app
+
+# 低延迟模式: 更激进的 GC
+GOGC=50 ./my-app
+```
+
+**程序化 GC 控制:**
+```go
+import "runtime/debug"
+
+func init() {
+    // 设置内存限制
+    debug.SetMemoryLimit(2 << 30) // 2 GiB
+    
+    // 设置 GC 触发百分比
+    debug.SetGCPercent(50)
+}
+```
+
+### 性能分析工具
+
+**pprof 集成:**
+```go
+import (
+    _ "net/http/pprof"
+    "net/http"
+)
+
+func init() {
+    // 开发环境启用 pprof
+    if os.Getenv("GO_ENV") == "development" {
+        go func() {
+            log.Println(http.ListenAndServe("localhost:6060", nil))
+        }()
+    }
+}
+```
+
+**性能分析命令:**
+```bash
+# CPU 性能分析
+go tool pprof http://localhost:6060/debug/pprof/profile
+
+# 内存分析
+go tool pprof http://localhost:6060/debug/pprof/heap
+
+# 可视化分析
+go tool pprof -http=:7070 cpu.prof
+
+# 竞态检测
+go test -race ./...
+
+# 基准测试
+go test -bench=. -benchmem
+```
+
+### 构建优化
+
+**编译优化标志:**
+```bash
+# 生产构建 (去除调试信息)
+go build -ldflags="-s -w" -o app main.go
+
+# 注入构建时变量
+go build -ldflags="-s -w -X main.version=1.0.0" -o app main.go
+
+# 调试构建 (禁用优化)
+go build -gcflags="all=-N -l" -o app main.go
+```
+
+### 代码审查清单
+
+**性能检查点:**
+- [ ] 结构体字段是否按大小排序对齐
+- [ ] 是否预分配了已知大小的 slice/map
+- [ ] 是否使用了对象池减少内存分配
+- [ ] 热路径是否避免了不必要的内存分配
+- [ ] 是否正确使用了原子操作而非锁
+- [ ] HTTP 客户端是否复用连接
+
+**架构检查点:**
+- [ ] 单个文件是否超过 400 行
+- [ ] 是否遵循单一职责原则
+- [ ] 是否正确分离了常量、DTO、实体
+- [ ] 错误处理是否提供足够上下文
+- [ ] 是否使用了批量操作减少数据库查询
+- [ ] 缓存策略是否合理
+
+**代码质量:**
+- [ ] 是否使用了 gofumpt 格式化
+- [ ] 函数命名是否清晰表达意图
+- [ ] 是否有适当的注释和文档
+- [ ] 测试覆盖率是否达到 80% 以上
+- [ ] 是否通过了 `go vet` 和 `golangci-lint` 检查

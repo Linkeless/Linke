@@ -47,18 +47,6 @@ func (User) TableName() string {
 	return "users"
 }
 
-// UserProfile represents a user profile with computed fields
-type UserProfile struct {
-	User               User    `json:"user"`
-	IsEmailVerified    bool    `json:"is_email_verified"`
-	AccountAge         int     `json:"account_age_days"`
-	LastLoginDaysAgo   int     `json:"last_login_days_ago"`
-	HasProfilePicture  bool    `json:"has_profile_picture"`
-	SubscriptionStatus string  `json:"subscription_status,omitempty"`
-	TotalOrders        int64   `json:"total_orders,omitempty"`
-	TotalSpent         float64 `json:"total_spent,omitempty"`
-}
-
 // IsDeleted checks if the user is soft deleted
 func (u *User) IsDeleted() bool {
 	return u.DeletedAt.Valid
@@ -116,91 +104,4 @@ func (u *User) SoftDelete(db *gorm.DB) error {
 // Restore restores a soft deleted user
 func (u *User) Restore(db *gorm.DB) error {
 	return db.Unscoped().Model(u).Update("deleted_at", nil).Error
-}
-
-// UserResponse represents the user data structure for API responses
-// Fields are ordered to match the User model for consistency
-type UserResponse struct {
-	// Primary Key
-	ID uint `json:"id"`
-
-	// Core Identity Fields
-	Email    string `json:"email"`
-	Username string `json:"username"`
-	Name     string `json:"name"`
-	Avatar   string `json:"avatar"`
-
-	// Authentication Fields (excluding password)
-	Provider string `json:"provider"`
-	Status   string `json:"status"`
-	Role     string `json:"role"`
-
-	// OAuth Provider IDs (only show if not empty)
-	GoogleID   *string `json:"google_id,omitempty"`
-	GitHubID   *string `json:"github_id,omitempty"`
-	TelegramID *string `json:"telegram_id,omitempty"`
-
-	// Provider Metadata (only show if not empty)
-	ProviderData *string `json:"provider_data,omitempty"`
-
-	// Invite Code Fields
-	InviteCodeID   *uint   `json:"invite_code_id,omitempty"`
-	InviteCodeUsed *string `json:"invite_code_used,omitempty"`
-
-	// Timestamp Fields
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt time.Time  `json:"updated_at"`
-	DeletedAt *time.Time `json:"deleted_at,omitempty"`
-}
-
-// ToResponse converts User to UserResponse
-func (u *User) ToResponse() *UserResponse {
-	resp := &UserResponse{
-		// Primary Key
-		ID: u.ID,
-
-		// Core Identity Fields
-		Email:    u.Email,
-		Username: u.Username,
-		Name:     u.Name,
-		Avatar:   u.Avatar,
-
-		// Authentication Fields
-		Provider: u.Provider,
-		Status:   u.Status,
-		Role:     u.Role,
-
-		// OAuth Provider IDs
-		GoogleID:   u.GoogleID,
-		GitHubID:   u.GitHubID,
-		TelegramID: u.TelegramID,
-
-		// Provider Metadata
-		ProviderData: u.ProviderData,
-
-		// Invite Code Fields
-		InviteCodeID:   u.InviteCodeID,
-		InviteCodeUsed: u.InviteCodeUsed,
-
-		// Timestamp Fields
-		CreatedAt: u.CreatedAt,
-		UpdatedAt: u.UpdatedAt,
-	}
-
-	// Set DeletedAt only if valid
-	if u.DeletedAt.Valid {
-		resp.DeletedAt = &u.DeletedAt.Time
-	}
-
-	return resp
-}
-
-// CreateUserRequest represents the request structure for creating a new user
-type CreateUserRequest struct {
-	Email    string `json:"email" binding:"required,email,max=255" example:"user@example.com"`
-	Username string `json:"username" binding:"omitempty,max=100" example:"johndoe"`
-	Name     string `json:"name" binding:"omitempty,max=255" example:"John Doe"`
-	Password string `json:"password" binding:"omitempty,min=6,max=255" example:"password123"`
-	Role     string `json:"role" binding:"omitempty,oneof=user admin" example:"user"`
-	Status   string `json:"status" binding:"omitempty,oneof=active inactive banned" example:"active"`
 }

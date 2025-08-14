@@ -11,7 +11,7 @@ import (
 	"linke/internal/domains/ticket/dto"
 	ticketEntities "linke/internal/domains/ticket/entities"
 	ticketInterfaces "linke/internal/domains/ticket/usecases/interfaces"
-	"linke/internal/domains/user/entities"
+	userDTO "linke/internal/domains/user/dto"
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/shared/config"
 	"linke/internal/shared/logger"
@@ -955,13 +955,14 @@ func (b *BotEnhanced) showPlanDetails(chatID int64, messageID int, planID uint) 
 
 // Helper functions
 
-func (b *BotEnhanced) getUserByTelegramID(ctx context.Context, telegramID int64) (*entities.UserResponse, error) {
+func (b *BotEnhanced) getUserByTelegramID(ctx context.Context, telegramID int64) (*userDTO.UserResponse, error) {
 	telegramIDStr := fmt.Sprintf("%d", telegramID)
 	user, err := b.userService.GetUserByTelegramID(ctx, telegramIDStr)
 	if err != nil {
 		return nil, err
 	}
-	return user.ToResponse(), nil
+	userResponse := userDTO.ToUserResponse(user)
+	return userResponse, nil
 }
 
 func (b *BotEnhanced) showUnboundAccount(chatID int64, messageID int) {
@@ -4383,7 +4384,7 @@ func (b *BotEnhanced) sendUnboundAccountMessage(chatID int64) {
 }
 
 // isUserAdmin checks if a user has admin privileges
-func (b *BotEnhanced) isUserAdmin(user *entities.UserResponse) bool {
+func (b *BotEnhanced) isUserAdmin(user *userDTO.UserResponse) bool {
 	// Check if user role is admin
 	if user.Role == "admin" || user.Role == "super_admin" {
 		return true

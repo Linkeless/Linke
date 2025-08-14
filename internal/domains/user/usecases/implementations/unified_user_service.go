@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"linke/internal/domains/user/dto"
 	"linke/internal/domains/user/entities"
-	"linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/shared/cache"
 	"linke/internal/shared/events"
 	"linke/internal/shared/framework"
@@ -209,8 +209,8 @@ func (s *UnifiedUserService) GetUsersByIDs(ctx context.Context, ids []uint) ([]*
 	return users, nil
 }
 
-func (s *UnifiedUserService) BatchDeleteUsers(ctx context.Context, ids []uint) (*interfaces.BatchOperationResult, error) {
-	result := &interfaces.BatchOperationResult{}
+func (s *UnifiedUserService) BatchDeleteUsers(ctx context.Context, ids []uint) (*dto.BatchOperationResult, error) {
+	result := &dto.BatchOperationResult{}
 
 	for _, id := range ids {
 		if err := s.SoftDeleteUser(ctx, id); err != nil {
@@ -223,8 +223,8 @@ func (s *UnifiedUserService) BatchDeleteUsers(ctx context.Context, ids []uint) (
 	return result, nil
 }
 
-func (s *UnifiedUserService) BatchRestoreUsers(ctx context.Context, ids []uint) (*interfaces.BatchOperationResult, error) {
-	result := &interfaces.BatchOperationResult{}
+func (s *UnifiedUserService) BatchRestoreUsers(ctx context.Context, ids []uint) (*dto.BatchOperationResult, error) {
+	result := &dto.BatchOperationResult{}
 
 	for _, id := range ids {
 		if err := s.RestoreUser(ctx, id); err != nil {
@@ -282,14 +282,14 @@ func (s *UnifiedUserService) ListUsers(ctx context.Context, limit, offset int) (
 }
 
 // ListUsersFiltered lists users with optional filters (query/status/role/provider) and pagination
-func (s *UnifiedUserService) ListUsersFiltered(ctx context.Context, req *interfaces.AdvancedUserSearchRequest) ([]*entities.User, int64, error) {
+func (s *UnifiedUserService) ListUsersFiltered(ctx context.Context, req *dto.AdvancedUserSearchRequest) ([]*entities.User, int64, error) {
 	var users []*entities.User
 	var total int64
 
 	q := s.db.WithContext(ctx).Model(&entities.User{})
 
 	if req == nil {
-		req = &interfaces.AdvancedUserSearchRequest{}
+		req = &dto.AdvancedUserSearchRequest{}
 	}
 
 	if strings.TrimSpace(req.Query) != "" {
@@ -422,8 +422,8 @@ func (s *UnifiedUserService) UpdateUserRole(ctx context.Context, id uint, role s
 }
 
 // Statistics
-func (s *UnifiedUserService) GetUserStats(ctx context.Context) (*interfaces.UserStats, error) {
-	stats := &interfaces.UserStats{
+func (s *UnifiedUserService) GetUserStats(ctx context.Context) (*dto.UserStats, error) {
+	stats := &dto.UserStats{
 		ByProvider: make(map[string]int64),
 	}
 
