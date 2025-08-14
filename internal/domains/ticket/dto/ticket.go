@@ -2,6 +2,8 @@ package dto
 
 import (
 	"time"
+
+	sharedDto "linke/internal/shared/dto"
 )
 
 // Base ticket request structures
@@ -198,4 +200,76 @@ type AgentInfo struct {
 	LastActiveAt      string   `json:"last_active_at,omitempty"`
 	AvgResponseTime   int      `json:"avg_response_time"`  // In minutes
 	SatisfactionScore float64  `json:"satisfaction_score"` // 0-10 scale
+}
+
+// TicketResponse represents the API response for a ticket (admin view)
+type TicketResponse struct {
+	ID              uint                    `json:"id" example:"1"`
+	TicketNo        string                  `json:"ticket_no" example:"TKT-20240101-001"`
+	Title           string                  `json:"title" example:"Unable to access my subscription"`
+	Description     string                  `json:"description" example:"I am unable to access my premium subscription features"`
+	Category        string                  `json:"category" example:"subscription"`
+	Priority        string                  `json:"priority" example:"normal"`
+	Status          string                  `json:"status" example:"open"`
+	UserID          uint                    `json:"user_id" example:"1"`
+	User            *sharedDto.UserBasicDTO `json:"user,omitempty"`
+	AssignedToID    *uint                   `json:"assigned_to_id" example:"2"`
+	AssignedTo      *sharedDto.UserBasicDTO `json:"assigned_to,omitempty"`
+	AssignedAt      *time.Time              `json:"assigned_at" example:"2024-01-01T10:00:00Z"`
+	ResolvedByID    *uint                   `json:"resolved_by_id" example:"2"`
+	ResolvedBy      *sharedDto.UserBasicDTO `json:"resolved_by,omitempty"`
+	ResolvedAt      *time.Time              `json:"resolved_at" example:"2024-01-02T15:30:00Z"`
+	Resolution      string                  `json:"resolution" example:"Issue resolved by updating subscription settings"`
+	FirstResponseAt *time.Time              `json:"first_response_at" example:"2024-01-01T10:30:00Z"`
+	LastResponseAt  *time.Time              `json:"last_response_at" example:"2024-01-02T14:00:00Z"`
+	ClosedAt        *time.Time              `json:"closed_at" example:"2024-01-02T16:00:00Z"`
+	Tags            *string                 `json:"tags" example:"urgent,subscription"`
+	Metadata        *string                 `json:"metadata" example:"{\"priority_escalated\": true}"`
+	Messages        []TicketMessageResponse `json:"messages,omitempty"`
+	CreatedAt       time.Time               `json:"created_at" example:"2024-01-01T09:00:00Z"`
+	UpdatedAt       time.Time               `json:"updated_at" example:"2024-01-02T16:00:00Z"`
+}
+
+// TicketMessageResponse represents the API response for a ticket message (admin view)
+type TicketMessageResponse struct {
+	ID          uint                    `json:"id" example:"1"`
+	TicketID    uint                    `json:"ticket_id" example:"1"`
+	UserID      uint                    `json:"user_id" example:"2"`
+	User        *sharedDto.UserBasicDTO `json:"user,omitempty"`
+	Content     string                  `json:"content" example:"Thank you for contacting support. We will review your issue."`
+	MessageType string                  `json:"message_type" example:"admin"`
+	Attachments *string                 `json:"attachments" example:"[{\"name\":\"screenshot.png\",\"url\":\"/uploads/screenshot.png\"}]"`
+	IsInternal  bool                    `json:"is_internal" example:"false"`
+	Metadata    *string                 `json:"metadata" example:"{\"priority\": \"normal\"}"`
+	CreatedAt   time.Time               `json:"created_at" example:"2024-01-01T10:30:00Z"`
+	UpdatedAt   time.Time               `json:"updated_at" example:"2024-01-01T10:30:00Z"`
+}
+
+// TicketUserResponse represents the ticket response for regular users (limited information)
+type TicketUserResponse struct {
+	ID              uint                        `json:"id" example:"1"`
+	TicketNo        string                      `json:"ticket_no" example:"TKT-20240101-001"`
+	Title           string                      `json:"title" example:"Unable to access my subscription"`
+	Description     string                      `json:"description" example:"I am unable to access my premium subscription features"`
+	Category        string                      `json:"category" example:"subscription"`
+	Priority        string                      `json:"priority" example:"normal"`
+	Status          string                      `json:"status" example:"open"`
+	Resolution      string                      `json:"resolution" example:"Issue resolved by updating subscription settings"`
+	FirstResponseAt *time.Time                  `json:"first_response_at" example:"2024-01-01T10:30:00Z"`
+	LastResponseAt  *time.Time                  `json:"last_response_at" example:"2024-01-02T14:00:00Z"`
+	ClosedAt        *time.Time                  `json:"closed_at" example:"2024-01-02T16:00:00Z"`
+	Messages        []TicketMessageUserResponse `json:"messages,omitempty"`
+	CreatedAt       time.Time                   `json:"created_at" example:"2024-01-01T09:00:00Z"`
+	UpdatedAt       time.Time                   `json:"updated_at" example:"2024-01-02T16:00:00Z"`
+}
+
+// TicketMessageUserResponse represents the ticket message response for regular users
+type TicketMessageUserResponse struct {
+	ID          uint      `json:"id" example:"1"`
+	TicketID    uint      `json:"ticket_id" example:"1"`
+	Content     string    `json:"content" example:"Thank you for contacting support. We will review your issue."`
+	MessageType string    `json:"message_type" example:"admin"`
+	Attachments *string   `json:"attachments" example:"[{\"name\":\"screenshot.png\",\"url\":\"/uploads/screenshot.png\"}]"`
+	CreatedAt   time.Time `json:"created_at" example:"2024-01-01T10:30:00Z"`
+	UpdatedAt   time.Time `json:"updated_at" example:"2024-01-01T10:30:00Z"`
 }

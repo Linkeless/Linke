@@ -1,16 +1,14 @@
 package handlers
 
 import (
-	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 
 	"linke/internal/domains/ticket/constants"
 	"linke/internal/domains/ticket/dto"
-	"linke/internal/domains/ticket/entities"
 	ticketInterfaces "linke/internal/domains/ticket/usecases/interfaces"
+	sharedErrors "linke/internal/shared/errors"
 	"linke/internal/shared/handlers"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/response"
@@ -41,10 +39,10 @@ func NewUserTicketHandler(
 // @Produce json
 // @Security BearerAuth
 // @Param ticket body dto.UserCreateTicketRequest true "Ticket creation data"
-// @Success 201 {object} entities.TicketUserResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
+// @Success 201 {object} dto.TicketUserResponse
+// @Failure 400 {object} response.ProblemJSONResponse
+// @Failure 401 {object} response.ProblemJSONResponse
+// @Failure 500 {object} response.ProblemJSONResponse
 // @Router /tickets [post]
 func (h *UserTicketHandler) CreateTicket(c *gin.Context) {
 	// Get current user from context
@@ -89,8 +87,11 @@ func (h *UserTicketHandler) CreateTicket(c *gin.Context) {
 		logger.String("ticket_no", ticket.TicketNo),
 		logger.Uint("user_id", user.ID))
 
-	// Return user-appropriate response
-	response.Created(c, ticket.ToUserResponse())
+	// Convert to DTO and return user-appropriate response
+	ticketResponse := dto.ToTicketUserResponse(ticket)
+	response.Created(c, ticketResponse)
+	// Return DTO to pool after use
+	dto.PutTicketUserResponse(ticketResponse)
 }
 
 // GetMyTickets godoc
@@ -147,13 +148,18 @@ func (h *UserTicketHandler) GetMyTickets(c *gin.Context) {
 		return
 	}
 
-	// Convert to user response format
-	responses := make([]*entities.TicketUserResponse, len(tickets))
+	// Convert to user response format using DTO functions
+	responses := make([]*dto.TicketUserResponse, len(tickets))
 	for i, ticket := range tickets {
-		responses[i] = ticket.ToUserResponse()
+		responses[i] = dto.ToTicketUserResponse(ticket)
 	}
 
-	response.Paginated(c, "Tickets retrieved successfully", responses, page, pagination.Limit, total, "/api/v1/tickets/my")
+	response.SendPaginatedResponse(c, responses, total)
+
+	// Return DTOs to pool after use
+	for _, resp := range responses {
+		dto.PutTicketUserResponse(resp)
+	}
 }
 
 // GetTicket godoc
@@ -164,7 +170,7 @@ func (h *UserTicketHandler) GetMyTickets(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
-// @Success 200 {object} entities.TicketUserResponse
+// @Success 200 {object} dto.TicketUserResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -204,8 +210,11 @@ func (h *UserTicketHandler) GetTicket(c *gin.Context) {
 		return
 	}
 
-	// Return user-appropriate response (filters out internal messages and admin-only fields)
-	response.OK(c, ticket.ToUserResponse())
+	// Convert to DTO and return user-appropriate response (filters out internal messages and admin-only fields)
+	ticketResponse := dto.ToTicketUserResponse(ticket)
+	response.OK(c, ticketResponse)
+	// Return DTO to pool after use
+	dto.PutTicketUserResponse(ticketResponse)
 }
 
 // CloseTicket godoc
@@ -217,7 +226,7 @@ func (h *UserTicketHandler) GetTicket(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
 // @Param closure body dto.CloseTicketRequest false "Closure reason"
-// @Success 200 {object} entities.TicketUserResponse
+// @Success 200 {object} dto.TicketUserResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -282,7 +291,8 @@ func (h *UserTicketHandler) CloseTicket(c *gin.Context) {
 			logger.Uint("user_id", user.ID),
 			logger.ErrorField(err))
 
-		if strings.Contains(err.Error(), "not found") {
+		convertedErr := sharedErrors.ConvertServiceError(err, "ticket", ticketID)
+		if sharedErrors.IsTicketNotFound(convertedErr) {
 			response.NotFound(c, "Ticket not found")
 		} else {
 			response.InternalServerError(c, "Failed to close ticket")
@@ -295,7 +305,11 @@ func (h *UserTicketHandler) CloseTicket(c *gin.Context) {
 		logger.Uint("user_id", user.ID))
 
 	// Return user-appropriate response
-	response.OK(c, closedTicket.ToUserResponse())
+	// Convert to DTO and return response
+	ticketResponse := dto.ToTicketUserResponse(closedTicket)
+	response.OK(c, ticketResponse)
+	// Return DTO to pool after use
+	dto.PutTicketUserResponse(ticketResponse)
 }
 
 // GetTicketMessages godoc
@@ -376,13 +390,18 @@ func (h *UserTicketHandler) GetTicketMessages(c *gin.Context) {
 		return
 	}
 
-	// Convert to user response format
-	responses := make([]*entities.TicketMessageUserResponse, len(messages))
+	// Convert to user response format using DTO functions
+	responses := make([]*dto.TicketMessageUserResponse, len(messages))
 	for i, message := range messages {
-		responses[i] = message.ToUserResponse()
+		responses[i] = dto.ToTicketMessageUserResponse(message)
 	}
 
-	response.Paginated(c, "Messages retrieved successfully", responses, page, pagination.Limit, total, fmt.Sprintf("/api/v1/tickets/%d/messages", ticketID))
+	response.SendPaginatedResponse(c, responses, total)
+
+	// Return DTOs to pool after use
+	for _, resp := range responses {
+		dto.PutTicketMessageUserResponse(resp)
+	}
 }
 
 // AddMessage godoc
@@ -394,7 +413,7 @@ func (h *UserTicketHandler) GetTicketMessages(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
 // @Param message body dto.UserTicketMessageRequest true "Message data"
-// @Success 201 {object} entities.TicketMessageUserResponse
+// @Success 201 {object} dto.TicketMessageUserResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -472,5 +491,9 @@ func (h *UserTicketHandler) AddMessage(c *gin.Context) {
 		logger.Uint("user_id", user.ID))
 
 	// Return user-appropriate response
-	response.Created(c, message.ToUserResponse())
+	// Convert to DTO and return response
+	messageResponse := dto.ToTicketMessageUserResponse(message)
+	response.Created(c, messageResponse)
+	// Return DTO to pool after use
+	dto.PutTicketMessageUserResponse(messageResponse)
 }

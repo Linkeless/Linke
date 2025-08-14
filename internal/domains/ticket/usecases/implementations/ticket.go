@@ -2,8 +2,8 @@ package implementations
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
-	"math/rand"
 	"time"
 
 	"linke/internal/domains/ticket/constants"
@@ -27,38 +27,13 @@ func NewTicketService(db *gorm.DB) *TicketService {
 // CreateTicket creates a new ticket
 func (s *TicketService) CreateTicket(ctx context.Context, userID uint, req *dto.CreateTicketRequest) (*entities.Ticket, error) {
 	// Generate unique ticket number
-	ticketNo := s.generateTicketNumber()
-
-	// Ensure ticket number is unique
-	for {
-		var existing entities.Ticket
-		if err := s.db.Where("ticket_no = ?", ticketNo).First(&existing).Error; err != nil {
-			if err == gorm.ErrRecordNotFound {
-				break // Ticket number is unique
-			}
-			return nil, fmt.Errorf("failed to check ticket number uniqueness: %w", err)
-		}
-		ticketNo = s.generateTicketNumber() // Generate new number
-	}
-
-	// Set default priority if not specified
-	priority := req.Priority
-	if priority == "" {
-		priority = constants.TicketPriorityNormal
+	ticketNo, err := s.generateUniqueTicketNumber(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate unique ticket number: %w", err)
 	}
 
 	// Create the ticket
-	ticket := &entities.Ticket{
-		TicketNo:    ticketNo,
-		Title:       req.Title,
-		Description: req.Description,
-		Category:    req.Category,
-		Priority:    priority,
-		Status:      constants.TicketStatusOpen,
-		UserID:      userID,
-		Tags:        &req.Tags,
-		Metadata:    &req.Metadata,
-	}
+	ticket := s.buildTicketFromRequest(userID, ticketNo, req)
 
 	if err := s.db.WithContext(ctx).Create(ticket).Error; err != nil {
 		logger.Error("Failed to create ticket", logger.ErrorField(err))
@@ -71,16 +46,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, userID uint, req *dto.
 		logger.String("category", ticket.Category))
 
 	// Attempt auto-assignment for new tickets (non-blocking)
-	go func() {
-		// Use background context for async operation
-		bgCtx := context.Background()
-		if _, err := s.AutoAssignTicket(bgCtx, ticket.ID); err != nil {
-			logger.Warn("Auto-assignment failed for new ticket",
-				logger.Uint("ticket_id", ticket.ID),
-				logger.String("ticket_no", ticket.TicketNo),
-				logger.ErrorField(err))
-		}
-	}()
+	s.attemptAutoAssignment(ticket)
 
 	return ticket, nil
 }
@@ -712,17 +678,83 @@ func (s *TicketService) BulkUpdateTicketStatus(ctx context.Context, ticketIDs []
 	return nil
 }
 
-// generateTicketNumber generates a unique ticket number
+// generateUniqueTicketNumber generates a cryptographically secure unique ticket number
+func (s *TicketService) generateUniqueTicketNumber(ctx context.Context) (string, error) {
+	const maxAttempts = 10
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		ticketNo := s.generateTicketNumber()
+
+		// Check if ticket number is unique
+		var existing entities.Ticket
+		err := s.db.WithContext(ctx).Where("ticket_no = ?", ticketNo).First(&existing).Error
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return ticketNo, nil // Ticket number is unique
+			}
+			return "", fmt.Errorf("failed to check ticket number uniqueness: %w", err)
+		}
+		// Continue loop to generate new number
+	}
+	return "", fmt.Errorf("failed to generate unique ticket number after %d attempts", maxAttempts)
+}
+
+// buildTicketFromRequest creates a ticket entity from the request
+func (s *TicketService) buildTicketFromRequest(userID uint, ticketNo string, req *dto.CreateTicketRequest) *entities.Ticket {
+	priority := req.Priority
+	if priority == "" {
+		priority = constants.TicketPriorityNormal
+	}
+
+	return &entities.Ticket{
+		TicketNo:    ticketNo,
+		Title:       req.Title,
+		Description: req.Description,
+		Category:    req.Category,
+		Priority:    priority,
+		Status:      constants.TicketStatusOpen,
+		UserID:      userID,
+		Tags:        &req.Tags,
+		Metadata:    &req.Metadata,
+	}
+}
+
+// attemptAutoAssignment attempts to auto-assign the ticket in background
+func (s *TicketService) attemptAutoAssignment(ticket *entities.Ticket) {
+	go func() {
+		// Use background context for async operation
+		bgCtx := context.Background()
+		if _, err := s.AutoAssignTicket(bgCtx, ticket.ID); err != nil {
+			logger.Warn("Auto-assignment failed for new ticket",
+				logger.Uint("ticket_id", ticket.ID),
+				logger.String("ticket_no", ticket.TicketNo),
+				logger.ErrorField(err))
+		}
+	}()
+}
+
+// generateTicketNumber generates a cryptographically secure ticket number
 func (s *TicketService) generateTicketNumber() string {
 	// Generate format: TK-YYYYMMDD-XXXXXX (e.g., TK-20240718-ABC123)
 	now := time.Now()
 	dateStr := now.Format("20060102")
 
-	// Generate random string using constant length
+	// Generate cryptographically secure random string
 	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	b := make([]byte, constants.TicketNumberLength)
-	for i := range b {
-		b[i] = charset[rand.Intn(len(charset))]
+	randomBytes := make([]byte, constants.TicketNumberLength)
+
+	// Use crypto/rand for secure random generation
+	if _, err := rand.Read(randomBytes); err != nil {
+		// Fallback to time-based generation if crypto/rand fails
+		logger.Warn("Failed to generate secure random bytes, using time-based fallback", logger.ErrorField(err))
+		unixNano := time.Now().UnixNano()
+		for i := range b {
+			b[i] = charset[(unixNano>>uint(i*8))%int64(len(charset))]
+		}
+	} else {
+		for i, randomByte := range randomBytes {
+			b[i] = charset[randomByte%byte(len(charset))]
+		}
 	}
 
 	return fmt.Sprintf("%s-%s-%s", constants.TicketNumberPrefix, dateStr, string(b))
@@ -804,46 +836,19 @@ func (s *TicketService) GetAgentWorkload(ctx context.Context, agentID uint) (int
 
 // GetAvailableAgents returns a list of agents available for assignment in a specific category
 func (s *TicketService) GetAvailableAgents(ctx context.Context, category string) ([]*dto.AgentInfo, error) {
-	// Query for admin users (agents) - simplified approach
-	// In a real implementation, you might have a separate agents table or role system
-	var agents []struct {
-		ID    uint   `json:"id"`
-		Name  string `json:"name"`
-		Email string `json:"email"`
-	}
-
-	// Get all admin users as potential agents
-	if err := s.db.WithContext(ctx).
-		Table("users").
-		Select("id, name, email").
-		Where("role = ? AND status = ?", "admin", "active").
-		Find(&agents).Error; err != nil {
+	agents, err := s.fetchAdminUsers(ctx)
+	if err != nil {
 		return nil, fmt.Errorf("failed to get available agents: %w", err)
 	}
 
 	var agentInfos []*dto.AgentInfo
 	for _, agent := range agents {
-		// Get current workload for this agent
-		workload, err := s.GetAgentWorkload(ctx, agent.ID)
+		agentInfo, err := s.buildAgentInfo(ctx, agent, category)
 		if err != nil {
-			logger.Warn("Failed to get workload for agent",
+			logger.Warn("Failed to build agent info",
 				logger.Uint("agent_id", agent.ID),
 				logger.ErrorField(err))
-			workload = 0
-		}
-
-		// Create agent info with defaults (in real implementation, these would come from agent profile)
-		agentInfo := &dto.AgentInfo{
-			UserID:            agent.ID,
-			Name:              agent.Name,
-			Email:             agent.Email,
-			Specialties:       []string{"general", category}, // Simplified: assume all agents can handle any category
-			CurrentLoad:       workload,
-			MaxLoad:           10,   // Default max load
-			IsOnline:          true, // Simplified: assume all agents are online
-			LastActiveAt:      time.Now().Format(time.RFC3339),
-			AvgResponseTime:   30,  // Default 30 minutes
-			SatisfactionScore: 8.5, // Default score
+			continue
 		}
 
 		// Only include agents who are not at max capacity
@@ -857,7 +862,6 @@ func (s *TicketService) GetAvailableAgents(ctx context.Context, category string)
 
 // FindBestAgentForTicket finds the best agent to assign a ticket to based on workload and specialties
 func (s *TicketService) FindBestAgentForTicket(ctx context.Context, ticket *entities.Ticket) (uint, error) {
-	// Get available agents for this ticket category
 	availableAgents, err := s.GetAvailableAgents(ctx, ticket.Category)
 	if err != nil {
 		return 0, fmt.Errorf("failed to get available agents: %w", err)
@@ -867,47 +871,7 @@ func (s *TicketService) FindBestAgentForTicket(ctx context.Context, ticket *enti
 		return 0, fmt.Errorf("no available agents found")
 	}
 
-	// Simple assignment algorithm: choose agent with lowest current workload
-	// In a more sophisticated implementation, you could consider:
-	// - Agent specialties matching ticket category
-	// - Agent response time history
-	// - Customer satisfaction scores
-	// - Agent availability/online status
-	// - Priority-based assignment for urgent tickets
-
-	var bestAgent *dto.AgentInfo
-	lowestWorkload := int(^uint(0) >> 1) // Max int
-
-	for _, agent := range availableAgents {
-		// Calculate assignment score (lower is better)
-		score := agent.CurrentLoad
-
-		// Bonus for category specialization
-		hasSpecialty := false
-		for _, specialty := range agent.Specialties {
-			if specialty == ticket.Category {
-				hasSpecialty = true
-				break
-			}
-		}
-
-		if hasSpecialty {
-			score -= 1 // Reduce score (better) if agent specializes in this category
-		}
-
-		// For urgent tickets, prefer agents with better response times
-		if ticket.Priority == constants.TicketPriorityUrgent || ticket.Priority == constants.TicketPriorityCritical {
-			if agent.AvgResponseTime < 30 { // Less than 30 minutes
-				score -= 1
-			}
-		}
-
-		if score < lowestWorkload {
-			lowestWorkload = score
-			bestAgent = agent
-		}
-	}
-
+	bestAgent := s.selectBestAgent(availableAgents, ticket)
 	if bestAgent == nil {
 		return 0, fmt.Errorf("could not determine best agent")
 	}
@@ -921,4 +885,99 @@ func (s *TicketService) FindBestAgentForTicket(ctx context.Context, ticket *enti
 		logger.String("ticket_priority", ticket.Priority))
 
 	return bestAgent.UserID, nil
+}
+
+// fetchAdminUsers retrieves all admin users from the database
+func (s *TicketService) fetchAdminUsers(ctx context.Context) ([]struct {
+	ID    uint   `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}, error) {
+	var agents []struct {
+		ID    uint   `json:"id"`
+		Name  string `json:"name"`
+		Email string `json:"email"`
+	}
+
+	err := s.db.WithContext(ctx).
+		Table("users").
+		Select("id, name, email").
+		Where("role = ? AND status = ?", "admin", "active").
+		Find(&agents).Error
+
+	return agents, err
+}
+
+// buildAgentInfo creates an AgentInfo structure for a given agent
+func (s *TicketService) buildAgentInfo(ctx context.Context, agent struct {
+	ID    uint   `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}, category string) (*dto.AgentInfo, error) {
+	workload, err := s.GetAgentWorkload(ctx, agent.ID)
+	if err != nil {
+		workload = 0 // Default to 0 on error
+	}
+
+	return &dto.AgentInfo{
+		UserID:            agent.ID,
+		Name:              agent.Name,
+		Email:             agent.Email,
+		Specialties:       []string{"general", category},
+		CurrentLoad:       workload,
+		MaxLoad:           constants.DefaultAgentMaxLoad,
+		IsOnline:          true, // Simplified assumption
+		LastActiveAt:      time.Now().Format(time.RFC3339),
+		AvgResponseTime:   constants.DefaultAgentResponseTime,
+		SatisfactionScore: constants.DefaultSatisfactionScore,
+	}, nil
+}
+
+// selectBestAgent implements the agent selection algorithm
+func (s *TicketService) selectBestAgent(agents []*dto.AgentInfo, ticket *entities.Ticket) *dto.AgentInfo {
+	var bestAgent *dto.AgentInfo
+	lowestScore := int(^uint(0) >> 1) // Max int
+
+	for _, agent := range agents {
+		score := s.calculateAgentScore(agent, ticket)
+		if score < lowestScore {
+			lowestScore = score
+			bestAgent = agent
+		}
+	}
+
+	return bestAgent
+}
+
+// calculateAgentScore calculates a score for an agent (lower is better)
+func (s *TicketService) calculateAgentScore(agent *dto.AgentInfo, ticket *entities.Ticket) int {
+	score := agent.CurrentLoad
+
+	// Bonus for category specialization
+	if s.hasSpecialty(agent, ticket.Category) {
+		score--
+	}
+
+	// For urgent tickets, prefer agents with better response times
+	if s.isUrgentTicket(ticket) && agent.AvgResponseTime < constants.DefaultAgentResponseTime {
+		score--
+	}
+
+	return score
+}
+
+// hasSpecialty checks if an agent specializes in a given category
+func (s *TicketService) hasSpecialty(agent *dto.AgentInfo, category string) bool {
+	for _, specialty := range agent.Specialties {
+		if specialty == category {
+			return true
+		}
+	}
+	return false
+}
+
+// isUrgentTicket checks if a ticket is urgent or critical
+func (s *TicketService) isUrgentTicket(ticket *entities.Ticket) bool {
+	return ticket.Priority == constants.TicketPriorityUrgent ||
+		ticket.Priority == constants.TicketPriorityCritical
 }

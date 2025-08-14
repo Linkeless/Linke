@@ -3,15 +3,15 @@ package handlers
 import (
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"linke/internal/domains/ticket/constants"
 	"linke/internal/domains/ticket/dto"
-	"linke/internal/domains/ticket/entities"
 	ticketInterfaces "linke/internal/domains/ticket/usecases/interfaces"
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
 	sharedDTO "linke/internal/shared/dto"
+	sharedErrors "linke/internal/shared/errors"
+	"linke/internal/shared/handlers"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/response"
 
@@ -38,6 +38,20 @@ func NewAdminTicketHandler(
 	}
 }
 
+// getAdminUserFromContext extracts and validates admin user from request context
+func (h *AdminTicketHandler) getAdminUserFromContext(c *gin.Context) (uint, error) {
+	user, ok := handlers.GetCurrentUser(c)
+	if !ok {
+		return 0, fmt.Errorf("user not found in request context")
+	}
+	
+	if user.Role != "admin" {
+		return 0, fmt.Errorf("insufficient privileges: admin role required, got role: %s", user.Role)
+	}
+	
+	return user.ID, nil
+}
+
 // CreateTicket godoc
 // @Summary Create new ticket
 // @Description Create a new support ticket (Admin only)
@@ -46,7 +60,7 @@ func NewAdminTicketHandler(
 // @Produce json
 // @Security BearerAuth
 // @Param ticket body dto.AdminCreateTicketRequest true "Ticket creation data"
-// @Success 201 {object} entities.TicketResponse
+// @Success 201 {object} dto.TicketResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -66,7 +80,13 @@ func (h *AdminTicketHandler) CreateTicket(c *gin.Context) {
 		logger.Error("Failed to verify user for ticket creation",
 			logger.Uint("user_id", req.UserID),
 			logger.ErrorField(err))
-		response.NotFound(c, "User not found")
+		
+		convertedErr := sharedErrors.ConvertServiceError(err, "user", req.UserID)
+		if sharedErrors.IsUserNotFound(convertedErr) {
+			response.NotFound(c, "User not found")
+		} else {
+			response.InternalServerError(c, "Failed to verify user")
+		}
 		return
 	}
 
@@ -77,7 +97,13 @@ func (h *AdminTicketHandler) CreateTicket(c *gin.Context) {
 			logger.Error("Failed to verify assigned user for ticket creation",
 				logger.Uint("assigned_to_id", *req.AssignedToID),
 				logger.ErrorField(err))
-			response.NotFound(c, "Assigned user not found")
+			
+			convertedErr := sharedErrors.ConvertServiceError(err, "user", *req.AssignedToID)
+			if sharedErrors.IsUserNotFound(convertedErr) {
+				response.NotFound(c, "Assigned user not found")
+			} else {
+				response.InternalServerError(c, "Failed to verify assigned user")
+			}
 			return
 		}
 
@@ -124,18 +150,9 @@ func (h *AdminTicketHandler) CreateTicket(c *gin.Context) {
 		}
 	}
 
-	// Populate user data in response
-	ticketResponse := ticket.ToResponse()
-	ticketResponse.User = &sharedDTO.UserBasicDTO{
-		ID:       user.ID,
-		Email:    user.Email,
-		Username: user.Username,
-		Name:     user.Name,
-		Avatar:   user.Avatar,
-		Provider: user.Provider,
-		Status:   user.Status,
-		Role:     user.Role,
-	}
+	// Populate user data in response using DTO functions
+	ticketResponse := dto.ToTicketResponse(ticket)
+	ticketResponse.User = handlers.ConvertUserToBasicDTO(user)
 
 	logger.Info("Admin created ticket successfully",
 		logger.Uint("ticket_id", ticket.ID),
@@ -143,6 +160,8 @@ func (h *AdminTicketHandler) CreateTicket(c *gin.Context) {
 		logger.Uint("user_id", req.UserID))
 
 	response.Created(c, ticketResponse)
+	// Return DTO to pool after use
+	dto.PutTicketResponse(ticketResponse)
 }
 
 // ListTickets godoc
@@ -214,57 +233,48 @@ func (h *AdminTicketHandler) ListTickets(c *gin.Context) {
 		return
 	}
 
-	// Convert to response format and populate user data
-	responses := make([]*entities.TicketResponse, len(tickets))
+	// Convert to response format and batch load user data
+	responses := make([]*dto.TicketResponse, len(tickets))
+	userIDCollector := handlers.NewUserIDCollector()
+	
+	// First pass: convert tickets and collect user IDs
 	for i, ticket := range tickets {
-		responses[i] = ticket.ToResponse()
-
-		// Populate user data if available
-		if user, err := h.userService.GetUserByID(c.Request.Context(), ticket.UserID); err == nil {
-			responses[i].User = &sharedDTO.UserBasicDTO{
-				ID:       user.ID,
-				Email:    user.Email,
-				Username: user.Username,
-				Name:     user.Name,
-				Avatar:   user.Avatar,
-				Provider: user.Provider,
-				Status:   user.Status,
-				Role:     user.Role,
-			}
-		}
-
+		responses[i] = dto.ToTicketResponse(ticket)
+		
+		// Collect all user IDs that need to be loaded
+		userIDCollector.Add(ticket.UserID)
+		userIDCollector.AddPtr(ticket.AssignedToID)
+		userIDCollector.AddPtr(ticket.ResolvedByID)
+	}
+	
+	// Batch load all users
+	userLoader := handlers.NewBatchUserLoader(h.userService)
+	if err := userLoader.LoadUsers(c.Request.Context(), userIDCollector.ToSlice()); err != nil {
+		logger.Error("Failed to batch load users for tickets",
+			logger.Int("user_count", userIDCollector.Count()),
+			logger.ErrorField(err))
+	}
+	
+	// Second pass: populate user data from cache
+	for _, response := range responses {
+		// Populate user data
+		response.User = userLoader.GetUser(response.UserID)
+		
 		// Populate assigned user data if available
-		if ticket.AssignedToID != nil {
-			if assignedUser, err := h.userService.GetUserByID(c.Request.Context(), *ticket.AssignedToID); err == nil {
-				responses[i].AssignedTo = &sharedDTO.UserBasicDTO{
-					ID:       assignedUser.ID,
-					Email:    assignedUser.Email,
-					Username: assignedUser.Username,
-					Name:     assignedUser.Name,
-					Avatar:   assignedUser.Avatar,
-					Provider: assignedUser.Provider,
-					Status:   assignedUser.Status,
-					Role:     assignedUser.Role,
-				}
-			}
+		if response.AssignedToID != nil {
+			response.AssignedTo = userLoader.GetUser(*response.AssignedToID)
 		}
-
+		
 		// Populate resolved by user data if available
-		if ticket.ResolvedByID != nil {
-			if resolvedUser, err := h.userService.GetUserByID(c.Request.Context(), *ticket.ResolvedByID); err == nil {
-				responses[i].ResolvedBy = &sharedDTO.UserBasicDTO{
-					ID:       resolvedUser.ID,
-					Email:    resolvedUser.Email,
-					Username: resolvedUser.Username,
-					Name:     resolvedUser.Name,
-					Avatar:   resolvedUser.Avatar,
-					Provider: resolvedUser.Provider,
-					Status:   resolvedUser.Status,
-					Role:     resolvedUser.Role,
-				}
-			}
+		if response.ResolvedByID != nil {
+			response.ResolvedBy = userLoader.GetUser(*response.ResolvedByID)
 		}
 	}
+	
+	logger.Debug("Batch loaded user data for tickets",
+		logger.Int("ticket_count", len(tickets)),
+		logger.Int("unique_users", userIDCollector.Count()),
+		logger.Int("cached_users", userLoader.CacheSize()))
 
 	response.Paginated(c, "Tickets retrieved successfully", responses, page, limit, total, "/api/v1/admin/tickets")
 }
@@ -277,7 +287,7 @@ func (h *AdminTicketHandler) ListTickets(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
-// @Success 200 {object} entities.TicketResponse
+// @Success 200 {object} dto.TicketResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -301,69 +311,48 @@ func (h *AdminTicketHandler) GetTicket(c *gin.Context) {
 	}
 
 	// Convert to response format and populate user data
-	ticketResponse := ticket.ToResponse()
+	ticketResponse := dto.ToTicketResponse(ticket)
 
-	// Populate user data
-	if user, err := h.userService.GetUserByID(c.Request.Context(), ticket.UserID); err == nil {
-		ticketResponse.User = &sharedDTO.UserBasicDTO{
-			ID:       user.ID,
-			Email:    user.Email,
-			Username: user.Username,
-			Name:     user.Name,
-			Avatar:   user.Avatar,
-			Provider: user.Provider,
-			Status:   user.Status,
-			Role:     user.Role,
-		}
+	// Collect all user IDs that need to be loaded
+	userIDCollector := handlers.NewUserIDCollector()
+	userIDCollector.Add(ticket.UserID)
+	userIDCollector.AddPtr(ticket.AssignedToID)
+	userIDCollector.AddPtr(ticket.ResolvedByID)
+	
+	// Collect user IDs from messages
+	for i := range ticketResponse.Messages {
+		userIDCollector.Add(ticketResponse.Messages[i].UserID)
 	}
-
+	
+	// Batch load all users
+	userLoader := handlers.NewBatchUserLoader(h.userService)
+	if err := userLoader.LoadUsers(c.Request.Context(), userIDCollector.ToSlice()); err != nil {
+		logger.Error("Failed to batch load users for ticket details",
+			logger.Int("user_count", userIDCollector.Count()),
+			logger.ErrorField(err))
+	}
+	
+	// Populate user data from cache
+	ticketResponse.User = userLoader.GetUser(ticket.UserID)
+	
 	// Populate assigned user data if available
 	if ticket.AssignedToID != nil {
-		if assignedUser, err := h.userService.GetUserByID(c.Request.Context(), *ticket.AssignedToID); err == nil {
-			ticketResponse.AssignedTo = &sharedDTO.UserBasicDTO{
-				ID:       assignedUser.ID,
-				Email:    assignedUser.Email,
-				Username: assignedUser.Username,
-				Name:     assignedUser.Name,
-				Avatar:   assignedUser.Avatar,
-				Provider: assignedUser.Provider,
-				Status:   assignedUser.Status,
-				Role:     assignedUser.Role,
-			}
-		}
+		ticketResponse.AssignedTo = userLoader.GetUser(*ticket.AssignedToID)
 	}
-
+	
 	// Populate resolved by user data if available
 	if ticket.ResolvedByID != nil {
-		if resolvedUser, err := h.userService.GetUserByID(c.Request.Context(), *ticket.ResolvedByID); err == nil {
-			ticketResponse.ResolvedBy = &sharedDTO.UserBasicDTO{
-				ID:       resolvedUser.ID,
-				Email:    resolvedUser.Email,
-				Username: resolvedUser.Username,
-				Name:     resolvedUser.Name,
-				Avatar:   resolvedUser.Avatar,
-				Provider: resolvedUser.Provider,
-				Status:   resolvedUser.Status,
-				Role:     resolvedUser.Role,
-			}
-		}
+		ticketResponse.ResolvedBy = userLoader.GetUser(*ticket.ResolvedByID)
 	}
-
+	
 	// Populate message user data
 	for i := range ticketResponse.Messages {
-		if user, err := h.userService.GetUserByID(c.Request.Context(), ticketResponse.Messages[i].UserID); err == nil {
-			ticketResponse.Messages[i].User = &sharedDTO.UserBasicDTO{
-				ID:       user.ID,
-				Email:    user.Email,
-				Username: user.Username,
-				Name:     user.Name,
-				Avatar:   user.Avatar,
-				Provider: user.Provider,
-				Status:   user.Status,
-				Role:     user.Role,
-			}
-		}
+		ticketResponse.Messages[i].User = userLoader.GetUser(ticketResponse.Messages[i].UserID)
 	}
+	
+	logger.Debug("Batch loaded user data for ticket details",
+		logger.Int("unique_users", userIDCollector.Count()),
+		logger.Int("cached_users", userLoader.CacheSize()))
 
 	response.OK(c, ticketResponse)
 }
@@ -377,7 +366,7 @@ func (h *AdminTicketHandler) GetTicket(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
 // @Param ticket body dto.AdminUpdateTicketRequest true "Ticket update data"
-// @Success 200 {object} entities.TicketResponse
+// @Success 200 {object} dto.TicketResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -415,7 +404,8 @@ func (h *AdminTicketHandler) UpdateTicket(c *gin.Context) {
 			logger.Uint("ticket_id", uint(id)),
 			logger.ErrorField(err))
 
-		if strings.Contains(err.Error(), "not found") {
+		convertedErr := sharedErrors.ConvertServiceError(err, "ticket", uint(id))
+		if sharedErrors.IsTicketNotFound(convertedErr) {
 			response.NotFound(c, "Ticket not found")
 		} else {
 			response.InternalServerError(c, "Failed to update ticket")
@@ -424,18 +414,9 @@ func (h *AdminTicketHandler) UpdateTicket(c *gin.Context) {
 	}
 
 	// Convert to response format and populate user data
-	ticketResponse := ticket.ToResponse()
+	ticketResponse := dto.ToTicketResponse(ticket)
 	if user, err := h.userService.GetUserByID(c.Request.Context(), ticket.UserID); err == nil {
-		ticketResponse.User = &sharedDTO.UserBasicDTO{
-			ID:       user.ID,
-			Email:    user.Email,
-			Username: user.Username,
-			Name:     user.Name,
-			Avatar:   user.Avatar,
-			Provider: user.Provider,
-			Status:   user.Status,
-			Role:     user.Role,
-		}
+		ticketResponse.User = handlers.ConvertUserToBasicDTO(user)
 	}
 
 	logger.Info("Admin updated ticket successfully",
@@ -453,7 +434,7 @@ func (h *AdminTicketHandler) UpdateTicket(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
 // @Param assignment body dto.AssignTicketRequest true "Assignment data"
-// @Success 200 {object} entities.TicketResponse
+// @Success 200 {object} dto.TicketResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -501,7 +482,8 @@ func (h *AdminTicketHandler) AssignTicket(c *gin.Context) {
 			logger.Uint("assigned_to_id", req.AssignedToID),
 			logger.ErrorField(err))
 
-		if strings.Contains(err.Error(), "not found") {
+		convertedErr := sharedErrors.ConvertServiceError(err, "ticket", uint(id))
+		if sharedErrors.IsTicketNotFound(convertedErr) {
 			response.NotFound(c, "Ticket not found")
 		} else {
 			response.InternalServerError(c, "Failed to assign ticket")
@@ -511,47 +493,38 @@ func (h *AdminTicketHandler) AssignTicket(c *gin.Context) {
 
 	// Add internal note if provided
 	if req.Note != "" {
-		noteReq := &dto.CreateTicketMessageRequest{
-			Content:     req.Note,
-			MessageType: constants.MessageTypeSystem,
-			IsInternal:  true,
-		}
-
-		// Note: We're passing 0 as userID for system messages - this might need adjustment
-		_, err = h.ticketMessageService.CreateTicketMessage(c.Request.Context(), ticket.ID, 0, noteReq)
+		// Get admin user ID from context
+		adminUserID, err := h.getAdminUserFromContext(c)
 		if err != nil {
-			logger.Error("Failed to create assignment note",
+			logger.Error("Failed to get admin user from context for assignment note",
 				logger.Uint("ticket_id", ticket.ID),
 				logger.ErrorField(err))
-			// Continue without failing the assignment
+			// Continue without failing the assignment since the main operation succeeded
+		} else {
+			noteReq := &dto.CreateTicketMessageRequest{
+				Content:     req.Note,
+				MessageType: constants.MessageTypeSystem,
+				IsInternal:  true,
+			}
+
+			_, err = h.ticketMessageService.CreateTicketMessage(c.Request.Context(), ticket.ID, adminUserID, noteReq)
+			if err != nil {
+				logger.Error("Failed to create assignment note",
+					logger.Uint("ticket_id", ticket.ID),
+					logger.Uint("admin_user_id", adminUserID),
+					logger.ErrorField(err))
+				// Continue without failing the assignment
+			}
 		}
 	}
 
 	// Convert to response format and populate user data
-	ticketResponse := ticket.ToResponse()
+	ticketResponse := dto.ToTicketResponse(ticket)
 	if user, err := h.userService.GetUserByID(c.Request.Context(), ticket.UserID); err == nil {
-		ticketResponse.User = &sharedDTO.UserBasicDTO{
-			ID:       user.ID,
-			Email:    user.Email,
-			Username: user.Username,
-			Name:     user.Name,
-			Avatar:   user.Avatar,
-			Provider: user.Provider,
-			Status:   user.Status,
-			Role:     user.Role,
-		}
+		ticketResponse.User = handlers.ConvertUserToBasicDTO(user)
 	}
 
-	ticketResponse.AssignedTo = &sharedDTO.UserBasicDTO{
-		ID:       assignedUser.ID,
-		Email:    assignedUser.Email,
-		Username: assignedUser.Username,
-		Name:     assignedUser.Name,
-		Avatar:   assignedUser.Avatar,
-		Provider: assignedUser.Provider,
-		Status:   assignedUser.Status,
-		Role:     assignedUser.Role,
-	}
+	ticketResponse.AssignedTo = handlers.ConvertUserToBasicDTO(assignedUser)
 
 	logger.Info("Admin assigned ticket successfully",
 		logger.Uint("ticket_id", uint(id)),
@@ -569,7 +542,7 @@ func (h *AdminTicketHandler) AssignTicket(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
 // @Param escalation body dto.EscalateTicketRequest true "Escalation data"
-// @Success 200 {object} entities.TicketResponse
+// @Success 200 {object} dto.TicketResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -650,33 +623,35 @@ func (h *AdminTicketHandler) EscalateTicket(c *gin.Context) {
 
 	// Add escalation note
 	escalationNote := "Ticket escalated. Reason: " + req.EscalationReason
-	noteReq := &dto.CreateTicketMessageRequest{
-		Content:     escalationNote,
-		MessageType: constants.MessageTypeSystem,
-		IsInternal:  true,
-	}
-
-	_, err = h.ticketMessageService.CreateTicketMessage(c.Request.Context(), ticket.ID, 0, noteReq)
+	
+	// Get admin user ID from context for the escalation note
+	adminUserID, err := h.getAdminUserFromContext(c)
 	if err != nil {
-		logger.Error("Failed to create escalation note",
+		logger.Error("Failed to get admin user from context for escalation note",
 			logger.Uint("ticket_id", ticket.ID),
 			logger.ErrorField(err))
-		// Continue without failing the escalation
+		// Continue without failing the escalation since the main operation succeeded
+	} else {
+		noteReq := &dto.CreateTicketMessageRequest{
+			Content:     escalationNote,
+			MessageType: constants.MessageTypeSystem,
+			IsInternal:  true,
+		}
+
+		_, err = h.ticketMessageService.CreateTicketMessage(c.Request.Context(), ticket.ID, adminUserID, noteReq)
+		if err != nil {
+			logger.Error("Failed to create escalation note",
+				logger.Uint("ticket_id", ticket.ID),
+				logger.Uint("admin_user_id", adminUserID),
+				logger.ErrorField(err))
+			// Continue without failing the escalation
+		}
 	}
 
 	// Convert to response format and populate user data
-	ticketResponse := ticket.ToResponse()
+	ticketResponse := dto.ToTicketResponse(ticket)
 	if user, err := h.userService.GetUserByID(c.Request.Context(), ticket.UserID); err == nil {
-		ticketResponse.User = &sharedDTO.UserBasicDTO{
-			ID:       user.ID,
-			Email:    user.Email,
-			Username: user.Username,
-			Name:     user.Name,
-			Avatar:   user.Avatar,
-			Provider: user.Provider,
-			Status:   user.Status,
-			Role:     user.Role,
-		}
+		ticketResponse.User = handlers.ConvertUserToBasicDTO(user)
 	}
 
 	ticketResponse.AssignedTo = &sharedDTO.UserBasicDTO{
@@ -705,7 +680,7 @@ func (h *AdminTicketHandler) EscalateTicket(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
-// @Success 200 {object} entities.TicketResponse
+// @Success 200 {object} dto.TicketResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -726,7 +701,8 @@ func (h *AdminTicketHandler) CloseTicket(c *gin.Context) {
 			logger.Uint("ticket_id", uint(id)),
 			logger.ErrorField(err))
 
-		if strings.Contains(err.Error(), "not found") {
+		convertedErr := sharedErrors.ConvertServiceError(err, "ticket", uint(id))
+		if sharedErrors.IsTicketNotFound(convertedErr) {
 			response.NotFound(c, "Ticket not found")
 		} else {
 			response.InternalServerError(c, "Failed to close ticket")
@@ -735,18 +711,9 @@ func (h *AdminTicketHandler) CloseTicket(c *gin.Context) {
 	}
 
 	// Convert to response format and populate user data
-	ticketResponse := ticket.ToResponse()
+	ticketResponse := dto.ToTicketResponse(ticket)
 	if user, err := h.userService.GetUserByID(c.Request.Context(), ticket.UserID); err == nil {
-		ticketResponse.User = &sharedDTO.UserBasicDTO{
-			ID:       user.ID,
-			Email:    user.Email,
-			Username: user.Username,
-			Name:     user.Name,
-			Avatar:   user.Avatar,
-			Provider: user.Provider,
-			Status:   user.Status,
-			Role:     user.Role,
-		}
+		ticketResponse.User = handlers.ConvertUserToBasicDTO(user)
 	}
 
 	logger.Info("Admin closed ticket successfully",
@@ -763,7 +730,7 @@ func (h *AdminTicketHandler) CloseTicket(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
-// @Success 200 {object} entities.TicketResponse
+// @Success 200 {object} dto.TicketResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -784,7 +751,8 @@ func (h *AdminTicketHandler) ReopenTicket(c *gin.Context) {
 			logger.Uint("ticket_id", uint(id)),
 			logger.ErrorField(err))
 
-		if strings.Contains(err.Error(), "not found") {
+		convertedErr := sharedErrors.ConvertServiceError(err, "ticket", uint(id))
+		if sharedErrors.IsTicketNotFound(convertedErr) {
 			response.NotFound(c, "Ticket not found")
 		} else {
 			response.InternalServerError(c, "Failed to reopen ticket")
@@ -793,18 +761,9 @@ func (h *AdminTicketHandler) ReopenTicket(c *gin.Context) {
 	}
 
 	// Convert to response format and populate user data
-	ticketResponse := ticket.ToResponse()
+	ticketResponse := dto.ToTicketResponse(ticket)
 	if user, err := h.userService.GetUserByID(c.Request.Context(), ticket.UserID); err == nil {
-		ticketResponse.User = &sharedDTO.UserBasicDTO{
-			ID:       user.ID,
-			Email:    user.Email,
-			Username: user.Username,
-			Name:     user.Name,
-			Avatar:   user.Avatar,
-			Provider: user.Provider,
-			Status:   user.Status,
-			Role:     user.Role,
-		}
+		ticketResponse.User = handlers.ConvertUserToBasicDTO(user)
 	}
 
 	logger.Info("Admin reopened ticket successfully",
@@ -877,24 +836,27 @@ func (h *AdminTicketHandler) GetTicketMessages(c *gin.Context) {
 		return
 	}
 
-	// Convert to response format and populate user data
-	responses := make([]*entities.TicketMessageResponse, len(messages))
+	// Convert to response format and batch load user data
+	responses := make([]*dto.TicketMessageResponse, len(messages))
+	userIDCollector := handlers.NewUserIDCollector()
+	
+	// First pass: convert messages and collect user IDs
 	for i, message := range messages {
-		responses[i] = message.ToResponse()
-
-		// Populate user data
-		if user, err := h.userService.GetUserByID(c.Request.Context(), message.UserID); err == nil {
-			responses[i].User = &sharedDTO.UserBasicDTO{
-				ID:       user.ID,
-				Email:    user.Email,
-				Username: user.Username,
-				Name:     user.Name,
-				Avatar:   user.Avatar,
-				Provider: user.Provider,
-				Status:   user.Status,
-				Role:     user.Role,
-			}
-		}
+		responses[i] = dto.ToTicketMessageResponse(message)
+		userIDCollector.Add(message.UserID)
+	}
+	
+	// Batch load all users
+	userLoader := handlers.NewBatchUserLoader(h.userService)
+	if err := userLoader.LoadUsers(c.Request.Context(), userIDCollector.ToSlice()); err != nil {
+		logger.Error("Failed to batch load users for ticket messages",
+			logger.Int("user_count", userIDCollector.Count()),
+			logger.ErrorField(err))
+	}
+	
+	// Second pass: populate user data from cache
+	for _, response := range responses {
+		response.User = userLoader.GetUser(response.UserID)
 	}
 
 	response.Paginated(c, "Messages retrieved successfully", responses, page, limit, total, fmt.Sprintf("/api/v1/admin/tickets/%s/messages", idStr))
@@ -909,7 +871,7 @@ func (h *AdminTicketHandler) GetTicketMessages(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
 // @Param message body dto.AdminTicketMessageRequest true "Message data"
-// @Success 201 {object} entities.TicketMessageResponse
+// @Success 201 {object} dto.TicketMessageResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -940,9 +902,15 @@ func (h *AdminTicketHandler) AddMessage(c *gin.Context) {
 		return
 	}
 
-	// TODO: Get admin user ID from context
-	// For now using 0, but this should be extracted from the authentication context
-	adminUserID := uint(0) // This needs to be properly implemented
+	// Get admin user ID from context
+	adminUserID, err := h.getAdminUserFromContext(c)
+	if err != nil {
+		logger.Error("Failed to get admin user from context for message creation",
+			logger.Uint("ticket_id", uint(ticketID)),
+			logger.ErrorField(err))
+		response.Unauthorized(c, "Admin authentication required")
+		return
+	}
 
 	// Set default message type
 	messageType := req.MessageType
@@ -968,18 +936,9 @@ func (h *AdminTicketHandler) AddMessage(c *gin.Context) {
 	}
 
 	// Convert to response format and populate user data
-	messageResponse := message.ToResponse()
+	messageResponse := dto.ToTicketMessageResponse(message)
 	if user, err := h.userService.GetUserByID(c.Request.Context(), message.UserID); err == nil {
-		messageResponse.User = &sharedDTO.UserBasicDTO{
-			ID:       user.ID,
-			Email:    user.Email,
-			Username: user.Username,
-			Name:     user.Name,
-			Avatar:   user.Avatar,
-			Provider: user.Provider,
-			Status:   user.Status,
-			Role:     user.Role,
-		}
+		messageResponse.User = handlers.ConvertUserToBasicDTO(user)
 	}
 
 	logger.Info("Admin added message to ticket successfully",
@@ -998,7 +957,7 @@ func (h *AdminTicketHandler) AddMessage(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
 // @Param msg_id path uint true "Message ID"
-// @Success 200 {object} entities.TicketMessageResponse
+// @Success 200 {object} dto.TicketMessageResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -1022,18 +981,9 @@ func (h *AdminTicketHandler) GetMessage(c *gin.Context) {
 	}
 
 	// Convert to response format and populate user data
-	messageResponse := message.ToResponse()
+	messageResponse := dto.ToTicketMessageResponse(message)
 	if user, err := h.userService.GetUserByID(c.Request.Context(), message.UserID); err == nil {
-		messageResponse.User = &sharedDTO.UserBasicDTO{
-			ID:       user.ID,
-			Email:    user.Email,
-			Username: user.Username,
-			Name:     user.Name,
-			Avatar:   user.Avatar,
-			Provider: user.Provider,
-			Status:   user.Status,
-			Role:     user.Role,
-		}
+		messageResponse.User = handlers.ConvertUserToBasicDTO(user)
 	}
 
 	response.OK(c, messageResponse)
@@ -1049,7 +999,7 @@ func (h *AdminTicketHandler) GetMessage(c *gin.Context) {
 // @Param id path uint true "Ticket ID"
 // @Param msg_id path uint true "Message ID"
 // @Param message body dto.UpdateTicketMessageRequest true "Message update data"
-// @Success 200 {object} entities.TicketMessageResponse
+// @Success 200 {object} dto.TicketMessageResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -1076,7 +1026,8 @@ func (h *AdminTicketHandler) UpdateMessage(c *gin.Context) {
 			logger.Uint("message_id", uint(msgID)),
 			logger.ErrorField(err))
 
-		if strings.Contains(err.Error(), "not found") {
+		convertedErr := sharedErrors.ConvertServiceError(err, "message", uint(msgID))
+		if sharedErrors.IsTicketMessageNotFound(convertedErr) {
 			response.NotFound(c, "Message not found")
 		} else {
 			response.InternalServerError(c, "Failed to update message")
@@ -1085,18 +1036,9 @@ func (h *AdminTicketHandler) UpdateMessage(c *gin.Context) {
 	}
 
 	// Convert to response format and populate user data
-	messageResponse := message.ToResponse()
+	messageResponse := dto.ToTicketMessageResponse(message)
 	if user, err := h.userService.GetUserByID(c.Request.Context(), message.UserID); err == nil {
-		messageResponse.User = &sharedDTO.UserBasicDTO{
-			ID:       user.ID,
-			Email:    user.Email,
-			Username: user.Username,
-			Name:     user.Name,
-			Avatar:   user.Avatar,
-			Provider: user.Provider,
-			Status:   user.Status,
-			Role:     user.Role,
-		}
+		messageResponse.User = handlers.ConvertUserToBasicDTO(user)
 	}
 
 	logger.Info("Admin updated message successfully",
@@ -1135,7 +1077,8 @@ func (h *AdminTicketHandler) DeleteMessage(c *gin.Context) {
 			logger.Uint("message_id", uint(msgID)),
 			logger.ErrorField(err))
 
-		if strings.Contains(err.Error(), "not found") {
+		convertedErr := sharedErrors.ConvertServiceError(err, "message", uint(msgID))
+		if sharedErrors.IsTicketMessageNotFound(convertedErr) {
 			response.NotFound(c, "Message not found")
 		} else {
 			response.InternalServerError(c, "Failed to delete message")
@@ -1158,7 +1101,7 @@ func (h *AdminTicketHandler) DeleteMessage(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
 // @Param note body dto.AdminTicketMessageRequest true "Internal note data"
-// @Success 201 {object} entities.TicketMessageResponse
+// @Success 201 {object} dto.TicketMessageResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -1189,8 +1132,15 @@ func (h *AdminTicketHandler) AddInternalNote(c *gin.Context) {
 		return
 	}
 
-	// TODO: Get admin user ID from context
-	adminUserID := uint(0)
+	// Get admin user ID from context
+	adminUserID, err := h.getAdminUserFromContext(c)
+	if err != nil {
+		logger.Error("Failed to get admin user from context for internal note creation",
+			logger.Uint("ticket_id", uint(ticketID)),
+			logger.ErrorField(err))
+		response.Unauthorized(c, "Admin authentication required")
+		return
+	}
 
 	// Use internal message service method if available, otherwise create regular message marked as internal
 	message, err := h.ticketMessageService.CreateInternalMessage(c.Request.Context(), uint(ticketID), adminUserID, req.Content)
@@ -1203,18 +1153,9 @@ func (h *AdminTicketHandler) AddInternalNote(c *gin.Context) {
 	}
 
 	// Convert to response format and populate user data
-	messageResponse := message.ToResponse()
+	messageResponse := dto.ToTicketMessageResponse(message)
 	if user, err := h.userService.GetUserByID(c.Request.Context(), message.UserID); err == nil {
-		messageResponse.User = &sharedDTO.UserBasicDTO{
-			ID:       user.ID,
-			Email:    user.Email,
-			Username: user.Username,
-			Name:     user.Name,
-			Avatar:   user.Avatar,
-			Provider: user.Provider,
-			Status:   user.Status,
-			Role:     user.Role,
-		}
+		messageResponse.User = handlers.ConvertUserToBasicDTO(user)
 	}
 
 	logger.Info("Admin added internal note successfully",
@@ -1284,39 +1225,36 @@ func (h *AdminTicketHandler) SearchTickets(c *gin.Context) {
 		return
 	}
 
-	// Convert to response format and populate user data
-	responses := make([]*entities.TicketResponse, len(tickets))
+	// Convert to response format and batch load user data
+	responses := make([]*dto.TicketResponse, len(tickets))
+	userIDCollector := handlers.NewUserIDCollector()
+	
+	// First pass: convert tickets and collect user IDs
 	for i, ticket := range tickets {
-		responses[i] = ticket.ToResponse()
-
+		responses[i] = dto.ToTicketResponse(ticket)
+		
+		// Collect all user IDs that need to be loaded
+		userIDCollector.Add(ticket.UserID)
+		userIDCollector.AddPtr(ticket.AssignedToID)
+		userIDCollector.AddPtr(ticket.ResolvedByID)
+	}
+	
+	// Batch load all users
+	userLoader := handlers.NewBatchUserLoader(h.userService)
+	if err := userLoader.LoadUsers(c.Request.Context(), userIDCollector.ToSlice()); err != nil {
+		logger.Error("Failed to batch load users for search results",
+			logger.Int("user_count", userIDCollector.Count()),
+			logger.ErrorField(err))
+	}
+	
+	// Second pass: populate user data from cache
+	for _, response := range responses {
 		// Populate user data
-		if user, err := h.userService.GetUserByID(c.Request.Context(), ticket.UserID); err == nil {
-			responses[i].User = &sharedDTO.UserBasicDTO{
-				ID:       user.ID,
-				Email:    user.Email,
-				Username: user.Username,
-				Name:     user.Name,
-				Avatar:   user.Avatar,
-				Provider: user.Provider,
-				Status:   user.Status,
-				Role:     user.Role,
-			}
-		}
-
+		response.User = userLoader.GetUser(response.UserID)
+		
 		// Populate assigned user data if available
-		if ticket.AssignedToID != nil {
-			if assignedUser, err := h.userService.GetUserByID(c.Request.Context(), *ticket.AssignedToID); err == nil {
-				responses[i].AssignedTo = &sharedDTO.UserBasicDTO{
-					ID:       assignedUser.ID,
-					Email:    assignedUser.Email,
-					Username: assignedUser.Username,
-					Name:     assignedUser.Name,
-					Avatar:   assignedUser.Avatar,
-					Provider: assignedUser.Provider,
-					Status:   assignedUser.Status,
-					Role:     assignedUser.Role,
-				}
-			}
+		if response.AssignedToID != nil {
+			response.AssignedTo = userLoader.GetUser(*response.AssignedToID)
 		}
 	}
 
@@ -1463,16 +1401,7 @@ func (h *AdminTicketHandler) GetAgents(c *gin.Context) {
 	agents := make([]*sharedDTO.UserBasicDTO, 0)
 	for _, user := range users {
 		if user.Role == "admin" {
-			agents = append(agents, &sharedDTO.UserBasicDTO{
-				ID:       user.ID,
-				Email:    user.Email,
-				Username: user.Username,
-				Name:     user.Name,
-				Avatar:   user.Avatar,
-				Provider: user.Provider,
-				Status:   user.Status,
-				Role:     user.Role,
-			})
+			agents = append(agents, handlers.ConvertUserToBasicDTO(user))
 		}
 	}
 
@@ -1674,7 +1603,8 @@ func (h *AdminTicketHandler) DeleteTicket(c *gin.Context) {
 			logger.Uint("ticket_id", uint(id)),
 			logger.ErrorField(err))
 
-		if strings.Contains(err.Error(), "not found") {
+		convertedErr := sharedErrors.ConvertServiceError(err, "ticket", uint(id))
+		if sharedErrors.IsTicketNotFound(convertedErr) {
 			response.NotFound(c, "Ticket not found")
 		} else {
 			response.InternalServerError(c, "Failed to delete ticket")
