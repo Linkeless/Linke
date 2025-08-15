@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"linke/internal/domains/user/dto"
+	userEntities "linke/internal/domains/user/entities"
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/middleware"
@@ -39,7 +40,7 @@ func (h *UserProfileHandler) GetProfile(c *gin.Context) {
 		return
 	}
 
-	user, ok := userValue.(*dto.UserResponse)
+	user, ok := userValue.(*userEntities.User)
 	if !ok {
 		response.Unauthorized(c, "Invalid user context")
 		return
@@ -83,7 +84,7 @@ func (h *UserProfileHandler) UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	currentUser, ok := userValue.(*dto.UserResponse)
+	currentUser, ok := userValue.(*userEntities.User)
 	if !ok {
 		response.Unauthorized(c, "Invalid user context")
 		return

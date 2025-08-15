@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"linke/internal/domains/user/dto"
+	userEntities "linke/internal/domains/user/entities"
 	"linke/internal/shared/constants"
 	"linke/internal/shared/middleware"
 	"linke/internal/shared/response"
@@ -32,14 +32,14 @@ func BindJSONRequest(c *gin.Context, req any) bool {
 }
 
 // GetCurrentUser 从上下文中获取当前用户
-func GetCurrentUser(c *gin.Context) (*dto.UserResponse, bool) {
+func GetCurrentUser(c *gin.Context) (*userEntities.User, bool) {
 	userValue, exists := c.Get(middleware.AuthContextKey)
 	if !exists {
 		response.Unauthorized(c, constants.ErrAuthenticationRequired)
 		return nil, false
 	}
 
-	user, ok := userValue.(*dto.UserResponse)
+	user, ok := userValue.(*userEntities.User)
 	if !ok {
 		response.Unauthorized(c, constants.ErrInvalidUserContext)
 		return nil, false

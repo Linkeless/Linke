@@ -816,7 +816,7 @@ func (h *AdminUserHandler) ResetUserPassword(c *gin.Context) {
 		return
 	}
 
-	admin, ok := adminUser.(*dto.UserResponse)
+	admin, ok := adminUser.(*entities.User)
 	if !ok {
 		response.InternalServerError(c, "Invalid admin user context")
 		return
