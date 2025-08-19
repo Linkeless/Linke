@@ -350,7 +350,7 @@ definitions:
       token:
         $ref: '#/definitions/dto.TokenResponse'
       user:
-        $ref: '#/definitions/dto.UserResponse'
+        $ref: '#/definitions/linke_internal_domains_auth_dto.UserResponse'
     type: object
   dto.AuthorizeURLResponse:
     properties:
@@ -358,6 +358,17 @@ definitions:
         type: string
       state:
         type: string
+    type: object
+  dto.BatchUserIDsRequest:
+    properties:
+      ids:
+        items:
+          type: integer
+        maxItems: 100
+        minItems: 1
+        type: array
+    required:
+    - ids
     type: object
   dto.BenchmarkResult:
     properties:
@@ -378,6 +389,15 @@ definitions:
         type: number
       total_operations:
         example: 5000
+        type: integer
+    type: object
+  dto.BindingListResponse:
+    properties:
+      bindings:
+        items:
+          $ref: '#/definitions/dto.UserAccountBindingResponse'
+        type: array
+      total:
         type: integer
     type: object
   dto.BulkCreateCouponRequest:
@@ -724,6 +744,45 @@ definitions:
         description: Discount value
         example: 20
         type: number
+    type: object
+  dto.CreateBindingRequest:
+    properties:
+      is_primary:
+        example: false
+        type: boolean
+      provider:
+        enum:
+        - google
+        - github
+        - telegram
+        example: google
+        type: string
+      provider_avatar:
+        example: https://example.com/avatar.jpg
+        maxLength: 500
+        type: string
+      provider_data:
+        example: '{"extra": "data"}'
+        type: string
+      provider_email:
+        example: user@example.com
+        maxLength: 255
+        type: string
+      provider_name:
+        example: User Name
+        maxLength: 255
+        type: string
+      provider_user_id:
+        example: "123456789"
+        maxLength: 100
+        type: string
+      provider_username:
+        example: username
+        maxLength: 100
+        type: string
+    required:
+    - provider
+    - provider_user_id
     type: object
   dto.CreateCouponRequest:
     properties:
@@ -1191,6 +1250,41 @@ definitions:
     - rate
     - server_port
     type: object
+  dto.CreateUserRequest:
+    properties:
+      email:
+        example: user@example.com
+        maxLength: 255
+        type: string
+      name:
+        example: John Doe
+        maxLength: 255
+        type: string
+      password:
+        example: password123
+        maxLength: 255
+        minLength: 6
+        type: string
+      role:
+        enum:
+        - user
+        - admin
+        example: user
+        type: string
+      status:
+        enum:
+        - active
+        - inactive
+        - banned
+        example: active
+        type: string
+      username:
+        example: johndoe
+        maxLength: 100
+        type: string
+    required:
+    - email
+    type: object
   dto.DatabaseHealthResponse:
     properties:
       mysql:
@@ -1483,6 +1577,31 @@ definitions:
         type: integer
       tags:
         example: premium,fast
+        type: string
+    type: object
+  dto.PatchUserRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      name:
+        example: John Doe
+        type: string
+      role:
+        enum:
+        - user
+        - admin
+        example: user
+        type: string
+      status:
+        enum:
+        - active
+        - inactive
+        - banned
+        example: active
+        type: string
+      username:
+        example: johndoe
         type: string
     type: object
   dto.PayOrderRequest:
@@ -2120,6 +2239,16 @@ definitions:
     required:
     - reason
     type: object
+  dto.ResetPasswordRequest:
+    properties:
+      new_password:
+        example: newSecurePassword123
+        maxLength: 255
+        minLength: 6
+        type: string
+    required:
+    - new_password
+    type: object
   dto.ServerAPIHealthResponse:
     properties:
       service:
@@ -2173,6 +2302,184 @@ definitions:
       user_id:
         example: 1
         type: integer
+    type: object
+  dto.TicketMessageResponse:
+    properties:
+      attachments:
+        example: '[{"name":"screenshot.png","url":"/uploads/screenshot.png"}]'
+        type: string
+      content:
+        example: Thank you for contacting support. We will review your issue.
+        type: string
+      created_at:
+        example: "2024-01-01T10:30:00Z"
+        type: string
+      id:
+        example: 1
+        type: integer
+      is_internal:
+        example: false
+        type: boolean
+      message_type:
+        example: admin
+        type: string
+      metadata:
+        example: '{"priority": "normal"}'
+        type: string
+      ticket_id:
+        example: 1
+        type: integer
+      updated_at:
+        example: "2024-01-01T10:30:00Z"
+        type: string
+      user:
+        $ref: '#/definitions/dto.UserBasicDTO'
+      user_id:
+        example: 2
+        type: integer
+    type: object
+  dto.TicketMessageUserResponse:
+    properties:
+      attachments:
+        example: '[{"name":"screenshot.png","url":"/uploads/screenshot.png"}]'
+        type: string
+      content:
+        example: Thank you for contacting support. We will review your issue.
+        type: string
+      created_at:
+        example: "2024-01-01T10:30:00Z"
+        type: string
+      id:
+        example: 1
+        type: integer
+      message_type:
+        example: admin
+        type: string
+      ticket_id:
+        example: 1
+        type: integer
+      updated_at:
+        example: "2024-01-01T10:30:00Z"
+        type: string
+    type: object
+  dto.TicketResponse:
+    properties:
+      assigned_at:
+        example: "2024-01-01T10:00:00Z"
+        type: string
+      assigned_to:
+        $ref: '#/definitions/dto.UserBasicDTO'
+      assigned_to_id:
+        example: 2
+        type: integer
+      category:
+        example: subscription
+        type: string
+      closed_at:
+        example: "2024-01-02T16:00:00Z"
+        type: string
+      created_at:
+        example: "2024-01-01T09:00:00Z"
+        type: string
+      description:
+        example: I am unable to access my premium subscription features
+        type: string
+      first_response_at:
+        example: "2024-01-01T10:30:00Z"
+        type: string
+      id:
+        example: 1
+        type: integer
+      last_response_at:
+        example: "2024-01-02T14:00:00Z"
+        type: string
+      messages:
+        items:
+          $ref: '#/definitions/dto.TicketMessageResponse'
+        type: array
+      metadata:
+        example: '{"priority_escalated": true}'
+        type: string
+      priority:
+        example: normal
+        type: string
+      resolution:
+        example: Issue resolved by updating subscription settings
+        type: string
+      resolved_at:
+        example: "2024-01-02T15:30:00Z"
+        type: string
+      resolved_by:
+        $ref: '#/definitions/dto.UserBasicDTO'
+      resolved_by_id:
+        example: 2
+        type: integer
+      status:
+        example: open
+        type: string
+      tags:
+        example: urgent,subscription
+        type: string
+      ticket_no:
+        example: TKT-20240101-001
+        type: string
+      title:
+        example: Unable to access my subscription
+        type: string
+      updated_at:
+        example: "2024-01-02T16:00:00Z"
+        type: string
+      user:
+        $ref: '#/definitions/dto.UserBasicDTO'
+      user_id:
+        example: 1
+        type: integer
+    type: object
+  dto.TicketUserResponse:
+    properties:
+      category:
+        example: subscription
+        type: string
+      closed_at:
+        example: "2024-01-02T16:00:00Z"
+        type: string
+      created_at:
+        example: "2024-01-01T09:00:00Z"
+        type: string
+      description:
+        example: I am unable to access my premium subscription features
+        type: string
+      first_response_at:
+        example: "2024-01-01T10:30:00Z"
+        type: string
+      id:
+        example: 1
+        type: integer
+      last_response_at:
+        example: "2024-01-02T14:00:00Z"
+        type: string
+      messages:
+        items:
+          $ref: '#/definitions/dto.TicketMessageUserResponse'
+        type: array
+      priority:
+        example: normal
+        type: string
+      resolution:
+        example: Issue resolved by updating subscription settings
+        type: string
+      status:
+        example: open
+        type: string
+      ticket_no:
+        example: TKT-20240101-001
+        type: string
+      title:
+        example: Unable to access my subscription
+        type: string
+      updated_at:
+        example: "2024-01-02T16:00:00Z"
+        type: string
     type: object
   dto.ToggleStatusRequest:
     properties:
@@ -2242,6 +2549,31 @@ definitions:
       timestamp:
         example: 1704067200
         type: integer
+    type: object
+  dto.UpdateBindingRequest:
+    properties:
+      is_primary:
+        example: false
+        type: boolean
+      provider_avatar:
+        example: https://example.com/avatar.jpg
+        maxLength: 500
+        type: string
+      provider_data:
+        example: '{"extra": "data"}'
+        type: string
+      provider_email:
+        example: user@example.com
+        maxLength: 255
+        type: string
+      provider_name:
+        example: User Name
+        maxLength: 255
+        type: string
+      provider_username:
+        example: username
+        maxLength: 100
+        type: string
     type: object
   dto.UpdateCouponRequest:
     properties:
@@ -2487,6 +2819,91 @@ definitions:
         example: '{"updated_by":"admin"}'
         type: string
     type: object
+  dto.UpdateUserRequest:
+    properties:
+      email:
+        example: user@example.com
+        maxLength: 255
+        type: string
+      name:
+        example: John Doe
+        maxLength: 255
+        type: string
+      role:
+        enum:
+        - user
+        - admin
+        example: user
+        type: string
+      status:
+        enum:
+        - active
+        - inactive
+        - banned
+        example: active
+        type: string
+      username:
+        example: johndoe
+        maxLength: 100
+        type: string
+    type: object
+  dto.UpdateUserRoleRequest:
+    properties:
+      role:
+        enum:
+        - user
+        - admin
+        example: user
+        type: string
+    required:
+    - role
+    type: object
+  dto.UpdateUserStatusRequest:
+    properties:
+      status:
+        enum:
+        - active
+        - inactive
+        - banned
+        example: active
+        type: string
+    required:
+    - status
+    type: object
+  dto.UserAccountBindingResponse:
+    properties:
+      bound_at:
+        type: string
+      created_at:
+        description: Timestamp Fields
+        type: string
+      deleted_at:
+        type: string
+      id:
+        description: Primary Key
+        type: integer
+      is_primary:
+        description: Binding Status
+        type: boolean
+      last_used_at:
+        type: string
+      provider:
+        description: Provider Information
+        type: string
+      provider_avatar:
+        type: string
+      provider_email:
+        description: Provider User Data (only show non-sensitive data)
+        type: string
+      provider_name:
+        type: string
+      provider_user_id:
+        type: string
+      provider_username:
+        type: string
+      updated_at:
+        type: string
+    type: object
   dto.UserBasicDTO:
     properties:
       avatar:
@@ -2558,37 +2975,13 @@ definitions:
     - description
     - title
     type: object
-  dto.UserResponse:
+  dto.UserProfileUpdateRequest:
     properties:
       avatar:
-        example: https://example.com/avatar.jpg
         type: string
-      created_at:
-        example: "2024-01-01T00:00:00Z"
-        type: string
-      email:
-        example: user@example.com
-        type: string
-      id:
-        example: 1
-        type: integer
       name:
-        example: John Doe
-        type: string
-      provider:
-        example: local
-        type: string
-      role:
-        example: user
-        type: string
-      status:
-        example: active
-        type: string
-      updated_at:
-        example: "2024-01-01T00:00:00Z"
         type: string
       username:
-        example: johndoe
         type: string
     type: object
   dto.UserTicketMessageRequest:
@@ -2707,89 +3100,6 @@ definitions:
         description: Subscription ID
         example: 1
         type: integer
-    type: object
-  entities.BindingListResponse:
-    properties:
-      bindings:
-        items:
-          $ref: '#/definitions/entities.UserAccountBindingResponse'
-        type: array
-      total:
-        type: integer
-    type: object
-  entities.CreateBindingRequest:
-    properties:
-      is_primary:
-        example: false
-        type: boolean
-      provider:
-        enum:
-        - google
-        - github
-        - telegram
-        example: google
-        type: string
-      provider_avatar:
-        example: https://example.com/avatar.jpg
-        maxLength: 500
-        type: string
-      provider_data:
-        example: '{"extra": "data"}'
-        type: string
-      provider_email:
-        example: user@example.com
-        maxLength: 255
-        type: string
-      provider_name:
-        example: User Name
-        maxLength: 255
-        type: string
-      provider_user_id:
-        example: "123456789"
-        maxLength: 100
-        type: string
-      provider_username:
-        example: username
-        maxLength: 100
-        type: string
-    required:
-    - provider
-    - provider_user_id
-    type: object
-  entities.CreateUserRequest:
-    properties:
-      email:
-        example: user@example.com
-        maxLength: 255
-        type: string
-      name:
-        example: John Doe
-        maxLength: 255
-        type: string
-      password:
-        example: password123
-        maxLength: 255
-        minLength: 6
-        type: string
-      role:
-        enum:
-        - user
-        - admin
-        example: user
-        type: string
-      status:
-        enum:
-        - active
-        - inactive
-        - banned
-        example: active
-        type: string
-      username:
-        example: johndoe
-        maxLength: 100
-        type: string
-    required:
-    - email
     type: object
   entities.Method:
     properties:
@@ -3174,209 +3484,6 @@ definitions:
         example: "2024-01-01T00:00:00Z"
         type: string
     type: object
-  entities.TicketMessageResponse:
-    properties:
-      attachments:
-        example: '[{"name":"screenshot.png","url":"/uploads/screenshot.png"}]'
-        type: string
-      content:
-        example: Thank you for contacting support. We will review your issue.
-        type: string
-      created_at:
-        example: "2024-01-01T10:30:00Z"
-        type: string
-      id:
-        example: 1
-        type: integer
-      is_internal:
-        example: false
-        type: boolean
-      message_type:
-        example: admin
-        type: string
-      metadata:
-        example: '{"priority": "normal"}'
-        type: string
-      ticket_id:
-        example: 1
-        type: integer
-      updated_at:
-        example: "2024-01-01T10:30:00Z"
-        type: string
-      user:
-        $ref: '#/definitions/dto.UserBasicDTO'
-      user_id:
-        example: 2
-        type: integer
-    type: object
-  entities.TicketMessageUserResponse:
-    properties:
-      attachments:
-        example: '[{"name":"screenshot.png","url":"/uploads/screenshot.png"}]'
-        type: string
-      content:
-        example: Thank you for contacting support. We will review your issue.
-        type: string
-      created_at:
-        example: "2024-01-01T10:30:00Z"
-        type: string
-      id:
-        example: 1
-        type: integer
-      message_type:
-        example: admin
-        type: string
-      ticket_id:
-        example: 1
-        type: integer
-      updated_at:
-        example: "2024-01-01T10:30:00Z"
-        type: string
-    type: object
-  entities.TicketResponse:
-    properties:
-      assigned_at:
-        example: "2024-01-01T10:00:00Z"
-        type: string
-      assigned_to:
-        $ref: '#/definitions/dto.UserBasicDTO'
-      assigned_to_id:
-        example: 2
-        type: integer
-      category:
-        example: subscription
-        type: string
-      closed_at:
-        example: "2024-01-02T16:00:00Z"
-        type: string
-      created_at:
-        example: "2024-01-01T09:00:00Z"
-        type: string
-      description:
-        example: I am unable to access my premium subscription features
-        type: string
-      first_response_at:
-        example: "2024-01-01T10:30:00Z"
-        type: string
-      id:
-        example: 1
-        type: integer
-      last_response_at:
-        example: "2024-01-02T14:00:00Z"
-        type: string
-      messages:
-        items:
-          $ref: '#/definitions/entities.TicketMessageResponse'
-        type: array
-      metadata:
-        example: '{"priority_escalated": true}'
-        type: string
-      priority:
-        example: normal
-        type: string
-      resolution:
-        example: Issue resolved by updating subscription settings
-        type: string
-      resolved_at:
-        example: "2024-01-02T15:30:00Z"
-        type: string
-      resolved_by:
-        $ref: '#/definitions/dto.UserBasicDTO'
-      resolved_by_id:
-        example: 2
-        type: integer
-      status:
-        example: open
-        type: string
-      tags:
-        example: urgent,subscription
-        type: string
-      ticket_no:
-        example: TKT-20240101-001
-        type: string
-      title:
-        example: Unable to access my subscription
-        type: string
-      updated_at:
-        example: "2024-01-02T16:00:00Z"
-        type: string
-      user:
-        $ref: '#/definitions/dto.UserBasicDTO'
-      user_id:
-        example: 1
-        type: integer
-    type: object
-  entities.TicketUserResponse:
-    properties:
-      category:
-        example: subscription
-        type: string
-      closed_at:
-        example: "2024-01-02T16:00:00Z"
-        type: string
-      created_at:
-        example: "2024-01-01T09:00:00Z"
-        type: string
-      description:
-        example: I am unable to access my premium subscription features
-        type: string
-      first_response_at:
-        example: "2024-01-01T10:30:00Z"
-        type: string
-      id:
-        example: 1
-        type: integer
-      last_response_at:
-        example: "2024-01-02T14:00:00Z"
-        type: string
-      messages:
-        items:
-          $ref: '#/definitions/entities.TicketMessageUserResponse'
-        type: array
-      priority:
-        example: normal
-        type: string
-      resolution:
-        example: Issue resolved by updating subscription settings
-        type: string
-      status:
-        example: open
-        type: string
-      ticket_no:
-        example: TKT-20240101-001
-        type: string
-      title:
-        example: Unable to access my subscription
-        type: string
-      updated_at:
-        example: "2024-01-02T16:00:00Z"
-        type: string
-    type: object
-  entities.UpdateBindingRequest:
-    properties:
-      is_primary:
-        example: false
-        type: boolean
-      provider_avatar:
-        example: https://example.com/avatar.jpg
-        maxLength: 500
-        type: string
-      provider_data:
-        example: '{"extra": "data"}'
-        type: string
-      provider_email:
-        example: user@example.com
-        maxLength: 255
-        type: string
-      provider_name:
-        example: User Name
-        maxLength: 255
-        type: string
-      provider_username:
-        example: username
-        maxLength: 100
-        type: string
-    type: object
   entities.UsageAlertResponse:
     properties:
       alert_configuration_id:
@@ -3542,84 +3649,6 @@ definitions:
       unit:
         type: string
       usage_type:
-        type: string
-    type: object
-  entities.UserAccountBindingResponse:
-    properties:
-      bound_at:
-        type: string
-      created_at:
-        description: Timestamp Fields
-        type: string
-      deleted_at:
-        type: string
-      id:
-        description: Primary Key
-        type: integer
-      is_primary:
-        description: Binding Status
-        type: boolean
-      last_used_at:
-        type: string
-      provider:
-        description: Provider Information
-        type: string
-      provider_avatar:
-        type: string
-      provider_email:
-        description: Provider User Data (only show non-sensitive data)
-        type: string
-      provider_name:
-        type: string
-      provider_user_id:
-        type: string
-      provider_username:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  entities.UserResponse:
-    properties:
-      avatar:
-        type: string
-      created_at:
-        description: Timestamp Fields
-        type: string
-      deleted_at:
-        type: string
-      email:
-        description: Core Identity Fields
-        type: string
-      github_id:
-        type: string
-      google_id:
-        description: OAuth Provider IDs (only show if not empty)
-        type: string
-      id:
-        description: Primary Key
-        type: integer
-      invite_code_id:
-        description: Invite Code Fields
-        type: integer
-      invite_code_used:
-        type: string
-      name:
-        type: string
-      provider:
-        description: Authentication Fields (excluding password)
-        type: string
-      provider_data:
-        description: Provider Metadata (only show if not empty)
-        type: string
-      role:
-        type: string
-      status:
-        type: string
-      telegram_id:
-        type: string
-      updated_at:
-        type: string
-      username:
         type: string
     type: object
   entities.UserSubscriptionResponse:
@@ -3790,6 +3819,17 @@ definitions:
         description: Unique identifier
         example: 550e8400-e29b-41d4-a716-446655440000
         type: string
+    type: object
+  errors.FieldError:
+    properties:
+      code:
+        type: string
+      constraints: {}
+      field:
+        type: string
+      message:
+        type: string
+      value: {}
     type: object
   handlers.AcknowledgeAlertRequest:
     properties:
@@ -4089,17 +4129,6 @@ definitions:
     required:
     - reason
     type: object
-  handlers.BatchUserIDsRequest:
-    properties:
-      ids:
-        items:
-          type: integer
-        maxItems: 100
-        minItems: 1
-        type: array
-    required:
-    - ids
-    type: object
   handlers.BulkInvoiceActionRequest:
     properties:
       action:
@@ -4373,31 +4402,6 @@ definitions:
         example: true
         type: boolean
     type: object
-  handlers.PatchUserRequest:
-    properties:
-      email:
-        example: user@example.com
-        type: string
-      name:
-        example: John Doe
-        type: string
-      role:
-        enum:
-        - user
-        - admin
-        example: user
-        type: string
-      status:
-        enum:
-        - active
-        - inactive
-        - banned
-        example: active
-        type: string
-      username:
-        example: johndoe
-        type: string
-    type: object
   handlers.RegeneratePDFRequest:
     properties:
       custom_fields:
@@ -4428,16 +4432,6 @@ definitions:
       to_email:
         example: customer@example.com
         type: string
-    type: object
-  handlers.ResetPasswordRequest:
-    properties:
-      new_password:
-        example: newSecurePassword123
-        maxLength: 255
-        minLength: 6
-        type: string
-    required:
-    - new_password
     type: object
   handlers.ResolveAlertRequest:
     properties:
@@ -4603,38 +4597,6 @@ definitions:
         type: string
     required:
     - status
-    type: object
-  handlers.UpdateUserRoleRequest:
-    properties:
-      role:
-        enum:
-        - user
-        - admin
-        example: user
-        type: string
-    required:
-    - role
-    type: object
-  handlers.UpdateUserStatusRequest:
-    properties:
-      status:
-        enum:
-        - active
-        - inactive
-        - banned
-        example: active
-        type: string
-    required:
-    - status
-    type: object
-  handlers.UserProfileUpdateRequest:
-    properties:
-      avatar:
-        type: string
-      name:
-        type: string
-      username:
-        type: string
     type: object
   handlers.VoidInvoiceRequest:
     properties:
@@ -5386,6 +5348,83 @@ definitions:
       user_subscription_id:
         type: integer
     type: object
+  linke_internal_domains_auth_dto.UserResponse:
+    properties:
+      avatar:
+        example: https://example.com/avatar.jpg
+        type: string
+      created_at:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      email:
+        example: user@example.com
+        type: string
+      id:
+        example: 1
+        type: integer
+      name:
+        example: John Doe
+        type: string
+      provider:
+        example: local
+        type: string
+      role:
+        example: user
+        type: string
+      status:
+        example: active
+        type: string
+      updated_at:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      username:
+        example: johndoe
+        type: string
+    type: object
+  linke_internal_domains_user_dto.UserResponse:
+    properties:
+      avatar:
+        type: string
+      created_at:
+        description: Timestamp Fields
+        type: string
+      deleted_at:
+        type: string
+      email:
+        description: Core Identity Fields
+        type: string
+      github_id:
+        type: string
+      google_id:
+        description: OAuth Provider IDs (only show if not empty)
+        type: string
+      id:
+        description: Primary Key
+        type: integer
+      invite_code_id:
+        description: Invite Code Fields
+        type: integer
+      invite_code_used:
+        type: string
+      name:
+        type: string
+      provider:
+        description: Authentication Fields (excluding password)
+        type: string
+      provider_data:
+        description: Provider Metadata (only show if not empty)
+        type: string
+      role:
+        type: string
+      status:
+        type: string
+      telegram_id:
+        type: string
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
   notification.ChannelAnalytics:
     properties:
       average_delivery_time:
@@ -5840,27 +5879,27 @@ definitions:
         type: integer
     type: object
   response.ProblemJSONResponse:
-    description: RFC 9457 Problem Details for HTTP APIs
     properties:
       detail:
-        description: Detailed explanation
-        example: The user with id 123 was not found
         type: string
+      errors:
+        items:
+          $ref: '#/definitions/errors.FieldError'
+        type: array
+      extensions:
+        additionalProperties: true
+        type: object
       instance:
-        description: Problem instance URI
-        example: /api/v1/users/123
         type: string
       status:
-        description: HTTP status code
-        example: 404
         type: integer
+      timestamp:
+        type: string
       title:
-        description: Short summary
-        example: Not Found
+        type: string
+      trace_id:
         type: string
       type:
-        description: Problem type URI
-        example: /problems/not-found
         type: string
     type: object
   response.StandardResponse:
@@ -11848,7 +11887,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/entities.TicketResponse'
+            $ref: '#/definitions/dto.TicketResponse'
         "400":
           description: Bad Request
           schema:
@@ -11933,7 +11972,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entities.TicketResponse'
+            $ref: '#/definitions/dto.TicketResponse'
         "400":
           description: Bad Request
           schema:
@@ -11977,7 +12016,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entities.TicketResponse'
+            $ref: '#/definitions/dto.TicketResponse'
         "400":
           description: Bad Request
           schema:
@@ -12026,7 +12065,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entities.TicketResponse'
+            $ref: '#/definitions/dto.TicketResponse'
         "400":
           description: Bad Request
           schema:
@@ -12069,7 +12108,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entities.TicketResponse'
+            $ref: '#/definitions/dto.TicketResponse'
         "400":
           description: Bad Request
           schema:
@@ -12118,7 +12157,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entities.TicketResponse'
+            $ref: '#/definitions/dto.TicketResponse'
         "400":
           description: Bad Request
           schema:
@@ -12220,7 +12259,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/entities.TicketMessageResponse'
+            $ref: '#/definitions/dto.TicketMessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -12315,7 +12354,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entities.TicketMessageResponse'
+            $ref: '#/definitions/dto.TicketMessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -12364,7 +12403,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entities.TicketMessageResponse'
+            $ref: '#/definitions/dto.TicketMessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -12413,7 +12452,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/entities.TicketMessageResponse'
+            $ref: '#/definitions/dto.TicketMessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -12456,7 +12495,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entities.TicketResponse'
+            $ref: '#/definitions/dto.TicketResponse'
         "400":
           description: Bad Request
           schema:
@@ -12949,14 +12988,14 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/entities.CreateUserRequest'
+          $ref: '#/definitions/dto.CreateUserRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/entities.UserResponse'
+            $ref: '#/definitions/linke_internal_domains_user_dto.UserResponse'
         "400":
           description: Bad Request
           schema:
@@ -13037,7 +13076,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entities.UserResponse'
+            $ref: '#/definitions/linke_internal_domains_user_dto.UserResponse'
         "400":
           description: Bad Request
           schema:
@@ -13074,14 +13113,14 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/handlers.PatchUserRequest'
+          $ref: '#/definitions/dto.PatchUserRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entities.UserResponse'
+            $ref: '#/definitions/linke_internal_domains_user_dto.UserResponse'
         "400":
           description: Bad Request
           schema:
@@ -13122,14 +13161,14 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/entities.UserResponse'
+          $ref: '#/definitions/dto.UpdateUserRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entities.UserResponse'
+            $ref: '#/definitions/linke_internal_domains_user_dto.UserResponse'
         "400":
           description: Bad Request
           schema:
@@ -13210,7 +13249,7 @@ paths:
         name: password
         required: true
         schema:
-          $ref: '#/definitions/handlers.ResetPasswordRequest'
+          $ref: '#/definitions/dto.ResetPasswordRequest'
       produces:
       - application/json
       responses:
@@ -13298,14 +13337,14 @@ paths:
         name: role
         required: true
         schema:
-          $ref: '#/definitions/handlers.UpdateUserRoleRequest'
+          $ref: '#/definitions/dto.UpdateUserRoleRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entities.UserResponse'
+            $ref: '#/definitions/linke_internal_domains_user_dto.UserResponse'
         "400":
           description: Bad Request
           schema:
@@ -13343,14 +13382,14 @@ paths:
         name: status
         required: true
         schema:
-          $ref: '#/definitions/handlers.UpdateUserStatusRequest'
+          $ref: '#/definitions/dto.UpdateUserStatusRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entities.UserResponse'
+            $ref: '#/definitions/linke_internal_domains_user_dto.UserResponse'
         "400":
           description: Bad Request
           schema:
@@ -13383,7 +13422,7 @@ paths:
         name: ids
         required: true
         schema:
-          $ref: '#/definitions/handlers.BatchUserIDsRequest'
+          $ref: '#/definitions/dto.BatchUserIDsRequest'
       produces:
       - application/json
       responses:
@@ -13424,7 +13463,7 @@ paths:
         name: ids
         required: true
         schema:
-          $ref: '#/definitions/handlers.BatchUserIDsRequest'
+          $ref: '#/definitions/dto.BatchUserIDsRequest'
       produces:
       - application/json
       responses:
@@ -15587,19 +15626,19 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/entities.TicketUserResponse'
+            $ref: '#/definitions/dto.TicketUserResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/response.BadRequestResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
+            $ref: '#/definitions/response.ProblemJSONResponse'
       security:
       - BearerAuth: []
       summary: Create new ticket
@@ -15623,7 +15662,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entities.TicketUserResponse'
+            $ref: '#/definitions/dto.TicketUserResponse'
         "400":
           description: Bad Request
           schema:
@@ -15667,7 +15706,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entities.TicketUserResponse'
+            $ref: '#/definitions/dto.TicketUserResponse'
         "400":
           description: Bad Request
           schema:
@@ -15765,7 +15804,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/entities.TicketMessageUserResponse'
+            $ref: '#/definitions/dto.TicketMessageUserResponse'
         "400":
           description: Bad Request
           schema:
@@ -17182,7 +17221,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entities.BindingListResponse'
+            $ref: '#/definitions/dto.BindingListResponse'
         "401":
           description: Unauthorized
           schema:
@@ -17251,7 +17290,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entities.UserAccountBindingResponse'
+            $ref: '#/definitions/dto.UserAccountBindingResponse'
         "400":
           description: Bad Request
           schema:
@@ -17289,14 +17328,14 @@ paths:
         name: binding
         required: true
         schema:
-          $ref: '#/definitions/entities.CreateBindingRequest'
+          $ref: '#/definitions/dto.CreateBindingRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/entities.UserAccountBindingResponse'
+            $ref: '#/definitions/dto.UserAccountBindingResponse'
         "400":
           description: Bad Request
           schema:
@@ -17333,14 +17372,14 @@ paths:
         name: binding
         required: true
         schema:
-          $ref: '#/definitions/entities.UpdateBindingRequest'
+          $ref: '#/definitions/dto.UpdateBindingRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entities.UserAccountBindingResponse'
+            $ref: '#/definitions/dto.UserAccountBindingResponse'
         "400":
           description: Bad Request
           schema:
@@ -17412,7 +17451,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entities.UserResponse'
+            $ref: '#/definitions/linke_internal_domains_user_dto.UserResponse'
         "401":
           description: Unauthorized
           schema:
@@ -17436,14 +17475,14 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/handlers.UserProfileUpdateRequest'
+          $ref: '#/definitions/dto.UserProfileUpdateRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entities.UserResponse'
+            $ref: '#/definitions/linke_internal_domains_user_dto.UserResponse'
         "400":
           description: Bad Request
           schema:

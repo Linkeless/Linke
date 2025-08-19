@@ -26,7 +26,7 @@ clean:
 	rm -rf bin/ docs/
 
 swagger:
-	$(HOME)/go/bin/swag init -g cmd/server/main.go -o docs
+	$(HOME)/go/bin/swag init -g cmd/server/main.go -o docs --parseInternal --parseDependency --parseDependencyLevel 3 --packagePrefix linke/internal
 
 dev: swagger
 	go run cmd/server/main.go

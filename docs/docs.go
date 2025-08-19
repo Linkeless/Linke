@@ -9184,7 +9184,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/entities.TicketResponse"
+                            "$ref": "#/definitions/dto.TicketResponse"
                         }
                     },
                     "400": {
@@ -9828,7 +9828,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.TicketResponse"
+                            "$ref": "#/definitions/dto.TicketResponse"
                         }
                     },
                     "400": {
@@ -9896,7 +9896,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.TicketResponse"
+                            "$ref": "#/definitions/dto.TicketResponse"
                         }
                     },
                     "400": {
@@ -10037,7 +10037,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.TicketResponse"
+                            "$ref": "#/definitions/dto.TicketResponse"
                         }
                     },
                     "400": {
@@ -10104,7 +10104,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.TicketResponse"
+                            "$ref": "#/definitions/dto.TicketResponse"
                         }
                     },
                     "400": {
@@ -10180,7 +10180,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.TicketResponse"
+                            "$ref": "#/definitions/dto.TicketResponse"
                         }
                     },
                     "400": {
@@ -10336,7 +10336,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/entities.TicketMessageResponse"
+                            "$ref": "#/definitions/dto.TicketMessageResponse"
                         }
                     },
                     "400": {
@@ -10410,7 +10410,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.TicketMessageResponse"
+                            "$ref": "#/definitions/dto.TicketMessageResponse"
                         }
                     },
                     "400": {
@@ -10485,7 +10485,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.TicketMessageResponse"
+                            "$ref": "#/definitions/dto.TicketMessageResponse"
                         }
                     },
                     "400": {
@@ -10633,7 +10633,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/entities.TicketMessageResponse"
+                            "$ref": "#/definitions/dto.TicketMessageResponse"
                         }
                     },
                     "400": {
@@ -10700,7 +10700,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.TicketResponse"
+                            "$ref": "#/definitions/dto.TicketResponse"
                         }
                     },
                     "400": {
@@ -10860,7 +10860,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/entities.CreateUserRequest"
+                            "$ref": "#/definitions/dto.CreateUserRequest"
                         }
                     }
                 ],
@@ -10868,7 +10868,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/entities.UserResponse"
+                            "$ref": "#/definitions/linke_internal_domains_user_dto.UserResponse"
                         }
                     },
                     "400": {
@@ -10929,7 +10929,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.BatchUserIDsRequest"
+                            "$ref": "#/definitions/dto.BatchUserIDsRequest"
                         }
                     }
                 ],
@@ -10993,7 +10993,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.BatchUserIDsRequest"
+                            "$ref": "#/definitions/dto.BatchUserIDsRequest"
                         }
                     }
                 ],
@@ -11322,7 +11322,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.UserResponse"
+                            "$ref": "#/definitions/linke_internal_domains_user_dto.UserResponse"
                         }
                     },
                     "400": {
@@ -11382,7 +11382,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/entities.UserResponse"
+                            "$ref": "#/definitions/dto.UpdateUserRequest"
                         }
                     }
                 ],
@@ -11390,7 +11390,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.UserResponse"
+                            "$ref": "#/definitions/linke_internal_domains_user_dto.UserResponse"
                         }
                     },
                     "400": {
@@ -11515,7 +11515,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.PatchUserRequest"
+                            "$ref": "#/definitions/dto.PatchUserRequest"
                         }
                     }
                 ],
@@ -11523,7 +11523,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.UserResponse"
+                            "$ref": "#/definitions/linke_internal_domains_user_dto.UserResponse"
                         }
                     },
                     "400": {
@@ -11652,7 +11652,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.ResetPasswordRequest"
+                            "$ref": "#/definitions/dto.ResetPasswordRequest"
                         }
                     }
                 ],
@@ -11789,7 +11789,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.UpdateUserRoleRequest"
+                            "$ref": "#/definitions/dto.UpdateUserRoleRequest"
                         }
                     }
                 ],
@@ -11797,7 +11797,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.UserResponse"
+                            "$ref": "#/definitions/linke_internal_domains_user_dto.UserResponse"
                         }
                     },
                     "400": {
@@ -11859,7 +11859,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.UpdateUserStatusRequest"
+                            "$ref": "#/definitions/dto.UpdateUserStatusRequest"
                         }
                     }
                 ],
@@ -11867,7 +11867,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.UserResponse"
+                            "$ref": "#/definitions/linke_internal_domains_user_dto.UserResponse"
                         }
                     },
                     "400": {
@@ -14893,25 +14893,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/entities.TicketUserResponse"
+                            "$ref": "#/definitions/dto.TicketUserResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
+                            "$ref": "#/definitions/response.ProblemJSONResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                            "$ref": "#/definitions/response.ProblemJSONResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                            "$ref": "#/definitions/response.ProblemJSONResponse"
                         }
                     }
                 }
@@ -15056,7 +15056,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.TicketUserResponse"
+                            "$ref": "#/definitions/dto.TicketUserResponse"
                         }
                     },
                     "400": {
@@ -15125,7 +15125,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.TicketUserResponse"
+                            "$ref": "#/definitions/dto.TicketUserResponse"
                         }
                     },
                     "400": {
@@ -15274,7 +15274,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/entities.TicketMessageUserResponse"
+                            "$ref": "#/definitions/dto.TicketMessageUserResponse"
                         }
                     },
                     "400": {
@@ -17245,7 +17245,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.BindingListResponse"
+                            "$ref": "#/definitions/dto.BindingListResponse"
                         }
                     },
                     "401": {
@@ -17294,7 +17294,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.UserAccountBindingResponse"
+                            "$ref": "#/definitions/dto.UserAccountBindingResponse"
                         }
                     },
                     "400": {
@@ -17354,7 +17354,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/entities.UpdateBindingRequest"
+                            "$ref": "#/definitions/dto.UpdateBindingRequest"
                         }
                     }
                 ],
@@ -17362,7 +17362,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.UserAccountBindingResponse"
+                            "$ref": "#/definitions/dto.UserAccountBindingResponse"
                         }
                     },
                     "400": {
@@ -17422,7 +17422,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/entities.CreateBindingRequest"
+                            "$ref": "#/definitions/dto.CreateBindingRequest"
                         }
                     }
                 ],
@@ -17430,7 +17430,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/entities.UserAccountBindingResponse"
+                            "$ref": "#/definitions/dto.UserAccountBindingResponse"
                         }
                     },
                     "400": {
@@ -17602,7 +17602,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.UserResponse"
+                            "$ref": "#/definitions/linke_internal_domains_user_dto.UserResponse"
                         }
                     },
                     "401": {
@@ -17643,7 +17643,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handlers.UserProfileUpdateRequest"
+                            "$ref": "#/definitions/dto.UserProfileUpdateRequest"
                         }
                     }
                 ],
@@ -17651,7 +17651,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entities.UserResponse"
+                            "$ref": "#/definitions/linke_internal_domains_user_dto.UserResponse"
                         }
                     },
                     "400": {
@@ -18222,7 +18222,7 @@ const docTemplate = `{
                     "$ref": "#/definitions/dto.TokenResponse"
                 },
                 "user": {
-                    "$ref": "#/definitions/dto.UserResponse"
+                    "$ref": "#/definitions/linke_internal_domains_auth_dto.UserResponse"
                 }
             }
         },
@@ -18234,6 +18234,22 @@ const docTemplate = `{
                 },
                 "state": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.BatchUserIDsRequest": {
+            "type": "object",
+            "required": [
+                "ids"
+            ],
+            "properties": {
+                "ids": {
+                    "type": "array",
+                    "maxItems": 100,
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         },
@@ -18263,6 +18279,20 @@ const docTemplate = `{
                 "total_operations": {
                     "type": "integer",
                     "example": 5000
+                }
+            }
+        },
+        "dto.BindingListResponse": {
+            "type": "object",
+            "properties": {
+                "bindings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.UserAccountBindingResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -18727,6 +18757,57 @@ const docTemplate = `{
                     "description": "Discount value",
                     "type": "number",
                     "example": 20
+                }
+            }
+        },
+        "dto.CreateBindingRequest": {
+            "type": "object",
+            "required": [
+                "provider",
+                "provider_user_id"
+            ],
+            "properties": {
+                "is_primary": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "provider": {
+                    "type": "string",
+                    "enum": [
+                        "google",
+                        "github",
+                        "telegram"
+                    ],
+                    "example": "google"
+                },
+                "provider_avatar": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "example": "https://example.com/avatar.jpg"
+                },
+                "provider_data": {
+                    "type": "string",
+                    "example": "{\"extra\": \"data\"}"
+                },
+                "provider_email": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "user@example.com"
+                },
+                "provider_name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "User Name"
+                },
+                "provider_user_id": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "123456789"
+                },
+                "provider_username": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "username"
                 }
             }
         },
@@ -19342,6 +19423,52 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.CreateUserRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "user@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "John Doe"
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 6,
+                    "example": "password123"
+                },
+                "role": {
+                    "type": "string",
+                    "enum": [
+                        "user",
+                        "admin"
+                    ],
+                    "example": "user"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "inactive",
+                        "banned"
+                    ],
+                    "example": "active"
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "johndoe"
+                }
+            }
+        },
         "dto.DatabaseHealthResponse": {
             "type": "object",
             "properties": {
@@ -19740,6 +19867,40 @@ const docTemplate = `{
                 "tags": {
                     "type": "string",
                     "example": "premium,fast"
+                }
+            }
+        },
+        "dto.PatchUserRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "role": {
+                    "type": "string",
+                    "enum": [
+                        "user",
+                        "admin"
+                    ],
+                    "example": "user"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "inactive",
+                        "banned"
+                    ],
+                    "example": "active"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "johndoe"
                 }
             }
         },
@@ -20606,6 +20767,20 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.ResetPasswordRequest": {
+            "type": "object",
+            "required": [
+                "new_password"
+            ],
+            "properties": {
+                "new_password": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 6,
+                    "example": "newSecurePassword123"
+                }
+            }
+        },
         "dto.ServerAPIHealthResponse": {
             "type": "object",
             "properties": {
@@ -20677,6 +20852,250 @@ const docTemplate = `{
                 "user_id": {
                     "type": "integer",
                     "example": 1
+                }
+            }
+        },
+        "dto.TicketMessageResponse": {
+            "type": "object",
+            "properties": {
+                "attachments": {
+                    "type": "string",
+                    "example": "[{\"name\":\"screenshot.png\",\"url\":\"/uploads/screenshot.png\"}]"
+                },
+                "content": {
+                    "type": "string",
+                    "example": "Thank you for contacting support. We will review your issue."
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-01T10:30:00Z"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "is_internal": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "message_type": {
+                    "type": "string",
+                    "example": "admin"
+                },
+                "metadata": {
+                    "type": "string",
+                    "example": "{\"priority\": \"normal\"}"
+                },
+                "ticket_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-01-01T10:30:00Z"
+                },
+                "user": {
+                    "$ref": "#/definitions/dto.UserBasicDTO"
+                },
+                "user_id": {
+                    "type": "integer",
+                    "example": 2
+                }
+            }
+        },
+        "dto.TicketMessageUserResponse": {
+            "type": "object",
+            "properties": {
+                "attachments": {
+                    "type": "string",
+                    "example": "[{\"name\":\"screenshot.png\",\"url\":\"/uploads/screenshot.png\"}]"
+                },
+                "content": {
+                    "type": "string",
+                    "example": "Thank you for contacting support. We will review your issue."
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-01T10:30:00Z"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "message_type": {
+                    "type": "string",
+                    "example": "admin"
+                },
+                "ticket_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-01-01T10:30:00Z"
+                }
+            }
+        },
+        "dto.TicketResponse": {
+            "type": "object",
+            "properties": {
+                "assigned_at": {
+                    "type": "string",
+                    "example": "2024-01-01T10:00:00Z"
+                },
+                "assigned_to": {
+                    "$ref": "#/definitions/dto.UserBasicDTO"
+                },
+                "assigned_to_id": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "category": {
+                    "type": "string",
+                    "example": "subscription"
+                },
+                "closed_at": {
+                    "type": "string",
+                    "example": "2024-01-02T16:00:00Z"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-01T09:00:00Z"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "I am unable to access my premium subscription features"
+                },
+                "first_response_at": {
+                    "type": "string",
+                    "example": "2024-01-01T10:30:00Z"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "last_response_at": {
+                    "type": "string",
+                    "example": "2024-01-02T14:00:00Z"
+                },
+                "messages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.TicketMessageResponse"
+                    }
+                },
+                "metadata": {
+                    "type": "string",
+                    "example": "{\"priority_escalated\": true}"
+                },
+                "priority": {
+                    "type": "string",
+                    "example": "normal"
+                },
+                "resolution": {
+                    "type": "string",
+                    "example": "Issue resolved by updating subscription settings"
+                },
+                "resolved_at": {
+                    "type": "string",
+                    "example": "2024-01-02T15:30:00Z"
+                },
+                "resolved_by": {
+                    "$ref": "#/definitions/dto.UserBasicDTO"
+                },
+                "resolved_by_id": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "status": {
+                    "type": "string",
+                    "example": "open"
+                },
+                "tags": {
+                    "type": "string",
+                    "example": "urgent,subscription"
+                },
+                "ticket_no": {
+                    "type": "string",
+                    "example": "TKT-20240101-001"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Unable to access my subscription"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-01-02T16:00:00Z"
+                },
+                "user": {
+                    "$ref": "#/definitions/dto.UserBasicDTO"
+                },
+                "user_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "dto.TicketUserResponse": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "example": "subscription"
+                },
+                "closed_at": {
+                    "type": "string",
+                    "example": "2024-01-02T16:00:00Z"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-01T09:00:00Z"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "I am unable to access my premium subscription features"
+                },
+                "first_response_at": {
+                    "type": "string",
+                    "example": "2024-01-01T10:30:00Z"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "last_response_at": {
+                    "type": "string",
+                    "example": "2024-01-02T14:00:00Z"
+                },
+                "messages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.TicketMessageUserResponse"
+                    }
+                },
+                "priority": {
+                    "type": "string",
+                    "example": "normal"
+                },
+                "resolution": {
+                    "type": "string",
+                    "example": "Issue resolved by updating subscription settings"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "open"
+                },
+                "ticket_no": {
+                    "type": "string",
+                    "example": "TKT-20240101-001"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Unable to access my subscription"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-01-02T16:00:00Z"
                 }
             }
         },
@@ -20775,6 +21194,39 @@ const docTemplate = `{
                 "timestamp": {
                     "type": "integer",
                     "example": 1704067200
+                }
+            }
+        },
+        "dto.UpdateBindingRequest": {
+            "type": "object",
+            "properties": {
+                "is_primary": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "provider_avatar": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "example": "https://example.com/avatar.jpg"
+                },
+                "provider_data": {
+                    "type": "string",
+                    "example": "{\"extra\": \"data\"}"
+                },
+                "provider_email": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "user@example.com"
+                },
+                "provider_name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "User Name"
+                },
+                "provider_username": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "username"
                 }
             }
         },
@@ -21101,6 +21553,125 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.UpdateUserRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "user@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "John Doe"
+                },
+                "role": {
+                    "type": "string",
+                    "enum": [
+                        "user",
+                        "admin"
+                    ],
+                    "example": "user"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "inactive",
+                        "banned"
+                    ],
+                    "example": "active"
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "johndoe"
+                }
+            }
+        },
+        "dto.UpdateUserRoleRequest": {
+            "type": "object",
+            "required": [
+                "role"
+            ],
+            "properties": {
+                "role": {
+                    "type": "string",
+                    "enum": [
+                        "user",
+                        "admin"
+                    ],
+                    "example": "user"
+                }
+            }
+        },
+        "dto.UpdateUserStatusRequest": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "inactive",
+                        "banned"
+                    ],
+                    "example": "active"
+                }
+            }
+        },
+        "dto.UserAccountBindingResponse": {
+            "type": "object",
+            "properties": {
+                "bound_at": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "Timestamp Fields",
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "description": "Primary Key",
+                    "type": "integer"
+                },
+                "is_primary": {
+                    "description": "Binding Status",
+                    "type": "boolean"
+                },
+                "last_used_at": {
+                    "type": "string"
+                },
+                "provider": {
+                    "description": "Provider Information",
+                    "type": "string"
+                },
+                "provider_avatar": {
+                    "type": "string"
+                },
+                "provider_email": {
+                    "description": "Provider User Data (only show non-sensitive data)",
+                    "type": "string"
+                },
+                "provider_name": {
+                    "type": "string"
+                },
+                "provider_user_id": {
+                    "type": "string"
+                },
+                "provider_username": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.UserBasicDTO": {
             "type": "object",
             "properties": {
@@ -21193,48 +21764,17 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UserResponse": {
+        "dto.UserProfileUpdateRequest": {
             "type": "object",
             "properties": {
                 "avatar": {
-                    "type": "string",
-                    "example": "https://example.com/avatar.jpg"
-                },
-                "created_at": {
-                    "type": "string",
-                    "example": "2024-01-01T00:00:00Z"
-                },
-                "email": {
-                    "type": "string",
-                    "example": "user@example.com"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string"
                 },
                 "name": {
-                    "type": "string",
-                    "example": "John Doe"
-                },
-                "provider": {
-                    "type": "string",
-                    "example": "local"
-                },
-                "role": {
-                    "type": "string",
-                    "example": "user"
-                },
-                "status": {
-                    "type": "string",
-                    "example": "active"
-                },
-                "updated_at": {
-                    "type": "string",
-                    "example": "2024-01-01T00:00:00Z"
+                    "type": "string"
                 },
                 "username": {
-                    "type": "string",
-                    "example": "johndoe"
+                    "type": "string"
                 }
             }
         },
@@ -21388,117 +21928,6 @@ const docTemplate = `{
                     "description": "Subscription ID",
                     "type": "integer",
                     "example": 1
-                }
-            }
-        },
-        "entities.BindingListResponse": {
-            "type": "object",
-            "properties": {
-                "bindings": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entities.UserAccountBindingResponse"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "entities.CreateBindingRequest": {
-            "type": "object",
-            "required": [
-                "provider",
-                "provider_user_id"
-            ],
-            "properties": {
-                "is_primary": {
-                    "type": "boolean",
-                    "example": false
-                },
-                "provider": {
-                    "type": "string",
-                    "enum": [
-                        "google",
-                        "github",
-                        "telegram"
-                    ],
-                    "example": "google"
-                },
-                "provider_avatar": {
-                    "type": "string",
-                    "maxLength": 500,
-                    "example": "https://example.com/avatar.jpg"
-                },
-                "provider_data": {
-                    "type": "string",
-                    "example": "{\"extra\": \"data\"}"
-                },
-                "provider_email": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "user@example.com"
-                },
-                "provider_name": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "User Name"
-                },
-                "provider_user_id": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "example": "123456789"
-                },
-                "provider_username": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "example": "username"
-                }
-            }
-        },
-        "entities.CreateUserRequest": {
-            "type": "object",
-            "required": [
-                "email"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "user@example.com"
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "John Doe"
-                },
-                "password": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 6,
-                    "example": "password123"
-                },
-                "role": {
-                    "type": "string",
-                    "enum": [
-                        "user",
-                        "admin"
-                    ],
-                    "example": "user"
-                },
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "active",
-                        "inactive",
-                        "banned"
-                    ],
-                    "example": "active"
-                },
-                "username": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "example": "johndoe"
                 }
             }
         },
@@ -22015,283 +22444,6 @@ const docTemplate = `{
                 }
             }
         },
-        "entities.TicketMessageResponse": {
-            "type": "object",
-            "properties": {
-                "attachments": {
-                    "type": "string",
-                    "example": "[{\"name\":\"screenshot.png\",\"url\":\"/uploads/screenshot.png\"}]"
-                },
-                "content": {
-                    "type": "string",
-                    "example": "Thank you for contacting support. We will review your issue."
-                },
-                "created_at": {
-                    "type": "string",
-                    "example": "2024-01-01T10:30:00Z"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "is_internal": {
-                    "type": "boolean",
-                    "example": false
-                },
-                "message_type": {
-                    "type": "string",
-                    "example": "admin"
-                },
-                "metadata": {
-                    "type": "string",
-                    "example": "{\"priority\": \"normal\"}"
-                },
-                "ticket_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "updated_at": {
-                    "type": "string",
-                    "example": "2024-01-01T10:30:00Z"
-                },
-                "user": {
-                    "$ref": "#/definitions/dto.UserBasicDTO"
-                },
-                "user_id": {
-                    "type": "integer",
-                    "example": 2
-                }
-            }
-        },
-        "entities.TicketMessageUserResponse": {
-            "type": "object",
-            "properties": {
-                "attachments": {
-                    "type": "string",
-                    "example": "[{\"name\":\"screenshot.png\",\"url\":\"/uploads/screenshot.png\"}]"
-                },
-                "content": {
-                    "type": "string",
-                    "example": "Thank you for contacting support. We will review your issue."
-                },
-                "created_at": {
-                    "type": "string",
-                    "example": "2024-01-01T10:30:00Z"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "message_type": {
-                    "type": "string",
-                    "example": "admin"
-                },
-                "ticket_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "updated_at": {
-                    "type": "string",
-                    "example": "2024-01-01T10:30:00Z"
-                }
-            }
-        },
-        "entities.TicketResponse": {
-            "type": "object",
-            "properties": {
-                "assigned_at": {
-                    "type": "string",
-                    "example": "2024-01-01T10:00:00Z"
-                },
-                "assigned_to": {
-                    "$ref": "#/definitions/dto.UserBasicDTO"
-                },
-                "assigned_to_id": {
-                    "type": "integer",
-                    "example": 2
-                },
-                "category": {
-                    "type": "string",
-                    "example": "subscription"
-                },
-                "closed_at": {
-                    "type": "string",
-                    "example": "2024-01-02T16:00:00Z"
-                },
-                "created_at": {
-                    "type": "string",
-                    "example": "2024-01-01T09:00:00Z"
-                },
-                "description": {
-                    "type": "string",
-                    "example": "I am unable to access my premium subscription features"
-                },
-                "first_response_at": {
-                    "type": "string",
-                    "example": "2024-01-01T10:30:00Z"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "last_response_at": {
-                    "type": "string",
-                    "example": "2024-01-02T14:00:00Z"
-                },
-                "messages": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entities.TicketMessageResponse"
-                    }
-                },
-                "metadata": {
-                    "type": "string",
-                    "example": "{\"priority_escalated\": true}"
-                },
-                "priority": {
-                    "type": "string",
-                    "example": "normal"
-                },
-                "resolution": {
-                    "type": "string",
-                    "example": "Issue resolved by updating subscription settings"
-                },
-                "resolved_at": {
-                    "type": "string",
-                    "example": "2024-01-02T15:30:00Z"
-                },
-                "resolved_by": {
-                    "$ref": "#/definitions/dto.UserBasicDTO"
-                },
-                "resolved_by_id": {
-                    "type": "integer",
-                    "example": 2
-                },
-                "status": {
-                    "type": "string",
-                    "example": "open"
-                },
-                "tags": {
-                    "type": "string",
-                    "example": "urgent,subscription"
-                },
-                "ticket_no": {
-                    "type": "string",
-                    "example": "TKT-20240101-001"
-                },
-                "title": {
-                    "type": "string",
-                    "example": "Unable to access my subscription"
-                },
-                "updated_at": {
-                    "type": "string",
-                    "example": "2024-01-02T16:00:00Z"
-                },
-                "user": {
-                    "$ref": "#/definitions/dto.UserBasicDTO"
-                },
-                "user_id": {
-                    "type": "integer",
-                    "example": 1
-                }
-            }
-        },
-        "entities.TicketUserResponse": {
-            "type": "object",
-            "properties": {
-                "category": {
-                    "type": "string",
-                    "example": "subscription"
-                },
-                "closed_at": {
-                    "type": "string",
-                    "example": "2024-01-02T16:00:00Z"
-                },
-                "created_at": {
-                    "type": "string",
-                    "example": "2024-01-01T09:00:00Z"
-                },
-                "description": {
-                    "type": "string",
-                    "example": "I am unable to access my premium subscription features"
-                },
-                "first_response_at": {
-                    "type": "string",
-                    "example": "2024-01-01T10:30:00Z"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "last_response_at": {
-                    "type": "string",
-                    "example": "2024-01-02T14:00:00Z"
-                },
-                "messages": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entities.TicketMessageUserResponse"
-                    }
-                },
-                "priority": {
-                    "type": "string",
-                    "example": "normal"
-                },
-                "resolution": {
-                    "type": "string",
-                    "example": "Issue resolved by updating subscription settings"
-                },
-                "status": {
-                    "type": "string",
-                    "example": "open"
-                },
-                "ticket_no": {
-                    "type": "string",
-                    "example": "TKT-20240101-001"
-                },
-                "title": {
-                    "type": "string",
-                    "example": "Unable to access my subscription"
-                },
-                "updated_at": {
-                    "type": "string",
-                    "example": "2024-01-02T16:00:00Z"
-                }
-            }
-        },
-        "entities.UpdateBindingRequest": {
-            "type": "object",
-            "properties": {
-                "is_primary": {
-                    "type": "boolean",
-                    "example": false
-                },
-                "provider_avatar": {
-                    "type": "string",
-                    "maxLength": 500,
-                    "example": "https://example.com/avatar.jpg"
-                },
-                "provider_data": {
-                    "type": "string",
-                    "example": "{\"extra\": \"data\"}"
-                },
-                "provider_email": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "user@example.com"
-                },
-                "provider_name": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "User Name"
-                },
-                "provider_username": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "example": "username"
-                }
-            }
-        },
         "entities.UsageAlertResponse": {
             "type": "object",
             "properties": {
@@ -22519,118 +22671,6 @@ const docTemplate = `{
                 }
             }
         },
-        "entities.UserAccountBindingResponse": {
-            "type": "object",
-            "properties": {
-                "bound_at": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "description": "Timestamp Fields",
-                    "type": "string"
-                },
-                "deleted_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "description": "Primary Key",
-                    "type": "integer"
-                },
-                "is_primary": {
-                    "description": "Binding Status",
-                    "type": "boolean"
-                },
-                "last_used_at": {
-                    "type": "string"
-                },
-                "provider": {
-                    "description": "Provider Information",
-                    "type": "string"
-                },
-                "provider_avatar": {
-                    "type": "string"
-                },
-                "provider_email": {
-                    "description": "Provider User Data (only show non-sensitive data)",
-                    "type": "string"
-                },
-                "provider_name": {
-                    "type": "string"
-                },
-                "provider_user_id": {
-                    "type": "string"
-                },
-                "provider_username": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "entities.UserResponse": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "description": "Timestamp Fields",
-                    "type": "string"
-                },
-                "deleted_at": {
-                    "type": "string"
-                },
-                "email": {
-                    "description": "Core Identity Fields",
-                    "type": "string"
-                },
-                "github_id": {
-                    "type": "string"
-                },
-                "google_id": {
-                    "description": "OAuth Provider IDs (only show if not empty)",
-                    "type": "string"
-                },
-                "id": {
-                    "description": "Primary Key",
-                    "type": "integer"
-                },
-                "invite_code_id": {
-                    "description": "Invite Code Fields",
-                    "type": "integer"
-                },
-                "invite_code_used": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "provider": {
-                    "description": "Authentication Fields (excluding password)",
-                    "type": "string"
-                },
-                "provider_data": {
-                    "description": "Provider Metadata (only show if not empty)",
-                    "type": "string"
-                },
-                "role": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "telegram_id": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
         "entities.UserSubscriptionResponse": {
             "type": "object",
             "properties": {
@@ -22846,6 +22886,22 @@ const docTemplate = `{
                     "type": "string",
                     "example": "550e8400-e29b-41d4-a716-446655440000"
                 }
+            }
+        },
+        "errors.FieldError": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "constraints": {},
+                "field": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "value": {}
             }
         },
         "handlers.AcknowledgeAlertRequest": {
@@ -23249,22 +23305,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.BatchUserIDsRequest": {
-            "type": "object",
-            "required": [
-                "ids"
-            ],
-            "properties": {
-                "ids": {
-                    "type": "array",
-                    "maxItems": 100,
-                    "minItems": 1,
-                    "items": {
-                        "type": "integer"
-                    }
-                }
-            }
-        },
         "handlers.BulkInvoiceActionRequest": {
             "type": "object",
             "required": [
@@ -23629,40 +23669,6 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.PatchUserRequest": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "user@example.com"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "John Doe"
-                },
-                "role": {
-                    "type": "string",
-                    "enum": [
-                        "user",
-                        "admin"
-                    ],
-                    "example": "user"
-                },
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "active",
-                        "inactive",
-                        "banned"
-                    ],
-                    "example": "active"
-                },
-                "username": {
-                    "type": "string",
-                    "example": "johndoe"
-                }
-            }
-        },
         "handlers.RegeneratePDFRequest": {
             "type": "object",
             "properties": {
@@ -23704,20 +23710,6 @@ const docTemplate = `{
                 "to_email": {
                     "type": "string",
                     "example": "customer@example.com"
-                }
-            }
-        },
-        "handlers.ResetPasswordRequest": {
-            "type": "object",
-            "required": [
-                "new_password"
-            ],
-            "properties": {
-                "new_password": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 6,
-                    "example": "newSecurePassword123"
                 }
             }
         },
@@ -23945,53 +23937,6 @@ const docTemplate = `{
                         "maintenance"
                     ],
                     "example": "active"
-                }
-            }
-        },
-        "handlers.UpdateUserRoleRequest": {
-            "type": "object",
-            "required": [
-                "role"
-            ],
-            "properties": {
-                "role": {
-                    "type": "string",
-                    "enum": [
-                        "user",
-                        "admin"
-                    ],
-                    "example": "user"
-                }
-            }
-        },
-        "handlers.UpdateUserStatusRequest": {
-            "type": "object",
-            "required": [
-                "status"
-            ],
-            "properties": {
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "active",
-                        "inactive",
-                        "banned"
-                    ],
-                    "example": "active"
-                }
-            }
-        },
-        "handlers.UserProfileUpdateRequest": {
-            "type": "object",
-            "properties": {
-                "avatar": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
                 }
             }
         },
@@ -25101,6 +25046,114 @@ const docTemplate = `{
                 }
             }
         },
+        "linke_internal_domains_auth_dto.UserResponse": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string",
+                    "example": "https://example.com/avatar.jpg"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "provider": {
+                    "type": "string",
+                    "example": "local"
+                },
+                "role": {
+                    "type": "string",
+                    "example": "user"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "active"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-01-01T00:00:00Z"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "johndoe"
+                }
+            }
+        },
+        "linke_internal_domains_user_dto.UserResponse": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "Timestamp Fields",
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "description": "Core Identity Fields",
+                    "type": "string"
+                },
+                "github_id": {
+                    "type": "string"
+                },
+                "google_id": {
+                    "description": "OAuth Provider IDs (only show if not empty)",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "Primary Key",
+                    "type": "integer"
+                },
+                "invite_code_id": {
+                    "description": "Invite Code Fields",
+                    "type": "integer"
+                },
+                "invite_code_used": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "provider": {
+                    "description": "Authentication Fields (excluding password)",
+                    "type": "string"
+                },
+                "provider_data": {
+                    "description": "Provider Metadata (only show if not empty)",
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "telegram_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "notification.ChannelAnalytics": {
             "type": "object",
             "properties": {
@@ -25764,33 +25817,38 @@ const docTemplate = `{
             }
         },
         "response.ProblemJSONResponse": {
-            "description": "RFC 9457 Problem Details for HTTP APIs",
             "type": "object",
             "properties": {
                 "detail": {
-                    "description": "Detailed explanation",
-                    "type": "string",
-                    "example": "The user with id 123 was not found"
+                    "type": "string"
+                },
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/errors.FieldError"
+                    }
+                },
+                "extensions": {
+                    "type": "object",
+                    "additionalProperties": true
                 },
                 "instance": {
-                    "description": "Problem instance URI",
-                    "type": "string",
-                    "example": "/api/v1/users/123"
+                    "type": "string"
                 },
                 "status": {
-                    "description": "HTTP status code",
-                    "type": "integer",
-                    "example": 404
+                    "type": "integer"
+                },
+                "timestamp": {
+                    "type": "string"
                 },
                 "title": {
-                    "description": "Short summary",
-                    "type": "string",
-                    "example": "Not Found"
+                    "type": "string"
+                },
+                "trace_id": {
+                    "type": "string"
                 },
                 "type": {
-                    "description": "Problem type URI",
-                    "type": "string",
-                    "example": "/problems/not-found"
+                    "type": "string"
                 }
             }
         },
