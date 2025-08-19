@@ -210,12 +210,12 @@ func LoadConfig() *Config {
 		OAuth2: OAuth2Config{
 			GoogleClientID:      getEnv("GOOGLE_CLIENT_ID", ""),
 			GoogleClientSecret:  getEnv("GOOGLE_CLIENT_SECRET", ""),
-			GoogleRedirectURL:   getEnv("GOOGLE_REDIRECT_URL", "http://localhost:8080/auth/google/callback"),
+			GoogleRedirectURL:   getEnv("GOOGLE_REDIRECT_URL", "http://localhost:8080/api/v1/auth/callback/google"),
 			GitHubClientID:      getEnv("GITHUB_CLIENT_ID", ""),
 			GitHubClientSecret:  getEnv("GITHUB_CLIENT_SECRET", ""),
-			GitHubRedirectURL:   getEnv("GITHUB_REDIRECT_URL", "http://localhost:8080/auth/github/callback"),
+			GitHubRedirectURL:   getEnv("GITHUB_REDIRECT_URL", "http://localhost:8080/api/v1/auth/callback/github"),
 			TelegramBotToken:    getEnv("TELEGRAM_BOT_TOKEN", ""),
-			TelegramRedirectURL: getEnv("TELEGRAM_REDIRECT_URL", "http://localhost:8080/auth/telegram/callback"),
+			TelegramRedirectURL: getEnv("TELEGRAM_REDIRECT_URL", "http://localhost:8080/api/v1/auth/callback/telegram"),
 		},
 		JWT: JWTConfig{
 			Secret:      jwtSecret,

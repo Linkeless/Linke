@@ -79,7 +79,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 // @Failure 400 {object} response.ProblemJSONResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 500 {object} response.ProblemJSONResponse
-// @Router /auth/{provider}/callback [get]
+// @Router /auth/callback/{provider} [get]
 func (h *AuthHandler) Callback(c *gin.Context) {
 	provider := c.Param("provider")
 
@@ -157,21 +157,21 @@ func (h *AuthHandler) GetProviders(c *gin.Context) {
 			"name":         "Google",
 			"key":          "google",
 			"login_url":    "/api/v1/auth/google",
-			"callback_url": "/api/v1/auth/google/callback",
+			"callback_url": "/api/v1/auth/callback/google",
 			"enabled":      h.cfg.OAuth2.GoogleClientID != "",
 		},
 		{
 			"name":         "GitHub",
 			"key":          "github",
 			"login_url":    "/api/v1/auth/github",
-			"callback_url": "/api/v1/auth/github/callback",
+			"callback_url": "/api/v1/auth/callback/github",
 			"enabled":      h.cfg.OAuth2.GitHubClientID != "",
 		},
 		{
 			"name":         "Telegram",
 			"key":          "telegram",
 			"login_url":    "/api/v1/auth/telegram",
-			"callback_url": "/api/v1/auth/telegram/callback",
+			"callback_url": "/api/v1/auth/callback/telegram",
 			"enabled":      h.cfg.OAuth2.TelegramBotToken != "",
 		},
 	}

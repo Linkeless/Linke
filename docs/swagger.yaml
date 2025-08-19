@@ -13565,7 +13565,7 @@ paths:
       summary: OAuth login
       tags:
       - auth
-  /auth/{provider}/callback:
+  /auth/callback/{provider}:
     get:
       description: Handle OAuth callback from providers
       responses:

@@ -150,7 +150,7 @@ func SetupRoutes(
 		authGroup.GET("/:provider", authHandler.Login)
 
 		// OAuth callback routes - using dynamic parameters to match handler expectations
-		authGroup.GET("/:provider/callback", authHandler.Callback)
+		authGroup.GET("/callback/:provider", authHandler.Callback)
 	}
 
 	// User routes (/api/v1/user) - requires authentication
