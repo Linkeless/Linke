@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"linke/internal/domains/user/constants"
 	"linke/internal/domains/user/dto"
 	userEntities "linke/internal/domains/user/entities"
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
@@ -46,18 +47,14 @@ func (h *UserProfileHandler) GetProfile(c *gin.Context) {
 		return
 	}
 
-	// Fetch fresh user data from database (only active users)
-	currentUser, err := h.userService.GetActiveUserByID(c.Request.Context(), user.ID)
-	if err != nil {
-		logger.Error("Failed to get active user profile",
-			logger.Uint("user_id", user.ID),
-			logger.ErrorField(err),
-		)
+	// Check if user status is active (data from JWT claims)
+	if user.Status != constants.UserStatusActive {
 		response.Unauthorized(c, "User account is not active")
 		return
 	}
 
-	userResponse := dto.ToUserResponse(currentUser)
+	// Use user data from JWT claims directly (no database query needed)
+	userResponse := dto.ToUserResponse(user)
 	response.OK(c, userResponse)
 	// Return the response to pool after use
 	dto.PutUserResponse(userResponse)
