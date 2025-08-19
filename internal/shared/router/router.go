@@ -117,6 +117,7 @@ func SetupRoutes(
 
 	// Task routes
 	taskGroup := apiV1.Group("/tasks")
+	taskGroup.Use(middleware.AuthMiddleware(newAuthServiceAdapter(authService)))
 	{
 		taskGroup.POST("", taskCreateFunc)
 	}
@@ -129,7 +130,7 @@ func SetupRoutes(
 		// Local authentication
 		authGroup.POST("/register", authHandler.Register)
 		authGroup.POST("/login", authHandler.LoginLocal)
-		authGroup.POST("/logout", authHandler.Logout)
+		authGroup.POST("/logout", middleware.AuthMiddleware(newAuthServiceAdapter(authService)), authHandler.Logout)
 		authGroup.POST("/refresh", authHandler.RefreshToken)
 		authGroup.POST("/change-password", middleware.AuthMiddleware(newAuthServiceAdapter(authService)), authHandler.ChangePassword)
 
@@ -390,15 +391,12 @@ func SetupRoutes(
 		adminInvoiceGroup.POST("", adminInvoiceHandler.CreateInvoice)
 		adminInvoiceGroup.GET("", adminInvoiceHandler.ListInvoices)
 		adminInvoiceGroup.GET("/:id", adminInvoiceHandler.GetInvoice)
-		adminInvoiceGroup.PUT("/:id", adminInvoiceHandler.UpdateInvoice)
+		adminInvoiceGroup.PATCH("/:id", adminInvoiceHandler.UpdateInvoice)
 		adminInvoiceGroup.DELETE("/:id", adminInvoiceHandler.DeleteInvoice)
 
 		// Invoice Status Operations
-		adminInvoiceGroup.POST("/:id/void", adminInvoiceHandler.VoidInvoice)
-		adminInvoiceGroup.POST("/:id/mark-paid", adminInvoiceHandler.MarkInvoiceAsPaid)
 
 		// PDF and Email Operations
-		adminInvoiceGroup.POST("/:id/regenerate-pdf", adminInvoiceHandler.RegenerateInvoicePDF)
 		adminInvoiceGroup.POST("/:id/resend-email", adminInvoiceHandler.ResendInvoice)
 
 		// Search and Analytics
@@ -580,8 +578,8 @@ func SetupRoutes(
 	ordersGroup.Use(middleware.AuthMiddleware(newAuthServiceAdapter(authService)))
 	{
 		// New standardized order creation flow
-		ordersGroup.POST("/create", subscriptionOrderHandler.CreateOrderWithInvoice)
-		ordersGroup.POST("/pay", subscriptionOrderHandler.CreatePaymentForOrder)
+		ordersGroup.POST("", subscriptionOrderHandler.CreateOrderWithInvoice)
+		ordersGroup.POST("/:id/payments", subscriptionOrderHandler.CreatePaymentForOrder)
 		ordersGroup.POST("/:id/invoice", subscriptionOrderHandler.GenerateInvoiceForOrder)
 
 		// Query and management endpoints
@@ -648,7 +646,6 @@ func SetupRoutes(
 		paymentGroup.GET("/orders/:payment_no", middleware.AuthMiddleware(newAuthServiceAdapter(authService)), paymentOrderHandler.GetPaymentOrder)
 		paymentGroup.GET("/orders/my", middleware.AuthMiddleware(newAuthServiceAdapter(authService)), paymentRecordHandler.GetMyPaymentOrders)
 		// Public endpoint - no auth needed
-		paymentGroup.GET("/methods", paymentMethodHandler.GetAvailablePaymentMethods)
 		paymentGroup.GET("/configs", paymentConfigHandler.GetActivePaymentConfigs)
 		// Webhook endpoint - no auth needed (uses signature validation)
 		paymentGroup.POST("/notify/:gateway", paymentOrderHandler.PaymentNotify)
@@ -753,7 +750,7 @@ func SetupRoutes(
 		"/api/v1/admin/coupons/analytics",
 		"/api/v1/admin/coupons/bulk/*",
 		"/api/v1/coupons",
-		"/api/v1/coupons/validate",
+		"/api/v1/coupons/*/validation",
 		"/api/v1/coupons/my-usage",
 		"/api/v1/admin/referrals",
 		"/api/v1/admin/referrals/*/approve",

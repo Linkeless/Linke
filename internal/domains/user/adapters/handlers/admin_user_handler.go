@@ -18,6 +18,24 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// StatsResponse represents common statistics response structure
+type StatsResponse struct {
+	TotalCount   int64            `json:"total_count" example:"100"`
+	StatusCounts map[string]int64 `json:"status_counts,omitempty"`
+	DateCounts   map[string]int64 `json:"date_counts,omitempty"`
+	CustomStats  map[string]any   `json:"custom_stats,omitempty"`
+	Period       string           `json:"period,omitempty" example:"monthly"`
+}
+
+// BatchOperationResult represents the result of a batch operation
+type BatchOperationResult struct {
+	SuccessCount int      `json:"success_count" example:"10"`
+	FailedCount  int      `json:"failed_count" example:"2"`
+	FailedIDs    []uint   `json:"failed_ids,omitempty"`
+	Errors       []string `json:"errors,omitempty"`
+	Message      string   `json:"message,omitempty" example:"Batch operation completed"`
+}
+
 type AdminUserHandler struct {
 	userService userInterfaces.UserService
 	authService authInterfaces.AuthService
@@ -612,7 +630,7 @@ func (h *AdminUserHandler) ListUsersByProvider(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} map[string]interface{}
+// @Success 200 {object} StatsResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 403 {object} response.ProblemJSONResponse
 // @Failure 500 {object} response.ProblemJSONResponse
@@ -636,7 +654,7 @@ func (h *AdminUserHandler) GetUserStats(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param ids body dto.BatchUserIDsRequest true "User IDs"
-// @Success 200 {object} map[string]interface{}
+// @Success 200 {object} BatchOperationResult
 // @Failure 400 {object} response.ProblemJSONResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 403 {object} response.ProblemJSONResponse
@@ -762,7 +780,7 @@ func (h *AdminUserHandler) PatchUser(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param ids body dto.BatchUserIDsRequest true "User IDs"
-// @Success 200 {object} map[string]interface{}
+// @Success 200 {object} BatchOperationResult
 // @Failure 400 {object} response.ProblemJSONResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 403 {object} response.ProblemJSONResponse

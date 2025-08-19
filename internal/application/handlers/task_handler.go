@@ -16,6 +16,21 @@ type CreateTaskRequest struct {
 	Payload map[string]interface{} `json:"payload" binding:"required" swaggertype:"object"`
 }
 
+// TaskCreatedResponse represents the response after creating a task
+type TaskCreatedResponse struct {
+	TaskID  string `json:"task_id" example:"task_123456"`
+	Message string `json:"message" example:"Task enqueued successfully"`
+}
+
+// QueueStatusResponse represents the response for queue status
+type QueueStatusResponse struct {
+	QueueName    string `json:"queue_name" example:"default"`
+	PendingTasks int    `json:"pending_tasks" example:"5"`
+	ProcessingTasks int `json:"processing_tasks" example:"2"`
+	CompletedTasks int  `json:"completed_tasks" example:"100"`
+	FailedTasks    int  `json:"failed_tasks" example:"3"`
+}
+
 type TaskHandler struct {
 	taskQueue *queue.TaskQueue
 }
@@ -33,7 +48,7 @@ func NewTaskHandler(taskQueue *queue.TaskQueue) *TaskHandler {
 // @Produce json
 // @Security BearerAuth
 // @Param task body CreateTaskRequest true "Task details"
-// @Success 201 {object} response.StandardResponse
+// @Success 201 {object} TaskCreatedResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -69,7 +84,7 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 // @Tags System-Task
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} response.StandardResponse
+// @Success 200 {object} QueueStatusResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /tasks/status [get]

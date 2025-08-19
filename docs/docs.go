@@ -9,7 +9,15 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "contact": {},
+        "contact": {
+            "name": "API Support Team",
+            "url": "https://docs.linke.com/support",
+            "email": "support@linke.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -184,8 +192,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/linke_internal_domains_auth_adapters_handlers.MessageResponse"
                         }
                     },
                     "400": {
@@ -259,8 +266,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/linke_internal_domains_auth_adapters_handlers.MessageResponse"
                         }
                     },
                     "401": {
@@ -306,8 +312,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/linke_internal_domains_auth_adapters_handlers.MessageResponse"
                         }
                     },
                     "401": {
@@ -362,8 +367,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/linke_internal_domains_auth_adapters_handlers.MessageResponse"
                         }
                     },
                     "401": {
@@ -420,8 +424,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/linke_internal_domains_auth_adapters_handlers.MessageResponse"
                         }
                     },
                     "400": {
@@ -484,8 +487,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/linke_internal_domains_auth_adapters_handlers.MessageResponse"
                         }
                     },
                     "400": {
@@ -548,8 +550,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/linke_internal_domains_auth_adapters_handlers.MessageResponse"
                         }
                     },
                     "400": {
@@ -612,8 +613,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/linke_internal_domains_auth_adapters_handlers.MessageResponse"
                         }
                     },
                     "400": {
@@ -665,8 +665,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/linke_internal_domains_auth_adapters_handlers.MessageResponse"
                         }
                     },
                     "401": {
@@ -985,8 +984,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/linke_internal_domains_auth_adapters_handlers.MessageResponse"
                         }
                     },
                     "401": {
@@ -1041,8 +1039,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/linke_internal_domains_auth_adapters_handlers.MessageResponse"
                         }
                     },
                     "401": {
@@ -1186,8 +1183,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/cache.MessageResponse"
                         }
                     }
                 }
@@ -1560,8 +1556,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/cache.CountResponse"
                         }
                     }
                 }
@@ -1589,8 +1584,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/cache.MessageResponse"
                         }
                     }
                 }
@@ -1817,7 +1811,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.StandardResponse"
+                            "$ref": "#/definitions/linke_internal_domains_coupon_adapters_handlers.StatisticsResponse"
                         }
                     },
                     "401": {
@@ -1874,7 +1868,10 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/response.StandardResponse"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.CouponResponse"
+                            }
                         }
                     },
                     "400": {
@@ -1937,7 +1934,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.StandardResponse"
+                            "$ref": "#/definitions/linke_internal_domains_coupon_adapters_handlers.BulkOperationResponse"
                         }
                     },
                     "400": {
@@ -2000,7 +1997,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.StandardResponse"
+                            "$ref": "#/definitions/linke_internal_domains_coupon_adapters_handlers.BulkOperationResponse"
                         }
                     },
                     "400": {
@@ -2205,7 +2202,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.StandardResponse"
+                            "$ref": "#/definitions/linke_internal_domains_coupon_adapters_handlers.StatisticsResponse"
                         }
                     },
                     "401": {
@@ -2390,11 +2387,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
+                    "204": {
+                        "description": "No Content"
                     },
                     "400": {
                         "description": "Bad Request",
@@ -2882,7 +2876,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.StandardResponse"
+                            "$ref": "#/definitions/linke_internal_domains_invoice_adapters_handlers.StatisticsResponse"
                         }
                     },
                     "400": {
@@ -2945,7 +2939,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.StandardResponse"
+                            "$ref": "#/definitions/linke_internal_domains_invoice_adapters_handlers.BulkOperationResponse"
                         }
                     },
                     "400": {
@@ -3008,7 +3002,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.StandardResponse"
+                            "$ref": "#/definitions/linke_internal_domains_invoice_adapters_handlers.BulkOperationResponse"
                         }
                     },
                     "400": {
@@ -3071,7 +3065,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.StandardResponse"
+                            "$ref": "#/definitions/linke_internal_domains_invoice_adapters_handlers.BulkOperationResponse"
                         }
                     },
                     "400": {
@@ -3134,7 +3128,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.StandardResponse"
+                            "$ref": "#/definitions/linke_internal_domains_invoice_adapters_handlers.BulkOperationResponse"
                         }
                     },
                     "400": {
@@ -3186,7 +3180,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.StandardResponse"
+                            "$ref": "#/definitions/linke_internal_domains_invoice_adapters_handlers.BulkOperationResponse"
                         }
                     },
                     "401": {
@@ -3448,7 +3442,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.StandardResponse"
+                            "$ref": "#/definitions/linke_internal_domains_invoice_adapters_handlers.StatisticsResponse"
                         }
                     },
                     "401": {
@@ -3494,7 +3488,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.StandardResponse"
+                            "$ref": "#/definitions/linke_internal_domains_invoice_adapters_handlers.BulkOperationResponse"
                         }
                     },
                     "401": {
@@ -3578,7 +3572,63 @@ const docTemplate = `{
                     }
                 }
             },
-            "put": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Soft delete an invoice (Admin only). Only draft invoices can be deleted.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin-Invoice-Management"
+                ],
+                "summary": "Delete invoice",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Invoice ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
                 "security": [
                     {
                         "BearerAuth": []
@@ -3618,211 +3668,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/dto.InvoiceResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ForbiddenResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.NotFoundResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Soft delete an invoice (Admin only). Only draft invoices can be deleted.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin-Invoice-Management"
-                ],
-                "summary": "Delete invoice",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Invoice ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ForbiddenResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.NotFoundResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/invoices/{id}/mark-paid": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Manually mark an invoice as paid (Admin only)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin-Invoice-Management"
-                ],
-                "summary": "Mark invoice as paid",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Invoice ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Mark paid request data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.MarkPaidRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.InvoiceResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ForbiddenResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.NotFoundResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/invoices/{id}/regenerate-pdf": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Regenerate PDF for an invoice with optional custom options (Admin only)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin-Invoice-Management"
-                ],
-                "summary": "Regenerate invoice PDF",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Invoice ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "PDF generation options",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.RegeneratePDFRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
                         }
                     },
                     "400": {
@@ -3898,7 +3743,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/linke_internal_domains_invoice_adapters_handlers.MessageResponse"
                         }
                     },
                     "400": {
@@ -3929,76 +3774,6 @@ const docTemplate = `{
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/invoices/{id}/void": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Void an invoice with reason (Admin only)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin-Invoice-Management"
-                ],
-                "summary": "Void invoice",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Invoice ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Void request data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.VoidInvoiceRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.InvoiceResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ForbiddenResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.NotFoundResponse"
                         }
                     }
                 }
@@ -5801,11 +5576,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
+                    "204": {
+                        "description": "No Content"
                     },
                     "400": {
                         "description": "Bad Request",
@@ -6511,11 +6283,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
+                    "204": {
+                        "description": "No Content"
                     },
                     "400": {
                         "description": "Bad Request",
@@ -6789,11 +6558,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
+                    "204": {
+                        "description": "No Content"
                     },
                     "400": {
                         "description": "Bad Request",
@@ -7445,11 +7211,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
+                    "204": {
+                        "description": "No Content"
                     },
                     "400": {
                         "description": "Bad Request",
@@ -7810,11 +7573,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
+                    "204": {
+                        "description": "No Content"
                     },
                     "400": {
                         "description": "Bad Request",
@@ -8381,7 +8141,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/linke_internal_domains_subscription_adapters_handlers.MessageResponse"
                         }
                     },
                     "400": {
@@ -8830,158 +8590,6 @@ const docTemplate = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/interfaces.UpgradeSubscriptionRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entities.UserSubscriptionResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ForbiddenResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.NotFoundResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/subscriptions/{id}/pause": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Pause a user subscription (admin only)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin-Subscription"
-                ],
-                "summary": "[Admin] Pause user subscription",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Subscription ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Pause subscription request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.PauseSubscriptionRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entities.UserSubscriptionResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ForbiddenResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.NotFoundResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/admin/subscriptions/{id}/resume": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Resume a paused user subscription (admin only)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin-Subscription"
-                ],
-                "summary": "[Admin] Resume user subscription",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Subscription ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Resume subscription request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/interfaces.ResumeSubscriptionRequest"
                         }
                     }
                 ],
@@ -9958,11 +9566,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
+                    "204": {
+                        "description": "No Content"
                     },
                     "400": {
                         "description": "Bad Request",
@@ -10554,11 +10159,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
+                    "204": {
+                        "description": "No Content"
                     },
                     "400": {
                         "description": "Bad Request",
@@ -10937,8 +10539,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/handlers.BatchOperationResult"
                         }
                     },
                     "400": {
@@ -11001,8 +10602,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/handlers.BatchOperationResult"
                         }
                     },
                     "400": {
@@ -11266,8 +10866,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/handlers.StatsResponse"
                         }
                     },
                     "401": {
@@ -12033,8 +11632,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/linke_internal_domains_auth_adapters_handlers.MessageResponse"
                         }
                     },
                     "401": {
@@ -12100,8 +11698,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/linke_internal_domains_auth_adapters_handlers.MessageResponse"
                         }
                     },
                     "400": {
@@ -12352,8 +11949,8 @@ const docTemplate = `{
                 }
             }
         },
-        "/coupons/validate": {
-            "post": {
+        "/coupons/{code}/validation": {
+            "get": {
                 "security": [
                     {
                         "BearerAuth": []
@@ -12372,13 +11969,31 @@ const docTemplate = `{
                 "summary": "Validate coupon code",
                 "parameters": [
                     {
-                        "description": "Coupon validation data",
-                        "name": "coupon",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.ValidateCouponRequest"
-                        }
+                        "type": "string",
+                        "description": "Coupon code to validate",
+                        "name": "code",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "Order amount for validation",
+                        "name": "order_amount",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Plan ID for validation",
+                        "name": "plan_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Currency code (default: CNY)",
+                        "name": "currency",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -12777,9 +12392,7 @@ const docTemplate = `{
                         }
                     }
                 }
-            }
-        },
-        "/orders/create": {
+            },
             "post": {
                 "security": [
                     {
@@ -12831,75 +12444,6 @@ const docTemplate = `{
                         "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/response.ForbiddenResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/orders/pay": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Create a payment record for an existing subscription order",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User-Subscription"
-                ],
-                "summary": "[User] Create payment for existing order",
-                "parameters": [
-                    {
-                        "description": "Payment creation request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.PayOrderRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "type": "object"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.BadRequestResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.UnauthorizedResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ForbiddenResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.NotFoundResponse"
                         }
                     },
                     "500": {
@@ -13043,6 +12587,75 @@ const docTemplate = `{
                 }
             }
         },
+        "/orders/{id}/payments": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a payment record for an existing subscription order",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User-Subscription"
+                ],
+                "summary": "[User] Create payment for existing order",
+                "parameters": [
+                    {
+                        "description": "Payment creation request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.PayOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.BadRequestResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.UnauthorizedResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ForbiddenResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.NotFoundResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/orders/{id}/summary": {
             "get": {
                 "security": [
@@ -13074,8 +12687,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/linke_internal_domains_subscription_adapters_handlers.MessageResponse"
                         }
                     },
                     "400": {
@@ -13682,41 +13294,6 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.InternalServerErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/payment/methods": {
-            "get": {
-                "description": "Get available payment methods organized by gateway. Returns enabled payment gateways and their supported methods (epay: alipay, wechat, qqpay). No authentication required.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User-Payment"
-                ],
-                "summary": "[Public] Get available payment methods",
-                "responses": {
-                    "200": {
-                        "description": "Returns map of gateway to supported payment methods",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "array",
-                                "items": {
-                                    "type": "string"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Failed to retrieve payment methods from database",
                         "schema": {
                             "$ref": "#/definitions/response.InternalServerErrorResponse"
                         }
@@ -14799,7 +14376,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/response.StandardResponse"
+                            "$ref": "#/definitions/handlers.TaskCreatedResponse"
                         }
                     },
                     "400": {
@@ -14842,7 +14419,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.StandardResponse"
+                            "$ref": "#/definitions/handlers.QueueStatusResponse"
                         }
                     },
                     "401": {
@@ -17487,9 +17064,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "message",
+                        "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/linke_internal_domains_user_adapters_handlers.MessageResponse"
                         }
                     },
                     "400": {
@@ -17548,9 +17125,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "message",
+                        "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/linke_internal_domains_user_adapters_handlers.MessageResponse"
                         }
                     },
                     "400": {
@@ -17804,8 +17381,26 @@ const docTemplate = `{
                 }
             }
         },
+        "cache.CountResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "example": 42
+                }
+            }
+        },
         "cache.MemoryCacheMetrics": {
             "type": "object"
+        },
+        "cache.MessageResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Operation completed successfully"
+                }
+            }
         },
         "cache.Metrics": {
             "type": "object",
@@ -21800,39 +21395,6 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.ValidateCouponRequest": {
-            "type": "object",
-            "required": [
-                "code",
-                "currency",
-                "order_amount",
-                "plan_id",
-                "user_id"
-            ],
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "example": "SAVE20"
-                },
-                "currency": {
-                    "type": "string",
-                    "example": "CNY"
-                },
-                "order_amount": {
-                    "type": "number",
-                    "minimum": 0,
-                    "example": 29.99
-                },
-                "plan_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "user_id": {
-                    "type": "integer",
-                    "example": 1
-                }
-            }
-        },
         "dto.ValidateCouponResponse": {
             "type": "object",
             "properties": {
@@ -23208,6 +22770,22 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Admin updated invoice"
                 },
+                "paid_at": {
+                    "type": "string",
+                    "example": "2025-08-19T10:30:00Z"
+                },
+                "payment_method": {
+                    "type": "string",
+                    "example": "bank_transfer"
+                },
+                "regenerate_pdf": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "status": {
+                    "type": "string",
+                    "example": "voided"
+                },
                 "tax_number": {
                     "type": "string",
                     "example": "AU123456789"
@@ -23223,6 +22801,10 @@ const docTemplate = `{
                 "template": {
                     "type": "string",
                     "example": "professional"
+                },
+                "void_reason": {
+                    "type": "string",
+                    "example": "Customer requested cancellation"
                 }
             }
         },
@@ -23302,6 +22884,35 @@ const docTemplate = `{
                 "usage_type": {
                     "type": "string",
                     "example": "traffic"
+                }
+            }
+        },
+        "handlers.BatchOperationResult": {
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "failed_count": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "failed_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Batch operation completed"
+                },
+                "success_count": {
+                    "type": "integer",
+                    "example": 10
                 }
             }
         },
@@ -23643,52 +23254,28 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.MarkPaidRequest": {
+        "handlers.QueueStatusResponse": {
             "type": "object",
             "properties": {
-                "notes": {
-                    "type": "string",
-                    "example": "Manual payment verification"
+                "completed_tasks": {
+                    "type": "integer",
+                    "example": 100
                 },
-                "payment_date": {
-                    "type": "string",
-                    "format": "date-time",
-                    "example": "2024-01-15T10:30:00Z"
+                "failed_tasks": {
+                    "type": "integer",
+                    "example": 3
                 },
-                "payment_method": {
-                    "type": "string",
-                    "example": "bank_transfer"
+                "pending_tasks": {
+                    "type": "integer",
+                    "example": 5
                 },
-                "payment_reference": {
-                    "type": "string",
-                    "example": "TXN123456"
+                "processing_tasks": {
+                    "type": "integer",
+                    "example": 2
                 },
-                "send_notification": {
-                    "type": "boolean",
-                    "example": true
-                }
-            }
-        },
-        "handlers.RegeneratePDFRequest": {
-            "type": "object",
-            "properties": {
-                "custom_fields": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                },
-                "language": {
+                "queue_name": {
                     "type": "string",
-                    "example": "en"
-                },
-                "template": {
-                    "type": "string",
-                    "example": "professional"
-                },
-                "watermark": {
-                    "type": "string",
-                    "example": "PAID"
+                    "example": "default"
                 }
             }
         },
@@ -23755,6 +23342,37 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.StatsResponse": {
+            "type": "object",
+            "properties": {
+                "custom_stats": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "date_counts": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "period": {
+                    "type": "string",
+                    "example": "monthly"
+                },
+                "status_counts": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "total_count": {
+                    "type": "integer",
+                    "example": 100
+                }
+            }
+        },
         "handlers.SuppressAlertRequest": {
             "type": "object",
             "required": [
@@ -23769,6 +23387,19 @@ const docTemplate = `{
                 "reason": {
                     "type": "string",
                     "example": "Maintenance window"
+                }
+            }
+        },
+        "handlers.TaskCreatedResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Task enqueued successfully"
+                },
+                "task_id": {
+                    "type": "string",
+                    "example": "task_123456"
                 }
             }
         },
@@ -23937,23 +23568,6 @@ const docTemplate = `{
                         "maintenance"
                     ],
                     "example": "active"
-                }
-            }
-        },
-        "handlers.VoidInvoiceRequest": {
-            "type": "object",
-            "required": [
-                "reason"
-            ],
-            "properties": {
-                "reason": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "example": "Customer requested cancellation"
-                },
-                "send_notification": {
-                    "type": "boolean",
-                    "example": true
                 }
             }
         },
@@ -25046,6 +24660,15 @@ const docTemplate = `{
                 }
             }
         },
+        "linke_internal_domains_auth_adapters_handlers.MessageResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Operation completed successfully"
+                }
+            }
+        },
         "linke_internal_domains_auth_dto.UserResponse": {
             "type": "object",
             "properties": {
@@ -25088,6 +24711,153 @@ const docTemplate = `{
                 "username": {
                     "type": "string",
                     "example": "johndoe"
+                }
+            }
+        },
+        "linke_internal_domains_coupon_adapters_handlers.BulkOperationResponse": {
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "failed_count": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "failed_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Bulk operation completed"
+                },
+                "success_count": {
+                    "type": "integer",
+                    "example": 10
+                }
+            }
+        },
+        "linke_internal_domains_coupon_adapters_handlers.StatisticsResponse": {
+            "type": "object",
+            "properties": {
+                "custom_stats": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "date_counts": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "period": {
+                    "type": "string",
+                    "example": "monthly"
+                },
+                "status_counts": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "total_count": {
+                    "type": "integer",
+                    "example": 100
+                }
+            }
+        },
+        "linke_internal_domains_invoice_adapters_handlers.BulkOperationResponse": {
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "failed_count": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "failed_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Bulk operation completed"
+                },
+                "success_count": {
+                    "type": "integer",
+                    "example": 10
+                }
+            }
+        },
+        "linke_internal_domains_invoice_adapters_handlers.MessageResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Operation completed successfully"
+                }
+            }
+        },
+        "linke_internal_domains_invoice_adapters_handlers.StatisticsResponse": {
+            "type": "object",
+            "properties": {
+                "custom_stats": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "date_counts": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "period": {
+                    "type": "string",
+                    "example": "monthly"
+                },
+                "status_counts": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "total_count": {
+                    "type": "integer",
+                    "example": 100
+                }
+            }
+        },
+        "linke_internal_domains_subscription_adapters_handlers.MessageResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Operation completed successfully"
+                }
+            }
+        },
+        "linke_internal_domains_user_adapters_handlers.MessageResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Operation completed successfully"
                 }
             }
         },
@@ -25911,10 +25681,10 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "1.0",
+	Version:          "1.0.0",
 	Host:             "localhost:8080",
 	BasePath:         "/api/v1",
-	Schemes:          []string{},
+	Schemes:          []string{"http", "https"},
 	Title:            "Linke API",
 	Description:      "A comprehensive service management platform with subscription-based billing, user management, and server administration. Features include OAuth2 authentication, traffic subscription management, multi-gateway payments, referral programs, and customer support system.",
 	InfoInstanceName: "swagger",

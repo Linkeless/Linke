@@ -262,7 +262,7 @@ func (h *AdminSubscriptionPlansHandler) UpdateSubscriptionPlan(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Plan ID"
-// @Success 200 {object} string
+// @Success 204 "No Content"
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse

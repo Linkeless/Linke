@@ -48,7 +48,19 @@ definitions:
         format: int64
         type: integer
     type: object
+  cache.CountResponse:
+    properties:
+      count:
+        example: 42
+        type: integer
+    type: object
   cache.MemoryCacheMetrics:
+    type: object
+  cache.MessageResponse:
+    properties:
+      message:
+        example: Operation completed successfully
+        type: string
     type: object
   cache.Metrics:
     properties:
@@ -3001,31 +3013,6 @@ definitions:
     required:
     - content
     type: object
-  dto.ValidateCouponRequest:
-    properties:
-      code:
-        example: SAVE20
-        type: string
-      currency:
-        example: CNY
-        type: string
-      order_amount:
-        example: 29.99
-        minimum: 0
-        type: number
-      plan_id:
-        example: 1
-        type: integer
-      user_id:
-        example: 1
-        type: integer
-    required:
-    - code
-    - currency
-    - order_amount
-    - plan_id
-    - user_id
-    type: object
   dto.ValidateCouponResponse:
     properties:
       coupon:
@@ -4057,6 +4044,18 @@ definitions:
       notes:
         example: Admin updated invoice
         type: string
+      paid_at:
+        example: "2025-08-19T10:30:00Z"
+        type: string
+      payment_method:
+        example: bank_transfer
+        type: string
+      regenerate_pdf:
+        example: true
+        type: boolean
+      status:
+        example: voided
+        type: string
       tax_number:
         example: AU123456789
         type: string
@@ -4068,6 +4067,9 @@ definitions:
         type: string
       template:
         example: professional
+        type: string
+      void_reason:
+        example: Customer requested cancellation
         type: string
     type: object
   handlers.AdminUpdateUserSubscriptionRequest:
@@ -4128,6 +4130,26 @@ definitions:
         type: string
     required:
     - reason
+    type: object
+  handlers.BatchOperationResult:
+    properties:
+      errors:
+        items:
+          type: string
+        type: array
+      failed_count:
+        example: 2
+        type: integer
+      failed_ids:
+        items:
+          type: integer
+        type: array
+      message:
+        example: Batch operation completed
+        type: string
+      success_count:
+        example: 10
+        type: integer
     type: object
   handlers.BulkInvoiceActionRequest:
     properties:
@@ -4383,39 +4405,22 @@ definitions:
     - extend_by_days
     - reason
     type: object
-  handlers.MarkPaidRequest:
+  handlers.QueueStatusResponse:
     properties:
-      notes:
-        example: Manual payment verification
-        type: string
-      payment_date:
-        example: "2024-01-15T10:30:00Z"
-        format: date-time
-        type: string
-      payment_method:
-        example: bank_transfer
-        type: string
-      payment_reference:
-        example: TXN123456
-        type: string
-      send_notification:
-        example: true
-        type: boolean
-    type: object
-  handlers.RegeneratePDFRequest:
-    properties:
-      custom_fields:
-        additionalProperties:
-          type: string
-        type: object
-      language:
-        example: en
-        type: string
-      template:
-        example: professional
-        type: string
-      watermark:
-        example: PAID
+      completed_tasks:
+        example: 100
+        type: integer
+      failed_tasks:
+        example: 3
+        type: integer
+      pending_tasks:
+        example: 5
+        type: integer
+      processing_tasks:
+        example: 2
+        type: integer
+      queue_name:
+        example: default
         type: string
     type: object
   handlers.ResendInvoiceRequest:
@@ -4464,6 +4469,28 @@ definitions:
     - subject
     - user_ids
     type: object
+  handlers.StatsResponse:
+    properties:
+      custom_stats:
+        additionalProperties: {}
+        type: object
+      date_counts:
+        additionalProperties:
+          format: int64
+          type: integer
+        type: object
+      period:
+        example: monthly
+        type: string
+      status_counts:
+        additionalProperties:
+          format: int64
+          type: integer
+        type: object
+      total_count:
+        example: 100
+        type: integer
+    type: object
   handlers.SuppressAlertRequest:
     properties:
       duration_minutes:
@@ -4475,6 +4502,15 @@ definitions:
     required:
     - duration_minutes
     - reason
+    type: object
+  handlers.TaskCreatedResponse:
+    properties:
+      message:
+        example: Task enqueued successfully
+        type: string
+      task_id:
+        example: task_123456
+        type: string
     type: object
   handlers.UniProxyBaseConfig:
     properties:
@@ -4597,18 +4633,6 @@ definitions:
         type: string
     required:
     - status
-    type: object
-  handlers.VoidInvoiceRequest:
-    properties:
-      reason:
-        example: Customer requested cancellation
-        maxLength: 255
-        type: string
-      send_notification:
-        example: true
-        type: boolean
-    required:
-    - reason
     type: object
   interfaces.AlertDistribution:
     properties:
@@ -5348,6 +5372,12 @@ definitions:
       user_subscription_id:
         type: integer
     type: object
+  linke_internal_domains_auth_adapters_handlers.MessageResponse:
+    properties:
+      message:
+        example: Operation completed successfully
+        type: string
+    type: object
   linke_internal_domains_auth_dto.UserResponse:
     properties:
       avatar:
@@ -5379,6 +5409,108 @@ definitions:
         type: string
       username:
         example: johndoe
+        type: string
+    type: object
+  linke_internal_domains_coupon_adapters_handlers.BulkOperationResponse:
+    properties:
+      errors:
+        items:
+          type: string
+        type: array
+      failed_count:
+        example: 2
+        type: integer
+      failed_ids:
+        items:
+          type: integer
+        type: array
+      message:
+        example: Bulk operation completed
+        type: string
+      success_count:
+        example: 10
+        type: integer
+    type: object
+  linke_internal_domains_coupon_adapters_handlers.StatisticsResponse:
+    properties:
+      custom_stats:
+        additionalProperties: {}
+        type: object
+      date_counts:
+        additionalProperties:
+          format: int64
+          type: integer
+        type: object
+      period:
+        example: monthly
+        type: string
+      status_counts:
+        additionalProperties:
+          format: int64
+          type: integer
+        type: object
+      total_count:
+        example: 100
+        type: integer
+    type: object
+  linke_internal_domains_invoice_adapters_handlers.BulkOperationResponse:
+    properties:
+      errors:
+        items:
+          type: string
+        type: array
+      failed_count:
+        example: 2
+        type: integer
+      failed_ids:
+        items:
+          type: integer
+        type: array
+      message:
+        example: Bulk operation completed
+        type: string
+      success_count:
+        example: 10
+        type: integer
+    type: object
+  linke_internal_domains_invoice_adapters_handlers.MessageResponse:
+    properties:
+      message:
+        example: Operation completed successfully
+        type: string
+    type: object
+  linke_internal_domains_invoice_adapters_handlers.StatisticsResponse:
+    properties:
+      custom_stats:
+        additionalProperties: {}
+        type: object
+      date_counts:
+        additionalProperties:
+          format: int64
+          type: integer
+        type: object
+      period:
+        example: monthly
+        type: string
+      status_counts:
+        additionalProperties:
+          format: int64
+          type: integer
+        type: object
+      total_count:
+        example: 100
+        type: integer
+    type: object
+  linke_internal_domains_subscription_adapters_handlers.MessageResponse:
+    properties:
+      message:
+        example: Operation completed successfully
+        type: string
+    type: object
+  linke_internal_domains_user_adapters_handlers.MessageResponse:
+    properties:
+      message:
+        example: Operation completed successfully
         type: string
     type: object
   linke_internal_domains_user_dto.UserResponse:
@@ -5938,13 +6070,19 @@ definitions:
     type: object
 host: localhost:8080
 info:
-  contact: {}
+  contact:
+    email: support@linke.com
+    name: API Support Team
+    url: https://docs.linke.com/support
   description: A comprehensive service management platform with subscription-based
     billing, user management, and server administration. Features include OAuth2 authentication,
     traffic subscription management, multi-gateway payments, referral programs, and
     customer support system.
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
   title: Linke API
-  version: "1.0"
+  version: 1.0.0
 paths:
   /admin/auth/accounts/{user_id}/security-status:
     get:
@@ -5964,8 +6102,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/linke_internal_domains_auth_adapters_handlers.MessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -6102,8 +6239,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/linke_internal_domains_auth_adapters_handlers.MessageResponse'
         "401":
           description: Unauthorized
           schema:
@@ -6132,8 +6268,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/linke_internal_domains_auth_adapters_handlers.MessageResponse'
         "401":
           description: Unauthorized
           schema:
@@ -6168,8 +6303,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/linke_internal_domains_auth_adapters_handlers.MessageResponse'
         "401":
           description: Unauthorized
           schema:
@@ -6205,8 +6339,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/linke_internal_domains_auth_adapters_handlers.MessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -6246,8 +6379,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/linke_internal_domains_auth_adapters_handlers.MessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -6287,8 +6419,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/linke_internal_domains_auth_adapters_handlers.MessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -6328,8 +6459,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/linke_internal_domains_auth_adapters_handlers.MessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -6362,8 +6492,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/linke_internal_domains_auth_adapters_handlers.MessageResponse'
         "401":
           description: Unauthorized
           schema:
@@ -6571,8 +6700,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/linke_internal_domains_auth_adapters_handlers.MessageResponse'
         "401":
           description: Unauthorized
           schema:
@@ -6608,8 +6736,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/linke_internal_domains_auth_adapters_handlers.MessageResponse'
         "401":
           description: Unauthorized
           schema:
@@ -6703,8 +6830,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/cache.MessageResponse'
       security:
       - BearerAuth: []
       summary: Flush cache
@@ -6933,8 +7059,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/cache.CountResponse'
       security:
       - BearerAuth: []
       summary: Delete cache by pattern
@@ -6951,8 +7076,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/cache.MessageResponse'
       security:
       - BearerAuth: []
       summary: Reset cache metrics
@@ -7091,10 +7215,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
-          schema:
-            type: string
+        "204":
+          description: No Content
         "400":
           description: Bad Request
           schema:
@@ -7363,7 +7485,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            $ref: '#/definitions/linke_internal_domains_coupon_adapters_handlers.StatisticsResponse'
         "401":
           description: Unauthorized
           schema:
@@ -7399,7 +7521,9 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            items:
+              $ref: '#/definitions/dto.CouponResponse'
+            type: array
         "400":
           description: Bad Request
           schema:
@@ -7439,7 +7563,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            $ref: '#/definitions/linke_internal_domains_coupon_adapters_handlers.BulkOperationResponse'
         "400":
           description: Bad Request
           schema:
@@ -7479,7 +7603,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            $ref: '#/definitions/linke_internal_domains_coupon_adapters_handlers.BulkOperationResponse'
         "400":
           description: Bad Request
           schema:
@@ -7615,7 +7739,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            $ref: '#/definitions/linke_internal_domains_coupon_adapters_handlers.StatisticsResponse'
         "401":
           description: Unauthorized
           schema:
@@ -7771,10 +7895,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
-          schema:
-            type: string
+        "204":
+          description: No Content
         "400":
           description: Bad Request
           schema:
@@ -7834,7 +7956,7 @@ paths:
       summary: Get invoice details
       tags:
       - Admin-Invoice-Management
-    put:
+    patch:
       consumes:
       - application/json
       description: Update invoice details (Admin only). Only draft invoices can be
@@ -7883,101 +8005,6 @@ paths:
       summary: Update invoice
       tags:
       - Admin-Invoice-Management
-  /admin/invoices/{id}/mark-paid:
-    post:
-      consumes:
-      - application/json
-      description: Manually mark an invoice as paid (Admin only)
-      parameters:
-      - description: Invoice ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Mark paid request data
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.MarkPaidRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/dto.InvoiceResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.NotFoundResponse'
-      security:
-      - BearerAuth: []
-      summary: Mark invoice as paid
-      tags:
-      - Admin-Invoice-Management
-  /admin/invoices/{id}/regenerate-pdf:
-    post:
-      consumes:
-      - application/json
-      description: Regenerate PDF for an invoice with optional custom options (Admin
-        only)
-      parameters:
-      - description: Invoice ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: PDF generation options
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.RegeneratePDFRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.NotFoundResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Regenerate invoice PDF
-      tags:
-      - Admin-Invoice-Management
   /admin/invoices/{id}/resend-email:
     post:
       consumes:
@@ -8001,7 +8028,7 @@ paths:
         "200":
           description: OK
           schema:
-            type: string
+            $ref: '#/definitions/linke_internal_domains_invoice_adapters_handlers.MessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -8025,51 +8052,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Resend invoice
-      tags:
-      - Admin-Invoice-Management
-  /admin/invoices/{id}/void:
-    post:
-      consumes:
-      - application/json
-      description: Void an invoice with reason (Admin only)
-      parameters:
-      - description: Invoice ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Void request data
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.VoidInvoiceRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/dto.InvoiceResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.NotFoundResponse'
-      security:
-      - BearerAuth: []
-      summary: Void invoice
       tags:
       - Admin-Invoice-Management
   /admin/invoices/analytics:
@@ -8108,7 +8090,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            $ref: '#/definitions/linke_internal_domains_invoice_adapters_handlers.StatisticsResponse'
         "400":
           description: Bad Request
           schema:
@@ -8148,7 +8130,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            $ref: '#/definitions/linke_internal_domains_invoice_adapters_handlers.BulkOperationResponse'
         "400":
           description: Bad Request
           schema:
@@ -8188,7 +8170,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            $ref: '#/definitions/linke_internal_domains_invoice_adapters_handlers.BulkOperationResponse'
         "400":
           description: Bad Request
           schema:
@@ -8228,7 +8210,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            $ref: '#/definitions/linke_internal_domains_invoice_adapters_handlers.BulkOperationResponse'
         "400":
           description: Bad Request
           schema:
@@ -8268,7 +8250,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            $ref: '#/definitions/linke_internal_domains_invoice_adapters_handlers.BulkOperationResponse'
         "400":
           description: Bad Request
           schema:
@@ -8301,7 +8283,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            $ref: '#/definitions/linke_internal_domains_invoice_adapters_handlers.BulkOperationResponse'
         "401":
           description: Unauthorized
           schema:
@@ -8472,7 +8454,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            $ref: '#/definitions/linke_internal_domains_invoice_adapters_handlers.StatisticsResponse'
         "401":
           description: Unauthorized
           schema:
@@ -8501,7 +8483,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            $ref: '#/definitions/linke_internal_domains_invoice_adapters_handlers.BulkOperationResponse'
         "401":
           description: Unauthorized
           schema:
@@ -9573,10 +9555,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
-          schema:
-            type: string
+        "204":
+          description: No Content
         "400":
           description: Bad Request
           schema:
@@ -9980,10 +9960,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
-          schema:
-            type: string
+        "204":
+          description: No Content
         "400":
           description: Bad Request
           schema:
@@ -10245,10 +10223,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
-          schema:
-            type: string
+        "204":
+          description: No Content
         "400":
           description: Bad Request
           schema:
@@ -10353,104 +10329,6 @@ paths:
       summary: '[Admin] Get servers by group'
       tags:
       - Admin-Server-Management
-  /admin/subscriptions/{id}/pause:
-    post:
-      consumes:
-      - application/json
-      description: Pause a user subscription (admin only)
-      parameters:
-      - description: Subscription ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Pause subscription request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/interfaces.PauseSubscriptionRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/entities.UserSubscriptionResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.NotFoundResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[Admin] Pause user subscription'
-      tags:
-      - Admin-Subscription
-  /admin/subscriptions/{id}/resume:
-    post:
-      consumes:
-      - application/json
-      description: Resume a paused user subscription (admin only)
-      parameters:
-      - description: Subscription ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Resume subscription request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/interfaces.ResumeSubscriptionRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/entities.UserSubscriptionResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.NotFoundResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[Admin] Resume user subscription'
-      tags:
-      - Admin-Subscription
   /admin/subscriptions/alerts:
     get:
       consumes:
@@ -10851,10 +10729,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
-          schema:
-            type: string
+        "204":
+          description: No Content
         "400":
           description: Bad Request
           schema:
@@ -11002,10 +10878,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
-          schema:
-            type: string
+        "204":
+          description: No Content
         "400":
           description: Bad Request
           schema:
@@ -11458,7 +11332,7 @@ paths:
         "200":
           description: OK
           schema:
-            type: string
+            $ref: '#/definitions/linke_internal_domains_subscription_adapters_handlers.MessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -11927,10 +11801,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
-          schema:
-            type: string
+        "204":
+          description: No Content
         "400":
           description: Bad Request
           schema:
@@ -12304,10 +12176,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
-          schema:
-            type: string
+        "204":
+          description: No Content
         "400":
           description: Bad Request
           schema:
@@ -13429,8 +13299,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/handlers.BatchOperationResult'
         "400":
           description: Bad Request
           schema:
@@ -13470,8 +13339,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/handlers.BatchOperationResult'
         "400":
           description: Bad Request
           schema:
@@ -13643,8 +13511,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/handlers.StatsResponse'
         "401":
           description: Unauthorized
           schema:
@@ -13792,8 +13659,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/linke_internal_domains_auth_adapters_handlers.MessageResponse'
         "401":
           description: Unauthorized
           schema:
@@ -13837,8 +13703,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/linke_internal_domains_auth_adapters_handlers.MessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -13917,6 +13782,59 @@ paths:
       summary: Get public coupons
       tags:
       - Coupon
+  /coupons/{code}/validation:
+    get:
+      consumes:
+      - application/json
+      description: Validate a coupon code for a specific user and order
+      parameters:
+      - description: Coupon code to validate
+        in: path
+        name: code
+        required: true
+        type: string
+      - description: Order amount for validation
+        in: query
+        name: order_amount
+        required: true
+        type: number
+      - description: Plan ID for validation
+        in: query
+        name: plan_id
+        required: true
+        type: integer
+      - description: 'Currency code (default: CNY)'
+        in: query
+        name: currency
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ValidateCouponResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Validate coupon code
+      tags:
+      - Coupon
   /coupons/my-usage:
     get:
       consumes:
@@ -13960,46 +13878,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Get my coupon usage history
-      tags:
-      - Coupon
-  /coupons/validate:
-    post:
-      consumes:
-      - application/json
-      description: Validate a coupon code for a specific user and order
-      parameters:
-      - description: Coupon validation data
-        in: body
-        name: coupon
-        required: true
-        schema:
-          $ref: '#/definitions/dto.ValidateCouponRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/dto.ValidateCouponResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.NotFoundResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Validate coupon code
       tags:
       - Coupon
   /invoices/{id}:
@@ -14243,6 +14121,45 @@ paths:
       summary: '[User] Get my orders'
       tags:
       - User-Subscription
+    post:
+      consumes:
+      - application/json
+      description: Create a new subscription order with invoice and payment record
+      parameters:
+      - description: Order creation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User] Create order with complete invoice and payment flow'
+      tags:
+      - User-Subscription
   /orders/{id}:
     get:
       consumes:
@@ -14328,91 +14245,7 @@ paths:
       summary: '[User] Generate invoice for existing order'
       tags:
       - User-Subscription
-  /orders/{id}/summary:
-    get:
-      consumes:
-      - application/json
-      description: Aggregate order with latest payment and invoice
-      parameters:
-      - description: Subscription order ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.NotFoundResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[User] Get order summary (order + latest payment + latest invoice)'
-      tags:
-      - User-Subscription
-  /orders/create:
-    post:
-      consumes:
-      - application/json
-      description: Create a new subscription order with invoice and payment record
-      parameters:
-      - description: Order creation request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.CreateOrderRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.BadRequestResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.UnauthorizedResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/response.ForbiddenResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: '[User] Create order with complete invoice and payment flow'
-      tags:
-      - User-Subscription
-  /orders/pay:
+  /orders/{id}/payments:
     post:
       consumes:
       - application/json
@@ -14454,6 +14287,49 @@ paths:
       security:
       - BearerAuth: []
       summary: '[User] Create payment for existing order'
+      tags:
+      - User-Subscription
+  /orders/{id}/summary:
+    get:
+      consumes:
+      - application/json
+      description: Aggregate order with latest payment and invoice
+      parameters:
+      - description: Subscription order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/linke_internal_domains_subscription_adapters_handlers.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.BadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.UnauthorizedResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ForbiddenResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.NotFoundResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.InternalServerErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: '[User] Get order summary (order + latest payment + latest invoice)'
       tags:
       - User-Subscription
   /payment-methods:
@@ -14825,31 +14701,6 @@ paths:
           schema:
             $ref: '#/definitions/response.InternalServerErrorResponse'
       summary: '[Public] Get active payment configs'
-      tags:
-      - User-Payment
-  /payment/methods:
-    get:
-      consumes:
-      - application/json
-      description: 'Get available payment methods organized by gateway. Returns enabled
-        payment gateways and their supported methods (epay: alipay, wechat, qqpay).
-        No authentication required.'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Returns map of gateway to supported payment methods
-          schema:
-            additionalProperties:
-              items:
-                type: string
-              type: array
-            type: object
-        "500":
-          description: Failed to retrieve payment methods from database
-          schema:
-            $ref: '#/definitions/response.InternalServerErrorResponse'
-      summary: '[Public] Get available payment methods'
       tags:
       - User-Payment
   /payment/notify/{gateway}:
@@ -15567,7 +15418,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            $ref: '#/definitions/handlers.TaskCreatedResponse'
         "400":
           description: Bad Request
           schema:
@@ -15594,7 +15445,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.StandardResponse'
+            $ref: '#/definitions/handlers.QueueStatusResponse'
         "401":
           description: Unauthorized
           schema:
@@ -17250,9 +17101,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: message
+          description: OK
           schema:
-            type: string
+            $ref: '#/definitions/linke_internal_domains_user_adapters_handlers.MessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -17416,9 +17267,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: message
+          description: OK
           schema:
-            type: string
+            $ref: '#/definitions/linke_internal_domains_user_adapters_handlers.MessageResponse'
         "400":
           description: Bad Request
           schema:
@@ -17540,6 +17391,9 @@ paths:
       - notifications
       - tracking
       - users
+schemes:
+- http
+- https
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token.

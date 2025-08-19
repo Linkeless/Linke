@@ -13,11 +13,19 @@ import (
 	_ "linke/docs"
 )
 
-// @title Linke API
-// @version 1.0
-// @description A comprehensive service management platform with subscription-based billing, user management, and server administration. Features include OAuth2 authentication, traffic subscription management, multi-gateway payments, referral programs, and customer support system.
-// @host localhost:8080
-// @BasePath /api/v1
+// @title           Linke API
+// @version         1.0.0
+// @description     A comprehensive service management platform with subscription-based billing, user management, and server administration. Features include OAuth2 authentication, traffic subscription management, multi-gateway payments, referral programs, and customer support system.
+// @contact.name    API Support Team
+// @contact.email   support@linke.com
+// @contact.url     https://docs.linke.com/support
+// @license.name    Apache 2.0
+// @license.url     https://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host            localhost:8080
+// @BasePath        /api/v1
+// @schemes         http https
+
 // @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization

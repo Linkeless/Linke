@@ -426,7 +426,7 @@ func (h *AdminSubscriptionUsersHandler) ExtendUserSubscription(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Subscription ID"
 // @Param cancel body object{reason=string,cancel_at_period_end=bool} true "Cancel data"
-// @Success 200 {object} string
+// @Success 200 {object} MessageResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse

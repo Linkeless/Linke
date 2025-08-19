@@ -16,6 +16,24 @@ import (
 	"linke/internal/shared/response"
 )
 
+// StatisticsResponse represents statistics data
+type StatisticsResponse struct {
+	TotalCount   int64            `json:"total_count" example:"100"`
+	StatusCounts map[string]int64 `json:"status_counts,omitempty"`
+	DateCounts   map[string]int64 `json:"date_counts,omitempty"`
+	CustomStats  map[string]any   `json:"custom_stats,omitempty"`
+	Period       string           `json:"period,omitempty" example:"monthly"`
+}
+
+// BulkOperationResponse represents the result of a bulk operation
+type BulkOperationResponse struct {
+	SuccessCount int      `json:"success_count" example:"10"`
+	FailedCount  int      `json:"failed_count" example:"2"`
+	FailedIDs    []uint64 `json:"failed_ids,omitempty"`
+	Errors       []string `json:"errors,omitempty"`
+	Message      string   `json:"message,omitempty" example:"Bulk operation completed"`
+}
+
 // AdminCouponHandler handles admin coupon operations
 type AdminCouponHandler struct {
 	couponService couponInterfaces.CouponService
@@ -254,7 +272,7 @@ func (h *AdminCouponHandler) UpdateCoupon(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Coupon ID"
-// @Success 200 {object} string
+// @Success 204 "No Content"
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -579,7 +597,7 @@ func (h *AdminCouponHandler) SearchCoupons(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} response.StandardResponse
+// @Success 200 {object} StatisticsResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -603,7 +621,7 @@ func (h *AdminCouponHandler) GetCouponStatistics(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param period query string false "Analytics period" Enums(7d,30d,90d,1y) default(30d)
-// @Success 200 {object} response.StandardResponse
+// @Success 200 {object} StatisticsResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -643,7 +661,7 @@ func (h *AdminCouponHandler) GetCouponAnalytics(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param bulk body dto.BulkCreateCouponRequest true "Bulk creation data"
-// @Success 201 {object} response.StandardResponse
+// @Success 201 {object} []dto.CouponResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -734,7 +752,7 @@ func (h *AdminCouponHandler) BulkCreateCoupons(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param bulk body handlers.BulkUpdateRequestDoc true "Bulk update data"
-// @Success 200 {object} response.StandardResponse
+// @Success 200 {object} BulkOperationResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -790,7 +808,7 @@ func (h *AdminCouponHandler) BulkUpdateCoupons(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param bulk body handlers.BulkUpdateRequestDoc true "Bulk deactivation data"
-// @Success 200 {object} response.StandardResponse
+// @Success 200 {object} BulkOperationResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse

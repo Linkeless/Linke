@@ -18,6 +18,29 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// MessageResponse represents a simple message response
+type MessageResponse struct {
+	Message string `json:"message" example:"Operation completed successfully"`
+}
+
+// StatisticsResponse represents statistics data
+type StatisticsResponse struct {
+	TotalCount   int64            `json:"total_count" example:"100"`
+	StatusCounts map[string]int64 `json:"status_counts,omitempty"`
+	DateCounts   map[string]int64 `json:"date_counts,omitempty"`
+	CustomStats  map[string]any   `json:"custom_stats,omitempty"`
+	Period       string           `json:"period,omitempty" example:"monthly"`
+}
+
+// BulkOperationResponse represents the result of a bulk operation
+type BulkOperationResponse struct {
+	SuccessCount int      `json:"success_count" example:"10"`
+	FailedCount  int      `json:"failed_count" example:"2"`
+	FailedIDs    []uint   `json:"failed_ids,omitempty"`
+	Errors       []string `json:"errors,omitempty"`
+	Message      string   `json:"message,omitempty" example:"Bulk operation completed"`
+}
+
 // AdminInvoiceHandler handles admin invoice management operations
 type AdminInvoiceHandler struct {
 	invoiceService interfaces.InvoiceService
@@ -85,27 +108,19 @@ type AdminUpdateInvoiceRequest struct {
 	CompanyName    *string  `json:"company_name,omitempty" example:"Updated Corp"`
 	CompanyTaxID   *string  `json:"company_tax_id,omitempty" example:"12-9876543"`
 	CompanyAddress *string  `json:"company_address,omitempty" example:"789 Corporate Blvd"`
+	Status         *string  `json:"status,omitempty" example:"voided"`
+	VoidReason     *string  `json:"void_reason,omitempty" example:"Customer requested cancellation"`
+	PaidAt         *string  `json:"paid_at,omitempty" example:"2025-08-19T10:30:00Z"`
+	PaymentMethod  *string  `json:"payment_method,omitempty" example:"bank_transfer"`
 	Description    *string  `json:"description,omitempty" example:"Updated subscription"`
 	Notes          *string  `json:"notes,omitempty" example:"Admin updated invoice"`
 	DueDate        *string  `json:"due_date,omitempty" example:"2024-02-29"`
 	Template       *string  `json:"template,omitempty" example:"professional"`
 	Language       *string  `json:"language,omitempty" example:"es"`
+	RegeneratePDF  *bool    `json:"regenerate_pdf,omitempty" example:"true"`
 }
 
-// VoidInvoiceRequest represents the request body for voiding invoices
-type VoidInvoiceRequest struct {
-	Reason           string `json:"reason" binding:"required,max=255" example:"Customer requested cancellation"`
-	SendNotification *bool  `json:"send_notification,omitempty" example:"true"`
-}
 
-// MarkPaidRequest represents the request body for manually marking invoices as paid
-type MarkPaidRequest struct {
-	PaymentDate      *time.Time `json:"payment_date,omitempty" swaggertype:"string" format:"date-time" example:"2024-01-15T10:30:00Z"`
-	PaymentMethod    *string    `json:"payment_method,omitempty" example:"bank_transfer"`
-	PaymentReference *string    `json:"payment_reference,omitempty" example:"TXN123456"`
-	Notes            *string    `json:"notes,omitempty" example:"Manual payment verification"`
-	SendNotification *bool      `json:"send_notification,omitempty" example:"true"`
-}
 
 // BulkInvoiceActionRequest represents bulk operations on invoices
 type BulkInvoiceActionRequest struct {
@@ -152,13 +167,6 @@ type ResendInvoiceRequest struct {
 	SendCopy *bool   `json:"send_copy,omitempty" example:"true"`
 }
 
-// RegeneratePDFRequest represents the request body for regenerating invoice PDFs
-type RegeneratePDFRequest struct {
-	Template     *string           `json:"template,omitempty" example:"professional"`
-	Language     *string           `json:"language,omitempty" example:"en"`
-	Watermark    *string           `json:"watermark,omitempty" example:"PAID"`
-	CustomFields map[string]string `json:"custom_fields,omitempty"`
-}
 
 // INVOICE MANAGEMENT
 
@@ -437,7 +445,7 @@ func (h *AdminInvoiceHandler) ListInvoices(c *gin.Context) {
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /admin/invoices/{id} [put]
+// @Router /admin/invoices/{id} [patch]
 func (h *AdminInvoiceHandler) UpdateInvoice(c *gin.Context) {
 	id, ok := handlers.ParseIDParam(c, "id")
 	if !ok {
@@ -494,6 +502,81 @@ func (h *AdminInvoiceHandler) UpdateInvoice(c *gin.Context) {
 		return
 	}
 
+	// Handle status changes
+	if updateReq.Status != nil {
+		switch *updateReq.Status {
+		case "voided":
+			voidReason := "Admin voided invoice"
+			if updateReq.VoidReason != nil {
+				voidReason = *updateReq.VoidReason
+			}
+			err := h.invoiceService.MarkInvoiceAsVoid(c.Request.Context(), uint(id), voidReason)
+			if err != nil {
+				logger.Error("Failed to void invoice after update", logger.ErrorField(err))
+				if strings.Contains(err.Error(), "cannot be voided") {
+					response.BadRequest(c, "Invoice cannot be voided in current status")
+					return
+				}
+				response.InternalServerError(c, "Failed to void invoice")
+				return
+			}
+		case "paid":
+			// Use paid_at timestamp if provided, otherwise use current time
+			paymentDate := time.Now().Format("2006-01-02 15:04:05")
+			if updateReq.PaidAt != nil {
+				if parsedTime, err := time.Parse(time.RFC3339, *updateReq.PaidAt); err == nil {
+					paymentDate = parsedTime.Format("2006-01-02 15:04:05")
+				}
+			}
+
+			err := h.invoiceService.MarkInvoiceAsPaid(c.Request.Context(), uint(id), paymentDate)
+			if err != nil {
+				logger.Error("Failed to mark invoice as paid after update", logger.ErrorField(err))
+				if strings.Contains(err.Error(), "cannot be marked as paid") {
+					response.BadRequest(c, "Invoice cannot be marked as paid in current status")
+					return
+				}
+				response.InternalServerError(c, "Failed to mark invoice as paid")
+				return
+			}
+		}
+
+		// Re-fetch invoice to get updated status
+		invoice, err = h.invoiceService.GetInvoice(c.Request.Context(), uint(id))
+		if err != nil {
+			logger.Error("Failed to get invoice after status update", logger.ErrorField(err))
+			response.InternalServerError(c, "Invoice updated but failed to retrieve updated data")
+			return
+		}
+	}
+
+	// Handle PDF regeneration if requested
+	if updateReq.RegeneratePDF != nil && *updateReq.RegeneratePDF {
+		pdfOptions := &dto.PDFGenerationRequest{
+			SaveToDisk: true, // Admin regeneration should save to disk
+		}
+
+		// Use template and language from request if provided
+		if updateReq.Template != nil {
+			pdfOptions.Template = *updateReq.Template
+		}
+		if updateReq.Language != nil {
+			pdfOptions.Language = *updateReq.Language
+		}
+
+		_, filePath, err := h.invoiceService.GenerateInvoicePDFWithOptions(c.Request.Context(), uint(id), pdfOptions)
+		if err != nil {
+			logger.Error("Failed to regenerate PDF during invoice update",
+				logger.Uint("invoice_id", uint(id)),
+				logger.ErrorField(err))
+			// Don't fail the entire update if PDF regeneration fails
+		} else {
+			logger.Info("PDF regenerated during invoice update",
+				logger.Uint("invoice_id", uint(id)),
+				logger.String("file_path", filePath))
+		}
+	}
+
 	logger.Info("Admin updated invoice",
 		logger.Uint("invoice_id", uint(id)),
 		logger.String("invoice_number", invoice.InvoiceNumber),
@@ -510,7 +593,7 @@ func (h *AdminInvoiceHandler) UpdateInvoice(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Invoice ID"
-// @Success 200 {object} string
+// @Success 204 "No Content"
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -548,217 +631,8 @@ func (h *AdminInvoiceHandler) DeleteInvoice(c *gin.Context) {
 	response.OK(c, nil)
 }
 
-// VoidInvoice godoc
-// @Summary Void invoice
-// @Description Void an invoice with reason (Admin only)
-// @Tags Admin-Invoice-Management
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param id path int true "Invoice ID"
-// @Param request body VoidInvoiceRequest true "Void request data"
-// @Success 200 {object} dto.InvoiceResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 404 {object} response.NotFoundResponse
-// @Router /admin/invoices/{id}/void [post]
-func (h *AdminInvoiceHandler) VoidInvoice(c *gin.Context) {
-	id, ok := handlers.ParseIDParam(c, "id")
-	if !ok {
-		return
-	}
 
-	var voidReq VoidInvoiceRequest
-	if err := c.ShouldBindJSON(&voidReq); err != nil {
-		response.BadRequest(c, err.Error())
-		return
-	}
 
-	err := h.invoiceService.MarkInvoiceAsVoid(c.Request.Context(), uint(id), voidReq.Reason)
-	if err != nil {
-		logger.Error("Admin failed to void invoice",
-			logger.Uint("invoice_id", uint(id)),
-			logger.String("reason", voidReq.Reason),
-			logger.ErrorField(err))
-
-		if strings.Contains(err.Error(), "not found") {
-			response.NotFound(c, "Invoice not found")
-			return
-		}
-
-		if strings.Contains(err.Error(), "cannot be voided") {
-			response.BadRequest(c, "Invoice cannot be voided in current status")
-			return
-		}
-
-		response.InternalServerError(c, "Failed to void invoice")
-		return
-	}
-
-	// Get updated invoice
-	invoice, err := h.invoiceService.GetInvoice(c.Request.Context(), uint(id))
-	if err != nil {
-		logger.Error("Failed to get invoice after voiding", logger.ErrorField(err))
-		response.InternalServerError(c, "Invoice voided but failed to retrieve updated data")
-		return
-	}
-
-	logger.Info("Admin voided invoice",
-		logger.Uint("invoice_id", uint(id)),
-		logger.String("invoice_number", invoice.InvoiceNumber),
-		logger.String("reason", voidReq.Reason),
-		logger.String("admin_action", "void_invoice"))
-
-	response.OK(c, dto.ToResponse(invoice))
-}
-
-// MarkInvoiceAsPaid godoc
-// @Summary Mark invoice as paid
-// @Description Manually mark an invoice as paid (Admin only)
-// @Tags Admin-Invoice-Management
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param id path int true "Invoice ID"
-// @Param request body MarkPaidRequest true "Mark paid request data"
-// @Success 200 {object} dto.InvoiceResponse
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 404 {object} response.NotFoundResponse
-// @Router /admin/invoices/{id}/mark-paid [post]
-func (h *AdminInvoiceHandler) MarkInvoiceAsPaid(c *gin.Context) {
-	id, ok := handlers.ParseIDParam(c, "id")
-	if !ok {
-		return
-	}
-
-	var paidReq MarkPaidRequest
-	if err := c.ShouldBindJSON(&paidReq); err != nil {
-		response.BadRequest(c, err.Error())
-		return
-	}
-
-	// Prepare payment date
-	paymentDate := ""
-	if paidReq.PaymentDate != nil {
-		paymentDate = paidReq.PaymentDate.Format("2006-01-02")
-	} else {
-		paymentDate = time.Now().Format("2006-01-02")
-	}
-
-	err := h.invoiceService.MarkInvoiceAsPaid(c.Request.Context(), uint(id), paymentDate)
-	if err != nil {
-		logger.Error("Admin failed to mark invoice as paid",
-			logger.Uint("invoice_id", uint(id)),
-			logger.String("payment_date", paymentDate),
-			logger.ErrorField(err))
-
-		if strings.Contains(err.Error(), "not found") {
-			response.NotFound(c, "Invoice not found")
-			return
-		}
-
-		if strings.Contains(err.Error(), "cannot be paid") || strings.Contains(err.Error(), "already paid") {
-			response.BadRequest(c, "Invoice cannot be marked as paid in current status")
-			return
-		}
-
-		response.InternalServerError(c, "Failed to mark invoice as paid")
-		return
-	}
-
-	// Get updated invoice to return payment information
-	invoice, err := h.invoiceService.GetInvoice(c.Request.Context(), uint(id))
-	if err != nil {
-		logger.Error("Failed to get invoice after marking as paid", logger.ErrorField(err))
-		response.InternalServerError(c, "Invoice marked as paid but failed to retrieve updated data")
-		return
-	}
-
-	logger.Info("Admin marked invoice as paid",
-		logger.Uint("invoice_id", uint(id)),
-		logger.String("invoice_number", invoice.InvoiceNumber),
-		logger.String("payment_date", paymentDate),
-		logger.String("admin_action", "mark_paid"))
-
-	response.OK(c, dto.ToResponse(invoice))
-}
-
-// RegenerateInvoicePDF godoc
-// @Summary Regenerate invoice PDF
-// @Description Regenerate PDF for an invoice with optional custom options (Admin only)
-// @Tags Admin-Invoice-Management
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param id path int true "Invoice ID"
-// @Param request body RegeneratePDFRequest true "PDF generation options"
-// @Success 200 {object} string
-// @Failure 400 {object} response.BadRequestResponse
-// @Failure 401 {object} response.UnauthorizedResponse
-// @Failure 403 {object} response.ForbiddenResponse
-// @Failure 404 {object} response.NotFoundResponse
-// @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /admin/invoices/{id}/regenerate-pdf [post]
-func (h *AdminInvoiceHandler) RegenerateInvoicePDF(c *gin.Context) {
-	id, ok := handlers.ParseIDParam(c, "id")
-	if !ok {
-		return
-	}
-
-	var pdfReq RegeneratePDFRequest
-	if err := c.ShouldBindJSON(&pdfReq); err != nil {
-		response.BadRequest(c, err.Error())
-		return
-	}
-
-	// Prepare PDF generation options
-	pdfOptions := &dto.PDFGenerationRequest{
-		SaveToDisk: true, // Admin regeneration should save to disk
-	}
-
-	if pdfReq.Template != nil {
-		pdfOptions.Template = *pdfReq.Template
-	}
-	if pdfReq.Language != nil {
-		pdfOptions.Language = *pdfReq.Language
-	}
-	if pdfReq.Watermark != nil {
-		pdfOptions.Watermark = *pdfReq.Watermark
-	}
-	if pdfReq.CustomFields != nil {
-		pdfOptions.CustomFields = pdfReq.CustomFields
-	}
-
-	// Generate PDF
-	_, filePath, err := h.invoiceService.GenerateInvoicePDFWithOptions(c.Request.Context(), uint(id), pdfOptions)
-	if err != nil {
-		logger.Error("Admin failed to regenerate invoice PDF",
-			logger.Uint("invoice_id", uint(id)),
-			logger.Any("pdf_options", pdfOptions),
-			logger.ErrorField(err))
-
-		if strings.Contains(err.Error(), "not found") {
-			response.NotFound(c, "Invoice not found")
-			return
-		}
-
-		response.InternalServerError(c, "Failed to regenerate PDF")
-		return
-	}
-
-	logger.Info("Admin regenerated invoice PDF",
-		logger.Uint("invoice_id", uint(id)),
-		logger.String("file_path", filePath),
-		logger.String("admin_action", "regenerate_pdf"))
-
-	response.OK(c, gin.H{
-		"message":   "PDF regenerated successfully",
-		"file_path": filePath,
-	})
-}
 
 // ResendInvoice godoc
 // @Summary Resend invoice
@@ -769,7 +643,7 @@ func (h *AdminInvoiceHandler) RegenerateInvoicePDF(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "Invoice ID"
 // @Param request body ResendInvoiceRequest true "Resend request data"
-// @Success 200 {object} string
+// @Success 200 {object} MessageResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -1003,7 +877,7 @@ func getValue[T comparable](ptr *T) T {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} response.StandardResponse
+// @Success 200 {object} StatisticsResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -1046,7 +920,7 @@ func (h *AdminInvoiceHandler) GetInvoiceStatistics(c *gin.Context) {
 // @Param currency query string false "Filter by currency"
 // @Param user_id query int false "Filter by user ID"
 // @Param breakdown query string false "Breakdown by: status, type, country"
-// @Success 200 {object} response.StandardResponse
+// @Success 200 {object} StatisticsResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -1177,7 +1051,7 @@ func (h *AdminInvoiceHandler) GetOverdueInvoices(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param request body BulkInvoiceActionRequest true "Bulk void request"
-// @Success 200 {object} response.StandardResponse
+// @Success 200 {object} BulkOperationResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -1241,7 +1115,7 @@ func (h *AdminInvoiceHandler) BulkVoidInvoices(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param request body BulkInvoiceActionRequest true "Bulk mark paid request"
-// @Success 200 {object} response.StandardResponse
+// @Success 200 {object} BulkOperationResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -1302,7 +1176,7 @@ func (h *AdminInvoiceHandler) BulkMarkPaid(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param request body BulkInvoiceActionRequest true "Bulk resend request"
-// @Success 200 {object} response.StandardResponse
+// @Success 200 {object} BulkOperationResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -1360,7 +1234,7 @@ func (h *AdminInvoiceHandler) BulkResendInvoices(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param request body BulkInvoiceActionRequest true "Bulk PDF regeneration request"
-// @Success 200 {object} response.StandardResponse
+// @Success 200 {object} BulkOperationResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -1414,7 +1288,7 @@ func (h *AdminInvoiceHandler) BulkRegeneratePDF(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} response.StandardResponse
+// @Success 200 {object} BulkOperationResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
@@ -1440,7 +1314,7 @@ func (h *AdminInvoiceHandler) GetAvailableTemplates(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} response.StandardResponse
+// @Success 200 {object} BulkOperationResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse

@@ -14,6 +14,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// MessageResponse represents a simple message response
+type MessageResponse struct {
+	Message string `json:"message" example:"Operation completed successfully"`
+}
+
 type SubscriptionOrderHandler struct {
 	subscriptionOrderService interfaces.SubscriptionOrderService
 }
@@ -32,7 +37,7 @@ func NewSubscriptionOrderHandler(subscriptionOrderService interfaces.Subscriptio
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "Subscription order ID"
-// @Success 200 {object} map[string]any
+// @Success 200 {object} MessageResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
@@ -98,7 +103,7 @@ func (h *SubscriptionOrderHandler) GetSubscriptionOrderSummary(c *gin.Context) {
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /orders/create [post]
+// @Router /orders [post]
 func (h *SubscriptionOrderHandler) CreateOrderWithInvoice(c *gin.Context) {
 	// Get current user from context
 	userValue, exists := c.Get(middleware.AuthContextKey)
@@ -211,8 +216,16 @@ func (h *SubscriptionOrderHandler) GenerateInvoiceForOrder(c *gin.Context) {
 // @Failure 403 {object} response.ForbiddenResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /orders/pay [post]
+// @Router /orders/{id}/payments [post]
 func (h *SubscriptionOrderHandler) CreatePaymentForOrder(c *gin.Context) {
+	// Parse order ID from path
+	orderIDStr := c.Param("id")
+	orderID, err := strconv.ParseUint(orderIDStr, 10, 32)
+	if err != nil {
+		response.BadRequest(c, "Invalid order ID")
+		return
+	}
+
 	// Get current user from context
 	userValue, exists := c.Get(middleware.AuthContextKey)
 	if !exists {
@@ -234,7 +247,7 @@ func (h *SubscriptionOrderHandler) CreatePaymentForOrder(c *gin.Context) {
 	}
 
 	// Check order ownership
-	order, err := h.subscriptionOrderService.GetSubscriptionOrder(c.Request.Context(), req.OrderID)
+	order, err := h.subscriptionOrderService.GetSubscriptionOrder(c.Request.Context(), uint(orderID))
 	if err != nil {
 		response.NotFound(c, "Subscription order not found")
 		return
@@ -245,6 +258,9 @@ func (h *SubscriptionOrderHandler) CreatePaymentForOrder(c *gin.Context) {
 		return
 	}
 
+	// Set order ID from path parameter
+	req.OrderID = uint(orderID)
+	
 	// Create payment
 	paymentResponse, err := h.subscriptionOrderService.CreatePaymentForOrder(c.Request.Context(), &req)
 	if err != nil {

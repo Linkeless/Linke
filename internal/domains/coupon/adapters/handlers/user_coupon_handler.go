@@ -74,13 +74,16 @@ func (h *UserCouponHandler) GetPublicCoupons(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param coupon body dto.ValidateCouponRequest true "Coupon validation data"
+// @Param code path string true "Coupon code to validate"
+// @Param order_amount query number true "Order amount for validation"
+// @Param plan_id query int true "Plan ID for validation"
+// @Param currency query string false "Currency code (default: CNY)"
 // @Success 200 {object} dto.ValidateCouponResponse
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 404 {object} response.NotFoundResponse
 // @Failure 500 {object} response.InternalServerErrorResponse
-// @Router /coupons/validate [post]
+// @Router /coupons/{code}/validation [get]
 func (h *UserCouponHandler) ValidateCoupon(c *gin.Context) {
 	// Get current user from context
 	userValue, exists := c.Get(middleware.AuthContextKey)
@@ -95,15 +98,50 @@ func (h *UserCouponHandler) ValidateCoupon(c *gin.Context) {
 		return
 	}
 
-	// Bind request
-	var req dto.ValidateCouponRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "Invalid request data")
+	// Get parameters
+	code := c.Param("code")
+	if code == "" {
+		response.BadRequest(c, "Coupon code is required")
 		return
 	}
 
-	// Add user ID to request
-	req.UserID = uint64(user.ID)
+	orderAmountStr := c.Query("order_amount")
+	if orderAmountStr == "" {
+		response.BadRequest(c, "Order amount is required")
+		return
+	}
+
+	orderAmount, err := strconv.ParseFloat(orderAmountStr, 64)
+	if err != nil {
+		response.BadRequest(c, "Invalid order amount")
+		return
+	}
+
+	planIDStr := c.Query("plan_id")
+	if planIDStr == "" {
+		response.BadRequest(c, "Plan ID is required")
+		return
+	}
+
+	planID, err := strconv.ParseUint(planIDStr, 10, 64)
+	if err != nil {
+		response.BadRequest(c, "Invalid plan ID")
+		return
+	}
+
+	currency := c.Query("currency")
+	if currency == "" {
+		currency = "CNY" // Default currency
+	}
+
+	// Build validation request
+	req := dto.ValidateCouponRequest{
+		Code:        code,
+		UserID:      uint64(user.ID),
+		OrderAmount: orderAmount,
+		PlanID:      planID,
+		Currency:    currency,
+	}
 
 	// Validate coupon
 	validationResponse, err := h.couponService.ValidateCoupon(c.Request.Context(), &req)
@@ -219,7 +257,7 @@ func (h *UserCouponHandler) RegisterRoutes(router *gin.RouterGroup) {
 		couponGroup.GET("", h.GetPublicCoupons)
 
 		// Authenticated routes - apply auth middleware
-		couponGroup.POST("/validate", middleware.AuthMiddleware(authAdapter), h.ValidateCoupon)
+		couponGroup.GET("/:code/validation", middleware.AuthMiddleware(authAdapter), h.ValidateCoupon)
 		couponGroup.GET("/my-usage", middleware.AuthMiddleware(authAdapter), h.GetMyCouponUsage)
 	}
 }

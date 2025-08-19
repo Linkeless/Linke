@@ -309,7 +309,7 @@ func (h *AdminTicketMessageHandler) UpdateMessage(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path uint true "Ticket ID"
 // @Param msg_id path uint true "Message ID"
-// @Success 200 {object} string
+// @Success 204 "No Content"
 // @Failure 400 {object} response.BadRequestResponse
 // @Failure 401 {object} response.UnauthorizedResponse
 // @Failure 403 {object} response.ForbiddenResponse

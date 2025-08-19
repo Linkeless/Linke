@@ -1,4 +1,4 @@
-.PHONY: build run test clean swagger dev migrate-help migrate-up migrate-down migrate-reset migrate-status migrate-list migrate-create migrate-force migrate-goto migrate-steps migrate-fix-dirty security-check safe-run safe-dev fmt lint check
+.PHONY: build run test clean swagger swagger-validate swagger-full dev migrate-help migrate-up migrate-down migrate-reset migrate-status migrate-list migrate-create migrate-force migrate-goto migrate-steps migrate-fix-dirty security-check safe-run safe-dev fmt lint check
 
 build:
 	go build -o bin/server cmd/server/main.go
@@ -26,7 +26,28 @@ clean:
 	rm -rf bin/ docs/
 
 swagger:
-	$(HOME)/go/bin/swag init -g cmd/server/main.go -o docs --parseInternal --parseDependency --parseDependencyLevel 3 --packagePrefix linke/internal
+	@echo "🔄 Generating OpenAPI 3.0 documentation..."
+	$(HOME)/go/bin/swag init \
+		-g cmd/server/main.go \
+		-o docs \
+		--parseInternal \
+		--parseDependency \
+		--parseDependencyLevel 3 \
+		--packagePrefix linke/internal \
+		--outputTypes go,json,yaml
+	@echo "✅ Swagger documentation generated successfully"
+
+swagger-validate:
+	@echo "🔍 Validating OpenAPI specification..."
+	@if command -v swagger >/dev/null 2>&1; then \
+		swagger validate docs/swagger.json && echo "✅ OpenAPI specification is valid"; \
+	elif command -v npx >/dev/null 2>&1; then \
+		npx @apidevtools/swagger-cli validate docs/swagger.json && echo "✅ OpenAPI specification is valid"; \
+	else \
+		echo "⚠️  No validation tool found. Install 'swagger' or 'npx' for validation."; \
+	fi
+
+swagger-full: swagger swagger-validate
 
 dev: swagger
 	go run cmd/server/main.go
@@ -116,7 +137,9 @@ help:
 	@echo "  run           - Run the application"
 	@echo "  test          - Run tests"
 	@echo "  clean         - Clean build artifacts"
-	@echo "  swagger       - Generate Swagger documentation"
+	@echo "  swagger       - Generate OpenAPI 3.0 documentation"
+	@echo "  swagger-validate - Validate generated OpenAPI specification"
+	@echo "  swagger-full  - Generate and validate OpenAPI documentation"
 	@echo "  dev           - Run in development mode with swagger"
 	@echo "  install       - Install dependencies and tools"
 	@echo ""

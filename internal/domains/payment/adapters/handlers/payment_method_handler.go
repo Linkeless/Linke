@@ -478,26 +478,6 @@ func (h *PaymentMethodHandler) GetPaymentMethodUsageStats(c *gin.Context) {
 	response.OK(c, result)
 }
 
-// GetAvailablePaymentMethods godoc
-// @Summary [Public] Get available payment methods
-// @Description Get available payment methods organized by gateway. Returns enabled payment gateways and their supported methods (epay: alipay, wechat, qqpay). No authentication required.
-// @Tags User-Payment
-// @Accept json
-// @Produce json
-// @Success 200 {object} map[string][]string "Returns map of gateway to supported payment methods"
-// @Failure 500 {object} response.InternalServerErrorResponse "Failed to retrieve payment methods from database"
-// @Router /payment/methods [get]
-func (h *PaymentMethodHandler) GetAvailablePaymentMethods(c *gin.Context) {
-	// Get available payment methods
-	methods, err := h.paymentService.GetAvailablePaymentMethods(c.Request.Context())
-	if err != nil {
-		logger.Error("Failed to get available payment methods", logger.ErrorField(err))
-		response.InternalServerError(c, "Failed to get payment methods")
-		return
-	}
-
-	response.OK(c, methods)
-}
 
 // Helper methods
 

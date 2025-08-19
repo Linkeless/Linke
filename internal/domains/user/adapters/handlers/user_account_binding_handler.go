@@ -12,6 +12,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// MessageResponse represents a simple message response
+type MessageResponse struct {
+	Message string `json:"message" example:"Operation completed successfully"`
+}
+
 // UserAccountBindingHandler handles user account binding related requests
 type UserAccountBindingHandler struct {
 	bindingService interfaces.UserAccountBindingService
@@ -279,7 +284,7 @@ func (h *UserAccountBindingHandler) UpdateBinding(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param provider path string true "Provider name (google, github, telegram)"
-// @Success 200 {string} string "message"
+// @Success 200 {object} MessageResponse
 // @Failure 400 {object} response.ProblemJSONResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 404 {object} response.ProblemJSONResponse
@@ -336,7 +341,7 @@ func (h *UserAccountBindingHandler) DeleteBinding(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param provider path string true "Provider name (google, github, telegram)"
-// @Success 200 {string} string "message"
+// @Success 200 {object} MessageResponse
 // @Failure 400 {object} response.ProblemJSONResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 404 {object} response.ProblemJSONResponse
@@ -437,7 +442,7 @@ func (h *UserAccountBindingHandler) GetBindingStats(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param days query int false "Days of inactivity threshold (default: 90)"
-// @Success 200 {string} string "message"
+// @Success 200 {object} MessageResponse
 // @Failure 400 {object} response.ProblemJSONResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 403 {object} response.ForbiddenResponse

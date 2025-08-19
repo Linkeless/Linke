@@ -12,6 +12,16 @@ import (
 	"linke/internal/shared/response"
 )
 
+// MessageResponse represents a simple message response
+type MessageResponse struct {
+	Message string `json:"message" example:"Operation completed successfully"`
+}
+
+// CountResponse represents a simple count response
+type CountResponse struct {
+	Count int64 `json:"count" example:"42"`
+}
+
 type CacheMonitoringHandler struct {
 	manager       CacheManager
 	collector     MetricsCollector
@@ -146,7 +156,7 @@ func (h *CacheMonitoringHandler) GetCacheStats(c *gin.Context) {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Success 200 {object} map[string]any
+// @Success 200 {object} MessageResponse
 // @Router /admin/cache/reset-metrics [post]
 func (h *CacheMonitoringHandler) ResetMetrics(c *gin.Context) {
 	h.collector.Reset()
@@ -163,7 +173,7 @@ func (h *CacheMonitoringHandler) ResetMetrics(c *gin.Context) {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Success 200 {object} map[string]any
+// @Success 200 {object} MessageResponse
 // @Router /admin/cache/flush [delete]
 func (h *CacheMonitoringHandler) FlushCache(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -189,7 +199,7 @@ func (h *CacheMonitoringHandler) FlushCache(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param pattern path string true "Cache key pattern (e.g., user:*, subscription:123:*)"
-// @Success 200 {object} map[string]any
+// @Success 200 {object} CountResponse
 // @Router /admin/cache/pattern/{pattern} [delete]
 func (h *CacheMonitoringHandler) DeleteByPattern(c *gin.Context) {
 	pattern := c.Param("pattern")

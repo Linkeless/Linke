@@ -150,7 +150,7 @@ func (h *AuthHandler) Callback(c *gin.Context) {
 
 // @Summary Get supported OAuth providers
 // @Description Get list of supported OAuth providers
-// @Success 200 {object} map[string]interface{}
+// @Success 200 {object} MessageResponse
 func (h *AuthHandler) GetProviders(c *gin.Context) {
 	providers := []map[string]any{
 		{
@@ -183,7 +183,7 @@ func (h *AuthHandler) GetProviders(c *gin.Context) {
 
 // @Summary Get Telegram Login Widget
 // @Description Get Telegram Login Widget HTML for frontend integration
-// @Success 200 {object} map[string]interface{}
+// @Success 200 {object} MessageResponse
 // @Failure 400 {object} response.ProblemJSONResponse
 // @Router /auth/telegram/widget [get]
 func (h *AuthHandler) GetTelegramWidget(c *gin.Context) {
@@ -375,7 +375,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 // RefreshToken godoc
 // @Summary Refresh JWT token
 // @Description Refresh an existing JWT token
-// @Success 200 {object} map[string]interface{}
+// @Success 200 {object} MessageResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Router /auth/refresh [post]
 func (h *AuthHandler) RefreshToken(c *gin.Context) {

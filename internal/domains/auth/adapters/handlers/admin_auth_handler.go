@@ -16,6 +16,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// MessageResponse represents a simple message response
+type MessageResponse struct {
+	Message string `json:"message" example:"Operation completed successfully"`
+}
+
 // Request structures for admin auth operations
 
 // AdminJWTRevokeRequest represents manual token revocation request
@@ -244,7 +249,7 @@ func (h *AdminAuthHandler) RevokeJWTToken(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} map[string]interface{}
+// @Success 200 {object} MessageResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 403 {object} response.ProblemJSONResponse
 // @Failure 500 {object} response.ProblemJSONResponse
@@ -348,7 +353,7 @@ func (h *AdminAuthHandler) ListLoginAttempts(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param days query int false "Analysis period in days" default(7)
-// @Success 200 {object} map[string]interface{}
+// @Success 200 {object} MessageResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 403 {object} response.ProblemJSONResponse
 // @Failure 500 {object} response.ProblemJSONResponse
@@ -517,7 +522,7 @@ func (h *AdminAuthHandler) ForcePasswordReset(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param user_id path uint true "User ID"
-// @Success 200 {object} map[string]interface{}
+// @Success 200 {object} MessageResponse
 // @Failure 400 {object} response.ProblemJSONResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 403 {object} response.ProblemJSONResponse
@@ -600,7 +605,7 @@ func (h *AdminAuthHandler) GetAccountSecurityStatus(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param days query int false "Statistics period in days" default(30)
-// @Success 200 {object} map[string]interface{}
+// @Success 200 {object} MessageResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 403 {object} response.ProblemJSONResponse
 // @Failure 500 {object} response.ProblemJSONResponse
@@ -663,7 +668,7 @@ func (h *AdminAuthHandler) GetSecurityStatistics(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param bulk body BulkSecurityActionRequest true "Bulk revocation data"
-// @Success 200 {object} map[string]interface{}
+// @Success 200 {object} MessageResponse
 // @Failure 400 {object} response.ProblemJSONResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 403 {object} response.ProblemJSONResponse
@@ -716,7 +721,7 @@ func (h *AdminAuthHandler) BulkRevokeTokens(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param bulk body BulkSecurityActionRequest true "Bulk unlock data"
-// @Success 200 {object} map[string]interface{}
+// @Success 200 {object} MessageResponse
 // @Failure 400 {object} response.ProblemJSONResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 403 {object} response.ProblemJSONResponse
@@ -790,7 +795,7 @@ func (h *AdminAuthHandler) BulkUnlockAccounts(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} map[string]interface{}
+// @Success 200 {object} MessageResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 403 {object} response.ProblemJSONResponse
 // @Failure 500 {object} response.ProblemJSONResponse
@@ -891,7 +896,7 @@ func (h *AdminAuthHandler) ListOAuthSecurityEvents(c *gin.Context) {
 // @Security BearerAuth
 // @Param analysis_type query string false "Analysis type" default("login_patterns") example="login_patterns"
 // @Param days query int false "Analysis period in days" default(30)
-// @Success 200 {object} map[string]interface{}
+// @Success 200 {object} MessageResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 403 {object} response.ProblemJSONResponse
 // @Failure 500 {object} response.ProblemJSONResponse
@@ -981,7 +986,7 @@ func (h *AdminAuthHandler) GetSecurityPatterns(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} map[string]interface{}
+// @Success 200 {object} MessageResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 403 {object} response.ProblemJSONResponse
 // @Failure 500 {object} response.ProblemJSONResponse
@@ -1050,7 +1055,7 @@ func (h *AdminAuthHandler) GetSecurityScore(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param bulk body BulkSecurityActionRequest true "Bulk password reset data"
-// @Success 200 {object} map[string]interface{}
+// @Success 200 {object} MessageResponse
 // @Failure 400 {object} response.ProblemJSONResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 403 {object} response.ProblemJSONResponse
@@ -1128,7 +1133,7 @@ func (h *AdminAuthHandler) BulkResetPasswords(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param notification body SecurityNotificationRequest true "Notification data"
-// @Success 200 {object} map[string]interface{}
+// @Success 200 {object} MessageResponse
 // @Failure 400 {object} response.ProblemJSONResponse
 // @Failure 401 {object} response.ProblemJSONResponse
 // @Failure 403 {object} response.ProblemJSONResponse
