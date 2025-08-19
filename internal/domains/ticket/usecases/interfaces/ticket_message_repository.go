@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"context"
+
 	"linke/internal/domains/ticket/entities"
 )
 
@@ -20,8 +21,8 @@ type TicketMessageRepository interface {
 	GetInternalMessages(ctx context.Context, ticketID uint) ([]*entities.TicketMessage, error)
 
 	// Message management
-	MarkAsRead(ctx context.Context, messageID uint, userID uint) error
-	MarkTicketMessagesAsRead(ctx context.Context, ticketID uint, userID uint) error
+	MarkAsRead(ctx context.Context, messageID, userID uint) error
+	MarkTicketMessagesAsRead(ctx context.Context, ticketID, userID uint) error
 
 	// Statistics
 	GetMessageStatistics(ctx context.Context, ticketID uint) (map[string]any, error)

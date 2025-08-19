@@ -24,7 +24,7 @@ type MetricsCollector interface {
 	RecordMiss(ctx context.Context, key string)
 	RecordSet(ctx context.Context, key string, ttl time.Duration)
 	RecordDelete(ctx context.Context, key string)
-	RecordError(ctx context.Context, key string, operation string)
+	RecordError(ctx context.Context, key, operation string)
 	RecordEviction(ctx context.Context, key string)
 	GetMetrics() *Metrics
 	GetMetricsByPrefix(prefix string) *Metrics
@@ -92,7 +92,7 @@ func (mc *DefaultMetricsCollector) RecordDelete(ctx context.Context, key string)
 	mc.recordPrefixMetric(key, MetricDelete)
 }
 
-func (mc *DefaultMetricsCollector) RecordError(ctx context.Context, key string, operation string) {
+func (mc *DefaultMetricsCollector) RecordError(ctx context.Context, key, operation string) {
 	mc.errors.Add(1)
 	mc.recordPrefixMetric(key, MetricError)
 }
@@ -247,7 +247,6 @@ func NewMetricsCacheWrapper(cache Cache, collector MetricsCollector) Cache {
 
 func (mw *MetricsCacheWrapper) Get(ctx context.Context, key string) ([]byte, error) {
 	result, err := mw.cache.Get(ctx, key)
-
 	if err != nil {
 		mw.collector.RecordError(ctx, key, "get")
 		return nil, err
@@ -264,7 +263,6 @@ func (mw *MetricsCacheWrapper) Get(ctx context.Context, key string) ([]byte, err
 
 func (mw *MetricsCacheWrapper) Set(ctx context.Context, key string, value []byte, ttl time.Duration) error {
 	err := mw.cache.Set(ctx, key, value, ttl)
-
 	if err != nil {
 		mw.collector.RecordError(ctx, key, "set")
 		return err
@@ -276,7 +274,6 @@ func (mw *MetricsCacheWrapper) Set(ctx context.Context, key string, value []byte
 
 func (mw *MetricsCacheWrapper) Delete(ctx context.Context, key string) error {
 	err := mw.cache.Delete(ctx, key)
-
 	if err != nil {
 		mw.collector.RecordError(ctx, key, "delete")
 		return err
@@ -288,7 +285,6 @@ func (mw *MetricsCacheWrapper) Delete(ctx context.Context, key string) error {
 
 func (mw *MetricsCacheWrapper) DeleteByPattern(ctx context.Context, pattern string) error {
 	err := mw.cache.DeleteByPattern(ctx, pattern)
-
 	if err != nil {
 		mw.collector.RecordError(ctx, pattern, "deleteByPattern")
 		return err

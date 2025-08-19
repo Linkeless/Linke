@@ -11,13 +11,13 @@ import (
 var (
 	ticketResponsePoolHits   int64
 	ticketResponsePoolMisses int64
-	
+
 	ticketUserResponsePoolHits   int64
 	ticketUserResponsePoolMisses int64
-	
+
 	ticketMessageResponsePoolHits   int64
 	ticketMessageResponsePoolMisses int64
-	
+
 	ticketMessageUserResponsePoolHits   int64
 	ticketMessageUserResponsePoolMisses int64
 )
@@ -57,13 +57,13 @@ var (
 type PoolStats struct {
 	TicketResponseHits   int64 `json:"ticket_response_hits"`
 	TicketResponseMisses int64 `json:"ticket_response_misses"`
-	
+
 	TicketUserResponseHits   int64 `json:"ticket_user_response_hits"`
 	TicketUserResponseMisses int64 `json:"ticket_user_response_misses"`
-	
+
 	TicketMessageResponseHits   int64 `json:"ticket_message_response_hits"`
 	TicketMessageResponseMisses int64 `json:"ticket_message_response_misses"`
-	
+
 	TicketMessageUserResponseHits   int64 `json:"ticket_message_user_response_hits"`
 	TicketMessageUserResponseMisses int64 `json:"ticket_message_user_response_misses"`
 }
@@ -73,13 +73,13 @@ func GetPoolStats() PoolStats {
 	return PoolStats{
 		TicketResponseHits:   atomic.LoadInt64(&ticketResponsePoolHits),
 		TicketResponseMisses: atomic.LoadInt64(&ticketResponsePoolMisses),
-		
+
 		TicketUserResponseHits:   atomic.LoadInt64(&ticketUserResponsePoolHits),
 		TicketUserResponseMisses: atomic.LoadInt64(&ticketUserResponsePoolMisses),
-		
+
 		TicketMessageResponseHits:   atomic.LoadInt64(&ticketMessageResponsePoolHits),
 		TicketMessageResponseMisses: atomic.LoadInt64(&ticketMessageResponsePoolMisses),
-		
+
 		TicketMessageUserResponseHits:   atomic.LoadInt64(&ticketMessageUserResponsePoolHits),
 		TicketMessageUserResponseMisses: atomic.LoadInt64(&ticketMessageUserResponsePoolMisses),
 	}
@@ -114,7 +114,7 @@ func resetTicketResponse(resp *TicketResponse) {
 	}
 }
 
-// resetTicketUserResponse safely resets a TicketUserResponse object  
+// resetTicketUserResponse safely resets a TicketUserResponse object
 func resetTicketUserResponse(resp *TicketUserResponse) {
 	resp.ID = 0
 	resp.TicketNo = ""

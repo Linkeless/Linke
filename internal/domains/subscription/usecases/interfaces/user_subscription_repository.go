@@ -2,9 +2,10 @@ package interfaces
 
 import (
 	"context"
+	"time"
+
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/shared/framework"
-	"time"
 )
 
 // UserSubscriptionRepository defines the interface for user subscription data access operations
@@ -77,8 +78,8 @@ type UserSubscriptionRepository interface {
 
 	// Server group access management
 	UpdateServerGroupAccess(ctx context.Context, id uint, serverGroupIDs []uint) error
-	GrantServerGroupAccess(ctx context.Context, id uint, serverGroupID uint) error
-	RevokeServerGroupAccess(ctx context.Context, id uint, serverGroupID uint) error
+	GrantServerGroupAccess(ctx context.Context, id, serverGroupID uint) error
+	RevokeServerGroupAccess(ctx context.Context, id, serverGroupID uint) error
 
 	// Subscription-specific batch operations (extending base batch operations)
 	BatchCancel(ctx context.Context, ids []uint, reason string) (int, []uint, error)

@@ -10,6 +10,7 @@ import (
 	"linke/internal/domains/invoice/entities"
 	"linke/internal/domains/invoice/usecases/interfaces"
 	userEntities "linke/internal/domains/user/entities"
+	"linke/internal/shared/handlers"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/middleware"
 	"linke/internal/shared/response"
@@ -49,10 +50,8 @@ func NewInvoiceHandler(invoiceService interfaces.InvoiceService, logger logger.L
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /invoices/{id} [get]
 func (h *InvoiceHandler) GetInvoice(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		response.BadRequest(c, "Invalid invoice ID")
+	id, ok := handlers.ParseIDParam(c, "id")
+	if !ok {
 		return
 	}
 
@@ -169,10 +168,8 @@ func (h *InvoiceHandler) GetUserInvoices(c *gin.Context) {
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /invoices/{id}/download [get]
 func (h *InvoiceHandler) DownloadInvoicePDF(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		response.BadRequest(c, "Invalid invoice ID")
+	id, ok := handlers.ParseIDParam(c, "id")
+	if !ok {
 		return
 	}
 

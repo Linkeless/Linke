@@ -467,7 +467,7 @@ func (s *CouponService) useCouponInternal(ctx context.Context, couponID, userID,
 }
 
 // GetCouponUsages gets coupon usage records with filtering and pagination
-func (s *CouponService) GetCouponUsages(ctx context.Context, couponID *uint64, userID *uint64, limit, offset int) ([]*entities.CouponUsage, int64, error) {
+func (s *CouponService) GetCouponUsages(ctx context.Context, couponID, userID *uint64, limit, offset int) ([]*entities.CouponUsage, int64, error) {
 	query := s.db.WithContext(ctx).Model(&entities.CouponUsage{})
 
 	// Apply filters

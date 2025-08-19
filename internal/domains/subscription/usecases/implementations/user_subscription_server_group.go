@@ -20,7 +20,7 @@ type UpdateSubscriptionServerGroupsRequest struct {
 }
 
 // GetAvailableServerGroups returns available server groups for a user's subscription
-func (s *UserSubscriptionService) GetAvailableServerGroups(ctx context.Context, userID uint, subscriptionID uint) ([]*serverEntities.ServerGroup, error) {
+func (s *UserSubscriptionService) GetAvailableServerGroups(ctx context.Context, userID, subscriptionID uint) ([]*serverEntities.ServerGroup, error) {
 	// Get the subscription to verify ownership
 	subscription, err := s.GetUserSubscription(ctx, subscriptionID)
 	if err != nil {
@@ -54,7 +54,7 @@ func (s *UserSubscriptionService) GetAvailableServerGroups(ctx context.Context, 
 }
 
 // GetSubscriptionServerGroups returns the server groups assigned to a subscription
-func (s *UserSubscriptionService) GetSubscriptionServerGroups(ctx context.Context, userID uint, subscriptionID uint) ([]*serverEntities.ServerGroup, error) {
+func (s *UserSubscriptionService) GetSubscriptionServerGroups(ctx context.Context, userID, subscriptionID uint) ([]*serverEntities.ServerGroup, error) {
 	// Get the subscription to verify ownership and get assigned groups
 	subscription, err := s.GetUserSubscription(ctx, subscriptionID)
 	if err != nil {
@@ -224,7 +224,7 @@ func (s *UserSubscriptionService) GetUserAccessibleServers(ctx context.Context, 
 }
 
 // GetUserServersBySubscription returns servers accessible through a specific subscription
-func (s *UserSubscriptionService) GetUserServersBySubscription(ctx context.Context, userID uint, subscriptionID uint) ([]*serverEntities.ShadowsocksServer, error) {
+func (s *UserSubscriptionService) GetUserServersBySubscription(ctx context.Context, userID, subscriptionID uint) ([]*serverEntities.ShadowsocksServer, error) {
 	// Get the subscription to verify ownership
 	subscription, err := s.GetUserSubscription(ctx, subscriptionID)
 	if err != nil {
@@ -259,7 +259,7 @@ func (s *UserSubscriptionService) GetUserServersBySubscription(ctx context.Conte
 }
 
 // ValidateUserServerAccess validates if a user has access to a specific server
-func (s *UserSubscriptionService) ValidateUserServerAccess(ctx context.Context, userID uint, serverID uint) (bool, *entities.UserSubscription, error) {
+func (s *UserSubscriptionService) ValidateUserServerAccess(ctx context.Context, userID, serverID uint) (bool, *entities.UserSubscription, error) {
 	// Get the server to find its server group
 	var server serverEntities.ShadowsocksServer
 	if err := s.db.WithContext(ctx).First(&server, serverID).Error; err != nil {

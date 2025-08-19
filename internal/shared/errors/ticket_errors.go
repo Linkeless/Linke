@@ -76,10 +76,10 @@ func (e *UserNotFoundError) Is(target error) bool {
 
 // InvalidTicketStateError represents an invalid ticket state transition error
 type InvalidTicketStateError struct {
-	TicketID    uint
+	TicketID     uint
 	CurrentState string
-	Action      string
-	Reason      string
+	Action       string
+	Reason       string
 }
 
 func (e *InvalidTicketStateError) Error() string {

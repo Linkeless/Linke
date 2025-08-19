@@ -106,7 +106,7 @@ func (s *MemoryFailureStore) GetPendingRetries(ctx context.Context, limit int) (
 }
 
 // MarkAsDeadLetter moves a failure to the dead letter queue
-func (s *MemoryFailureStore) MarkAsDeadLetter(ctx context.Context, requestID string, reason string) error {
+func (s *MemoryFailureStore) MarkAsDeadLetter(ctx context.Context, requestID, reason string) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -285,7 +285,7 @@ func (s *RedisFailureStore) GetPendingRetries(ctx context.Context, limit int) ([
 }
 
 // MarkAsDeadLetter moves a failure to the dead letter queue in Redis
-func (s *RedisFailureStore) MarkAsDeadLetter(ctx context.Context, requestID string, reason string) error {
+func (s *RedisFailureStore) MarkAsDeadLetter(ctx context.Context, requestID, reason string) error {
 	// Special handling for success case
 	if reason == "retry_succeeded" {
 		return s.removeFailure(ctx, requestID, "retry succeeded")
@@ -329,7 +329,7 @@ func (s *RedisFailureStore) MarkAsDeadLetter(ctx context.Context, requestID stri
 }
 
 // removeFailure removes a failure from active tracking
-func (s *RedisFailureStore) removeFailure(ctx context.Context, requestID string, reason string) error {
+func (s *RedisFailureStore) removeFailure(ctx context.Context, requestID, reason string) error {
 	key := s.prefix + requestID
 
 	// Remove from failure store

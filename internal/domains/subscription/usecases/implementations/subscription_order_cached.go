@@ -210,7 +210,6 @@ func (sos *CachedSubscriptionOrderService) GetSubscriptionOrder(ctx context.Cont
 	order, err := sos.orderCache.Get(ctx, cacheKey, func() (*entities.SubscriptionOrder, error) {
 		return sos.SubscriptionOrderService.GetSubscriptionOrder(ctx, orderID)
 	})
-
 	if err != nil {
 		return nil, err
 	}

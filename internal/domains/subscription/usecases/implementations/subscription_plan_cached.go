@@ -74,7 +74,6 @@ func (s *CachedSubscriptionPlanService) GetSubscriptionPlan(ctx context.Context,
 	plan, err := s.planCache.Get(ctx, cacheKey, func() (*entities.SubscriptionPlan, error) {
 		return s.SubscriptionPlanService.GetSubscriptionPlan(ctx, planID)
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +88,6 @@ func (s *CachedSubscriptionPlanService) GetSubscriptionPlanByCode(ctx context.Co
 	plan, err := s.planCache.Get(ctx, cacheKey, func() (*entities.SubscriptionPlan, error) {
 		return s.SubscriptionPlanService.GetSubscriptionPlanByCode(ctx, code)
 	})
-
 	if err != nil {
 		return nil, err
 	}

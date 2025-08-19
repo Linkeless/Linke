@@ -25,7 +25,7 @@ func NewTicketMessageService(db *gorm.DB) *TicketMessageService {
 }
 
 // CreateTicketMessage creates a new ticket message
-func (s *TicketMessageService) CreateTicketMessage(ctx context.Context, ticketID uint, userID uint, req *dto.CreateTicketMessageRequest) (*entities.TicketMessage, error) {
+func (s *TicketMessageService) CreateTicketMessage(ctx context.Context, ticketID, userID uint, req *dto.CreateTicketMessageRequest) (*entities.TicketMessage, error) {
 	// Verify ticket exists
 	var ticket entities.Ticket
 	if err := s.db.WithContext(ctx).First(&ticket, ticketID).Error; err != nil {
@@ -232,7 +232,7 @@ func (s *TicketMessageService) DeleteTicketMessage(ctx context.Context, messageI
 }
 
 // GetTicketMessagesForUser gets messages for a ticket that are visible to the user
-func (s *TicketMessageService) GetTicketMessagesForUser(ctx context.Context, ticketID uint, userID uint, limit int, offset int) ([]*entities.TicketMessage, int64, error) {
+func (s *TicketMessageService) GetTicketMessagesForUser(ctx context.Context, ticketID, userID uint, limit, offset int) ([]*entities.TicketMessage, int64, error) {
 	// Verify that the user owns the ticket or is an admin
 	var ticket entities.Ticket
 	if err := s.db.WithContext(ctx).
@@ -309,7 +309,7 @@ func (s *TicketMessageService) GetLatestTicketMessages(ctx context.Context, tick
 }
 
 // MarkMessageAsRead marks a message as read by a user
-func (s *TicketMessageService) MarkMessageAsRead(ctx context.Context, messageID uint, userID uint) error {
+func (s *TicketMessageService) MarkMessageAsRead(ctx context.Context, messageID, userID uint) error {
 	// For now, we'll implement a simple version
 	// In a full implementation, this would track read status per user
 	logger.Info("Message marked as read",
@@ -319,7 +319,7 @@ func (s *TicketMessageService) MarkMessageAsRead(ctx context.Context, messageID 
 }
 
 // MarkTicketMessagesAsRead marks all messages in a ticket as read by a user
-func (s *TicketMessageService) MarkTicketMessagesAsRead(ctx context.Context, ticketID uint, userID uint) error {
+func (s *TicketMessageService) MarkTicketMessagesAsRead(ctx context.Context, ticketID, userID uint) error {
 	// For now, we'll implement a simple version
 	// In a full implementation, this would track read status per user for all messages
 	logger.Info("All ticket messages marked as read",
@@ -329,7 +329,7 @@ func (s *TicketMessageService) MarkTicketMessagesAsRead(ctx context.Context, tic
 }
 
 // CreateInternalMessage creates an internal message
-func (s *TicketMessageService) CreateInternalMessage(ctx context.Context, ticketID uint, userID uint, content string) (*entities.TicketMessage, error) {
+func (s *TicketMessageService) CreateInternalMessage(ctx context.Context, ticketID, userID uint, content string) (*entities.TicketMessage, error) {
 	req := &dto.CreateTicketMessageRequest{
 		Content:     content,
 		MessageType: constants.MessageTypeAdmin,

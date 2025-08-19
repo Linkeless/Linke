@@ -309,7 +309,6 @@ func (r *alertRepository) GetAlertsSummary(ctx context.Context, subscriptionID u
 			SUM(CASE WHEN severity = 'warning' THEN 1 ELSE 0 END) as medium_alerts,
 			SUM(CASE WHEN severity = 'info' THEN 1 ELSE 0 END) as low_alerts
 		`).Scan(&summary).Error
-
 	if err != nil {
 		return nil, err
 	}
@@ -381,7 +380,6 @@ func (r *alertRepository) GetAlertTrends(ctx context.Context, subscriptionID uin
 		Group("period, severity").
 		Order("period ASC").
 		Scan(&results).Error
-
 	if err != nil {
 		return nil, err
 	}
@@ -432,7 +430,6 @@ func (r *alertRepository) GetTopAlertConfigurations(ctx context.Context, subscri
 		Order("alert_count DESC").
 		Limit(limit).
 		Scan(&results).Error
-
 	if err != nil {
 		return nil, err
 	}

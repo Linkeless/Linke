@@ -239,7 +239,7 @@ type PaymentEvent struct {
 }
 
 // NewPaymentEvent creates a new payment event
-func NewPaymentEvent(eventType string, paymentID string, amount float64, userID uint, data any) *PaymentEvent {
+func NewPaymentEvent(eventType, paymentID string, amount float64, userID uint, data any) *PaymentEvent {
 	return &PaymentEvent{
 		BaseEvent: NewBaseEvent(eventType, "payment-service", data),
 		PaymentID: paymentID,
@@ -256,7 +256,7 @@ type SubscriptionEvent struct {
 }
 
 // NewSubscriptionEvent creates a new subscription event
-func NewSubscriptionEvent(eventType string, subscriptionID uint, userID uint, data any) *SubscriptionEvent {
+func NewSubscriptionEvent(eventType string, subscriptionID, userID uint, data any) *SubscriptionEvent {
 	return &SubscriptionEvent{
 		BaseEvent:      NewBaseEvent(eventType, "subscription-service", data),
 		SubscriptionID: subscriptionID,
@@ -332,7 +332,7 @@ type OrderEvent struct {
 }
 
 // NewOrderEvent creates a new order event
-func NewOrderEvent(eventType string, orderID uint, userID uint, data any) *OrderEvent {
+func NewOrderEvent(eventType string, orderID, userID uint, data any) *OrderEvent {
 	return &OrderEvent{
 		BaseEvent: NewBaseEvent(eventType, "order-service", data),
 		OrderID:   orderID,
@@ -350,7 +350,7 @@ type InvoiceEvent struct {
 }
 
 // NewInvoiceEvent creates a new invoice event
-func NewInvoiceEvent(eventType string, invoiceID uint, orderID uint, userID uint, amount float64, data any) *InvoiceEvent {
+func NewInvoiceEvent(eventType string, invoiceID, orderID, userID uint, amount float64, data any) *InvoiceEvent {
 	return &InvoiceEvent{
 		BaseEvent: NewBaseEvent(eventType, "invoice-service", data),
 		InvoiceID: invoiceID,

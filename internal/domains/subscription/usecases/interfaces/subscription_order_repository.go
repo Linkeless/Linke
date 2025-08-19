@@ -2,9 +2,10 @@ package interfaces
 
 import (
 	"context"
+	"time"
+
 	"linke/internal/domains/subscription/entities"
 	"linke/internal/shared/framework"
-	"time"
 )
 
 // SubscriptionOrderRepository defines the interface for subscription order data access operations
@@ -51,8 +52,8 @@ type SubscriptionOrderRepository interface {
 	ListUninvoicedOrders(ctx context.Context, limit, offset int) ([]*entities.SubscriptionOrder, int64, error)
 
 	// Subscription order specific status management
-	UpdatePaymentStatus(ctx context.Context, id uint, paymentStatus string, transactionID string) error
-	UpdateInvoiceStatus(ctx context.Context, id uint, invoiceStatus string, invoiceNumber string) error
+	UpdatePaymentStatus(ctx context.Context, id uint, paymentStatus, transactionID string) error
+	UpdateInvoiceStatus(ctx context.Context, id uint, invoiceStatus, invoiceNumber string) error
 	MarkAsPaid(ctx context.Context, id uint, transactionID string, paidAt time.Time) error
 	MarkAsRefunded(ctx context.Context, id uint, refundAmount float64, refundReason string, refundedAt time.Time) error
 

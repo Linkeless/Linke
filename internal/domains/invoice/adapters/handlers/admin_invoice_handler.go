@@ -11,6 +11,7 @@ import (
 	"linke/internal/domains/invoice/usecases/interfaces"
 	paymentInterfaces "linke/internal/domains/payment/usecases/interfaces"
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
+	"linke/internal/shared/handlers"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/response"
 
@@ -332,10 +333,8 @@ func (h *AdminInvoiceHandler) CreateInvoice(c *gin.Context) {
 // @Failure 404 {object} response.NotFoundResponse
 // @Router /admin/invoices/{id} [get]
 func (h *AdminInvoiceHandler) GetInvoice(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		response.BadRequest(c, "Invalid invoice ID")
+	id, ok := handlers.ParseIDParam(c, "id")
+	if !ok {
 		return
 	}
 
@@ -440,10 +439,8 @@ func (h *AdminInvoiceHandler) ListInvoices(c *gin.Context) {
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /admin/invoices/{id} [put]
 func (h *AdminInvoiceHandler) UpdateInvoice(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		response.BadRequest(c, "Invalid invoice ID")
+	id, ok := handlers.ParseIDParam(c, "id")
+	if !ok {
 		return
 	}
 
@@ -520,10 +517,8 @@ func (h *AdminInvoiceHandler) UpdateInvoice(c *gin.Context) {
 // @Failure 404 {object} response.NotFoundResponse
 // @Router /admin/invoices/{id} [delete]
 func (h *AdminInvoiceHandler) DeleteInvoice(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		response.BadRequest(c, "Invalid invoice ID")
+	id, ok := handlers.ParseIDParam(c, "id")
+	if !ok {
 		return
 	}
 
@@ -569,10 +564,8 @@ func (h *AdminInvoiceHandler) DeleteInvoice(c *gin.Context) {
 // @Failure 404 {object} response.NotFoundResponse
 // @Router /admin/invoices/{id}/void [post]
 func (h *AdminInvoiceHandler) VoidInvoice(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		response.BadRequest(c, "Invalid invoice ID")
+	id, ok := handlers.ParseIDParam(c, "id")
+	if !ok {
 		return
 	}
 
@@ -582,7 +575,7 @@ func (h *AdminInvoiceHandler) VoidInvoice(c *gin.Context) {
 		return
 	}
 
-	err = h.invoiceService.MarkInvoiceAsVoid(c.Request.Context(), uint(id), voidReq.Reason)
+	err := h.invoiceService.MarkInvoiceAsVoid(c.Request.Context(), uint(id), voidReq.Reason)
 	if err != nil {
 		logger.Error("Admin failed to void invoice",
 			logger.Uint("invoice_id", uint(id)),
@@ -636,10 +629,8 @@ func (h *AdminInvoiceHandler) VoidInvoice(c *gin.Context) {
 // @Failure 404 {object} response.NotFoundResponse
 // @Router /admin/invoices/{id}/mark-paid [post]
 func (h *AdminInvoiceHandler) MarkInvoiceAsPaid(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		response.BadRequest(c, "Invalid invoice ID")
+	id, ok := handlers.ParseIDParam(c, "id")
+	if !ok {
 		return
 	}
 
@@ -657,7 +648,7 @@ func (h *AdminInvoiceHandler) MarkInvoiceAsPaid(c *gin.Context) {
 		paymentDate = time.Now().Format("2006-01-02")
 	}
 
-	err = h.invoiceService.MarkInvoiceAsPaid(c.Request.Context(), uint(id), paymentDate)
+	err := h.invoiceService.MarkInvoiceAsPaid(c.Request.Context(), uint(id), paymentDate)
 	if err != nil {
 		logger.Error("Admin failed to mark invoice as paid",
 			logger.Uint("invoice_id", uint(id)),
@@ -712,10 +703,8 @@ func (h *AdminInvoiceHandler) MarkInvoiceAsPaid(c *gin.Context) {
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /admin/invoices/{id}/regenerate-pdf [post]
 func (h *AdminInvoiceHandler) RegenerateInvoicePDF(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		response.BadRequest(c, "Invalid invoice ID")
+	id, ok := handlers.ParseIDParam(c, "id")
+	if !ok {
 		return
 	}
 
@@ -788,10 +777,8 @@ func (h *AdminInvoiceHandler) RegenerateInvoicePDF(c *gin.Context) {
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /admin/invoices/{id}/resend-email [post]
 func (h *AdminInvoiceHandler) ResendInvoice(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		response.BadRequest(c, "Invalid invoice ID")
+	id, ok := handlers.ParseIDParam(c, "id")
+	if !ok {
 		return
 	}
 

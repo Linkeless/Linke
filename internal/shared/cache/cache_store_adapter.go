@@ -20,7 +20,7 @@ func NewCacheStoreAdapter(cache Cache) CacheStore {
 }
 
 // Set stores a string value in the cache
-func (a *CacheStoreAdapter) Set(ctx context.Context, key string, value string, expiration time.Duration) error {
+func (a *CacheStoreAdapter) Set(ctx context.Context, key, value string, expiration time.Duration) error {
 	return a.cache.Set(ctx, key, []byte(value), expiration)
 }
 

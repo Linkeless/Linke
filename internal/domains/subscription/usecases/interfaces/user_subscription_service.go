@@ -2,9 +2,10 @@ package interfaces
 
 import (
 	"context"
+	"time"
+
 	serverEntities "linke/internal/domains/server/entities"
 	"linke/internal/domains/subscription/entities"
-	"time"
 )
 
 // UserSubscriptionService defines the interface for user subscription operations
@@ -27,7 +28,7 @@ type UserSubscriptionService interface {
 	ResumeUserSubscription(ctx context.Context, subscriptionID uint, req *ResumeSubscriptionRequest, adminUserID uint) (*entities.UserSubscription, error)
 
 	// Subscription upgrade/downgrade - Unified method for better maintainability
-	ProcessSubscriptionChange(ctx context.Context, subscriptionID uint, newPlanID uint, changeType string) (*entities.UserSubscription, error)
+	ProcessSubscriptionChange(ctx context.Context, subscriptionID, newPlanID uint, changeType string) (*entities.UserSubscription, error)
 	// Convenience methods that delegate to ProcessSubscriptionChange
 	UpgradeUserSubscription(ctx context.Context, req *UpgradeSubscriptionRequest) (*entities.UserSubscription, error)
 	DowngradeUserSubscription(ctx context.Context, req *DowngradeSubscriptionRequest) (*entities.UserSubscription, error)
@@ -35,7 +36,7 @@ type UserSubscriptionService interface {
 	// Traffic and usage management
 	UpdateTrafficUsage(ctx context.Context, subscriptionID uint, usedBytes int64) error
 	// ResetTrafficUsage resets traffic usage for a subscription - unified signature
-	ResetTrafficUsage(ctx context.Context, subscriptionID uint, adminUserID uint) (*entities.UserSubscription, error)
+	ResetTrafficUsage(ctx context.Context, subscriptionID, adminUserID uint) (*entities.UserSubscription, error)
 	GetSubscriptionTrafficStats(ctx context.Context, subscriptionID uint) (map[string]any, error)
 
 	// Access control helpers

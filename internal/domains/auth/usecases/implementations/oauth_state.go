@@ -52,7 +52,7 @@ func (s *OAuthStateStore) GetState(state string) (*dto.OAuthStateInfo, error) {
 	// Use constant-time comparison to prevent timing attacks
 	var foundInfo *dto.OAuthStateInfo
 	var found bool
-	
+
 	for storedState, info := range s.states {
 		if subtle.ConstantTimeCompare([]byte(state), []byte(storedState)) == 1 {
 			foundInfo = info

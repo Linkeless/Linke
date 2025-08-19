@@ -126,7 +126,7 @@ func (r *userAccountBindingRepository) GetByProviderAndProviderUserID(ctx contex
 }
 
 // SetPrimaryBinding sets a binding as primary and unsets others
-func (r *userAccountBindingRepository) SetPrimaryBinding(ctx context.Context, userID uint, bindingID uint) error {
+func (r *userAccountBindingRepository) SetPrimaryBinding(ctx context.Context, userID, bindingID uint) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// First, unset all other bindings for this user
 		if err := tx.Model(&entities.UserAccountBinding{}).

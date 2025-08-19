@@ -69,7 +69,7 @@ type FailureStore interface {
 	GetFailure(ctx context.Context, requestID string) (*NotificationFailure, error)
 	UpdateFailure(ctx context.Context, failure *NotificationFailure) error
 	GetPendingRetries(ctx context.Context, limit int) ([]*NotificationFailure, error)
-	MarkAsDeadLetter(ctx context.Context, requestID string, reason string) error
+	MarkAsDeadLetter(ctx context.Context, requestID, reason string) error
 	GetDeadLetters(ctx context.Context, limit int) ([]*DeadLetterEntry, error)
 }
 

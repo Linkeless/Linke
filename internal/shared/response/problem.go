@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
+
+	"linke/internal/shared/errors"
 
 	"github.com/gin-gonic/gin"
 )
@@ -32,11 +35,33 @@ const (
 	ProblemTypePermissionDenied     = "/problems/permission-denied"
 )
 
-// ValidationError represents a validation error for a specific field
+// ProblemJSONResponse represents an RFC 9457 Problem JSON response
+type ProblemJSONResponse struct {
+	Type       string                 `json:"type"`
+	Title      string                 `json:"title"`
+	Status     int                    `json:"status"`
+	Detail     string                 `json:"detail,omitempty"`
+	Instance   string                 `json:"instance,omitempty"`
+	TraceID    string                 `json:"trace_id,omitempty"`
+	Timestamp  time.Time              `json:"timestamp"`
+	Errors     []errors.FieldError    `json:"errors,omitempty"`
+	Extensions map[string]interface{} `json:"extensions,omitempty"`
+}
+
+// ValidationError represents a validation error for a specific field (legacy)
 type ValidationError struct {
 	Field   string `json:"field"`
 	Message string `json:"message"`
 	Code    string `json:"code,omitempty"`
+}
+
+// ProblemContext provides additional context for problem responses
+type ProblemContext struct {
+	TraceID   string
+	RequestID string
+	UserID    string
+	Operation string
+	Metadata  map[string]interface{}
 }
 
 // ProblemDetail creates detailed problem responses with proper extensions

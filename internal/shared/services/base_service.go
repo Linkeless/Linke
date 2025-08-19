@@ -473,7 +473,7 @@ func (s *BaseServiceImpl[T, ID]) PublishCreatedEvent(ctx context.Context, entity
 	return nil
 }
 
-func (s *BaseServiceImpl[T, ID]) PublishUpdatedEvent(ctx context.Context, old *T, new *T) error {
+func (s *BaseServiceImpl[T, ID]) PublishUpdatedEvent(ctx context.Context, old, new *T) error {
 	if s.eventPub == nil {
 		return nil
 	}

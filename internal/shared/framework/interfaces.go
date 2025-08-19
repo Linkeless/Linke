@@ -107,9 +107,9 @@ type Repository interface {
 type BaseRepository interface {
 	Repository
 	Create(ctx context.Context, entity any) error
-	GetByID(ctx context.Context, id any, entity any) error
+	GetByID(ctx context.Context, id, entity any) error
 	Update(ctx context.Context, entity any) error
-	Delete(ctx context.Context, id any, entity any) error
+	Delete(ctx context.Context, id, entity any) error
 	List(ctx context.Context, entities any, offset, limit int) error
 	Count(ctx context.Context, entity any) (int64, error)
 }
@@ -325,7 +325,7 @@ type OrderManagementService[T any, ID comparable] interface {
 
 	// Order-specific operations
 	GetByOrderNumber(ctx context.Context, orderNumber string) (*T, error)
-	UpdateOrderStatus(ctx context.Context, id ID, status string, reason string) (*T, error)
+	UpdateOrderStatus(ctx context.Context, id ID, status, reason string) (*T, error)
 	ProcessOrder(ctx context.Context, id ID, processData map[string]any) (*T, error)
 	CancelOrder(ctx context.Context, id ID, reason string) (*T, error)
 	GetOrdersByStatus(ctx context.Context, status string, req *ListRequest) (*ListResponse[T], error)
@@ -424,7 +424,7 @@ type BusinessService[T any, ID comparable] interface {
 
 	// Event publishing
 	PublishCreatedEvent(ctx context.Context, entity *T) error
-	PublishUpdatedEvent(ctx context.Context, old *T, new *T) error
+	PublishUpdatedEvent(ctx context.Context, old, new *T) error
 	PublishDeletedEvent(ctx context.Context, entity *T) error
 
 	// Audit operations

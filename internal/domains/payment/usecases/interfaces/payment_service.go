@@ -18,7 +18,7 @@ type PaymentService interface {
 	CreatePaymentOrder(ctx context.Context, req *dto.CreatePaymentOrderRequest) (*entities.PaymentRecord, error)
 	GetPaymentRecord(ctx context.Context, paymentNo string) (*entities.PaymentRecord, error)
 	GetPaymentRecordByOutTradeNo(ctx context.Context, outTradeNo string) (*entities.PaymentRecord, error)
-	UpdatePaymentStatus(ctx context.Context, paymentNo string, status string, transactionID string, paidAt *time.Time) error
+	UpdatePaymentStatus(ctx context.Context, paymentNo, status, transactionID string, paidAt *time.Time) error
 	ProcessNotification(ctx context.Context, gateway string, data map[string]any) error
 	GetAvailablePaymentMethods(ctx context.Context) (map[string][]string, error)
 	GeneratePaymentNo() (string, error)

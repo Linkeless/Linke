@@ -26,7 +26,7 @@ type PDFGeneratorService struct {
 // NewPDFGeneratorService creates a new PDF generator service
 func NewPDFGeneratorService(outputDir string, logger logger.Logger) *PDFGeneratorService {
 	// Ensure output directory exists
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
+	if err := os.MkdirAll(outputDir, 0o755); err != nil {
 		logger.Error("Failed to create PDF output directory", zap.Error(err))
 	}
 
@@ -125,7 +125,7 @@ func (pgs *PDFGeneratorService) GeneratePDF(ctx context.Context, invoice *entiti
 			time.Now().Unix())
 		filePath = filepath.Join(pgs.outputDir, fileName)
 
-		if err := os.WriteFile(filePath, pdfBytes, 0644); err != nil {
+		if err := os.WriteFile(filePath, pdfBytes, 0o644); err != nil {
 			pgs.logger.Error("Failed to save PDF to disk",
 				zap.Error(err),
 				zap.String("file_path", filePath))

@@ -19,6 +19,6 @@ type UserAccountBindingRepository interface {
 	GetByProviderAndProviderUserID(ctx context.Context, provider, providerUserID string) (*entities.UserAccountBinding, error)
 
 	// Primary binding management
-	SetPrimaryBinding(ctx context.Context, userID uint, bindingID uint) error
+	SetPrimaryBinding(ctx context.Context, userID, bindingID uint) error
 	UpdateLastUsed(ctx context.Context, id uint) error
 }

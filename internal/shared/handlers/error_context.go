@@ -11,18 +11,18 @@ import (
 
 // OperationContext provides structured context for operations and error logging
 type OperationContext struct {
-	Operation     string            `json:"operation"`
-	UserID        uint              `json:"user_id"`
-	AdminID       *uint             `json:"admin_id,omitempty"`
-	TicketID      *uint             `json:"ticket_id,omitempty"`
-	MessageID     *uint             `json:"message_id,omitempty"`
-	RequestID     string            `json:"request_id,omitempty"`
-	UserAgent     string            `json:"user_agent,omitempty"`
-	RemoteAddr    string            `json:"remote_addr,omitempty"`
-	StartTime     time.Time         `json:"start_time"`
-	RequestSize   int               `json:"request_size,omitempty"`
-	ResponseSize  int               `json:"response_size,omitempty"`
-	Metadata      map[string]any    `json:"metadata,omitempty"`
+	Operation    string         `json:"operation"`
+	UserID       uint           `json:"user_id"`
+	AdminID      *uint          `json:"admin_id,omitempty"`
+	TicketID     *uint          `json:"ticket_id,omitempty"`
+	MessageID    *uint          `json:"message_id,omitempty"`
+	RequestID    string         `json:"request_id,omitempty"`
+	UserAgent    string         `json:"user_agent,omitempty"`
+	RemoteAddr   string         `json:"remote_addr,omitempty"`
+	StartTime    time.Time      `json:"start_time"`
+	RequestSize  int            `json:"request_size,omitempty"`
+	ResponseSize int            `json:"response_size,omitempty"`
+	Metadata     map[string]any `json:"metadata,omitempty"`
 }
 
 // NewOperationContext creates a new operation context from gin.Context
@@ -142,7 +142,7 @@ func (ctx *OperationContext) LogError(err error, message string, additionalField
 	fields := ctx.toLogFields()
 	fields = append(fields, logger.ErrorField(err))
 	fields = append(fields, additionalFields...)
-	
+
 	logger.Error(message, fields...)
 }
 
@@ -150,7 +150,7 @@ func (ctx *OperationContext) LogError(err error, message string, additionalField
 func (ctx *OperationContext) LogWarn(message string, additionalFields ...zap.Field) {
 	fields := ctx.toLogFields()
 	fields = append(fields, additionalFields...)
-	
+
 	logger.Warn(message, fields...)
 }
 
@@ -158,7 +158,7 @@ func (ctx *OperationContext) LogWarn(message string, additionalFields ...zap.Fie
 func (ctx *OperationContext) LogInfo(message string, additionalFields ...zap.Field) {
 	fields := ctx.toLogFields()
 	fields = append(fields, additionalFields...)
-	
+
 	logger.Info(message, fields...)
 }
 
@@ -166,7 +166,7 @@ func (ctx *OperationContext) LogInfo(message string, additionalFields ...zap.Fie
 func (ctx *OperationContext) LogDebug(message string, additionalFields ...zap.Field) {
 	fields := ctx.toLogFields()
 	fields = append(fields, additionalFields...)
-	
+
 	logger.Debug(message, fields...)
 }
 
@@ -175,7 +175,7 @@ func (ctx *OperationContext) LogSuccess(message string, additionalFields ...zap.
 	fields := ctx.toLogFields()
 	fields = append(fields, logger.String("status", "success"))
 	fields = append(fields, additionalFields...)
-	
+
 	logger.Info(message, fields...)
 }
 
@@ -184,7 +184,7 @@ func (ctx *OperationContext) LogPerformance(additionalFields ...zap.Field) {
 	fields := ctx.toLogFields()
 	fields = append(fields, logger.String("log_type", "performance"))
 	fields = append(fields, additionalFields...)
-	
+
 	duration := ctx.Duration()
 	if duration > 1*time.Second {
 		logger.Warn("Slow operation detected", fields...)
@@ -202,7 +202,7 @@ type SecurityContext struct {
 }
 
 // NewSecurityContext creates a security context for security-related operations
-func NewSecurityContext(ctx *OperationContext, event string, riskLevel string) *SecurityContext {
+func NewSecurityContext(ctx *OperationContext, event, riskLevel string) *SecurityContext {
 	return &SecurityContext{
 		OperationContext: ctx,
 		SecurityEvent:    event,
@@ -214,7 +214,7 @@ func NewSecurityContext(ctx *OperationContext, event string, riskLevel string) *
 // LogSecurityEvent logs security-related events
 func (ctx *SecurityContext) LogSecurityEvent(message string, additionalFields ...zap.Field) {
 	fields := ctx.toLogFields()
-	fields = append(fields, 
+	fields = append(fields,
 		logger.String("security_event", ctx.SecurityEvent),
 		logger.String("risk_level", ctx.RiskLevel),
 		logger.String("ip_address", ctx.IPAddress),
@@ -240,25 +240,25 @@ type PerformanceThresholds struct {
 
 // DefaultThresholds provides default performance thresholds
 var DefaultThresholds = map[string]PerformanceThresholds{
-	"create_ticket":        {Warning: 500 * time.Millisecond, Critical: 2 * time.Second},
-	"list_tickets":         {Warning: 1 * time.Second, Critical: 3 * time.Second},
-	"search_tickets":       {Warning: 1 * time.Second, Critical: 5 * time.Second},
-	"get_ticket":          {Warning: 200 * time.Millisecond, Critical: 1 * time.Second},
-	"update_ticket":       {Warning: 300 * time.Millisecond, Critical: 1 * time.Second},
-	"assign_ticket":       {Warning: 200 * time.Millisecond, Critical: 1 * time.Second},
-	"add_message":         {Warning: 300 * time.Millisecond, Critical: 1 * time.Second},
-	"get_messages":        {Warning: 500 * time.Millisecond, Critical: 2 * time.Second},
-	"batch_load_users":    {Warning: 200 * time.Millisecond, Critical: 1 * time.Second},
+	"create_ticket":    {Warning: 500 * time.Millisecond, Critical: 2 * time.Second},
+	"list_tickets":     {Warning: 1 * time.Second, Critical: 3 * time.Second},
+	"search_tickets":   {Warning: 1 * time.Second, Critical: 5 * time.Second},
+	"get_ticket":       {Warning: 200 * time.Millisecond, Critical: 1 * time.Second},
+	"update_ticket":    {Warning: 300 * time.Millisecond, Critical: 1 * time.Second},
+	"assign_ticket":    {Warning: 200 * time.Millisecond, Critical: 1 * time.Second},
+	"add_message":      {Warning: 300 * time.Millisecond, Critical: 1 * time.Second},
+	"get_messages":     {Warning: 500 * time.Millisecond, Critical: 2 * time.Second},
+	"batch_load_users": {Warning: 200 * time.Millisecond, Critical: 1 * time.Second},
 }
 
 // CheckPerformance checks performance against thresholds and logs appropriately
 func (ctx *OperationContext) CheckPerformance(additionalFields ...zap.Field) {
 	duration := ctx.Duration()
 	thresholds, exists := DefaultThresholds[ctx.Operation]
-	
+
 	fields := ctx.toLogFields()
 	fields = append(fields, additionalFields...)
-	
+
 	if exists {
 		if duration >= thresholds.Critical {
 			fields = append(fields, logger.String("performance_level", "critical"))

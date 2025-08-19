@@ -95,7 +95,6 @@ func (l *LoginSecurityService) RecordLoginAttempt(ctx context.Context, email, ip
 func (l *LoginSecurityService) IsAccountLocked(ctx context.Context, email string) (bool, *entities.AccountLockout, error) {
 	var lockout entities.AccountLockout
 	err := l.db.WithContext(ctx).Where("email = ?", email).First(&lockout).Error
-
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return false, nil, nil // Account not locked
@@ -118,7 +117,6 @@ func (l *LoginSecurityService) GetFailureCount(ctx context.Context, email string
 	err := l.db.WithContext(ctx).Model(&entities.LoginAttempt{}).
 		Where("email = ? AND success = false AND created_at > ?", email, windowStart).
 		Count(&count).Error
-
 	if err != nil {
 		return 0, fmt.Errorf("failed to get failure count: %w", err)
 	}
@@ -221,7 +219,7 @@ func (l *LoginSecurityService) calculateLockoutDuration(lockout *entities.Accoun
 }
 
 // UnlockAccount manually unlocks an account (admin function)
-func (l *LoginSecurityService) UnlockAccount(ctx context.Context, email string, reason string) error {
+func (l *LoginSecurityService) UnlockAccount(ctx context.Context, email, reason string) error {
 	result := l.db.WithContext(ctx).Model(&entities.AccountLockout{}).
 		Where("email = ?", email).
 		Updates(map[string]any{

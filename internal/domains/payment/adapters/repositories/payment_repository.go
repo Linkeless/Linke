@@ -214,7 +214,7 @@ func (r *paymentRecordRepository) ListWithFilter(ctx context.Context, filter int
 }
 
 // UpdatePaymentStatus updates the payment status and related fields
-func (r *paymentRecordRepository) UpdatePaymentStatus(ctx context.Context, id uint, status string, transactionID string, paidAt *time.Time) error {
+func (r *paymentRecordRepository) UpdatePaymentStatus(ctx context.Context, id uint, status, transactionID string, paidAt *time.Time) error {
 	updateData := map[string]interface{}{
 		"status":     status,
 		"updated_at": time.Now(),

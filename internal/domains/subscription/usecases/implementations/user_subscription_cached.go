@@ -76,7 +76,6 @@ func (s *CachedUserSubscriptionService) GetUserSubscription(ctx context.Context,
 	subscription, err := s.subscriptionCache.Get(ctx, cacheKey, func() (*entities.UserSubscription, error) {
 		return s.UserSubscriptionService.GetUserSubscription(ctx, subscriptionID)
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +91,6 @@ func (s *CachedUserSubscriptionService) GetUserSubscriptionWithRelations(ctx con
 	subscription, err := s.subscriptionCache.Get(ctx, cacheKey, func() (*entities.UserSubscription, error) {
 		return s.UserSubscriptionService.GetUserSubscriptionWithRelations(ctx, subscriptionID)
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -190,7 +188,6 @@ func (s *CachedUserSubscriptionService) GetActiveUserSubscription(ctx context.Co
 	subscription, err := s.subscriptionCache.Get(ctx, cacheKey, func() (*entities.UserSubscription, error) {
 		return s.UserSubscriptionService.GetActiveUserSubscription(ctx, userID, planID)
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -343,7 +340,7 @@ func (s *CachedUserSubscriptionService) UpdateTrafficUsage(ctx context.Context, 
 // Traffic and renewal methods with cache invalidation
 
 // ResetTrafficUsage resets traffic usage with cache invalidation
-func (s *CachedUserSubscriptionService) ResetTrafficUsage(ctx context.Context, subscriptionID uint, adminUserID uint) (*entities.UserSubscription, error) {
+func (s *CachedUserSubscriptionService) ResetTrafficUsage(ctx context.Context, subscriptionID, adminUserID uint) (*entities.UserSubscription, error) {
 	subscription, err := s.UserSubscriptionService.ResetTrafficUsage(ctx, subscriptionID, adminUserID)
 	if err != nil {
 		return nil, err
@@ -547,7 +544,7 @@ func (s *CachedUserSubscriptionService) GetSubscriptionStatistics(ctx context.Co
 
 // Cache invalidation helper methods
 
-func (s *CachedUserSubscriptionService) invalidateSubscriptionCaches(ctx context.Context, subscriptionID uint, userID uint) {
+func (s *CachedUserSubscriptionService) invalidateSubscriptionCaches(ctx context.Context, subscriptionID, userID uint) {
 	// Invalidate specific subscription caches
 	cacheKeys := []string{
 		fmt.Sprintf("id:%d", subscriptionID),
@@ -755,7 +752,7 @@ func (s *CachedUserSubscriptionService) DowngradeUserSubscription(ctx context.Co
 }
 
 // ProcessSubscriptionChange processes subscription change with cache invalidation
-func (s *CachedUserSubscriptionService) ProcessSubscriptionChange(ctx context.Context, subscriptionID uint, newPlanID uint, changeType string) (*entities.UserSubscription, error) {
+func (s *CachedUserSubscriptionService) ProcessSubscriptionChange(ctx context.Context, subscriptionID, newPlanID uint, changeType string) (*entities.UserSubscription, error) {
 	subscription, err := s.UserSubscriptionService.ProcessSubscriptionChange(ctx, subscriptionID, newPlanID, changeType)
 	if err != nil {
 		return nil, err

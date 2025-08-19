@@ -223,7 +223,7 @@ func (cs *CachedCouponService) UseCoupon(ctx context.Context, couponID, userID u
 
 // GetCouponUsages gets coupon usage records (no caching - usage data changes frequently)
 // This is a helper method that delegates to the appropriate base service method
-func (cs *CachedCouponService) GetCouponUsages(ctx context.Context, couponID *uint64, userID *uint64, limit, offset int) ([]*entities.CouponUsage, int64, error) {
+func (cs *CachedCouponService) GetCouponUsages(ctx context.Context, couponID, userID *uint64, limit, offset int) ([]*entities.CouponUsage, int64, error) {
 	if couponID != nil {
 		return cs.base.GetCouponUsage(ctx, *couponID, limit, offset)
 	} else if userID != nil {

@@ -288,7 +288,7 @@ func ExtractPaginationParams(c *gin.Context) (page, size, offset int) {
 }
 
 // ExtractSortParams extracts sorting parameters
-func ExtractSortParams(c *gin.Context, allowedFields []string) (sortBy string, sortOrder string) {
+func ExtractSortParams(c *gin.Context, allowedFields []string) (sortBy, sortOrder string) {
 	sortBy = c.Query("sort")
 	sortOrder = strings.ToLower(c.DefaultQuery("order", "asc"))
 

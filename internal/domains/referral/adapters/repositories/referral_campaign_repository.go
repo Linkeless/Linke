@@ -2,11 +2,12 @@ package repositories
 
 import (
 	"context"
+	"time"
+
 	"linke/internal/domains/referral/entities"
 	"linke/internal/domains/referral/usecases/interfaces"
 	"linke/internal/shared/framework"
 	"linke/internal/shared/repository"
-	"time"
 
 	"gorm.io/gorm"
 )

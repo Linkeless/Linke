@@ -257,7 +257,7 @@ func (s *TicketService) AssignTicket(ctx context.Context, ticketID uint, req *dt
 }
 
 // ResolveTicket resolves a ticket
-func (s *TicketService) ResolveTicket(ctx context.Context, ticketID uint, resolvedByID uint, req *dto.ResolveTicketRequest) (*entities.Ticket, error) {
+func (s *TicketService) ResolveTicket(ctx context.Context, ticketID, resolvedByID uint, req *dto.ResolveTicketRequest) (*entities.Ticket, error) {
 	// Get existing ticket
 	ticket, err := s.GetTicket(ctx, ticketID)
 	if err != nil {
@@ -892,7 +892,8 @@ func (s *TicketService) fetchAdminUsers(ctx context.Context) ([]struct {
 	ID    uint   `json:"id"`
 	Name  string `json:"name"`
 	Email string `json:"email"`
-}, error) {
+}, error,
+) {
 	var agents []struct {
 		ID    uint   `json:"id"`
 		Name  string `json:"name"`
@@ -913,7 +914,8 @@ func (s *TicketService) buildAgentInfo(ctx context.Context, agent struct {
 	ID    uint   `json:"id"`
 	Name  string `json:"name"`
 	Email string `json:"email"`
-}, category string) (*dto.AgentInfo, error) {
+}, category string,
+) (*dto.AgentInfo, error) {
 	workload, err := s.GetAgentWorkload(ctx, agent.ID)
 	if err != nil {
 		workload = 0 // Default to 0 on error

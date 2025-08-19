@@ -2,11 +2,293 @@ package cache
 
 import (
 	"context"
+	"crypto/md5"
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 )
+
+// KeyStrategy defines how cache keys are generated
+type KeyStrategy interface {
+	GenerateKey(prefix string, identifier string, params ...interface{}) string
+	ValidateKey(key string) error
+	NormalizeKey(key string) string
+}
+
+// TTLStrategy defines how TTL is determined for cache entries
+type TTLStrategy interface {
+	GetTTL(ctx context.Context, key string, value interface{}) time.Duration
+	GetRefreshTTL(ctx context.Context, key string) time.Duration
+	ShouldRefresh(ctx context.Context, key string, age time.Duration) bool
+}
+
+// DefaultKeyStrategy implements a simple key generation strategy
+type DefaultKeyStrategy struct {
+	separator string
+	maxLength int
+}
+
+// NewDefaultKeyStrategy creates a new default key strategy
+func NewDefaultKeyStrategy() *DefaultKeyStrategy {
+	return &DefaultKeyStrategy{
+		separator: ":",
+		maxLength: 250, // Redis max key length is 512MB, but keep reasonable
+	}
+}
+
+func (dks *DefaultKeyStrategy) GenerateKey(prefix string, identifier string, params ...interface{}) string {
+	parts := []string{prefix, identifier}
+	
+	for _, param := range params {
+		parts = append(parts, fmt.Sprintf("%v", param))
+	}
+	
+	key := strings.Join(parts, dks.separator)
+	return dks.NormalizeKey(key)
+}
+
+func (dks *DefaultKeyStrategy) ValidateKey(key string) error {
+	if len(key) == 0 {
+		return fmt.Errorf("key cannot be empty")
+	}
+	if len(key) > dks.maxLength {
+		return fmt.Errorf("key length %d exceeds maximum %d", len(key), dks.maxLength)
+	}
+	return nil
+}
+
+func (dks *DefaultKeyStrategy) NormalizeKey(key string) string {
+	// Remove any problematic characters and normalize
+	normalized := strings.ReplaceAll(key, " ", "_")
+	normalized = strings.ToLower(normalized)
+	
+	// If key is too long, hash it
+	if len(normalized) > dks.maxLength {
+		hash := fmt.Sprintf("%x", md5.Sum([]byte(normalized)))
+		prefix := normalized[:dks.maxLength-len(hash)-1]
+		return prefix + "_" + hash
+	}
+	
+	return normalized
+}
+
+// HashKeyStrategy implements a hash-based key generation strategy
+type HashKeyStrategy struct {
+	*DefaultKeyStrategy
+	hashLongKeys bool
+}
+
+func NewHashKeyStrategy() *HashKeyStrategy {
+	return &HashKeyStrategy{
+		DefaultKeyStrategy: NewDefaultKeyStrategy(),
+		hashLongKeys:       true,
+	}
+}
+
+func (hks *HashKeyStrategy) GenerateKey(prefix string, identifier string, params ...interface{}) string {
+	if !hks.hashLongKeys {
+		return hks.DefaultKeyStrategy.GenerateKey(prefix, identifier, params...)
+	}
+	
+	// Always hash for consistent length
+	allParams := append([]interface{}{prefix, identifier}, params...)
+	data, _ := json.Marshal(allParams)
+	hash := fmt.Sprintf("%x", md5.Sum(data))
+	
+	return fmt.Sprintf("%s:%s", prefix, hash)
+}
+
+// FixedTTLStrategy implements a simple fixed TTL strategy
+type FixedTTLStrategy struct {
+	defaultTTL time.Duration
+	refreshTTL time.Duration
+}
+
+func NewFixedTTLStrategy(defaultTTL time.Duration) *FixedTTLStrategy {
+	return &FixedTTLStrategy{
+		defaultTTL: defaultTTL,
+		refreshTTL: defaultTTL / 4, // Refresh when 75% of TTL has passed
+	}
+}
+
+func (fts *FixedTTLStrategy) GetTTL(ctx context.Context, key string, value interface{}) time.Duration {
+	return fts.defaultTTL
+}
+
+func (fts *FixedTTLStrategy) GetRefreshTTL(ctx context.Context, key string) time.Duration {
+	return fts.refreshTTL
+}
+
+func (fts *FixedTTLStrategy) ShouldRefresh(ctx context.Context, key string, age time.Duration) bool {
+	return age >= fts.refreshTTL
+}
+
+// AdaptiveTTLStrategy implements an adaptive TTL strategy based on data characteristics
+type AdaptiveTTLStrategy struct {
+	baseTTL    time.Duration
+	maxTTL     time.Duration
+	minTTL     time.Duration
+	refreshTTL time.Duration
+}
+
+func NewAdaptiveTTLStrategy(baseTTL, minTTL, maxTTL time.Duration) *AdaptiveTTLStrategy {
+	return &AdaptiveTTLStrategy{
+		baseTTL:    baseTTL,
+		maxTTL:     maxTTL,
+		minTTL:     minTTL,
+		refreshTTL: baseTTL / 3,
+	}
+}
+
+func (ats *AdaptiveTTLStrategy) GetTTL(ctx context.Context, key string, value interface{}) time.Duration {
+	// Adjust TTL based on value characteristics
+	ttl := ats.baseTTL
+	
+	if value != nil {
+		// Larger objects get shorter TTL
+		if data, err := json.Marshal(value); err == nil {
+			size := len(data)
+			if size > 10240 { // 10KB
+				ttl = ats.minTTL
+			} else if size < 1024 { // 1KB
+				ttl = ats.maxTTL
+			}
+		}
+	}
+	
+	// Ensure TTL is within bounds
+	if ttl < ats.minTTL {
+		ttl = ats.minTTL
+	}
+	if ttl > ats.maxTTL {
+		ttl = ats.maxTTL
+	}
+	
+	return ttl
+}
+
+func (ats *AdaptiveTTLStrategy) GetRefreshTTL(ctx context.Context, key string) time.Duration {
+	return ats.refreshTTL
+}
+
+func (ats *AdaptiveTTLStrategy) ShouldRefresh(ctx context.Context, key string, age time.Duration) bool {
+	return age >= ats.refreshTTL
+}
+
+// EnhancedCacheDecorator extends the basic cache decorator with strategies
+type EnhancedCacheDecorator struct {
+	cache       Cache
+	keyStrategy KeyStrategy
+	ttlStrategy TTLStrategy
+	prefix      string
+}
+
+// NewEnhancedCacheDecorator creates a new enhanced cache decorator
+func NewEnhancedCacheDecorator(cache Cache, prefix string, keyStrategy KeyStrategy, ttlStrategy TTLStrategy) *EnhancedCacheDecorator {
+	if keyStrategy == nil {
+		keyStrategy = NewDefaultKeyStrategy()
+	}
+	if ttlStrategy == nil {
+		ttlStrategy = NewFixedTTLStrategy(5 * time.Minute)
+	}
+	
+	return &EnhancedCacheDecorator{
+		cache:       cache,
+		keyStrategy: keyStrategy,
+		ttlStrategy: ttlStrategy,
+		prefix:      prefix,
+	}
+}
+
+// GetWithStrategy gets a value using configured strategies
+func (ecd *EnhancedCacheDecorator) GetWithStrategy(ctx context.Context, identifier string, fetch func() (interface{}, error), params ...interface{}) (interface{}, error) {
+	cacheKey := ecd.keyStrategy.GenerateKey(ecd.prefix, identifier, params...)
+	
+	if err := ecd.keyStrategy.ValidateKey(cacheKey); err != nil {
+		return fetch() // Fall back to direct fetch if key is invalid
+	}
+	
+	cached, err := ecd.cache.Get(ctx, cacheKey)
+	if err != nil {
+		return ecd.fetchAndStore(ctx, cacheKey, fetch)
+	}
+	
+	if cached != nil {
+		var result interface{}
+		if err := json.Unmarshal(cached, &result); err == nil {
+			return result, nil
+		}
+	}
+	
+	return ecd.fetchAndStore(ctx, cacheKey, fetch)
+}
+
+// SetWithStrategy sets a value using configured strategies
+func (ecd *EnhancedCacheDecorator) SetWithStrategy(ctx context.Context, identifier string, value interface{}, params ...interface{}) error {
+	cacheKey := ecd.keyStrategy.GenerateKey(ecd.prefix, identifier, params...)
+	
+	if err := ecd.keyStrategy.ValidateKey(cacheKey); err != nil {
+		return err
+	}
+	
+	ttl := ecd.ttlStrategy.GetTTL(ctx, cacheKey, value)
+	
+	if value != nil {
+		if data, err := json.Marshal(value); err == nil {
+			return ecd.cache.Set(ctx, cacheKey, data, ttl)
+		}
+	}
+	
+	return nil
+}
+
+// InvalidateWithStrategy invalidates a cache entry using configured strategies
+func (ecd *EnhancedCacheDecorator) InvalidateWithStrategy(ctx context.Context, identifier string, params ...interface{}) error {
+	cacheKey := ecd.keyStrategy.GenerateKey(ecd.prefix, identifier, params...)
+	return ecd.cache.Delete(ctx, cacheKey)
+}
+
+func (ecd *EnhancedCacheDecorator) fetchAndStore(ctx context.Context, cacheKey string, fetch func() (interface{}, error)) (interface{}, error) {
+	result, err := fetch()
+	if err != nil {
+		return nil, err
+	}
+	
+	if result != nil {
+		ttl := ecd.ttlStrategy.GetTTL(ctx, cacheKey, result)
+		if data, err := json.Marshal(result); err == nil {
+			_ = ecd.cache.Set(ctx, cacheKey, data, ttl)
+		}
+	}
+	
+	return result, nil
+}
+
+// GetKeyStrategy returns the current key strategy
+func (ecd *EnhancedCacheDecorator) GetKeyStrategy() KeyStrategy {
+	return ecd.keyStrategy
+}
+
+// GetTTLStrategy returns the current TTL strategy
+func (ecd *EnhancedCacheDecorator) GetTTLStrategy() TTLStrategy {
+	return ecd.ttlStrategy
+}
+
+// SetKeyStrategy updates the key strategy
+func (ecd *EnhancedCacheDecorator) SetKeyStrategy(strategy KeyStrategy) {
+	if strategy != nil {
+		ecd.keyStrategy = strategy
+	}
+}
+
+// SetTTLStrategy updates the TTL strategy
+func (ecd *EnhancedCacheDecorator) SetTTLStrategy(strategy TTLStrategy) {
+	if strategy != nil {
+		ecd.ttlStrategy = strategy
+	}
+}
 
 type CacheDecorator struct {
 	cache     Cache

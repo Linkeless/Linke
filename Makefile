@@ -1,4 +1,4 @@
-.PHONY: build run test clean swagger dev migrate-help migrate-up migrate-down migrate-reset migrate-status migrate-list migrate-create migrate-force migrate-goto migrate-steps migrate-fix-dirty security-check safe-run safe-dev
+.PHONY: build run test clean swagger dev migrate-help migrate-up migrate-down migrate-reset migrate-status migrate-list migrate-create migrate-force migrate-goto migrate-steps migrate-fix-dirty security-check safe-run safe-dev fmt lint check
 
 build:
 	go build -o bin/server cmd/server/main.go
@@ -34,6 +34,8 @@ dev: swagger
 install:
 	go mod tidy
 	go install github.com/swaggo/swag/cmd/swag@latest
+	go install mvdan.cc/gofumpt@latest
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
 # Database migration commands
 # Uses integrated migration functionality in main server application
@@ -141,3 +143,17 @@ help:
 	@echo "  make migrate-goto VERSION=3        # Migrate to version 3"
 	@echo "  make migrate-steps STEPS=2         # Run 2 migrations up"
 	@echo "  make migrate-steps STEPS=-1        # Rollback 1 migration"
+
+# Code formatting and linting
+fmt:
+	@echo "Formatting code with gofumpt..."
+	$(HOME)/go/bin/gofumpt -w -extra .
+
+lint:
+	@echo "Running linter..."
+	$(HOME)/go/bin/golangci-lint run
+
+check: fmt lint
+	@echo "Running all code quality checks..."
+	go vet ./...
+	go test -race ./...

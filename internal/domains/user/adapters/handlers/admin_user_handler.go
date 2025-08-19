@@ -9,6 +9,7 @@ import (
 	"linke/internal/domains/user/dto"
 	"linke/internal/domains/user/entities"
 	userInterfaces "linke/internal/domains/user/usecases/interfaces"
+	"linke/internal/shared/handlers"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/middleware"
 	"linke/internal/shared/response"
@@ -45,9 +46,8 @@ func NewAdminUserHandler(userService userInterfaces.UserService, authService aut
 // @Failure 500 {object} response.ProblemJSONResponse
 // @Router /admin/users [post]
 func (h *AdminUserHandler) CreateUser(c *gin.Context) {
-	var createReq dto.CreateUserRequest
-	if err := c.ShouldBindJSON(&createReq); err != nil {
-		response.BadRequest(c, err.Error())
+	createReq, err := handlers.BindAndValidate[dto.CreateUserRequest](c)
+	if err != nil {
 		return
 	}
 

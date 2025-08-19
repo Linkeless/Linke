@@ -115,8 +115,8 @@ func (h *RetryTaskHandler) scheduleNextRetry(ctx context.Context, retryData *str
 	Attempt     int                  `json:"attempt"`
 	Error       string               `json:"error"`
 	ScheduledAt int64                `json:"scheduled_at"`
-}, err error) error {
-
+}, err error,
+) error {
 	nextAttempt := retryData.Attempt + 1
 	delay := h.retryService.calculateRetryDelay(nextAttempt, FailureTypeTemporary)
 

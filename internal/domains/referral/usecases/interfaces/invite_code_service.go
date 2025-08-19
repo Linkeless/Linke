@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"context"
+
 	"linke/internal/domains/referral/dto"
 	"linke/internal/domains/referral/entities"
 )

@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+
 	"linke/internal/domains/ticket/entities"
 	"linke/internal/domains/ticket/usecases/interfaces"
 
@@ -92,7 +93,7 @@ func (r *TicketMessageRepository) GetInternalMessages(ctx context.Context, ticke
 }
 
 // MarkAsRead marks a message as read by a user
-func (r *TicketMessageRepository) MarkAsRead(ctx context.Context, messageID uint, userID uint) error {
+func (r *TicketMessageRepository) MarkAsRead(ctx context.Context, messageID, userID uint) error {
 	// This could be implemented with a separate read tracking table
 	// For now, we'll update the message entity if it has a read tracking field
 	return r.db.WithContext(ctx).
@@ -102,7 +103,7 @@ func (r *TicketMessageRepository) MarkAsRead(ctx context.Context, messageID uint
 }
 
 // MarkTicketMessagesAsRead marks all messages in a ticket as read by a user
-func (r *TicketMessageRepository) MarkTicketMessagesAsRead(ctx context.Context, ticketID uint, userID uint) error {
+func (r *TicketMessageRepository) MarkTicketMessagesAsRead(ctx context.Context, ticketID, userID uint) error {
 	return r.db.WithContext(ctx).
 		Model(&entities.TicketMessage{}).
 		Where("ticket_id = ?", ticketID).
@@ -128,7 +129,6 @@ func (r *TicketMessageRepository) GetMessageStatistics(ctx context.Context, tick
 		`).
 		Where("ticket_id = ?", ticketID).
 		Scan(&stats).Error
-
 	if err != nil {
 		return nil, err
 	}

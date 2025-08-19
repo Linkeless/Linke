@@ -53,7 +53,7 @@ func (h *AdminTicketBaseHandler) CreateTicket(c *gin.Context) {
 			logger.Uint("user_id", req.UserID),
 			logger.ErrorField(err))
 
-		convertedErr := sharedErrors.ConvertServiceError(err, "user", req.UserID)
+		convertedErr := sharedErrors.ConvertUserErrorUint(err, req.UserID)
 		if sharedErrors.IsUserNotFound(convertedErr) {
 			response.NotFound(c, "User not found")
 		} else {
@@ -70,7 +70,7 @@ func (h *AdminTicketBaseHandler) CreateTicket(c *gin.Context) {
 				logger.Uint("assigned_to_id", *req.AssignedToID),
 				logger.ErrorField(err))
 
-			convertedErr := sharedErrors.ConvertServiceError(err, "user", *req.AssignedToID)
+			convertedErr := sharedErrors.ConvertUserErrorUint(err, *req.AssignedToID)
 			if sharedErrors.IsUserNotFound(convertedErr) {
 				response.NotFound(c, "Assigned user not found")
 			} else {
@@ -376,7 +376,7 @@ func (h *AdminTicketBaseHandler) UpdateTicket(c *gin.Context) {
 			logger.Uint("ticket_id", uint(id)),
 			logger.ErrorField(err))
 
-		convertedErr := sharedErrors.ConvertServiceError(err, "ticket", uint(id))
+		convertedErr := sharedErrors.ConvertTicketErrorUint(err, uint(id))
 		if sharedErrors.IsTicketNotFound(convertedErr) {
 			response.NotFound(c, "Ticket not found")
 		} else {
@@ -426,7 +426,7 @@ func (h *AdminTicketBaseHandler) DeleteTicket(c *gin.Context) {
 			logger.Uint("ticket_id", uint(id)),
 			logger.ErrorField(err))
 
-		convertedErr := sharedErrors.ConvertServiceError(err, "ticket", uint(id))
+		convertedErr := sharedErrors.ConvertTicketErrorUint(err, uint(id))
 		if sharedErrors.IsTicketNotFound(convertedErr) {
 			response.NotFound(c, "Ticket not found")
 		} else {

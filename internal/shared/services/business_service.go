@@ -104,7 +104,7 @@ func (s *BusinessServiceImpl[T, ID]) PublishCreatedEvent(ctx context.Context, en
 	return nil
 }
 
-func (s *BusinessServiceImpl[T, ID]) PublishUpdatedEvent(ctx context.Context, old *T, new *T) error {
+func (s *BusinessServiceImpl[T, ID]) PublishUpdatedEvent(ctx context.Context, old, new *T) error {
 	if s.eventPub == nil {
 		return nil
 	}
@@ -301,7 +301,7 @@ func (s *BusinessServiceImpl[T, ID]) getEntityID(entity *T) ID {
 	return zero
 }
 
-func (s *BusinessServiceImpl[T, ID]) mergeEntityForValidation(existing *T, updates *T) *T {
+func (s *BusinessServiceImpl[T, ID]) mergeEntityForValidation(existing, updates *T) *T {
 	// This is a simplified merge - in real implementation, you'd use a proper merge strategy
 	// For now, return the updates as they should contain the fields being updated
 	return updates

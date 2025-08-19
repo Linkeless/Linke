@@ -22,7 +22,7 @@ func NewInviteCodeUsageService(db *gorm.DB) *InviteCodeUsageService {
 }
 
 // CreateUsageRecord creates a new usage record for an invite code
-func (s *InviteCodeUsageService) CreateUsageRecord(ctx context.Context, inviteCodeID uint, userID uint, ipAddress, userAgent string) (*entities.InviteCodeUsage, error) {
+func (s *InviteCodeUsageService) CreateUsageRecord(ctx context.Context, inviteCodeID, userID uint, ipAddress, userAgent string) (*entities.InviteCodeUsage, error) {
 	usage := &entities.InviteCodeUsage{
 		InviteCodeID: inviteCodeID,
 		UsedByID:     userID,

@@ -2,9 +2,10 @@ package interfaces
 
 import (
 	"context"
+	"time"
+
 	"linke/internal/domains/payment/entities"
 	"linke/internal/shared/framework"
-	"time"
 )
 
 // PaymentRecordFilter provides flexible filtering options for payment records
@@ -35,7 +36,7 @@ type PaymentRecordRepository interface {
 	ListWithFilter(ctx context.Context, filter PaymentRecordFilter, limit, offset int) ([]*entities.PaymentRecord, int64, error)
 
 	// Essential status operations
-	UpdatePaymentStatus(ctx context.Context, id uint, status string, transactionID string, paidAt *time.Time) error
+	UpdatePaymentStatus(ctx context.Context, id uint, status, transactionID string, paidAt *time.Time) error
 
 	// Statistics (consolidated)
 	GetRevenueStats(ctx context.Context, currency string, startDate, endDate *time.Time) (*RevenueStats, error)

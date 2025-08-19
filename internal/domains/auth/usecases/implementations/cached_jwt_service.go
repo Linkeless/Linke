@@ -17,17 +17,17 @@ import (
 
 // CachedJWTService wraps JWTService with caching for frequently accessed operations
 type CachedJWTService struct {
-	baseService     *JWTService
-	cacheManager    cache.CacheManager
-	cacheKeys       *cache.AllCacheKeys
-	logger          framework.Logger
-	cacheStrategy   *CacheStrategyManager
-	
+	baseService   *JWTService
+	cacheManager  cache.CacheManager
+	cacheKeys     *cache.AllCacheKeys
+	logger        framework.Logger
+	cacheStrategy *CacheStrategyManager
+
 	// Atomic counters for performance metrics
-	cacheHits      int64
-	cacheMisses    int64
-	validationOps  int64
-	errorCount     int64
+	cacheHits     int64
+	cacheMisses   int64
+	validationOps int64
+	errorCount    int64
 }
 
 // NewCachedJWTService creates a new cached JWT service
@@ -55,7 +55,7 @@ func (s *CachedJWTService) GenerateToken(user *userEntities.User) (*dto.TokenRes
 func (s *CachedJWTService) ValidateToken(tokenString string) (*dto.Claims, error) {
 	// Increment validation operation counter
 	atomic.AddInt64(&s.validationOps, 1)
-	
+
 	// Generate optimized cache key using strategy manager
 	cacheKey := s.cacheStrategy.GenerateKey(TokenValidationKey, tokenString)
 	cacheTTL := s.cacheStrategy.GetTTL(TokenValidationKey)
@@ -77,7 +77,7 @@ func (s *CachedJWTService) ValidateToken(tokenString string) (*dto.Claims, error
 
 	// Cache miss - increment counter
 	atomic.AddInt64(&s.cacheMisses, 1)
-	
+
 	// Validate token
 	claims, err := s.baseService.ValidateToken(tokenString)
 
@@ -166,24 +166,24 @@ func (s *CachedJWTService) RevokeAllUserTokens(userID uint, reason string) error
 // RotateSecret rotates the JWT signing secret (delegates to base service)
 func (s *CachedJWTService) RotateSecret(newSecret string) {
 	s.baseService.RotateSecret(newSecret)
-	
+
 	// Clear all validation caches when secret is rotated for security using strategy pattern
 	pattern := s.cacheStrategy.GetKeyPattern(TokenValidationKey)
 	if err := s.cacheManager.GetCache().DeleteByPattern(context.Background(), pattern); err != nil {
 		s.logger.Error("Failed to clear validation caches after secret rotation",
 			logger.ErrorField(err))
 	}
-	
+
 	s.logger.Warn("JWT secret rotated and validation caches cleared")
 }
 
 // GetMetrics returns current performance metrics using atomic loads
 func (s *CachedJWTService) GetMetrics() map[string]int64 {
 	return map[string]int64{
-		"cache_hits":      atomic.LoadInt64(&s.cacheHits),
-		"cache_misses":    atomic.LoadInt64(&s.cacheMisses),
-		"validation_ops":  atomic.LoadInt64(&s.validationOps),
-		"error_count":     atomic.LoadInt64(&s.errorCount),
+		"cache_hits":     atomic.LoadInt64(&s.cacheHits),
+		"cache_misses":   atomic.LoadInt64(&s.cacheMisses),
+		"validation_ops": atomic.LoadInt64(&s.validationOps),
+		"error_count":    atomic.LoadInt64(&s.errorCount),
 	}
 }
 

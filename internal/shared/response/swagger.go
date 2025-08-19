@@ -47,9 +47,9 @@ type PageInfoSwagger struct {
 	Number        int   `json:"number" example:"0"`          // Current page number (0-based)
 }
 
-// ProblemJSONResponse represents RFC 9457 Problem Details for Swagger documentation
+// ProblemJSONSwagger represents RFC 9457 Problem Details for Swagger documentation
 // @Description RFC 9457 Problem Details for HTTP APIs
-type ProblemJSONResponse struct {
+type ProblemJSONSwagger struct {
 	Type     string `json:"type" example:"/problems/not-found"`                            // Problem type URI
 	Title    string `json:"title" example:"Not Found"`                                     // Short summary
 	Status   int    `json:"status" example:"404"`                                          // HTTP status code

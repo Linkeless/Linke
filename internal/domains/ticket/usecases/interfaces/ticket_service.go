@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"context"
+
 	"linke/internal/domains/ticket/dto"
 	"linke/internal/domains/ticket/entities"
 )
@@ -33,7 +34,7 @@ type TicketService interface {
 	FindBestAgentForTicket(ctx context.Context, ticket *entities.Ticket) (uint, error)
 
 	// Ticket resolution
-	ResolveTicket(ctx context.Context, ticketID uint, resolvedByID uint, req *dto.ResolveTicketRequest) (*entities.Ticket, error)
+	ResolveTicket(ctx context.Context, ticketID, resolvedByID uint, req *dto.ResolveTicketRequest) (*entities.Ticket, error)
 	CloseTicket(ctx context.Context, ticketID uint, reason string) (*entities.Ticket, error)
 	ReopenTicket(ctx context.Context, ticketID uint, reason string) (*entities.Ticket, error)
 

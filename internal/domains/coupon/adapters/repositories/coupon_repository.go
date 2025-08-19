@@ -219,7 +219,7 @@ func (r *couponRepository) ListByValueRange(ctx context.Context, minValue, maxVa
 }
 
 // ListByUsageCount retrieves coupons by usage count range
-func (r *couponRepository) ListByUsageCount(ctx context.Context, minUsed, maxUsed int, limit, offset int) ([]*entities.Coupon, int64, error) {
+func (r *couponRepository) ListByUsageCount(ctx context.Context, minUsed, maxUsed, limit, offset int) ([]*entities.Coupon, int64, error) {
 	var coupons []*entities.Coupon
 	var total int64
 

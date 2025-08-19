@@ -70,7 +70,7 @@ func (cs *CachedPaymentService) GetPaymentRecordByOutTradeNo(ctx context.Context
 }
 
 // UpdatePaymentStatus updates payment record status (real-time, no caching)
-func (cs *CachedPaymentService) UpdatePaymentStatus(ctx context.Context, paymentNo string, status string, transactionID string, paidAt *time.Time) error {
+func (cs *CachedPaymentService) UpdatePaymentStatus(ctx context.Context, paymentNo, status, transactionID string, paidAt *time.Time) error {
 	// No caching involved - direct database update for transactional consistency
 	return cs.base.UpdatePaymentStatus(ctx, paymentNo, status, transactionID, paidAt)
 }

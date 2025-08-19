@@ -106,7 +106,7 @@ func (j *JWTService) ValidateToken(tokenString string) (*dto.Claims, error) {
 			// Check specific token blacklist
 			isBlacklisted, err := j.blacklistService.IsTokenBlacklisted(context.Background(), tokenString)
 			if err != nil {
-				return nil, dto.NewAuthErrorWithCause(dto.ErrorTypeBlacklistFailure, 
+				return nil, dto.NewAuthErrorWithCause(dto.ErrorTypeBlacklistFailure,
 					"Failed to check token blacklist", err).WithTokenHash(tokenString[:8])
 			}
 			if isBlacklisted {
@@ -134,7 +134,7 @@ func (j *JWTService) ValidateToken(tokenString string) (*dto.Claims, error) {
 		dtoClaims.Status = claims.Status
 		dtoClaims.IssuedAt = claims.IssuedAt.Time
 		dtoClaims.ExpiresAt = claims.ExpiresAt.Time
-		
+
 		return dtoClaims, nil
 	}
 

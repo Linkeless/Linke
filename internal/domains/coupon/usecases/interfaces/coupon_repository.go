@@ -2,9 +2,10 @@ package interfaces
 
 import (
 	"context"
+	"time"
+
 	"linke/internal/domains/coupon/entities"
 	"linke/internal/shared/framework"
-	"time"
 )
 
 // CouponRepository defines the interface for coupon data access operations
@@ -29,7 +30,7 @@ type CouponRepository interface {
 	ListByValueRange(ctx context.Context, minValue, maxValue float64, limit, offset int) ([]*entities.Coupon, int64, error)
 
 	// Usage filtering
-	ListByUsageCount(ctx context.Context, minUsed, maxUsed int, limit, offset int) ([]*entities.Coupon, int64, error)
+	ListByUsageCount(ctx context.Context, minUsed, maxUsed, limit, offset int) ([]*entities.Coupon, int64, error)
 	ListAvailable(ctx context.Context, limit, offset int) ([]*entities.Coupon, int64, error)
 	ListExhausted(ctx context.Context, limit, offset int) ([]*entities.Coupon, int64, error)
 

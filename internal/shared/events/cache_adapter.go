@@ -8,7 +8,7 @@ import (
 // CacheStoreAdapter adapts any implementation with the required methods to EventCacheStore
 // This breaks the circular dependency by avoiding direct import of cache package
 type CacheStoreAdapter struct {
-	setFunc           func(ctx context.Context, key string, value string, expiration time.Duration) error
+	setFunc           func(ctx context.Context, key, value string, expiration time.Duration) error
 	getFunc           func(ctx context.Context, key string) (string, error)
 	deleteFunc        func(ctx context.Context, key string) error
 	existsFunc        func(ctx context.Context, key string) (bool, error)
@@ -19,7 +19,7 @@ type CacheStoreAdapter struct {
 
 // NewCacheStoreAdapter creates a new cache store adapter with function implementations
 func NewCacheStoreAdapter(
-	setFunc func(ctx context.Context, key string, value string, expiration time.Duration) error,
+	setFunc func(ctx context.Context, key, value string, expiration time.Duration) error,
 	getFunc func(ctx context.Context, key string) (string, error),
 	deleteFunc func(ctx context.Context, key string) error,
 	existsFunc func(ctx context.Context, key string) (bool, error),
@@ -38,7 +38,7 @@ func NewCacheStoreAdapter(
 	}
 }
 
-func (a *CacheStoreAdapter) Set(ctx context.Context, key string, value string, expiration time.Duration) error {
+func (a *CacheStoreAdapter) Set(ctx context.Context, key, value string, expiration time.Duration) error {
 	if a.setFunc == nil {
 		return nil // No-op if function not provided
 	}

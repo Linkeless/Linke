@@ -76,7 +76,7 @@ func (r *jwtBlacklistRepository) BlacklistToken(ctx context.Context, tokenHash s
 }
 
 // BlacklistAllUserTokens adds all user tokens to the blacklist (tokens issued before a specific time)
-func (r *jwtBlacklistRepository) BlacklistAllUserTokens(ctx context.Context, userID uint, reason string, beforeTime time.Time, expiresAt time.Time) error {
+func (r *jwtBlacklistRepository) BlacklistAllUserTokens(ctx context.Context, userID uint, reason string, beforeTime, expiresAt time.Time) error {
 	// Create a special entry to mark all user tokens as blacklisted before a certain time
 	blacklist := &entities.JWTBlacklist{
 		TokenHash: fmt.Sprintf("user_%d_before_%d", userID, beforeTime.Unix()),

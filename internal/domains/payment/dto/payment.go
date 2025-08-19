@@ -3,12 +3,12 @@ package dto
 import (
 	"encoding/json"
 	"strings"
-	"sync"
 	"time"
 
 	"linke/internal/domains/payment/constants"
 	"linke/internal/domains/payment/entities"
 	"linke/internal/shared/dto"
+	"linke/internal/shared/pool"
 )
 
 // Package dto provides data transfer objects for the payment domain.
@@ -546,59 +546,71 @@ func ToPaymentConfigPublicResponse(pc *entities.PaymentConfig) *PaymentConfigRes
 
 var (
 	// Pool for PaymentRecordResponse objects
-	paymentRecordResponsePool = sync.Pool{
-		New: func() interface{} {
+	paymentRecordResponsePool = pool.NewPool(
+		func() *PaymentRecordResponse {
 			return &PaymentRecordResponse{}
 		},
-	}
+		func(resp *PaymentRecordResponse) {
+			*resp = PaymentRecordResponse{}
+		},
+	)
 
 	// Pool for CreatePaymentOrderRequest objects
-	createPaymentOrderRequestPool = sync.Pool{
-		New: func() interface{} {
+	createPaymentOrderRequestPool = pool.NewPool(
+		func() *CreatePaymentOrderRequest {
 			return &CreatePaymentOrderRequest{}
 		},
-	}
+		func(req *CreatePaymentOrderRequest) {
+			*req = CreatePaymentOrderRequest{}
+		},
+	)
 
 	// Pool for NotifyData objects
-	notifyDataPool = sync.Pool{
-		New: func() interface{} {
+	notifyDataPool = pool.NewPool(
+		func() *NotifyData {
 			return &NotifyData{}
 		},
-	}
+		func(data *NotifyData) {
+			*data = NotifyData{}
+		},
+	)
 )
 
 // GetPaymentRecordResponse gets a PaymentRecordResponse from the pool
 func GetPaymentRecordResponse() *PaymentRecordResponse {
-	return paymentRecordResponsePool.Get().(*PaymentRecordResponse)
+	return paymentRecordResponsePool.Get()
 }
 
 // PutPaymentRecordResponse returns a PaymentRecordResponse to the pool
 func PutPaymentRecordResponse(resp *PaymentRecordResponse) {
-	// Reset all fields to avoid memory leaks
-	*resp = PaymentRecordResponse{}
+	if resp == nil {
+		return
+	}
 	paymentRecordResponsePool.Put(resp)
 }
 
 // GetCreatePaymentOrderRequest gets a CreatePaymentOrderRequest from the pool
 func GetCreatePaymentOrderRequest() *CreatePaymentOrderRequest {
-	return createPaymentOrderRequestPool.Get().(*CreatePaymentOrderRequest)
+	return createPaymentOrderRequestPool.Get()
 }
 
 // PutCreatePaymentOrderRequest returns a CreatePaymentOrderRequest to the pool
 func PutCreatePaymentOrderRequest(req *CreatePaymentOrderRequest) {
-	// Reset all fields to avoid memory leaks
-	*req = CreatePaymentOrderRequest{}
+	if req == nil {
+		return
+	}
 	createPaymentOrderRequestPool.Put(req)
 }
 
 // GetNotifyData gets a NotifyData from the pool
 func GetNotifyData() *NotifyData {
-	return notifyDataPool.Get().(*NotifyData)
+	return notifyDataPool.Get()
 }
 
 // PutNotifyData returns a NotifyData to the pool
 func PutNotifyData(data *NotifyData) {
-	// Reset all fields to avoid memory leaks
-	*data = NotifyData{}
+	if data == nil {
+		return
+	}
 	notifyDataPool.Put(data)
 }

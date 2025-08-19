@@ -305,7 +305,6 @@ func (r *usageRepository) GetUsageSummary(ctx context.Context, filter interfaces
 		MAX(timestamp) as last_usage,
 		unit
 	`).Group("usage_type, unit").Scan(&results).Error
-
 	if err != nil {
 		return nil, err
 	}
@@ -456,7 +455,6 @@ func (r *usageRepository) GetUsageStatistics(ctx context.Context, filter interfa
 		MIN(timestamp) as start_time,
 		MAX(timestamp) as end_time
 	`).Scan(&result).Error
-
 	if err != nil {
 		return nil, err
 	}
@@ -509,7 +507,6 @@ func (r *usageRepository) GetTopUsageSubscriptions(ctx context.Context, usageTyp
 		Order("total_usage DESC").
 		Limit(limit).
 		Scan(&results).Error
-
 	if err != nil {
 		return nil, err
 	}

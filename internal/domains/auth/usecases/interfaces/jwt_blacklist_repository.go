@@ -19,7 +19,7 @@ type JWTBlacklistRepository interface {
 	Delete(ctx context.Context, tokenHash string) error
 
 	// User-wide operations
-	BlacklistAllUserTokens(ctx context.Context, userID uint, reason string, beforeTime time.Time, expiresAt time.Time) error
+	BlacklistAllUserTokens(ctx context.Context, userID uint, reason string, beforeTime, expiresAt time.Time) error
 	IsUserTokensBlacklisted(ctx context.Context, userID uint, tokenIssuedAt time.Time) (bool, error)
 	GetUserBlacklistedTokens(ctx context.Context, userID uint) ([]*entities.JWTBlacklist, error)
 

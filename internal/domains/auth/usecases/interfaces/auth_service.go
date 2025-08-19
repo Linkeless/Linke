@@ -2,10 +2,11 @@ package interfaces
 
 import (
 	"context"
+	"time"
+
 	"linke/internal/domains/auth/dto"
 	"linke/internal/domains/auth/entities"
 	userEntities "linke/internal/domains/user/entities"
-	"time"
 )
 
 // AuthService defines the interface for authentication service operations
@@ -41,7 +42,7 @@ type LoginSecurityService interface {
 	RecordLoginAttempt(ctx context.Context, email, ip, userAgent, reason string, success bool, userID *uint) error
 	IsAccountLocked(ctx context.Context, email string) (bool, *entities.AccountLockout, error)
 	GetFailureCount(ctx context.Context, email string) (int, error)
-	UnlockAccount(ctx context.Context, email string, reason string) error
+	UnlockAccount(ctx context.Context, email, reason string) error
 	GetLoginAttemptStats(ctx context.Context, since time.Time) (map[string]any, error)
 	CleanupOldAttempts(ctx context.Context, olderThan time.Duration) error
 }

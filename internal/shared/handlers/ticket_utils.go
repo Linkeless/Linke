@@ -87,7 +87,7 @@ func (utils *TicketHandlerUtils) PopulateUserData(ctx context.Context, userID ui
 // CreateOptimizedUserLoader creates a user loader with preload capabilities for common operations
 func (utils *TicketHandlerUtils) CreateOptimizedUserLoader(ctx context.Context, preloadUserIDs []uint) *BatchUserLoader {
 	loader := utils.CreateUserLoader()
-	
+
 	if len(preloadUserIDs) > 0 {
 		loader.AddPreloadIDs(preloadUserIDs)
 		// Trigger preload
@@ -95,6 +95,6 @@ func (utils *TicketHandlerUtils) CreateOptimizedUserLoader(ctx context.Context, 
 			logger.Warn("Failed to preload users", logger.ErrorField(err))
 		}
 	}
-	
+
 	return loader
 }

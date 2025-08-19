@@ -7,6 +7,7 @@ import (
 	"linke/internal/domains/referral/constants"
 	"linke/internal/domains/referral/dto"
 	referralInterfaces "linke/internal/domains/referral/usecases/interfaces"
+	"linke/internal/shared/handlers"
 	"linke/internal/shared/logger"
 	"linke/internal/shared/response"
 
@@ -182,10 +183,8 @@ func (h *AdminReferralHandler) ListReferrals(c *gin.Context) {
 // @Failure 404 {object} response.NotFoundResponse
 // @Router /admin/referrals/{id} [get]
 func (h *AdminReferralHandler) GetReferral(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		response.BadRequest(c, "Invalid referral ID")
+	id, ok := handlers.ParseIDParam(c, "id")
+	if !ok {
 		return
 	}
 
@@ -219,10 +218,8 @@ func (h *AdminReferralHandler) GetReferral(c *gin.Context) {
 // @Failure 500 {object} response.InternalServerErrorResponse
 // @Router /admin/referrals/{id} [put]
 func (h *AdminReferralHandler) UpdateReferral(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		response.BadRequest(c, "Invalid referral ID")
+	id, ok := handlers.ParseIDParam(c, "id")
+	if !ok {
 		return
 	}
 
@@ -276,10 +273,8 @@ func (h *AdminReferralHandler) UpdateReferral(c *gin.Context) {
 // @Failure 404 {object} response.NotFoundResponse
 // @Router /admin/referrals/{id}/approve [post]
 func (h *AdminReferralHandler) ApproveReferral(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		response.BadRequest(c, "Invalid referral ID")
+	id, ok := handlers.ParseIDParam(c, "id")
+	if !ok {
 		return
 	}
 
@@ -289,7 +284,7 @@ func (h *AdminReferralHandler) ApproveReferral(c *gin.Context) {
 		return
 	}
 
-	err = h.referralService.ConfirmReferral(c.Request.Context(), uint(id))
+	err := h.referralService.ConfirmReferral(c.Request.Context(), uint(id))
 	if err != nil {
 		logger.Error("Admin failed to approve referral",
 			logger.Uint("referral_id", uint(id)),
@@ -343,10 +338,8 @@ func (h *AdminReferralHandler) ApproveReferral(c *gin.Context) {
 // @Failure 404 {object} response.NotFoundResponse
 // @Router /admin/referrals/{id}/reject [post]
 func (h *AdminReferralHandler) RejectReferral(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		response.BadRequest(c, "Invalid referral ID")
+	id, ok := handlers.ParseIDParam(c, "id")
+	if !ok {
 		return
 	}
 
@@ -401,10 +394,8 @@ func (h *AdminReferralHandler) RejectReferral(c *gin.Context) {
 // @Failure 404 {object} response.NotFoundResponse
 // @Router /admin/referrals/{id}/payout [post]
 func (h *AdminReferralHandler) ProcessReferralPayout(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		response.BadRequest(c, "Invalid referral ID")
+	id, ok := handlers.ParseIDParam(c, "id")
+	if !ok {
 		return
 	}
 
@@ -415,7 +406,7 @@ func (h *AdminReferralHandler) ProcessReferralPayout(c *gin.Context) {
 	}
 
 	// Mark referral as paid
-	err = h.referralService.MarkReferralAsPaid(c.Request.Context(), uint(id))
+	err := h.referralService.MarkReferralAsPaid(c.Request.Context(), uint(id))
 	if err != nil {
 		logger.Error("Admin failed to process referral payout",
 			logger.Uint("referral_id", uint(id)),

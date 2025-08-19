@@ -689,7 +689,7 @@ type ResetTrafficRequest struct {
 
 // ResetTrafficUsage resets traffic usage for a specific subscription
 // This is the canonical implementation that matches the interface signature
-func (s *UserSubscriptionService) ResetTrafficUsage(ctx context.Context, subscriptionID uint, adminUserID uint) (*entities.UserSubscription, error) {
+func (s *UserSubscriptionService) ResetTrafficUsage(ctx context.Context, subscriptionID, adminUserID uint) (*entities.UserSubscription, error) {
 	// Start transaction for data consistency
 	tx := s.db.WithContext(ctx).Begin()
 	defer func() {
@@ -1276,7 +1276,7 @@ func (s *UserSubscriptionService) DowngradeUserSubscription(ctx context.Context,
 }
 
 // ProcessSubscriptionChange handles the core logic for subscription plan changes (upgrade/downgrade)
-func (s *UserSubscriptionService) ProcessSubscriptionChange(ctx context.Context, subscriptionID uint, newPlanID uint, changeType string) (*entities.UserSubscription, error) {
+func (s *UserSubscriptionService) ProcessSubscriptionChange(ctx context.Context, subscriptionID, newPlanID uint, changeType string) (*entities.UserSubscription, error) {
 	// Start transaction
 	tx := s.db.WithContext(ctx).Begin()
 	if tx.Error != nil {

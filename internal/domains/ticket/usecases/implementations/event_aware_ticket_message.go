@@ -35,7 +35,7 @@ func NewEventAwareTicketMessageService(
 }
 
 // CreateTicketMessage creates a new ticket message and publishes an event
-func (s *EventAwareTicketMessageService) CreateTicketMessage(ctx context.Context, ticketID uint, userID uint, req *dto.CreateTicketMessageRequest) (*entities.TicketMessage, error) {
+func (s *EventAwareTicketMessageService) CreateTicketMessage(ctx context.Context, ticketID, userID uint, req *dto.CreateTicketMessageRequest) (*entities.TicketMessage, error) {
 	// Create the message
 	message, err := s.ticketMessageService.CreateTicketMessage(ctx, ticketID, userID, req)
 	if err != nil {
@@ -138,7 +138,7 @@ func (s *EventAwareTicketMessageService) CreateTicketMessage(ctx context.Context
 }
 
 // CreateInternalMessage creates an internal message and publishes event if needed
-func (s *EventAwareTicketMessageService) CreateInternalMessage(ctx context.Context, ticketID uint, userID uint, content string) (*entities.TicketMessage, error) {
+func (s *EventAwareTicketMessageService) CreateInternalMessage(ctx context.Context, ticketID, userID uint, content string) (*entities.TicketMessage, error) {
 	// Create the internal message using the regular service
 	message, err := s.ticketMessageService.CreateInternalMessage(ctx, ticketID, userID, content)
 	if err != nil {
@@ -179,11 +179,11 @@ func (s *EventAwareTicketMessageService) GetLatestTicketMessages(ctx context.Con
 	return s.ticketMessageService.GetLatestTicketMessages(ctx, ticketID, limit)
 }
 
-func (s *EventAwareTicketMessageService) MarkMessageAsRead(ctx context.Context, messageID uint, userID uint) error {
+func (s *EventAwareTicketMessageService) MarkMessageAsRead(ctx context.Context, messageID, userID uint) error {
 	return s.ticketMessageService.MarkMessageAsRead(ctx, messageID, userID)
 }
 
-func (s *EventAwareTicketMessageService) MarkTicketMessagesAsRead(ctx context.Context, ticketID uint, userID uint) error {
+func (s *EventAwareTicketMessageService) MarkTicketMessagesAsRead(ctx context.Context, ticketID, userID uint) error {
 	return s.ticketMessageService.MarkTicketMessagesAsRead(ctx, ticketID, userID)
 }
 

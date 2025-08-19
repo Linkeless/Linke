@@ -500,7 +500,7 @@ func (s *usageAlertService) GetUsageAlerts(ctx context.Context, req *interfaces.
 	}, nil
 }
 
-func (s *usageAlertService) AcknowledgeAlert(ctx context.Context, alertID uint, acknowledgedBy uint) error {
+func (s *usageAlertService) AcknowledgeAlert(ctx context.Context, alertID, acknowledgedBy uint) error {
 	// Get alert
 	alert, err := s.alertRepo.GetUsageAlert(ctx, alertID)
 	if err != nil {
@@ -935,7 +935,7 @@ func (s *usageAlertService) CreateDefaultAlertConfigurations(ctx context.Context
 	return nil
 }
 
-func (s *usageAlertService) CopyAlertConfigurationsFromPlan(ctx context.Context, subscriptionID uint, planID uint) error {
+func (s *usageAlertService) CopyAlertConfigurationsFromPlan(ctx context.Context, subscriptionID, planID uint) error {
 	// TODO: This would copy alert configurations from a subscription plan template
 	// For now, just create default configurations
 	return s.CreateDefaultAlertConfigurations(ctx, subscriptionID)

@@ -239,7 +239,7 @@ func CreatedWithMessage(c *gin.Context, message string, data any) {
 }
 
 // Error - DEPRECATED: Use specific Problem functions instead
-func Error(c *gin.Context, httpStatus int, code int, message string) {
+func Error(c *gin.Context, httpStatus, code int, message string) {
 	Problem(c, httpStatus, fmt.Sprintf("/problems/error-%d", code), http.StatusText(httpStatus), message)
 }
 
@@ -355,7 +355,7 @@ func BuildHALLinksWithQuery(baseURL string, page, limit int, total int64, query 
 // DEPRECATED: Legacy pagination functions for backward compatibility
 
 // Paginated - DEPRECATED: Use Collection with HAL links instead
-func Paginated(c *gin.Context, message string, data any, page int, limit int, total int64, baseURL string) {
+func Paginated(c *gin.Context, message string, data any, page, limit int, total int64, baseURL string) {
 	links := BuildHALLinks(baseURL, page, limit, total)
 	pageInfo := &PageInfo{
 		Size:          limit,
@@ -368,7 +368,7 @@ func Paginated(c *gin.Context, message string, data any, page int, limit int, to
 }
 
 // PaginatedWithQuery - DEPRECATED: Use Collection with HAL links instead
-func PaginatedWithQuery(c *gin.Context, message string, data any, page int, limit int, total int64, baseURL string, query map[string]any) {
+func PaginatedWithQuery(c *gin.Context, message string, data any, page, limit int, total int64, baseURL string, query map[string]any) {
 	links := BuildHALLinksWithQuery(baseURL, page, limit, total, query)
 	pageInfo := &PageInfo{
 		Size:          limit,

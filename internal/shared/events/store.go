@@ -15,8 +15,8 @@ import (
 type EventStore interface {
 	Store(ctx context.Context, event Event) error
 	GetEvents(ctx context.Context, filters EventFilters) ([]*StoredEvent, error)
-	GetEventsByAggregateID(ctx context.Context, aggregateID string, aggregateType string) ([]*StoredEvent, error)
-	GetEventsByType(ctx context.Context, eventType string, limit int, offset int) ([]*StoredEvent, error)
+	GetEventsByAggregateID(ctx context.Context, aggregateID, aggregateType string) ([]*StoredEvent, error)
+	GetEventsByType(ctx context.Context, eventType string, limit, offset int) ([]*StoredEvent, error)
 	Replay(ctx context.Context, fromTimestamp time.Time, handler EventHandler) error
 }
 
@@ -185,7 +185,7 @@ func (s *DatabaseEventStore) GetEvents(ctx context.Context, filters EventFilters
 }
 
 // GetEventsByAggregateID retrieves all events for a specific aggregate
-func (s *DatabaseEventStore) GetEventsByAggregateID(ctx context.Context, aggregateID string, aggregateType string) ([]*StoredEvent, error) {
+func (s *DatabaseEventStore) GetEventsByAggregateID(ctx context.Context, aggregateID, aggregateType string) ([]*StoredEvent, error) {
 	var events []*StoredEvent
 	query := s.db.WithContext(ctx).Where("aggregate_id = ? AND aggregate_type = ?", aggregateID, aggregateType).
 		Order("occurred_at ASC")
@@ -203,7 +203,7 @@ func (s *DatabaseEventStore) GetEventsByAggregateID(ctx context.Context, aggrega
 }
 
 // GetEventsByType retrieves events by type with pagination
-func (s *DatabaseEventStore) GetEventsByType(ctx context.Context, eventType string, limit int, offset int) ([]*StoredEvent, error) {
+func (s *DatabaseEventStore) GetEventsByType(ctx context.Context, eventType string, limit, offset int) ([]*StoredEvent, error) {
 	var events []*StoredEvent
 	query := s.db.WithContext(ctx).Where("event_type = ?", eventType).
 		Order("occurred_at ASC").

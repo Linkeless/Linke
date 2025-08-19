@@ -1,70 +1,61 @@
 package dto
 
 import (
-	"sync"
-	"sync/atomic"
-
 	"linke/internal/domains/user/entities"
-)
-
-// Pool statistics for monitoring
-var (
-	userResponsePoolHits   int64
-	userResponsePoolMisses int64
-
-	userAccountBindingResponsePoolHits   int64
-	userAccountBindingResponsePoolMisses int64
-
-	userProfilePoolHits   int64
-	userProfilePoolMisses int64
-
-	userStatsPoolHits   int64
-	userStatsPoolMisses int64
+	"linke/internal/shared/pool"
 )
 
 // Object pools for performance optimization
 var (
-	userResponsePool = sync.Pool{
-		New: func() any {
-			atomic.AddInt64(&userResponsePoolMisses, 1)
+	userResponsePool = pool.NewPool(
+		func() *UserResponse {
 			return &UserResponse{}
 		},
-	}
+		func(resp *UserResponse) {
+			*resp = UserResponse{}
+		},
+	)
 
-	userAccountBindingResponsePool = sync.Pool{
-		New: func() any {
-			atomic.AddInt64(&userAccountBindingResponsePoolMisses, 1)
+	userAccountBindingResponsePool = pool.NewPool(
+		func() *UserAccountBindingResponse {
 			return &UserAccountBindingResponse{}
 		},
-	}
+		func(resp *UserAccountBindingResponse) {
+			*resp = UserAccountBindingResponse{}
+		},
+	)
 
-	userProfilePool = sync.Pool{
-		New: func() any {
-			atomic.AddInt64(&userProfilePoolMisses, 1)
+	userProfilePool = pool.NewPool(
+		func() *UserProfile {
 			return &UserProfile{}
 		},
-	}
+		func(profile *UserProfile) {
+			*profile = UserProfile{}
+		},
+	)
 
-	userStatsPool = sync.Pool{
-		New: func() any {
-			atomic.AddInt64(&userStatsPoolMisses, 1)
+	userStatsPool = pool.NewPool(
+		func() *UserStats {
 			return &UserStats{}
 		},
-	}
+		func(stats *UserStats) {
+			*stats = UserStats{}
+		},
+	)
 )
 
 // Pool management functions for UserResponse
 
 // GetUserResponse gets a UserResponse from the pool
 func GetUserResponse() *UserResponse {
-	atomic.AddInt64(&userResponsePoolHits, 1)
-	return userResponsePool.Get().(*UserResponse)
+	return userResponsePool.Get()
 }
 
 // PutUserResponse returns a UserResponse to the pool
 func PutUserResponse(resp *UserResponse) {
-	// Reset the object to avoid memory leaks
-	*resp = UserResponse{}
+	if resp == nil {
+		return
+	}
 	userResponsePool.Put(resp)
 }
 
@@ -72,14 +63,14 @@ func PutUserResponse(resp *UserResponse) {
 
 // GetUserAccountBindingResponse gets a UserAccountBindingResponse from the pool
 func GetUserAccountBindingResponse() *UserAccountBindingResponse {
-	atomic.AddInt64(&userAccountBindingResponsePoolHits, 1)
-	return userAccountBindingResponsePool.Get().(*UserAccountBindingResponse)
+	return userAccountBindingResponsePool.Get()
 }
 
 // PutUserAccountBindingResponse returns a UserAccountBindingResponse to the pool
 func PutUserAccountBindingResponse(resp *UserAccountBindingResponse) {
-	// Reset the object to avoid memory leaks
-	*resp = UserAccountBindingResponse{}
+	if resp == nil {
+		return
+	}
 	userAccountBindingResponsePool.Put(resp)
 }
 
@@ -87,14 +78,14 @@ func PutUserAccountBindingResponse(resp *UserAccountBindingResponse) {
 
 // GetUserProfile gets a UserProfile from the pool
 func GetUserProfile() *UserProfile {
-	atomic.AddInt64(&userProfilePoolHits, 1)
-	return userProfilePool.Get().(*UserProfile)
+	return userProfilePool.Get()
 }
 
 // PutUserProfile returns a UserProfile to the pool
 func PutUserProfile(profile *UserProfile) {
-	// Reset the object to avoid memory leaks
-	*profile = UserProfile{}
+	if profile == nil {
+		return
+	}
 	userProfilePool.Put(profile)
 }
 
@@ -102,14 +93,14 @@ func PutUserProfile(profile *UserProfile) {
 
 // GetUserStats gets a UserStats from the pool
 func GetUserStats() *UserStats {
-	atomic.AddInt64(&userStatsPoolHits, 1)
-	return userStatsPool.Get().(*UserStats)
+	return userStatsPool.Get()
 }
 
 // PutUserStats returns a UserStats to the pool
 func PutUserStats(stats *UserStats) {
-	// Reset the object to avoid memory leaks
-	*stats = UserStats{}
+	if stats == nil {
+		return
+	}
 	userStatsPool.Put(stats)
 }
 
@@ -271,30 +262,22 @@ func PutUserAccountBindingResponseSlice(responses []*UserAccountBindingResponse)
 
 // Pool statistics functions
 
-// GetUserPoolStats returns pool statistics for monitoring
-func GetUserPoolStats() map[string]int64 {
-	return map[string]int64{
-		"user_response_hits":           atomic.LoadInt64(&userResponsePoolHits),
-		"user_response_misses":         atomic.LoadInt64(&userResponsePoolMisses),
-		"user_binding_response_hits":   atomic.LoadInt64(&userAccountBindingResponsePoolHits),
-		"user_binding_response_misses": atomic.LoadInt64(&userAccountBindingResponsePoolMisses),
-		"user_profile_hits":            atomic.LoadInt64(&userProfilePoolHits),
-		"user_profile_misses":          atomic.LoadInt64(&userProfilePoolMisses),
-		"user_stats_hits":              atomic.LoadInt64(&userStatsPoolHits),
-		"user_stats_misses":            atomic.LoadInt64(&userStatsPoolMisses),
+// GetUserPoolStats returns pool statistics for monitoring using generic pool stats
+func GetUserPoolStats() map[string]interface{} {
+	return map[string]interface{}{
+		"user_response":         userResponsePool.Stats(),
+		"user_binding_response": userAccountBindingResponsePool.Stats(),
+		"user_profile":          userProfilePool.Stats(),
+		"user_stats":            userStatsPool.Stats(),
 	}
 }
 
-// ResetUserPoolStats resets pool statistics
+// ResetUserPoolStats resets pool statistics for benchmarking
+// Note: The new pool implementation doesn't support resetting stats,
+// so this is a no-op function for backward compatibility
 func ResetUserPoolStats() {
-	atomic.StoreInt64(&userResponsePoolHits, 0)
-	atomic.StoreInt64(&userResponsePoolMisses, 0)
-	atomic.StoreInt64(&userAccountBindingResponsePoolHits, 0)
-	atomic.StoreInt64(&userAccountBindingResponsePoolMisses, 0)
-	atomic.StoreInt64(&userProfilePoolHits, 0)
-	atomic.StoreInt64(&userProfilePoolMisses, 0)
-	atomic.StoreInt64(&userStatsPoolHits, 0)
-	atomic.StoreInt64(&userStatsPoolMisses, 0)
+	// No-op: New pool implementation doesn't support stat reset
+	// This function exists for backward compatibility with tests
 }
 
 // Utility functions for request validation

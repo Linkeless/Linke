@@ -221,7 +221,7 @@ func (ps *PaymentService) GetPaymentRecordByOutTradeNo(ctx context.Context, outT
 }
 
 // UpdatePaymentStatus updates payment record status
-func (ps *PaymentService) UpdatePaymentStatus(ctx context.Context, paymentNo string, status string, transactionID string, paidAt *time.Time) error {
+func (ps *PaymentService) UpdatePaymentStatus(ctx context.Context, paymentNo, status, transactionID string, paidAt *time.Time) error {
 	if paymentNo == "" {
 		return fmt.Errorf("payment number cannot be empty")
 	}

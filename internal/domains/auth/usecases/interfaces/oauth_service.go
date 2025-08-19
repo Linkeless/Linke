@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"context"
+
 	"golang.org/x/oauth2"
 	"linke/internal/domains/auth/dto"
 )

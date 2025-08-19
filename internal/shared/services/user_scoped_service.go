@@ -69,7 +69,7 @@ func (s *UserScopedServiceImpl[T, ID]) GetUserTotalCount(ctx context.Context, us
 func (s *UserScopedServiceImpl[T, ID]) DeleteByUser(ctx context.Context, userID uint, ids []ID) (*framework.BatchOperationResponse, error) {
 	var successCount int
 	var failedIDs []uint
-	var errors = make(map[string]string)
+	errors := make(map[string]string)
 
 	for _, id := range ids {
 		// Validate user access before deletion

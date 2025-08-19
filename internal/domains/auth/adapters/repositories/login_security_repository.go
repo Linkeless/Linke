@@ -643,7 +643,7 @@ func (r *accountLockoutRepository) LockAccount(ctx context.Context, email string
 }
 
 // UnlockAccount unlocks an account
-func (r *accountLockoutRepository) UnlockAccount(ctx context.Context, email string, reason string) error {
+func (r *accountLockoutRepository) UnlockAccount(ctx context.Context, email, reason string) error {
 	result := r.db.WithContext(ctx).Model(&entities.AccountLockout{}).
 		Where("email = ?", email).
 		Updates(map[string]any{
@@ -720,7 +720,7 @@ func (r *accountLockoutRepository) GetLockedAccounts(ctx context.Context, limit,
 }
 
 // GetAccountsWithFailures retrieves accounts with minimum failure count with pagination
-func (r *accountLockoutRepository) GetAccountsWithFailures(ctx context.Context, minFailures int, limit, offset int) ([]*entities.AccountLockout, int64, error) {
+func (r *accountLockoutRepository) GetAccountsWithFailures(ctx context.Context, minFailures, limit, offset int) ([]*entities.AccountLockout, int64, error) {
 	var lockouts []*entities.AccountLockout
 	var total int64
 

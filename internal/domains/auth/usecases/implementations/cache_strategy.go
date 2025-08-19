@@ -36,7 +36,7 @@ type CacheStrategyManager struct {
 // NewCacheStrategyManager creates a new cache strategy manager with optimized TTL layers
 func NewCacheStrategyManager() *CacheStrategyManager {
 	strategies := make(map[CacheKeyType]*CacheStrategy)
-	
+
 	// Define layered TTL strategies based on data sensitivity and usage patterns
 	strategies[TokenValidationKey] = &CacheStrategy{
 		KeyType:    TokenValidationKey,
@@ -44,28 +44,28 @@ func NewCacheStrategyManager() *CacheStrategyManager {
 		Prefix:     cache.CachePrefixAuth + "val",
 		UseShortID: true, // Use shorter hash for performance
 	}
-	
+
 	strategies[UserDataKey] = &CacheStrategy{
 		KeyType:    UserDataKey,
 		TTL:        cache.MediumCacheTTL, // 15 minutes - moderately dynamic
 		Prefix:     cache.CachePrefixAuth + "user",
 		UseShortID: false, // Full hash for uniqueness
 	}
-	
+
 	strategies[BlacklistKey] = &CacheStrategy{
 		KeyType:    BlacklistKey,
 		TTL:        cache.LongCacheTTL, // 1 hour - relatively static
 		Prefix:     cache.CachePrefixAuth + "bl",
 		UseShortID: true, // Performance over uniqueness
 	}
-	
+
 	strategies[ConfigKey] = &CacheStrategy{
 		KeyType:    ConfigKey,
 		TTL:        time.Hour * 6, // 6 hours - very static
 		Prefix:     cache.CachePrefixAuth + "cfg",
 		UseShortID: false,
 	}
-	
+
 	return &CacheStrategyManager{
 		strategies: strategies,
 	}
@@ -78,7 +78,7 @@ func (csm *CacheStrategyManager) GenerateKey(keyType CacheKeyType, data string) 
 		// Fallback to default strategy
 		return fmt.Sprintf("%s:default:%s", cache.CachePrefixAuth, data)
 	}
-	
+
 	// Use different hash strategies based on performance vs uniqueness needs
 	var hashedData string
 	if strategy.UseShortID {
@@ -90,7 +90,7 @@ func (csm *CacheStrategyManager) GenerateKey(keyType CacheKeyType, data string) 
 		hash := sha256.Sum256([]byte(data))
 		hashedData = hex.EncodeToString(hash[:])
 	}
-	
+
 	return fmt.Sprintf("%s:%s", strategy.Prefix, hashedData)
 }
 

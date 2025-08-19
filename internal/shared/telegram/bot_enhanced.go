@@ -1233,7 +1233,7 @@ func (b *BotEnhanced) sendMessage(chatID int64, text string) {
 }
 
 // sendErrorMessage sends a formatted error message with details
-func (b *BotEnhanced) sendErrorMessage(chatID int64, title string, description string) {
+func (b *BotEnhanced) sendErrorMessage(chatID int64, title, description string) {
 	text := fmt.Sprintf("❌ *%s*\n\n%s", title, description)
 
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
@@ -2267,7 +2267,7 @@ func (b *BotEnhanced) truncateString(s string, maxLen int) string {
 }
 
 // handleTicketReply processes ticket reply submissions
-func (b *BotEnhanced) handleTicketReply(chatID int64, ticketID uint, content string, messageType string) {
+func (b *BotEnhanced) handleTicketReply(chatID int64, ticketID uint, content, messageType string) {
 	ctx := context.Background()
 
 	logger.Info("Processing ticket reply via telegram",
@@ -2623,7 +2623,6 @@ func (b *BotEnhanced) showTicketHistory(chatID int64, messageID int, ticketID ui
 		TicketID: ticketID,
 		Limit:    50, // Get more history
 	})
-
 	if err != nil {
 		b.showError(chatID, messageID, "获取历史记录失败")
 		return
@@ -2905,7 +2904,6 @@ func (b *BotEnhanced) handleMessageSearch(chatID int64, ticketID uint, searchQue
 		TicketID: ticketID,
 		Limit:    100, // Get more messages for search
 	})
-
 	if err != nil {
 		b.sendMessage(chatID, "❌ 搜索失败，请稍后重试")
 		return
@@ -3767,7 +3765,7 @@ func (b *BotEnhanced) showScheduledNotifications(chatID int64, messageID int) {
 // Enhanced notification helper methods
 
 // sendNotificationToUser sends a notification to a specific user
-func (b *BotEnhanced) sendNotificationToUser(userTelegramID string, title string, message string, keyboard *tgbotapi.InlineKeyboardMarkup) error {
+func (b *BotEnhanced) sendNotificationToUser(userTelegramID, title, message string, keyboard *tgbotapi.InlineKeyboardMarkup) error {
 	chatID, err := strconv.ParseInt(userTelegramID, 10, 64)
 	if err != nil {
 		return fmt.Errorf("invalid telegram ID: %w", err)
@@ -3786,7 +3784,7 @@ func (b *BotEnhanced) sendNotificationToUser(userTelegramID string, title string
 }
 
 // sendBatchNotification sends notifications to multiple users
-func (b *BotEnhanced) sendBatchNotification(userTelegramIDs []string, title string, message string) error {
+func (b *BotEnhanced) sendBatchNotification(userTelegramIDs []string, title, message string) error {
 	var errors []error
 	successCount := 0
 
@@ -3815,7 +3813,7 @@ func (b *BotEnhanced) sendBatchNotification(userTelegramIDs []string, title stri
 }
 
 // scheduleNotification schedules a notification to be sent later
-func (b *BotEnhanced) scheduleNotification(userTelegramID string, title string, message string, sendAt time.Time) error {
+func (b *BotEnhanced) scheduleNotification(userTelegramID, title, message string, sendAt time.Time) error {
 	// TODO: Implement actual notification scheduling
 	// This would typically involve storing the notification in a database or queue
 	// and having a background worker process them at the scheduled time
@@ -3831,7 +3829,7 @@ func (b *BotEnhanced) scheduleNotification(userTelegramID string, title string, 
 // Multi-message reply handling functions
 
 // handleMultiMessageReply handles incoming messages for multi-message replies
-func (b *BotEnhanced) handleMultiMessageReply(chatID int64, ticketID uint, content string, messageType string) {
+func (b *BotEnhanced) handleMultiMessageReply(chatID int64, ticketID uint, content, messageType string) {
 	bufferKey := fmt.Sprintf("%d_%d", chatID, ticketID)
 
 	// Initialize buffer if not exists

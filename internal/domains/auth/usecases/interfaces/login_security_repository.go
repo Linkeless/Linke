@@ -57,12 +57,12 @@ type AccountLockoutRepository interface {
 	IsAccountLocked(ctx context.Context, email string) (bool, *entities.AccountLockout, error)
 	IncrementFailureCount(ctx context.Context, email string, userID *uint) (*entities.AccountLockout, error)
 	LockAccount(ctx context.Context, email string, userID *uint, duration time.Duration, reason string) (*entities.AccountLockout, error)
-	UnlockAccount(ctx context.Context, email string, reason string) error
+	UnlockAccount(ctx context.Context, email, reason string) error
 	ResetFailureCount(ctx context.Context, email string) error
 
 	// Query operations
 	GetLockedAccounts(ctx context.Context, limit, offset int) ([]*entities.AccountLockout, int64, error)
-	GetAccountsWithFailures(ctx context.Context, minFailures int, limit, offset int) ([]*entities.AccountLockout, int64, error)
+	GetAccountsWithFailures(ctx context.Context, minFailures, limit, offset int) ([]*entities.AccountLockout, int64, error)
 	GetByUser(ctx context.Context, userID uint) (*entities.AccountLockout, error)
 
 	// Statistics

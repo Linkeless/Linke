@@ -129,7 +129,7 @@ func (s *OrderManagementServiceMixin[T, ID]) GetByOrderNumber(ctx context.Contex
 }
 
 // UpdateOrderStatus updates the order status with reason
-func (s *OrderManagementServiceMixin[T, ID]) UpdateOrderStatus(ctx context.Context, id ID, status string, reason string) (*T, error) {
+func (s *OrderManagementServiceMixin[T, ID]) UpdateOrderStatus(ctx context.Context, id ID, status, reason string) (*T, error) {
 	updates := map[string]any{
 		s.statusField: status,
 	}

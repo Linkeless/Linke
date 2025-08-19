@@ -57,7 +57,6 @@ func (j *JWTBlacklistService) IsTokenBlacklisted(ctx context.Context, token stri
 
 	var blacklistEntry entities.JWTBlacklist
 	err := j.db.WithContext(ctx).Where("token_hash = ? AND expires_at > ?", tokenHash, time.Now()).First(&blacklistEntry).Error
-
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return false, nil // Token not blacklisted
@@ -107,7 +106,6 @@ func (j *JWTBlacklistService) IsUserTokensBlacklisted(ctx context.Context, userI
 		Where("user_id = ? AND token_hash LIKE ? AND created_at > ? AND expires_at > ?",
 			userID, "user_%", tokenIssuedAt, time.Now()).
 		Count(&count).Error
-
 	if err != nil {
 		logger.Error("Failed to check user token blacklist",
 			logger.Uint("user_id", userID),

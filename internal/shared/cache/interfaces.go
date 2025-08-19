@@ -138,7 +138,7 @@ const (
 // It provides string and JSON operations while avoiding circular dependencies
 type CacheStore interface {
 	// String operations
-	Set(ctx context.Context, key string, value string, expiration time.Duration) error
+	Set(ctx context.Context, key, value string, expiration time.Duration) error
 	Get(ctx context.Context, key string) (string, error)
 	Delete(ctx context.Context, key string) error
 	Exists(ctx context.Context, key string) (bool, error)

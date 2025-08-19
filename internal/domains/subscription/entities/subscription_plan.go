@@ -273,7 +273,6 @@ type SubscriptionPlanResponse struct {
 
 // ToResponse converts SubscriptionPlan to SubscriptionPlanResponse
 func (sp *SubscriptionPlan) ToResponse() *SubscriptionPlanResponse {
-
 	return &SubscriptionPlanResponse{
 		ID:              sp.ID,
 		Name:            sp.Name,

@@ -432,7 +432,7 @@ func (s *paymentMethodService) ProcessPaymentWithDefaultMethod(ctx context.Conte
 }
 
 // RetryFailedPayment retries a failed payment with alternative payment methods
-func (s *paymentMethodService) RetryFailedPayment(ctx context.Context, userID uint, paymentRecordID uint) (*entities.PaymentRecord, error) {
+func (s *paymentMethodService) RetryFailedPayment(ctx context.Context, userID, paymentRecordID uint) (*entities.PaymentRecord, error) {
 	// TODO: Implement retry logic with alternative payment methods
 	// This would:
 	// 1. Get the failed payment record

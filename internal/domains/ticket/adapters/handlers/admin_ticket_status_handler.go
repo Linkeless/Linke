@@ -83,7 +83,7 @@ func (h *AdminTicketStatusHandler) AssignTicket(c *gin.Context) {
 			logger.Uint("assigned_to_id", req.AssignedToID),
 			logger.ErrorField(err))
 
-		convertedErr := sharedErrors.ConvertServiceError(err, "ticket", uint(id))
+		convertedErr := sharedErrors.ConvertTicketErrorUint(err, uint(id))
 		if sharedErrors.IsTicketNotFound(convertedErr) {
 			response.NotFound(c, "Ticket not found")
 		} else {
@@ -302,7 +302,7 @@ func (h *AdminTicketStatusHandler) CloseTicket(c *gin.Context) {
 			logger.Uint("ticket_id", uint(id)),
 			logger.ErrorField(err))
 
-		convertedErr := sharedErrors.ConvertServiceError(err, "ticket", uint(id))
+		convertedErr := sharedErrors.ConvertTicketErrorUint(err, uint(id))
 		if sharedErrors.IsTicketNotFound(convertedErr) {
 			response.NotFound(c, "Ticket not found")
 		} else {
@@ -352,7 +352,7 @@ func (h *AdminTicketStatusHandler) ReopenTicket(c *gin.Context) {
 			logger.Uint("ticket_id", uint(id)),
 			logger.ErrorField(err))
 
-		convertedErr := sharedErrors.ConvertServiceError(err, "ticket", uint(id))
+		convertedErr := sharedErrors.ConvertTicketErrorUint(err, uint(id))
 		if sharedErrors.IsTicketNotFound(convertedErr) {
 			response.NotFound(c, "Ticket not found")
 		} else {

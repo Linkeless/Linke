@@ -69,7 +69,6 @@ func (h *UsageHandler) RegisterRoutes(router *gin.RouterGroup) {
 			admin.POST("/sync/:subscription_id", h.SyncSubscriptionLimits)
 		}
 	}
-
 }
 
 // Helper methods

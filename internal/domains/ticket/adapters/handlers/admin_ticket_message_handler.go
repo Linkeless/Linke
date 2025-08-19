@@ -279,7 +279,7 @@ func (h *AdminTicketMessageHandler) UpdateMessage(c *gin.Context) {
 			logger.Uint("message_id", uint(msgID)),
 			logger.ErrorField(err))
 
-		convertedErr := sharedErrors.ConvertServiceError(err, "message", uint(msgID))
+		convertedErr := sharedErrors.ConvertServiceErrorWithID(err, "ticket", "message", uint(msgID))
 		if sharedErrors.IsTicketMessageNotFound(convertedErr) {
 			response.NotFound(c, "Message not found")
 		} else {
@@ -330,7 +330,7 @@ func (h *AdminTicketMessageHandler) DeleteMessage(c *gin.Context) {
 			logger.Uint("message_id", uint(msgID)),
 			logger.ErrorField(err))
 
-		convertedErr := sharedErrors.ConvertServiceError(err, "message", uint(msgID))
+		convertedErr := sharedErrors.ConvertServiceErrorWithID(err, "ticket", "message", uint(msgID))
 		if sharedErrors.IsTicketMessageNotFound(convertedErr) {
 			response.NotFound(c, "Message not found")
 		} else {

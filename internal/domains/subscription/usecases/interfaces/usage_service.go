@@ -56,7 +56,7 @@ type UsageAlertService interface {
 
 	// Alert Management
 	GetUsageAlerts(ctx context.Context, req *GetUsageAlertsRequest) (*GetUsageAlertsResponse, error)
-	AcknowledgeAlert(ctx context.Context, alertID uint, acknowledgedBy uint) error
+	AcknowledgeAlert(ctx context.Context, alertID, acknowledgedBy uint) error
 	SuppressAlert(ctx context.Context, alertID uint, duration time.Duration, reason string) error
 	BulkResolveAlerts(ctx context.Context, req *BulkResolveAlertsRequest) (*BulkResolveAlertsResponse, error)
 
@@ -71,7 +71,7 @@ type UsageAlertService interface {
 
 	// Default Configurations
 	CreateDefaultAlertConfigurations(ctx context.Context, subscriptionID uint) error
-	CopyAlertConfigurationsFromPlan(ctx context.Context, subscriptionID uint, planID uint) error
+	CopyAlertConfigurationsFromPlan(ctx context.Context, subscriptionID, planID uint) error
 }
 
 // Request/Response structures for usage tracking service

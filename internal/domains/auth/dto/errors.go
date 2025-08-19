@@ -159,17 +159,17 @@ func (cm *CleanupManager) AddSimple(cleanupFunc func()) {
 // Execute runs all cleanup functions in reverse order (LIFO)
 func (cm *CleanupManager) Execute() error {
 	var firstError error
-	
+
 	// Execute in reverse order (last added, first executed)
 	for i := len(cm.cleanupFuncs) - 1; i >= 0; i-- {
 		if err := cm.cleanupFuncs[i](); err != nil && firstError == nil {
 			firstError = err
 		}
 	}
-	
+
 	// Clear the cleanup functions after execution
 	cm.cleanupFuncs = cm.cleanupFuncs[:0]
-	
+
 	return firstError
 }
 

@@ -11,27 +11,27 @@ type ErrorCode string
 
 const (
 	// Resource errors
-	ErrCodeNotFound       ErrorCode = "NOT_FOUND"
-	ErrCodeAlreadyExists  ErrorCode = "ALREADY_EXISTS"
-	ErrCodeConflict       ErrorCode = "CONFLICT"
-	
+	ErrCodeNotFound      ErrorCode = "NOT_FOUND"
+	ErrCodeAlreadyExists ErrorCode = "ALREADY_EXISTS"
+	ErrCodeConflict      ErrorCode = "CONFLICT"
+
 	// Permission errors
-	ErrCodeForbidden      ErrorCode = "FORBIDDEN"
-	ErrCodeUnauthorized   ErrorCode = "UNAUTHORIZED"
-	
+	ErrCodeForbidden    ErrorCode = "FORBIDDEN"
+	ErrCodeUnauthorized ErrorCode = "UNAUTHORIZED"
+
 	// Input validation errors
-	ErrCodeInvalidInput   ErrorCode = "INVALID_INPUT"
-	ErrCodeInvalidFormat  ErrorCode = "INVALID_FORMAT"
-	ErrCodeInvalidState   ErrorCode = "INVALID_STATE"
-	
+	ErrCodeInvalidInput  ErrorCode = "INVALID_INPUT"
+	ErrCodeInvalidFormat ErrorCode = "INVALID_FORMAT"
+	ErrCodeInvalidState  ErrorCode = "INVALID_STATE"
+
 	// System errors
-	ErrCodeInternal       ErrorCode = "INTERNAL_ERROR"
-	ErrCodeTimeout        ErrorCode = "TIMEOUT"
-	ErrCodeUnavailable    ErrorCode = "UNAVAILABLE"
-	
+	ErrCodeInternal    ErrorCode = "INTERNAL_ERROR"
+	ErrCodeTimeout     ErrorCode = "TIMEOUT"
+	ErrCodeUnavailable ErrorCode = "UNAVAILABLE"
+
 	// Business logic errors
-	ErrCodeBusinessRule   ErrorCode = "BUSINESS_RULE_VIOLATION"
-	ErrCodeQuotaExceeded  ErrorCode = "QUOTA_EXCEEDED"
+	ErrCodeBusinessRule  ErrorCode = "BUSINESS_RULE_VIOLATION"
+	ErrCodeQuotaExceeded ErrorCode = "QUOTA_EXCEEDED"
 )
 
 // BusinessError represents a structured business error
@@ -126,14 +126,14 @@ func Wrapf(err error, code ErrorCode, format string, args ...interface{}) *Busin
 
 // Predefined errors for common cases
 var (
-	ErrNotFound       = New(ErrCodeNotFound, "Resource not found")
-	ErrAlreadyExists  = New(ErrCodeAlreadyExists, "Resource already exists")
-	ErrForbidden      = New(ErrCodeForbidden, "Operation not permitted")
-	ErrUnauthorized   = New(ErrCodeUnauthorized, "Authentication required")
-	ErrInvalidInput   = New(ErrCodeInvalidInput, "Invalid input provided")
-	ErrInternal       = New(ErrCodeInternal, "Internal server error")
-	ErrTimeout        = New(ErrCodeTimeout, "Operation timed out")
-	ErrUnavailable    = New(ErrCodeUnavailable, "Service unavailable")
+	ErrNotFound      = New(ErrCodeNotFound, "Resource not found")
+	ErrAlreadyExists = New(ErrCodeAlreadyExists, "Resource already exists")
+	ErrForbidden     = New(ErrCodeForbidden, "Operation not permitted")
+	ErrUnauthorized  = New(ErrCodeUnauthorized, "Authentication required")
+	ErrInvalidInput  = New(ErrCodeInvalidInput, "Invalid input provided")
+	ErrInternal      = New(ErrCodeInternal, "Internal server error")
+	ErrTimeout       = New(ErrCodeTimeout, "Operation timed out")
+	ErrUnavailable   = New(ErrCodeUnavailable, "Service unavailable")
 )
 
 // IsNotFound checks if an error is a "not found" error

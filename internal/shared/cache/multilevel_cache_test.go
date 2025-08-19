@@ -84,7 +84,7 @@ func (m *MockMetricsCollector) RecordDelete(ctx context.Context, key string) {
 	m.Called(ctx, key)
 }
 
-func (m *MockMetricsCollector) RecordError(ctx context.Context, key string, operation string) {
+func (m *MockMetricsCollector) RecordError(ctx context.Context, key, operation string) {
 	m.Called(ctx, key, operation)
 }
 

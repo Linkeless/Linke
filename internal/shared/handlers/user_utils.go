@@ -243,7 +243,7 @@ func (loader *BatchUserLoader) preloadUsers(ctx context.Context) error {
 func (loader *BatchUserLoader) AddPreloadIDs(userIDs []uint) {
 	loader.mu.Lock()
 	defer loader.mu.Unlock()
-	
+
 	for _, userID := range userIDs {
 		if userID != 0 {
 			// Avoid duplicates
@@ -265,11 +265,11 @@ func (loader *BatchUserLoader) AddPreloadIDs(userIDs []uint) {
 func (loader *BatchUserLoader) EvictLRU() {
 	loader.mu.Lock()
 	defer loader.mu.Unlock()
-	
+
 	if len(loader.cache) <= loader.maxCacheSize {
 		return
 	}
-	
+
 	// Simple LRU: remove random items (in production, you'd want proper LRU)
 	count := 0
 	targetRemove := len(loader.cache) - loader.maxCacheSize + 100 // Remove extra to avoid frequent eviction
@@ -280,7 +280,7 @@ func (loader *BatchUserLoader) EvictLRU() {
 		delete(loader.cache, userID)
 		count++
 	}
-	
+
 	logger.Debug("Evicted cache entries",
 		logger.Int("evicted_count", count),
 		logger.Int("remaining_count", len(loader.cache)))

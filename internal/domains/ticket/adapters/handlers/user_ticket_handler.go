@@ -291,7 +291,7 @@ func (h *UserTicketHandler) CloseTicket(c *gin.Context) {
 			logger.Uint("user_id", user.ID),
 			logger.ErrorField(err))
 
-		convertedErr := sharedErrors.ConvertServiceError(err, "ticket", ticketID)
+		convertedErr := sharedErrors.ConvertTicketErrorUint(err, ticketID)
 		if sharedErrors.IsTicketNotFound(convertedErr) {
 			response.NotFound(c, "Ticket not found")
 		} else {

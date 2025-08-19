@@ -20,12 +20,12 @@ import (
 
 // NotificationService 通知服务接口 (可选)
 type NotificationService interface {
-	SendOrderCreatedNotification(ctx context.Context, userID uint, orderID uint) error
-	SendPaymentSuccessNotification(ctx context.Context, userID uint, orderID uint) error
-	SendSubscriptionActivatedNotification(ctx context.Context, userID uint, subscriptionID uint) error
-	SendOrderExpiredNotification(ctx context.Context, userID uint, orderID uint) error
-	SendSubscriptionRenewedNotification(ctx context.Context, userID uint, subscriptionID uint) error
-	SendSubscriptionCancelledNotification(ctx context.Context, userID uint, subscriptionID uint) error
+	SendOrderCreatedNotification(ctx context.Context, userID, orderID uint) error
+	SendPaymentSuccessNotification(ctx context.Context, userID, orderID uint) error
+	SendSubscriptionActivatedNotification(ctx context.Context, userID, subscriptionID uint) error
+	SendOrderExpiredNotification(ctx context.Context, userID, orderID uint) error
+	SendSubscriptionRenewedNotification(ctx context.Context, userID, subscriptionID uint) error
+	SendSubscriptionCancelledNotification(ctx context.Context, userID, subscriptionID uint) error
 }
 
 // SubscriptionWorkflow 订阅购买工作流

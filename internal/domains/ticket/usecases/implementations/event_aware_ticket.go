@@ -193,7 +193,7 @@ func (s *EventAwareTicketService) UpdateTicketStatus(ctx context.Context, ticket
 }
 
 // ResolveTicket resolves a ticket and publishes an event
-func (s *EventAwareTicketService) ResolveTicket(ctx context.Context, ticketID uint, resolvedByID uint, req *dto.ResolveTicketRequest) (*entities.Ticket, error) {
+func (s *EventAwareTicketService) ResolveTicket(ctx context.Context, ticketID, resolvedByID uint, req *dto.ResolveTicketRequest) (*entities.Ticket, error) {
 	// Resolve the ticket
 	ticket, err := s.ticketService.ResolveTicket(ctx, ticketID, resolvedByID, req)
 	if err != nil {

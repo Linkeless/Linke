@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+
 	"linke/internal/domains/referral/entities"
 	"linke/internal/domains/referral/usecases/interfaces"
 	"linke/internal/shared/framework"
@@ -134,7 +135,6 @@ func (r *ReferralRepository) GetReferralStatistics(ctx context.Context, userID u
 		`).
 		Where("referrer_id = ?", userID).
 		Scan(&stats).Error
-
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +168,6 @@ func (r *ReferralRepository) GetSystemReferralStatistics(ctx context.Context) (m
 			COUNT(DISTINCT referrer_id) as unique_referrers
 		`).
 		Scan(&stats).Error
-
 	if err != nil {
 		return nil, err
 	}
